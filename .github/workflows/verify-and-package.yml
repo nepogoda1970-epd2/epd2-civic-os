@@ -1,0 +1,89 @@
+name: Verify and Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Generate locks, verify, and package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate Python lock file
+        run: uv lock
+
+      - name: Install Python dependencies
+        run: uv sync --all-groups --frozen
+
+      - name: Generate Node lock file and install dependencies
+        run: npm install
+
+      - name: Run full verification
+        id: verify
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          make verify 2>&1 | tee PACK-01-VERIFICATION.log
+
+      - name: Write verification status
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.verify.outcome }}" = "success" ]; then
+            STATUS="PACK-01 PASS"
+          else
+            STATUS="PACK-01 FAIL"
+          fi
+
+          {
+            echo "# PACK-01 Verification"
+            echo
+            echo "Status: **${STATUS}**"
+            echo
+            echo "Runner: GitHub Actions / ubuntu-latest"
+            echo "Python: 3.12"
+            echo "Node.js: 22"
+          } > PACK-01-RESULT.md
+
+      - name: Create result archive
+        if: always()
+        run: |
+          rm -rf .venv node_modules
+          rm -rf frontend/web-shell/node_modules
+          rm -rf frontend/web-shell/.next
+          zip -r epd2-civic-os-PACK-01-result.zip . \
+            -x ".git/*" \
+            -x "epd2-civic-os-PACK-01-result.zip"
+
+      - name: Upload result archive
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: epd2-civic-os-PACK-01-result
+          path: epd2-civic-os-PACK-01-result.zip
+          retention-days: 14
+
+      - name: Mark workflow failed when verification failed
+        if: steps.verify.outcome != 'success'
+        run: exit 1
