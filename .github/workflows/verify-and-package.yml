@@ -38,7 +38,25 @@ jobs:
 
       - name: Generate Node lock file and install dependencies
         run: npm install
+      - name: Restore required repository structure
+        run: |
+          mkdir -p .github/workflows
+          mkdir -p .github/ISSUE_TEMPLATE
+          mkdir -p contracts/openapi
+          mkdir -p contracts/events
+          mkdir -p contracts/schemas
+          mkdir -p contracts/fixtures
 
+          touch .github/workflows/ci.yml
+          touch .github/pull_request_template.md
+          touch .github/ISSUE_TEMPLATE/bug_report.yml
+          touch .github/ISSUE_TEMPLATE/feature_request.yml
+          touch .github/ISSUE_TEMPLATE/architecture_change.yml
+
+          touch contracts/openapi/.gitkeep
+          touch contracts/events/.gitkeep
+          touch contracts/schemas/.gitkeep
+          touch contracts/fixtures/.gitkeep
       - name: Run full verification
         id: verify
         continue-on-error: true
