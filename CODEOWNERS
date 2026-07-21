@@ -1,0 +1,17 @@
+# CODEOWNERS
+#
+# The team aliases below are PLACEHOLDERS. They are not real GitHub
+# usernames or teams and will not resolve to any account until the
+# EPD Plattform e.V. GitHub organization and its teams are created.
+#
+# Once real GitHub teams exist, replace each placeholder with the actual
+# team alias (e.g. `@epd2-plattform/canon-owners`). See
+# docs/development/repository-rules.md and docs/review/OPEN_QUESTIONS.md
+# (open question: "Какие GitHub team aliases будут использоваться в
+# CODEOWNERS?").
+
+/docs/canonical/   @EPD2-CANON-OWNER
+/contracts/        @EPD2-ARCHITECTURE-OWNER
+/.github/          @EPD2-INFRASTRUCTURE-OWNER
+/packages/         @EPD2-ARCHITECTURE-OWNER
+/frontend/         @EPD2-FRONTEND-OWNER
