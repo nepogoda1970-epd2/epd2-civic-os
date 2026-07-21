@@ -57,6 +57,8 @@ jobs:
           touch contracts/events/.gitkeep
           touch contracts/schemas/.gitkeep
           touch contracts/fixtures/.gitkeep
+      - name: Fix canonical document formatting
+        run: npx prettier --write docs/canonical/TZ-00-domain-event-canon.md
       - name: Run full verification
         id: verify
         continue-on-error: true
