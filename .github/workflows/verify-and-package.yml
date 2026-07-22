@@ -18,7 +18,9 @@ jobs:
         shell: bash
         run: |
           unzip -q -o epd2-civic-os-PACK-02-verification-candidate-v2.zip -d .
-          git rm -f --ignore-unmatch epd2-civic-os-PACK-02-verification-candidate.zip
+          git rm -f --ignore-unmatch \
+            epd2-civic-os-PACK-02-verification-candidate.zip \
+            epd2-civic-os-PACK-02-verification-candidate-v2.zip
 
           
       - name: Set up Python 3.12
