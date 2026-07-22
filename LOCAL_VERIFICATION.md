@@ -1,5 +1,15 @@
 # Local Verification
 
+> **Status update:** PACK-01 has since been verified end-to-end (real
+> `uv.lock`/`package-lock.json`, `next build`, and the full `make verify`
+> pipeline) via `.github/workflows/verify-and-package.yml` on GitHub
+> Actions — see `docs/handover/PACK-01-REPORT.md` (Revision 4) and
+> `docs/handover/PACK-01-VERIFICATION.log` for the real output. The
+> procedure below remains the reference for regenerating lock files or
+> re-verifying locally (e.g. after a dependency bump) on any machine with
+> normal internet access, or via `GITHUB_ACTIONS_START.md` if one isn't
+> available.
+
 This repository's structure, code, formatting, linting, type checking, and
 tests have already been verified inside the sandbox this package was built
 in, wherever that did not require a live PyPI/npm connection (see

@@ -1,10 +1,15 @@
 [project]
 name = "epd2-civic-os"
 version = "0.1.0"
-description = "EPD2 Civic OS monorepo workspace root (infrastructure skeleton, no business logic)"
+description = "EPD2 Civic OS monorepo workspace root (infrastructure skeleton plus CLAUDE-PACK-02 identity/audit kernel)"
 requires-python = ">=3.12"
 dependencies = [
     "epd2-core",
+    "epd2-account-service",
+    "epd2-identity-service",
+    "epd2-eligibility-service",
+    "epd2-credential-service",
+    "epd2-audit-core",
 ]
 
 # Lower bounds are the versions this repository's checks (Ruff ruleset,
@@ -22,33 +27,72 @@ dev = [
     "ruff>=0.6,<1",
     "pydantic>=2.9,<3",
     "pre-commit>=3.8,<4",
+    # CLAUDE-PACK-02 additions:
+    "types-PyYAML>=6.0,<7",
+    "jsonschema>=4.23,<5",
+    "hypothesis>=6.112,<7",
 ]
 
 [tool.uv]
 package = false
 
 [tool.uv.workspace]
-members = ["packages/python/epd2-core"]
+members = [
+    "packages/python/epd2-core",
+    "services/account-service",
+    "services/identity-service",
+    "services/eligibility-service",
+    "services/credential-service",
+    "services/audit-core",
+]
 
 [tool.uv.sources]
 epd2-core = { workspace = true }
+epd2-account-service = { workspace = true }
+epd2-identity-service = { workspace = true }
+epd2-eligibility-service = { workspace = true }
+epd2-credential-service = { workspace = true }
+epd2-audit-core = { workspace = true }
 
 # --- Ruff ---
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["packages/python/epd2-core/src", "scripts", "tests"]
+src = [
+    "packages/python/epd2-core/src",
+    "services/account-service/src",
+    "services/identity-service/src",
+    "services/eligibility-service/src",
+    "services/credential-service/src",
+    "services/audit-core/src",
+    "scripts",
+    "tests",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["epd2_core"]
+known-first-party = [
+    "epd2_core",
+    "epd2_account_service",
+    "epd2_identity_service",
+    "epd2_eligibility_service",
+    "epd2_credential_service",
+    "epd2_audit_core",
+]
 
 # --- mypy ---
 [tool.mypy]
 python_version = "3.12"
-mypy_path = ["packages/python/epd2-core/src"]
+mypy_path = [
+    "packages/python/epd2-core/src",
+    "services/account-service/src",
+    "services/identity-service/src",
+    "services/eligibility-service/src",
+    "services/credential-service/src",
+    "services/audit-core/src",
+]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_any_generics = true
@@ -59,11 +103,58 @@ warn_unused_ignores = true
 warn_return_any = true
 strict_equality = true
 
+# PyYAML ships no inline type stubs of its own; `types-PyYAML` (declared
+# above) supplies them in CI. That package cannot be installed in this
+# sandbox (no network access - see LOCAL_VERIFICATION.md), so this
+# override only prevents that one, single-purpose sandbox limitation from
+# blocking `mypy .` here; CI runs fully-typed (no override needed there,
+# but the override is harmless if stubs are present).
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
+
+# jsonschema and hypothesis ship their own inline type stubs (PEP 561) and
+# need no override once installed. They cannot be installed in this
+# sandbox either (same network restriction), so the same
+# ignore_missing_imports treatment applies here for the same reason as
+# "yaml" above; CI has both installed via `uv sync --all-groups` and type
+# checks the real packages.
+[[tool.mypy.overrides]]
+module = ["jsonschema", "hypothesis", "hypothesis.*"]
+ignore_missing_imports = true
+
+# pytest itself ships inline type stubs (PEP 561) and needs no override
+# once installed via `uv sync --all-groups` (as CI does). Locally, this
+# sandbox's `uv run mypy` cannot resolve at all (same lock/network
+# restriction as above), so local verification falls back to an isolated,
+# standalone mypy install with no project dependencies in its own
+# site-packages - not even pytest. This override exists only to keep that
+# local fallback invocation usable; it is a no-op in CI, where pytest's
+# own stubs are found normally.
+[[tool.mypy.overrides]]
+module = ["pytest", "_pytest.*"]
+ignore_missing_imports = true
+
 # No per-test-module relaxation is configured: all test modules in this
 # repository are fully typed and pass the same strict settings as
 # application code.
 
 # --- pytest ---
 [tool.pytest.ini_options]
-testpaths = ["packages/python/epd2-core/tests", "tests/repository"]
-addopts = "-ra"
+testpaths = [
+    "packages/python/epd2-core/tests",
+    "tests/repository",
+    "tests/contract",
+    "services/account-service/tests",
+    "services/identity-service/tests",
+    "services/eligibility-service/tests",
+    "services/credential-service/tests",
+    "services/audit-core/tests",
+]
+# --import-mode=importlib: several services intentionally use the same
+# test file basenames (test_domain.py, test_application.py, ...) - this
+# import mode resolves each by its fully-qualified path instead of by
+# bare basename, so they never collide, without requiring __init__.py
+# files in every tests/ directory (which previously caused a mypy
+# "Duplicate module named tests" error - see docs/handover/PACK-01-REPORT.md).
+addopts = "-ra --import-mode=importlib"

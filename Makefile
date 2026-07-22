@@ -27,8 +27,27 @@ lint:
 	npm run lint --workspace=frontend/web-shell
 
 # --- make typecheck ---
+# A single repo-wide `uv run mypy .` is NOT used here: the 5 PACK-02
+# services deliberately share identically-named test files (test_domain.py,
+# test_application.py, etc., see each service's tests/ directory) with no
+# __init__.py, so that pytest can use --import-mode=importlib and resolve
+# same-named test files by full path. mypy has no equivalent mode - a single
+# whole-repo invocation fails immediately with "Duplicate module named
+# 'test_application'" (etc.) before checking a single real error. Instead,
+# mypy is invoked once per group of files whose basenames don't collide
+# within that one invocation: the core/scripts/repository-tests group, the
+# shared contract-test suite, and then once per service. Every group must
+# exit 0 for `make typecheck` to succeed - make's default recipe behavior
+# aborts the whole target on the first non-zero exit code, so an earlier
+# group's failure is never silently masked by a later group's success.
 typecheck:
-	uv run mypy .
+	uv run mypy packages/python/epd2-core scripts tests/repository conftest.py
+	uv run mypy tests/contract
+	uv run mypy services/account-service
+	uv run mypy services/identity-service
+	uv run mypy services/eligibility-service
+	uv run mypy services/credential-service
+	uv run mypy services/audit-core
 	npm run typecheck --workspace=packages/typescript/epd2-types
 	npm run typecheck --workspace=frontend/web-shell
 
