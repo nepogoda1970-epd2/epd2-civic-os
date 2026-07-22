@@ -1,19 +1,18 @@
 # CLAUDE-PACK-02 — Identity Separation and Audit Kernel: Handover Report
 
-**Revision 3 — final candidate.** Revision 1 was exported as
+**Revision 4 — final candidate.** Revision 1 was exported as
 `epd2-civic-os-PACK-02-verification-candidate.zip` and run through external
 verification on GitHub Actions, which found one real test-scope bug (fixed
-in revision 2, section 0a). This revision fixes a second, independent real
-bug that the same external run surfaced — a Hypothesis API rename in
-`tests/contract/test_property_based.py` (section 0b) — and, separately,
-cleans up the delivery mechanics themselves so that no further manual
-intervention is needed on GitHub: the repository tree is now genuinely
-Prettier-formatted (checked with a real Prettier binary this pass, not
-assumed — section 0c), and `.github/workflows/verify-and-package.yml` has
-been reduced to exactly checkout → dependency setup → `uv lock` → install
-→ `make verify` → result write → package → artifact upload, with the two
-one-off patch steps from earlier revisions removed now that they are no
-longer needed (section 0c).
+in revision 2, section 0a). Revision 3 fixed a second real bug the same
+external run surfaced — a Hypothesis API rename in
+`tests/contract/test_property_based.py` (section 0b) — and cleaned up the
+delivery mechanics so no manual GitHub edit is needed (section 0c). This
+revision fixes a third, independent real bug: a genuine mypy `arg-type`
+error in the same file, found by a subsequent external GitHub Actions run
+against revision 3's real, installed `hypothesis` (section 0d) — the
+Hypothesis-rename fix in revision 3 was itself correct, but introduced a
+value whose type mypy could not verify against Hypothesis's real stub
+without an explicit annotation, which this revision adds.
 
 Every check this sandbox can run (structure, forbidden paths, version
 consistency, Ruff format, Ruff lint, a real Prettier format check, mypy
@@ -28,9 +27,9 @@ blocked, and the required `hypothesis` package is not present in the local
 (reconfirmed this pass, section 3). This is the same class of blocker
 `docs/handover/PACK-01-REPORT.md` hit in its revision 3, resolved there by
 running `.github/workflows/verify-and-package.yml` on GitHub Actions (real
-network access) — the same workflow that surfaced both bugs this and the
-prior revision fixed. Per the pack's own rule against a "conditional
-PASS," this revision honestly records:
+network access) — the same workflow that surfaced all three bugs fixed
+across revisions 2 through 4. Per the pack's own rule against a
+"conditional PASS," this revision honestly records:
 
 ```text
 PACK-02 FAIL — blocked solely by an unregenerated uv.lock
@@ -181,6 +180,59 @@ this sandbox has no path to real PyPI access, so per this revision's own
 instructions, GitHub Actions running the cleaned-up workflow above is the
 stated, sole remaining step — not a placeholder for further manual
 repository edits.
+
+## 0d. External verification finding and fix (revision 4): mypy `arg-type` on `characters(categories=...)`
+
+A subsequent external GitHub Actions run — against revision 3, with a
+genuinely installed `hypothesis` and its real, PEP 561 type stubs — found
+one real mypy error:
+
+```text
+tests/contract/test_property_based.py:202: error: Argument "categories"
+to "characters" has incompatible type "tuple[str]"  [arg-type]
+```
+
+Line 202 is `st.characters(categories=("Ll",))`, nested inside
+`st.text(alphabet=...)` inside `st.dictionaries(...)`. Hypothesis's real
+stub types `characters(categories: Collection[CategoryName] | None = ...)`,
+where `CategoryName` (imported internally from
+`hypothesis.internal.charmap`) is a restrictive type covering only the
+valid one/two-letter Unicode category codes — confirmed against
+Hypothesis's own public API reference documentation this pass (fetched
+directly rather than assumed), which describes `categories`/
+`exclude_categories` as accepting exactly this kind of restricted category
+specifier and gives `('Nd', 'Lu')` as a worked example — not plain `str`.
+A bare string-literal tuple such as `("Ll",)`, written directly as a call
+argument, is in this single-element case inferred by mypy as plain
+`tuple[str]` rather than a `Literal["Ll"]`-typed tuple, which
+`Collection[CategoryName]` correctly rejects (`str` is broader than the
+`CategoryName` restriction) — this is a known category of mypy inference
+gap around single-element tuple/list displays not always receiving the
+same expected-type-driven literal narrowing that multi-element ones do
+(the sibling call, `categories=("Lu", "Nd")`, was not flagged).
+
+Fixed at the source, with no `# type: ignore` (a type-safe alternative
+existed — say what the value actually is): both `categories=` tuples in
+`tests/contract/test_property_based.py` are now named module-level
+constants with an explicit `tuple[Literal["Ll"]]` /
+`tuple[Literal["Lu"], Literal["Nd"]]` annotation
+(`_LOWERCASE_LETTER_CATEGORY`, `_UPPERCASE_LETTER_OR_DIGIT_CATEGORIES`),
+so mypy is told the precise, narrow type directly rather than left to
+infer (and potentially widen) it from a bare literal. The module docstring
+now records why. Both call sites were changed for consistency, not just
+the one mypy flagged, since they share the same underlying construction
+and the same latent risk.
+
+This sandbox still cannot install `hypothesis` (section 3), so this fix
+was verified as far as this environment allows: `python3 -m py_compile` on
+the corrected file, `ruff check`/`ruff format --check` clean, and the
+scoped `mypy tests/contract` group still reporting "Success" (this
+sandbox's mypy run does not exercise Hypothesis's real stub at all, via
+the pre-existing `ignore_missing_imports` override for a package this
+sandbox cannot install — the same reason this class of bug is invisible
+here in the first place and only surfaces on a real, external run with
+`hypothesis` genuinely installed). Full confirmation that this specific
+mypy error is gone requires that next external GitHub Actions run.
 
 ## 0. What CLAUDE-PACK-02 adds
 
@@ -412,6 +464,17 @@ Changed in revision 3 (this revision, sections 0b/0c):
   `services/credential-service/README.md` — content unchanged, only
   whitespace/formatting; `docs/canonical/TZ-00-domain-event-canon.md` was
   not among them and its SHA-256 is unchanged (section 2).
+- `docs/handover/PACK-02-REPORT.md` — revision 3 content.
+
+Changed in revision 4 (this revision, section 0d):
+
+- `tests/contract/test_property_based.py` — added `_LOWERCASE_LETTER_CATEGORY:
+tuple[Literal["Ll"]]` and `_UPPERCASE_LETTER_OR_DIGIT_CATEGORIES:
+tuple[Literal["Lu"], Literal["Nd"]]` module-level constants (with
+  `from typing import Literal` added to the imports); both
+  `st.characters(categories=...)` call sites now reference these typed
+  constants instead of bare tuple literals; extended the module docstring
+  explaining the mypy inference gap this works around (section 0d).
 - `docs/handover/PACK-02-REPORT.md` — this revision.
 
 ## 5. A gap found and fixed during this pass's own verification
@@ -471,7 +534,66 @@ per the pack's demand for honest verification:
 
 ## 6. Commands executed this pass, and results
 
-### Revision 3 re-verification (this revision, after the section 0b/0c fixes) — final
+### Revision 4 re-verification (this revision, after the section 0d fix) — final
+
+```text
+✅ python3 -m py_compile tests/contract/test_property_based.py
+   → compiles cleanly after the Literal-annotated categories= constants (section 0d)
+
+✅ python3 scripts/check_repository.py
+   → OK: all 166 required paths are present.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ ruff check .
+   → All checks passed!
+
+✅ ruff format --check .
+   → 87 files already formatted
+
+✅ prettier --check .   (real Prettier 3.8.1 binary)
+   → All matched files use Prettier code style!
+
+✅ mypy packages/python/epd2-core scripts tests/repository conftest.py
+   → Success: no issues found in 24 source files
+✅ mypy tests/contract
+   → Success: no issues found in 18 source files
+✅ mypy services/account-service
+   → Success: no issues found in 8 source files
+✅ mypy services/identity-service
+   → Success: no issues found in 8 source files
+✅ mypy services/eligibility-service
+   → Success: no issues found in 8 source files
+✅ mypy services/credential-service
+   → Success: no issues found in 11 source files
+✅ mypy services/audit-core
+   → Success: no issues found in 10 source files
+
+✅ PYTHONPATH=<all 6 src/ dirs> pytest -q
+   → 339 passed, 8 skipped, 0 failed (unchanged from revision 3 — this
+     fix is type-annotation-only, no test logic or count changed)
+
+✅ JSON/YAML parse validation (every *.json / *.yml / *.yaml)
+   → all files parse without error
+
+✅ sha256(docs/canonical/TZ-00-domain-event-canon.md) unchanged:
+   c731a24477d91010b5c6bc41a00253c8e30279b7f03394e53481ef0d8975e18b
+
+✅ .github/workflows/verify-and-package.yml step list reconfirmed unchanged
+   (12 steps: checkout, Python/uv/Node setup ×3, uv lock, uv sync, npm
+   install, make verify, write status, create archive, upload artifact,
+   mark-failed — no patch step added, per this revision's own instruction)
+
+❌ uv lock / uv lock --offline
+   → still fails, see section 3 (the one genuine, unresolved gap, entirely
+     unrelated to and unaffected by this revision's mypy annotation fix)
+```
+
+### Revision 3 re-verification (historical, for the record)
 
 ```text
 ✅ python3 scripts/check_repository.py
@@ -698,18 +820,21 @@ merely assumed — section 0c), mypy across all 7 scoped groups (24 + 18 +
 blanket ignores), 339 passing tests with 0 failures and only expected
 sandbox-dependency skips and genuine not-applicable markers accounting for
 the remaining 8, and JSON/YAML validity across every contract file. This
-revision incorporates two real fixes from external GitHub Actions
-verification — a test-scoping bug (section 0a) and a Hypothesis API
-rename (section 0b), neither a canon or contract violation — and cleans
-up the delivery mechanics themselves so no manual GitHub edit is needed:
-the tree is genuinely Prettier-formatted and
-`.github/workflows/verify-and-package.yml` now performs only checkout,
+revision incorporates three real fixes from external GitHub Actions
+verification, across three separate runs — a test-scoping bug (section
+0a), a Hypothesis parameter rename (section 0b), and a Hypothesis
+`categories=` argument-typing gap (section 0d) — none a canon or contract
+violation, each fixed with a precise, type-safe, source-level change and
+no blanket suppression. Delivery mechanics were also cleaned up so no
+manual GitHub edit is needed: the tree is genuinely Prettier-formatted and
+`.github/workflows/verify-and-package.yml` performs only checkout,
 dependency setup, `uv lock`, install, `make verify`, result generation,
-packaging, and artifact upload (section 0c). No check was weakened, no
-empty file was written to satisfy a path requirement, no reason code was
-hidden, no legitimate field was stripped from a service's own contract to
-make a test pass, and no unlinkability claim is made without the automated
-test that backs it (section 8).
+packaging, and artifact upload (section 0c) — reconfirmed unchanged this
+revision. No check was weakened, no empty file was written to satisfy a
+path requirement, no reason code was hidden, no legitimate field was
+stripped from a service's own contract to make a test pass, and no
+unlinkability claim is made without the automated test that backs it
+(section 8).
 
 The sole reason this is **FAIL** and not **PASS** is Definition-of-Done
 item 12: `uv.lock` has not been regenerated to include PACK-02's five new

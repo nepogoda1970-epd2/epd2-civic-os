@@ -14,11 +14,26 @@ argument) at real runtime, not just a deprecation warning. This was
 invisible in this sandbox, where `hypothesis` cannot be installed at all
 (the whole module import-skips), and only surfaced when external
 verification ran this suite against a real, installed `hypothesis`.
+
+Note: the `categories=` tuples below are given an explicit
+`tuple[Literal[...], ...]` annotation rather than being passed as bare
+string-literal tuples. Hypothesis's real (CI-installed) stub types
+`characters(categories: Collection[CategoryName] | None = ...)`, where
+`CategoryName` is a `Literal` union of the valid one/two-letter Unicode
+category codes - not plain `str`. A bare tuple literal such as
+`("Ll",)` is, in at least one single-element case, inferred by mypy as
+plain `tuple[str]` rather than `tuple[Literal["Ll"]]`, which
+`Collection[CategoryName]` correctly rejects (`str` is broader than the
+`CategoryName` literal union). Annotating the constant explicitly gives
+mypy the precise, narrow type it needs to verify against the real stub,
+without a `# type: ignore` (there is a type-safe alternative: say what
+the value actually is).
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Literal
 from uuid import uuid4
 
 import pytest
@@ -41,6 +56,14 @@ from hypothesis import given, settings  # noqa: E402
 from hypothesis import strategies as st  # noqa: E402
 
 _CLOCK = FixedClock(datetime(2026, 1, 1, tzinfo=UTC))
+
+# Explicitly typed as `Literal[...]` tuples, not bare `tuple[str, ...]` -
+# see the module docstring for why: Hypothesis's real `characters()` stub
+# expects `Collection[CategoryName]` (a `Literal` union of valid one/two
+# letter Unicode category codes), and a bare string-literal tuple can be
+# widened by mypy to plain `tuple[str]`, which does not satisfy that.
+_UPPERCASE_LETTER_OR_DIGIT_CATEGORIES: tuple[Literal["Lu"], Literal["Nd"]] = ("Lu", "Nd")
+_LOWERCASE_LETTER_CATEGORY: tuple[Literal["Ll"]] = ("Ll",)
 
 
 def _credential(**overrides: object) -> ParticipationCredential:
@@ -117,7 +140,13 @@ def test_credential_expiry_boundary_is_strict(offset_seconds: int) -> None:
 # --- Duplicate event behavior ---
 
 
-@given(st.text(min_size=1, max_size=30, alphabet=st.characters(categories=("Lu", "Nd"))))
+@given(
+    st.text(
+        min_size=1,
+        max_size=30,
+        alphabet=st.characters(categories=_UPPERCASE_LETTER_OR_DIGIT_CATEGORIES),
+    )
+)
 @settings(max_examples=30)
 def test_duplicate_audit_event_id_with_identical_content_is_always_idempotent(
     action_text: str,
@@ -199,7 +228,11 @@ def test_reason_code_strings_are_stable_literals_not_derived(code: str) -> None:
 
 @given(
     st.dictionaries(
-        st.text(min_size=1, max_size=10, alphabet=st.characters(categories=("Ll",))),
+        st.text(
+            min_size=1,
+            max_size=10,
+            alphabet=st.characters(categories=_LOWERCASE_LETTER_CATEGORY),
+        ),
         st.integers(),
     )
 )
