@@ -19,6 +19,22 @@ jobs:
         run: |
           unzip -q -o epd2-civic-os-PACK-02-verification-candidate.zip -d .
           git rm -f --ignore-unmatch epd2-civic-os-PACK-02-verification-candidate.zip
+      - name: Patch Hypothesis typing compatibility
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/contract/test_property_based.py")
+          text = path.read_text(encoding="utf-8")
+          old = 'alphabet=st.characters(whitelist_categories=("Ll",)),'
+          new = 'alphabet=st.characters(whitelist_categories=("Ll",)),  # type: ignore[arg-type]'
+
+          if old not in text:
+              raise SystemExit("Target line not found in test_property_based.py")
+
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
