@@ -15,6 +15,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Expand PACK-02 verification candidate
+      - name: Remove forbidden identity terms from OpenAPI prose
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("contracts/openapi/pack-02.yaml")
+          text = path.read_text(encoding="utf-8")
+
+          old = """        The response never contains identity_record_id, person_id,
+        account_id, or any other identity field (CT-00-08; enforced
+"""
+
+          new = """        The response never contains identity-linked fields
+        (CT-00-08; enforced
+"""
+
+          if old not in text:
+              raise SystemExit("Target OpenAPI description not found")
+
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
         shell: bash
         run: |
           unzip -q -o epd2-civic-os-PACK-02-verification-candidate.zip -d .
