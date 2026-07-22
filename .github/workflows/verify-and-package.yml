@@ -28,18 +28,28 @@ jobs:
           path = Path("tests/contract/test_property_based.py")
           lines = path.read_text(encoding="utf-8").splitlines()
           marker = "# type: ignore[arg-type]"
-          changed = 0
 
-          for index, line in enumerate(lines):
-              if "whitelist_categories=" in line and marker not in line:
-                  lines[index] = f"{line}  {marker}"
-                  changed += 1
+          matches = [
+              index
+              for index, line in enumerate(lines)
+              if "whitelist_categories=" in line
+          ]
 
-          if changed == 0:
-              raise SystemExit("No unpatched whitelist_categories lines found")
+          if len(matches) != 2:
+              raise SystemExit(
+                  f"Expected exactly 2 whitelist_categories lines, found {len(matches)}"
+              )
+
+          # Remove the ignore marker from both lines first.
+          for index in matches:
+              lines[index] = lines[index].replace(f"  {marker}", "").replace(marker, "")
+
+          # Add it only to the second occurrence, which is the mypy-incompatible one.
+          second = matches[1]
+          lines[second] = f"{lines[second]}  {marker}"
 
           path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-          print(f"Patched {changed} whitelist_categories line(s)")
+          print("Patched only the second whitelist_categories occurrence")
           PY
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
