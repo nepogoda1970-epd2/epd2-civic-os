@@ -27,25 +27,19 @@ jobs:
 
           path = Path("tests/contract/test_property_based.py")
           lines = path.read_text(encoding="utf-8").splitlines()
-
-          matches = [
-              index
-              for index, line in enumerate(lines)
-              if "whitelist_categories=" in line
-          ]
-
-          if len(matches) != 1:
-              raise SystemExit(
-                  f"Expected exactly one whitelist_categories line, found {len(matches)}"
-              )
-
-          index = matches[0]
           marker = "# type: ignore[arg-type]"
+          changed = 0
 
-          if marker not in lines[index]:
-              lines[index] = f"{lines[index]}  {marker}"
+          for index, line in enumerate(lines):
+              if "whitelist_categories=" in line and marker not in line:
+                  lines[index] = f"{line}  {marker}"
+                  changed += 1
+
+          if changed == 0:
+              raise SystemExit("No unpatched whitelist_categories lines found")
 
           path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print(f"Patched {changed} whitelist_categories line(s)")
           PY
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
