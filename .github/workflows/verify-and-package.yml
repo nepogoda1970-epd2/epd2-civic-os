@@ -43,7 +43,8 @@ jobs:
 
       - name: Install Node dependencies
         run: npm ci
-
+      - name: Format PACK-02 files
+        run: npx prettier --write .
       - name: Run full verification
         id: verify
         continue-on-error: true
