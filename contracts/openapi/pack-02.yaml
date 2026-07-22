@@ -1,0 +1,351 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-02 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contracts for the five PACK-02 services (pack
+    section 11). No production HTTP server ships in this pack — these
+    paths document the minimal operation set pack section 11 requires
+    (record identity verification; evaluate eligibility; create
+    eligibility snapshot; issue credential; validate credential; revoke
+    credential; read an audit event by a permitted identifier) and are
+    exercised in tests via the underlying application-layer functions
+    directly, not over HTTP. Service boundaries are structural here too:
+    no single path ever returns identity data together with a
+    ParticipationCredential (CT-00-08 / INV-01), and each path is served
+    by exactly one service, matching the ownership matrix in
+    docs/canonical/TZ-00-domain-event-canon.md, section 22.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://identity.epd2.example
+    description: identity-service (not deployed in PACK-02 — contract only)
+  - url: https://eligibility.epd2.example
+    description: eligibility-service (not deployed in PACK-02 — contract only)
+  - url: https://credential.epd2.example
+    description: credential-service (not deployed in PACK-02 — contract only)
+  - url: https://audit.epd2.example
+    description: audit-core (not deployed in PACK-02 — contract only)
+
+paths:
+  /identity/verifications:
+    post:
+      operationId: recordIdentityVerification
+      summary: Record the outcome of an identity verification attempt
+      description: >
+        Owned by identity-service. Maps to
+        epd2_identity_service.application.record_verification_result.
+        CT-00-06: rejected with 403 if the actor is not authorized.
+        CT-00-02/03: rejected with 422 for an unknown status value or a
+        forbidden transition (docs/canonical/TZ-00-domain-event-canon.md,
+        section 7.3; canon events section 20.2).
+      tags: [identity-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [identity_record_id, outcome]
+              properties:
+                identity_record_id: { type: string, format: uuid }
+                outcome:
+                  type: string
+                  enum:
+                    [
+                      verified,
+                      failed,
+                      expired,
+                      duplicate_suspected,
+                      manual_review_required,
+                    ]
+                expires_at: { type: [string, "null"], format: date-time }
+                duplicate_check_status: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Verification result recorded; returns the updated IdentityRecord and, if a canonical event resulted, its envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [record]
+                properties:
+                  record: { $ref: "../schemas/identity-record.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such identity_record_id (ADR-004).
+        "422":
+          description: VALIDATION_UNKNOWN_STATUS or VALIDATION_FORBIDDEN_TRANSITION (CT-00-02/03).
+
+  /eligibility/decisions:
+    post:
+      operationId: evaluateEligibility
+      summary: Evaluate one subject against one frozen eligibility rule version
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.evaluate_eligibility. Never
+        accepts or returns identity data — evaluated_claims is a plain
+        string map supplied by the caller (structural boundary, see
+        services/eligibility-service/README.md).
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  eligibility_rule_id,
+                  rule_version,
+                  subject_reference,
+                  process_id,
+                  evaluated_claims,
+                  evaluator_version,
+                ]
+              properties:
+                eligibility_rule_id: { type: string, format: uuid }
+                rule_version: { type: integer }
+                subject_reference: { type: string, format: uuid }
+                process_id: { type: string, format: uuid }
+                evaluated_claims: { type: object }
+                evaluator_version: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Decision recorded; canon's eligibility.evaluated event emitted (docs/canonical/TZ-00-domain-event-canon.md, section 20.3).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision, event]
+                properties:
+                  decision:
+                    { $ref: "../schemas/eligibility-decision.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such (eligibility_rule_id, rule_version) (ADR-004).
+
+  /eligibility/snapshots:
+    post:
+      operationId: createEligibilitySnapshot
+      summary: Create an immutable snapshot from a set of eligible decisions
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.create_eligibility_snapshot.
+        Fail-closed (422) if any supplied decision does not match the
+        given rule/version or is not `eligible` (docs/canonical/TZ-00-domain-event-canon.md,
+        section 9.3).
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [eligibility_rule_id, rule_version, eligible_decision_ids]
+              properties:
+                eligibility_rule_id: { type: string, format: uuid }
+                rule_version: { type: integer }
+                eligible_decision_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Snapshot created; canon's eligibility.snapshot_created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [snapshot, event]
+                properties:
+                  snapshot:
+                    { $ref: "../schemas/eligibility-snapshot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "422":
+          description: A supplied decision does not match the rule/version or is not eligible.
+
+  /credentials:
+    post:
+      operationId: issueParticipationCredential
+      summary: Issue a new opaque ParticipationCredential
+      description: >
+        Owned by credential-service. Maps to
+        epd2_credential_service.application.issue_participation_credential.
+        The response never contains identity_record_id, person_id,
+        account_id, or any other identity field (CT-00-08; enforced
+        structurally by additionalProperties: false on
+        participation-credential.schema.json).
+      tags: [credential-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  credential_type,
+                  scope_type,
+                  scope_id,
+                  valid_from,
+                  expires_at,
+                  rule_version,
+                  eligibility_snapshot_digest,
+                ]
+              properties:
+                credential_type:
+                  type: string
+                  enum:
+                    [
+                      space_access,
+                      initiative_support,
+                      ballot_access,
+                      delegation_access,
+                      audit_access,
+                    ]
+                scope_type: { type: string, minLength: 1 }
+                scope_id: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                expires_at: { type: string, format: date-time }
+                usage_limit: { type: [integer, "null"] }
+                rule_version: { type: integer }
+                eligibility_snapshot_digest: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Credential issued; canon's credential.issued event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [credential, event]
+                properties:
+                  credential:
+                    { $ref: "../schemas/participation-credential.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: CREDENTIAL_DUPLICATE_ISSUANCE_CONFLICT (ADR-004).
+
+  /credentials/{credentialId}/validate:
+    post:
+      operationId: validateParticipationCredential
+      summary: Fail-closed validation of a ParticipationCredential
+      description: >
+        Owned by credential-service. Maps to
+        epd2_credential_service.application.validate_participation_credential.
+        A query, not a state change — no canonical event on success
+        (ADR-002). The response structurally cannot contain identity data
+        (ValidationResult has no identity-linked fields, see
+        epd2_credential_service.domain.ValidationResult) and, on failure,
+        never reveals `scope_type`/`scope_id`/`expires_at` (fail-closed,
+        pack section 6.4).
+      tags: [credential-service]
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                required_scope_type: { type: [string, "null"] }
+                required_scope_id: { type: [string, "null"], format: uuid }
+                expected_rule_version: { type: [integer, "null"] }
+                expected_digest: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Validation result (valid=false never leaks scope/expiry — pack section 6.4).
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [valid, reason_codes, credential_version]
+                properties:
+                  valid: { type: boolean }
+                  scope_type: { type: [string, "null"] }
+                  scope_id: { type: [string, "null"], format: uuid }
+                  expires_at: { type: [string, "null"], format: date-time }
+                  reason_codes: { type: array, items: { type: string } }
+                  credential_version: { type: integer }
+
+  /credentials/{credentialId}/revoke:
+    post:
+      operationId: revokeParticipationCredential
+      summary: Revoke a previously issued ParticipationCredential
+      description: >
+        Owned by credential-service. Maps to
+        epd2_credential_service.application.revoke_participation_credential.
+      tags: [credential-service]
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Credential revoked; canon's credential.revoked event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [credential, event]
+                properties:
+                  credential:
+                    { $ref: "../schemas/participation-credential.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such credential_id (ADR-004).
+
+  /audit/events/{auditEventId}:
+    get:
+      operationId: getAuditEventById
+      summary: Read a single AuditEvent by its permitted identifier
+      description: >
+        Owned by audit-core. Maps to
+        epd2_audit_core.application.get_by_event_id. Per canon section
+        18.1, Audit Core has "отдельные права чтения" (separate read
+        permissions) from the services that append to it — this path is
+        intentionally the *only* read surface this contract exposes for
+        AuditEvent, and it is scoped by a single permitted identifier
+        rather than an open listing, to keep audit-read access
+        auditable and narrow in its own right.
+      tags: [audit-core]
+      parameters:
+        - name: auditEventId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: The AuditEvent, if the caller is permitted to read it.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/audit-event.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — caller lacks Audit Core read permission.
+        "404":
+          description: No AuditEvent exists for the given audit_event_id.
+
+components: {}

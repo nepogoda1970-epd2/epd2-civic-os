@@ -4,7 +4,15 @@ version = "0.1.0"
 description = "EPD2 Civic OS shared Python infrastructure package (no business logic)"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+# PyYAML is required only by epd2_core.reason_codes (loading the
+# contracts/reason-codes/*.yml registry files). Every other module in
+# this package remains dependency-free stdlib. See LOCAL_VERIFICATION.md:
+# this dependency cannot be installed inside this sandbox (no PyPI
+# access), so anything importing epd2_core.reason_codes is verified in
+# CI (.github/workflows/verify-and-package.yml), not locally.
+dependencies = [
+    "pyyaml>=6.0,<7",
+]
 
 [build-system]
 requires = ["hatchling"]

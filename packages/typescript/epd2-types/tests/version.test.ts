@@ -23,5 +23,5 @@ test("REPOSITORY_VERSION is a semver-like string", () => {
 
 test("current versions match the expected skeleton version", () => {
   assert.equal(CANON_VERSION, "0.1.0");
-  assert.equal(REPOSITORY_VERSION, "0.1.0");
+  assert.equal(REPOSITORY_VERSION, "0.2.0");
 });

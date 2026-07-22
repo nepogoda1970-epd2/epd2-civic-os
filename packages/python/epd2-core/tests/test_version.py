@@ -17,4 +17,4 @@ def test_repository_version_is_semver_like_string() -> None:
 
 def test_current_versions_match_expected_skeleton_version() -> None:
     assert CANON_VERSION == "0.1.0"
-    assert REPOSITORY_VERSION == "0.1.0"
+    assert REPOSITORY_VERSION == "0.2.0"

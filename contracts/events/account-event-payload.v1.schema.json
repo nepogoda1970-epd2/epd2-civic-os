@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/account-event-payload.v1.schema.json",
+  "title": "Account Service event payload (v1)",
+  "description": "Payload shape shared by account.created, account.restricted, account.suspended, account.closed (docs/canonical/TZ-00-domain-event-canon.md, section 20.1; event names via ADR-002). Produced by epd2_account_service.events.build_account_event. Wraps into the canonical envelope's `payload` field (see event-envelope.schema.json).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["account_id", "account_status"],
+  "properties": {
+    "account_id": { "type": "string", "format": "uuid" },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "restricted",
+        "suspended",
+        "recovery_pending",
+        "closed"
+      ]
+    }
+  }
+}

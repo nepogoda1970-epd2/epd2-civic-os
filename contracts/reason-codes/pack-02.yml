@@ -1,0 +1,492 @@
+# Centralized PACK-02 reason-code registry (pack section 10).
+#
+# This is the single source of truth for every `reason_code` string
+# literal used anywhere in `services/*/src` and `packages/python/epd2-core`.
+# No service may use a free-text string in place of a registered code
+# (canon section 24: "reason code не заменяется свободным текстом").
+#
+# `source: canon` entries are copied verbatim from
+# `docs/canonical/TZ-00-domain-event-canon.md`, section 24, canon version
+# 0.1.0 - their meaning must never be changed here without a canon ADR and
+# version bump. `source: pack-02-adr-004` entries are additive codes
+# introduced by this pack, documented and justified in
+# `docs/adr/ADR-004-reason-code-registry.md`; they are backward-compatible
+# additions (canon section 25's "Minor" category) and change no existing
+# canon code's meaning. See ADR-004 for the full rationale, including a
+# real mislabeling bug (three exceptions that reused an unrelated canon
+# code for a plain lookup-miss) found and fixed while assembling this
+# registry.
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+# Validated structurally against `epd2_core.minimal_json_schema` in
+# `tests/contract/test_reason_codes_registry.py` (Task 20), which also
+# scans all five services' source for `reason_code`/`reason_codes`
+# literals and asserts every one is registered here.
+
+# --- Canon section 24 codes (verbatim list, source: canon 0.1.0) ---
+
+- code: IDENTITY_NOT_VERIFIED
+  meaning: >-
+    A downstream check (eligibility evaluation, credential issuance)
+    requires a verified IdentityRecord, but the referenced identity has not
+    passed verification.
+  severity: error
+  description: Your identity has not been verified yet, so this action cannot proceed.
+  retryable: true
+  owner: Identity Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: IDENTITY_VERIFICATION_EXPIRED
+  meaning: >-
+    An IdentityRecord's verification has expired (naturally, or via an
+    explicit revocation mapped onto this event per ADR-002) and can no
+    longer be relied on by downstream contexts.
+  severity: error
+  description: Your identity verification has expired and needs to be renewed.
+  retryable: true
+  owner: Identity Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: ELIGIBILITY_NOT_MET
+  meaning: >-
+    An EligibilityDecision was evaluated against a rule that exists, and
+    the subject's claims did not satisfy the rule's requirements.
+  severity: error
+  description: You do not currently meet the eligibility requirements for this action.
+  retryable: false
+  owner: Eligibility Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: ELIGIBILITY_PENDING
+  meaning: >-
+    An EligibilityDecision could not be determined automatically (required
+    claims were missing or incomplete) and requires manual review.
+  severity: warning
+  description: Your eligibility is pending manual review.
+  retryable: true
+  owner: Eligibility Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: CREDENTIAL_EXPIRED
+  meaning: A ParticipationCredential was presented for validation after its expires_at.
+  severity: error
+  description: This credential has expired.
+  retryable: false
+  owner: Credential Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: CREDENTIAL_ALREADY_USED
+  meaning: >-
+    A single-use (or usage-limited) ParticipationCredential was presented
+    again after its usage_limit was already reached.
+  severity: error
+  description: This credential has already been used.
+  retryable: false
+  owner: Credential Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: CREDENTIAL_SCOPE_MISMATCH
+  meaning: >-
+    A ParticipationCredential was presented for a scope_type/scope_id that
+    does not match the scope it was actually issued for.
+  severity: error
+  description: This credential is not valid for the requested scope.
+  retryable: false
+  owner: Credential Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The requesting actor is not authorized to perform the requested
+    command, in any bounded context.
+  severity: error
+  description: You do not have permission to perform this action.
+  retryable: false
+  owner: shared (all bounded contexts)
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: ROLE_CONFLICT
+  meaning: An actor's assigned roles conflict in a way that forbids the requested action.
+  severity: error
+  description: Your current roles conflict and prevent this action.
+  retryable: false
+  owner: Organization Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: BALLOT_NOT_OPEN
+  meaning: An action was attempted against a Ballot that is not currently open for voting.
+  severity: error
+  description: This ballot is not currently open.
+  retryable: true
+  owner: Voting Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: BALLOT_ALREADY_CLOSED
+  meaning: An action was attempted against a Ballot that has already closed.
+  severity: error
+  description: This ballot has already closed.
+  retryable: false
+  owner: Voting Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: BALLOT_CONFIGURATION_LOCKED
+  meaning: >-
+    A change was attempted to a Ballot's configuration after it opened
+    (canon INV-06 / CT-00-10 rule freeze).
+  severity: error
+  description: This ballot's configuration is locked and can no longer be changed.
+  retryable: false
+  owner: Voting Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: DUPLICATE_SUPPORT
+  meaning: The same subject attempted to support the same initiative more than once.
+  severity: error
+  description: You have already supported this initiative.
+  retryable: false
+  owner: Initiative Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: DUPLICATE_VOTE
+  meaning: The same subject attempted to cast a vote on the same ballot more than once.
+  severity: error
+  description: You have already voted on this ballot.
+  retryable: false
+  owner: Voting Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: DELEGATION_CYCLE
+  meaning: The requested delegation would create a cycle in the delegation graph.
+  severity: error
+  description: This delegation would create a circular chain and cannot be created.
+  retryable: false
+  owner: Delegation Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: DELEGATION_EXPIRED
+  meaning: A Delegation was presented or relied upon after its validity period ended.
+  severity: error
+  description: This delegation has expired.
+  retryable: true
+  owner: Delegation Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: MODERATION_POLICY_VIOLATION
+  meaning: Content or an action violated a moderation policy.
+  severity: error
+  description: This violates the applicable moderation policy.
+  retryable: false
+  owner: Moderation Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: APPEAL_DEADLINE_EXPIRED
+  meaning: An Appeal was submitted after its allowed deadline.
+  severity: error
+  description: The deadline to appeal this decision has passed.
+  retryable: false
+  owner: Moderation Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: EVENT_VERSION_UNSUPPORTED
+  meaning: >-
+    An event or credential carried a major version this reader/validator
+    does not support.
+  severity: error
+  description: This request uses a version that is no longer supported.
+  retryable: false
+  owner: shared (event envelope, all bounded contexts)
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: INTEGRITY_CHECK_FAILED
+  meaning: >-
+    A structural or cryptographic integrity check failed (payload hash
+    mismatch, signature mismatch, or equivalent).
+  severity: critical
+  description: An integrity check failed for this request.
+  retryable: false
+  owner: Audit Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: SERVICE_STATE_READ_ONLY
+  meaning: The service (or a subsystem of it) is temporarily in a read-only state.
+  severity: warning
+  description: This service is temporarily read-only; please try again later.
+  retryable: true
+  owner: Governance Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+- code: EMERGENCY_FREEZE_ACTIVE
+  meaning: An EmergencyAction freeze is active and forbids the requested operation (CT-00-12).
+  severity: critical
+  description: An emergency freeze is currently active; this action is temporarily unavailable.
+  retryable: true
+  owner: Governance Context
+  introduced_in_version: "0.1.0"
+  source: canon
+
+# --- PACK-02 additive codes (source: pack-02-adr-004, see ADR-004) ---
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: >-
+    A status/verification-status/decision-value string outside the
+    entity's defined enum was supplied (CT-00-02).
+  severity: error
+  description: The status value provided is not recognized.
+  retryable: false
+  owner: shared (account-service, identity-service, eligibility-service, credential-service)
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: >-
+    The requested status transition is not present in the entity's
+    allowed-transition table (CT-00-03).
+  severity: error
+  description: This status change is not allowed from the entity's current status.
+  retryable: false
+  owner: shared (account-service, identity-service, credential-service)
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    No entity exists for the given identifier (a plain lookup miss),
+    distinct from any business-rule refusal on a record that does exist.
+    Introduced by ADR-004 to replace three exceptions that had mistakenly
+    reused IDENTITY_NOT_VERIFIED, ELIGIBILITY_NOT_MET, and the
+    non-existent CREDENTIAL_UNKNOWN_STATUS for this same lookup-miss case.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: shared (identity-service, eligibility-service, credential-service)
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: AUDIT_EVENT_CONFLICT
+  meaning: >-
+    An audit-event append request reused an existing audit_event_id with
+    different caller-controlled content (pack section 9.3, CT-00-04
+    analogue for the audit log).
+  severity: critical
+  description: This audit event conflicts with a previously recorded event of the same ID.
+  retryable: false
+  owner: audit-core
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: AUDIT_CHAIN_BROKEN
+  meaning: >-
+    Hash-chain verification detected a mismatch between a stored event's
+    recomputed hash and its recorded hash, or a broken previous_hash link
+    (pack section 9.2, INV-05).
+  severity: critical
+  description: The audit log's integrity chain is broken.
+  retryable: false
+  owner: audit-core
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_DUPLICATE_ISSUANCE_CONFLICT
+  meaning: >-
+    A repeated issuance request reused an existing credential_id with
+    different content (CT-00-04 analogue for credential issuance).
+  severity: error
+  description: A credential with this identifier already exists with different content.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_REVOKED
+  meaning: A ParticipationCredential was presented for validation after being revoked.
+  severity: error
+  description: This credential has been revoked.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_RULE_VERSION_MISMATCH
+  meaning: >-
+    A ParticipationCredential's rule_version does not match the
+    rule_version expected by the validating caller.
+  severity: error
+  description: This credential was issued against a different rule version than expected.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_DIGEST_MISMATCH
+  meaning: >-
+    A ParticipationCredential's eligibility_snapshot_digest does not match
+    the digest expected by the validating caller.
+  severity: error
+  description: This credential's eligibility snapshot digest does not match.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_REQUIRED_FIELD_MISSING
+  meaning: >-
+    A ParticipationCredential is missing a field required for validation
+    (e.g. an empty eligibility_snapshot_digest).
+  severity: error
+  description: This credential is missing a field required for validation.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: ELIGIBILITY_RULE_VERSION_FROZEN
+  meaning: >-
+    A caller attempted to re-submit an existing
+    (eligibility_rule_id, rule_version) pair with different content
+    (canon section 9.1 rule-freeze requirement).
+  severity: error
+  description: This rule version is frozen and cannot be changed.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: CREDENTIAL_ISSUED
+  meaning: >-
+    AuditEvent.reason_code classification for a successfully issued
+    ParticipationCredential (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: A participation credential was issued.
+  retryable: false
+  owner: credential-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: IDENTITY_VERIFIED
+  meaning: >-
+    AuditEvent.reason_code classification for a successful identity
+    verification (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: An identity was successfully verified.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: IDENTITY_VERIFICATION_STARTED
+  meaning: >-
+    AuditEvent.reason_code classification for the creation of a new
+    IdentityRecord in pending status (INV-04 audit trail; no refusal
+    occurred).
+  severity: info
+  description: An identity verification process was started.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: IDENTITY_VERIFICATION_REVOKED
+  meaning: >-
+    AuditEvent.reason_code classification for an explicit administrative
+    revocation of a verified IdentityRecord, distinct from a
+    system-detected natural expiry. Both map to the same canonical
+    `identity.verification_expired` event per ADR-002 (canon defines no
+    separate revocation event), but the audit trail's reason_code
+    preserves the distinction the event name cannot.
+  severity: warning
+  description: An identity verification was explicitly revoked.
+  retryable: true
+  owner: identity-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: IDENTITY_DUPLICATE_SUSPECTED
+  meaning: >-
+    AuditEvent.reason_code classification for an IdentityRecord
+    transitioning to duplicate_suspected (a possible duplicate identity
+    was detected during verification).
+  severity: warning
+  description: A possible duplicate identity was detected.
+  retryable: true
+  owner: identity-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: IDENTITY_MANUAL_REVIEW_REQUIRED
+  meaning: >-
+    AuditEvent.reason_code classification for an IdentityRecord
+    transitioning to manual_review_required.
+  severity: warning
+  description: This identity verification requires manual review.
+  retryable: true
+  owner: identity-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: ELIGIBILITY_MET
+  meaning: >-
+    AuditEvent.reason_code classification for an eligibility decision that
+    resulted in ELIGIBLE (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: An eligibility decision resulted in a positive determination.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: ELIGIBILITY_SNAPSHOT_CREATED
+  meaning: >-
+    AuditEvent.reason_code classification for the creation of an
+    EligibilitySnapshot (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: An eligibility snapshot was created.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: ACCOUNT_CREATED
+  meaning: >-
+    AuditEvent.reason_code classification for the creation of a new
+    Account (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: An account was created.
+  retryable: false
+  owner: account-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004
+
+- code: ACCOUNT_STATUS_CHANGED
+  meaning: >-
+    AuditEvent.reason_code classification for an Account status transition
+    that reaches a canonical event (INV-04 audit trail; no refusal
+    occurred). The specific transition is carried by AuditEvent.event_type;
+    this code intentionally covers every transition rather than one code
+    per transition.
+  severity: info
+  description: An account's status was changed.
+  retryable: false
+  owner: account-service
+  introduced_in_version: "pack-02-0.1.0"
+  source: pack-02-adr-004

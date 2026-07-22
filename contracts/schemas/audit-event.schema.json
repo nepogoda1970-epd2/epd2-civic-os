@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/audit-event.schema.json",
+  "title": "AuditEvent",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 18.1. Owned by audit-core (epd2_audit_core.domain.AuditEvent). Append-only, sequentially hash-chained (previous_event_hash/event_hash, ADR-003) - ordinary API access can never update or delete a recorded instance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "audit_event_id",
+    "event_type",
+    "occurred_at",
+    "recorded_at",
+    "actor_id",
+    "actor_type",
+    "target_type",
+    "target_id",
+    "action",
+    "reason_code",
+    "policy_version",
+    "before_hash",
+    "after_hash",
+    "correlation_id",
+    "source_service",
+    "previous_event_hash",
+    "event_hash"
+  ],
+  "properties": {
+    "audit_event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "minLength": 1 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "actor_id": { "type": "string", "format": "uuid" },
+    "actor_type": { "type": "string", "minLength": 1 },
+    "target_type": { "type": "string", "minLength": 1 },
+    "target_id": { "type": "string", "format": "uuid" },
+    "action": { "type": "string", "minLength": 1 },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "before_hash": { "type": "string" },
+    "after_hash": { "type": "string" },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "source_service": { "type": "string", "minLength": 1 },
+    "previous_event_hash": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "event_hash": { "type": "string", "minLength": 64, "maxLength": 64 }
+  }
+}

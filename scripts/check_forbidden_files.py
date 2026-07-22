@@ -10,6 +10,20 @@ must not contain: `.env`, private keys, files named `id_rsa` / `id_ed25519`,
 `.venv`, `__pycache__`, `.DS_Store`, real database files, or archives with
 unknown contents.
 
+Per CLAUDE-PACK-02 section 15, this also checks for the absence of a
+forbidden central identity-participation mapping table or file: a filename
+that names an identity/person entity together with a credential,
+participation, or account entity *and* an explicit "map"/"link"/"join"-style
+word (e.g. `identity_credential_map.py`, `person_participation_link.json`).
+This is a structural, filename-based heuristic only - it cannot detect a
+mapping expressed purely as runtime data or as a column pairing inside an
+otherwise innocuously-named file, but it catches the concrete, statically
+detectable case the pack asks for. It is deliberately narrow (requires a
+link-style word) so it does not flag legitimate schema/service files that
+merely mention both an identity term and a credential/participation term,
+such as `contracts/schemas/participation-credential.schema.json` (the
+ParticipationCredential schema, not a mapping table).
+
 This check is git-aware: it evaluates the set of paths that are tracked, or
 would be trackable (untracked and not `.gitignore`-excluded), via
 `git ls-files --cached --others --exclude-standard`. This matters because
@@ -81,6 +95,25 @@ def _is_allowed_pem_fixture(rel_posix: str) -> bool:
     return any(rel_posix.startswith(f"{allowed}/") for allowed in ALLOWED_PEM_FIXTURE_DIRS)
 
 
+# CLAUDE-PACK-02 section 15: forbidden central identity-participation
+# mapping table/file, detected by filename. A match requires an identity
+# term, a participation-adjacent term, AND an explicit link/mapping word -
+# all three - so ordinary schema/service filenames that merely mention two
+# domain nouns (e.g. `participation-credential.schema.json`) are never
+# flagged.
+_IDENTITY_TERMS = ("identity", "person")
+_PARTICIPATION_TERMS = ("participation", "credential", "account")
+_LINK_TERMS = ("map", "mapping", "link", "linkage", "join", "bridge")
+
+
+def _is_forbidden_identity_link_filename(name: str) -> bool:
+    lower = name.lower()
+    has_identity = any(term in lower for term in _IDENTITY_TERMS)
+    has_participation = any(term in lower for term in _PARTICIPATION_TERMS)
+    has_link = any(term in lower for term in _LINK_TERMS)
+    return has_identity and has_participation and has_link
+
+
 def _git_trackable_paths(root: Path) -> list[str] | None:
     """Return git-relative paths that are tracked or trackable (untracked
     and not gitignored), or None if `root` is not a git repository / git is
@@ -148,6 +181,10 @@ def find_forbidden_paths(root: Path) -> list[str]:
             continue
 
         if name in FORBIDDEN_FILE_NAMES:
+            found.add(rel_posix)
+            continue
+
+        if _is_forbidden_identity_link_filename(name):
             found.add(rel_posix)
             continue
 

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/eligibility-decision.schema.json",
+  "title": "EligibilityDecision",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 9.2 (plus pack-additive correlation_id/evaluator_version/evaluated_claims fields, ADR-002). Owned by eligibility-service (epd2_eligibility_service.domain.EligibilityDecision). Never imports or references IdentityRecord (structural boundary, see services/eligibility-service/README.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eligibility_decision_id",
+    "subject_reference",
+    "process_id",
+    "eligibility_rule_id",
+    "rule_version",
+    "decision",
+    "reason_codes",
+    "evaluated_at",
+    "expires_at",
+    "correlation_id",
+    "evaluator_version",
+    "evaluated_claims"
+  ],
+  "properties": {
+    "eligibility_decision_id": { "type": "string", "format": "uuid" },
+    "subject_reference": { "type": "string", "format": "uuid" },
+    "process_id": { "type": "string", "format": "uuid" },
+    "eligibility_rule_id": { "type": "string", "format": "uuid" },
+    "rule_version": { "type": "integer" },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "not_eligible",
+        "pending",
+        "expired",
+        "manual_review_required"
+      ]
+    },
+    "reason_codes": { "type": "array", "items": { "type": "string" } },
+    "evaluated_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "evaluator_version": { "type": "string", "minLength": 1 },
+    "evaluated_claims": { "type": "object" }
+  }
+}

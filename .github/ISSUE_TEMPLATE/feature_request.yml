@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose a new feature or enhancement within the current architecture.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-scope
+    attributes:
+      label: Proposed scope
+    validations:
+      required: true
+  - type: input
+    id: affected-module
+    attributes:
+      label: Affected module
+    validations:
+      required: true
+  - type: textarea
+    id: canon-impact
+    attributes:
+      label: Canon impact
+      description: Does this require any change to docs/canonical/TZ-00-domain-event-canon.md? If so, use the "Architecture change" template instead.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true

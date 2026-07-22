@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/identity-event-payload.v1.schema.json",
+  "title": "Identity Service event payload (v1)",
+  "description": "Payload shape shared by identity.verification_started, identity.verified, identity.verification_failed, identity.duplicate_suspected, identity.manual_review_required, identity.verification_expired (docs/canonical/TZ-00-domain-event-canon.md, section 20.2; identity.verification_expired's dual natural-expiry/revocation mapping per ADR-002). Produced by epd2_identity_service.events.build_identity_event. Deliberately minimal (not the full IdentityRecord state - see epd2_identity_service.events.identity_record_payload for that).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity_record_id",
+    "account_id",
+    "verification_status",
+    "verification_level"
+  ],
+  "properties": {
+    "identity_record_id": { "type": "string", "format": "uuid" },
+    "account_id": { "type": "string", "format": "uuid" },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "failed",
+        "expired",
+        "duplicate_suspected",
+        "manual_review_required"
+      ]
+    },
+    "verification_level": { "type": "string", "minLength": 1 }
+  }
+}

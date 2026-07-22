@@ -12,17 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Expand PACK-02 verification candidate
-        shell: bash
-        run: |
-          unzip -q -o epd2-civic-os-PACK-02-verification-candidate-v2.zip -d .
-          git rm -f --ignore-unmatch \
-            epd2-civic-os-PACK-02-verification-candidate.zip \
-            epd2-civic-os-PACK-02-verification-candidate-v2.zip
 
-          
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -37,7 +29,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Generate Python lock file
         run: uv lock
@@ -45,30 +36,28 @@ jobs:
       - name: Install Python dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Install Node dependencies
-        run: npm ci
-      - name: Format PACK-02 files
-        run: npx prettier --write .
+      - name: Generate Node lock file and install dependencies
+        run: npm install
+
       - name: Run full verification
         id: verify
         continue-on-error: true
-        shell: bash
         run: |
           set -o pipefail
-          make verify 2>&1 | tee PACK-02-VERIFICATION.log
+          make verify 2>&1 | tee VERIFICATION.log
 
-      - name: Write verification result
+      - name: Write verification status
         if: always()
         shell: bash
         run: |
           if [ "${{ steps.verify.outcome }}" = "success" ]; then
-            STATUS="PACK-02 PASS"
+            STATUS="PASS"
           else
-            STATUS="PACK-02 FAIL"
+            STATUS="FAIL"
           fi
 
           {
-            echo "# PACK-02 Verification"
+            echo "# Verification Result"
             echo
             echo "Status: **${STATUS}**"
             echo
@@ -76,33 +65,29 @@ jobs:
             echo "Python: 3.12"
             echo "Node.js: 22"
             echo
-            echo "Full log: PACK-02-VERIFICATION.log"
-          } > PACK-02-RESULT.md
+            echo "This workflow is pack-agnostic: it verifies whatever pack(s)"
+            echo "are implemented in the checked-out tree at run time (see"
+            echo "docs/handover/ for the pack-specific report this run applies to)."
+          } > VERIFICATION-RESULT.md
 
       - name: Create result archive
         if: always()
-        shell: bash
         run: |
-          rm -rf .venv
-          rm -rf node_modules
+          rm -rf .venv node_modules
           rm -rf frontend/web-shell/node_modules
           rm -rf frontend/web-shell/.next
-          rm -rf .pytest_cache
-          rm -rf .mypy_cache
-          rm -rf .ruff_cache
-
-          zip -r epd2-civic-os-PACK-02-result.zip . \
+          zip -r epd2-civic-os-verification-result.zip . \
             -x ".git/*" \
-            -x "epd2-civic-os-PACK-02-result.zip"
+            -x "epd2-civic-os-verification-result.zip"
 
       - name: Upload result archive
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: epd2-civic-os-PACK-02-result
-          path: epd2-civic-os-PACK-02-result.zip
+          name: epd2-civic-os-verification-result
+          path: epd2-civic-os-verification-result.zip
           retention-days: 14
 
-      - name: Fail workflow when verification failed
+      - name: Mark workflow failed when verification failed
         if: steps.verify.outcome != 'success'
         run: exit 1

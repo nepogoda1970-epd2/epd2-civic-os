@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/eligibility-snapshot-created-payload.v1.schema.json",
+  "title": "eligibility.snapshot_created event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.3. Produced by epd2_eligibility_service.events.build_snapshot_created_event.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eligibility_snapshot_id",
+    "eligibility_rule_id",
+    "rule_version",
+    "eligible_count",
+    "digest"
+  ],
+  "properties": {
+    "eligibility_snapshot_id": { "type": "string", "format": "uuid" },
+    "eligibility_rule_id": { "type": "string", "format": "uuid" },
+    "rule_version": { "type": "integer" },
+    "eligible_count": { "type": "integer" },
+    "digest": { "type": "string", "minLength": 64 }
+  }
+}
