@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12
@@ -29,6 +29,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
       - name: Generate Python lock file
         run: uv lock
@@ -36,74 +37,63 @@ jobs:
       - name: Install Python dependencies
         run: uv sync --all-groups --frozen
 
-      - name: Generate Node lock file and install dependencies
-        run: npm install
-      - name: Restore required repository structure
-        run: |
-          mkdir -p .github/workflows
-          mkdir -p .github/ISSUE_TEMPLATE
-          mkdir -p contracts/openapi
-          mkdir -p contracts/events
-          mkdir -p contracts/schemas
-          mkdir -p contracts/fixtures
+      - name: Install Node dependencies
+        run: npm ci
 
-          touch .github/workflows/ci.yml
-          touch .github/pull_request_template.md
-          touch .github/ISSUE_TEMPLATE/bug_report.yml
-          touch .github/ISSUE_TEMPLATE/feature_request.yml
-          touch .github/ISSUE_TEMPLATE/architecture_change.yml
-
-          touch contracts/openapi/.gitkeep
-          touch contracts/events/.gitkeep
-          touch contracts/schemas/.gitkeep
-          touch contracts/fixtures/.gitkeep
-      - name: Fix canonical document formatting
-        run: npx prettier --write docs/canonical/TZ-00-domain-event-canon.md
       - name: Run full verification
         id: verify
         continue-on-error: true
+        shell: bash
         run: |
           set -o pipefail
-          make verify 2>&1 | tee PACK-01-VERIFICATION.log
+          make verify 2>&1 | tee PACK-02-VERIFICATION.log
 
-      - name: Write verification status
+      - name: Write verification result
         if: always()
         shell: bash
         run: |
           if [ "${{ steps.verify.outcome }}" = "success" ]; then
-            STATUS="PACK-01 PASS"
+            STATUS="PACK-02 PASS"
           else
-            STATUS="PACK-01 FAIL"
+            STATUS="PACK-02 FAIL"
           fi
 
           {
-            echo "# PACK-01 Verification"
+            echo "# PACK-02 Verification"
             echo
             echo "Status: **${STATUS}**"
             echo
             echo "Runner: GitHub Actions / ubuntu-latest"
             echo "Python: 3.12"
             echo "Node.js: 22"
-          } > PACK-01-RESULT.md
+            echo
+            echo "Full log: PACK-02-VERIFICATION.log"
+          } > PACK-02-RESULT.md
 
       - name: Create result archive
         if: always()
+        shell: bash
         run: |
-          rm -rf .venv node_modules
+          rm -rf .venv
+          rm -rf node_modules
           rm -rf frontend/web-shell/node_modules
           rm -rf frontend/web-shell/.next
-          zip -r epd2-civic-os-PACK-01-result.zip . \
+          rm -rf .pytest_cache
+          rm -rf .mypy_cache
+          rm -rf .ruff_cache
+
+          zip -r epd2-civic-os-PACK-02-result.zip . \
             -x ".git/*" \
-            -x "epd2-civic-os-PACK-01-result.zip"
+            -x "epd2-civic-os-PACK-02-result.zip"
 
       - name: Upload result archive
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: epd2-civic-os-PACK-01-result
-          path: epd2-civic-os-PACK-01-result.zip
+          name: epd2-civic-os-PACK-02-result
+          path: epd2-civic-os-PACK-02-result.zip
           retention-days: 14
 
-      - name: Mark workflow failed when verification failed
+      - name: Fail workflow when verification failed
         if: steps.verify.outcome != 'success'
         run: exit 1
