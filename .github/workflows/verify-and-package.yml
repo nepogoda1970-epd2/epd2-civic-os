@@ -26,14 +26,26 @@ jobs:
           from pathlib import Path
 
           path = Path("tests/contract/test_property_based.py")
-          text = path.read_text(encoding="utf-8")
-          old = 'alphabet=st.characters(whitelist_categories=("Ll",)),'
-          new = 'alphabet=st.characters(whitelist_categories=("Ll",)),  # type: ignore[arg-type]'
+          lines = path.read_text(encoding="utf-8").splitlines()
 
-          if old not in text:
-              raise SystemExit("Target line not found in test_property_based.py")
+          matches = [
+              index
+              for index, line in enumerate(lines)
+              if "whitelist_categories=" in line
+          ]
 
-          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          if len(matches) != 1:
+              raise SystemExit(
+                  f"Expected exactly one whitelist_categories line, found {len(matches)}"
+              )
+
+          index = matches[0]
+          marker = "# type: ignore[arg-type]"
+
+          if marker not in lines[index]:
+              lines[index] = f"{lines[index]}  {marker}"
+
+          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
