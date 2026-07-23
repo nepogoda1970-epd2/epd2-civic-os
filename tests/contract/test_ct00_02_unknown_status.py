@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from enum import Enum
+from typing import Protocol, runtime_checkable
 
 import pytest
 
@@ -107,6 +108,33 @@ def test_credential_unknown_status_is_rejected() -> None:
 # =============================================================================
 
 
+@runtime_checkable
+class _ReasonCodedError(Protocol):
+    """Structural protocol used to narrow a caught, generically-typed
+    exception before accessing its `reason_code` attribute.
+
+    `expected_exception` below is intentionally typed as the generic
+    `type[Exception]` - the 18 `Unknown*Error` classes in
+    `_PACK03_PARSE_CASES` span six different services' `exceptions`
+    modules and share no common concrete base beyond `ValueError`, so a
+    single parametrized test cannot name one concrete exception type.
+    Each of those classes does declare a class-level `reason_code: str`
+    attribute (every service's `exceptions.py` module docstring says so),
+    but a plain `Exception` does not, so `excinfo.value.reason_code`
+    fails mypy's `attr-defined` check once real pytest type stubs are
+    installed (this is invisible in a sandbox where `pytest` falls back
+    to `ignore_missing_imports`, per this project's mypy config, and
+    surfaced only on external GitHub Actions verification with pytest
+    genuinely installed). `isinstance(error, _ReasonCodedError)` performs
+    a real runtime check for the attribute's presence
+    (`@runtime_checkable` protocols check `hasattr` for every declared
+    member, not just methods) and narrows `error`'s static type for the
+    following line - not a blanket `# type: ignore`, and no weakening of
+    the assertion this test makes."""
+
+    reason_code: str
+
+
 #: (parse_fn, expected_exception_type) for all 18 PACK-03 enums across the
 #: six new services: initiative-service (4), deliberation-service (3),
 #: moderation-service (3), voting-service (4), tally-service (3),
@@ -143,4 +171,6 @@ def test_pack03_unknown_enum_value_is_rejected(
 ) -> None:
     with pytest.raises(expected_exception) as excinfo:
         parse_fn("not_a_real_value")
-    assert excinfo.value.reason_code == "VALIDATION_UNKNOWN_STATUS"
+    error = excinfo.value
+    assert isinstance(error, _ReasonCodedError)
+    assert error.reason_code == "VALIDATION_UNKNOWN_STATUS"

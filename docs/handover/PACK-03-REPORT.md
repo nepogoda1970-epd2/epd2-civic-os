@@ -1,10 +1,15 @@
 # CLAUDE-PACK-03 — Participation and Decision Kernel: Handover Report
 
+**Revision 2.** Revision 1's local-only verification was followed by a
+real external GitHub Actions run, which found one genuine mypy error
+(section 0a). That error is now fixed at the source and the full local
+verification suite was re-run clean.
+
 ```text
-PACK-03: LOCAL VERIFICATION PASS — full PASS pending GitHub Actions
-network-dependent steps (uv.lock / package-lock.json regeneration,
-hypothesis-gated property tests, npm install / ESLint / TypeScript
-build)
+PACK-03: LOCAL VERIFICATION PASS (revision 2) — full PASS pending
+GitHub Actions network-dependent steps (uv.lock / package-lock.json
+regeneration, hypothesis-gated property tests, npm install / ESLint /
+TypeScript build)
 ```
 
 Per this pack's own instruction ("do not mark PASS if network-dependent
@@ -22,6 +27,85 @@ stated remaining step is the same one PACK-02 ultimately took: run
 `.github/workflows/verify-and-package.yml` on GitHub Actions with real
 network access, then diff the returned tree against the sent tree
 file-by-file before accepting it.
+
+## 0a. External verification finding and fix (revision 2)
+
+External verification on GitHub Actions (running against the revision-1
+candidate archive) reported one real mypy error, with everything before
+it in the pipeline (Ruff format, Prettier, Ruff lint, frontend ESLint,
+mypy for `epd2-core`/`scripts`/`tests/repository`/`conftest.py`) already
+passing:
+
+```text
+tests/contract/test_ct00_02_unknown_status.py:146: error: "Exception"
+has no attribute "reason_code"  [attr-defined]
+```
+
+Root cause: `test_pack03_unknown_enum_value_is_rejected` is one
+parametrized test covering all 18 PACK-03 status/value enums'
+`Unknown*Error` exception classes across six services — those classes
+share no common concrete base beyond `ValueError`, so the test parameter
+`expected_exception` is typed as the generic `type[Exception]`. Passing
+that generic type into `pytest.raises(expected_exception)` makes
+`excinfo.value` resolve to plain `Exception`, which has no
+`reason_code` attribute — only the concrete `Unknown*Error` subclasses
+do. This is genuinely invisible in this sandbox: the project's own mypy
+config carries `ignore_missing_imports = true` for `pytest`/`_pytest.*`
+(documented in `pyproject.toml`, originally added because this sandbox's
+standalone mypy tool has no `pytest` installed to find real stubs for),
+so locally `pytest.raises(...)` resolves to `Any` and the attribute
+access never gets checked at all — the same category of "invisible
+locally, real once genuine stubs are installed" gap
+`docs/handover/PACK-02-REPORT.md` section 0d already documented for
+Hypothesis.
+
+Fixed at the source, with no blanket `# type: ignore` and no relaxed
+mypy setting: added a `@runtime_checkable` `Protocol` (`_ReasonCodedError`,
+declaring `reason_code: str`) to
+`tests/contract/test_ct00_02_unknown_status.py`, and narrowed the caught
+exception against it before accessing the attribute:
+
+```python
+error = excinfo.value
+assert isinstance(error, _ReasonCodedError)
+assert error.reason_code == "VALIDATION_UNKNOWN_STATUS"
+```
+
+This is option 2 of the two the pack's own instruction allowed ("narrow
+the caught exception before accessing `reason_code`") — option 1 (naming
+one concrete exception type per case) was not available without
+introducing a new shared exception base class across eleven services'
+`exceptions.py` modules, a materially larger and riskier change than this
+test file needed. The `isinstance()` check is a genuine runtime
+assertion, not a no-op: `@runtime_checkable` protocols check for the
+declared attribute's actual presence on the instance
+(`hasattr`-equivalent, confirmed directly this pass with a throwaway
+script — a plain `ValueError` without `reason_code` correctly fails the
+isinstance check), so if any of the 18 `Unknown*Error` classes ever
+stopped declaring `reason_code`, this test would fail loudly rather than
+silently pass. Mypy narrows `error`'s static type to a synthesized
+intersection of `Exception` and `_ReasonCodedError` after the assert
+(confirmed directly this pass via `reveal_type`), which is exactly what
+makes the following `.reason_code` access type-check. The assertion this
+test makes — that an unknown status value produces
+`reason_code == "VALIDATION_UNKNOWN_STATUS"` — is unchanged and still
+genuinely executed for all 18 cases.
+
+`.github/workflows/verify-and-package.yml` was not touched — the fix is
+entirely inside the one test file that had the bug. This sandbox still
+cannot install real `pytest`/`_pytest.*` stubs to reproduce CI's exact
+failure locally (same root cause as the bug itself), so this fix was
+verified as far as this environment allows: `mypy tests/contract` still
+reports "Success: no issues found in 18 source files" (unchanged — this
+sandbox's config never saw the error in the first place), and a
+standalone, throwaway repro file using a hand-written `Exception`-typed
+variable (not going through `pytest.raises`, to sidestep the
+`ignore_missing_imports` masking) confirmed both halves directly:
+accessing `.reason_code` on a bare `Exception`-typed variable fails
+`attr-defined` exactly as CI reported, and the same access after
+`assert isinstance(error, _ReasonCodedError)` type-checks cleanly with
+mypy narrowing to the intersection type. Full confirmation that the real
+CI error is gone requires the next external GitHub Actions run.
 
 ## 0. What CLAUDE-PACK-03 adds
 
@@ -227,6 +311,15 @@ section 3); `frontend/web-shell/`; any of the five PACK-02 services'
 `src/` (only `eligibility-service/application.py` gained the two new
 read functions above — no existing PACK-02 behavior was altered).
 
+Changed in revision 2 (section 0a):
+
+- `tests/contract/test_ct00_02_unknown_status.py` — added a
+  `@runtime_checkable` `Protocol` (`_ReasonCodedError`) and narrowed
+  `test_pack03_unknown_enum_value_is_rejected`'s caught exception against
+  it via `isinstance()` before accessing `.reason_code`, fixing the one
+  real mypy error external GitHub Actions verification found.
+- `docs/handover/PACK-03-REPORT.md` — this revision.
+
 ## 5. Gaps found and fixed during this pass's own verification
 
 Recorded here in full, per this pack's demand for honest verification,
@@ -290,6 +383,11 @@ ContributionType)`. Fixed by narrowing with explicit
    after (section 2).
 
 ## 6. Commands executed this pass, and results
+
+### Revision 2 re-verification (current, source of truth)
+
+Full local verification suite re-run end to end after the section 0a
+fix, from a clean state:
 
 ```text
 ✅ sha256(docs/canonical/TZ-00-domain-event-canon.md) unchanged:
@@ -362,6 +460,18 @@ ContributionType)`. Fixed by narrowing with explicit
    (both workspaces), npm run lint (frontend ESLint), npm run test (both
    workspaces), next build.
 ```
+
+### Revision 1's original verification (historical, for the record)
+
+Identical results to revision 2 above, except
+`tests/contract/test_ct00_02_unknown_status.py` did not yet have the
+section 0a fix — this sandbox's own `mypy tests/contract` run reported
+"Success: no issues found in 18 source files" then too (the bug was
+invisible locally both before and after the fix, section 0a), and the
+full local pytest count was the same 1518 passed / 3 skipped / 0 failed,
+since the fix changed only type annotations and an added runtime
+`isinstance` assertion that always evaluates `True` for every real
+`Unknown*Error` instance in this codebase — no test behavior changed.
 
 ### Why 3 tests are skipped, not failing
 
@@ -498,7 +608,7 @@ that all 65 actually-used PACK-03 codes are present in the registry.
 ## 11. Readiness conclusion
 
 ```text
-PACK-03: LOCAL VERIFICATION PASS
+PACK-03: LOCAL VERIFICATION PASS (revision 2)
 uv.lock / npm install: NOT YET REGENERATED (network-blocked, section 3)
 ```
 
@@ -516,6 +626,13 @@ was weakened, no empty file was written to satisfy a path requirement, no
 reason code was hidden, no identity field was stripped from a service's
 own contract to make a test pass, and no unlinkability claim is made
 without the automated test that backs it (section 9).
+
+This revision incorporates one real fix surfaced by external GitHub
+Actions verification — a generic-exception-typed attribute access in a
+parametrized contract test (section 0a) — closed with a precise,
+source-level, type-safe narrowing (`isinstance` against a
+`@runtime_checkable` `Protocol`), not a blanket suppression, and with
+`.github/workflows/verify-and-package.yml` left untouched.
 
 The one thing standing between this repository and PACK-03's full
 Definition of Done — exactly as PACK-02 documented and then closed — is a
