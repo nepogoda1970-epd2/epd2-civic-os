@@ -1,9 +1,9 @@
 # CLAUDE-PACK-04 — Transparency Context: Handover Report
 
-**Revision 2 — one real, external-CI-found Prettier formatting finding
-fixed (section 0a); external GitHub Actions confirmation of the
-resulting candidate is the one step this sandbox still cannot itself
-perform.**
+**Revision 3 — a second, real Prettier-relevant finding fixed (section
+0b: this report's own revision-1 text contained a markdown-mangled list
+item); external GitHub Actions confirmation of the resulting candidate
+is the one step this sandbox still cannot itself perform.**
 
 This report follows the same honesty convention
 `docs/handover/PACK-02-REPORT.md` and `docs/handover/PACK-03-REPORT.md`
@@ -77,6 +77,67 @@ paths, same canon checksum, same 1592 passed / 3 skipped / 0 failed,
 section 11) — proving the Prettier fix changed no logic, schema, test,
 or workflow behavior, exactly as this task's own instruction required.
 `.github/workflows/*.yml` was not touched.
+
+## 0b. External verification finding and fix (revision 3)
+
+External verification on GitHub Actions (running against the revision-2
+candidate archive, `epd2-civic-os-PACK-04-final-candidate-v2.zip`)
+reported Prettier still failing on exactly one file:
+`docs/handover/PACK-04-REPORT.md` — despite this sandbox's own
+`/opt/node22/bin/prettier --check .` reporting that same file clean
+after the section 0a fix.
+
+Root cause, found on direct inspection rather than assumed: this
+report's own revision-1 "Gaps found and fixed" section 5, item 3, was
+genuinely malformed markdown. A code span wrapping a literal double
+asterisk sat directly adjacent to other backtick-delimited terms with no
+separating space, and the list continuation lines lost their leading
+indentation and inter-word spacing entirely, with a literal backslash-
+escaped double asterisk appearing further down — verbatim, the broken
+text read (shown here as a plain code block, deliberately not inline
+markdown, so this description cannot reintroduce the same ambiguity it
+is describing):
+
+```text
+3. **`mypy` `**kwargs`unpacking against a`dict[str, object]`.**
+`test_publish_ledger_entry_is_idempotent_by_event_id`builds a`kwargs = dict(...)`of mixed-typed values (mirroring the identical
+...
+idempotency tests) and unpacks it twice with `\*\*kwargs`. mypy widens
+```
+
+A code span whose content begins with a double asterisk, sitting inside
+(or next to) a bold run, is a genuinely ambiguous construct for a
+markdown parser — different Prettier/remark versions can tokenize it
+differently, which is consistent with this sandbox's system Prettier
+(3.8.1) and CI's locked Prettier (`package-lock.json` pins `3.9.6`)
+disagreeing about how to normalize it, each producing output the other's
+`--check` would reject. This was a genuine authoring defect in this
+report's own prose, not something either Prettier version invented — no
+other file in the `docs/canonical/`, `docs/handover/`, `docs/adr/`,
+`docs/review/`, or `contracts/` trees, and no other list item in this
+same file, contains the same backtick-adjacency pattern (checked
+directly with a regex sweep for a closing backtick immediately followed
+by a letter, across every Markdown/JSON/YAML file this pack touched or
+otherwise scanned).
+
+Fixed at the source: rewrote the item 5.3 heading and body in plain,
+unambiguous prose — `**kwargs`, when mentioned, now appears only inside
+non-bold running text ("unpacks it twice via double-star (`**kwargs`)
+syntax"), never nested inside a bold span or jammed against another
+code span with no separating space. No logic, schema, test, workflow,
+or canon content changed — this is exclusively a correction to this
+report's own descriptive text about a mypy fix that was already applied
+correctly in `services/transparency-service/tests/test_application.py`
+in revision 1; nothing about that fix itself changed. Re-ran
+`/opt/node22/bin/prettier --write docs/handover/PACK-04-REPORT.md`
+(reported "unchanged" — the hand-rewritten text already matched
+Prettier's expected output), then `/opt/node22/bin/prettier --check .`
+and `npm run format:check` against the full tree (both clean), then the
+complete local verification suite end to end: results identical to
+revision 2 in every respect (305/305 required paths, canon checksum
+unchanged, Ruff clean, mypy clean across all fourteen scoped groups,
+1592 passed / 3 skipped / 0 failed, section 11). `.github/workflows/*.yml`
+was not touched.
 
 ## 0. What CLAUDE-PACK-04 adds
 
@@ -314,16 +375,17 @@ Changed:
    _is_ made (`list_by_target_types`, from
    `generate_audit_export_package`) and which four are sanctioned but
    not yet invoked.
-3. **`mypy` `**kwargs`unpacking against a`dict[str, object]`.**
-`test_publish_ledger_entry_is_idempotent_by_event_id`builds a`kwargs = dict(...)`of mixed-typed values (mirroring the identical
-pattern already used in`services/delegation-service`,
-`initiative-service`, `moderation-service`, and `tally-service`'s own
-idempotency tests) and unpacks it twice with `\*\*kwargs`. mypy widens
-the dict to `dict[str, object]`, which does not statically match
-`publish_ledger_entry`'s individually-typed keyword parameters. Fixed
-with the same `# type: ignore[arg-type]` on the two call sites the
-   four sibling services already use for this exact, harmless pattern —
-   not a blanket per-module or per-rule suppression.
+3. **`mypy` disagreeing with a keyword-argument dict unpack.**
+   `test_publish_ledger_entry_is_idempotent_by_event_id` builds a
+   `kwargs = dict(...)` of mixed-typed values (mirroring the identical
+   pattern already used in `services/delegation-service`,
+   `initiative-service`, `moderation-service`, and `tally-service`'s own
+   idempotency tests) and unpacks it twice via double-star (`**kwargs`)
+   syntax. mypy widens the dict to `dict[str, object]`, which does not
+   statically match `publish_ledger_entry`'s individually-typed keyword
+   parameters. Fixed with the same `# type: ignore[arg-type]` on the two
+   call sites the four sibling services already use for this exact,
+   harmless pattern — not a blanket per-module or per-rule suppression.
 4. **Ruff `E501`/`RUF001`/`RUF002` in the newly-authored files.** 18
    findings: several genuinely-over-100-column lines (wrapped by hand or
    via `ruff format`), two ambiguous EN DASH characters in a small-cell
