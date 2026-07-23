@@ -92,7 +92,7 @@ def test_parse_verification_status_rejects_unknown_value() -> None:
         parse_verification_status("half_done")
 
 
-@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS, key=lambda p: (p[0], p[1])))
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS))
 def test_every_allowed_tally_transition_succeeds(
     current: TallyVerificationStatus, target: TallyVerificationStatus
 ) -> None:

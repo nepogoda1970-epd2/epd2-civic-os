@@ -129,9 +129,7 @@ def test_initiative_transition_table_has_exactly_28_edges() -> None:
     assert len(ALLOWED_INITIATIVE_TRANSITIONS) == 28
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_INITIATIVE_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_INITIATIVE_TRANSITIONS))
 def test_every_allowed_initiative_transition_succeeds(
     current: InitiativeStatus, target: InitiativeStatus
 ) -> None:
@@ -270,9 +268,7 @@ def test_parse_support_status_rejects_unknown_value() -> None:
         parse_support_status("super_active")
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_SUPPORT_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_SUPPORT_TRANSITIONS))
 def test_every_allowed_support_transition_succeeds(
     current: SupportStatus, target: SupportStatus
 ) -> None:
@@ -326,9 +322,7 @@ def test_amendment_transition_table_has_exactly_11_edges() -> None:
     assert len(ALLOWED_AMENDMENT_TRANSITIONS) == 11
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_AMENDMENT_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_AMENDMENT_TRANSITIONS))
 def test_every_allowed_amendment_transition_succeeds(
     current: AmendmentStatus, target: AmendmentStatus
 ) -> None:
@@ -371,9 +365,7 @@ def test_source_verification_transition_table_has_exactly_13_edges() -> None:
     assert len(ALLOWED_SOURCE_VERIFICATION_TRANSITIONS) == 13
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_SOURCE_VERIFICATION_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_SOURCE_VERIFICATION_TRANSITIONS))
 def test_every_allowed_source_verification_transition_succeeds(
     current: SourceVerificationStatus, target: SourceVerificationStatus
 ) -> None:

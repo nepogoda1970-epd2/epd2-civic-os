@@ -143,7 +143,7 @@ def test_parse_ballot_status_rejects_unknown_value() -> None:
         parse_ballot_status("super_open")
 
 
-@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS, key=lambda p: (p[0], p[1])))
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS))
 def test_every_allowed_ballot_transition_succeeds(
     current: BallotStatus, target: BallotStatus
 ) -> None:
@@ -255,9 +255,7 @@ def test_parse_ballot_option_status_rejects_unknown_value() -> None:
         parse_ballot_option_status("half_locked")
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_OPTION_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_OPTION_TRANSITIONS))
 def test_every_allowed_ballot_option_transition_succeeds(
     current: BallotOptionStatus, target: BallotOptionStatus
 ) -> None:
@@ -288,9 +286,7 @@ def test_parse_vote_envelope_status_rejects_unknown_value() -> None:
         parse_vote_envelope_status("half_received")
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_VOTE_ENVELOPE_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_VOTE_ENVELOPE_TRANSITIONS))
 def test_every_allowed_vote_envelope_transition_succeeds(
     current: VoteEnvelopeStatus, target: VoteEnvelopeStatus
 ) -> None:
@@ -408,9 +404,7 @@ def test_parse_vote_receipt_verification_status_rejects_unknown_value() -> None:
         parse_vote_receipt_verification_status("half_verified")
 
 
-@pytest.mark.parametrize(
-    "current,target", sorted(ALLOWED_RECEIPT_TRANSITIONS, key=lambda p: (p[0], p[1]))
-)
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_RECEIPT_TRANSITIONS))
 def test_every_allowed_receipt_transition_succeeds(
     current: VoteReceiptVerificationStatus, target: VoteReceiptVerificationStatus
 ) -> None:

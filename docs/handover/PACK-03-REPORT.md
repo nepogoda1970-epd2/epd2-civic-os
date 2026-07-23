@@ -1,12 +1,14 @@
 # CLAUDE-PACK-03 — Participation and Decision Kernel: Handover Report
 
-**Revision 2.** Revision 1's local-only verification was followed by a
+**Revision 3.** Revision 1's local-only verification was followed by a
 real external GitHub Actions run, which found one genuine mypy error
-(section 0a). That error is now fixed at the source and the full local
-verification suite was re-run clean.
+(section 0a) — fixed, then a second external run found four more, all
+the same underlying bug pattern in a different service (section 0b).
+Both are now fixed at the source and the full local verification suite
+was re-run clean after each.
 
 ```text
-PACK-03: LOCAL VERIFICATION PASS (revision 2) — full PASS pending
+PACK-03: LOCAL VERIFICATION PASS (revision 3) — full PASS pending
 GitHub Actions network-dependent steps (uv.lock / package-lock.json
 regeneration, hypothesis-gated property tests, npm install / ESLint /
 TypeScript build)
@@ -106,6 +108,91 @@ accessing `.reason_code` on a bare `Exception`-typed variable fails
 `assert isinstance(error, _ReasonCodedError)` type-checks cleanly with
 mypy narrowing to the intersection type. Full confirmation that the real
 CI error is gone requires the next external GitHub Actions run.
+
+## 0b. External verification finding and fix (revision 3)
+
+A subsequent external GitHub Actions run — against the revision-2
+candidate archive — passed everything through the section 0a fix (Ruff
+format, Prettier, Ruff lint, frontend ESLint, mypy for
+`epd2-core`/`scripts`/`tests/repository`/`conftest.py`, mypy for
+`audit-core`), then found four real mypy errors, all in one file:
+
+```text
+services/initiative-service/tests/test_domain.py:133: error: Value of
+type "object" is not indexable  [index]
+services/initiative-service/tests/test_domain.py:274: error: Value of
+type "object" is not indexable  [index]
+services/initiative-service/tests/test_domain.py:330: error: Value of
+type "object" is not indexable  [index]
+services/initiative-service/tests/test_domain.py:375: error: Value of
+type "object" is not indexable  [index]
+```
+
+Root cause: all four flagged lines were `@pytest.mark.parametrize`
+decorators of the form
+`sorted(ALLOWED_*_TRANSITIONS, key=lambda p: (p[0], p[1]))` — one per
+owned entity (`Initiative`, `SupportRecord`, `Amendment`, `SourceRecord`).
+Reproduced directly this pass with a hand-written stand-in for pytest's
+real `parametrize` signature (`argvalues: Iterable[Sequence[object] |
+object]`, closely matching the real stub, in a throwaway file, since this
+sandbox's own mypy config masks real `pytest` via `ignore_missing_imports`
+exactly as section 0a described): when `sorted(...)`'s result is passed
+as an argument into a call whose parameter is typed with that broad
+`Sequence[object] | object` element type, mypy's bidirectional inference
+pushes that expected type down into the lambda, and the lambda parameter
+`p` types as `object` instead of the correct
+`tuple[SomeStatus, SomeStatus]` inferred from `ALLOWED_*_TRANSITIONS`
+itself — so `p[0]`/`p[1]` fail `object` is not indexable. Confirmed with
+a second throwaway repro that removing the `key=` argument entirely
+avoids the broken inference path completely and type-checks cleanly.
+
+The `key=lambda p: (p[0], p[1])` was always a no-op: for a 2-tuple `p`,
+`(p[0], p[1])` is exactly `p` itself, so this key function does not
+change the sort order at all — `sorted(x, key=lambda p: (p[0], p[1]))`
+and `sorted(x)` are the same operation whenever `x`'s elements are
+themselves comparable 2-tuples (true here: every `ALLOWED_*_TRANSITIONS`
+is declared as `frozenset[tuple[SomeStatus, SomeStatus]]`, and every
+`SomeStatus` is a `StrEnum`, which supports ordering). Fixed by deleting
+the redundant `key=` argument at all four flagged lines, leaving
+`sorted(ALLOWED_*_TRANSITIONS)` — not a cast, not a blanket ignore, and
+not a behavior change: confirmed programmatically this pass, for each of
+the four affected sets, that `sorted(x, key=lambda p: (p[0], p[1])) ==
+sorted(x)` (`True` in all four cases, with the documented edge counts:
+28 initiative, 2 support, 11 amendment, 13 source-verification
+transitions), so the parametrized test cases and their order are
+byte-for-byte unchanged — this satisfies the pack's requirement to
+preserve existing assertions and test meaning exactly, while removing
+the operation mypy correctly flagged as unsafe under real pytest stubs.
+
+While fixing this, the identical `sorted(ALLOWED_*, key=lambda p: (p[0],
+p[1]))` pattern was found, unprompted by the CI report, in four more
+places across three other PACK-03 services —
+`services/voting-service/tests/test_domain.py` (4 occurrences: `Ballot`,
+`BallotOption`, `VoteEnvelope`, `VoteReceipt`),
+`services/delegation-service/tests/test_domain.py` (1: `Delegation`),
+and `services/tally-service/tests/test_domain.py` (1: `Tally`
+verification status) — the same sub-agent-authored pattern, copied
+across services when each service's own transition-table test was
+written. These had not yet been reached by CI's per-service mypy
+ordering, but are the exact same latent bug and would have failed the
+next run regardless. Fixed identically (redundant `key=` removed) and
+verified programmatically the same way: `sorted(x, key=lambda p: (p[0],
+p[1])) == sorted(x)` for all six additional sets (`True` in every case).
+Ten occurrences fixed in total this revision, not four — closing this
+whole bug class in one pass rather than trickling in one CI round at a
+time.
+
+`.github/workflows/verify-and-package.yml` was not touched. This
+sandbox's own `mypy services/initiative-service` (and the five other
+affected services) reported "Success: no issues found" both before and
+after this fix — the bug is invisible here for the same
+`ignore_missing_imports`-on-`pytest` reason as section 0a, which is
+exactly why the two throwaway repro files above (using a hand-written
+stand-in for pytest's real signature, not a real pytest import) were used
+to reproduce and confirm the fix locally as far as this environment
+allows. The full local verification suite (section 6) was re-run clean
+after this fix: 1518 passed, 3 skipped, 0 failed — unchanged from
+revision 2, confirming zero test-behavior change.
 
 ## 0. What CLAUDE-PACK-03 adds
 
@@ -320,6 +407,19 @@ Changed in revision 2 (section 0a):
   real mypy error external GitHub Actions verification found.
 - `docs/handover/PACK-03-REPORT.md` — this revision.
 
+Changed in revision 3 (section 0b):
+
+- `services/initiative-service/tests/test_domain.py` (4 sites),
+  `services/voting-service/tests/test_domain.py` (4 sites),
+  `services/delegation-service/tests/test_domain.py` (1 site),
+  `services/tally-service/tests/test_domain.py` (1 site) — removed the
+  redundant, no-op `key=lambda p: (p[0], p[1])` argument from each
+  `sorted(ALLOWED_*_TRANSITIONS, ...)` call feeding a
+  `@pytest.mark.parametrize` decorator, fixing the four real mypy errors
+  external GitHub Actions verification found (plus six identical latent
+  occurrences found while fixing them, section 0b).
+- `docs/handover/PACK-03-REPORT.md` — this revision.
+
 ## 5. Gaps found and fixed during this pass's own verification
 
 Recorded here in full, per this pack's demand for honest verification,
@@ -384,7 +484,89 @@ ContributionType)`. Fixed by narrowing with explicit
 
 ## 6. Commands executed this pass, and results
 
-### Revision 2 re-verification (current, source of truth)
+### Revision 3 re-verification (current, source of truth)
+
+Full local verification suite re-run end to end after the section 0b
+fix, from a clean state. Results are identical to revision 2's own
+re-verification below in every respect except `ruff format --check .`
+(two more files reformatted this revision, reflecting the ten `sorted()`
+call-site edits) — same 277/277 required paths, same canon checksum,
+same 1518 passed / 3 skipped / 0 failed:
+
+```text
+✅ sha256(docs/canonical/TZ-00-domain-event-canon.md) unchanged:
+   5ed52c3a6a94e821323616ac369595fd364a71115cf5c1c6763d8edb51a6044a
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/check_repository.py
+   → OK: all 277 required paths are present.
+
+✅ ruff check .
+   → All checks passed!
+
+✅ ruff format --check .
+   → 141 files already formatted (after `ruff format .` reformatted
+     `services/initiative-service/tests/test_domain.py` and
+     `services/voting-service/tests/test_domain.py`, section 0b)
+
+✅ prettier --check .   (system Prettier 3.8.1, outside npm install)
+   → All matched files use Prettier code style!
+
+✅ mypy packages/python/epd2-core scripts tests/repository conftest.py
+   → Success: no issues found in 24 source files
+✅ mypy tests/contract
+   → Success: no issues found in 18 source files
+✅ mypy services/account-service
+   → Success: no issues found in 8 source files
+✅ mypy services/identity-service
+   → Success: no issues found in 8 source files
+✅ mypy services/eligibility-service
+   → Success: no issues found in 8 source files
+✅ mypy services/credential-service
+   → Success: no issues found in 11 source files
+✅ mypy services/audit-core
+   → Success: no issues found in 10 source files
+✅ mypy services/initiative-service
+   → Success: no issues found in 9 source files
+✅ mypy services/deliberation-service
+   → Success: no issues found in 9 source files
+✅ mypy services/moderation-service
+   → Success: no issues found in 9 source files
+✅ mypy services/voting-service
+   → Success: no issues found in 9 source files
+✅ mypy services/tally-service
+   → Success: no issues found in 9 source files
+✅ mypy services/delegation-service
+   → Success: no issues found in 9 source files
+
+✅ PYTHONPATH=<all 12 src/ dirs>:<python3 dist-packages> pytest -q
+   → 1518 passed, 3 skipped, 0 failed
+     (3 skips: `test_property_based.py` — hypothesis genuinely
+     unavailable, section 1 — and the same 2 genuine CT-00-11/CT-00-12
+     not-applicable markers this project has always documented; zero
+     unexplained skips, zero failures — identical count to revision 2,
+     confirming the section 0b fix changed no test behavior)
+
+✅ JSON/YAML parse validation (every *.json / *.yml / *.yaml, 67 files)
+   → all files parse without error
+
+❌ uv lock / uv sync / npm install
+   → blocked, section 3 (the one genuine, unresolved gap — network
+     egress to pypi.org/files.pythonhosted.org/registry.npmjs.org
+     returns 403, reconfirmed this pass)
+
+⏳ Not run this pass (same network restriction; PACK-03 makes no
+   frontend/TypeScript source change, section 1): npm run typecheck
+   (both workspaces), npm run lint (frontend ESLint), npm run test (both
+   workspaces), next build.
+```
+
+### Revision 2 re-verification (historical, for the record)
 
 Full local verification suite re-run end to end after the section 0a
 fix, from a clean state:
@@ -608,7 +790,7 @@ that all 65 actually-used PACK-03 codes are present in the registry.
 ## 11. Readiness conclusion
 
 ```text
-PACK-03: LOCAL VERIFICATION PASS (revision 2)
+PACK-03: LOCAL VERIFICATION PASS (revision 3)
 uv.lock / npm install: NOT YET REGENERATED (network-blocked, section 3)
 ```
 
@@ -627,12 +809,15 @@ reason code was hidden, no identity field was stripped from a service's
 own contract to make a test pass, and no unlinkability claim is made
 without the automated test that backs it (section 9).
 
-This revision incorporates one real fix surfaced by external GitHub
-Actions verification — a generic-exception-typed attribute access in a
-parametrized contract test (section 0a) — closed with a precise,
-source-level, type-safe narrowing (`isinstance` against a
-`@runtime_checkable` `Protocol`), not a blanket suppression, and with
-`.github/workflows/verify-and-package.yml` left untouched.
+This revision incorporates two real fixes surfaced across two rounds of
+external GitHub Actions verification — a generic-exception-typed
+attribute access in a parametrized contract test (section 0a), and a
+redundant, mypy-unsafe sort key repeated across ten call sites in four
+services (section 0b) — each closed with a precise, source-level fix
+(a type-safe `isinstance` narrowing; a no-op key's removal, verified
+programmatically to change no test outcome) and no blanket suppression,
+with `.github/workflows/verify-and-package.yml` left untouched both
+times.
 
 The one thing standing between this repository and PACK-03's full
 Definition of Done — exactly as PACK-02 documented and then closed — is a

@@ -83,7 +83,7 @@ def test_parse_delegation_status_rejects_unknown_value() -> None:
         parse_delegation_status("super_active")
 
 
-@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS, key=lambda p: (p[0], p[1])))
+@pytest.mark.parametrize("current,target", sorted(ALLOWED_TRANSITIONS))
 def test_every_allowed_delegation_transition_succeeds(
     current: DelegationStatus, target: DelegationStatus
 ) -> None:
