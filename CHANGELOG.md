@@ -112,8 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   vote-envelope-shaped field is dropped before it ever reaches a public
   payload.
 - `REPOSITORY_VERSION` `0.3.0 → 0.4.0` (`packages/python/epd2-core/src/
-  epd2_core/version.py`, `packages/typescript/epd2-types/src/
-  version.ts`, both version-consistency unit tests, and
+epd2_core/version.py`, `packages/typescript/epd2-types/src/
+version.ts`, both version-consistency unit tests, and
   `docs/canonical/canon-version.json`'s `repository_compatibility` upper
   bound widened to admit it). `CANON_VERSION` is unchanged (`0.3.0`) —
   this round implements the already-accepted canon 19a text; no further

@@ -75,6 +75,9 @@
     "generated_at": { "type": "string", "format": "date-time" },
     "redaction_notice": { "type": ["string", "null"] },
     "supersedes_package_id": { "type": ["string", "null"], "format": "uuid" },
-    "status": { "type": "string", "enum": ["generated", "published", "superseded"] }
+    "status": {
+      "type": "string",
+      "enum": ["generated", "published", "superseded"]
+    }
   }
 }

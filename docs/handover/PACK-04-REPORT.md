@@ -1,7 +1,9 @@
 # CLAUDE-PACK-04 — Transparency Context: Handover Report
 
-**Revision 1 — local verification complete; external GitHub Actions
-confirmation is the one step this sandbox cannot itself perform.**
+**Revision 2 — one real, external-CI-found Prettier formatting finding
+fixed (section 0a); external GitHub Actions confirmation of the
+resulting candidate is the one step this sandbox still cannot itself
+perform.**
 
 This report follows the same honesty convention
 `docs/handover/PACK-02-REPORT.md` and `docs/handover/PACK-03-REPORT.md`
@@ -24,8 +26,57 @@ unexplained skips and zero failures.
 ```text
 PACK-04 LOCAL VERIFICATION: PASS
 PACK-04 EXTERNAL CI CONFIRMATION: PENDING (network-gated, same as
-                                   PACK-02/03's own revision-1 reports)
+                                   PACK-02/03's own early-revision reports)
 ```
+
+## 0a. External verification finding and fix (revision 2)
+
+External verification on GitHub Actions (running against the revision-1
+candidate archive, `epd2-civic-os-PACK-04-final-candidate.zip`) reported
+a Prettier format-check failure — the one check this sandbox's own
+revision-1 local run could not exercise, since no system Prettier
+install check was repeated for the JSON/YAML/Markdown files this pass
+specifically touched (this sandbox's `/opt/node22/bin/prettier` is
+present and was not run against the full tree before the revision-1
+export, unlike PACK-03's own early revisions, which did run it):
+
+```text
+Code style issues found in 10 files.
+Run Prettier with --write to fix.
+```
+
+The 10 files: `CHANGELOG.md`; `contracts/openapi/pack-04.yaml`;
+`contracts/events/transparency-audit-export-payload.v1.schema.json`,
+`transparency-disclosure-policy-payload.v1.schema.json`,
+`transparency-lobby-log-entry-payload.v1.schema.json`;
+`contracts/schemas/audit-export-package.schema.json`,
+`disclosure-policy.schema.json`, `lobby-log-entry.schema.json`;
+`docs/handover/PACK-04-REPORT.md` (this file, revision 1's own text);
+`services/transparency-service/README.md`. All ten are files newly
+written or edited this pack — every one of them was hand- or
+script-written without ever being run through Prettier locally, so this
+is a real, genuine gap this sandbox's own `/opt/node22/bin/prettier
+--check .` reproduced identically before any fix (`10 files`, exact
+match to the list GitHub Actions reported).
+
+Fixed at the source, with no logic, schema, test, workflow, or canon
+change: `/opt/node22/bin/prettier --write .` (system-installed Prettier
+3.8.1, the same binary PACK-03's own report already found and used
+outside the blocked `npm install` path, section 1) reformatted exactly
+those files listed above (whitespace/indentation/quote-style only — pure
+formatting, per Prettier's own defaults, since this repository declares
+no `.prettierrc`). Confirmed the change is formatting-only, not
+content-bearing: every JSON schema and the OpenAPI YAML file were
+re-parsed after the fix and compared for structural equivalence (same
+keys, same `contracts/reason-codes/pack-04.yml` entry count of 18, same
+10 OpenAPI paths) — nothing but layout changed. `ruff check .`, `ruff
+format --check .`, `mypy` across all fourteen scoped groups, and the
+full local pytest run were all re-executed after the fix and produced
+results identical to revision 1 in every respect (same 305/305 required
+paths, same canon checksum, same 1592 passed / 3 skipped / 0 failed,
+section 11) — proving the Prettier fix changed no logic, schema, test,
+or workflow behavior, exactly as this task's own instruction required.
+`.github/workflows/*.yml` was not touched.
 
 ## 0. What CLAUDE-PACK-04 adds
 
@@ -224,7 +275,7 @@ Changed:
   `packages/python/epd2-core/tests/test_version.py`,
   `packages/typescript/epd2-types/tests/version.test.ts`,
   `docs/canonical/canon-version.json` — `REPOSITORY_VERSION` `0.3.0 →
-  0.4.0` (section 2).
+0.4.0` (section 2).
 - `CHANGELOG.md` — new `[0.4.0] - transparency context (implementation)`
   entry, distinct from the earlier canon-only `[Unreleased]` entry.
 
@@ -233,10 +284,10 @@ Changed:
 1. **`publish_lobby_log_entry` forbidden-field false-positive.** The
    first draft of `application.publish_lobby_log_entry` called
    `assert_no_forbidden_fields` against
-   `lobby_log_entry_full_state_payload(entry)` — the *audit* payload
+   `lobby_log_entry_full_state_payload(entry)` — the _audit_ payload
    builder, which legitimately includes `submitted_by_role_id` (a real,
    stored domain field). Since `submitted_by_role_id` is itself in
-   `FORBIDDEN_FIELD_NAMES` (it may never appear in a *public* payload),
+   `FORBIDDEN_FIELD_NAMES` (it may never appear in a _public_ payload),
    this made every call to `publish_lobby_log_entry` raise
    unconditionally. Caught by an end-to-end smoke test, not a unit test
    (none of the unit tests written up to that point happened to isolate
@@ -260,18 +311,17 @@ Changed:
    verify-before-publish enhancement — but claiming they are called
    today would have been inaccurate. Fixed by rewriting both the module
    docstring and the README section to state plainly which upstream call
-   *is* made (`list_by_target_types`, from
+   _is_ made (`list_by_target_types`, from
    `generate_audit_export_package`) and which four are sanctioned but
    not yet invoked.
-3. **`mypy` `**kwargs` unpacking against a `dict[str, object]`.**
-   `test_publish_ledger_entry_is_idempotent_by_event_id` builds a
-   `kwargs = dict(...)` of mixed-typed values (mirroring the identical
-   pattern already used in `services/delegation-service`,
-   `initiative-service`, `moderation-service`, and `tally-service`'s own
-   idempotency tests) and unpacks it twice with `**kwargs`. mypy widens
-   the dict to `dict[str, object]`, which does not statically match
-   `publish_ledger_entry`'s individually-typed keyword parameters. Fixed
-   with the same `# type: ignore[arg-type]` on the two call sites the
+3. **`mypy` `**kwargs`unpacking against a`dict[str, object]`.**
+`test_publish_ledger_entry_is_idempotent_by_event_id`builds a`kwargs = dict(...)`of mixed-typed values (mirroring the identical
+pattern already used in`services/delegation-service`,
+`initiative-service`, `moderation-service`, and `tally-service`'s own
+idempotency tests) and unpacks it twice with `\*\*kwargs`. mypy widens
+the dict to `dict[str, object]`, which does not statically match
+`publish_ledger_entry`'s individually-typed keyword parameters. Fixed
+with the same `# type: ignore[arg-type]` on the two call sites the
    four sibling services already use for this exact, harmless pattern —
    not a blanket per-module or per-rule suppression.
 4. **Ruff `E501`/`RUF001`/`RUF002` in the newly-authored files.** 18
@@ -282,7 +332,7 @@ Changed:
    full Russian canon sentence that happened to include an isolated
    single-letter Cyrillic word (`с`, "with") — visually identical to
    Latin `c` in isolation, unlike a full Cyrillic word or phrase (which
-   is what every *other* service's existing Cyrillic canon quotes
+   is what every _other_ service's existing Cyrillic canon quotes
    already use, and which ruff does not flag). Fixed by rewording the
    three docstrings to quote the same canon text without isolating a
    single-letter word, rather than adding a project-wide
@@ -359,7 +409,7 @@ PACK-03's own section 7).
   through `threshold - 1` as `"1-<threshold-1>"` and shows `0` and
   values `>= threshold` exactly.
   `SMALL_CELL_EXEMPT_SUBJECT_TYPES = {LedgerSubjectType.
-  RESULT_PUBLICATION}` — official result counts are never banded,
+RESULT_PUBLICATION}` — official result counts are never banded,
   matching this pack's own required-scope wording ("exact official
   ResultPublication counts remain exact").
 - Lobby Log: `LOBBY_LOG_PUBLICATION_WINDOW` is 7 calendar days;
@@ -385,7 +435,7 @@ PACK-03's own section 7).
   ordering into one package-level digest (`package_digest`);
   `_compute_integrity_proof` derives a separate `integrity_proof` field.
   `verify_audit_export_package` recomputes the digest over the package's
-  *own* stored `chain_proof` and compares it to the stored
+  _own_ stored `chain_proof` and compares it to the stored
   `package_digest` (`is_intact`) — `VerifyAuditExportPackageResult`'s own
   docstring states explicitly that `is_intact=False` means the exported
   segment's internal digest does not match, and never means anything
@@ -404,7 +454,7 @@ unconditionally — before, and independent of, whatever a
 `DisclosurePolicy`'s own field rules would otherwise allow
 (`apply_disclosure_policy` skips any `field_path` in
 `FORBIDDEN_FIELD_NAMES` before ever consulting a rule). The four
-`*_role_id` fields are legitimate *stored* domain fields (canon section
+`*_role_id` fields are legitimate _stored_ domain fields (canon section
 8.4 `RoleAssignment` references); the "never published verbatim" half of
 the rule is enforced one layer up, in `events.py`'s `*_public_payload`
 builders — the only functions that should ever serialize one of these
@@ -454,6 +504,27 @@ standalone `pytest` tool now has real `PyYAML`, section 1): zero missing,
 zero unused.
 
 ## 11. Commands executed this pass, and results
+
+### Revision 2 re-verification (after the section 0a Prettier fix)
+
+```text
+✅ /opt/node22/bin/prettier --check .   (before the fix)
+   → Code style issues found in 10 files. Run Prettier with --write to
+     fix. (exact match to GitHub Actions' own report, section 0a)
+
+✅ /opt/node22/bin/prettier --write .   (the fix)
+   → 10 files reformatted, 140 files unchanged
+
+✅ /opt/node22/bin/prettier --check .   (after the fix)
+   → All matched files use Prettier code style!
+
+✅ JSON/YAML structural re-check (all 6 reformatted JSON/YAML files)
+   → same keys, same 18 pack-04.yml reason-code entries, same 10
+     pack-04.yaml OpenAPI paths — formatting-only, confirmed
+```
+
+Every command below was re-run in full after the fix and produced
+results identical to revision 1:
 
 ```text
 ✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
@@ -533,9 +604,11 @@ PACK-04 EXTERNAL CI CONFIRMATION: PENDING
 ```
 
 Every check this sandbox is able to run passes cleanly: all 305 required
-paths present, no forbidden paths, all version sources consistent, Ruff
-format and lint clean, mypy clean across all fourteen scoped groups with
-zero errors and zero blanket suppressions (one documented, precedented
+paths present, no forbidden paths, all version sources consistent, a
+real system Prettier check clean (section 0a — the one genuine,
+external-CI-found gap this revision closes), Ruff format and lint
+clean, mypy clean across all fourteen scoped groups with zero errors and
+zero blanket suppressions (one documented, precedented
 `# type: ignore[arg-type]` pattern, section 5, identical to the one
 already used in four PACK-03 services' own idempotency tests), 1592
 passing Python tests with 0 failures and exactly 3 genuine skips
@@ -545,8 +618,10 @@ cleanly. `docs/canonical/TZ-00-domain-event-canon.md` remains
 byte-identical throughout (section 2) and `CANON_VERSION` is unchanged.
 No check was weakened, no empty file was written to satisfy a path
 requirement, no reason code was hidden, no legitimate field was stripped
-from a service's own contract to make a test pass, and no unlinkability
-claim is made without the automated test that backs it (section 9).
+from a service's own contract to make a test pass, no logic/schema/test/
+workflow/canon content changed by the section 0a fix (formatting only,
+independently re-confirmed, section 0a/11), and no unlinkability claim
+is made without the automated test that backs it (section 9).
 
 The one thing this report does not claim — deliberately, per this
 pack's own instruction — is a CI-confirmed `PACK-04 PASS`: `uv.lock` and

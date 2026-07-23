@@ -21,7 +21,10 @@
   "properties": {
     "lobby_log_entry_id": { "type": "string", "format": "uuid" },
     "organization_name": { "type": "string", "minLength": 1 },
-    "related_subject_type": { "type": "string", "enum": ["initiative", "ballot", "amendment"] },
+    "related_subject_type": {
+      "type": "string",
+      "enum": ["initiative", "ballot", "amendment"]
+    },
     "related_subject_id": { "type": "string", "format": "uuid" },
     "contact_date": { "type": "string", "format": "date-time" },
     "contact_method": {

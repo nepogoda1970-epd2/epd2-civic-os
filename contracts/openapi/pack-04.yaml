@@ -158,7 +158,12 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [audit_export_package_id, scope_description, included_target_types]
+              required:
+                [
+                  audit_export_package_id,
+                  scope_description,
+                  included_target_types,
+                ]
               properties:
                 audit_export_package_id: { type: string, format: uuid }
                 scope_description: { type: string, minLength: 1 }
@@ -187,7 +192,8 @@ paths:
                 type: object
                 required: [package]
                 properties:
-                  package: { $ref: "../schemas/audit-export-package.schema.json" }
+                  package:
+                    { $ref: "../schemas/audit-export-package.schema.json" }
                   event: { $ref: "../schemas/event-envelope.schema.json" }
         "403":
           description: PERMISSION_DENIED — actor is not authorized.
@@ -218,7 +224,8 @@ paths:
                 type: object
                 required: [package]
                 properties:
-                  package: { $ref: "../schemas/audit-export-package.schema.json" }
+                  package:
+                    { $ref: "../schemas/audit-export-package.schema.json" }
                   event: { $ref: "../schemas/event-envelope.schema.json" }
         "403":
           description: PERMISSION_DENIED — actor is not authorized.
@@ -278,7 +285,13 @@ paths:
               type: object
               additionalProperties: false
               required:
-                [disclosure_policy_id, applies_to_subject_type, field_rules, effective_from, version]
+                [
+                  disclosure_policy_id,
+                  applies_to_subject_type,
+                  field_rules,
+                  effective_from,
+                  version,
+                ]
               properties:
                 disclosure_policy_id: { type: string, format: uuid }
                 applies_to_subject_type: { type: string, minLength: 1 }
@@ -296,7 +309,13 @@ paths:
                       transformation:
                         type: string
                         enum:
-                          [none, generalize_to_role_scope, band_small_cell, suppress, hash]
+                          [
+                            none,
+                            generalize_to_role_scope,
+                            band_small_cell,
+                            suppress,
+                            hash,
+                          ]
                       replacement_label: { type: [string, "null"] }
                 small_cell_threshold: { type: integer, minimum: 0, default: 10 }
                 effective_from: { type: string, format: date-time }

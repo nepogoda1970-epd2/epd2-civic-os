@@ -13,7 +13,7 @@ dependencies beyond `epd2-core`/`epd2-audit-core`:
 `epd2-initiative-service`, `epd2-moderation-service`,
 `epd2-voting-service`, `epd2-tally-service`. ADR-012 sanctions four
 upstream read-only functions, each newly added (this pack) to the
-*upstream* service's own `application.py` as a small, additive,
+_upstream_ service's own `application.py` as a small, additive,
 backward-compatible read wrapper around that service's existing `Store.
 get`, as PACK-04's only permitted upstream `.application`-module
 imports:
@@ -49,7 +49,7 @@ imported here — see `tests/repository/test_service_boundaries.py`'s
 ### `PublicLedgerEntry` (canon 19a.1)
 
 No status transition table — the only status is `published`, set at
-creation, never changed. A correction is always a *new* row with
+creation, never changed. A correction is always a _new_ row with
 `supersedes_entry_id` set (`application.correct_ledger_entry`); the
 original row is never rewritten (`storage.PublicLedgerEntryStore` has no
 `save`). `previous_entry_hash` chains published entries in creation
@@ -62,18 +62,18 @@ order — a separate, lighter hash chain from Audit Core's own
 (`domain.AUDIT_EXPORT_PACKAGE_ALLOWED_TRANSITIONS`). `published ->
 superseded` is never a standalone command — it only ever happens as a
 side effect of `application.publish_audit_export_package` publishing a
-*new* package whose own `supersedes_package_id` names the old one; the
+_new_ package whose own `supersedes_package_id` names the old one; the
 old package's content is never rewritten, only its `status`.
 
 `chain_proof` (ADR-013 amendment 1): an ordered list of `ChainProofItem`
-— `event_hash`, `previous_event_hash` (of the *previous item in this
-exported segment*, not Audit Core's own chain), public-safe metadata,
+— `event_hash`, `previous_event_hash` (of the _previous item in this
+exported segment_, not Audit Core's own chain), public-safe metadata,
 `sequence_position`. `package_digest` and `integrity_proof` are
 package-level fields computed over the whole ordered list. See
 `application.verify_audit_export_package`'s docstring, and canon section
 19a.2's own "Семантика проверки", for exactly what this proves (chain
-continuity, ordering/completeness, non-modification of the *exported
-segment*) and what it explicitly does not (recomputing the original
+continuity, ordering/completeness, non-modification of the _exported
+segment_) and what it explicitly does not (recomputing the original
 private `AuditEvent.event_hash` values, which depend on fields this
 package never discloses — `actor_id`, `actor_type`, `before_hash`,
 `after_hash`).
@@ -122,18 +122,18 @@ allowed against an already-`published` original.
 
 ## Application commands -> canon events (section 20.14, verbatim list)
 
-| Command                          | Transition                                          | Event                                       |
-| --------------------------------- | ---------------------------------------------------- | --------------------------------------------- |
-| `publish_ledger_entry`            | (create) `-> published`                             | `transparency.ledger_entry_published`       |
-| `correct_ledger_entry`            | (create, new row) `-> published`                    | `transparency.ledger_entry_corrected`       |
-| `generate_audit_export_package`   | (create) `-> generated`                             | `transparency.audit_export_generated`       |
-| `publish_audit_export_package`    | `generated -> published` (+ old `-> superseded`)   | `transparency.audit_export_published`       |
-| `define_disclosure_policy`        | (create) `-> draft`                                 | `transparency.disclosure_policy_defined`    |
-| `activate_disclosure_policy`      | `draft -> active` (+ old `-> superseded`)          | `transparency.disclosure_policy_activated`  |
-| _(side effect of the above)_      | `active -> superseded`                              | `transparency.disclosure_policy_superseded` |
-| `submit_lobby_log_entry`          | (create) `-> submitted`                             | `transparency.lobby_log_entry_submitted`    |
-| `publish_lobby_log_entry`         | `submitted -> published`                            | `transparency.lobby_log_entry_published`    |
-| `correct_lobby_log_entry`         | (create, new row) `-> published`                    | `transparency.lobby_log_entry_corrected`    |
+| Command                         | Transition                                       | Event                                       |
+| ------------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| `publish_ledger_entry`          | (create) `-> published`                          | `transparency.ledger_entry_published`       |
+| `correct_ledger_entry`          | (create, new row) `-> published`                 | `transparency.ledger_entry_corrected`       |
+| `generate_audit_export_package` | (create) `-> generated`                          | `transparency.audit_export_generated`       |
+| `publish_audit_export_package`  | `generated -> published` (+ old `-> superseded`) | `transparency.audit_export_published`       |
+| `define_disclosure_policy`      | (create) `-> draft`                              | `transparency.disclosure_policy_defined`    |
+| `activate_disclosure_policy`    | `draft -> active` (+ old `-> superseded`)        | `transparency.disclosure_policy_activated`  |
+| _(side effect of the above)_    | `active -> superseded`                           | `transparency.disclosure_policy_superseded` |
+| `submit_lobby_log_entry`        | (create) `-> submitted`                          | `transparency.lobby_log_entry_submitted`    |
+| `publish_lobby_log_entry`       | `submitted -> published`                         | `transparency.lobby_log_entry_published`    |
+| `correct_lobby_log_entry`       | (create, new row) `-> published`                 | `transparency.lobby_log_entry_corrected`    |
 
 Every command follows the shared shape: `actor: ActorRef,
 actor_is_authorized: bool, correlation_id: UUID, clock: Clock, event_id:
@@ -162,7 +162,7 @@ cannot be included even by mistake.
 ## Known gaps (documented, not silently dropped)
 
 - **7-day Lobby Log publication window is not publish-blocking.** Canon
-  names no dedicated reason code for a *missed* deadline (unlike
+  names no dedicated reason code for a _missed_ deadline (unlike
   `LOBBY_LOG_ENTRY_INCOMPLETE` for missing mandatory fields), so
   `publish_lobby_log_entry` does not hard-reject a late publish on this
   basis alone; `domain.is_within_publication_deadline` is
@@ -176,7 +176,7 @@ cannot be included even by mistake.
 - **`applies_to_subject_type` is a free string**, not a closed enum —
   canon section 19a.3 gives this field no enumerated value list (unlike
   `PublicLedgerEntry.subject_type` or `AuditExportPackage.
-  included_target_types`, which canon does enumerate).
+included_target_types`, which canon does enumerate).
 
 ## Reason codes
 

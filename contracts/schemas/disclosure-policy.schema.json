@@ -23,7 +23,12 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["field_path", "disclosure_class", "transformation", "replacement_label"],
+        "required": [
+          "field_path",
+          "disclosure_class",
+          "transformation",
+          "replacement_label"
+        ],
         "properties": {
           "field_path": { "type": "string", "minLength": 1 },
           "disclosure_class": {
@@ -32,7 +37,13 @@
           },
           "transformation": {
             "type": "string",
-            "enum": ["none", "generalize_to_role_scope", "band_small_cell", "suppress", "hash"]
+            "enum": [
+              "none",
+              "generalize_to_role_scope",
+              "band_small_cell",
+              "suppress",
+              "hash"
+            ]
           },
           "replacement_label": { "type": ["string", "null"] }
         }
