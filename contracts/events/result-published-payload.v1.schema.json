@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/result-published-payload.v1.schema.json",
+  "title": "result.published event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.10's result subset. Produced by epd2_tally_service.events.result_publication_state_payload, used by build_result_published_event (result.published). Per ADR-009 item 15, every field here is already part of the minimum-disclosure set (aggregate counts plus administrative fields) - there is no narrower 'public' subset to additionally redact. additionalProperties: false is a load-bearing identity-separation control: account_id, person_id, and identity_record_id are all forbidden and cannot appear on a payload that validates against this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_publication_id",
+    "ballot_id",
+    "tally_id",
+    "eligible_count",
+    "credential_count",
+    "accepted_vote_count",
+    "rejected_vote_count",
+    "quorum_result",
+    "threshold_result",
+    "published_at",
+    "audit_package_reference",
+    "challenge_deadline_at"
+  ],
+  "properties": {
+    "result_publication_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "tally_id": { "type": "string", "format": "uuid" },
+    "eligible_count": { "type": "integer", "minimum": 0 },
+    "credential_count": { "type": "integer", "minimum": 0 },
+    "accepted_vote_count": { "type": "integer", "minimum": 0 },
+    "rejected_vote_count": { "type": "integer", "minimum": 0 },
+    "quorum_result": {
+      "type": "string",
+      "enum": ["quorum_met", "quorum_not_met", "not_required"]
+    },
+    "threshold_result": {
+      "type": "string",
+      "enum": ["threshold_met", "threshold_not_met", "tie_no_decision"]
+    },
+    "published_at": { "type": "string", "format": "date-time" },
+    "audit_package_reference": { "type": "string", "minLength": 1 },
+    "challenge_deadline_at": { "type": "string", "format": "date-time" }
+  }
+}

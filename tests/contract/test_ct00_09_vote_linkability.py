@@ -12,7 +12,52 @@ guarantee doesn't have to be retrofitted later under time pressure.
 
 from __future__ import annotations
 
-from epd2_credential_service.domain import FORBIDDEN_FIELD_NAMES, ParticipationCredential
+import ast
+import inspect
+import json
+from datetime import timedelta
+from pathlib import Path
+from uuid import UUID, uuid4
+
+from _schema_helpers import to_jsonable
+
+from epd2_audit_core.storage import InMemoryAuditEventStore
+from epd2_core.clock import FixedClock
+from epd2_core.event_envelope import ActorRef
+from epd2_credential_service.application import issue_participation_credential
+from epd2_credential_service.domain import (
+    FORBIDDEN_FIELD_NAMES,
+    CredentialType,
+    ParticipationCredential,
+)
+from epd2_credential_service.storage import InMemoryCredentialStore
+from epd2_eligibility_service.application import (
+    create_eligibility_rule,
+    create_eligibility_snapshot,
+)
+from epd2_eligibility_service.storage import (
+    InMemoryEligibilityRuleStore,
+    InMemoryEligibilitySnapshotStore,
+)
+from epd2_voting_service.application import (
+    approve_ballot_configuration,
+    cast_vote,
+    create_ballot,
+    open_ballot,
+    submit_ballot_for_configuration_review,
+)
+from epd2_voting_service.domain import (
+    FORBIDDEN_FIELD_NAMES as VOTE_FORBIDDEN,
+)
+from epd2_voting_service.domain import (
+    BallotMethod,
+    VoteEnvelope,
+)
+from epd2_voting_service.storage import (
+    InMemoryBallotOptionStore,
+    InMemoryBallotStore,
+    InMemoryVoteEnvelopeStore,
+)
 
 
 def test_participation_credential_has_no_account_or_identity_linkage_field() -> None:
@@ -57,3 +102,184 @@ def test_credential_shares_no_join_key_with_account_or_identity_record() -> None
     assert credential_ids == {"credential_id", "scope_id"}
     assert credential_ids & account_ids == set()
     assert credential_ids & identity_ids == set()
+
+
+# =============================================================================
+# PACK-03: voting is now in scope, so CT-00-09 can (and must) be exercised
+# directly against a real `VoteEnvelope`, not just the PACK-02 structural
+# future-safety proxy above.
+# =============================================================================
+
+
+def test_vote_envelope_dataclass_has_no_forbidden_identity_fields() -> None:
+    field_names = set(VoteEnvelope.__dataclass_fields__)
+    assert not (field_names & VOTE_FORBIDDEN)
+
+
+def test_vote_envelope_credential_proof_is_a_bare_uuid_reference() -> None:
+    """`credential_proof` is typed as a bare `UUID` (an opaque credential
+    reference), never a structured identity object or account/identity
+    field name."""
+    annotation = VoteEnvelope.__dataclass_fields__["credential_proof"].type
+    assert annotation in ("UUID", UUID) or "UUID" in str(annotation)
+    assert "account_id" not in VoteEnvelope.__dataclass_fields__
+    assert "identity_record_id" not in VoteEnvelope.__dataclass_fields__
+
+
+def test_real_cast_vote_event_payload_has_no_identity_fields(
+    ballot_store: InMemoryBallotStore,
+    ballot_option_store: InMemoryBallotOptionStore,
+    vote_envelope_store: InMemoryVoteEnvelopeStore,
+    audit_store: InMemoryAuditEventStore,
+    credential_store: InMemoryCredentialStore,
+    eligibility_rule_store: InMemoryEligibilityRuleStore,
+    eligibility_snapshot_store: InMemoryEligibilitySnapshotStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """A real, end-to-end `cast_vote` call's emitted event payload -
+    round-tripped through JSON exactly as a wire consumer would see it -
+    contains none of `FORBIDDEN_FIELD_NAMES`, proving the guarantee is
+    real at the actual emission boundary, not just at the dataclass
+    definition checked above."""
+    rule = create_eligibility_rule(
+        eligibility_rule_store,
+        eligibility_rule_id=uuid4(),
+        rule_version=1,
+        scope_type="ballot",
+        scope_id=uuid4(),
+        required_membership_status="active",
+        required_verification_level="basic",
+        region_constraint=None,
+        minimum_membership_age=None,
+        exclusion_conditions=(),
+        valid_from=clock.now(),
+        valid_until=None,
+    )
+    snapshot = create_eligibility_snapshot(
+        eligibility_snapshot_store,
+        audit_store,
+        eligibility_rule_id=rule.eligibility_rule_id,
+        rule_version=1,
+        eligible_decisions=(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        causation_id=None,
+        clock=clock,
+    ).snapshot
+
+    ballot_id = uuid4()
+    credential = issue_participation_credential(
+        credential_store,
+        audit_store,
+        credential_id=uuid4(),
+        credential_type=CredentialType.BALLOT_ACCESS,
+        scope_type="ballot",
+        scope_id=ballot_id,
+        valid_from=clock.now(),
+        expires_at=clock.now() + timedelta(days=365),
+        usage_limit=None,
+        rule_version=1,
+        eligibility_snapshot_digest=snapshot.digest,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    ).credential
+
+    creator = ActorRef(actor_id=uuid4(), actor_type="service")
+    create_ballot(
+        ballot_store,
+        audit_store,
+        ballot_id=ballot_id,
+        space_id=uuid4(),
+        subject_type="initiative",
+        subject_id=uuid4(),
+        question="Shall this pass?",
+        ballot_method=BallotMethod.YES_NO,
+        secrecy_mode="secret",
+        eligibility_rule_version=1,
+        delegation_policy_version=1,
+        quorum_rule="none",
+        threshold_rule="simple_majority",
+        opens_at=clock.now(),
+        closes_at=clock.now() + timedelta(days=1),
+        challenge_window_hours=None,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    submit_ballot_for_configuration_review(
+        ballot_store,
+        audit_store,
+        eligibility_snapshot_store,
+        ballot_id=ballot_id,
+        eligibility_snapshot_id=snapshot.eligibility_snapshot_id,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    approve_ballot_configuration(
+        ballot_store,
+        audit_store,
+        ballot_id=ballot_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    open_ballot(
+        ballot_store,
+        ballot_option_store,
+        audit_store,
+        ballot_id=ballot_id,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    result = cast_vote(
+        ballot_store,
+        vote_envelope_store,
+        audit_store,
+        credential_store,
+        vote_envelope_id=uuid4(),
+        ballot_id=ballot_id,
+        credential_proof=credential.credential_id,
+        encrypted_or_encoded_choice="yes",
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_text = json.dumps(to_jsonable(result.event.payload))
+    for forbidden in VOTE_FORBIDDEN:
+        assert forbidden not in payload_text
+
+
+def test_voting_service_never_imports_account_or_identity_service() -> None:
+    """AST-based import-boundary check (README.md /
+    `tests/test_domain.py::test_no_code_path_resolves_a_vote_envelope_to_an_account`'s
+    own precedent, checked here at the pack-cross-cutting CT-00 level
+    too): no module in `epd2_voting_service` imports `epd2_account_service`
+    or `epd2_identity_service` (ADR-008 - voting-service has no PACK-02
+    dependency)."""
+    import epd2_voting_service
+
+    package_dir = Path(inspect.getfile(epd2_voting_service)).parent
+    forbidden_modules = {"epd2_account_service", "epd2_identity_service"}
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {node.module.split(".")[0]} if node.module else set()
+            else:
+                continue
+            leaked = names & forbidden_modules
+            assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"

@@ -1,0 +1,526 @@
+# CLAUDE-PACK-03 — Participation and Decision Kernel: Handover Report
+
+```text
+PACK-03: LOCAL VERIFICATION PASS — full PASS pending GitHub Actions
+network-dependent steps (uv.lock / package-lock.json regeneration,
+hypothesis-gated property tests, npm install / ESLint / TypeScript
+build)
+```
+
+Per this pack's own instruction ("do not mark PASS if network-dependent
+lock regeneration or any verification step could not be completed"),
+this report does not claim an unconditional PASS. Every check this
+sandbox can genuinely execute has been run and passes (section 6); the
+remaining gap is identical in kind, and narrower in scope, to the one
+`docs/handover/PACK-02-REPORT.md` documented and later closed externally
+(section 3): this sandbox's network egress still blocks `pypi.org` /
+`files.pythonhosted.org` / `registry.npmjs.org` (`403`, reconfirmed this
+pass), so `uv lock`, `uv sync`, and `npm install` cannot run here, and the
+`hypothesis` package (needed only by `tests/contract/test_property_based.py`,
+unchanged by this pack) cannot be installed or exercised locally. The
+stated remaining step is the same one PACK-02 ultimately took: run
+`.github/workflows/verify-and-package.yml` on GitHub Actions with real
+network access, then diff the returned tree against the sent tree
+file-by-file before accepting it.
+
+## 0. What CLAUDE-PACK-03 adds
+
+Six new Python services, each an independent `uv` workspace member with
+its own `pyproject.toml`, `src/`, and `tests/`, implementing the 18
+in-scope canonical entities for participation and decision-making:
+
+- `services/initiative-service` (`epd2_initiative_service`) — owns
+  `Initiative`, `InitiativeVersion`, `SupportRecord`, `Amendment`,
+  `SourceRecord`.
+- `services/deliberation-service` (`epd2_deliberation_service`) — owns
+  `Discussion`, `Contribution`.
+- `services/moderation-service` (`epd2_moderation_service`) — owns
+  `ModerationCase`, `ModerationDecision`, `Appeal`.
+- `services/voting-service` (`epd2_voting_service`) — owns `Ballot`,
+  `BallotOption`, `VoteEnvelope`, `VoteReceipt`.
+- `services/tally-service` (`epd2_tally_service`) — owns `Tally`,
+  `ResultPublication`.
+- `services/delegation-service` (`epd2_delegation_service`) — owns
+  `Delegation`, `DelegationSnapshot`.
+
+Plus: five accepted ADRs already present in this tree
+(`docs/adr/ADR-005-pack-03-service-decomposition.md`,
+`ADR-006-pack-03-reason-code-additions.md`,
+`ADR-008-pack-03-pack-02-integration-boundary.md`,
+`ADR-009-voting-delegation-quorum-defaults.md`,
+`ADR-010-ballot-challenge-window-canon-addition.md`), a separate 70-entry
+reason-code registry (`contracts/reason-codes/pack-03.yml`, ADR-006
+Option B — never merged with `pack-02.yml`), 18 entity JSON Schemas and
+18 event-payload JSON Schemas in `contracts/schemas/` /
+`contracts/events/`, a 71-path OpenAPI contract
+(`contracts/openapi/pack-03.yaml`), the CT-00-01 through CT-00-10
+contract-test suite extended to cover all six services (CT-00-11/12
+remain documented not-applicable, unchanged from PACK-02, since neither
+`AIProcessingRecord` nor `EmergencyAction` is in scope for PACK-03
+either), and a repository-wide structural boundary test
+(`tests/repository/test_service_boundaries.py`) enforcing ADR-008's
+narrow, `.application`-only PACK-03 → PACK-02 read edge with no
+PACK-02 → PACK-03 dependency and no PACK-03 ↔ PACK-03 cross-service
+imports.
+
+## 1. Environment and network status
+
+```text
+$ python3 --version
+Python 3.11.15
+$ python3.12 --version
+Python 3.12.3
+```
+
+This sandbox's network egress blocks `pypi.org` / `files.pythonhosted.org`
+/ `registry.npmjs.org` (`403`), reconfirmed directly this pass:
+
+```text
+$ curl -sS -o /dev/null -w "%{http_code}\n" https://registry.npmjs.org/
+403
+$ curl -sS -o /dev/null -w "%{http_code}\n" https://pypi.org/
+403
+```
+
+No standalone `uv`-synced project venv exists in this sandbox for the
+same reason. Local verification instead used the pre-existing standalone
+tool binaries at `/root/.local/share/uv/tools/{pytest,mypy}/bin/` and
+`/root/.local/bin/ruff`, plus the system `python3`/`python3.12`
+interpreters (each with a real, already-installed `PyYAML` and
+`jsonschema` — not network-fetched this session) and a system-installed
+Prettier 3.8.1 (found available outside the project's own blocked
+`npm install` path, the same discovery `docs/handover/PACK-02-REPORT.md`
+section 0c made). `node_modules` does not exist in this tree; PACK-03
+makes no frontend/TypeScript source change (only the `REPOSITORY_VERSION`
+mirror in `packages/typescript/epd2-types/src/version.ts`, section 2), so
+`npm run typecheck`, ESLint, the TypeScript unit tests, and `next build`
+were not run locally — consistent with every one of PACK-02's early
+revisions, before GitHub Actions' real network access closed that gap.
+
+One improvement over PACK-02's local-verification ceiling: pointing
+`PYTHONPATH` at the system `python3`'s `dist-packages` directory
+(`/usr/local/lib/python3.11/dist-packages`, which already carries a real
+`PyYAML` and `jsonschema`) in addition to all twelve workspace `src/`
+directories let the standalone `pytest` tool run every YAML/JSON-Schema-
+dependent test for real this pass, instead of `pytest.importorskip`-ing
+them. The only test that still cannot run locally is
+`tests/contract/test_property_based.py` (needs `hypothesis`, which is
+genuinely absent from this sandbox and not present in any local cache —
+confirmed by `find /` turning up no installable wheel or importable
+module anywhere on the filesystem).
+
+## 2. Canon integrity
+
+`docs/canonical/TZ-00-domain-event-canon.md` was not opened for editing
+this pass and was re-verified byte-identical both before and after every
+change in this pass (prettier run, reason-code generation, mypy/ruff
+fixes):
+
+```text
+sha256(docs/canonical/TZ-00-domain-event-canon.md) =
+  5ed52c3a6a94e821323616ac369595fd364a71115cf5c1c6763d8edb51a6044a
+```
+
+This matches the value fixed at the start of this task and must never
+change. `CANON_VERSION` remains `"0.2.0"` everywhere it is declared
+(`epd2_core/version.py`, `epd2-types/version.ts`,
+`docs/canonical/canon-version.json`) — PACK-03 adds one narrow,
+ADR-010-accepted canon addition (`Ballot.challenge_window_hours`,
+`ResultPublication.challenge_deadline_at`) but does not bump
+`CANON_VERSION` itself, per ADR-010's own framing of this as an additive,
+backward-compatible field addition rather than a new canon version.
+
+`REPOSITORY_VERSION` was bumped `0.2.0` → `0.3.0`
+(`packages/python/epd2-core/src/epd2_core/version.py`,
+`packages/typescript/epd2-types/src/version.ts`, both tests' expected
+values, `CHANGELOG.md`'s newest entry), enforced by
+`scripts/verify_versions.py`, which passes.
+`docs/canonical/canon-version.json`'s `repository_compatibility` field
+(repository-side bookkeeping, not canon-immutable content) was widened
+from `">=0.1.0 <0.3.0"` to `">=0.1.0 <0.4.0"` to admit the new repository
+version.
+
+## 3. Lock files — open (same class of gap as PACK-02, narrower in scope)
+
+```text
+uv.lock:            NOT regenerated — `uv lock` fails in this sandbox,
+                     network egress to pypi.org/files.pythonhosted.org
+                     is blocked (403, reconfirmed section 1); PACK-03
+                     adds no new third-party Python dependency beyond
+                     what PACK-02 already required (jsonschema,
+                     types-PyYAML — both already pinned), so the only
+                     unresolved question a real `uv lock` run answers is
+                     whether the twelve-workspace-member resolution is
+                     itself consistent, not whether a new package
+                     exists.
+package-lock.json:  NOT touched — PACK-03 is backend-only; no npm
+                     dependency was added, removed, or changed.
+```
+
+No source code, test, or check was changed to route around this gap, and
+no hand-written lock file was substituted for a real one. Per this pack's
+own instruction not to mark PASS while this is true, and per the
+established remediation path from PACK-02 (`docs/handover/PACK-02-REPORT.md`
+section 3): the next step is running
+`.github/workflows/verify-and-package.yml` via **Actions → Verify and
+Package → Run workflow** on a fork/clone with real GitHub Actions network
+access, then diffing the returned tree against the exact tree sent for
+verification, file-by-file, before accepting the regenerated `uv.lock`.
+
+## 4. Files added or changed this pass
+
+New:
+
+- `services/initiative-service/`, `services/deliberation-service/`,
+  `services/moderation-service/`, `services/voting-service/`,
+  `services/tally-service/`, `services/delegation-service/` — full
+  `src/`, `tests/`, `pyproject.toml`, `README.md` each.
+- `contracts/reason-codes/pack-03.yml` (70 entries).
+- `contracts/schemas/*.json` (18 new PACK-03 entity schemas),
+  `contracts/events/*.json` (18 new PACK-03 event-payload schemas),
+  `contracts/openapi/pack-03.yaml` (71 paths).
+- `tests/contract/test_ct00_*.py`, `test_state_transitions.py` — extended
+  in place to cover all eleven PACK-02+PACK-03 services (CT-00-01
+  through CT-00-10); `test_ct00_11_12_not_applicable.py` updated with
+  PACK-03-scoped justification text.
+- `tests/repository/test_service_boundaries.py` — rewritten (see
+  section 5) to enforce the ADR-008 edge at the dotted-module-path
+  level, not just the root-package level.
+- `docs/handover/PACK-03-REPORT.md` — this report.
+
+Changed:
+
+- `services/eligibility-service/src/epd2_eligibility_service/application.py`
+  — added `get_eligibility_decision` and `get_eligibility_snapshot`, two
+  plain, unaudited read functions under ADR-008's narrow
+  PACK-03 → PACK-02 `.application`-only edge (with matching tests and a
+  new README section).
+- Root `pyproject.toml` — `[project.dependencies]`,
+  `[tool.uv.workspace].members` (now 12), `[tool.uv.sources]`,
+  `[tool.ruff].src`, `[tool.ruff.lint.isort].known-first-party`,
+  `[tool.mypy].mypy_path`, `[tool.pytest.ini_options].testpaths` — all
+  extended for the six new services.
+- `Makefile` — `typecheck` target extended with one scoped
+  `mypy services/<name>` line per new service (same one-invocation-per-
+  non-colliding-basename-group pattern PACK-02 established, section 5 of
+  that report).
+- `scripts/check_repository.py` — `REQUIRED_PATHS` extended with all new
+  ADR, contract, schema, and per-service paths (277 total, all present —
+  section 6).
+- `packages/python/epd2-core/src/epd2_core/version.py`,
+  `packages/typescript/epd2-types/src/version.ts` and their tests,
+  `docs/canonical/canon-version.json`, `CHANGELOG.md` — version bump,
+  section 2.
+- 14 files reformatted with a real Prettier binary this pass (content
+  unchanged, whitespace/formatting only): `CHANGELOG.md`, 5
+  `contracts/events/*.v1.schema.json` PACK-03 files,
+  `contracts/openapi/pack-03.yaml`, `contracts/reason-codes/pack-03.yml`,
+  and 6 PACK-03 service `README.md` files
+  (`delegation-service`, `deliberation-service`, `initiative-service`,
+  `moderation-service`, `tally-service`, `voting-service`).
+  `docs/canonical/TZ-00-domain-event-canon.md` was not among them and its
+  SHA-256 is unchanged (section 2).
+
+Not changed: `docs/canonical/TZ-00-domain-event-canon.md` (byte-identical,
+section 2); `package.json` / `package-lock.json` (no npm-side change,
+section 3); `frontend/web-shell/`; any of the five PACK-02 services'
+`src/` (only `eligibility-service/application.py` gained the two new
+read functions above — no existing PACK-02 behavior was altered).
+
+## 5. Gaps found and fixed during this pass's own verification
+
+Recorded here in full, per this pack's demand for honest verification,
+rather than folded silently into the file list above:
+
+1. **The reason-code registry test originally scanned all eleven
+   services against only `pack-02.yml`.** `tests/contract/test_reason_codes_registry.py`
+   pre-existed this pass scoped to PACK-02's five services; once PACK-03's
+   six services landed in `services/`, a naive extension would have
+   scanned them against the wrong registry. Fixed by parametrizing the
+   test over `(pack_name, registry_path, service_dir_names,
+minimum_size)` so PACK-02 services check against `pack-02.yml` and
+   PACK-03 services check against `pack-03.yml` independently — each
+   pack's registry remains a complete, standalone source of truth for
+   its own services, per ADR-006 Option B.
+2. **The structural boundary test needed a finer edge than "which
+   package did you import."** PACK-02's own
+   `tests/repository/test_service_boundaries.py` checked root package
+   names only, which is too coarse for ADR-008: PACK-03 services are
+   allowed to import specific `.application`-scoped functions from
+   specific PACK-02 services, but never their `.storage` or `.domain`
+   modules, and never each other. Fixed by adding
+   `_imported_module_paths()` (full dotted-path AST inspection, not just
+   root-package names) alongside the existing `_imported_roots()`, and
+   five explicit test functions covering both PACK-02's own one-way
+   dependency rule and every new PACK-03 edge — all five pass against
+   the real codebase.
+3. **Sub-agent-authored PACK-03 contract test extensions repeatedly put
+   new imports mid-file instead of at the top**, producing 119 Ruff
+   `E402` errors across ten files. Fixed file-by-file (manual `Edit` for
+   `test_state_transitions.py`; a small one-off AST-based script,
+   deleted after use, for the other eight `test_ct00_*.py` files),
+   followed by `ruff check . --fix` for import ordering.
+4. **mypy strict mode surfaced twelve real, previously-unchecked errors**
+   once the new contract-test and deliberation-service test helpers were
+   type-checked for real: missing parameter annotations
+   (`test_ct00_02/05/06_*.py`), a `dict[str, object]`-typed helper
+   returning `Any` where `dict[str, object]` was declared
+   (`test_ct00_08_identity_leakage.py`), a `Union[...]` attribute access
+   needing per-branch `# type: ignore` instead of one blanket comment
+   (`test_state_transitions.py`), and — the largest of these — two
+   deliberation-service test helpers (`_setup_contribution`,
+   `_make_contribution` in both `test_domain.py` and `test_storage.py`)
+   whose `**overrides: object` splat pattern left `content`/
+   `contribution_type` typed as bare `object` when passed into
+   `compute_contribution_content_hash(content: str, contribution_type:
+ContributionType)`. Fixed by narrowing with explicit
+   `isinstance(...)` assertions before use (mirroring the existing
+   `_setup_contribution` return-type fix already applied to
+   `test_application.py`) rather than adding another blanket
+   `# type: ignore`; this also resolved four stale, now-`unused-ignore`
+   comments the strict `warn_unused_ignores = true` setting was
+   correctly flagging as errors in their own right. All twelve fixed for
+   real; none suppressed with a bare ignore.
+5. **Prettier had never actually been run against this pass's new
+   files.** Running the system Prettier 3.8.1 binary (available outside
+   the project's own network-blocked `npm install` path — same discovery
+   PACK-02 made in its own revision 3) found 14 genuinely
+   non-Prettier-compliant files (section 4). Fixed with `prettier
+--write .`; canon checksum reconfirmed byte-identical before and
+   after (section 2).
+
+## 6. Commands executed this pass, and results
+
+```text
+✅ sha256(docs/canonical/TZ-00-domain-event-canon.md) unchanged:
+   5ed52c3a6a94e821323616ac369595fd364a71115cf5c1c6763d8edb51a6044a
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/check_repository.py
+   → OK: all 277 required paths are present.
+
+✅ ruff check .
+   → All checks passed!
+
+✅ ruff format --check .
+   → 141 files already formatted (after `ruff format .` reformatted one
+     file this pass, section 4's mypy fix reflow)
+
+✅ prettier --check .   (system Prettier 3.8.1, outside npm install)
+   → All matched files use Prettier code style! (after `prettier
+     --write .` fixed 14 genuinely non-compliant files, section 5)
+
+✅ mypy packages/python/epd2-core scripts tests/repository conftest.py
+   → Success: no issues found in 24 source files
+✅ mypy tests/contract
+   → Success: no issues found in 18 source files
+✅ mypy services/account-service
+   → Success: no issues found in 8 source files
+✅ mypy services/identity-service
+   → Success: no issues found in 8 source files
+✅ mypy services/eligibility-service
+   → Success: no issues found in 8 source files
+✅ mypy services/credential-service
+   → Success: no issues found in 11 source files
+✅ mypy services/audit-core
+   → Success: no issues found in 10 source files
+✅ mypy services/initiative-service
+   → Success: no issues found in 9 source files
+✅ mypy services/deliberation-service
+   → Success: no issues found in 9 source files
+✅ mypy services/moderation-service
+   → Success: no issues found in 9 source files
+✅ mypy services/voting-service
+   → Success: no issues found in 9 source files
+✅ mypy services/tally-service
+   → Success: no issues found in 9 source files
+✅ mypy services/delegation-service
+   → Success: no issues found in 9 source files
+
+✅ PYTHONPATH=<all 12 src/ dirs>:<python3 dist-packages> pytest -q
+   → 1518 passed, 3 skipped, 0 failed
+     (3 skips: `test_property_based.py` — hypothesis genuinely
+     unavailable, section 1 — and the same 2 genuine CT-00-11/CT-00-12
+     not-applicable markers this project has always documented; zero
+     unexplained skips, zero failures)
+
+✅ JSON/YAML parse validation (every *.json / *.yml / *.yaml, 67 files)
+   → all files parse without error
+
+❌ uv lock / uv sync / npm install
+   → blocked, section 3 (the one genuine, unresolved gap — network
+     egress to pypi.org/files.pythonhosted.org/registry.npmjs.org
+     returns 403, reconfirmed this pass)
+
+⏳ Not run this pass (same network restriction; PACK-03 makes no
+   frontend/TypeScript source change, section 1): npm run typecheck
+   (both workspaces), npm run lint (frontend ESLint), npm run test (both
+   workspaces), next build.
+```
+
+### Why 3 tests are skipped, not failing
+
+```text
+SKIPPED  tests/contract/test_property_based.py                 (no hypothesis)
+SKIPPED  tests/contract/test_ct00_11_12_not_applicable.py (2 tests)
+```
+
+The first is a `pytest.importorskip("hypothesis")` guard: this sandbox
+cannot install `hypothesis` at all (section 1) — CI's `uv sync
+--all-groups` installs it and PACK-02's own GitHub Actions run already
+confirmed this module runs and passes for real once it is present; PACK-03
+made no change to this file. The remaining two are genuine, scope-level
+**not-applicable** markers, unchanged from PACK-02: CT-00-11
+(AI-produced-result human-control gate) and CT-00-12
+(forbidden-operation-during-freeze) both require canon entities
+(`AIProcessingRecord`, `EmergencyAction`) that are explicitly out of
+scope for both PACK-02 and PACK-03 — there is nothing in either pack for
+either test to exercise, and `test_ct00_11_12_not_applicable.py`
+documents why rather than silently omitting them from the suite.
+
+## 7. Repository boundary enforcement (ADR-008)
+
+`tests/repository/test_service_boundaries.py` enforces, against the real
+codebase's AST (not a hand-maintained list asserted to be true):
+
+- No PACK-02 service imports another PACK-02 service's package (except
+  every service's existing, unchanged dependency on `epd2_audit_core`)
+  — PACK-02's own pre-existing rule, reconfirmed unbroken.
+- No PACK-03 service imports another PACK-03 service's package.
+  `initiative-service`, `deliberation-service`, `moderation-service`,
+  `voting-service`, `tally-service`, and `delegation-service` are
+  mutually independent; each depends only on its own package,
+  `epd2_core`, and `epd2_audit_core`.
+- No PACK-02 service imports any PACK-03 service — the dependency edge
+  is strictly one-directional.
+- Every PACK-03 → PACK-02 import is limited to the exact
+  `.application`-scoped module paths ADR-008 names
+  (`ALLOWED_PACK03_TO_PACK02_APPLICATION_MODULES`) — never a `.storage`
+  or `.domain` import, and never an unlisted PACK-02 service. This is
+  what makes `epd2_eligibility_service.application.get_eligibility_decision`
+  / `get_eligibility_snapshot` (section 4) necessary: without them,
+  `voting-service` and `initiative-service` would have no ADR-008-legal
+  way to read eligibility state at all.
+- `epd2_audit_core` itself imports neither PACK-02 nor PACK-03 domain
+  services.
+
+All five checks pass against the real, current codebase — none is
+currently vacuous (each PACK-03 service genuinely does import at least
+one allowed PACK-02 `.application` function where the pack's own spec
+requires it, so the "narrow edge, not zero edge" distinction is actually
+exercised).
+
+## 8. Voting, delegation, and finality rules (ADR-009 / ADR-010)
+
+Enforced in `services/voting-service`, `services/tally-service`, and
+`services/delegation-service`, each backed by dedicated domain/application
+tests:
+
+- Vote changes are allowed until a ballot closes; only the latest valid
+  `VoteEnvelope` per voter counts (superseding, not accumulating).
+- Abstention is an explicit `BallotOption`, never an implicit "no
+  envelope" state.
+- Pilot ballot methods are restricted to single-choice and yes/no
+  (`BallotMethod`); no ranked or weighted method is reachable this pack.
+- Quorum is optional per ballot (`quorum_rule` may be `"none"`).
+- Configuring a ballot requires second-actor approval — the actor who
+  created a ballot cannot also be the one who approves its
+  configuration (enforced in `voting-service`'s application layer, tested
+  in `tests/contract/test_ct00_06_missing_permission.py`).
+- Delegation is disabled by default and capped at depth 1, enforced
+  bidirectionally in `delegation-service`'s domain layer (a delegation
+  cannot be created if it would make any chain, in either direction,
+  exceed depth 1).
+- A direct vote always overrides a delegated one.
+- A tie produces `ThresholdResult.TIE_NO_DECISION` — never a
+  silently-broken tie.
+- `Ballot.challenge_window_hours` defaults to 72
+  (`DEFAULT_CHALLENGE_WINDOW_HOURS`) and is configurable per ballot
+  (ADR-010).
+- `ResultPublication`'s finality state is one of exactly
+  `PROVISIONAL_BEFORE_DEADLINE` or
+  `PROVISIONAL_PENDING_CHALLENGE_MECHANISM` — `compute_finality_state`
+  has no code path that returns anything resembling "final"; there is no
+  automatic-production-finality state in this pack, per ADR-010's own
+  clarification.
+- No PACK-03-accessible command reaches `BallotStatus.INVALIDATED` —
+  confirmed by an AST-based test walking every `voting-service`
+  application function's reachable status transitions, not merely
+  asserted.
+
+## 9. Identity separation and vote-linkability (structural, not
+
+cryptographic)
+
+`VoteEnvelope`, `VoteReceipt`, `Tally`, `ResultPublication`,
+`SupportRecord`, `Delegation`, and `DelegationSnapshot` each declare
+`additionalProperties: false` in their JSON Schema and are checked
+against a `FORBIDDEN_FIELD_NAMES` frozenset (no `account_id`,
+`person_id`, or `identity_record_id` field, and no schema property that
+would let one be added) — the same structural pattern PACK-02 established
+for `ParticipationCredential` (CT-00-08), extended here to every
+PACK-03 entity that touches a vote, a delegation, or a support signature.
+`tests/contract/test_ct00_08_identity_leakage.py` and
+`test_ct00_09_vote_linkability.py` exercise this for all eleven
+PACK-02+PACK-03 services, including a positive-space regression test
+(mirroring PACK-02's own, section 0a of that report) confirming that
+identity-service's own OpenAPI paths still legitimately declare
+`identity_record_id` — proving the forbidden-field scan is scoped
+correctly rather than passing vacuously. As with PACK-02, this is an
+explicitly **structural** guarantee (no field, no shared ID, no schema
+property, no reverse-lookup path from a vote back to an account) — not a
+cryptographic-anonymity or unlinkability-under-collusion claim.
+
+## 10. Reason-code registry
+
+`contracts/reason-codes/pack-03.yml`: 70 entries — 14 canon-sourced (9
+PACK-03-relevant canon section-24 codes plus 5 reused generics:
+`PERMISSION_DENIED`, `EVENT_VERSION_UNSUPPORTED`,
+`INTEGRITY_CHECK_FAILED`, `SERVICE_STATE_READ_ONLY`,
+`EMERGENCY_FREEZE_ACTIVE`), 3 validation-generic additive codes
+(mirroring `pack-02.yml`'s own pattern), and 53 PACK-03-additive codes
+across all six services (ADR-006). This is a separate, non-overlapping
+file from `contracts/reason-codes/pack-02.yml` (ADR-006 Option B) — codes
+both packs need, such as `PERMISSION_DENIED`, are independently
+redeclared in each registry rather than shared by import. Every reason
+code actually used in a PACK-03 service's `raise ...Error(reason_code=...)`
+call is checked against this registry by the pack-parametrized
+`tests/contract/test_reason_codes_registry.py` (section 5, gap 1) — this
+pass confirmed, both via that test (now running for real, not
+sandbox-skipped, section 1) and via a direct `yaml.safe_load` cross-check,
+that all 65 actually-used PACK-03 codes are present in the registry.
+
+## 11. Readiness conclusion
+
+```text
+PACK-03: LOCAL VERIFICATION PASS
+uv.lock / npm install: NOT YET REGENERATED (network-blocked, section 3)
+```
+
+Every check this sandbox can genuinely execute passes: 277 of 277
+required paths present, no forbidden paths, all version sources
+consistent, Ruff lint and format clean, a real Prettier format check
+clean, mypy clean across all thirteen scoped groups (133 source files,
+zero errors, zero suppressed via blanket ignores), 1518 passing Python
+tests with 0 failures and exactly 3 genuine skips (1 missing-dependency,
+2 documented not-applicable — zero unexplained skips), and JSON/YAML
+validity across every one of the 67 contract files in this repository.
+`docs/canonical/TZ-00-domain-event-canon.md` remains byte-identical to
+the fixed value this task began with throughout (section 2). No check
+was weakened, no empty file was written to satisfy a path requirement, no
+reason code was hidden, no identity field was stripped from a service's
+own contract to make a test pass, and no unlinkability claim is made
+without the automated test that backs it (section 9).
+
+The one thing standing between this repository and PACK-03's full
+Definition of Done — exactly as PACK-02 documented and then closed — is a
+real `uv lock` / `npm install` run against genuine network access,
+followed by the same file-by-file diff-before-accept discipline this
+project has followed since the PACK-01 incident. This report records an
+honest, currently-true **local** PASS and an explicitly open, narrowly
+scoped, already-precedented network gap — not a final PASS.

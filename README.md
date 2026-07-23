@@ -20,10 +20,12 @@ append-only, hash-chained журнал аудита. Остальная бизн
 - Этап: infrastructure skeleton (CLAUDE-PACK-01) — **PACK-01 PASS**, см.
   `docs/handover/PACK-01-REPORT.md`.
 - Этап: identity separation and audit kernel (CLAUDE-PACK-02) — **PACK-02
-  FAIL**, блокировано исключительно неперегенерированным `uv.lock` (сеть к
-  PyPI недоступна в этой песочнице); все остальные проверки честно проходят.
-  См. `docs/handover/PACK-02-REPORT.md` для точного и полного описания
-  оставшегося блокера и пути его устранения.
+  PASS**, подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock` регенерирован по-настоящему (43 пакета, все 5
+  сервисов PACK-02, `hypothesis`/`jsonschema`/`types-PyYAML`), 363 Python-
+  теста пройдены (2 пропуска — ожидаемые CT-00-11/12 not-applicable
+  маркеры), TypeScript/frontend тесты и `next build` пройдены полностью.
+  См. `docs/handover/PACK-02-REPORT.md` для полного описания.
 - Canon version: `0.1.0` (`docs/canonical/TZ-00-domain-event-canon.md`,
   неизменён в PACK-02).
 - Repository version: `0.2.0`.

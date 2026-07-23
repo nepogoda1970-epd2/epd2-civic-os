@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/vote-envelope.schema.json",
+  "title": "VoteEnvelope",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 15.3 (the most safety-critical entity in PACK-03; ADR-005 consolidation into voting-service). Owned by voting-service (epd2_voting_service.domain.VoteEnvelope). additionalProperties: false is a load-bearing vote-linkability control (CT-00-09, canon section 15.3's 'Запрет'): account_id, person_id, identity_record_id, full_name, email, membership_id, and identity_provider_reference are all forbidden and cannot appear on an instance that validates against this schema (epd2_voting_service.domain.FORBIDDEN_FIELD_NAMES). `credential_proof` references an opaque ParticipationCredential.credential_id, never an account_id - no code path anywhere resolves a VoteEnvelope back to an Account/IdentityRecord.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vote_envelope_id",
+    "ballot_id",
+    "credential_proof",
+    "encrypted_or_encoded_choice",
+    "submitted_at",
+    "integrity_hash",
+    "validation_status",
+    "included_in_tally"
+  ],
+  "properties": {
+    "vote_envelope_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "credential_proof": { "type": "string", "format": "uuid" },
+    "encrypted_or_encoded_choice": { "type": "string", "minLength": 1 },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "integrity_hash": { "type": "string", "minLength": 1 },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "validated",
+        "rejected",
+        "superseded",
+        "included",
+        "quarantined"
+      ]
+    },
+    "included_in_tally": { "type": "boolean" }
+  }
+}

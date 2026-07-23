@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/tally-status-changed-payload.v1.schema.json",
+  "title": "tally.started / tally.completed / tally.verified event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.10's tally subset. Produced by epd2_tally_service.events.tally_state_payload, shared verbatim by build_tally_started_event (tally.started), build_tally_completed_event (tally.completed), and build_tally_verified_event (tally.verified) - verified by reading events.py, all three call the identical payload function. Deliberately excludes result_data/invalid_vote_count/tally_signature (see tally_full_state_payload for Audit Core's complete snapshot). additionalProperties: false is a load-bearing identity-separation control (ADR-009 item 15): account_id, person_id, and identity_record_id are all forbidden and cannot appear on a payload that validates against this schema. completed_at is nullable (null until running -> completed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tally_id",
+    "ballot_id",
+    "input_set_hash",
+    "algorithm_version",
+    "verification_status",
+    "started_at",
+    "completed_at"
+  ],
+  "properties": {
+    "tally_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "input_set_hash": { "type": "string", "minLength": 1 },
+    "algorithm_version": { "type": "string", "minLength": 1 },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "verification_failed",
+        "verified",
+        "superseded"
+      ]
+    },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

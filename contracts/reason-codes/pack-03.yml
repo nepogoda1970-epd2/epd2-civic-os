@@ -1,0 +1,711 @@
+# Centralized PACK-03 reason-code registry (ADR-006).
+#
+# This is the single source of truth for every `reason_code` string
+# literal used anywhere in the six PACK-03 services'
+# (initiative-service, deliberation-service, moderation-service,
+# voting-service, tally-service, delegation-service) `src/`. No PACK-03
+# service may use a free-text string in place of a registered code
+# (canon section 24: "reason code \u043d\u0435 \u0437\u0430\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u044b\u043c \u0442\u0435\u043a\u0441\u0442\u043e\u043c").
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# (ADR-006, Option B - see docs/adr/ADR-006-pack-03-reason-code-additions.md):
+# PACK-02's five services and PACK-03's six services each have their own
+# reason-code registry; codes that both need (e.g. PERMISSION_DENIED,
+# VALIDATION_UNKNOWN_STATUS) are independently redeclared here rather than
+# imported from pack-02.yml, so each pack's registry remains a complete,
+# standalone source of truth for its own services.
+#
+# `source: canon` entries are the nine PACK-03-relevant canon section-24
+# codes plus five reused shared/generic canon codes, all copied verbatim
+# from docs/canonical/TZ-00-domain-event-canon.md section 24, canon
+# version 0.2.0 - their meaning must never be changed here without a canon
+# ADR and version bump. `source: pack-03-adr-006` entries are additive
+# codes introduced by this pack, documented and justified in
+# docs/adr/ADR-006-pack-03-reason-code-additions.md; they are
+# backward-compatible additions (canon section 25's "Minor" category) and
+# change no existing canon code's meaning.
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+# Validated structurally and scanned for every `reason_code` literal used
+# in the six PACK-03 services by `tests/contract/test_reason_codes_registry.py`.
+
+- code: BALLOT_NOT_OPEN
+  meaning: An action was attempted against a Ballot that is not currently open for voting.
+  severity: error
+  description: This ballot is not currently open.
+  retryable: true
+  owner: Voting Context (voting-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: BALLOT_ALREADY_CLOSED
+  meaning: An action was attempted against a Ballot that has already closed.
+  severity: error
+  description: This ballot has already closed.
+  retryable: false
+  owner: Voting Context (voting-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: BALLOT_CONFIGURATION_LOCKED
+  meaning:
+    A change was attempted to a Ballot's configuration after it opened (canon INV-06
+    / CT-00-10 rule freeze).
+  severity: error
+  description: This ballot's configuration is locked and can no longer be changed.
+  retryable: false
+  owner: Voting Context (voting-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: DUPLICATE_SUPPORT
+  meaning: The same subject attempted to support the same initiative more than once.
+  severity: error
+  description: You have already supported this initiative.
+  retryable: false
+  owner: Initiative Context (initiative-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: DUPLICATE_VOTE
+  meaning:
+    The same subject attempted to cast a vote on the same ballot more than once after
+    the ballot closed (a legitimate pre-close vote change is handled via supersession, not
+    this code).
+  severity: error
+  description: You have already voted on this ballot.
+  retryable: false
+  owner: Voting Context (voting-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: DELEGATION_CYCLE
+  meaning:
+    The requested delegation would create a cycle in the delegation graph (in this
+    pilot's depth-1 cap, this includes any attempt to re-delegate).
+  severity: error
+  description: This delegation would create a circular chain and cannot be created.
+  retryable: false
+  owner: Delegation Context (delegation-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: DELEGATION_EXPIRED
+  meaning: A Delegation was presented or relied upon after its validity period ended.
+  severity: error
+  description: This delegation has expired.
+  retryable: true
+  owner: Delegation Context (delegation-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: MODERATION_POLICY_VIOLATION
+  meaning: Content or an action violated a moderation policy.
+  severity: error
+  description: This violates the applicable moderation policy.
+  retryable: false
+  owner: Moderation Context (moderation-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: APPEAL_DEADLINE_EXPIRED
+  meaning:
+    "An Appeal was submitted after its allowed deadline. Reserved in PACK-03: canon
+    names this code but gives no deadline field in sections 14.2/14.3, so moderation-service
+    does not currently raise it."
+  severity: error
+  description: The deadline to appeal this decision has passed.
+  retryable: false
+  owner: Moderation Context (moderation-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: PERMISSION_DENIED
+  meaning:
+    The requesting actor is not authorized to perform the requested command, in any
+    bounded context.
+  severity: error
+  description: You do not have permission to perform this action.
+  retryable: false
+  owner: shared (all six PACK-03 services)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: EVENT_VERSION_UNSUPPORTED
+  meaning: An event or credential carried a major version this reader/validator does not support.
+  severity: error
+  description: This request uses a version that is no longer supported.
+  retryable: false
+  owner: shared (event envelope, all six PACK-03 services)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: INTEGRITY_CHECK_FAILED
+  meaning:
+    A structural or cryptographic integrity check failed (payload hash mismatch, signature
+    mismatch, tally verification failure, or equivalent).
+  severity: critical
+  description: An integrity check failed for this request.
+  retryable: false
+  owner: shared (tally-service verification, voting-service vote integrity)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: SERVICE_STATE_READ_ONLY
+  meaning:
+    "The service (or a subsystem of it) is temporarily in a read-only state. Reserved:
+    no PACK-03 service currently triggers this condition."
+  severity: warning
+  description: This service is temporarily read-only; please try again later.
+  retryable: true
+  owner: Governance Context (reserved, out of PACK-03 scope)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: EMERGENCY_FREEZE_ACTIVE
+  meaning:
+    "An EmergencyAction freeze is active and forbids the requested operation (CT-00-12).
+    Reserved: no PACK-03 service currently triggers this condition (EmergencyAction is out
+    of this pack's scope)."
+  severity: critical
+  description: An emergency freeze is currently active; this action is temporarily unavailable.
+  retryable: true
+  owner: Governance Context (reserved, out of PACK-03 scope)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning:
+    A status/verification-status/decision-value string outside the entity's defined
+    enum was supplied (CT-00-02). Mirrors pack-02-adr-004's additive code of the same name,
+    redeclared here per ADR-006 since pack-03.yml is its own registry file.
+  severity: error
+  description: The status value provided is not recognized.
+  retryable: false
+  owner: shared (all six PACK-03 services)
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning:
+    The requested status transition is not present in the entity's allowed-transition
+    table (CT-00-03). Mirrors pack-02-adr-004's additive code of the same name.
+  severity: error
+  description: This status change is not allowed from the entity's current status.
+  retryable: false
+  owner: shared (all six PACK-03 services)
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning:
+    No entity exists for the given identifier (a plain lookup miss), distinct from
+    any business-rule refusal on a record that does exist. Mirrors pack-02-adr-004's additive
+    code of the same name.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: shared (all six PACK-03 services)
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_VERSION_FROZEN
+  meaning:
+    A caller attempted to re-submit an existing (initiative_id, version_number) pair
+    with different content - a published InitiativeVersion never changes (canon section 11.2).
+  severity: error
+  description: This initiative version is frozen and cannot be changed.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: AMENDMENT_TARGET_SUPERSEDED
+  meaning:
+    An Amendment's target_version_id no longer exists / was superseded before a decision
+    was reached.
+  severity: error
+  description: This amendment's target version has been superseded.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_HAS_NO_VERSION
+  meaning: An Initiative was submitted with no InitiativeVersion yet created for it.
+  severity: error
+  description: This initiative has no content version to submit.
+  retryable: true
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_NOT_ACCEPTING_SUPPORT
+  meaning:
+    A SupportRecord was attempted against an Initiative not currently in support_collection
+    status.
+  severity: error
+  description: This initiative is not currently accepting support.
+  retryable: true
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Initiative creation request reused an existing initiative_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: An initiative with this identifier already exists with different content.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SUPPORT_RECORD_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated SupportRecord creation request reused an existing support_record_id
+    with different content (CT-00-04 analogue).
+  severity: error
+  description: A support record with this identifier already exists with different content.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: AMENDMENT_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Amendment creation request reused an existing amendment_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: An amendment with this identifier already exists with different content.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SOURCE_RECORD_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated SourceRecord creation request reused an existing source_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: A source record with this identifier already exists with different content.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for an Initiative status transition that
+    reaches a canonical event (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: An initiative's status was changed.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: INITIATIVE_VERSION_CREATED
+  meaning:
+    AuditEvent.reason_code classification for the creation of a new InitiativeVersion
+    (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: A new initiative version was created.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SUPPORT_RECORDED
+  meaning:
+    AuditEvent.reason_code classification for a successfully recorded SupportRecord
+    (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: Support for this initiative was recorded.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SUPPORT_WITHDRAWN
+  meaning:
+    AuditEvent.reason_code classification for a SupportRecord withdrawal (INV-04 audit
+    trail; no refusal occurred).
+  severity: info
+  description: Support for this initiative was withdrawn.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SUPPORT_INVALIDATED
+  meaning: AuditEvent.reason_code classification for a SupportRecord transitioning to invalidated.
+  severity: warning
+  description: Support for this initiative was invalidated.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: AMENDMENT_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for an Amendment status transition that reaches
+    a canonical event.
+  severity: info
+  description: An amendment's status was changed.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: SOURCE_STATUS_CHANGED
+  meaning: AuditEvent.reason_code classification for a SourceRecord verification_status transition.
+  severity: info
+  description: A source record's verification status was changed.
+  retryable: false
+  owner: initiative-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DISCUSSION_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Discussion creation request reused an existing discussion_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: A discussion with this identifier already exists with different content.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: CONTRIBUTION_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Contribution creation request reused an existing contribution_id with
+    different content (CT-00-04 analogue).
+  severity: error
+  description: A contribution with this identifier already exists with different content.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DISCUSSION_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a Discussion status transition that reaches
+    a canonical event.
+  severity: info
+  description: A discussion's status was changed.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: CONTRIBUTION_CREATED
+  meaning: AuditEvent.reason_code classification for the creation of a new Contribution.
+  severity: info
+  description: A contribution was created.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: CONTRIBUTION_EDITED
+  meaning:
+    AuditEvent.reason_code classification for an edit to an existing Contribution's
+    content (edited_version incremented).
+  severity: info
+  description: A contribution was edited.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: CONTRIBUTION_FLAGGED
+  meaning:
+    AuditEvent.reason_code classification for a Contribution being flagged for moderator
+    review.
+  severity: warning
+  description: A contribution was flagged for review.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: CONTRIBUTION_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a Contribution visibility_status transition
+    not covered by a more specific code above.
+  severity: info
+  description: A contribution's visibility status was changed.
+  retryable: false
+  owner: deliberation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: MODERATION_CASE_DUPLICATE_CONFLICT
+  meaning:
+    A repeated ModerationCase creation request reused an existing moderation_case_id
+    with different content (CT-00-04 analogue).
+  severity: error
+  description: A moderation case with this identifier already exists with different content.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: MODERATION_DECISION_DUPLICATE_CONFLICT
+  meaning:
+    A repeated ModerationDecision creation request reused an existing moderation_decision_id
+    with different content (CT-00-04 analogue).
+  severity: error
+  description: A moderation decision with this identifier already exists with different content.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: APPEAL_DUPLICATE_SUBMISSION_CONFLICT
+  meaning:
+    A repeated Appeal submission reused an existing appeal_id with different content
+    (CT-00-04 analogue).
+  severity: error
+  description: An appeal with this identifier already exists with different content.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: MODERATION_CASE_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a ModerationCase status transition that
+    reaches a canonical event.
+  severity: info
+  description: A moderation case's status was changed.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: MODERATION_DECISION_ISSUED
+  meaning:
+    AuditEvent.reason_code classification for the creation of a new ModerationDecision
+    (INV-04 audit trail; no refusal occurred).
+  severity: info
+  description: A moderation decision was issued.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: MODERATION_DECISION_ENFORCED
+  meaning:
+    AuditEvent.reason_code classification for a ModerationDecision being recorded as
+    enforced.
+  severity: info
+  description: A moderation decision was enforced.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: APPEAL_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for an Appeal status transition not covered
+    by a more specific code above.
+  severity: info
+  description: An appeal's status was changed.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: APPEAL_DECIDED
+  meaning:
+    AuditEvent.reason_code classification for an Appeal reaching a terminal outcome
+    (upheld, partially_upheld, or rejected) via the reviewer-is-not-the-original-decider check
+    (canon section 14.3).
+  severity: info
+  description: An appeal decision was recorded.
+  retryable: false
+  owner: moderation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: BALLOT_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Ballot creation request reused an existing ballot_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: A ballot with this identifier already exists with different content.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: BALLOT_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a Ballot status transition that reaches
+    a canonical event.
+  severity: info
+  description: A ballot's status was changed.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_ENVELOPE_DUPLICATE_SUBMISSION_CONFLICT
+  meaning:
+    A repeated VoteEnvelope submission after Ballot.closes_at reused the same credential
+    with different content, or the same event_id with different content (CT-00-04 analogue;
+    a pre-close vote change is supersession, not this conflict).
+  severity: error
+  description: A vote envelope with this identifier already exists with different content.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: RECEIPT_DUPLICATE_ISSUANCE_CONFLICT
+  meaning:
+    A repeated VoteReceipt issuance request reused an existing receipt_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: A receipt with this identifier already exists with different content.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_ENVELOPE_NOT_RECEIPT_ELIGIBLE
+  meaning:
+    A VoteReceipt was requested for a VoteEnvelope not in a status that may be receipted
+    (e.g. rejected or superseded).
+  severity: error
+  description: This vote is not eligible for a receipt.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_INTEGRITY_HASH_MISMATCH
+  meaning: A VoteEnvelope's integrity_hash did not match its recomputed value during validation.
+  severity: critical
+  description: This vote's integrity check failed.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_RECEIVED
+  meaning:
+    AuditEvent.reason_code classification for a newly received VoteEnvelope (INV-04
+    audit trail; no refusal occurred).
+  severity: info
+  description: A vote was received.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_VALIDATED
+  meaning: AuditEvent.reason_code classification for a VoteEnvelope transitioning to validated.
+  severity: info
+  description: A vote was validated.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_REJECTED
+  meaning: AuditEvent.reason_code classification for a VoteEnvelope transitioning to rejected.
+  severity: warning
+  description: A vote was rejected.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: VOTE_SUPERSEDED
+  meaning:
+    AuditEvent.reason_code classification for a VoteEnvelope transitioning to superseded
+    as a result of a legitimate pre-close vote change (ADR-009 items 1-2).
+  severity: info
+  description: A previous vote was superseded by a newer one.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: RECEIPT_ISSUED
+  meaning: AuditEvent.reason_code classification for the issuance of a new VoteReceipt.
+  severity: info
+  description: A vote receipt was issued.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: TALLY_RECORD_CONFLICT
+  meaning:
+    A repeated Tally creation request reused an existing tally_id with different content
+    (CT-00-04 analogue).
+  severity: error
+  description: A tally with this identifier already exists with different content.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: RESULT_PUBLICATION_RECORD_CONFLICT
+  meaning:
+    A repeated ResultPublication creation request reused an existing result_publication_id
+    with different content (CT-00-04 analogue).
+  severity: error
+  description: A result publication with this identifier already exists with different content.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: TALLY_QUORUM_NOT_MET
+  meaning:
+    AuditEvent.reason_code classification for a ResultPublication whose quorum_result
+    is quorum_not_met (ADR-009 item 5).
+  severity: warning
+  description: The quorum requirement for this ballot was not met.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: TALLY_THRESHOLD_TIE_NO_DECISION
+  meaning:
+    AuditEvent.reason_code classification for a ResultPublication whose threshold_result
+    is tie_no_decision - no silent tie-break is ever performed (ADR-009 item 11).
+  severity: warning
+  description: This ballot resulted in a tie with no decision.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: TALLY_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a Tally verification_status transition
+    that reaches a canonical event.
+  severity: info
+  description: A tally's status was changed.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: RESULT_PUBLISHED
+  meaning:
+    AuditEvent.reason_code classification for the publication of a new ResultPublication
+    (INV-04 audit trail; the result remains provisional per ADR-010's finality clarification
+    regardless of this classification).
+  severity: info
+  description: A result was published.
+  retryable: false
+  owner: tally-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_SELF_REFERENCE_FORBIDDEN
+  meaning:
+    A Delegation was attempted with delegator_actor_id == delegate_actor_id (canon
+    section 16.1's self-delegation prohibition).
+  severity: error
+  description: You cannot delegate to yourself.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_SCOPE_CONFLICT
+  meaning:
+    A Delegation was attempted for a (delegator_actor_id, scope_type, scope_id) that
+    already has a competing active delegation (canon section 16.1's competing-active-delegation
+    prohibition).
+  severity: error
+  description: You already have an active delegation for this scope.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_SNAPSHOT_FROZEN
+  meaning:
+    A caller attempted to re-submit an existing (ballot_id, input_hash) DelegationSnapshot
+    with different content - a snapshot may not change after voting has opened (canon section
+    16.1).
+  severity: error
+  description: This delegation snapshot is frozen and cannot be changed.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_DUPLICATE_CREATION_CONFLICT
+  meaning:
+    A repeated Delegation creation request reused an existing delegation_id with different
+    content (CT-00-04 analogue).
+  severity: error
+  description: A delegation with this identifier already exists with different content.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_STATUS_CHANGED
+  meaning:
+    AuditEvent.reason_code classification for a Delegation status transition that reaches
+    a canonical event.
+  severity: info
+  description: A delegation's status was changed.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006
+- code: DELEGATION_SNAPSHOT_CREATED
+  meaning: AuditEvent.reason_code classification for the creation of a new DelegationSnapshot.
+  severity: info
+  description: A delegation snapshot was created.
+  retryable: false
+  owner: delegation-service
+  introduced_in_version: pack-03-0.1.0
+  source: pack-03-adr-006

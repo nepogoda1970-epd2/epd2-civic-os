@@ -24,7 +24,13 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from _schema_helpers import OPENAPI_PATH, load_event_schema, load_schema, to_jsonable
+from _schema_helpers import (
+    OPENAPI_PATH,
+    PACK03_OPENAPI_PATH,
+    load_event_schema,
+    load_schema,
+    to_jsonable,
+)
 
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
@@ -38,6 +44,10 @@ from epd2_credential_service.application import (
 from epd2_credential_service.domain import FORBIDDEN_FIELD_NAMES, CredentialType
 from epd2_credential_service.events import credential_full_state_payload
 from epd2_credential_service.storage import InMemoryCredentialStore
+from epd2_delegation_service.domain import FORBIDDEN_FIELD_NAMES as DELEGATION_FORBIDDEN
+from epd2_initiative_service.domain import FORBIDDEN_FIELD_NAMES as SUPPORT_FORBIDDEN
+from epd2_tally_service.domain import FORBIDDEN_FIELD_NAMES as TALLY_FORBIDDEN
+from epd2_voting_service.domain import FORBIDDEN_FIELD_NAMES as VOTING_FORBIDDEN
 
 
 def _issue(
@@ -181,21 +191,31 @@ def test_serialized_credential_has_no_id_shared_with_identity_or_account(
     assert set(payload) & {"account_id", "identity_record_id", "person_id"} == set()
 
 
-def _credential_service_paths(spec: dict[str, object]) -> dict[str, object]:
-    """The subset of the OpenAPI `paths` mapping owned by credential-service
-    (`tags: [credential-service]` on at least one HTTP method) - CT-00-08 is
-    about *credential* responses never leaking identity fields, not about
-    every path in the shared, multi-service contract. Other services'
-    paths (e.g. identity-service's `/identity/verifications`) legitimately
-    reference fields such as `identity_record_id`, since that is their own
-    canonical primary key, not a leak into a participation artifact."""
+def _credential_service_paths(
+    spec: dict[str, object], service_tag: str = "credential-service"
+) -> dict[str, object]:
+    """The subset of the OpenAPI `paths` mapping owned by `service_tag`
+    (`tags: [service_tag]` on at least one HTTP method) - CT-00-08 is
+    about a given service's own responses never leaking identity fields,
+    not about every path in the shared, multi-service contract. Other
+    services' paths (e.g. identity-service's `/identity/verifications`)
+    legitimately reference fields such as `identity_record_id`, since
+    that is their own canonical primary key, not a leak into a
+    participation artifact.
+
+    Generalized (PACK-03) from a credential-service-only helper: the
+    original name is kept (existing PACK-02 call sites below rely on the
+    `service_tag="credential-service"` default and pass no second
+    argument, so they are completely unaffected) rather than introducing
+    a same-shaped second helper under a new name, since the body is
+    identical for every service - only the tag string differs."""
     paths = spec.get("paths", {})
     assert isinstance(paths, dict)
     result: dict[str, object] = {}
     for path, item in paths.items():
         assert isinstance(item, dict)
         operations = [op for op in item.values() if isinstance(op, dict)]
-        if any("credential-service" in (op.get("tags") or []) for op in operations):
+        if any(service_tag in (op.get("tags") or []) for op in operations):
             result[path] = item
     return result
 
@@ -294,3 +314,124 @@ def test_identity_service_paths_may_reference_identity_record_id() -> None:
     identity_path = spec["paths"]["/identity/verifications"]
     identity_path_text = json.dumps(identity_path)
     assert "identity_record_id" in identity_path_text
+
+
+# =============================================================================
+# PACK-03: the generalized `_credential_service_paths(spec, service_tag)`
+# helper exercised against `pack-03.yaml` for voting-service, tally-service,
+# and initiative-service, plus schema-forbids-identity-fields tests for the
+# six PACK-03 entities each own an identity-separation guarantee for
+# (VoteEnvelope, VoteReceipt, Tally, ResultPublication, SupportRecord,
+# Delegation) - mirroring `test_credential_schema_forbids_identity_fields`
+# above exactly.
+# =============================================================================
+
+
+def test_vote_envelope_schema_forbids_identity_fields() -> None:
+    schema = load_schema("vote-envelope.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in VOTING_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_vote_receipt_schema_forbids_identity_fields() -> None:
+    schema = load_schema("vote-receipt.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in VOTING_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_tally_schema_forbids_identity_fields() -> None:
+    schema = load_schema("tally.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TALLY_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_result_publication_schema_forbids_identity_fields() -> None:
+    schema = load_schema("result-publication.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TALLY_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_support_record_schema_forbids_identity_fields() -> None:
+    schema = load_schema("support-record.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in SUPPORT_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_delegation_schema_forbids_identity_fields() -> None:
+    schema = load_schema("delegation.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in DELEGATION_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def _pack03_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK03_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_voting_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    voting_paths = _credential_service_paths(spec, service_tag="voting-service")
+    assert voting_paths, "expected at least one voting-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(voting_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(voting_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & VOTING_FORBIDDEN
+    assert leaked == set(), (
+        f"voting-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+def test_openapi_tally_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    tally_paths = _credential_service_paths(spec, service_tag="tally-service")
+    assert tally_paths, "expected at least one tally-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(tally_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(tally_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & TALLY_FORBIDDEN
+    assert leaked == set(), (
+        f"tally-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+def test_openapi_initiative_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    initiative_paths = _credential_service_paths(spec, service_tag="initiative-service")
+    assert initiative_paths, "expected at least one initiative-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(initiative_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(initiative_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & SUPPORT_FORBIDDEN
+    assert leaked == set(), (
+        f"initiative-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )

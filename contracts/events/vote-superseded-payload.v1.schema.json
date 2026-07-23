@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/vote-superseded-payload.v1.schema.json",
+  "title": "vote.superseded event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.10. Produced by epd2_voting_service.events.build_vote_superseded_event: vote_envelope_state_payload(envelope) plus superseded_by (the vote_envelope_id of the new envelope that superseded this one, ADR-009 items 1-2's vote-change/latest-valid-vote rule). additionalProperties: false is a load-bearing vote-linkability control (CT-00-09): account_id, person_id, identity_record_id, full_name, email, membership_id, and identity_provider_reference are all forbidden and cannot appear on a payload that validates against this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vote_envelope_id",
+    "ballot_id",
+    "credential_proof",
+    "integrity_hash",
+    "validation_status",
+    "included_in_tally",
+    "superseded_by"
+  ],
+  "properties": {
+    "vote_envelope_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "credential_proof": { "type": "string", "format": "uuid" },
+    "integrity_hash": { "type": "string", "minLength": 1 },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "validated",
+        "rejected",
+        "superseded",
+        "included",
+        "quarantined"
+      ]
+    },
+    "included_in_tally": { "type": "boolean" },
+    "superseded_by": { "type": "string", "format": "uuid" }
+  }
+}

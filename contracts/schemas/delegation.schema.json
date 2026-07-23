@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/delegation.schema.json",
+  "title": "Delegation",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 16.1 (ADR-005 consolidates 'Delegation Service'/'Delegation Resolution Engine' into delegation-service). Owned by delegation-service (epd2_delegation_service.domain.Delegation). additionalProperties: false is a load-bearing identity-separation control: account_id, person_id, and identity_record_id are all forbidden and cannot appear on an instance that validates against this schema (epd2_delegation_service.domain.FORBIDDEN_FIELD_NAMES) - only opaque delegator_actor_id/delegate_actor_id references are ever carried. `valid_until` is nullable but never implicit (canon prohibition #3, 'hidden indefinite delegation') - every construction site must consciously supply a concrete instant or an explicit null. `revocation_status` is an opaque, unvalidated string (canon gives it no enumerated value list).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delegation_id",
+    "delegator_actor_id",
+    "delegate_actor_id",
+    "scope_type",
+    "scope_id",
+    "valid_from",
+    "valid_until",
+    "revocation_status",
+    "status"
+  ],
+  "properties": {
+    "delegation_id": { "type": "string", "format": "uuid" },
+    "delegator_actor_id": { "type": "string", "format": "uuid" },
+    "delegate_actor_id": { "type": "string", "format": "uuid" },
+    "scope_type": { "type": "string", "minLength": 1 },
+    "scope_id": { "type": "string", "format": "uuid" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "revocation_status": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "revoked", "expired", "suspended", "invalid"]
+    }
+  }
+}

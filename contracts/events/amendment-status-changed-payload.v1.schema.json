@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/amendment-status-changed-payload.v1.schema.json",
+  "title": "amendment.* status-change event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.7. Produced by epd2_initiative_service.events.amendment_state_payload, shared verbatim by four distinct event_type builders: build_amendment_submitted_event (amendment.submitted), build_amendment_published_event (amendment.published), build_amendment_accepted_event (amendment.accepted), build_amendment_rejected_event (amendment.rejected) - verified by reading events.py, all four call the shared private _build_amendment_event helper with the identical payload function and differ only in event_type.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["amendment_id", "initiative_id", "target_version_id", "status"],
+  "properties": {
+    "amendment_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "target_version_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "published",
+        "under_discussion",
+        "accepted",
+        "rejected",
+        "withdrawn",
+        "superseded"
+      ]
+    }
+  }
+}

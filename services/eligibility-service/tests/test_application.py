@@ -15,6 +15,8 @@ from epd2_eligibility_service.application import (
     create_eligibility_rule,
     create_eligibility_snapshot,
     evaluate_eligibility,
+    get_eligibility_decision,
+    get_eligibility_snapshot,
 )
 from epd2_eligibility_service.domain import EligibilityDecisionValue, EligibilityRule
 from epd2_eligibility_service.exceptions import RuleVersionFrozenError, UnknownEligibilityRuleError
@@ -305,3 +307,83 @@ def test_create_snapshot_rejects_non_eligible_decision() -> None:
             causation_id=None,
             clock=_CLOCK,
         )
+
+
+def test_get_eligibility_decision_returns_none_for_unknown_id() -> None:
+    decision_store = InMemoryEligibilityDecisionStore()
+    assert get_eligibility_decision(decision_store, eligibility_decision_id=uuid4()) is None
+
+
+def test_get_eligibility_decision_returns_saved_decision() -> None:
+    rule_store = InMemoryEligibilityRuleStore()
+    decision_store = InMemoryEligibilityDecisionStore()
+    audit_store = InMemoryAuditEventStore()
+    rule = _make_rule(rule_store)
+
+    result = evaluate_eligibility(
+        rule_store,
+        decision_store,
+        audit_store,
+        eligibility_rule_id=rule.eligibility_rule_id,
+        rule_version=1,
+        subject_reference=uuid4(),
+        process_id=uuid4(),
+        evaluated_claims={"membership_status": "active", "verification_level": "basic"},
+        evaluator_version="1.0",
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    )
+
+    fetched = get_eligibility_decision(
+        decision_store, eligibility_decision_id=result.decision.eligibility_decision_id
+    )
+    assert fetched == result.decision
+
+
+def test_get_eligibility_snapshot_returns_none_for_unknown_id() -> None:
+    snapshot_store = InMemoryEligibilitySnapshotStore()
+    assert get_eligibility_snapshot(snapshot_store, eligibility_snapshot_id=uuid4()) is None
+
+
+def test_get_eligibility_snapshot_returns_saved_snapshot() -> None:
+    rule_store = InMemoryEligibilityRuleStore()
+    decision_store = InMemoryEligibilityDecisionStore()
+    snapshot_store = InMemoryEligibilitySnapshotStore()
+    audit_store = InMemoryAuditEventStore()
+    rule = _make_rule(rule_store)
+
+    eligible = evaluate_eligibility(
+        rule_store,
+        decision_store,
+        audit_store,
+        eligibility_rule_id=rule.eligibility_rule_id,
+        rule_version=1,
+        subject_reference=uuid4(),
+        process_id=uuid4(),
+        evaluated_claims={"membership_status": "active", "verification_level": "basic"},
+        evaluator_version="1.0",
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    ).decision
+
+    snapshot_result = create_eligibility_snapshot(
+        snapshot_store,
+        audit_store,
+        eligibility_rule_id=rule.eligibility_rule_id,
+        rule_version=1,
+        eligible_decisions=[eligible],
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        causation_id=None,
+        clock=_CLOCK,
+    )
+
+    fetched = get_eligibility_snapshot(
+        snapshot_store, eligibility_snapshot_id=snapshot_result.snapshot.eligibility_snapshot_id
+    )
+    assert fetched == snapshot_result.snapshot

@@ -1,41 +1,42 @@
 # CLAUDE-PACK-02 — Identity Separation and Audit Kernel: Handover Report
 
-**Revision 4 — final candidate.** Revision 1 was exported as
-`epd2-civic-os-PACK-02-verification-candidate.zip` and run through external
-verification on GitHub Actions, which found one real test-scope bug (fixed
-in revision 2, section 0a). Revision 3 fixed a second real bug the same
-external run surfaced — a Hypothesis API rename in
-`tests/contract/test_property_based.py` (section 0b) — and cleaned up the
-delivery mechanics so no manual GitHub edit is needed (section 0c). This
-revision fixes a third, independent real bug: a genuine mypy `arg-type`
-error in the same file, found by a subsequent external GitHub Actions run
-against revision 3's real, installed `hypothesis` (section 0d) — the
-Hypothesis-rename fix in revision 3 was itself correct, but introduced a
-value whose type mypy could not verify against Hypothesis's real stub
-without an explicit annotation, which this revision adds.
-
-Every check this sandbox can run (structure, forbidden paths, version
-consistency, Ruff format, Ruff lint, a real Prettier format check, mypy
-across every service and the shared test suites, pytest, JSON/YAML
-validity) passes cleanly and honestly, with no weakened, skipped, or
-disabled check. The one Definition-of-Done item this repository still
-cannot satisfy locally is `uv.lock` being regenerated to include PACK-02's
-five new workspace members and three new dev dependencies — this
-sandbox's network egress to `pypi.org` / `files.pythonhosted.org` is
-blocked, and the required `hypothesis` package is not present in the local
-`uv` cache either, so `uv lock` fails both online and with `--offline`
-(reconfirmed this pass, section 3). This is the same class of blocker
-`docs/handover/PACK-01-REPORT.md` hit in its revision 3, resolved there by
-running `.github/workflows/verify-and-package.yml` on GitHub Actions (real
-network access) — the same workflow that surfaced all three bugs fixed
-across revisions 2 through 4. Per the pack's own rule against a
-"conditional PASS," this revision honestly records:
+**Revision 5 — PASS.** Revisions 1 through 4 each fixed one real bug found
+by successive external GitHub Actions verification runs — a test-scope
+bug (revision 2, section 0a), a Hypothesis parameter rename (revision 3,
+section 0b), and a Hypothesis `categories=` argument-typing gap (revision
+4, section 0d) — and cleaned up delivery so no manual GitHub edit was ever
+required (revision 3, section 0c). A subsequent external GitHub Actions
+run against the revision-4 tree, with genuine PyPI/npm network access,
+completed the full pipeline successfully: `uv lock` regenerated a real
+`uv.lock` (43 packages, including all 5 PACK-02 workspace members and
+`hypothesis` 6.160.0, `jsonschema`, `types-PyYAML`, with real
+files.pythonhosted.org hashes/URLs — not asserted, verified directly
+against the returned lock file, section 3), and the complete `make verify`
+pipeline passed end to end: 363 Python tests passed, 2 skipped (the same 2
+genuine CT-00-11/12 not-applicable markers this report has always
+documented — zero unexplained skips, zero failures), TypeScript typecheck
+clean for both workspaces, ESLint clean, 3/3 TypeScript unit tests passed,
+2/2 frontend tests passed, and `next build` completed successfully with 4
+static routes generated. Full evidence (`VERIFICATION-RESULT.md`,
+`VERIFICATION.log`) is in `epd2civicosverificationresult.zip`, and — per
+this project's own established practice, restated after the PACK-01
+incident — the returned tree was diffed file-by-file against the tree
+that was sent for verification before being accepted (section 3): the only
+differences were the regenerated `uv.lock`, the workflow's own
+`VERIFICATION-RESULT.md`/`VERIFICATION.log` output, two harmless
+build-time artifacts (`next-env.d.ts`, `tsconfig.tsbuildinfo`, both
+`.gitignore`d or build-regenerated), and one non-required historical
+evidence file (`docs/handover/PACK-01-VERIFICATION.log`) that did not
+survive the round trip (see section 3's note — almost certainly because
+it matches this repository's own `*.log` `.gitignore` pattern, not because
+of any content corruption; it is not a required path and does not affect
+this pack's verification). `docs/canonical/TZ-00-domain-event-canon.md`'s
+SHA-256 is byte-identical to what was sent. No source code, test, or
+check was changed to reach this result — this revision is a
+documentation-only update recording a genuine, already-achieved PASS.
 
 ```text
-PACK-02 FAIL — blocked solely by an unregenerated uv.lock
-(see section 3 for the exact, narrow gap; GitHub Actions must run
-`uv lock` for real network access — this is the only remaining step,
-and it requires no manual repository edits, per section 0c)
+PACK-02 PASS
 ```
 
 ## 0a. External verification finding and fix (revision 2)
@@ -303,71 +304,70 @@ canon-immutable content — see `docs/canonical/README.md`) was widened from
 `">=0.1.0 <0.2.0"` to `">=0.1.0 <0.3.0"` to admit the new repository
 version.
 
-## 3. Lock files — the one open Definition-of-Done gap
+## 3. Lock files — closed (revision 5)
 
 ```text
-uv.lock:            STALE — present, but missing all 5 PACK-02 workspace
-                     members and 3 new dev dependencies
-package-lock.json:  UP TO DATE — PACK-02 added no new npm dependency;
-                     package.json's dependencies/devDependencies and
-                     package-lock.json's root package entry are identical,
-                     and package.json's `workspaces` list is unchanged
-                     (still just packages/typescript/epd2-types and
-                     frontend/web-shell) - verified programmatically this
-                     pass, not merely assumed
+uv.lock:            REGENERATED — genuine, tool-generated lock file
+                     produced by `uv lock` running under real GitHub
+                     Actions network access; 43 packages total, including
+                     all 5 PACK-02 workspace members
+                     (epd2-account-service, epd2-identity-service,
+                     epd2-eligibility-service, epd2-credential-service,
+                     epd2-audit-core) and every new dev dependency
+                     (hypothesis 6.160.0, jsonschema, types-PyYAML), each
+                     with real files.pythonhosted.org URLs and hashes
+package-lock.json:  UP TO DATE — confirmed byte-identical between the
+                     tree sent for verification and the tree returned by
+                     GitHub Actions (`diff` produced zero output);
+                     PACK-02 added no new npm dependency, consistent with
+                     every earlier revision's finding
 ```
 
-Verification performed this pass (both commands run from the repository
-root, `pyproject.toml` as currently committed):
+This gap is now closed. Revisions 1 through 4 could not regenerate
+`uv.lock` in this sandbox at all, because this sandbox's network egress
+blocks `pypi.org` / `files.pythonhosted.org` (confirmed directly, both
+online and `--offline`, in every earlier revision of this section — see
+git history of this file for the exact failure transcripts) and
+`hypothesis` — a genuinely new dependency this pack introduces — is not
+present in the local `uv` cache either, so even an offline resolution
+failed on the first new package it needed. There was no partial or manual
+workaround that would have produced a genuine, tool-generated `uv.lock`
+in that environment, and none was attempted; a hand-written lock file
+would not be a real one.
 
-```text
-$ uv lock
-  × No solution found when resolving dependencies for split
-    (markers: python_full_version >= '3.15'):
-  ╰─▶ Because hypothesis was not found in the package registry ...
-      hint: An index URL (https://pypi.org/simple) could not be queried
-      due to a lack of valid authentication credentials (403 Forbidden).
+Per the remediation path this report always described (identical in kind
+to `docs/handover/PACK-01-REPORT.md`'s own revision-3-to-4 transition),
+`.github/workflows/verify-and-package.yml` was run via **Actions → Verify
+and Package → Run workflow** on a fork/clone with real GitHub Actions
+network access. That run's `uv lock` step produced the real, complete lock
+file above; its `uv sync --all-groups --frozen` step then installed from
+it and the rest of `make verify` ran end to end (section 6). The lock file
+was not accepted on the strength of the workflow's own PASS status alone:
+per this project's established practice (restated after the PACK-01
+incident), the full returned tree was extracted and diffed file-by-file
+against the exact tree that was sent for verification before anything was
+accepted. That diff showed only the expected differences — the
+regenerated `uv.lock` itself, the workflow's own `VERIFICATION-RESULT.md`
+and `VERIFICATION.log` output, two harmless build-time artifacts
+(`next-env.d.ts`, `tsconfig.tsbuildinfo`, both either `.gitignore`d or
+build-regenerated), and one non-required historical evidence file
+(`docs/handover/PACK-01-VERIFICATION.log`) that did not survive the round
+trip. That last file was investigated, not waved away: it is absent from
+`scripts/check_repository.py`'s `REQUIRED_PATHS`, so its absence does not
+fail any check, and it matches this repository's own `*.log`
+`.gitignore` pattern, which is almost certainly why a fresh
+`actions/checkout` + zip round trip did not carry it — nothing in the diff
+suggests content corruption or a partial/failed run. `package-lock.json`
+was separately confirmed byte-identical (zero-output `diff`), matching
+this report's finding in every prior revision that PACK-02 added no npm
+dependency.
 
-$ uv lock --offline
-  × No solution found when resolving dependencies ...
-  ╰─▶ Because hypothesis was not found in the cache ...
-      hint: Packages were unavailable because the network was disabled.
-```
-
-`jsonschema` and `types-PyYAML` wheels happen to already be present in this
-sandbox's local `uv` cache (residue from other work), but `hypothesis` is
-not, so even a fully offline resolution fails on the very first new
-dependency it needs. There is no partial or manual workaround that
-produces a genuine, tool-generated `uv.lock` here — writing one by hand
-would not be a real lock file and was not attempted.
-
-**Remediation path (identical in kind to `docs/handover/PACK-01-REPORT.md`
-section 0's revision-3-to-4 transition):** run
-`.github/workflows/verify-and-package.yml` via **Actions → Verify and
-Package → Run workflow** on a fork/clone with normal GitHub Actions network
-access (see `GITHUB_ACTIONS_START.md`). That workflow performs exactly:
-checkout, Python/uv/Node dependency setup, `uv lock` (generates a genuine
-lock file for real), `uv sync --all-groups --frozen` + `npm install`
-(install), the full `make verify` pipeline, a verification-status write, a
-result archive, and an artifact upload named
-`epd2-civic-os-verification-result` — nothing else, and nothing that
-requires a manual edit on GitHub first (section 0c). It was generalized
-this session away from being PACK-01-specific (previously hardcoded
-`PACK-01-RESULT.md` / `PACK-01-VERIFICATION.log` / a
-`epd2-civic-os-PACK-01-result` artifact name and status string; now emits
-pack-agnostic names, since it is re-run for every pack) and, this
-revision, had its two remaining patch steps removed entirely — see
-section 0c for why they are no longer needed rather than merely hardened.
-The canon file's safety no longer depends on an in-CI checksum guard at
-all: the repository delivered to GitHub Actions is already
-Prettier-formatted (section 0c) and `.prettierignore` already excludes the
-canon path, so CI's `make verify` only ever _checks_ formatting, never
-writes to any file.
-
-Once that run produces a genuine `uv.lock`, it should be diffed
-file-by-file against the current tree before being accepted (per the exact
-lesson of the PACK-01 incident), then this report revised to a genuine,
-non-conditional PACK-02 PASS.
+The returned `uv.lock` was then copied into this working tree, replacing
+the stale one. `docs/canonical/TZ-00-domain-event-canon.md`'s SHA-256 was
+reconfirmed unchanged (section 2) both before and after accepting the
+returned tree. No source code, test, or check was changed as part of
+closing this gap — this section records a verified, external, successful
+lock-file regeneration and its independent acceptance, nothing more.
 
 ## 4. Files added or changed this pass
 
@@ -477,6 +477,19 @@ tuple[Literal["Lu"], Literal["Nd"]]` module-level constants (with
   explaining the mypy inference gap this works around (section 0d).
 - `docs/handover/PACK-02-REPORT.md` — this revision.
 
+Changed in revision 5 (this revision, section 3):
+
+- `uv.lock` — replaced with the genuine, tool-generated lock file returned
+  by the external GitHub Actions run (43 packages, including all 5
+  PACK-02 workspace members and `hypothesis` 6.160.0, `jsonschema`,
+  `types-PyYAML` with real `files.pythonhosted.org` hashes/URLs), after
+  being diffed file-by-file against the sent tree and accepted (section 3).
+- `docs/handover/PACK-02-REPORT.md` — rewritten from FAIL to PASS: header,
+  section 3 (lock-file gap closed), section 6 (revision 5 verification
+  results added), section 9 (conclusion changed to PACK-02 PASS). No
+  source code, test, or check was changed as part of this revision.
+- `README.md` — status line updated from PACK-02 FAIL to PACK-02 PASS.
+
 ## 5. A gap found and fixed during this pass's own verification
 
 Two real problems were found while producing this report, not before it —
@@ -534,7 +547,93 @@ per the pack's demand for honest verification:
 
 ## 6. Commands executed this pass, and results
 
-### Revision 4 re-verification (this revision, after the section 0d fix) — final
+### Revision 5: external GitHub Actions verification — PASS (final, source of truth)
+
+Run against the revision-4 tree, on GitHub Actions (`ubuntu-latest`,
+Python 3.12, Node.js 22), with genuine PyPI/npm network access. Evidence:
+`VERIFICATION-RESULT.md` and the full `VERIFICATION.log` transcript,
+delivered in `epd2-civic-os-verification-result.zip`
+(`epd2civicosverificationresult.zip` as uploaded). Independently inspected
+directly, not taken on the strength of a summary:
+
+```text
+✅ VERIFICATION-RESULT.md
+   → Status: PASS
+     Runner: GitHub Actions / ubuntu-latest
+     Python: 3.12
+     Node.js: 22
+
+✅ uv lock
+   → generated a genuine uv.lock: 43 packages, including all 5 PACK-02
+     workspace members and hypothesis 6.160.0, jsonschema, types-PyYAML,
+     with real files.pythonhosted.org hashes/URLs (section 3)
+
+✅ uv sync --all-groups --frozen
+   → installed from the freshly generated lock file
+
+✅ npm install
+   → installed; package-lock.json confirmed byte-identical to the sent
+     tree (zero-output diff)
+
+✅ scripts/check_repository.py
+   → OK: all 166 required paths are present.
+
+✅ scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ ruff format --check .
+   → 87 files already formatted
+
+✅ prettier --check .
+   → All matched files use Prettier code style!
+
+✅ ruff check .
+   → All checks passed!
+
+✅ eslint .
+   → clean
+
+✅ mypy — all 7 scoped groups (epd2-core/scripts/tests-repository/conftest,
+   tests/contract, and one per service)
+   → Success: no issues found, in every group
+
+✅ npm run typecheck — both TypeScript workspaces
+   → clean
+
+✅ pytest -q
+   → 363 passed, 2 skipped, 0 failed
+     (2 skips: the same genuine CT-00-11/CT-00-12 not-applicable markers
+     this report has always documented — zero unexplained skips, zero
+     failures; count is higher than revisions 1-4's sandbox-observed
+     339 passed/8 skipped because a real hypothesis + PyYAML install lets
+     every previously sandbox-skipped test, including the full property-
+     based suite, actually run for real instead of import-skipping)
+
+✅ TypeScript unit tests (epd2-types workspace)
+   → 3/3 passed
+
+✅ frontend unit tests (web-shell workspace)
+   → 2/2 passed
+
+✅ next build
+   → Compiled successfully; 4 static routes generated (/, /_not-found,
+     and the remaining two PACK-01-era routes)
+
+✅ sha256(docs/canonical/TZ-00-domain-event-canon.md) unchanged:
+   c731a24477d91010b5c6bc41a00253c8e30279b7f03394e53481ef0d8975e18b
+```
+
+No `FAIL`, `Error`, or `error:` string appears anywhere in the 200-line
+`VERIFICATION.log` (confirmed via `grep`). File-by-file diff of the
+returned tree against the sent tree, per this project's established
+practice: clean except for the expected regenerated `uv.lock`, the
+workflow's own result files, two harmless build artifacts, and one
+non-required historical log file, all accounted for in section 3.
+
+### Revision 4 re-verification (historical, for the record)
 
 ```text
 ✅ python3 -m py_compile tests/contract/test_property_based.py
@@ -809,45 +908,45 @@ broken-link detection is exercised in
 ## 9. Readiness conclusion
 
 ```text
-PACK-02 FAIL
+PACK-02 PASS
 ```
 
-Every check this repository and sandbox can genuinely execute passes:
-required structure (166 of 166 paths), forbidden-paths, version
-consistency, Ruff format, Ruff lint, a real Prettier format check (not
-merely assumed — section 0c), mypy across all 7 scoped groups (24 + 18 +
-8 + 8 + 8 + 11 + 10 = 87 source files, zero errors, zero suppressed via
-blanket ignores), 339 passing tests with 0 failures and only expected
-sandbox-dependency skips and genuine not-applicable markers accounting for
-the remaining 8, and JSON/YAML validity across every contract file. This
-revision incorporates three real fixes from external GitHub Actions
-verification, across three separate runs — a test-scoping bug (section
-0a), a Hypothesis parameter rename (section 0b), and a Hypothesis
-`categories=` argument-typing gap (section 0d) — none a canon or contract
-violation, each fixed with a precise, type-safe, source-level change and
-no blanket suppression. Delivery mechanics were also cleaned up so no
-manual GitHub edit is needed: the tree is genuinely Prettier-formatted and
+Every check this repository can genuinely execute passes, now confirmed
+both locally (as far as this sandbox allows) and, decisively, by a
+complete external GitHub Actions run with real network access (section 6,
+revision 5): required structure (166 of 166 paths), forbidden-paths,
+version consistency, Ruff format, Ruff lint, a real Prettier format check,
+ESLint, mypy across all 7 scoped groups (87 source files, zero errors,
+zero suppressed via blanket ignores), TypeScript typecheck for both
+workspaces, 363 passing Python tests with 0 failures and exactly 2 genuine
+CT-00-11/CT-00-12 not-applicable skips (zero unexplained skips), 3/3
+TypeScript unit tests, 2/2 frontend tests, a successful `next build`
+(4 static routes), and JSON/YAML validity across every contract file. This
+revision closes the single remaining Definition-of-Done gap from
+revisions 1 through 4: `uv.lock` has been regenerated for real (43
+packages, all 5 PACK-02 workspace members, `hypothesis` 6.160.0,
+`jsonschema`, `types-PyYAML`, real `files.pythonhosted.org` hashes/URLs —
+section 3), verified as a genuine tool-generated artifact and not
+fabricated, and accepted only after the established file-by-file diff
+against the sent tree came back clean (section 3).
+
+This report incorporates four real fixes surfaced across four separate
+rounds of external GitHub Actions verification — a test-scoping bug
+(section 0a), a Hypothesis parameter rename (section 0b), a Hypothesis
+`categories=` argument-typing gap (section 0d), and the lock-file
+regeneration itself (section 3) — none a canon or contract violation,
+each closed with a precise, source-level, type-safe change and no blanket
+suppression. Delivery mechanics were cleaned up so no manual GitHub edit
+was ever required: the tree is genuinely Prettier-formatted and
 `.github/workflows/verify-and-package.yml` performs only checkout,
 dependency setup, `uv lock`, install, `make verify`, result generation,
-packaging, and artifact upload (section 0c) — reconfirmed unchanged this
-revision. No check was weakened, no empty file was written to satisfy a
-path requirement, no reason code was hidden, no legitimate field was
-stripped from a service's own contract to make a test pass, and no
-unlinkability claim is made without the automated test that backs it
-(section 8).
-
-The sole reason this is **FAIL** and not **PASS** is Definition-of-Done
-item 12: `uv.lock` has not been regenerated to include PACK-02's five new
-workspace members and three new dev dependencies, because this sandbox's
-network access to PyPI is blocked and the one missing dependency
-(`hypothesis`) is not in the local cache either (section 3, with the exact
-commands and their exact failures shown, reconfirmed this revision).
-`package-lock.json` needs no change (verified programmatically, section
-3). The remediation is already-prepared, mechanical, and requires no
-manual repository edits first: run the cleaned-up
-`.github/workflows/verify-and-package.yml` on GitHub Actions (real
-network) — it will run `uv lock` for real, install, and run `make verify`
-end to end — diff the result against this tree before accepting it (per
-the PACK-01 incident's lesson), and revise this report to PACK-02 PASS
-once that lock file is genuine and committed. Nothing else stands between
-this repository and a real PASS.
+packaging, and artifact upload (section 0c) — unchanged since revision 3
+and reconfirmed present in the exact tree that produced this PASS. No
+check was weakened, no empty file was written to satisfy a path
+requirement, no reason code was hidden, no legitimate field was stripped
+from a service's own contract to make a test pass, and no unlinkability
+claim is made without the automated test that backs it (section 8).
+`docs/canonical/TZ-00-domain-event-canon.md` remains byte-identical
+throughout (section 2). `package-lock.json` required no change (section
+3). Nothing further stands between this repository and this pack's
+Definition of Done: **PACK-02 PASS**.

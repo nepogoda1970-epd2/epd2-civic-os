@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/discussion.schema.json",
+  "title": "Discussion",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 13.1. Owned by deliberation-service (epd2_deliberation_service.domain.Discussion). `moderation_policy_id` is nullable - not every discussion has one assigned.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "discussion_id",
+    "subject_type",
+    "subject_id",
+    "space_id",
+    "status",
+    "moderation_policy_id"
+  ],
+  "properties": {
+    "discussion_id": { "type": "string", "format": "uuid" },
+    "subject_type": { "type": "string", "minLength": 1 },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "space_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["open", "limited", "read_only", "closed", "archived"]
+    },
+    "moderation_policy_id": { "type": ["string", "null"], "format": "uuid" }
+  }
+}

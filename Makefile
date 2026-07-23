@@ -48,6 +48,12 @@ typecheck:
 	uv run mypy services/eligibility-service
 	uv run mypy services/credential-service
 	uv run mypy services/audit-core
+	uv run mypy services/initiative-service
+	uv run mypy services/deliberation-service
+	uv run mypy services/moderation-service
+	uv run mypy services/voting-service
+	uv run mypy services/tally-service
+	uv run mypy services/delegation-service
 	npm run typecheck --workspace=packages/typescript/epd2-types
 	npm run typecheck --workspace=frontend/web-shell
 

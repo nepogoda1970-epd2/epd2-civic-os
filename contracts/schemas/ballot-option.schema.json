@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/ballot-option.schema.json",
+  "title": "BallotOption",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 15.2. Owned by voting-service (epd2_voting_service.domain.BallotOption). Per ADR-009 item 3, abstention is modeled as an ordinary option row (e.g. option_code = 'abstain') - there is no separate abstention field. `status` is this service's own minimal, documented completion of canon's 'options lock once the ballot opens' rule (canon names no explicit status list for this entity).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ballot_option_id",
+    "ballot_id",
+    "option_code",
+    "label",
+    "description",
+    "display_order",
+    "status"
+  ],
+  "properties": {
+    "ballot_option_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "option_code": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "display_order": { "type": "integer", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["active", "locked"]
+    }
+  }
+}

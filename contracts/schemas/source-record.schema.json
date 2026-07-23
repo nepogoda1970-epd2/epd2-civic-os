@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/source-record.schema.json",
+  "title": "SourceRecord",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 12.1 ('Evidence Service', consolidated into initiative-service per ADR-005). Owned by initiative-service (epd2_initiative_service.domain.SourceRecord). `publication_date`/`archive_reference`/`valid_until` are nullable - not every source has a known publication date, an archived snapshot, or an expiry (README.md). No canon event is ever emitted for this entity (persist + audit only).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_id",
+    "source_type",
+    "title",
+    "publisher",
+    "publication_date",
+    "url",
+    "archive_reference",
+    "verification_status",
+    "added_by_actor_id",
+    "accessed_at",
+    "content_hash",
+    "valid_until"
+  ],
+  "properties": {
+    "source_id": { "type": "string", "format": "uuid" },
+    "source_type": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "publisher": { "type": "string" },
+    "publication_date": { "type": ["string", "null"], "format": "date-time" },
+    "url": { "type": "string" },
+    "archive_reference": { "type": ["string", "null"] },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "automatically_checked",
+        "human_checked",
+        "disputed",
+        "unavailable",
+        "outdated"
+      ]
+    },
+    "added_by_actor_id": { "type": "string", "format": "uuid" },
+    "accessed_at": { "type": "string", "format": "date-time" },
+    "content_hash": { "type": "string", "minLength": 1 },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

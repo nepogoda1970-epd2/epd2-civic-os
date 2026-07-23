@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/vote-envelope-status-changed-payload.v1.schema.json",
+  "title": "vote.received / vote.validated event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.10. Produced by epd2_voting_service.events.vote_envelope_state_payload, shared verbatim by build_vote_received_event (vote.received) and build_vote_validated_event (vote.validated) - verified by reading events.py, both call the shared private _build_vote_event helper with the identical payload function. Deliberately excludes encrypted_or_encoded_choice from the wire event (only integrity_hash, already a one-way digest, travels) - see vote_envelope_full_state_payload for Audit Core's complete snapshot. additionalProperties: false is a load-bearing vote-linkability control (CT-00-09, canon section 15.3's 'Запрет'): account_id, person_id, identity_record_id, full_name, email, membership_id, and identity_provider_reference are all forbidden and cannot appear on a payload that validates against this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vote_envelope_id",
+    "ballot_id",
+    "credential_proof",
+    "integrity_hash",
+    "validation_status",
+    "included_in_tally"
+  ],
+  "properties": {
+    "vote_envelope_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "credential_proof": { "type": "string", "format": "uuid" },
+    "integrity_hash": { "type": "string", "minLength": 1 },
+    "validation_status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "validated",
+        "rejected",
+        "superseded",
+        "included",
+        "quarantined"
+      ]
+    },
+    "included_in_tally": { "type": "boolean" }
+  }
+}

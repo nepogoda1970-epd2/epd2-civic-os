@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/contribution-flagged-payload.v1.schema.json",
+  "title": "contribution.flagged event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.8. Produced by epd2_deliberation_service.events.build_contribution_flagged_event: contribution_state_payload(contribution) plus flag_reason_code/note. flag_reason_code/note describe why the flag was raised (e.g. canon section 24's MODERATION_POLICY_VIOLATION) - distinct from the audit entry's own reason_code (CONTRIBUTION_FLAGGED), which describes the audit action, not the flag's substantive reason. note is nullable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contribution_id",
+    "discussion_id",
+    "author_actor_id",
+    "parent_contribution_id",
+    "contribution_type",
+    "content",
+    "content_hash",
+    "visibility_status",
+    "edited_version",
+    "flag_reason_code",
+    "note"
+  ],
+  "properties": {
+    "contribution_id": { "type": "string", "format": "uuid" },
+    "discussion_id": { "type": "string", "format": "uuid" },
+    "author_actor_id": { "type": "string", "format": "uuid" },
+    "parent_contribution_id": { "type": ["string", "null"], "format": "uuid" },
+    "contribution_type": {
+      "type": "string",
+      "enum": [
+        "comment",
+        "argument_for",
+        "argument_against",
+        "question",
+        "answer",
+        "proposal",
+        "source_note",
+        "moderator_notice"
+      ]
+    },
+    "content": { "type": "string" },
+    "content_hash": { "type": "string", "minLength": 1 },
+    "visibility_status": {
+      "type": "string",
+      "enum": [
+        "visible",
+        "temporarily_hidden",
+        "restricted",
+        "removed_from_public_view",
+        "restored"
+      ]
+    },
+    "edited_version": { "type": "integer", "minimum": 1 },
+    "flag_reason_code": { "type": "string", "minLength": 1 },
+    "note": { "type": ["string", "null"] }
+  }
+}

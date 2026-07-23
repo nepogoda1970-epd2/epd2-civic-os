@@ -1,0 +1,2881 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-03 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contracts for the six PACK-03 services
+    (initiative-service, deliberation-service, moderation-service,
+    voting-service, tally-service, delegation-service). No production
+    HTTP server ships in this pack — these paths document, one-to-one,
+    every real command function in each service's own
+    `epd2_*_service.application` module and are exercised in tests via
+    those application-layer functions directly, not over HTTP. Every
+    path maps to exactly one real command; none of this file's paths
+    invent an HTTP surface a command function does not already provide.
+    Request bodies list only genuine business fields — actor identity,
+    authorization, correlation/causation ids, the clock, and the
+    idempotency `event_id` are transport/session concerns, the same
+    convention `contracts/openapi/pack-02.yaml` already follows. Per
+    CT-00-08 (identity/vote-linkability boundary), no path or schema in
+    this file ever declares `account_id`, `person_id`, or
+    `identity_record_id` for an initiative-support, voting, tally, or
+    delegation path.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://initiative.epd2.example
+    description: initiative-service (not deployed in PACK-03 — contract only)
+  - url: https://deliberation.epd2.example
+    description: deliberation-service (not deployed in PACK-03 — contract only)
+  - url: https://moderation.epd2.example
+    description: moderation-service (not deployed in PACK-03 — contract only)
+  - url: https://voting.epd2.example
+    description: voting-service (not deployed in PACK-03 — contract only)
+  - url: https://tally.epd2.example
+    description: tally-service (not deployed in PACK-03 — contract only)
+  - url: https://delegation.epd2.example
+    description: delegation-service (not deployed in PACK-03 — contract only)
+
+paths:
+  # ==========================================================================
+  # initiative-service
+  # ==========================================================================
+  /initiatives:
+    post:
+      operationId: createInitiative
+      summary: Create a new Initiative shell in draft
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.create_initiative. Creates
+        the Initiative shell (status=draft, current_version_id=null) -
+        canon 11.1.
+      tags: [initiative-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  initiative_id,
+                  space_id,
+                  author_actor_id,
+                  initiative_type,
+                  workflow_id,
+                ]
+              properties:
+                initiative_id: { type: string, format: uuid }
+                space_id: { type: string, format: uuid }
+                author_actor_id: { type: string, format: uuid }
+                initiative_type: { type: string, minLength: 1 }
+                workflow_id: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Initiative created; canon's initiative.draft_created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized (CT-00-06).
+        "409":
+          description: INITIATIVE_DUPLICATE_CREATION_CONFLICT — initiative_id already exists with different content.
+
+  /initiatives/{initiativeId}/versions:
+    post:
+      operationId: createInitiativeVersion
+      summary: Create (or idempotently re-confirm) one immutable InitiativeVersion
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.create_initiative_version
+        (canon 11.2 — a published version never changes; every edit is a
+        new version).
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  initiative_version_id,
+                  version_number,
+                  title,
+                  problem_statement,
+                  proposed_solution,
+                  affected_groups,
+                  expected_effects,
+                  risks,
+                  estimated_resources,
+                  legal_questions,
+                  source_references,
+                ]
+              properties:
+                initiative_version_id: { type: string, format: uuid }
+                version_number: { type: integer, minimum: 1 }
+                title: { type: string, minLength: 1 }
+                problem_statement: { type: string }
+                proposed_solution: { type: string }
+                affected_groups: { type: array, items: { type: string } }
+                expected_effects: { type: string }
+                risks: { type: string }
+                estimated_resources: { type: string }
+                legal_questions: { type: string }
+                source_references:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Version created (or idempotently re-confirmed); canon's initiative.version_created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative, version]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  version: { $ref: "../schemas/initiative-version.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "409":
+          description: INITIATIVE_VERSION_FROZEN — (initiative_id, version_number) already exists with different content.
+
+  /initiatives/{initiativeId}/submit:
+    post:
+      operationId: submitInitiative
+      summary: Submit an Initiative (draft or revision_required) for completeness review
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.submit_initiative. Requires
+        current_version_id to already be set.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to submitted; canon's initiative.submitted event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: INITIATIVE_HAS_NO_VERSION (no InitiativeVersion yet) or VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/start-completeness-review:
+    post:
+      operationId: startInitiativeCompletenessReview
+      summary: submitted -> completeness_review
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.start_completeness_review.
+        Canon names no domain event for this step — persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to completeness_review; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/request-revision:
+    post:
+      operationId: requestInitiativeRevision
+      summary: completeness_review -> revision_required
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.request_revision.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to revision_required; canon's initiative.revision_requested event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/publish:
+    post:
+      operationId: publishInitiative
+      summary: completeness_review -> published
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.publish_initiative.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative published; canon's initiative.published event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/start-support-collection:
+    post:
+      operationId: startSupportCollection
+      summary: published -> support_collection
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.start_support_collection.
+        Canon names no domain event for this step — persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to support_collection; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/mark-qualified:
+    post:
+      operationId: markInitiativeQualified
+      summary: support_collection -> qualified
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.mark_qualified.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative marked qualified; canon's initiative.qualified event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/reject:
+    post:
+      operationId: rejectInitiative
+      summary: support_collection|legal_review|voting -> rejected
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.reject_initiative. Canon
+        names no domain event for this outcome on Initiative — persist +
+        audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative rejected; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/start-deliberation:
+    post:
+      operationId: startInitiativeDeliberation
+      summary: qualified -> deliberation
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.start_deliberation.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to deliberation; canon's initiative.deliberation_started event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/request-legal-review:
+    post:
+      operationId: requestInitiativeLegalReview
+      summary: deliberation -> legal_review
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.request_legal_review.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to legal_review; canon's initiative.legal_review_requested event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/mark-ready-for-ballot:
+    post:
+      operationId: markInitiativeReadyForBallot
+      summary: legal_review -> ready_for_ballot
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.mark_ready_for_ballot.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to ready_for_ballot; canon's initiative.ready_for_ballot event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/start-voting:
+    post:
+      operationId: startInitiativeVoting
+      summary: ready_for_ballot -> voting
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.start_voting. The real
+        Ballot lifecycle events belong to voting-service (ADR-008) —
+        this step is persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative moved to voting; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/mark-adopted:
+    post:
+      operationId: markInitiativeAdopted
+      summary: voting -> adopted
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.mark_adopted. Canon names no
+        domain event for this step — persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative marked adopted; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/withdraw:
+    post:
+      operationId: withdrawInitiative
+      summary: any pre-voting status -> withdrawn (author's early exit)
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.withdraw_initiative.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative withdrawn; canon's initiative.withdrawn event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/archive:
+    post:
+      operationId: archiveInitiative
+      summary: adopted|rejected|withdrawn -> archived (terminal)
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.archive_initiative.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Initiative archived; canon's initiative.archived event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/support:
+    post:
+      operationId: addInitiativeSupport
+      summary: Record one participant's active support for an initiative
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.add_support. Requires
+        Initiative.status == support_collection; validates the presented
+        initiative_support credential via
+        epd2_credential_service.application.validate_participation_credential
+        (ADR-008) before accepting a SupportRecord. support_actor_reference/
+        credential_reference are opaque UUID references only — never
+        account_id/person_id/identity_record_id (CT-00-08).
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  support_record_id,
+                  support_actor_reference,
+                  credential_reference,
+                ]
+              properties:
+                support_record_id: { type: string, format: uuid }
+                support_actor_reference: { type: string, format: uuid }
+                credential_reference: { type: string, format: uuid }
+                eligibility_decision_id:
+                  { type: [string, "null"], format: uuid }
+      responses:
+        "201":
+          description: Support recorded (or idempotently re-confirmed); canon's initiative.support_added event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative, support]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  support: { $ref: "../schemas/support-record.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor unauthorized, or the presented credential does not validate (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such initiative_id, or (if supplied) no such eligibility_decision_id.
+        "409":
+          description: DUPLICATE_SUPPORT — the same subject already has an active SupportRecord on this initiative, or SUPPORT_RECORD_DUPLICATE_CREATION_CONFLICT.
+        "422":
+          description: INITIATIVE_NOT_ACCEPTING_SUPPORT — Initiative.status is not support_collection.
+
+  /support-records/{supportRecordId}/withdraw:
+    post:
+      operationId: withdrawInitiativeSupport
+      summary: active -> withdrawn
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.withdraw_support.
+        Decrements Initiative.support_count in the same call.
+      tags: [initiative-service]
+      parameters:
+        - name: supportRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Support withdrawn; canon's initiative.support_withdrawn event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative, support]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  support: { $ref: "../schemas/support-record.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such support_record_id or its initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /support-records/{supportRecordId}/invalidate:
+    post:
+      operationId: invalidateInitiativeSupport
+      summary: active -> invalidated
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.invalidate_support. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [initiative-service]
+      parameters:
+        - name: supportRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Support invalidated; no domain event (persist + audit only, reason_code SUPPORT_INVALIDATED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [initiative, support]
+                properties:
+                  initiative: { $ref: "../schemas/initiative.schema.json" }
+                  support: { $ref: "../schemas/support-record.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such support_record_id or its initiative_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /initiatives/{initiativeId}/amendments:
+    post:
+      operationId: createAmendment
+      summary: Create a new Amendment in draft
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.create_amendment. Canon
+        names no domain event for this creation step — persist + audit
+        only.
+      tags: [initiative-service]
+      parameters:
+        - name: initiativeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  amendment_id,
+                  target_version_id,
+                  proposer_actor_id,
+                  proposed_change,
+                  justification,
+                ]
+              properties:
+                amendment_id: { type: string, format: uuid }
+                target_version_id: { type: string, format: uuid }
+                proposer_actor_id: { type: string, format: uuid }
+                proposed_change: { type: string }
+                justification: { type: string }
+      responses:
+        "201":
+          description: Amendment created in draft; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: AMENDMENT_DUPLICATE_CREATION_CONFLICT — amendment_id already exists with different content.
+
+  /amendments/{amendmentId}/submit:
+    post:
+      operationId: submitAmendment
+      summary: draft -> submitted
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.submit_amendment.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Amendment submitted; canon's amendment.submitted event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/publish:
+    post:
+      operationId: publishAmendment
+      summary: submitted -> published
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.publish_amendment.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Amendment published; canon's amendment.published event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/start-discussion:
+    post:
+      operationId: startAmendmentDiscussion
+      summary: published -> under_discussion
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.start_amendment_discussion.
+        Canon names no domain event for this step — persist + audit
+        only.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Amendment moved to under_discussion; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/accept:
+    post:
+      operationId: acceptAmendment
+      summary: under_discussion -> accepted
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.accept_amendment.
+        decision_reference may be recorded in the same call.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                decision_reference: { type: [string, "null"], format: uuid }
+      responses:
+        "200":
+          description: Amendment accepted; canon's amendment.accepted event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/reject:
+    post:
+      operationId: rejectAmendment
+      summary: under_discussion -> rejected
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.reject_amendment.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                decision_reference: { type: [string, "null"], format: uuid }
+      responses:
+        "200":
+          description: Amendment rejected; canon's amendment.rejected event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/withdraw:
+    post:
+      operationId: withdrawAmendment
+      summary: draft|submitted|published|under_discussion -> withdrawn
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.withdraw_amendment. Canon
+        names no domain event for this step — persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Amendment withdrawn; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /amendments/{amendmentId}/supersede:
+    post:
+      operationId: supersedeAmendment
+      summary: published|under_discussion -> superseded
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.supersede_amendment. Canon
+        names no domain event for this outcome — persist + audit only,
+        using the additive AMENDMENT_TARGET_SUPERSEDED reason code.
+      tags: [initiative-service]
+      parameters:
+        - name: amendmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Amendment superseded; no domain event (persist + audit only, reason_code AMENDMENT_TARGET_SUPERSEDED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amendment]
+                properties:
+                  amendment: { $ref: "../schemas/amendment.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such amendment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /source-records:
+    post:
+      operationId: addSourceRecord
+      summary: Create a new SourceRecord in unverified
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.add_source_record. Canon
+        names no domain event for SourceRecord at all — persist + audit
+        only.
+      tags: [initiative-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  source_id,
+                  source_type,
+                  title,
+                  publisher,
+                  url,
+                  added_by_actor_id,
+                ]
+              properties:
+                source_id: { type: string, format: uuid }
+                source_type: { type: string, minLength: 1 }
+                title: { type: string, minLength: 1 }
+                publisher: { type: string }
+                publication_date: { type: [string, "null"], format: date-time }
+                url: { type: string }
+                archive_reference: { type: [string, "null"] }
+                added_by_actor_id: { type: string, format: uuid }
+                valid_until: { type: [string, "null"], format: date-time }
+      responses:
+        "201":
+          description: SourceRecord created; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [source]
+                properties:
+                  source: { $ref: "../schemas/source-record.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: SOURCE_RECORD_DUPLICATE_CREATION_CONFLICT — source_id already exists with different content.
+
+  /source-records/{sourceId}/verification-status:
+    post:
+      operationId: updateSourceVerificationStatus
+      summary: Transition a SourceRecord's verification_status
+      description: >
+        Owned by initiative-service. Maps to
+        epd2_initiative_service.application.update_source_verification_status.
+        Canon's hard rule ("an AI actor may not silently promote a
+        source's status to human_checked") is enforced structurally
+        before any other check. No domain event — persist + audit only.
+      tags: [initiative-service]
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_status]
+              properties:
+                target_status:
+                  type: string
+                  enum:
+                    [
+                      unverified,
+                      automatically_checked,
+                      human_checked,
+                      disputed,
+                      unavailable,
+                      outdated,
+                    ]
+      responses:
+        "200":
+          description: SourceRecord verification_status updated; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [source]
+                properties:
+                  source: { $ref: "../schemas/source-record.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor unauthorized, or an AI actor attempted to promote to human_checked (canon 12.1).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such source_id.
+        "422":
+          description: VALIDATION_UNKNOWN_STATUS or VALIDATION_FORBIDDEN_TRANSITION (CT-00-02/03).
+
+  # ==========================================================================
+  # deliberation-service
+  # ==========================================================================
+  /discussions:
+    post:
+      operationId: openDiscussion
+      summary: Open a new Discussion in open status
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.open_discussion.
+      tags: [deliberation-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [discussion_id, subject_type, subject_id, space_id]
+              properties:
+                discussion_id: { type: string, format: uuid }
+                subject_type: { type: string, minLength: 1 }
+                subject_id: { type: string, format: uuid }
+                space_id: { type: string, format: uuid }
+                moderation_policy_id: { type: [string, "null"], format: uuid }
+      responses:
+        "201":
+          description: Discussion opened; canon's discussion.opened event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: DISCUSSION_DUPLICATE_CREATION_CONFLICT — discussion_id already exists with different content.
+
+  /discussions/{discussionId}/close:
+    post:
+      operationId: closeDiscussion
+      summary: open|limited|read_only -> closed
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.close_discussion.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Discussion closed; canon's discussion.closed event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /discussions/{discussionId}/limit:
+    post:
+      operationId: limitDiscussion
+      summary: open -> limited
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.limit_discussion. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Discussion limited; no domain event (persist + audit only, reason_code DISCUSSION_STATUS_CHANGED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /discussions/{discussionId}/set-read-only:
+    post:
+      operationId: setDiscussionReadOnly
+      summary: open|limited -> read_only
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.set_discussion_read_only.
+        Canon names no domain event for this transition — persist +
+        audit only.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Discussion set read_only; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /discussions/{discussionId}/reopen:
+    post:
+      operationId: reopenDiscussion
+      summary: limited|read_only -> open
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.reopen_discussion. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Discussion reopened; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /discussions/{discussionId}/archive:
+    post:
+      operationId: archiveDiscussion
+      summary: closed -> archived (terminal)
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.archive_discussion. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Discussion archived; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [discussion]
+                properties:
+                  discussion: { $ref: "../schemas/discussion.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /discussions/{discussionId}/contributions:
+    post:
+      operationId: createContribution
+      summary: Create a new Contribution in visible status
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.create_contribution.
+        Validates discussion_id and (if given) parent_contribution_id
+        reference existing records.
+      tags: [deliberation-service]
+      parameters:
+        - name: discussionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [contribution_id, author_actor_id, contribution_type, content]
+              properties:
+                contribution_id: { type: string, format: uuid }
+                author_actor_id: { type: string, format: uuid }
+                parent_contribution_id: { type: [string, "null"], format: uuid }
+                contribution_type:
+                  type: string
+                  enum:
+                    [
+                      comment,
+                      argument_for,
+                      argument_against,
+                      question,
+                      answer,
+                      proposal,
+                      source_note,
+                      moderator_notice,
+                    ]
+                content: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Contribution created; canon's contribution.created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contribution]
+                properties:
+                  contribution: { $ref: "../schemas/contribution.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such discussion_id, or parent_contribution_id does not reference an existing contribution in this discussion.
+        "409":
+          description: CONTRIBUTION_DUPLICATE_CREATION_CONFLICT — contribution_id already exists with different content.
+
+  /contributions/{contributionId}/edit:
+    post:
+      operationId: editContribution
+      summary: Edit a Contribution's content (creates a new edited_version)
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.edit_contribution.
+      tags: [deliberation-service]
+      parameters:
+        - name: contributionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [new_content]
+              properties:
+                new_content: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Contribution edited; canon's contribution.edited event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contribution]
+                properties:
+                  contribution: { $ref: "../schemas/contribution.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such contribution_id.
+
+  /contributions/{contributionId}/flag:
+    post:
+      operationId: flagContribution
+      summary: Record that an actor flagged a Contribution for moderation review
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.flag_contribution. Never
+        changes visibility_status itself; emits contribution.flagged for
+        some other process (e.g. moderation-service) to react to.
+      tags: [deliberation-service]
+      parameters:
+        - name: contributionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [flag_reason_code]
+              properties:
+                flag_reason_code: { type: string, minLength: 1 }
+                note: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Flag recorded; canon's contribution.flagged event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contribution]
+                properties:
+                  contribution: { $ref: "../schemas/contribution.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such contribution_id.
+
+  /contributions/{contributionId}/hide:
+    post:
+      operationId: hideContribution
+      summary: visible -> temporarily_hidden|restricted|removed_from_public_view
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.hide_contribution.
+      tags: [deliberation-service]
+      parameters:
+        - name: contributionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_status]
+              properties:
+                target_status:
+                  type: string
+                  enum:
+                    [temporarily_hidden, restricted, removed_from_public_view]
+      responses:
+        "200":
+          description: Contribution hidden; canon's contribution.hidden event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contribution]
+                properties:
+                  contribution: { $ref: "../schemas/contribution.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such contribution_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03) — contribution is not visible, or target_status is not one of the three hide targets.
+
+  /contributions/{contributionId}/restore:
+    post:
+      operationId: restoreContribution
+      summary: Restore a hidden/restricted/removed contribution one step back towards visibility
+      description: >
+        Owned by deliberation-service. Maps to
+        epd2_deliberation_service.application.restore_contribution.
+        Dispatches the actual target status off the contribution's
+        current status (temporarily_hidden|restricted|removed_from_public_view
+        -> restored; restored -> visible) — both legs emit
+        contribution.restored.
+      tags: [deliberation-service]
+      parameters:
+        - name: contributionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Contribution restored one step; canon's contribution.restored event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contribution]
+                properties:
+                  contribution: { $ref: "../schemas/contribution.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such contribution_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03) — no restore transition is defined from the contribution's current visibility_status.
+
+  # ==========================================================================
+  # moderation-service
+  # ==========================================================================
+  /moderation-cases:
+    post:
+      operationId: openModerationCase
+      summary: Open a new ModerationCase in open status
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.open_moderation_case.
+      tags: [moderation-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  moderation_case_id,
+                  target_type,
+                  target_id,
+                  opened_by,
+                  trigger_type,
+                  policy_version,
+                ]
+              properties:
+                moderation_case_id: { type: string, format: uuid }
+                target_type: { type: string, minLength: 1 }
+                target_id: { type: string, format: uuid }
+                opened_by: { type: string, format: uuid }
+                trigger_type: { type: string, minLength: 1 }
+                policy_version: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: ModerationCase opened; canon's moderation.case_opened event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [case]
+                properties:
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: MODERATION_CASE_DUPLICATE_CONFLICT — moderation_case_id already exists with different content.
+
+  /moderation-cases/{moderationCaseId}/assign:
+    post:
+      operationId: assignModerator
+      summary: open -> under_review, recording assigned_moderator
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.assign_moderator.
+      tags: [moderation-service]
+      parameters:
+        - name: moderationCaseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [moderator_id]
+              properties:
+                moderator_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Moderator assigned; canon's moderation.case_assigned event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [case]
+                properties:
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such moderation_case_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /moderation-cases/{moderationCaseId}/propose-action:
+    post:
+      operationId: proposeModerationAction
+      summary: under_review -> action_proposed
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.propose_action. Canon names
+        no domain event for this transition — persist + audit only.
+      tags: [moderation-service]
+      parameters:
+        - name: moderationCaseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Action proposed; no domain event (persist + audit only, reason_code MODERATION_CASE_STATUS_CHANGED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [case]
+                properties:
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such moderation_case_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /moderation-cases/{moderationCaseId}/decisions:
+    post:
+      operationId: issueModerationDecision
+      summary: action_proposed -> decided; creates the immutable ModerationDecision
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.issue_decision.
+      tags: [moderation-service]
+      parameters:
+        - name: moderationCaseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  moderation_decision_id,
+                  decision_type,
+                  reason_code,
+                  policy_reference,
+                  decided_by,
+                  effective_from,
+                  public_explanation,
+                ]
+              properties:
+                moderation_decision_id: { type: string, format: uuid }
+                decision_type:
+                  type: string
+                  enum:
+                    [
+                      no_action,
+                      warning,
+                      temporary_hide,
+                      restore,
+                      participation_limit,
+                      account_restriction_request,
+                      escalate,
+                      remove_from_public_view,
+                    ]
+                reason_code: { type: string, minLength: 1 }
+                policy_reference: { type: string, minLength: 1 }
+                decided_by: { type: string, format: uuid }
+                effective_from: { type: string, format: date-time }
+                effective_until: { type: [string, "null"], format: date-time }
+                public_explanation: { type: string }
+      responses:
+        "201":
+          description: ModerationDecision issued; canon's moderation.decision_issued event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision]
+                properties:
+                  decision:
+                    { $ref: "../schemas/moderation-decision.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such moderation_case_id.
+        "409":
+          description: MODERATION_DECISION_DUPLICATE_CONFLICT — moderation_decision_id already exists with different content.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03) — case is not action_proposed.
+
+  /moderation-decisions/{moderationDecisionId}/enforce:
+    post:
+      operationId: enforceModerationDecision
+      summary: Record that an already-issued ModerationDecision has been carried out
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.enforce_decision. Does not
+        transition ModerationCase.status; ModerationDecision itself has
+        no mutable "enforced" flag (before_hash == after_hash by
+        construction).
+      tags: [moderation-service]
+      parameters:
+        - name: moderationDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Enforcement recorded; canon's moderation.decision_enforced event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision, case]
+                properties:
+                  decision:
+                    { $ref: "../schemas/moderation-decision.schema.json" }
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such moderation_decision_id or its case_id.
+
+  /moderation-decisions/{moderationDecisionId}/appeals:
+    post:
+      operationId: submitAppeal
+      summary: case decided -> appealed; creates a new Appeal in submitted
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.submit_appeal.
+      tags: [moderation-service]
+      parameters:
+        - name: moderationDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [appeal_id, submitted_by, grounds]
+              properties:
+                appeal_id: { type: string, format: uuid }
+                submitted_by: { type: string, format: uuid }
+                grounds: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Appeal submitted; canon's moderation.appeal_submitted event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [appeal, case]
+                properties:
+                  appeal: { $ref: "../schemas/appeal.schema.json" }
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such moderation_decision_id or its case_id.
+        "409":
+          description: APPEAL_DUPLICATE_SUBMISSION_CONFLICT — appeal_id already exists with different content.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03) — case is not decided.
+
+  /appeals/{appealId}/decide:
+    post:
+      operationId: decideAppeal
+      summary: Walk submitted -> admissibility_review -> under_review -> outcome; close the case
+      description: >
+        Owned by moderation-service. Maps to
+        epd2_moderation_service.application.decide_appeal. THE SINGLE
+        MOST IMPORTANT CHECK IN THIS SERVICE (CT-00-06, canon section
+        14.3): reviewer_actor_id must differ from the original
+        ModerationDecision.decided_by. outcome=withdrawn is rejected here
+        (see domain.FINAL_APPEAL_OUTCOMES).
+      tags: [moderation-service]
+      parameters:
+        - name: appealId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reviewer_actor_id, outcome, result]
+              properties:
+                reviewer_actor_id: { type: string, format: uuid }
+                outcome:
+                  type: string
+                  enum: [upheld, partially_upheld, rejected]
+                result: { type: string }
+      responses:
+        "200":
+          description: Appeal decided; case closed; canon's moderation.appeal_decided event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [appeal, case]
+                properties:
+                  appeal: { $ref: "../schemas/appeal.schema.json" }
+                  case: { $ref: "../schemas/moderation-case.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor unauthorized, or reviewer_actor_id equals the original decision's decided_by (canon 14.3, CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such appeal_id, its decision_id, or its case_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03), or outcome is not one of upheld/partially_upheld/rejected.
+
+  # ==========================================================================
+  # voting-service
+  # ==========================================================================
+  /ballots:
+    post:
+      operationId: createBallot
+      summary: Create a new Ballot in draft
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.create_ballot. Configuration
+        fields remain mutable only while status == draft (CT-00-10).
+      tags: [voting-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  ballot_id,
+                  space_id,
+                  subject_type,
+                  subject_id,
+                  question,
+                  ballot_method,
+                  secrecy_mode,
+                  eligibility_rule_version,
+                  delegation_policy_version,
+                  quorum_rule,
+                  threshold_rule,
+                  opens_at,
+                  closes_at,
+                ]
+              properties:
+                ballot_id: { type: string, format: uuid }
+                space_id: { type: string, format: uuid }
+                subject_type: { type: string, minLength: 1 }
+                subject_id: { type: string, format: uuid }
+                question: { type: string, minLength: 1 }
+                ballot_method:
+                  type: string
+                  enum: [single_choice, yes_no]
+                secrecy_mode: { type: string, minLength: 1 }
+                eligibility_rule_version: { type: integer, minimum: 1 }
+                delegation_policy_version: { type: integer, minimum: 1 }
+                quorum_rule: { type: string }
+                threshold_rule: { type: string }
+                opens_at: { type: string, format: date-time }
+                closes_at: { type: string, format: date-time }
+                challenge_window_hours: { type: [integer, "null"], minimum: 0 }
+      responses:
+        "201":
+          description: Ballot created; canon's ballot.created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: BALLOT_DUPLICATE_CREATION_CONFLICT — ballot_id already exists with different content.
+
+  /ballots/{ballotId}/submit-for-configuration-review:
+    post:
+      operationId: submitBallotForConfigurationReview
+      summary: draft -> configuration_review; freezes configuration_hash (CT-00-10)
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.submit_ballot_for_configuration_review.
+        Confirms the referenced EligibilitySnapshot is real via
+        epd2_eligibility_service.application.get_eligibility_snapshot
+        (ADR-008). Canon names no domain event for this sub-step —
+        persist + audit only.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [eligibility_snapshot_id]
+              properties:
+                eligibility_snapshot_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot configuration frozen; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id or eligibility_snapshot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03), or the snapshot's rule_version does not match the ballot's eligibility_rule_version.
+
+  /ballots/{ballotId}/approve-configuration:
+    post:
+      operationId: approveBallotConfiguration
+      summary: configuration_review -> scheduled (second-actor approval, ADR-009 item 7)
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.approve_ballot_configuration.
+        The approving actor must differ from the ballot's own creator.
+        Emits BOTH ballot.configuration_locked and ballot.scheduled.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot approved and scheduled; canon's ballot.configuration_locked and ballot.scheduled events both emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot, configuration_locked_event, scheduled_event]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  configuration_locked_event:
+                    { $ref: "../schemas/event-envelope.schema.json" }
+                  scheduled_event:
+                    { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor unauthorized, or the actor who created this ballot attempted to approve its own configuration (ADR-009 item 7 / INV-08).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/options:
+    post:
+      operationId: addBallotOption
+      summary: Add one BallotOption while a ballot is still draft
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.add_ballot_option. Per ADR-009
+        item 3, abstention is just another option row. Not audited
+        (pre-freeze, same reasoning as create_eligibility_rule).
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  ballot_option_id,
+                  option_code,
+                  label,
+                  description,
+                  display_order,
+                ]
+              properties:
+                ballot_option_id: { type: string, format: uuid }
+                option_code: { type: string, minLength: 1 }
+                label: { type: string, minLength: 1 }
+                description: { type: string }
+                display_order: { type: integer, minimum: 0 }
+      responses:
+        "201":
+          description: BallotOption added.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [option]
+                properties:
+                  option: { $ref: "../schemas/ballot-option.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "409":
+          description: BALLOT_CONFIGURATION_LOCKED — ballot.status is no longer draft.
+
+  /ballots/{ballotId}/open:
+    post:
+      operationId: openBallot
+      summary: scheduled -> open; locks every BallotOption for this ballot
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.open_ballot.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot opened; canon's ballot.opened event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot, locked_options]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  locked_options:
+                    type: array
+                    items: { $ref: "../schemas/ballot-option.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/pause:
+    post:
+      operationId: pauseBallot
+      summary: open -> paused
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.pause_ballot.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot paused; canon's ballot.paused event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/resume:
+    post:
+      operationId: resumeBallot
+      summary: paused -> open
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.resume_ballot.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot resumed; canon's ballot.resumed event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/close:
+    post:
+      operationId: closeBallot
+      summary: open -> closed
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.close_ballot.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot closed; canon's ballot.closed event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/cancel:
+    post:
+      operationId: cancelBallot
+      summary: draft|configuration_review|scheduled -> cancelled
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.cancel_ballot. Per ADR-009 item
+        14, an always-available withdrawal path, distinct from the
+        structurally-unreachable invalidated status.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot cancelled; canon's ballot.cancelled event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /ballots/{ballotId}/votes:
+    post:
+      operationId: castVote
+      summary: Cast (or change) a vote on an open ballot
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.cast_vote. credential_proof must
+        be the credential_id of an already-issued ballot_access
+        ParticipationCredential — never an account_id (canon 15.3,
+        CT-00-08/CT-00-09). Validated via
+        epd2_credential_service.application.validate_participation_credential
+        before any VoteEnvelope is persisted. A pre-close vote change
+        supersedes the previous validated envelope and additionally
+        emits vote.superseded (ADR-009 items 1-2). This request body,
+        and its response, never contain account_id/person_id/
+        identity_record_id (CT-00-08).
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  vote_envelope_id,
+                  credential_proof,
+                  encrypted_or_encoded_choice,
+                ]
+              properties:
+                vote_envelope_id: { type: string, format: uuid }
+                credential_proof: { type: string, format: uuid }
+                encrypted_or_encoded_choice: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Vote received (and any previous validated vote for this credential superseded); canon's vote.received event (and, if applicable, vote.superseded) emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [envelope]
+                properties:
+                  envelope: { $ref: "../schemas/vote-envelope.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+                  superseded_envelope:
+                    { $ref: "../schemas/vote-envelope.schema.json" }
+                  superseded_event:
+                    { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor unauthorized, or the presented credential does not validate for this ballot.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id.
+        "409":
+          description: BALLOT_NOT_OPEN, BALLOT_ALREADY_CLOSED, or DUPLICATE_VOTE — a genuinely late resubmission attempt for a credential that already has a validated vote (ADR-009 items 1-2), or VOTE_ENVELOPE_DUPLICATE_SUBMISSION_CONFLICT.
+
+  /vote-envelopes/{voteEnvelopeId}/validate:
+    post:
+      operationId: validateVote
+      summary: received -> validated or received -> rejected, by recomputing integrity_hash
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.validate_vote. A structural
+        tamper-evidence check only (recomputes integrity_hash); does not
+        raise on a hash mismatch — it transitions the VoteEnvelope to
+        rejected and emits vote.rejected (reason_codes:
+        VOTE_INTEGRITY_HASH_MISMATCH) instead.
+      tags: [voting-service]
+      parameters:
+        - name: voteEnvelopeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Vote validated or rejected; canon's vote.validated or vote.rejected event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [envelope]
+                properties:
+                  envelope: { $ref: "../schemas/vote-envelope.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such vote_envelope_id.
+
+  /vote-envelopes/{voteEnvelopeId}/receipt:
+    post:
+      operationId: issueVoteReceipt
+      summary: Issue a VoteReceipt for an already-validated/included VoteEnvelope
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.issue_vote_receipt.
+        receipt_hash is built only from vote_envelope_id/integrity_hash
+        — never encrypted_or_encoded_choice — so the receipt cannot
+        reveal the chosen option (canon 15.4). Canon names no domain
+        event for receipt issuance — persist + audit only. This request,
+        and its response, never contain account_id/person_id/
+        identity_record_id (CT-00-08).
+      tags: [voting-service]
+      parameters:
+        - name: voteEnvelopeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [receipt_id]
+              properties:
+                receipt_id: { type: string, format: uuid }
+      responses:
+        "201":
+          description: VoteReceipt issued; no domain event (persist + audit only, reason_code RECEIPT_ISSUED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [receipt]
+                properties:
+                  receipt: { $ref: "../schemas/vote-receipt.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such vote_envelope_id.
+        "409":
+          description: RECEIPT_DUPLICATE_ISSUANCE_CONFLICT — receipt_id already exists with different content.
+        "422":
+          description: VOTE_ENVELOPE_NOT_RECEIPT_ELIGIBLE — the referenced VoteEnvelope is not validated or included.
+
+  # ==========================================================================
+  # tally-service
+  # ==========================================================================
+  /tallies:
+    post:
+      operationId: startTally
+      summary: Create a new Tally (pending -> running immediately)
+      description: >
+        Owned by tally-service. Maps to
+        epd2_tally_service.application.start_tally. input_set_hash and
+        algorithm_version are caller-supplied — tally-service never
+        imports epd2_voting_service (ADR-008 item 3); this request never
+        contains account_id/person_id/identity_record_id (CT-00-08).
+      tags: [tally-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tally_id, ballot_id, input_set_hash, algorithm_version]
+              properties:
+                tally_id: { type: string, format: uuid }
+                ballot_id: { type: string, format: uuid }
+                input_set_hash: { type: string, minLength: 1 }
+                algorithm_version: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Tally started; canon's tally.started event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tally]
+                properties:
+                  tally: { $ref: "../schemas/tally.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: TALLY_RECORD_CONFLICT — tally_id already exists with different content.
+
+  /tallies/{tallyId}/complete:
+    post:
+      operationId: completeTally
+      summary: running -> completed, recording the caller-computed result
+      description: >
+        Owned by tally-service. Maps to
+        epd2_tally_service.application.complete_tally. This request
+        never contains individual vote contents or identity fields
+        (CT-00-08, ADR-009 item 15) — only an aggregate per-option count
+        breakdown.
+      tags: [tally-service]
+      parameters:
+        - name: tallyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [result_data, invalid_vote_count]
+              properties:
+                result_data:
+                  type: object
+                  additionalProperties: { type: integer, minimum: 0 }
+                invalid_vote_count: { type: integer, minimum: 0 }
+                tally_signature: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Tally completed; canon's tally.completed event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tally]
+                properties:
+                  tally: { $ref: "../schemas/tally.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such tally_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION — tally is already completed with content different from this request (not a legitimate CT-00-04 replay).
+
+  /tallies/{tallyId}/verify:
+    post:
+      operationId: verifyTally
+      summary: completed -> verified, or completed -> verification_failed
+      description: >
+        Owned by tally-service. Maps to
+        epd2_tally_service.application.verify_tally. tally.verified is
+        emitted only on success — canon names no event for a failed
+        verification (persisted and audited as INTEGRITY_CHECK_FAILED
+        only, no event field in the response).
+      tags: [tally-service]
+      parameters:
+        - name: tallyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [verification_passed]
+              properties:
+                verification_passed: { type: boolean }
+      responses:
+        "200":
+          description: Tally verified or marked verification_failed; canon's tally.verified event emitted only on the success path.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tally]
+                properties:
+                  tally: { $ref: "../schemas/tally.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such tally_id.
+
+  /tallies/{tallyId}/publish-result:
+    post:
+      operationId: publishResult
+      summary: Create a ResultPublication from a verified Tally
+      description: >
+        Owned by tally-service. Maps to
+        epd2_tally_service.application.publish_result. Requires the
+        referenced Tally's verification_status == verified.
+        quorum_threshold/option_counts/challenge_window_hours are plain
+        caller-supplied values (ADR-008 item 3, ADR-010). Per ADR-009
+        item 15, this request and its response carry only aggregate
+        counts — never account_id/person_id/identity_record_id or
+        individual vote contents (CT-00-08).
+      tags: [tally-service]
+      parameters:
+        - name: tallyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  result_publication_id,
+                  ballot_id,
+                  eligible_count,
+                  credential_count,
+                  accepted_vote_count,
+                  rejected_vote_count,
+                  option_counts,
+                  audit_package_reference,
+                ]
+              properties:
+                result_publication_id: { type: string, format: uuid }
+                ballot_id: { type: string, format: uuid }
+                eligible_count: { type: integer, minimum: 0 }
+                credential_count: { type: integer, minimum: 0 }
+                accepted_vote_count: { type: integer, minimum: 0 }
+                rejected_vote_count: { type: integer, minimum: 0 }
+                quorum_threshold: { type: [integer, "null"], minimum: 0 }
+                option_counts:
+                  type: object
+                  additionalProperties: { type: integer, minimum: 0 }
+                challenge_window_hours: { type: [integer, "null"], minimum: 0 }
+                audit_package_reference: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Result published (never final — ADR-010); canon's result.published event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [result]
+                properties:
+                  result: { $ref: "../schemas/result-publication.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such tally_id, or it does not belong to ballot_id.
+        "409":
+          description: RESULT_PUBLICATION_RECORD_CONFLICT — result_publication_id already exists with different content.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION — the referenced Tally's verification_status is not verified.
+
+  # ==========================================================================
+  # delegation-service
+  # ==========================================================================
+  /delegations:
+    post:
+      operationId: createDelegation
+      summary: Create a new Delegation in draft
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.create_delegation. Enforces
+        canon section 16.1's self-delegation prohibition and ADR-009
+        item 9's max-depth-1 rule (checked in both possible creation
+        orders) fail-closed before any Delegation is constructed. This
+        request, and its response, never contain account_id/person_id/
+        identity_record_id (CT-00-08) — only opaque delegator_actor_id/
+        delegate_actor_id references.
+      tags: [delegation-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  delegation_id,
+                  delegator_actor_id,
+                  delegate_actor_id,
+                  scope_type,
+                  scope_id,
+                  valid_from,
+                  valid_until,
+                  revocation_status,
+                ]
+              properties:
+                delegation_id: { type: string, format: uuid }
+                delegator_actor_id: { type: string, format: uuid }
+                delegate_actor_id: { type: string, format: uuid }
+                scope_type: { type: string, minLength: 1 }
+                scope_id: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, "null"], format: date-time }
+                revocation_status: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Delegation created; canon's delegation.created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: DELEGATION_SCOPE_CONFLICT — a competing draft/active Delegation already exists for this (delegator_actor_id, scope_type, scope_id), or DELEGATION_DUPLICATE_CREATION_CONFLICT.
+        "422":
+          description: DELEGATION_SELF_REFERENCE_FORBIDDEN (delegator_actor_id == delegate_actor_id), or DELEGATION_CYCLE — this delegation would exceed the pilot's maximum delegation depth of 1 (ADR-009 item 9); audited under delegation.cycle_detected even though no Delegation is created.
+
+  /delegations/{delegationId}/activate:
+    post:
+      operationId: activateDelegation
+      summary: draft -> active
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.activate_delegation. Guards
+        against activating an already-time-expired draft.
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation activated; canon's delegation.activated event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: DELEGATION_EXPIRED — valid_until has already passed, or VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegations/{delegationId}/revoke:
+    post:
+      operationId: revokeDelegation
+      summary: active|suspended -> revoked
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.revoke_delegation.
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation revoked; canon's delegation.revoked event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegations/{delegationId}/expire:
+    post:
+      operationId: expireDelegation
+      summary: active -> expired
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.expire_delegation.
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation expired; canon's delegation.expired event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegations/{delegationId}/suspend:
+    post:
+      operationId: suspendDelegation
+      summary: active -> suspended
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.suspend_delegation. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation suspended; no domain event (persist + audit only, reason_code DELEGATION_STATUS_CHANGED).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegations/{delegationId}/unsuspend:
+    post:
+      operationId: unsuspendDelegation
+      summary: suspended -> active
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.unsuspend_delegation. Canon
+        names no domain event for this transition — persist + audit
+        only.
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation unsuspended; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegations/{delegationId}/mark-invalid:
+    post:
+      operationId: markDelegationInvalid
+      summary: draft|active -> invalid
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.mark_delegation_invalid.
+        Canon names no domain event for this transition — persist +
+        audit only (unlike voting-service's structurally-unreachable
+        BallotStatus.INVALIDATED, this IS a real, callable command).
+      tags: [delegation-service]
+      parameters:
+        - name: delegationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Delegation marked invalid; no domain event (persist + audit only).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [delegation]
+                properties:
+                  delegation: { $ref: "../schemas/delegation.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such delegation_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /delegation-snapshots:
+    post:
+      operationId: resolveDelegationSnapshot
+      summary: Resolve one DelegationSnapshot for a ballot
+      description: >
+        Owned by delegation-service. Maps to
+        epd2_delegation_service.application.resolve_delegation_snapshot.
+        Never imports epd2_voting_service (ADR-008 item 3) — ballot_id
+        is an opaque reference, and direct_voters/delegator_actor_ids are
+        plain caller-supplied sets (ADR-009 item 10). Idempotent by
+        (ballot_id, input_hash) — a replay with the same inputs but
+        different resolved content is rejected (canon prohibition #4).
+        This request, and its response, never contain account_id/
+        person_id/identity_record_id (CT-00-08) — resolved_weights maps
+        an opaque delegate_actor_id to an integer weight only.
+      tags: [delegation-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  ballot_id,
+                  policy_version,
+                  delegator_actor_ids,
+                  scope_type,
+                  scope_id,
+                  direct_voters,
+                ]
+              properties:
+                delegation_snapshot_id: { type: [string, "null"], format: uuid }
+                ballot_id: { type: string, format: uuid }
+                policy_version: { type: integer, minimum: 1 }
+                delegator_actor_ids:
+                  type: array
+                  items: { type: string, format: uuid }
+                scope_type: { type: string, minLength: 1 }
+                scope_id: { type: string, format: uuid }
+                direct_voters:
+                  type: array
+                  items: { type: string, format: uuid }
+      responses:
+        "201":
+          description: DelegationSnapshot created (or idempotently re-confirmed); canon's delegation.snapshot_created event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [snapshot]
+                properties:
+                  snapshot:
+                    { $ref: "../schemas/delegation-snapshot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "409":
+          description: DELEGATION_SNAPSHOT_FROZEN — a snapshot already exists for this (ballot_id, input_hash) with different resolved content (canon prohibition #4 — a snapshot may not change after voting has opened).
+
+components: {}

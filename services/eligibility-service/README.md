@@ -32,3 +32,16 @@ equally to `EligibilityRule`).
 and a deterministic `digest` (canon section 9.3: "имеет hash"), and
 records `eligible_count` so the number of admitted persons can be
 independently verified without exposing any individual's identity.
+
+## PACK-03 read boundary (ADR-008)
+
+`application.get_eligibility_decision` and `application.get_eligibility_snapshot`
+are two small, additive, unaudited read-only query functions added under
+`docs/adr/ADR-008-pack-03-pack-02-integration-boundary.md`, which names
+this module (never `epd2_eligibility_service.storage`) as the only
+legitimate way `initiative-service` and `voting-service` may read this
+service's already-published state (`SupportRecord` validation and
+`Ballot.eligibility_rule_version` rule-freeze, respectively). Both are pure
+lookups with no state change and no canonical event, the same shape
+`validate_participation_credential` already established in
+credential-service for a query that is not itself a domain command.

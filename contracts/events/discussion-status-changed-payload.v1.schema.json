@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/discussion-status-changed-payload.v1.schema.json",
+  "title": "discussion.opened / discussion.closed event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.8. Produced by epd2_deliberation_service.events.discussion_state_payload, shared verbatim by build_discussion_opened_event (discussion.opened) and build_discussion_closed_event (discussion.closed) - verified by reading events.py, both call the identical payload function. Deliberately excludes moderation_policy_id (see discussion_full_state_payload for Audit Core's complete snapshot).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "discussion_id",
+    "subject_type",
+    "subject_id",
+    "space_id",
+    "status"
+  ],
+  "properties": {
+    "discussion_id": { "type": "string", "format": "uuid" },
+    "subject_type": { "type": "string", "minLength": 1 },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "space_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["open", "limited", "read_only", "closed", "archived"]
+    }
+  }
+}

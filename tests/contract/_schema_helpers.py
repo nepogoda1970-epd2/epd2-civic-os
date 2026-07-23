@@ -20,6 +20,33 @@ REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-02.yml"
 OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-02.yaml"
 SERVICES_DIR = REPO_ROOT / "services"
 
+#: PACK-03's own reason-code registry / OpenAPI contract - added alongside
+#: (never replacing) the PACK-02 constants above, so existing PACK-02
+#: call sites are completely unaffected.
+PACK03_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-03.yml"
+PACK03_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-03.yaml"
+
+#: Exactly which service directories belong to which pack - used so a
+#: registry/contract scan can be scoped to its own pack's services rather
+#: than indiscriminately scanning the whole `services/` tree (which now
+#: contains both packs' services) against a single pack's registry. See
+#: `test_reason_codes_registry.py`.
+PACK02_SERVICE_DIRS: tuple[str, ...] = (
+    "account-service",
+    "identity-service",
+    "eligibility-service",
+    "credential-service",
+    "audit-core",
+)
+PACK03_SERVICE_DIRS: tuple[str, ...] = (
+    "initiative-service",
+    "deliberation-service",
+    "moderation-service",
+    "voting-service",
+    "tally-service",
+    "delegation-service",
+)
+
 
 def load_schema(name: str) -> dict[str, Any]:
     parsed: dict[str, Any] = json.loads((SCHEMAS_DIR / name).read_text(encoding="utf-8"))

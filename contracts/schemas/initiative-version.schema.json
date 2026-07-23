@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/initiative-version.schema.json",
+  "title": "InitiativeVersion",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 11.2. Owned by initiative-service (epd2_initiative_service.domain.InitiativeVersion). Immutable once created ('a published version never changes; any edit creates a new version') - has no status field and no transition table; `content_hash` is a deterministic digest over every field here except the identifiers themselves (epd2_initiative_service.domain.compute_initiative_version_content_hash).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "initiative_version_id",
+    "initiative_id",
+    "version_number",
+    "title",
+    "problem_statement",
+    "proposed_solution",
+    "affected_groups",
+    "expected_effects",
+    "risks",
+    "estimated_resources",
+    "legal_questions",
+    "source_references",
+    "created_by_actor_id",
+    "content_hash"
+  ],
+  "properties": {
+    "initiative_version_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "version_number": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "problem_statement": { "type": "string" },
+    "proposed_solution": { "type": "string" },
+    "affected_groups": { "type": "array", "items": { "type": "string" } },
+    "expected_effects": { "type": "string" },
+    "risks": { "type": "string" },
+    "estimated_resources": { "type": "string" },
+    "legal_questions": { "type": "string" },
+    "source_references": {
+      "type": "array",
+      "items": { "type": "string", "format": "uuid" }
+    },
+    "created_by_actor_id": { "type": "string", "format": "uuid" },
+    "content_hash": { "type": "string", "minLength": 1 }
+  }
+}

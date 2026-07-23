@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/ballot-status-changed-payload.v1.schema.json",
+  "title": "ballot.* status-change event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.10. Produced by epd2_voting_service.events.ballot_state_payload, shared verbatim by eight distinct event_type builders: build_ballot_created_event (ballot.created), build_ballot_configuration_locked_event (ballot.configuration_locked), build_ballot_scheduled_event (ballot.scheduled), build_ballot_opened_event (ballot.opened), build_ballot_paused_event (ballot.paused), build_ballot_resumed_event (ballot.resumed), build_ballot_closed_event (ballot.closed), build_ballot_cancelled_event (ballot.cancelled) - verified by reading events.py, all eight call the shared private _build_ballot_event helper with the identical payload function and differ only in event_type. configuration_hash is nullable until CT-00-10's freeze sets it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ballot_id",
+    "space_id",
+    "subject_type",
+    "subject_id",
+    "ballot_method",
+    "status",
+    "opens_at",
+    "closes_at",
+    "configuration_hash"
+  ],
+  "properties": {
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "space_id": { "type": "string", "format": "uuid" },
+    "subject_type": { "type": "string", "minLength": 1 },
+    "subject_id": { "type": "string", "format": "uuid" },
+    "ballot_method": {
+      "type": "string",
+      "enum": ["single_choice", "yes_no"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "configuration_review",
+        "scheduled",
+        "open",
+        "paused",
+        "closed",
+        "tallying",
+        "tallied",
+        "published",
+        "cancelled",
+        "invalidated"
+      ]
+    },
+    "opens_at": { "type": "string", "format": "date-time" },
+    "closes_at": { "type": "string", "format": "date-time" },
+    "configuration_hash": { "type": ["string", "null"] }
+  }
+}

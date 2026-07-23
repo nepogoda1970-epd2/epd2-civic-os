@@ -298,3 +298,38 @@ def create_eligibility_snapshot(
         clock=clock,
     )
     return SnapshotResult(snapshot=snapshot, event=event, audit_event=audit_event)
+
+
+def get_eligibility_decision(
+    decision_store: EligibilityDecisionStore,
+    *,
+    eligibility_decision_id: UUID,
+) -> EligibilityDecision | None:
+    """Plain, unaudited read of one `EligibilityDecision` by id.
+
+    Added under ADR-008 ("PACK-03 to PACK-02 integration boundary"),
+    which names `epd2_eligibility_service.application` (never
+    `epd2_eligibility_service.storage`) as the only legitimate way a
+    PACK-03 service (`initiative-service`) may read "eligibility
+    decisions backing a support action". This is a pure lookup with no
+    state change - no canonical event, no audit entry - mirroring
+    `epd2_credential_service.application.validate_participation_credential`'s
+    own precedent for a query that is not itself a domain command.
+    """
+    return decision_store.get(eligibility_decision_id)
+
+
+def get_eligibility_snapshot(
+    snapshot_store: EligibilitySnapshotStore,
+    *,
+    eligibility_snapshot_id: UUID,
+) -> EligibilitySnapshot | None:
+    """Plain, unaudited read of one `EligibilitySnapshot` by id.
+
+    Added under ADR-008, which names `epd2_eligibility_service.application`
+    as the only legitimate way a PACK-03 service (`voting-service`) may
+    "freeze against a real EligibilitySnapshot" (canon section 9.1: "after
+    opening a vote, the rule version used is frozen"). Pure lookup, no
+    state change - same rationale as `get_eligibility_decision` above.
+    """
+    return snapshot_store.get(eligibility_snapshot_id)

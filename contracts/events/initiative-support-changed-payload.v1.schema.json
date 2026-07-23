@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/initiative-support-changed-payload.v1.schema.json",
+  "title": "initiative.support_added / initiative.support_withdrawn event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.6. Produced by epd2_initiative_service.events.support_record_state_payload, shared verbatim by build_support_added_event (initiative.support_added) and build_support_withdrawn_event (initiative.support_withdrawn) - verified by reading events.py, both call the identical payload function. Deliberately excludes support_actor_reference/credential_reference from the wire event (see support_record_full_state_payload for Audit Core's complete snapshot). additionalProperties: false is a load-bearing identity-leakage control (INV-01/INV-03): account_id, person_id, and identity_record_id are all forbidden and cannot appear on a payload that validates against this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["support_record_id", "initiative_id", "status"],
+  "properties": {
+    "support_record_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["active", "withdrawn", "invalidated"]
+    }
+  }
+}
