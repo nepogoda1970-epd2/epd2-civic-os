@@ -1,0 +1,188 @@
+# Centralized PACK-04 reason-code registry (ADR-014).
+#
+# This is the single source of truth for every `reason_code` string
+# literal used in the one PACK-04 service's (transparency-service) `src/`.
+# No PACK-04 service may use a free-text string in place of a registered
+# code (canon section 24: "reason code не заменяется свободным текстом").
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# and contracts/reason-codes/pack-03.yml (ADR-006, Option B precedent,
+# extended by ADR-014): each pack's services have their own reason-code
+# registry; codes that multiple packs need (e.g. PERMISSION_DENIED,
+# VALIDATION_UNKNOWN_STATUS) are independently redeclared here rather than
+# imported from an earlier pack's file, so each pack's registry remains a
+# complete, standalone source of truth for its own services.
+#
+# `source: canon` entries are the shared/generic canon section-24 codes
+# this pack reuses verbatim, copied from
+# docs/canonical/TZ-00-domain-event-canon.md, canon version 0.3.0 - their
+# meaning must never be changed here without a canon ADR and version bump.
+# `source: pack-04-adr-014` entries are the six additive codes ADR-014
+# introduces, documented and justified in
+# docs/adr/ADR-014-pack-04-reason-code-additions.md; they are
+# backward-compatible additions (canon section 25's "Minor" category) and
+# change no existing canon code's meaning. `source: pack-04-service` entries
+# are this service's own additive duplicate-conflict and audit-success
+# classification codes (the same additive pattern ADR-006 already
+# established for PACK-03's own services), not named by ADR-014 itself but
+# following its precedent.
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+# Validated structurally and scanned for every `reason_code` literal used
+# in transparency-service by `tests/contract/test_reason_codes_registry.py`.
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: An entity's status (or an equivalent closed-value field) does not match any known enum value.
+  severity: error
+  description: This value is not a recognized status.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: An attempted status transition is not permitted from the entity's current status.
+  severity: error
+  description: This status change is not allowed.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: No record exists for the given identifier.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: PERMISSION_DENIED
+  meaning: The acting party is not authorized to perform the requested action.
+  severity: error
+  description: You are not authorized to perform this action.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.1.0
+  source: canon
+- code: DISCLOSURE_POLICY_VIOLATION
+  meaning:
+    Applying a DisclosurePolicy to candidate content would still leave a structurally
+    forbidden field present (defense-in-depth; should be unreachable given unconditional
+    structural filtering).
+  severity: error
+  description: This content violates the applicable disclosure policy.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: PUBLICATION_NOT_ALLOWED
+  meaning:
+    No active DisclosurePolicy exists for the relevant subject type at the moment a
+    publish command is attempted (fail-closed, INV-10).
+  severity: error
+  description: Publication is not currently allowed for this content.
+  retryable: true
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: REDACTION_REQUIRED
+  meaning:
+    A caller explicitly demanded a field be disclosed as public when the resolved
+    field_rule is prohibited (missing or ambiguous rule).
+  severity: error
+  description: This field must be redacted before it can be published.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: LOBBY_LOG_ENTRY_INCOMPLETE
+  meaning: A LobbyLogEntry is missing a mandatory field at submission or publication time.
+  severity: error
+  description: This lobby log entry is missing a mandatory field.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: AUDIT_EXPORT_INTEGRITY_FAILED
+  meaning:
+    A recomputed digest over an AuditExportPackage's chain_proof does not match its
+    stored package_digest.
+  severity: error
+  description: This audit export package's integrity check failed.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: LEDGER_ENTRY_ALREADY_PUBLISHED
+  meaning:
+    A PublicLedgerEntry already exists for the given subject_event_id; use a correction
+    instead of a second, unrelated publication.
+  severity: error
+  description: A ledger entry already exists for this event; use a correction instead.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-adr-014
+- code: LEDGER_ENTRY_DUPLICATE_CONFLICT
+  meaning: A repeated publish/correct-ledger-entry request reused an id with different content.
+  severity: error
+  description: A ledger entry with this identifier already exists with different content.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: AUDIT_EXPORT_PACKAGE_DUPLICATE_CONFLICT
+  meaning: A repeated generate-audit-export-package request reused an id with different content.
+  severity: error
+  description: An audit export package with this identifier already exists with different content.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: DISCLOSURE_POLICY_DUPLICATE_CONFLICT
+  meaning: A repeated define-disclosure-policy request reused an id with different content.
+  severity: error
+  description: A disclosure policy with this identifier already exists with different content.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: LOBBY_LOG_ENTRY_DUPLICATE_CONFLICT
+  meaning: A repeated submit-lobby-log-entry request reused an id with different content.
+  severity: error
+  description: A lobby log entry with this identifier already exists with different content.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: TRANSPARENCY_LEDGER_ENTRY_PUBLISHED
+  meaning: Audit-success classification for publish_ledger_entry/correct_ledger_entry.
+  severity: info
+  description: A public ledger entry was published or corrected.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: TRANSPARENCY_AUDIT_EXPORT_STATUS_CHANGED
+  meaning: Audit-success classification for generate/publish_audit_export_package.
+  severity: info
+  description: An audit export package's status changed.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: TRANSPARENCY_DISCLOSURE_POLICY_STATUS_CHANGED
+  meaning: Audit-success classification for define/activate_disclosure_policy.
+  severity: info
+  description: A disclosure policy's status changed.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service
+- code: TRANSPARENCY_LOBBY_LOG_ENTRY_STATUS_CHANGED
+  meaning: Audit-success classification for submit/publish/correct_lobby_log_entry.
+  severity: info
+  description: A lobby log entry's status changed.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+  source: pack-04-service

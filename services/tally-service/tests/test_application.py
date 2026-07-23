@@ -28,6 +28,7 @@ from epd2_tally_service.application import (
     PermissionDeniedError,
     PublishResultResult,
     complete_tally,
+    get_result_publication,
     publish_result,
     start_tally,
     verify_tally,
@@ -600,3 +601,31 @@ def test_package_only_depends_on_epd2_core_and_audit_core() -> None:
                 top = node.module.split(".")[0]
                 if top.startswith("epd2"):
                     assert top in allowed_prefixes, f"{py_file.name} imports from {node.module!r}"
+
+
+def test_get_result_publication_read_accessor() -> None:
+    """Additive (PACK-04, ADR-012 item 3): backs
+    `epd2_transparency_service.application.publish_ledger_entry` for
+    `subject_type = "result_publication"`."""
+    fx = _Fixture()
+    ballot_id = uuid4()
+    tally_id = _verified(fx, result_data={"yes": 60, "no": 40})
+    stored = fx.tally_store.get(tally_id)
+    assert stored is not None
+    from dataclasses import replace
+
+    fx.tally_store.save(replace(stored, ballot_id=ballot_id))
+    result = _publish(
+        fx,
+        tally_id=tally_id,
+        ballot_id=ballot_id,
+        option_counts={"yes": 60, "no": 40},
+        accepted_vote_count=100,
+        quorum_threshold=None,
+    )
+    found = get_result_publication(
+        fx.result_store, result_publication_id=result.result.result_publication_id
+    )
+    assert found is not None
+    assert found.result_publication_id == result.result.result_publication_id
+    assert get_result_publication(fx.result_store, result_publication_id=uuid4()) is None

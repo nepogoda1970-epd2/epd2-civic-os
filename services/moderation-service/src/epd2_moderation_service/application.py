@@ -849,3 +849,18 @@ def decide_appeal(
     return DecideAppealResult(
         appeal=final_appeal, case=updated_case, event=event, audit_event=audit_event
     )
+
+
+def get_moderation_decision(
+    store: ModerationDecisionStore, *, moderation_decision_id: UUID
+) -> ModerationDecision | None:
+    """Plain, unaudited read of one `ModerationDecision` by id.
+
+    Added under ADR-012 ("PACK-04 cross-pack read boundary"), which names
+    `epd2_moderation_service.application` (never `.storage`/`.domain`) as
+    the only authorized way `transparency-service` may read
+    `ModerationDecision` records for `PublicLedgerEntry.subject_type =
+    "moderation_decision"` (canon section 19a.5). Additive; does not
+    change any existing function's signature or behavior.
+    """
+    return store.get(moderation_decision_id)

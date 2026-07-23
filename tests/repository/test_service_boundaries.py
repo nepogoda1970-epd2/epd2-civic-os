@@ -57,8 +57,20 @@ PACK03_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (both packs).
-SERVICE_PACKAGES = {**PACK02_SERVICE_PACKAGES, **PACK03_SERVICE_PACKAGES}
+# package import name -> its src/ directory, for the one PACK-04 service
+# (ADR-011's single-service decomposition).
+PACK04_SERVICE_PACKAGES = {
+    "epd2_transparency_service": (
+        REPO_ROOT / "services/transparency-service/src/epd2_transparency_service"
+    ),
+}
+
+# Every service in the repository (all three packs).
+SERVICE_PACKAGES = {
+    **PACK02_SERVICE_PACKAGES,
+    **PACK03_SERVICE_PACKAGES,
+    **PACK04_SERVICE_PACKAGES,
+}
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
 # docs/architecture/service-boundaries.md) and on epd2_audit_core (the one
@@ -94,6 +106,39 @@ ALLOWED_PACK03_TO_PACK02_APPLICATION_MODULES: dict[str, frozenset[str]] = {
     "epd2_tally_service": frozenset(),
     "epd2_delegation_service": frozenset(),
 }
+
+# ADR-012 Decision: the exact, enumerated PACK-04 -> PACK-03 edges, each
+# scoped to the OTHER service's `.application` submodule only - never
+# `.storage`/`.domain` (the same INV-03 boundary ADR-008 already drew for
+# PACK-03 -> PACK-02). `transparency-service` is the only PACK-04 service
+# (ADR-011) and is the first service in this project to read from another
+# same-generation pack rather than an older one. Explicitly excluded (not
+# merely absent): `epd2_deliberation_service`, `epd2_delegation_service`,
+# and every PACK-02 identity/credential-adjacent service - ADR-012's own
+# Decision names none of them as an edge.
+ALLOWED_PACK04_TO_UPSTREAM_APPLICATION_MODULES: dict[str, frozenset[str]] = {
+    "epd2_transparency_service": frozenset(
+        {
+            "epd2_initiative_service.application",
+            "epd2_moderation_service.application",
+            "epd2_voting_service.application",
+            "epd2_tally_service.application",
+        }
+    ),
+}
+
+#: PACK-04 services (i.e. `transparency-service`) may read from these
+#: upstream PACK-03 services' `.application` layer (ADR-012) - a strict
+#: subset of all PACK-03 services, explicitly excluding
+#: `epd2_deliberation_service` and `epd2_delegation_service`.
+PACK04_ALLOWED_PACK03_ROOTS = frozenset(
+    {
+        "epd2_initiative_service",
+        "epd2_moderation_service",
+        "epd2_voting_service",
+        "epd2_tally_service",
+    }
+)
 
 
 def _imported_roots(source_file: Path) -> set[str]:
@@ -209,6 +254,111 @@ def test_pack03_services_only_call_pack02_applications_named_in_adr008() -> None
                     )
     assert violations == [], "Unauthorized PACK-03 -> PACK-02 imports found:\n" + "\n".join(
         violations
+    )
+
+
+def test_no_pack04_service_imports_another_pack04_services_package() -> None:
+    """There is only one PACK-04 service today (ADR-011), so this is
+    currently vacuous, but it is kept for symmetry with
+    `test_no_pack03_service_imports_another_pack03_services_package` and
+    to fail loudly if a second PACK-04 service is ever added without
+    updating this file."""
+    violations: list[str] = []
+    for package_name, src_dir in PACK04_SERVICE_PACKAGES.items():
+        forbidden = set(PACK04_SERVICE_PACKAGES) - {package_name}
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & forbidden
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "Forbidden PACK-04<->PACK-04 imports found:\n" + "\n".join(violations)
+
+
+def test_no_pack02_or_pack03_service_imports_pack04_service() -> None:
+    """ADR-012's dependency direction is one-way: `transparency-service`
+    reads from PACK-02/03; no PACK-02/03 service may import it back."""
+    violations: list[str] = []
+    for src_dir in {**PACK02_SERVICE_PACKAGES, **PACK03_SERVICE_PACKAGES}.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK04_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "PACK-02/03 must not import any PACK-04 service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_pack04_service_only_calls_upstream_applications_named_in_adr012() -> None:
+    """ADR-012 Decision: `transparency-service` may depend on an upstream
+    PACK-03 service ONLY via that service's `.application` submodule, and
+    only on the specific edges ADR-012 enumerates - never
+    `.storage`/`.domain`, and never a PACK-02/03 service not named for it
+    (in particular, never `epd2_deliberation_service`,
+    `epd2_delegation_service`, or any PACK-02 identity/credential-adjacent
+    service)."""
+    violations: list[str] = []
+    for package_name, src_dir in PACK04_SERVICE_PACKAGES.items():
+        allowed_paths = ALLOWED_PACK04_TO_UPSTREAM_APPLICATION_MODULES[package_name]
+        allowed_roots = {path.split(".")[0] for path in allowed_paths}
+        forbidden_roots = (set(PACK02_SERVICE_PACKAGES) | set(PACK03_SERVICE_PACKAGES)) - {
+            "epd2_audit_core"
+        }
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            touched_forbidden_universe = roots & forbidden_roots
+            if not touched_forbidden_universe:
+                continue
+            unauthorized_roots = touched_forbidden_universe - allowed_roots
+            if unauthorized_roots:
+                violations.append(
+                    f"{py_file.relative_to(REPO_ROOT)} imports unauthorized service(s) "
+                    f"{sorted(unauthorized_roots)} (not an ADR-012 edge for {package_name})"
+                )
+                continue
+            module_paths = _imported_module_paths(py_file)
+            for root in touched_forbidden_universe:
+                touched_dotted = {p for p in module_paths if p == root or p.startswith(root + ".")}
+                bad_paths = touched_dotted - allowed_paths
+                if bad_paths:
+                    root_allowed = sorted(p for p in allowed_paths if p.startswith(root))
+                    violations.append(
+                        f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad_paths)} - "
+                        f"only {root_allowed} is authorized for {package_name} (ADR-012)"
+                    )
+    assert violations == [], "Unauthorized PACK-04 -> upstream imports found:\n" + "\n".join(
+        violations
+    )
+
+
+def test_pack04_service_never_imports_deliberation_or_delegation_or_pack02_identity_services() -> (
+    None
+):
+    """ADR-012's explicit exclusions, tested as positive assertions (not
+    merely "unlisted") per that ADR's own instruction: `transparency-
+    service` must never import `epd2_deliberation_service`,
+    `epd2_delegation_service`, `epd2_account_service`,
+    `epd2_identity_service`, `epd2_eligibility_service`, or
+    `epd2_credential_service`, under any module path."""
+    excluded = frozenset(
+        {
+            "epd2_deliberation_service",
+            "epd2_delegation_service",
+            "epd2_account_service",
+            "epd2_identity_service",
+            "epd2_eligibility_service",
+            "epd2_credential_service",
+        }
+    )
+    violations: list[str] = []
+    for src_dir in PACK04_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & excluded
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "ADR-012-excluded imports found in transparency-service:\n" + "\n".join(violations)
     )
 
 

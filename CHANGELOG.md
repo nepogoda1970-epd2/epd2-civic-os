@@ -5,6 +5,121 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - canon minor version 0.3.0 (Transparency Context)
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.2.0 →
+0.3.0` (ADR-013, accepted with amendments) — the second edit to this
+  document's own text since its original acceptance (the first was
+  ADR-010's `0.1.0 → 0.2.0`). Adds a new section 19a ("Прозрачность /
+  Transparency Context") defining four new canonical entities —
+  `PublicLedgerEntry`, `AuditExportPackage`, `DisclosurePolicy`,
+  `LobbyLogEntry` — with full fields, identifiers, statuses, owners,
+  invariants, forbidden links, and immutable/correction semantics; a new
+  section 20.14 with the ten-event Transparency canonical event catalog;
+  four new section 22 ownership-matrix rows; and new section 23
+  forbidden-link entries covering identity, credential, vote-envelope,
+  delegation, private audit payload, and internal role-reference
+  exposure. Governance Context (5.12), AI-processing (section 17), and
+  Emergency/Crisis Override (section 19) remain explicitly untouched and
+  unimplemented by this addition (canon 19a's own closing subsection).
+  `docs/canonical/canon-version.json`,
+  `packages/python/epd2-core/src/epd2_core/version.py`, and
+  `packages/typescript/epd2-types/src/version.ts` updated to match, with
+  both version-consistency unit tests updated and
+  `scripts/verify_versions.py` passing; `REPOSITORY_VERSION` is unchanged
+  (`0.3.0`) since no `transparency-service` code exists yet — this is a
+  canon-only change, per CLAUDE-PACK-04's own governance round
+  (`docs/adr/ADR-011` through `ADR-015`, all `accepted`;
+  `docs/review/PACK-04-OWNER-DECISIONS.md`).
+
+## [0.4.0] - transparency context (implementation)
+
+### Added
+
+- A new, independent, in-memory-backed service, `transparency-service`
+  (CLAUDE-PACK-04, "Transparency Context"), with its own `README.md`,
+  `pyproject.toml`, `src/`, `tests/`, storage interfaces, and in-memory
+  reference adapters, implementing exactly the canon 0.3.0 section 19a
+  text and ADR-011 through ADR-015 (all `accepted`) with no further canon
+  edit.
+- All four canon 19a entities: `PublicLedgerEntry`, `AuditExportPackage`,
+  `DisclosurePolicy`, `LobbyLogEntry` — domain models, `StrEnum` statuses,
+  `ALLOWED_TRANSITIONS` state machines where canon defines one
+  (`AuditExportPackage`'s `generated -> published -> superseded`,
+  `DisclosurePolicy`'s `draft -> active -> superseded`,
+  `LobbyLogEntry`'s `submitted -> published`), and permanent
+  content-immutability with no transition table at all for
+  `PublicLedgerEntry` (a correction is always a new superseding row, per
+  canon 19a.1).
+- Ten application-layer commands (`publish_ledger_entry`,
+  `correct_ledger_entry`, `generate_audit_export_package`,
+  `publish_audit_export_package`, `verify_audit_export_package`,
+  `define_disclosure_policy`, `activate_disclosure_policy`,
+  `submit_lobby_log_entry`, `publish_lobby_log_entry`,
+  `correct_lobby_log_entry`), each with `epd2_audit_core` audit entries,
+  CT-00-04 idempotency, and the ten canonical Transparency events (canon
+  section 20.14).
+- Per-field `DisclosurePolicy` rules (`public`/`redacted`/`restricted`/
+  `prohibited` classes; missing or ambiguous rules default to
+  `prohibited`; prohibited fields cannot be overridden by any rule;
+  role-scope generalization uses labels only; a structural
+  `FORBIDDEN_FIELD_NAMES` set — identity, account, credential,
+  vote-envelope, and internal role-UUID fields — is stripped
+  unconditionally before any policy is even consulted); a
+  `small_cell_threshold` of `10` for analytics-shaped fields, with
+  `ResultPublication` counts explicitly exempt (exact official counts
+  remain exact).
+- Lobby Log rules: a 7-calendar-day publication deadline
+  (`is_within_publication_deadline`), mandatory automated completeness
+  and prohibited-field validation on every publish, no mandatory human
+  pre-publication approval by default, and corrections only through a
+  new superseding entry (`correct_lobby_log_entry`), never a rewrite.
+- Public audit export rules (`AuditExportPackage`): a
+  `ChainProofItem`-based proof of continuity, ordering, and integrity for
+  an exported hash-chain segment (`event_hash`, `previous_event_hash`,
+  public-safe metadata, and sequence position per item), a
+  package-level `package_digest` and an `integrity_proof`
+  signature-shaped field, and an explicit non-claim of full recomputation
+  of redacted private `AuditEvent` hashes (`verify_audit_export_package`
+  checks the exported segment's own internal consistency only).
+- `contracts/openapi/pack-04.yaml` (10 operations, tag
+  `transparency-service`), `contracts/reason-codes/pack-04.yml` (18
+  entries), four entity JSON Schemas (`public-ledger-entry`,
+  `audit-export-package`, `disclosure-policy`, `lobby-log-entry`) and
+  four event-payload JSON Schemas, all validated against real generated
+  payloads.
+- Additive, read-only upstream `.application`-layer functions (ADR-012):
+  `epd2_audit_core.application.list_by_target_types` (used directly by
+  `generate_audit_export_package`), plus four further sanctioned-but-
+  not-yet-called functions (`get_published_initiative`,
+  `get_initiative_version`, `get_moderation_decision`, `get_ballot`,
+  `get_result_publication`) added to their respective upstream services
+  and enforced as PACK-04's only permitted upstream `.application`
+  imports by `tests/repository/test_service_boundaries.py`.
+- `tests/repository/test_service_boundaries.py` extended with four new
+  PACK-04 boundary tests (no PACK-04-to-PACK-04 cross-service import, no
+  PACK-02/03 service imports PACK-04, PACK-04 calls only the
+  ADR-012-named upstream applications, PACK-04 never imports
+  deliberation-service, delegation-service, or the PACK-02 identity
+  services).
+- `tests/contract/test_ct00_08_identity_leakage.py` and
+  `tests/contract/test_ct00_09_vote_linkability.py` extended with a
+  PACK-04 section each: structural schema checks that no entity or event
+  schema exposes an identity/credential/vote-envelope/role-UUID field,
+  and a real end-to-end command call proving a caller-supplied
+  vote-envelope-shaped field is dropped before it ever reaches a public
+  payload.
+- `REPOSITORY_VERSION` `0.3.0 → 0.4.0` (`packages/python/epd2-core/src/
+  epd2_core/version.py`, `packages/typescript/epd2-types/src/
+  version.ts`, both version-consistency unit tests, and
+  `docs/canonical/canon-version.json`'s `repository_compatibility` upper
+  bound widened to admit it). `CANON_VERSION` is unchanged (`0.3.0`) —
+  this round implements the already-accepted canon 19a text; no further
+  canon edit was made.
+- `docs/handover/PACK-04-REPORT.md`.
+
 ## [0.3.0] - participation and decision kernel
 
 ### Added
@@ -98,6 +213,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   canon-immutable content; the canon document's own text and checksum are
   unchanged by this pack (still `0.2.0`,
   `5ed52c3a6a94e821323616ac369595fd364a71115cf5c1c6763d8edb51a6044a`).
+
+### Verified
+
+- **PACK-03 PASS**, confirmed by a complete external GitHub Actions run
+  with real network access: 1525 Python tests passed, 2 skipped (genuine
+  CT-00-11/12 not-applicable markers), TypeScript 3/3, frontend tests
+  2/2, a successful Next.js production build, and Ruff, Prettier,
+  ESLint, and mypy all clean, with all 277 required paths present and no
+  forbidden files. Full detail: `docs/handover/PACK-03-REPORT.md`.
 
 ## [Unreleased] - canon minor version 0.2.0
 

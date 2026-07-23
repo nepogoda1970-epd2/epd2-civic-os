@@ -1698,3 +1698,30 @@ def update_source_verification_status(
         clock=clock,
     )
     return SourceRecordResult(source=updated, event=None, audit_event=audit_event)
+
+
+def get_published_initiative(store: InitiativeStore, *, initiative_id: UUID) -> Initiative | None:
+    """Plain, unaudited read of one `Initiative` by id.
+
+    Added under ADR-012 ("PACK-04 cross-pack read boundary"), which names
+    `epd2_initiative_service.application` (never `.storage`/`.domain`) as
+    the only authorized way `transparency-service` may read `Initiative`
+    records for `PublicLedgerEntry.subject_type = "initiative"` (canon
+    section 19a.5). Mirrors `epd2_eligibility_service.application.
+    get_eligibility_decision`'s own precedent for a read-only,
+    application-layer accessor added specifically to satisfy a
+    cross-pack-read ADR. Additive; does not change any existing
+    function's signature or behavior.
+    """
+    return store.get(initiative_id)
+
+
+def get_initiative_version(
+    store: InitiativeVersionStore, *, initiative_id: UUID, version_number: int
+) -> InitiativeVersion | None:
+    """Plain, unaudited read of one `InitiativeVersion` by
+    `(initiative_id, version_number)`. Added under ADR-012, for
+    `PublicLedgerEntry.subject_type = "initiative_version"` (canon section
+    19a.5) — see `get_published_initiative`'s docstring for the shared
+    rationale."""
+    return store.get(initiative_id, version_number)

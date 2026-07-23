@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/transparency-lobby-log-entry-payload.v1.schema.json",
+  "title": "TransparencyLobbyLogEntryPayloadV1",
+  "description": "Payload shape for transparency.lobby_log_entry_submitted, transparency.lobby_log_entry_published, and transparency.lobby_log_entry_corrected (canon section 20.14; epd2_transparency_service.events.lobby_log_entry_public_payload). Deliberately omits submitted_by_role_id (canon section 19a.6).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lobby_log_entry_id",
+    "organization_name",
+    "related_subject_type",
+    "related_subject_id",
+    "contact_date",
+    "contact_method",
+    "topic_summary",
+    "submitted_at",
+    "published_at",
+    "supersedes_entry_id",
+    "status"
+  ],
+  "properties": {
+    "lobby_log_entry_id": { "type": "string", "format": "uuid" },
+    "organization_name": { "type": "string", "minLength": 1 },
+    "related_subject_type": { "type": "string", "enum": ["initiative", "ballot", "amendment"] },
+    "related_subject_id": { "type": "string", "format": "uuid" },
+    "contact_date": { "type": "string", "format": "date-time" },
+    "contact_method": {
+      "type": "string",
+      "enum": ["meeting", "written_submission", "call", "other"]
+    },
+    "topic_summary": { "type": "string", "minLength": 1 },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "published_at": { "type": ["string", "null"], "format": "date-time" },
+    "supersedes_entry_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["submitted", "published"] }
+  }
+}

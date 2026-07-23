@@ -34,6 +34,8 @@ from epd2_initiative_service.application import (
     create_amendment,
     create_initiative,
     create_initiative_version,
+    get_initiative_version,
+    get_published_initiative,
     invalidate_support,
     mark_adopted,
     mark_qualified,
@@ -1447,3 +1449,33 @@ def test_update_source_verification_status_unknown_source_raises() -> None:
             correlation_id=uuid4(),
             clock=_CLOCK,
         )
+
+
+def test_get_published_initiative_read_accessor() -> None:
+    """Additive (PACK-04, ADR-012 item 1): backs
+    `epd2_transparency_service.application.publish_ledger_entry` for
+    `subject_type = "initiative"`."""
+    fx = _Fixture()
+    author = _actor()
+    initiative_id = _create_draft_initiative(fx, author)
+    found = get_published_initiative(fx.initiative_store, initiative_id=initiative_id)
+    assert found is not None
+    assert found.initiative_id == initiative_id
+    assert get_published_initiative(fx.initiative_store, initiative_id=uuid4()) is None
+
+
+def test_get_initiative_version_read_accessor() -> None:
+    """Additive (PACK-04, ADR-012 item 1): backs
+    `epd2_transparency_service.application.publish_ledger_entry` for
+    `subject_type = "initiative_version"`."""
+    fx = _Fixture()
+    author = _actor()
+    initiative_id = _create_draft_initiative(fx, author)
+    _add_version(fx, initiative_id, author, version_number=1)
+    found = get_initiative_version(fx.version_store, initiative_id=initiative_id, version_number=1)
+    assert found is not None
+    assert found.initiative_id == initiative_id
+    assert (
+        get_initiative_version(fx.version_store, initiative_id=initiative_id, version_number=99)
+        is None
+    )

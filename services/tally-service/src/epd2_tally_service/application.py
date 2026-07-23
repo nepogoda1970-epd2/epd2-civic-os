@@ -452,3 +452,18 @@ def publish_result(
         clock=clock,
     )
     return PublishResultResult(result=stored, event=event, audit_event=audit_event)
+
+
+def get_result_publication(
+    store: ResultPublicationStore, *, result_publication_id: UUID
+) -> ResultPublication | None:
+    """Plain, unaudited read of one `ResultPublication` by id.
+
+    Added under ADR-012 ("PACK-04 cross-pack read boundary"), which names
+    `epd2_tally_service.application` (never `.storage`/`.domain`) as the
+    authorized way `transparency-service` may read published aggregate
+    counts for `PublicLedgerEntry.subject_type = "result_publication"`
+    (canon section 19a.5). Additive; does not change any existing
+    function's signature or behavior.
+    """
+    return store.get(result_publication_id)

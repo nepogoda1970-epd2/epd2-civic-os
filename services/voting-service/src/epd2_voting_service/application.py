@@ -1065,3 +1065,17 @@ def issue_vote_receipt(
         clock=clock,
     )
     return IssueReceiptResult(receipt=stored, audit_event=audit_event)
+
+
+def get_ballot(store: BallotStore, *, ballot_id: UUID) -> Ballot | None:
+    """Plain, unaudited read of one `Ballot` by id.
+
+    Added under ADR-012 ("PACK-04 cross-pack read boundary"), which names
+    `epd2_voting_service.application` (never `.storage`/`.domain`) as one
+    authorized way `transparency-service` may read `Ballot` context for
+    `PublicLedgerEntry.subject_type = "result_publication"` (canon section
+    19a.5) — alongside `epd2_tally_service.application.
+    get_result_publication` for the aggregate counts themselves. Additive;
+    does not change any existing function's signature or behavior.
+    """
+    return store.get(ballot_id)

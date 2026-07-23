@@ -1,0 +1,514 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-04 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the one PACK-04 service
+    (transparency-service, ADR-011). No production HTTP server ships in
+    this pack — these paths document, one-to-one, every real command
+    function in epd2_transparency_service.application and are exercised
+    in tests via those application-layer functions directly, not over
+    HTTP. Every path maps to exactly one real command; none of this
+    file's paths invent an HTTP surface a command function does not
+    already provide. Request bodies list only genuine business fields —
+    actor identity, authorization, correlation/causation ids, the clock,
+    and the idempotency event_id are transport/session concerns, the
+    same convention contracts/openapi/pack-02.yaml and pack-03.yaml
+    already follow. Per canon section 19a.6 / CT-00-08, no path or
+    schema in this file ever declares account_id, person_id,
+    identity_record_id, participation_credential_id, vote_envelope_id,
+    encrypted_or_encoded_choice, credential_proof, or any of the four
+    *_role_id fields as part of a *response* body — those are internal
+    fields, present only in the stored entity schemas
+    (contracts/schemas/*.json), never in a public wire payload.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://transparency.epd2.example
+    description: transparency-service (not deployed in PACK-04 — contract only)
+
+paths:
+  # ==========================================================================
+  # transparency-service — PublicLedgerEntry
+  # ==========================================================================
+  /public-ledger-entries:
+    post:
+      operationId: publishLedgerEntry
+      summary: Publish a new PublicLedgerEntry
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.publish_ledger_entry.
+        Creates the entry already in status=published (canon 19a.1) —
+        content is filtered through the active DisclosurePolicy for
+        subject_type before storage.
+      tags: [transparency-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  public_ledger_entry_id,
+                  subject_type,
+                  subject_id,
+                  subject_event_id,
+                  raw_content,
+                ]
+              properties:
+                public_ledger_entry_id: { type: string, format: uuid }
+                subject_type:
+                  type: string
+                  enum:
+                    [
+                      initiative,
+                      initiative_version,
+                      moderation_decision,
+                      result_publication,
+                      ai_processing_record,
+                    ]
+                subject_id: { type: string, format: uuid }
+                subject_event_id: { type: string, format: uuid }
+                raw_content: { type: object }
+                redaction_notice: { type: [string, "null"] }
+      responses:
+        "201":
+          description: Ledger entry published; transparency.ledger_entry_published emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entry]
+                properties:
+                  entry: { $ref: "../schemas/public-ledger-entry.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized (CT-00-06).
+        "409":
+          description: LEDGER_ENTRY_ALREADY_PUBLISHED — use the correction path instead.
+        "422":
+          description: PUBLICATION_NOT_ALLOWED — no active DisclosurePolicy for subject_type.
+
+  /public-ledger-entries/{supersedes_entry_id}/corrections:
+    post:
+      operationId: correctLedgerEntry
+      summary: Publish a correcting PublicLedgerEntry
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.correct_ledger_entry. The
+        original entry is never rewritten (canon 19a.1) — this creates a
+        new row with supersedes_entry_id set.
+      tags: [transparency-service]
+      parameters:
+        - name: supersedes_entry_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [new_public_ledger_entry_id, raw_content]
+              properties:
+                new_public_ledger_entry_id: { type: string, format: uuid }
+                raw_content: { type: object }
+                redaction_notice: { type: [string, "null"] }
+      responses:
+        "201":
+          description: Correcting entry published; transparency.ledger_entry_corrected emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entry]
+                properties:
+                  entry: { $ref: "../schemas/public-ledger-entry.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — supersedes_entry_id does not exist.
+
+  # ==========================================================================
+  # transparency-service — AuditExportPackage
+  # ==========================================================================
+  /audit-export-packages:
+    post:
+      operationId: generateAuditExportPackage
+      summary: Generate a new AuditExportPackage in status=generated
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.generate_audit_export_package.
+        Builds chain_proof from epd2_audit_core's matching events via the
+        new, additive, read-only
+        epd2_audit_core.application.list_by_target_types function
+        (ADR-012 item 4).
+      tags: [transparency-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [audit_export_package_id, scope_description, included_target_types]
+              properties:
+                audit_export_package_id: { type: string, format: uuid }
+                scope_description: { type: string, minLength: 1 }
+                included_target_types:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    enum:
+                      [
+                        initiative,
+                        initiative_version,
+                        ballot,
+                        moderation_case,
+                        moderation_decision,
+                        result_publication,
+                      ]
+                redaction_notice: { type: [string, "null"] }
+                supersedes_package_id: { type: [string, "null"], format: uuid }
+      responses:
+        "201":
+          description: Package generated; transparency.audit_export_generated emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [package]
+                properties:
+                  package: { $ref: "../schemas/audit-export-package.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+
+  /audit-export-packages/{audit_export_package_id}/publish:
+    post:
+      operationId: publishAuditExportPackage
+      summary: generated -> published (may also supersede an old package)
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.publish_audit_export_package.
+        If the package's own supersedes_package_id is set, this call also
+        transitions that referenced package published -> superseded
+        (canon 19a.2) — the old package's content is never rewritten,
+        only its status.
+      tags: [transparency-service]
+      parameters:
+        - name: audit_export_package_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Package published; transparency.audit_export_published emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [package]
+                properties:
+                  package: { $ref: "../schemas/audit-export-package.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — unknown audit_export_package_id.
+        "409":
+          description: VALIDATION_FORBIDDEN_TRANSITION — package is not in status=generated.
+
+  /audit-export-packages/{audit_export_package_id}/verify:
+    get:
+      operationId: verifyAuditExportPackage
+      summary: Recompute and check package_digest (public verification only)
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.verify_audit_export_package.
+        Proves chain-continuity/ordering/non-modification of the exported
+        segment (canon 19a.2's "Семантика проверки") — never a
+        recomputation of the original private AuditEvent.event_hash
+        values.
+      tags: [transparency-service]
+      parameters:
+        - name: audit_export_package_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Verification result.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [is_intact, recomputed_digest]
+                properties:
+                  is_intact: { type: boolean }
+                  recomputed_digest: { type: string, minLength: 1 }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — unknown audit_export_package_id.
+
+  # ==========================================================================
+  # transparency-service — DisclosurePolicy
+  # ==========================================================================
+  /disclosure-policies:
+    post:
+      operationId: defineDisclosurePolicy
+      summary: Define a new DisclosurePolicy in status=draft
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.define_disclosure_policy.
+      tags: [transparency-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [disclosure_policy_id, applies_to_subject_type, field_rules, effective_from, version]
+              properties:
+                disclosure_policy_id: { type: string, format: uuid }
+                applies_to_subject_type: { type: string, minLength: 1 }
+                field_rules:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [field_path, disclosure_class, transformation]
+                    properties:
+                      field_path: { type: string, minLength: 1 }
+                      disclosure_class:
+                        type: string
+                        enum: [public, redacted, restricted, prohibited]
+                      transformation:
+                        type: string
+                        enum:
+                          [none, generalize_to_role_scope, band_small_cell, suppress, hash]
+                      replacement_label: { type: [string, "null"] }
+                small_cell_threshold: { type: integer, minimum: 0, default: 10 }
+                effective_from: { type: string, format: date-time }
+                version: { type: integer, minimum: 1 }
+      responses:
+        "201":
+          description: Policy defined; transparency.disclosure_policy_defined emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [policy]
+                properties:
+                  policy: { $ref: "../schemas/disclosure-policy.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+
+  /disclosure-policies/{disclosure_policy_id}/activate:
+    post:
+      operationId: activateDisclosurePolicy
+      summary: draft -> active (may also supersede the previously-active version)
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.activate_disclosure_policy.
+        Requires approved_by_role_id (INV-08). If another policy is
+        already active for the same applies_to_subject_type, this call
+        also transitions it active -> superseded (canon 19a.3).
+      tags: [transparency-service]
+      parameters:
+        - name: disclosure_policy_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [approved_by_role_id]
+              properties:
+                approved_by_role_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Policy activated; transparency.disclosure_policy_activated emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [policy]
+                properties:
+                  policy: { $ref: "../schemas/disclosure-policy.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — unknown disclosure_policy_id.
+        "409":
+          description: VALIDATION_FORBIDDEN_TRANSITION — policy is not in status=draft.
+
+  # ==========================================================================
+  # transparency-service — LobbyLogEntry
+  # ==========================================================================
+  /lobby-log-entries:
+    post:
+      operationId: submitLobbyLogEntry
+      summary: Submit a new LobbyLogEntry in status=submitted
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.submit_lobby_log_entry.
+        Rejects a submission missing any mandatory field
+        (LOBBY_LOG_ENTRY_INCOMPLETE) before construction (canon 19a.4).
+      tags: [transparency-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  lobby_log_entry_id,
+                  organization_name,
+                  related_subject_type,
+                  related_subject_id,
+                  contact_date,
+                  contact_method,
+                  topic_summary,
+                ]
+              properties:
+                lobby_log_entry_id: { type: string, format: uuid }
+                organization_name: { type: string, minLength: 1 }
+                related_subject_type:
+                  type: string
+                  enum: [initiative, ballot, amendment]
+                related_subject_id: { type: string, format: uuid }
+                contact_date: { type: string, format: date-time }
+                contact_method:
+                  type: string
+                  enum: [meeting, written_submission, call, other]
+                topic_summary: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Entry submitted; transparency.lobby_log_entry_submitted emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entry]
+                properties:
+                  entry: { $ref: "../schemas/lobby-log-entry.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "422":
+          description: LOBBY_LOG_ENTRY_INCOMPLETE — a mandatory field is missing.
+
+  /lobby-log-entries/{lobby_log_entry_id}/publish:
+    post:
+      operationId: publishLobbyLogEntry
+      summary: submitted -> published (mandatory automated validation, no default human review)
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.publish_lobby_log_entry.
+        ADR-015 item 4 (amended): no mandatory human pre-publication
+        review by default; mandatory automated completeness/
+        prohibited-field/disclosure-policy validation.
+      tags: [transparency-service]
+      parameters:
+        - name: lobby_log_entry_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Entry published; transparency.lobby_log_entry_published emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entry]
+                properties:
+                  entry: { $ref: "../schemas/lobby-log-entry.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — unknown lobby_log_entry_id.
+        "422":
+          description: LOBBY_LOG_ENTRY_INCOMPLETE or PUBLICATION_NOT_ALLOWED.
+
+  /lobby-log-entries/{supersedes_entry_id}/corrections:
+    post:
+      operationId: correctLobbyLogEntry
+      summary: Publish a correcting LobbyLogEntry
+      description: >
+        Owned by transparency-service. Maps to
+        epd2_transparency_service.application.correct_lobby_log_entry.
+        Only allowed against an already-published original (canon
+        19a.4); the original row is never rewritten.
+      tags: [transparency-service]
+      parameters:
+        - name: supersedes_entry_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  new_lobby_log_entry_id,
+                  organization_name,
+                  related_subject_type,
+                  related_subject_id,
+                  contact_date,
+                  contact_method,
+                  topic_summary,
+                ]
+              properties:
+                new_lobby_log_entry_id: { type: string, format: uuid }
+                organization_name: { type: string, minLength: 1 }
+                related_subject_type:
+                  type: string
+                  enum: [initiative, ballot, amendment]
+                related_subject_id: { type: string, format: uuid }
+                contact_date: { type: string, format: date-time }
+                contact_method:
+                  type: string
+                  enum: [meeting, written_submission, call, other]
+                topic_summary: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Correcting entry published; transparency.lobby_log_entry_corrected emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entry]
+                properties:
+                  entry: { $ref: "../schemas/lobby-log-entry.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED — actor is not authorized.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — supersedes_entry_id does not exist or is not published.
+        "422":
+          description: LOBBY_LOG_ENTRY_INCOMPLETE or PUBLICATION_NOT_ALLOWED.

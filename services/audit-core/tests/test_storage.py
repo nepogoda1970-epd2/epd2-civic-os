@@ -147,3 +147,17 @@ def test_head_hash_advances_after_append() -> None:
     event = _make_chained(store)
     store.append(event)
     assert store.head_hash() == event.event_hash
+
+
+def test_list_all_returns_events_in_append_order() -> None:
+    store = InMemoryAuditEventStore()
+    first = _make_chained(store)
+    store.append(first)
+    second = _make_chained(store)
+    store.append(second)
+    assert store.list_all() == (first, second)
+
+
+def test_list_all_empty_store() -> None:
+    store = InMemoryAuditEventStore()
+    assert store.list_all() == ()

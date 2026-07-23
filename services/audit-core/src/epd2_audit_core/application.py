@@ -129,3 +129,19 @@ def list_by_aggregate(
 
 def verify_chain(store: AuditEventStore) -> ChainVerificationResult:
     return store.verify_chain()
+
+
+def list_by_target_types(
+    store: AuditEventStore, target_types: frozenset[str]
+) -> tuple[AuditEvent, ...]:
+    """Return every recorded event whose `target_type` is in
+    `target_types`, in append (chain) order.
+
+    Additive, read-only (PACK-04, ADR-012 item 4): the one new Audit Core
+    interface this pack's own ADR anticipated needing.
+    `epd2_transparency_service.application.generate_audit_export_package`
+    is this function's only caller — used to build an
+    `AuditExportPackage.chain_proof` (canon section 19a.2). Does not
+    change any existing function's signature or behavior.
+    """
+    return tuple(event for event in store.list_all() if event.target_type in target_types)

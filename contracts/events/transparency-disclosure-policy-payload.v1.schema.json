@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/transparency-disclosure-policy-payload.v1.schema.json",
+  "title": "TransparencyDisclosurePolicyPayloadV1",
+  "description": "Payload shape for transparency.disclosure_policy_defined, transparency.disclosure_policy_activated, and transparency.disclosure_policy_superseded (canon section 20.14; epd2_transparency_service.events.disclosure_policy_public_payload). Deliberately omits approved_by_role_id (canon section 19a.6).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disclosure_policy_id",
+    "applies_to_subject_type",
+    "field_rules",
+    "small_cell_threshold",
+    "effective_from",
+    "version",
+    "status"
+  ],
+  "properties": {
+    "disclosure_policy_id": { "type": "string", "format": "uuid" },
+    "applies_to_subject_type": { "type": "string", "minLength": 1 },
+    "field_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field_path", "disclosure_class", "transformation", "replacement_label"],
+        "properties": {
+          "field_path": { "type": "string", "minLength": 1 },
+          "disclosure_class": {
+            "type": "string",
+            "enum": ["public", "redacted", "restricted", "prohibited"]
+          },
+          "transformation": {
+            "type": "string",
+            "enum": ["none", "generalize_to_role_scope", "band_small_cell", "suppress", "hash"]
+          },
+          "replacement_label": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "small_cell_threshold": { "type": "integer", "minimum": 0 },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft", "active", "superseded"] }
+  }
+}

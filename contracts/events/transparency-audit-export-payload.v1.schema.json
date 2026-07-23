@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/transparency-audit-export-payload.v1.schema.json",
+  "title": "TransparencyAuditExportPayloadV1",
+  "description": "Payload shape for transparency.audit_export_generated and transparency.audit_export_published (canon section 20.14; epd2_transparency_service.events.audit_export_package_public_payload). Deliberately omits requested_by_role_id (canon section 19a.6). chain_proof items never contain actor_id/actor_type/before_hash/after_hash/recorded_at/policy_version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "audit_export_package_id",
+    "scope_description",
+    "included_target_types",
+    "event_count",
+    "chain_proof",
+    "package_digest",
+    "integrity_proof",
+    "generated_at",
+    "redaction_notice",
+    "supersedes_package_id",
+    "status"
+  ],
+  "properties": {
+    "audit_export_package_id": { "type": "string", "format": "uuid" },
+    "scope_description": { "type": "string", "minLength": 1 },
+    "included_target_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "initiative",
+          "initiative_version",
+          "ballot",
+          "moderation_case",
+          "moderation_decision",
+          "result_publication"
+        ]
+      }
+    },
+    "event_count": { "type": "integer", "minimum": 0 },
+    "chain_proof": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_hash",
+          "previous_event_hash",
+          "event_type",
+          "occurred_at",
+          "target_type",
+          "target_id",
+          "action",
+          "reason_code",
+          "correlation_id",
+          "source_service",
+          "sequence_position"
+        ],
+        "properties": {
+          "event_hash": { "type": "string", "minLength": 1 },
+          "previous_event_hash": { "type": "string", "minLength": 1 },
+          "event_type": { "type": "string", "minLength": 1 },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "target_type": { "type": "string", "minLength": 1 },
+          "target_id": { "type": "string", "format": "uuid" },
+          "action": { "type": "string", "minLength": 1 },
+          "reason_code": { "type": "string", "minLength": 1 },
+          "correlation_id": { "type": "string", "format": "uuid" },
+          "source_service": { "type": "string", "minLength": 1 },
+          "sequence_position": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "package_digest": { "type": "string", "minLength": 1 },
+    "integrity_proof": { "type": "string", "minLength": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "redaction_notice": { "type": ["string", "null"] },
+    "supersedes_package_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["generated", "published", "superseded"] }
+  }
+}

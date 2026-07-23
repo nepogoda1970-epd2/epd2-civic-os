@@ -41,6 +41,7 @@ from epd2_voting_service.application import (
     cast_vote,
     close_ballot,
     create_ballot,
+    get_ballot,
     issue_vote_receipt,
     open_ballot,
     pause_ballot,
@@ -1159,3 +1160,38 @@ def test_application_module_path_exists() -> None:
 
     package_dir = Path(inspect.getfile(epd2_voting_service)).parent
     assert (package_dir / "application.py").exists()
+
+
+def test_get_ballot_read_accessor() -> None:
+    """Additive (PACK-04, ADR-012 item 3): backs
+    `epd2_transparency_service.application.publish_ledger_entry` for
+    `subject_type = "result_publication"` (ballot context)."""
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    create_ballot(
+        fx.ballot_store,
+        fx.audit_store,
+        ballot_id=ballot_id,
+        space_id=uuid4(),
+        subject_type="initiative",
+        subject_id=uuid4(),
+        question="Should we adopt this proposal?",
+        ballot_method=BallotMethod.YES_NO,
+        secrecy_mode="secret",
+        eligibility_rule_version=1,
+        delegation_policy_version=1,
+        quorum_rule="simple_majority",
+        threshold_rule="simple_majority",
+        opens_at=_OPENS_AT,
+        closes_at=_CLOSES_AT,
+        challenge_window_hours=None,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    )
+    found = get_ballot(fx.ballot_store, ballot_id=ballot_id)
+    assert found is not None
+    assert found.ballot_id == ballot_id
+    assert get_ballot(fx.ballot_store, ballot_id=uuid4()) is None

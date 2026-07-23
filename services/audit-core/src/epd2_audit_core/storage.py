@@ -50,6 +50,17 @@ class AuditEventStore(Protocol):
 
     def verify_chain(self) -> ChainVerificationResult: ...
 
+    def list_all(self) -> tuple[AuditEvent, ...]:
+        """Return every recorded event, in append (chain) order.
+
+        Additive (PACK-04, ADR-012 item 4): backs
+        `application.list_by_target_types`, which
+        `epd2_transparency_service.application.generate_audit_export_package`
+        uses to build an `AuditExportPackage`'s `chain_proof`. Does not
+        change any existing method's signature or behavior.
+        """
+        ...
+
 
 class InMemoryAuditEventStore:
     """Reference `AuditEventStore` adapter: a single append-only list plus
@@ -84,6 +95,9 @@ class InMemoryAuditEventStore:
         return tuple(
             e for e in self._events if e.target_type == target_type and e.target_id == target_id
         )
+
+    def list_all(self) -> tuple[AuditEvent, ...]:
+        return tuple(self._events)
 
     def verify_chain(self) -> ChainVerificationResult:
         previous_hash = GENESIS_PREVIOUS_HASH

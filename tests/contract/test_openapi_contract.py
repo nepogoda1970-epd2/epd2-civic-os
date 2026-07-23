@@ -12,6 +12,13 @@ names (mirroring PACK-02's own
 `test_each_operation_is_owned_by_exactly_one_service_tag` check, applied
 to the new file).
 
+Also validates `contracts/openapi/pack-04.yaml` (added alongside, not
+replacing, the PACK-02/PACK-03 assertions above): it exists, parses as
+well-formed OpenAPI 3.x, and every operation's `tags` value is exactly
+`["transparency-service"]` (ADR-011's single-service decomposition - a
+one-service pack has no "subset of many services" question to check;
+this is a stricter, exact-match assertion for that reason).
+
 Requires PyYAML; skipped locally (see LOCAL_VERIFICATION.md), run for real
 in CI.
 """
@@ -21,7 +28,12 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from _schema_helpers import OPENAPI_PATH, PACK03_OPENAPI_PATH, PACK03_SERVICE_DIRS
+from _schema_helpers import (
+    OPENAPI_PATH,
+    PACK03_OPENAPI_PATH,
+    PACK03_SERVICE_DIRS,
+    PACK04_OPENAPI_PATH,
+)
 
 yaml = pytest.importorskip("yaml")
 
@@ -48,6 +60,11 @@ def _spec() -> dict[str, Any]:
 
 def _pack03_spec() -> dict[str, Any]:
     parsed: dict[str, Any] = yaml.safe_load(PACK03_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return parsed
+
+
+def _pack04_spec() -> dict[str, Any]:
+    parsed: dict[str, Any] = yaml.safe_load(PACK04_OPENAPI_PATH.read_text(encoding="utf-8"))
     return parsed
 
 
@@ -133,4 +150,41 @@ def test_pack03_tags_are_a_subset_of_the_six_pack03_service_names() -> None:
     unexpected = used_tags - _PACK03_SERVICE_NAMES
     assert not unexpected, (
         f"pack-03.yaml uses tag(s) outside the six PACK-03 services: {unexpected}"
+    )
+
+
+# --- PACK-04 (contracts/openapi/pack-04.yaml) -------------------------------
+
+
+def test_pack04_openapi_file_is_well_formed_yaml() -> None:
+    spec = _pack04_spec()
+    assert spec["openapi"].startswith("3.")
+    assert "paths" in spec
+    assert len(spec["paths"]) > 0
+
+
+def test_pack04_each_operation_is_owned_by_exactly_one_service_tag() -> None:
+    spec = _pack04_spec()
+    for path, path_item in spec["paths"].items():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            tags = operation.get("tags", [])
+            assert len(tags) == 1, f"{path} {method} must have exactly one owning service tag"
+
+
+def test_pack04_tags_are_exactly_transparency_service() -> None:
+    """ADR-011: PACK-04 has exactly one service. Every operation's `tags`
+    value in `pack-04.yaml` must be `["transparency-service"]` - never a
+    stray/misspelled tag, and never a PACK-02/03 service name (PACK-04's
+    own contract owns only PACK-04 paths)."""
+    spec = _pack04_spec()
+    used_tags: set[str] = set()
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            used_tags.update(operation.get("tags", []))
+    assert used_tags == {"transparency-service"}, (
+        f"pack-04.yaml must use exactly the tag 'transparency-service', found: {used_tags}"
     )

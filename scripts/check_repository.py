@@ -64,6 +64,11 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/adr/ADR-008-pack-03-pack-02-integration-boundary.md",
     "docs/adr/ADR-009-voting-delegation-quorum-defaults.md",
     "docs/adr/ADR-010-ballot-challenge-window-canon-addition.md",
+    "docs/adr/ADR-011-pack-04-transparency-service-decomposition.md",
+    "docs/adr/ADR-012-pack-04-cross-pack-read-boundary.md",
+    "docs/adr/ADR-013-canon-0.3.0-transparency-context-additions.md",
+    "docs/adr/ADR-014-pack-04-reason-code-additions.md",
+    "docs/adr/ADR-015-disclosure-redaction-lobby-log-defaults.md",
     # Docs: development
     "docs/development/local-development.md",
     "docs/development/repository-rules.md",
@@ -76,6 +81,8 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-02-REPORT.md",
     "docs/handover/PACK-03-REPORT.md",
     "docs/handover/PACK-03-SPEC.md",
+    "docs/handover/PACK-04-SPEC.md",
+    "docs/handover/PACK-04-REPORT.md",
     # Contracts
     "contracts/README.md",
     "contracts/openapi",
@@ -145,6 +152,20 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "contracts/events/delegation-snapshot-created-payload.v1.schema.json",
     # Contracts: PACK-03 OpenAPI
     "contracts/openapi/pack-03.yaml",
+    # Contracts: PACK-04 reason codes registry
+    "contracts/reason-codes/pack-04.yml",
+    # Contracts: PACK-04 JSON Schemas
+    "contracts/schemas/public-ledger-entry.schema.json",
+    "contracts/schemas/audit-export-package.schema.json",
+    "contracts/schemas/disclosure-policy.schema.json",
+    "contracts/schemas/lobby-log-entry.schema.json",
+    # Contracts: PACK-04 event payload schemas
+    "contracts/events/transparency-ledger-entry-payload.v1.schema.json",
+    "contracts/events/transparency-audit-export-payload.v1.schema.json",
+    "contracts/events/transparency-disclosure-policy-payload.v1.schema.json",
+    "contracts/events/transparency-lobby-log-entry-payload.v1.schema.json",
+    # Contracts: PACK-04 OpenAPI
+    "contracts/openapi/pack-04.yaml",
     # Services (placeholder)
     "services/README.md",
     # Services: account-service
@@ -266,6 +287,18 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/delegation-service/tests/test_domain.py",
     "services/delegation-service/tests/test_application.py",
     "services/delegation-service/tests/test_storage.py",
+    # Services: transparency-service
+    "services/transparency-service/README.md",
+    "services/transparency-service/pyproject.toml",
+    "services/transparency-service/src/epd2_transparency_service/__init__.py",
+    "services/transparency-service/src/epd2_transparency_service/domain.py",
+    "services/transparency-service/src/epd2_transparency_service/application.py",
+    "services/transparency-service/src/epd2_transparency_service/events.py",
+    "services/transparency-service/src/epd2_transparency_service/exceptions.py",
+    "services/transparency-service/src/epd2_transparency_service/storage.py",
+    "services/transparency-service/tests/test_domain.py",
+    "services/transparency-service/tests/test_application.py",
+    "services/transparency-service/tests/test_storage.py",
     # Services: audit-core
     "services/audit-core/README.md",
     "services/audit-core/pyproject.toml",

@@ -261,6 +261,174 @@ def test_real_cast_vote_event_payload_has_no_identity_fields(
         assert forbidden not in payload_text
 
 
+# =============================================================================
+# PACK-04 (transparency-service): canon section 19a/ADR-013's own explicit
+# prohibition - no vote-envelope or delegation-graph data may ever reach a
+# public Transparency artifact. Unlike PACK-03 above, transparency-service
+# never imports `epd2_voting_service.domain.VoteEnvelope` or
+# `epd2_delegation_service` at all (ADR-012's exclusion list), so this
+# section checks the boundary from the *outside*: (1) the pack's own
+# `FORBIDDEN_FIELD_NAMES` names the exact vote-linkability fields a caller
+# could otherwise smuggle into `raw_content`, (2) a real end-to-end command
+# call proves those fields are dropped from the persisted content and the
+# emitted public payload even when a caller supplies them, and (3) an
+# AST-based import scan (mirroring
+# `test_voting_service_never_imports_account_or_identity_service` above)
+# confirms no module in `epd2_transparency_service` ever imports
+# `epd2_delegation_service` or `epd2_voting_service.domain`'s
+# `VoteEnvelope`-carrying module directly.
+# =============================================================================
+
+
+def test_transparency_forbidden_fields_names_the_vote_linkability_fields() -> None:
+    """`epd2_transparency_service.domain.FORBIDDEN_FIELD_NAMES` must name
+    every vote-envelope/credential-linkage field a caller could otherwise
+    smuggle into a `PublicLedgerEntry`'s `raw_content` (canon section
+    19a.5/19a.6 - "no ... vote-envelope/delegation-graph ... data in
+    public output")."""
+    from epd2_transparency_service.domain import FORBIDDEN_FIELD_NAMES as TRANSPARENCY_FORBIDDEN
+
+    assert {"vote_envelope_id", "encrypted_or_encoded_choice", "credential_proof"} <= (
+        TRANSPARENCY_FORBIDDEN
+    )
+
+
+def test_real_publish_ledger_entry_drops_vote_linkability_fields_from_public_output() -> None:
+    """A real, end-to-end `publish_ledger_entry` call whose caller-supplied
+    `raw_content` includes vote-envelope-shaped keys - proving the
+    guarantee holds at the actual persistence/emission boundary, not just
+    at the `FORBIDDEN_FIELD_NAMES` definition checked above."""
+    from datetime import UTC as _UTC
+    from datetime import datetime as _datetime
+
+    from epd2_audit_core.storage import InMemoryAuditEventStore as _AuditStore
+    from epd2_core.clock import FixedClock as _FixedClock
+    from epd2_core.event_envelope import ActorRef as _ActorRef
+    from epd2_transparency_service.application import (
+        activate_disclosure_policy,
+        define_disclosure_policy,
+        publish_ledger_entry,
+    )
+    from epd2_transparency_service.domain import (
+        DisclosureClass,
+        FieldRule,
+        LedgerSubjectType,
+        Transformation,
+    )
+    from epd2_transparency_service.storage import (
+        InMemoryDisclosurePolicyStore,
+        InMemoryPublicLedgerEntryStore,
+    )
+
+    clock = _FixedClock(_datetime(2026, 1, 5, tzinfo=_UTC))
+    actor = _ActorRef(actor_id=uuid4(), actor_type="service")
+    ledger_store = InMemoryPublicLedgerEntryStore()
+    policy_store = InMemoryDisclosurePolicyStore()
+    audit_store = _AuditStore()
+
+    defined = define_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=uuid4(),
+        applies_to_subject_type="result_publication",
+        field_rules=(
+            FieldRule(
+                field_path="yes_votes",
+                disclosure_class=DisclosureClass.PUBLIC,
+                transformation=Transformation.NONE,
+            ),
+            FieldRule(
+                field_path="no_votes",
+                disclosure_class=DisclosureClass.PUBLIC,
+                transformation=Transformation.NONE,
+            ),
+        ),
+        effective_from=clock.now(),
+        version=1,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    activate_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=defined.policy.disclosure_policy_id,
+        approved_by_role_id=uuid4(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    tainted_raw_content = {
+        "yes_votes": 120,
+        "no_votes": 80,
+        "vote_envelope_id": str(uuid4()),
+        "encrypted_or_encoded_choice": "yes",
+        "credential_proof": str(uuid4()),
+    }
+    result = publish_ledger_entry(
+        ledger_store,
+        policy_store,
+        audit_store,
+        public_ledger_entry_id=uuid4(),
+        subject_type=LedgerSubjectType.RESULT_PUBLICATION,
+        subject_id=uuid4(),
+        subject_event_id=uuid4(),
+        raw_content=tainted_raw_content,
+        published_by_role_id=uuid4(),
+        redaction_notice=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    assert "vote_envelope_id" not in result.entry.content_snapshot
+    assert "encrypted_or_encoded_choice" not in result.entry.content_snapshot
+    assert "credential_proof" not in result.entry.content_snapshot
+    assert result.entry.content_snapshot.get("yes_votes") == 120
+
+    payload_text = json.dumps(to_jsonable(result.event.payload))
+    assert "vote_envelope_id" not in payload_text
+    assert "encrypted_or_encoded_choice" not in payload_text
+    assert "credential_proof" not in payload_text
+
+
+def test_transparency_service_never_imports_delegation_or_voting_domain() -> None:
+    """AST-based import-boundary check: no module in
+    `epd2_transparency_service` ever imports `epd2_delegation_service` (a
+    `DelegationSnapshot` is the closest thing this project has to a
+    "delegation graph", and ADR-012 excludes it entirely) or
+    `epd2_voting_service.domain` (the module that actually carries
+    `VoteEnvelope`; PACK-04's one sanctioned voting-service import,
+    `get_ballot`, lives in `epd2_voting_service.application` instead - see
+    `tests/repository/test_service_boundaries.py`)."""
+    import epd2_transparency_service
+
+    package_dir = Path(inspect.getfile(epd2_transparency_service)).parent
+    forbidden_modules = {"epd2_delegation_service"}
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+                full_names = {alias.name for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {node.module.split(".")[0]} if node.module else set()
+                full_names = {node.module} if node.module else set()
+            else:
+                continue
+            leaked = names & forbidden_modules
+            assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+            assert "epd2_voting_service.domain" not in full_names, (
+                f"{py_file} imports epd2_voting_service.domain directly "
+                f"(VoteEnvelope carrier) - only epd2_voting_service.application "
+                f"is a sanctioned PACK-04 import"
+            )
+
+
 def test_voting_service_never_imports_account_or_identity_service() -> None:
     """AST-based import-boundary check (README.md /
     `tests/test_domain.py::test_no_code_path_resolves_a_vote_envelope_to_an_account`'s

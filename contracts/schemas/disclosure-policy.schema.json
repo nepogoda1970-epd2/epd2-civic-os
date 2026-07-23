@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/disclosure-policy.schema.json",
+  "title": "DisclosurePolicy",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19a.3 (added by canon 0.3.0, ADR-013, amendment 2). Owned by transparency-service (epd2_transparency_service.domain.DisclosurePolicy). field_rules is a structured list (field_path, disclosure_class, transformation, optional replacement_label); a candidate field with no matching rule, or more than one, resolves to prohibited (fail-closed, INV-10) - never overridable. small_cell_threshold defaults to 10. Status draft -> active (requires approved_by_role_id, INV-08) -> superseded (only when a new version is activated for the same applies_to_subject_type - never a standalone command). At most one active policy per applies_to_subject_type at a time.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disclosure_policy_id",
+    "applies_to_subject_type",
+    "field_rules",
+    "small_cell_threshold",
+    "effective_from",
+    "approved_by_role_id",
+    "version",
+    "status"
+  ],
+  "properties": {
+    "disclosure_policy_id": { "type": "string", "format": "uuid" },
+    "applies_to_subject_type": { "type": "string", "minLength": 1 },
+    "field_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field_path", "disclosure_class", "transformation", "replacement_label"],
+        "properties": {
+          "field_path": { "type": "string", "minLength": 1 },
+          "disclosure_class": {
+            "type": "string",
+            "enum": ["public", "redacted", "restricted", "prohibited"]
+          },
+          "transformation": {
+            "type": "string",
+            "enum": ["none", "generalize_to_role_scope", "band_small_cell", "suppress", "hash"]
+          },
+          "replacement_label": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "small_cell_threshold": { "type": "integer", "minimum": 0 },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "approved_by_role_id": { "type": ["string", "null"], "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft", "active", "superseded"] }
+  }
+}

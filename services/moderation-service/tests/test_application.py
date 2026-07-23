@@ -28,6 +28,7 @@ from epd2_moderation_service.application import (
     assign_moderator,
     decide_appeal,
     enforce_decision,
+    get_moderation_decision,
     issue_decision,
     open_moderation_case,
     propose_action,
@@ -621,3 +622,16 @@ def test_decide_appeal_admissibility_reject_reaches_rejected_without_full_review
         clock=_CLOCK,
     )
     assert result.appeal.status == AppealStatus.REJECTED
+
+
+def test_get_moderation_decision_read_accessor() -> None:
+    """Additive (PACK-04, ADR-012 item 2): backs
+    `epd2_transparency_service.application.publish_ledger_entry` for
+    `subject_type = "moderation_decision"`."""
+    fx = _Fixture()
+    case_id = _open_case(fx)
+    decision_id, _ = _issue_decision(fx, case_id)
+    found = get_moderation_decision(fx.decision_store, moderation_decision_id=decision_id)
+    assert found is not None
+    assert found.moderation_decision_id == decision_id
+    assert get_moderation_decision(fx.decision_store, moderation_decision_id=uuid4()) is None

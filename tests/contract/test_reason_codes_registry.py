@@ -3,16 +3,18 @@ a pack's own `services/*/src` is registered in that pack's own
 `contracts/reason-codes/*.yml` (ADR-004's own stated enforcement
 mechanism) - a reason code must never be free text (canon section 24).
 
-Parametrized over both packs (PACK-02 and PACK-03): each scan is scoped to
-only that pack's own service directories (`PACK02_SERVICE_DIRS`/
-`PACK03_SERVICE_DIRS`), checked against only that pack's own registry
-file. `services/*` now contains all eleven services from both packs -
-scanning the whole tree against a single pack's registry would spuriously
-fail once a second pack's services exist (as PACK-03's six now do), since
-every service uses its own additive reason codes never registered in the
-other pack's file. This file existed pre-PACK-03 scoped only to PACK-02
-(a bare, unparametrized scan of the whole `services/` tree against
-`pack-02.yml` only); the PACK-03 parametrization/scoping is new.
+Parametrized over all three packs (PACK-02, PACK-03, PACK-04): each scan
+is scoped to only that pack's own service directories
+(`PACK02_SERVICE_DIRS`/`PACK03_SERVICE_DIRS`/`PACK04_SERVICE_DIRS`),
+checked against only that pack's own registry file. `services/*` now
+contains all twelve services from three packs - scanning the whole tree
+against a single pack's registry would spuriously fail once another
+pack's services exist, since every service uses its own additive reason
+codes never registered in another pack's file. This file existed
+pre-PACK-03 scoped only to PACK-02 (a bare, unparametrized scan of the
+whole `services/` tree against `pack-02.yml` only); the PACK-03
+parametrization/scoping added a second pack, and this PACK-04 update adds
+a third.
 
 Requires PyYAML (see `epd2_core.reason_codes`); skipped locally in this
 sandbox (no network access to install PyYAML - see
@@ -29,6 +31,8 @@ from _schema_helpers import (
     PACK02_SERVICE_DIRS,
     PACK03_REASON_CODES_PATH,
     PACK03_SERVICE_DIRS,
+    PACK04_REASON_CODES_PATH,
+    PACK04_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -45,6 +49,7 @@ _LITERAL_RE = re.compile(r'"([A-Z][A-Z0-9_]{2,})"')
 _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-02", REASON_CODES_PATH, PACK02_SERVICE_DIRS, 38),
     ("pack-03", PACK03_REASON_CODES_PATH, PACK03_SERVICE_DIRS, 60),
+    ("pack-04", PACK04_REASON_CODES_PATH, PACK04_SERVICE_DIRS, 18),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 

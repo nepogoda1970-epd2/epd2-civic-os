@@ -12,6 +12,7 @@ from epd2_audit_core.application import (
     append_audit_event,
     get_by_event_id,
     list_by_aggregate,
+    list_by_target_types,
     verify_chain,
 )
 from epd2_audit_core.exceptions import AuditEventConflictError
@@ -87,3 +88,22 @@ def test_verify_chain_reports_intact_after_several_appends() -> None:
     for _ in range(5):
         append_audit_event(store, _request(), clock=_CLOCK)
     assert verify_chain(store).is_intact
+
+
+def test_list_by_target_types_filters_and_preserves_order() -> None:
+    """Additive (PACK-04, ADR-012 item 4): backs
+    `epd2_transparency_service.application.generate_audit_export_package`.
+    """
+    store = InMemoryAuditEventStore()
+    append_audit_event(store, _request(target_type="initiative"), clock=_CLOCK)
+    append_audit_event(store, _request(target_type="moderation_case"), clock=_CLOCK)
+    append_audit_event(store, _request(target_type="initiative"), clock=_CLOCK)
+    matched = list_by_target_types(store, frozenset({"initiative"}))
+    assert len(matched) == 2
+    assert all(event.target_type == "initiative" for event in matched)
+
+
+def test_list_by_target_types_returns_empty_for_no_match() -> None:
+    store = InMemoryAuditEventStore()
+    append_audit_event(store, _request(target_type="initiative"), clock=_CLOCK)
+    assert list_by_target_types(store, frozenset({"ballot"})) == ()

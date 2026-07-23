@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/lobby-log-entry.schema.json",
+  "title": "LobbyLogEntry",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19a.4 (added by canon 0.3.0, ADR-013). Owned by transparency-service (epd2_transparency_service.domain.LobbyLogEntry). organization_name, related_subject_type, related_subject_id, contact_date, topic_summary, submitted_by_role_id are mandatory - a submission missing any of these is rejected, never published incomplete. Publication window is 7 calendar days after submitted_at, with mandatory automated (not human) pre-publication validation (ADR-015 item 4, amended). Status submitted -> published, one-shot, no return; a correction is a new row with supersedes_entry_id set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lobby_log_entry_id",
+    "submitted_by_role_id",
+    "organization_name",
+    "related_subject_type",
+    "related_subject_id",
+    "contact_date",
+    "contact_method",
+    "topic_summary",
+    "submitted_at",
+    "published_at",
+    "supersedes_entry_id",
+    "status"
+  ],
+  "properties": {
+    "lobby_log_entry_id": { "type": "string", "format": "uuid" },
+    "submitted_by_role_id": { "type": "string", "format": "uuid" },
+    "organization_name": { "type": "string", "minLength": 1 },
+    "related_subject_type": { "type": "string", "enum": ["initiative", "ballot", "amendment"] },
+    "related_subject_id": { "type": "string", "format": "uuid" },
+    "contact_date": { "type": "string", "format": "date-time" },
+    "contact_method": {
+      "type": "string",
+      "enum": ["meeting", "written_submission", "call", "other"]
+    },
+    "topic_summary": { "type": "string", "minLength": 1 },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "published_at": { "type": ["string", "null"], "format": "date-time" },
+    "supersedes_entry_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["submitted", "published"] }
+  }
+}

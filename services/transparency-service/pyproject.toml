@@ -1,0 +1,21 @@
+[project]
+name = "epd2-transparency-service"
+version = "0.1.0"
+description = "EPD2 Civic OS Transparency Service — owns PublicLedgerEntry/AuditExportPackage/DisclosurePolicy/LobbyLogEntry (canon section 19a; ADR-011)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "epd2-core",
+    "epd2-audit-core",
+    "epd2-initiative-service",
+    "epd2-moderation-service",
+    "epd2-voting-service",
+    "epd2-tally-service",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/epd2_transparency_service"]

@@ -1,7 +1,7 @@
 # EPD² CIVIC OS
 ## ТЗ-00. Каноническая модель домена и событий
 
-**Версия:** 0.2.0  
+**Версия:** 0.3.0  
 **Статус:** working canon  
 **Владелец документа:** EPD Plattform e.V.  
 **Назначение:** единая обязательная спецификация для всех разработчиков и модулей EPD²  
@@ -1289,6 +1289,379 @@ Receipt должен позволять проверить включение б
 
 ---
 
+# 19a. Прозрачность (Transparency Context)
+
+Добавлено версией канона 0.3.0 (ADR-013, принят 2026-07-23) и реализует
+сущности контекста 5.11 (Transparency Context). Раздел вставлен под
+номером 19a, между разделами 19 (Crisis Override) и 20 (Канонический
+каталог событий), чтобы не переносить нумерацию уже существующих
+разделов 20–27, на которые ссылаются ранее принятые ADR и отчёты.
+Governance Context (5.12), ИИ-обработка (раздел 17) и Emergency/Crisis
+Override (раздел 19) не входят в настоящий раздел и не расширяются им —
+ни одна из четырёх сущностей ниже не требует существования сущности
+Governance-контекста, `AIProcessingRecord` или `EmergencyAction`
+(подробности разделения — 19a.6).
+
+## 19a.1. PublicLedgerEntry
+
+Единая, обобщённая запись публикуемого факта ("публичный реестр
+инициатив, реестр решений, история версий, результаты, журналы
+модерации", 5.11) с дискриминатором `subject_type` — вместо нескольких
+почти одинаковых сущностей.
+
+### Поля
+
+- `public_ledger_entry_id`
+- `subject_type`
+- `subject_id`
+- `subject_event_id`
+- `published_at`
+- `published_by_role_id`
+- `content_snapshot`
+- `content_hash`
+- `previous_entry_hash`
+- `disclosure_policy_id`
+- `redaction_notice`
+- `supersedes_entry_id`
+- `status`
+
+### Значения subject_type
+
+- `initiative`
+- `initiative_version`
+- `moderation_decision`
+- `result_publication`
+- `ai_processing_record`
+
+Значение `ai_processing_record` используется исключительно для
+публикации уже существующей `AIProcessingRecord` (см. 19a.6) — настоящий
+раздел не создаёт и не требует `AIProcessingRecord`.
+
+### Статусы
+
+- `published`
+
+`PublicLedgerEntry` не имеет иного статуса, кроме `published`; поле
+`status` не изменяется после создания записи.
+
+### Неизменяемость и исправления
+
+Опубликованная запись неизменяема: поля `status`, `content_snapshot`,
+`content_hash`, `previous_entry_hash` и любые иные поля записи не
+переписываются после создания — ни при каких условиях. Исправление
+оформляется исключительно как новая запись `PublicLedgerEntry` с
+заполненным `supersedes_entry_id`, указывающим на исправляемую запись.
+Факт «данная запись заменена» является производным (вычисляется на
+момент чтения по наличию другой записи со ссылкой `supersedes_entry_id`)
+и не хранится и не записывается обратно в исходную запись.
+
+### Запрещённые связи
+
+- `PublicLedgerEntry → Account` — запрещено.
+- `PublicLedgerEntry → IdentityRecord` — запрещено.
+- `PublicLedgerEntry → ParticipationCredential` — запрещено.
+- `PublicLedgerEntry → VoteEnvelope` — запрещено.
+- `PublicLedgerEntry → Delegation` / `DelegationSnapshot` — запрещено.
+- `published_by_role_id` не публикуется в исходном виде — допустима
+  только утверждённая генерализованная метка роли (`replacement_label`,
+  19a.3).
+
+### Владелец
+
+Public Ledger Service (раздел 22).
+
+## 19a.2. AuditExportPackage
+
+Реализует «audit exports» (5.11) и механизм INV-03 «специальный audit
+export» — пакетный, доказуемый по цепочке хешей экспорт записей
+`AuditEvent` (18.1), редактированный для публичного потребления.
+
+### Поля
+
+- `audit_export_package_id`
+- `scope_description`
+- `requested_by_role_id`
+- `included_target_types`
+- `event_count`
+- `chain_proof`
+- `package_digest`
+- `integrity_proof`
+- `generated_at`
+- `redaction_notice`
+- `supersedes_package_id`
+- `status`
+
+### Значения included_target_types
+
+- `initiative`
+- `initiative_version`
+- `ballot`
+- `moderation_case`
+- `moderation_decision`
+- `result_publication`
+
+Значения `vote_envelope` и `delegation` в этот перечень не входят ни при
+каких условиях.
+
+### chain_proof
+
+`chain_proof` — упорядоченный список элементов доказательства, по
+одному на каждое включённое `AuditEvent`. Каждый элемент содержит:
+`event_hash` (собственный `event_hash` исходного `AuditEvent`);
+`previous_event_hash` (`event_hash` предыдущего элемента в этом
+экспортированном сегменте); публично-безопасные метаданные —
+`event_type`, `occurred_at`, `target_type`, `target_id`, `action`,
+`reason_code`, `correlation_id`, `source_service` (без `actor_id`,
+`actor_type`, `before_hash`, `after_hash`, `recorded_at`,
+`policy_version`); и `sequence_position` — порядковый номер элемента в
+сегменте, непрерывный, без пропусков, количеством равным `event_count`.
+
+### Семантика проверки
+
+Внешний проверяющий может независимо подтвердить: (1) непрерывность
+цепочки — `previous_event_hash` каждого следующего элемента равен
+`event_hash` предыдущего; (2) порядок и полноту — значения
+`sequence_position` непрерывны, их количество равно `event_count`;
+(3) отсутствие изменений после экспорта — пересчитанный дайджест по
+полученному упорядоченному `chain_proof` совпадает с `package_digest`.
+Внешний проверяющий **не может** по одному этому пакету пересчитать
+исходные приватные значения `AuditEvent.event_hash` "с нуля", поскольку
+`event_hash` (18.1) вычисляется по полному каноническому набору полей
+`AuditEvent`, включающему поля, намеренно не раскрываемые данным пакетом
+(`actor_id`, `actor_type`, `before_hash`, `after_hash`). Пакет
+доказывает целостность и неизменность опубликованного сегмента — не
+пересчёт приватного хеша; полный аудит исходной приватной цепочки
+остаётся доступен только через отдельные права чтения `epd2_audit_core`
+(18.1), а не через данный пакет.
+
+### Статусы
+
+- `generated`
+- `published`
+- `superseded`
+
+Переходы: `generated → published`; `published → superseded` (только
+через новый пакет с `supersedes_package_id`). Возврат к `generated`
+невозможен; исходный пакет не редактируется.
+
+### Запрещённые связи
+
+- `AuditExportPackage → AuditEvent.actor_id` / `actor_type` /
+  `before_hash` / `after_hash` — запрещено для любого включённого
+  события.
+- `requested_by_role_id` не публикуется в исходном виде.
+- `AuditExportPackage → непубличные персональные данные` — запрещено.
+
+### Владелец
+
+Audit Export Service (раздел 22).
+
+## 19a.3. DisclosurePolicy
+
+Управляет тем, что именно и на каком основании раскрывается публично
+для всех сущностей настоящего раздела.
+
+### Поля
+
+- `disclosure_policy_id`
+- `applies_to_subject_type`
+- `field_rules`
+- `small_cell_threshold`
+- `effective_from`
+- `approved_by_role_id`
+- `version`
+- `status`
+
+### field_rules
+
+`field_rules` — список структурированных правил; каждое правило
+содержит: `field_path` (путь к полю в схеме публикуемого содержимого);
+`disclosure_class` — одно из `public`, `redacted`, `restricted`,
+`prohibited`; `transformation` (способ преобразования значения, например
+`none`, `generalize_to_role_scope`, `band_small_cell`, `suppress`,
+`hash`); и необязательный `replacement_label` (замещающая публичная
+метка, используется при `transformation = generalize_to_role_scope` и
+аналогичных).
+
+Каждое потенциально публикуемое поле должно иметь ровно одно применимое
+правило; отсутствие правила или неоднозначность (более одного
+применимого правила) переводит поле в класс `prohibited` (fail-closed,
+INV-10). Правило не может перевести структурно запрещённое поле (19a.6)
+в какой-либо иной класс, кроме `prohibited`.
+
+### small_cell_threshold
+
+Значение по умолчанию — `10`: агрегированные значения от 1 до 9 в
+открытых аналитических представлениях, не являющихся формально
+обязательными, отображаются как `"1–9"`; значение `0` отображается
+точно. Для формально обязательного официального `ResultPublication`
+(через `PublicLedgerEntry`, `subject_type = result_publication`)
+подавление/группировка малых значений не применяется — точные значения
+раскрываются всегда, независимо от размера выборки; данное исключение
+фиксируется отдельным правилом `field_rules` с `transformation = none`
+для этого `subject_type` — не подразумевается неявно.
+
+### Статусы
+
+- `draft`
+- `active`
+- `superseded`
+
+`draft → active` требует заполненного `approved_by_role_id` (разделение
+полномочий, INV-08); `active → superseded` — только при активации новой
+версии для того же `applies_to_subject_type` (не более одной активной
+версии одновременно); возврат к `draft` невозможен. Изменение уже
+действующих правил производится только новой версией — не
+редактированием существующей.
+
+### Владелец
+
+Disclosure Policy Service (раздел 22).
+
+## 19a.4. LobbyLogEntry
+
+Реализует «lobbying log» (5.11). Минимальная схема; полноценная
+регистрация внешних лоббирующих субъектов остаётся будущим расширением
+Organization Context (5.4).
+
+### Поля
+
+- `lobby_log_entry_id`
+- `submitted_by_role_id`
+- `organization_name`
+- `related_subject_type`
+- `related_subject_id`
+- `contact_date`
+- `contact_method`
+- `topic_summary`
+- `submitted_at`
+- `published_at`
+- `supersedes_entry_id`
+- `status`
+
+### Значения related_subject_type
+
+- `initiative`
+- `ballot`
+- `amendment`
+
+### Значения contact_method
+
+- `meeting`
+- `written_submission`
+- `call`
+- `other`
+
+### Обязательные поля
+
+`organization_name`, `related_subject_type` и `related_subject_id`,
+`contact_date`, `topic_summary`, `submitted_by_role_id` обязательны;
+запись с отсутствующим обязательным полем отклоняется при подаче и не
+публикуется в неполном виде.
+
+### Публикация
+
+Запись публикуется не позднее 7 календарных дней после `submitted_at`.
+Обязательного предварительного рассмотрения человеком по умолчанию нет;
+обязательна автоматическая проверка перед публикацией: полнота
+обязательных полей, отсутствие структурно запрещённых полей (19a.6),
+соответствие действующей `DisclosurePolicy`.
+
+### Статусы
+
+- `submitted`
+- `published`
+
+`submitted → published` — однократный переход. После перехода в
+`published` запись не изменяется ни при каких условиях. Исправление —
+исключительно новая запись `LobbyLogEntry` с заполненным
+`supersedes_entry_id`; факт замены исходной записи является производным
+(вычисляется на момент чтения), исходная запись не переписывается.
+
+### Запрещённые связи
+
+- `LobbyLogEntry → IdentityRecord` / `Account` подающего лица —
+  запрещено.
+- `submitted_by_role_id` не публикуется в исходном виде.
+
+### Владелец
+
+Lobby Log Service (раздел 22).
+
+## 19a.5. Связь PublicLedgerEntry с Initiative, InitiativeVersion, ModerationDecision, ResultPublication и AuditEvent
+
+- **Initiative** (11.1): запись с `subject_type = initiative` создаётся
+  при достижении `Initiative.status = published`, по событию
+  `initiative.published` (20.6). `content_snapshot` — редактированная
+  копия публичных полей на момент публикации, не живая ссылка на
+  текущее состояние источника.
+- **InitiativeVersion** (11.2): запись с `subject_type =
+initiative_version` создаётся на каждую новую опубликованную версию,
+  по событию `initiative.version_created` (20.7) — реализует «историю
+  версий» (5.11).
+- **ModerationDecision** (14.2): запись с `subject_type =
+moderation_decision` создаётся при вынесении или исполнении решения
+  (`moderation.decision_issued` / `moderation.decision_enforced`, 20.9).
+  `content_snapshot` никогда не содержит `actor_id`, UUID
+  `RoleAssignment` либо иной учётной/личной ссылки на рецензента —
+  раскрывается только генерализованная метка роли (например,
+  `"moderator"`); полная информация о рецензенте доступна только по
+  restricted-доступу авторизованным ролям аудита и надзора, но не через
+  публичное содержимое `PublicLedgerEntry`.
+- **ResultPublication** (15.6): запись с `subject_type =
+result_publication` создаётся по событию `result.published` (20.10).
+  `content_snapshot` ограничен точно агрегатными полями
+  `ResultPublication` (`eligible_count`, `credential_count`,
+  `accepted_vote_count`, `rejected_vote_count`, `quorum_result`,
+  `threshold_result`, `challenge_deadline_at`) — никогда содержимым
+  `VoteEnvelope` или внутренним представлением `Tally.result_data`, если
+  оно отличается. Этот `subject_type` исключён из подавления малых
+  значений (19a.3, small_cell_threshold) — официальный результат
+  публикуется точно всегда, независимо от размера выборки.
+- **AuditEvent** (18.1): публикация или исправление `PublicLedgerEntry`
+  сама по себе относится к обязательным для аудита действиям INV-04
+  («публикация», «снятие с публикации») и создаёт обычную (непубличную)
+  `AuditEvent` в `epd2_audit_core` — как и любое другое значимое
+  действие. `AuditExportPackage` (19a.2) — отдельный, более крупный
+  механизм: он упаковывает диапазон уже существующих `AuditEvent` в
+  публично проверяемое доказательство целостности и неизменности
+  экспортированного сегмента, а не доказательство содержимого.
+  `PublicLedgerEntry` публикует содержимое; `AuditExportPackage`
+  публикует доказательство того, что процесс публикации был соблюдён
+  корректно. Одно не заменяет другое.
+
+## 19a.6. Структурный запрет и разделение с другими контурами
+
+Ни одна из четырёх сущностей настоящего раздела не может содержать поле
+`account_id`, `person_id`, `identity_record_id`,
+`participation_credential_id`, `vote_envelope_id`,
+`encrypted_or_encoded_choice` или `credential_proof`. Поля
+`published_by_role_id`, `requested_by_role_id`, `approved_by_role_id`,
+`submitted_by_role_id` — внутренние служебные ссылки (`RoleAssignment`,
+8.4) и ни при каких условиях не публикуются в исходном виде; в открытом
+представлении допустима только утверждённая генерализованная метка роли
+(`replacement_label`, 19a.3). `AuditExportPackage` дополнительно никогда
+не раскрывает `AuditEvent.actor_id`, `actor_type`, `before_hash` или
+`after_hash` для любого включённого события (19a.2).
+
+`PublicLedgerEntry.subject_type = ai_processing_record` (19a.1)
+используется исключительно для публикации уже существующей
+`AIProcessingRecord` (17.1, владелец — AI Accountability Service);
+настоящий раздел не создаёт, не изменяет и не требует существования
+`AIProcessingRecord`, и не реализует ИИ-обработку. Governance Context
+(5.12) — системные роли, политика полномочий, версии правил, emergency
+procedures, crisis override, audit access, review procedures — не
+входит в настоящий раздел; единственная точка, где требуется решение,
+похожее на governance (кто уполномочен утвердить `DisclosurePolicy` или
+опубликовать `LobbyLogEntry`), разрешена через уже существующую,
+узкоспециализированную роль `RoleAssignment` (8.4), а не через
+определение или реализацию новой сущности Governance-контекста.
+Emergency/Crisis Override (раздел 19) также не входит в настоящий
+раздел: ни одна из четырёх сущностей не требует существования
+`EmergencyAction`.
+
+---
+
 # 20. Канонические системные события
 
 ## 20.1. Account
@@ -1427,6 +1800,28 @@ Receipt должен позволять проверить включение б
 - `emergency.resolved`
 - `emergency.report_published`
 
+## 20.14. Прозрачность
+
+Добавлено версией канона 0.3.0 (ADR-013). События создаются исключительно
+`transparency-service` (19a) при публикации, экспорте или исправлении
+записей настоящего раздела.
+
+- `transparency.ledger_entry_published`
+- `transparency.ledger_entry_corrected`
+- `transparency.audit_export_generated`
+- `transparency.audit_export_published`
+- `transparency.disclosure_policy_defined`
+- `transparency.disclosure_policy_activated`
+- `transparency.disclosure_policy_superseded`
+- `transparency.lobby_log_entry_submitted`
+- `transparency.lobby_log_entry_published`
+- `transparency.lobby_log_entry_corrected`
+
+`transparency.ledger_entry_corrected` и
+`transparency.lobby_log_entry_corrected` создаются при создании новой,
+замещающей записи (19a.1, 19a.4) — не при изменении существующей
+строки, поскольку такое изменение не допускается.
+
 ---
 
 # 21. Стандарт события
@@ -1501,6 +1896,17 @@ Receipt должен позволять проверить включение б
 | AIProcessingRecord | AI Accountability Service |
 | AuditEvent | Audit Core |
 | EmergencyAction | Governance / Crisis Service |
+| PublicLedgerEntry | Public Ledger Service |
+| AuditExportPackage | Audit Export Service |
+| DisclosurePolicy | Disclosure Policy Service |
+| LobbyLogEntry | Lobby Log Service |
+
+Четыре новые строки (`PublicLedgerEntry`, `AuditExportPackage`,
+`DisclosurePolicy`, `LobbyLogEntry`) добавлены версией канона 0.3.0
+(ADR-013, раздел 19a). Физически все четыре реализуются одним сервисом,
+`transparency-service` (ADR-011) — как и для ряда более ранних записей
+этой матрицы, один физический сервис может владеть несколькими
+канонически названными модулями.
 
 ---
 
@@ -1518,6 +1924,10 @@ Receipt должен позволять проверить включение б
 - `AdministratorRole → право расшифровать тайные голоса`
 - `Identity provider reference → Participation database`
 - `Credential → полная копия личных данных`
+- `PublicLedgerEntry → Account` / `IdentityRecord` / `ParticipationCredential` / `VoteEnvelope` / `Delegation` / `DelegationSnapshot` (добавлено 0.3.0, 19a.1)
+- `AuditExportPackage → AuditEvent.actor_id` / `actor_type` / `before_hash` / `after_hash` (добавлено 0.3.0, 19a.2)
+- `published_by_role_id` / `requested_by_role_id` / `approved_by_role_id` / `submitted_by_role_id` → публикация в исходном виде (добавлено 0.3.0, 19a.6) — допустима только генерализованная метка роли
+- `DisclosurePolicy.field_rules` → переклассификация структурно запрещённого поля в класс, отличный от `prohibited` (добавлено 0.3.0, 19a.3)
 
 ---
 

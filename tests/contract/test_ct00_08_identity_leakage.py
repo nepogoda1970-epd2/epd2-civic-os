@@ -27,6 +27,7 @@ import pytest
 from _schema_helpers import (
     OPENAPI_PATH,
     PACK03_OPENAPI_PATH,
+    PACK04_OPENAPI_PATH,
     load_event_schema,
     load_schema,
     to_jsonable,
@@ -47,7 +48,24 @@ from epd2_credential_service.storage import InMemoryCredentialStore
 from epd2_delegation_service.domain import FORBIDDEN_FIELD_NAMES as DELEGATION_FORBIDDEN
 from epd2_initiative_service.domain import FORBIDDEN_FIELD_NAMES as SUPPORT_FORBIDDEN
 from epd2_tally_service.domain import FORBIDDEN_FIELD_NAMES as TALLY_FORBIDDEN
+from epd2_transparency_service.domain import FORBIDDEN_FIELD_NAMES as TRANSPARENCY_FORBIDDEN
 from epd2_voting_service.domain import FORBIDDEN_FIELD_NAMES as VOTING_FORBIDDEN
+
+#: The subset of `TRANSPARENCY_FORBIDDEN` that must never appear in ANY
+#: transparency-service artifact, including the four owned entities'
+#: own *stored* schemas - unlike the four `*_role_id` fields (also in
+#: `TRANSPARENCY_FORBIDDEN`), which are legitimate stored domain fields
+#: (canon section 19a) and only become forbidden in a *public* event
+#: payload (canon section 19a.6) - see
+#: `test_transparency_event_payload_schemas_forbid_all_forbidden_fields`
+#: below, which checks the full set against the event payload schemas
+#: instead.
+TRANSPARENCY_STRUCTURAL_FORBIDDEN = TRANSPARENCY_FORBIDDEN - {
+    "published_by_role_id",
+    "requested_by_role_id",
+    "approved_by_role_id",
+    "submitted_by_role_id",
+}
 
 
 def _issue(
@@ -433,5 +451,178 @@ def test_openapi_initiative_responses_do_not_reference_identity_fields() -> None
     leaked = declared & SUPPORT_FORBIDDEN
     assert leaked == set(), (
         f"initiative-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-04: transparency-service (ADR-013/ADR-015). The four owned entities'
+# own *stored* schemas must never contain a structurally forbidden field
+# (canon section 19a.6), and the event *payload* schemas must additionally
+# never contain any of the four internal `*_role_id` fields (never published
+# verbatim) - mirroring the PACK-02/03 pattern above, but split into two
+# checks since this pack (uniquely) has fields that are legitimate in the
+# stored entity but forbidden in the public payload.
+# =============================================================================
+
+
+def test_public_ledger_entry_schema_forbids_structural_fields() -> None:
+    schema = load_schema("public-ledger-entry.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_audit_export_package_schema_forbids_structural_fields() -> None:
+    schema = load_schema("audit-export-package.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+    # AuditExportPackage's own chain_proof items never carry actor_id/
+    # actor_type/before_hash/after_hash for any included event (canon
+    # section 19a.2/19a.6).
+    item_schema = schema["properties"]["chain_proof"]["items"]
+    for forbidden in ("actor_id", "actor_type", "before_hash", "after_hash"):
+        assert forbidden not in item_schema["properties"]
+
+
+def test_disclosure_policy_schema_forbids_structural_fields() -> None:
+    schema = load_schema("disclosure-policy.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_lobby_log_entry_schema_forbids_structural_fields() -> None:
+    schema = load_schema("lobby-log-entry.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+@pytest.mark.parametrize(
+    "event_schema_name",
+    [
+        "transparency-ledger-entry-payload.v1.schema.json",
+        "transparency-audit-export-payload.v1.schema.json",
+        "transparency-disclosure-policy-payload.v1.schema.json",
+        "transparency-lobby-log-entry-payload.v1.schema.json",
+    ],
+)
+def test_transparency_event_payload_schemas_forbid_all_forbidden_fields(
+    event_schema_name: str,
+) -> None:
+    """Unlike the stored entity schemas above, an event *payload* schema
+    must never declare ANY of `TRANSPARENCY_FORBIDDEN` - including the
+    four `*_role_id` fields, which are never published verbatim (canon
+    section 19a.6)."""
+    schema = load_event_schema(event_schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{event_schema_name} must never declare {forbidden!r}"
+        )
+
+
+def test_transparency_ledger_entry_published_event_has_no_role_id() -> None:
+    """End-to-end proof (not just schema-level): a real
+    `publish_ledger_entry` call's emitted event payload never contains
+    `published_by_role_id`, even though the stored `PublicLedgerEntry`
+    domain object does."""
+    from epd2_audit_core.storage import InMemoryAuditEventStore as _Store
+    from epd2_core.clock import FixedClock as _Clock
+    from epd2_transparency_service.application import (
+        activate_disclosure_policy,
+        define_disclosure_policy,
+        publish_ledger_entry,
+    )
+    from epd2_transparency_service.domain import (
+        DisclosureClass,
+        FieldRule,
+        LedgerSubjectType,
+        Transformation,
+    )
+    from epd2_transparency_service.storage import (
+        InMemoryDisclosurePolicyStore,
+        InMemoryPublicLedgerEntryStore,
+    )
+
+    clock = _Clock(datetime(2026, 1, 5, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="staff")
+    audit_store = _Store()
+    policy_store = InMemoryDisclosurePolicyStore()
+    ledger_store = InMemoryPublicLedgerEntryStore()
+
+    defined = define_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=uuid4(),
+        applies_to_subject_type="initiative",
+        field_rules=(FieldRule("title", DisclosureClass.PUBLIC, Transformation.NONE),),
+        effective_from=clock.now(),
+        version=1,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    activate_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=defined.policy.disclosure_policy_id,
+        approved_by_role_id=uuid4(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    role_id = uuid4()
+    result = publish_ledger_entry(
+        ledger_store,
+        policy_store,
+        audit_store,
+        public_ledger_entry_id=uuid4(),
+        subject_type=LedgerSubjectType.INITIATIVE,
+        subject_id=uuid4(),
+        subject_event_id=uuid4(),
+        raw_content={"title": "x"},
+        published_by_role_id=role_id,
+        redaction_notice=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "published_by_role_id" not in payload_json
+    assert str(role_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain it (it is a real field).
+    assert result.entry.published_by_role_id == role_id
+
+
+def _pack04_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK04_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_transparency_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack04_spec()
+    transparency_paths = _credential_service_paths(spec, service_tag="transparency-service")
+    assert transparency_paths, "expected at least one transparency-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(transparency_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(transparency_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & TRANSPARENCY_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"transparency-service OpenAPI paths/schemas declare structurally forbidden "
         f"field(s) as an actual property: {sorted(leaked)}"
     )
