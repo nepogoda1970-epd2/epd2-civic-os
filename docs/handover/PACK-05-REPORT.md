@@ -1,12 +1,18 @@
 # CLAUDE-PACK-05 — Governance Context: Handover Report
 
-**Revision 2 — external Prettier finding fixed; still no other external
-CI result to report.** Revision 1 closed a genuine local PASS but had
-never been run through the project's actual CI Prettier version before
-export. The first real external GitHub Actions run against
-`epd2-civic-os-PACK-05-final-candidate.zip` reported a Prettier
-format-check failure on exactly two files — see section 0a for the
-finding and fix. This report follows the same honesty convention
+**Revision 3 — a second external Prettier finding, root-caused and
+fixed; still no other external CI result to report.** Revision 1 closed
+a genuine local PASS but had never been run through the project's actual
+CI Prettier version before export. The first external GitHub Actions run
+reported a Prettier format-check failure on two files (section 0a). The
+next external run, against the revision-2 candidate, reported Prettier
+still failing on one of those same two files —
+`services/governance-service/README.md` — despite this sandbox's own
+Prettier reporting it clean after the revision-2 fix. Section 0b records
+the real root cause this round found (a malformed Markdown table, not a
+version disagreement) and its fix, using the project's own exact
+`npm run format`/`npm run format:check` commands rather than an
+approximation. This report follows the same honesty convention
 `docs/handover/PACK-02-REPORT.md`, `docs/handover/PACK-03-REPORT.md`, and
 `docs/handover/PACK-04-REPORT.md` established: every check this sandbox
 can actually run is run for real (not skipped, not asserted from memory)
@@ -27,9 +33,84 @@ report makes no claim beyond what has actually been run and observed,
 locally or externally.
 
 ```text
-PACK-05 PASS (local verification; one external Prettier finding fixed
-this revision; no other external CI result reported yet)
+PACK-05 PASS (local verification; two external Prettier findings fixed
+across revisions 2-3; no other external CI result reported yet)
 ```
+
+## 0b. Second external verification finding and fix (revision 3)
+
+The next external GitHub Actions run — against the revision-2 candidate
+archive, `epd2-civic-os-PACK-05-final-candidate-v2.zip` — reported
+Prettier still failing on exactly one file:
+
+```text
+Checking formatting...
+[warn] services/governance-service/README.md
+[warn] Code style issues found in the above file. Run Prettier with
+       --write to fix.
+make: *** [Makefile:22: format-check] Error 1
+```
+
+This sandbox's own Prettier had reported that same file clean after the
+revision-2 fix, so this round did not assume another version
+disagreement and instead used the project's own exact commands
+(`npm run format` / `npm run format:check`, which resolve to
+`prettier --write .` / `prettier --check .` per `package.json`) to
+re-investigate, plus a direct structural read of the file rather than a
+blind retry.
+
+**Root cause found:** a genuine Markdown authoring defect, not a
+Prettier version disagreement. The "Application commands -> canon
+events" table's separator row had **4** columns
+(`| --- | --- | --- | --- |`) while the header row and every data row
+had **3** columns (`| Command | Transition | Event |`) — confirmed by
+counting literal `|` characters per row: the header and all data rows
+had 4 pipes (3 columns) except the separator row (5 pipes, 4 columns)
+and one data row, 5 pipes as well. That one data row —
+`_(side effect of approve/reject_governance_decision)_` — contained an
+**unescaped literal pipe character** inside a table cell:
+`` `under_review -> upheld | rejected` `` (meant as one code span reading
+"upheld/rejected"), which a table parser reads as an extra column
+boundary, splitting one cell into two. A column-count mismatch between
+a table's separator row and its data rows, and a raw `|` inside a cell,
+are both genuinely invalid/ambiguous GFM table syntax — this sandbox's
+own Prettier 3.8.1 apparently tolerated it silently, while CI's locked
+3.9.6 did not, which is why the two versions disagreed.
+
+**Fixed at the source, content unchanged in meaning:** the separator row
+was corrected to exactly 3 columns, matching the header; the one
+offending cell's literal `upheld | rejected` was changed to
+`upheld/rejected` (a slash, matching how the same alternative is written
+elsewhere in this same file, e.g. `upheld|rejected` only ever appears in
+running prose, never inside a table cell) so no unescaped pipe remains
+inside any cell. Verified with the project's own exact commands:
+
+```text
+$ npm run format
+
+> epd2-civic-os@0.1.0 format
+> prettier --write .
+
+... (every other file in the repository reported "(unchanged)") ...
+services/governance-service/README.md 61ms
+
+$ npm run format:check
+
+> epd2-civic-os@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+`npm run format` touched exactly one file — `services/governance-service/README.md`
+— and every other tracked file in the repository reported `(unchanged)`,
+confirming this fix did not reformat anything else. Re-ran the complete
+local verification suite after the fix: identical to revision 2 in every
+respect (336/336 required paths, canon checksum unchanged, Ruff clean,
+mypy clean across all fifteen groups, 1712 passed / 3 skipped / 0
+failed) — proving the fix was a pure table-syntax correction, no logic,
+schema, test, workflow, canon, ADR, or version content touched.
 
 ## 0a. External verification finding and fix (revision 2)
 
@@ -481,6 +562,53 @@ alongside PACK-02/PACK-03.
 
 ## 11. Commands executed this pass, and results
 
+### Revision 3 re-verification (after the section 0b table fix, using the repository's own exact commands)
+
+```text
+$ npm run format
+
+> epd2-civic-os@0.1.0 format
+> prettier --write .
+
+... (every other tracked file reported "(unchanged)") ...
+services/governance-service/README.md 61ms
+
+$ npm run format:check
+
+> epd2-civic-os@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+Every command below was re-run in full after the fix and produced
+results identical to revision 2:
+
+```text
+✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
+   61232dc8488f1dd96ea030fa3c41bd397c1c5cf1c7c8cee484bda0568d02c202
+   (unchanged throughout, section 2)
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/check_repository.py
+   → OK: all 336 required paths are present.
+
+✅ ruff check . / ruff format --check .
+   → All checks passed! / 161 files already formatted
+
+✅ mypy — all fifteen scoped groups
+   → Success: no issues found, zero errors
+
+✅ PYTHONPATH=<all 14 src/ dirs>:<system python3 dist-packages> pytest -q
+   → 1712 passed, 3 skipped, 0 failed
+```
+
 ### Revision 2 re-verification (after the section 0a Prettier fix)
 
 ```text
@@ -594,17 +722,21 @@ results identical to revision 1:
 ## 12. Readiness conclusion
 
 ```text
-PACK-05 PASS (local verification; one external Prettier finding fixed
-this revision; no other external CI result reported yet)
+PACK-05 PASS (local verification; two external Prettier findings fixed
+across revisions 2-3; no other external CI result reported yet)
 ```
 
 Every check this sandbox can run has been run for real and passed:
 required structure (336 of 336 paths), no forbidden paths, all version
 sources consistent, Ruff format and lint clean, a real Prettier format
-check clean — after fixing, this pass, both the genuine duplicate-key
-YAML defect found locally in revision 1 (section 5 item 6) and the
-genuine markdown-authoring defect external CI found in revision 2
-(section 0a) — mypy clean across all fifteen scoped groups with zero
+check clean via the project's own exact `npm run format`/
+`npm run format:check` commands — after fixing, across this pack's three
+revisions, the genuine duplicate-key YAML defect found locally in
+revision 1 (section 5 item 6), the genuine bold-adjacent-to-code-span
+markdown defect external CI found in revision 2 (section 0a), and the
+genuine malformed-Markdown-table defect (mismatched column count plus an
+unescaped literal pipe inside a cell) external CI found in revision 3
+(section 0b) — mypy clean across all fifteen scoped groups with zero
 errors and exactly one documented, precedented `# type: ignore[arg-type]`
 pair (section 5 item 5, identical in kind to the pattern already used in
 four PACK-03 services and transparency-service), and 1712 passing Python
@@ -618,20 +750,20 @@ reason code was hidden, no legitimate field was stripped from a service's
 own contract to make a test pass, and no unlinkability or boundary claim
 is made without the automated test that backs it (sections 6, 9).
 
-This report does not claim more than this sandbox, plus the one external
-run reported so far, have actually verified: `uv.lock`/`package-lock.json`
+This report does not claim more than this sandbox, plus the external
+runs reported so far, have actually verified: `uv.lock`/`package-lock.json`
 regeneration, `npm run typecheck`, frontend ESLint, the
 TypeScript/frontend test suites, and `next build` remain genuinely not
 executed anywhere yet, for the same network-restriction reason PACK-02
 through PACK-04 already documented for this sandbox's own local runs —
-named explicitly above rather than glossed over. The one external run
-this pack has had so far exercised the full `make verify` pipeline far
-enough to reach (and, this revision, pass) the Prettier format-check
-step; what it found on the far side of that step (lint, typecheck, the
-Python test suite, TypeScript/frontend tests, the frontend build) has
-not yet been reported back. `PACK-05 PASS` in this report's title means
-exactly what section 11 shows and no more; it is not yet a claim of a
-complete, externally-confirmed `make verify` success, which — as
-PACK-04's own report section 0c demonstrates — is the outcome the next
-external GitHub Actions run against this revision's candidate archive
-should be able to confirm.
+named explicitly above rather than glossed over. The external runs this
+pack has had so far have exercised the full `make verify` pipeline far
+enough to reach (and, as of this revision, pass) the Prettier
+format-check step; what lies on the far side of that step (lint,
+typecheck, the Python test suite, TypeScript/frontend tests, the
+frontend build) has not yet been reported back. `PACK-05 PASS` in this
+report's title means exactly what section 11 shows and no more; it is
+not yet a claim of a complete, externally-confirmed `make verify`
+success, which — as PACK-04's own report section 0c demonstrates — is
+the outcome the next external GitHub Actions run against this revision's
+candidate archive should be able to confirm.

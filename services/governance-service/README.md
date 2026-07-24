@@ -169,21 +169,21 @@ authoritative way to learn a result's finality.
 
 ## Application commands -> canon events (section 20.15, verbatim list)
 
-| Command                                               | Transition                                  | Event                                      |
-| ----------------------------------------------------- | ------------------------------------------- | ------------------------------------------ | -------------------------------------------- |
-| `request_role_assignment`                             | (create) `-> pending`                       | `governance.role_assignment_requested`     |
-| `activate_role_assignment`                            | `pending -> active`                         | `governance.role_assignment_activated`     |
-| `revoke_role_assignment`                              | `* -> revoked`                              | `governance.role_assignment_revoked`       |
-| `propose_governance_policy`                           | (create) `-> draft`                         | `governance.policy_proposed`               |
-| `activate_governance_policy`                          | `draft -> active` (+ old `-> superseded`)   | `governance.policy_activated`              |
-| _(side effect of the above)_                          | `active -> superseded`                      | `governance.policy_superseded`             |
-| `propose_governance_decision`                         | (create) `-> proposed`                      | `governance.decision_proposed`             |
-| `approve_governance_decision`                         | `proposed -> approved`                      | `governance.decision_approved`             |
-| `reject_governance_decision`                          | `proposed -> rejected`                      | `governance.decision_rejected`             |
-| _(side effect of approving a superseding decision)_   | n/a (superseded row's status never changes) | `governance.decision_superseded`           |
-| `submit_technical_challenge`                          | (create) `-> submitted`                     | `governance.technical_challenge_submitted` |
-| `begin_technical_challenge_review`                    | `submitted -> under_review`                 | _(none — see above)_                       |
-| _(side effect of approve/reject_governance_decision)_ | `under_review -> upheld                     | rejected`                                  | `governance.technical_challenge_adjudicated` |
+| Command                                               | Transition                                  | Event                                        |
+| ----------------------------------------------------- | ------------------------------------------- | -------------------------------------------- |
+| `request_role_assignment`                             | (create) `-> pending`                       | `governance.role_assignment_requested`       |
+| `activate_role_assignment`                            | `pending -> active`                         | `governance.role_assignment_activated`       |
+| `revoke_role_assignment`                              | `* -> revoked`                              | `governance.role_assignment_revoked`         |
+| `propose_governance_policy`                           | (create) `-> draft`                         | `governance.policy_proposed`                 |
+| `activate_governance_policy`                          | `draft -> active` (+ old `-> superseded`)   | `governance.policy_activated`                |
+| _(side effect of the above)_                          | `active -> superseded`                      | `governance.policy_superseded`               |
+| `propose_governance_decision`                         | (create) `-> proposed`                      | `governance.decision_proposed`               |
+| `approve_governance_decision`                         | `proposed -> approved`                      | `governance.decision_approved`               |
+| `reject_governance_decision`                          | `proposed -> rejected`                      | `governance.decision_rejected`               |
+| _(side effect of approving a superseding decision)_   | n/a (superseded row's status never changes) | `governance.decision_superseded`             |
+| `submit_technical_challenge`                          | (create) `-> submitted`                     | `governance.technical_challenge_submitted`   |
+| `begin_technical_challenge_review`                    | `submitted -> under_review`                 | _(none — see above)_                         |
+| _(side effect of approve/reject_governance_decision)_ | `under_review -> upheld/rejected`           | `governance.technical_challenge_adjudicated` |
 
 Every command follows the shared shape: `actor: ActorRef,
 actor_is_authorized: bool, correlation_id: UUID, clock: Clock, event_id:
