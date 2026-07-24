@@ -82,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The one canon entity this pack owns, `AIProcessingRecord` (canon 17.1,
   extended by 19c), with two independent, structurally separate status
   planes: `processing_status` (`requested -> input_prepared -> processing
-  -> {completed | failed | rejected_by_policy}`, `rejected_by_policy`
+-> {completed | failed | rejected_by_policy}`, `rejected_by_policy`
   also directly reachable from `requested`; no stored `superseded` value)
   and `human_review_status` (canon's unchanged six-value enum; `superseded`
   is never directly stored, only ever surfaced by the derived
@@ -170,26 +170,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scan to exactly one named function).
 - `tests/contract/test_ct00_01_schema_validation.py` through
   `test_ct00_09_vote_linkability.py` each extended with a PACK-06 section
-  as applicable (schema validation and unknown-processing_status/
-  human_review_status rejection; two `parse_*` functions and their
-  `Unknown*Error`s newly added to `domain.py`; forbidden-transition cases
-  for both status planes; event idempotency, unsupported-event-version,
-  and audit-creation checks for `request_ai_processing`; the flagship
-  self-review-prohibition authorization test for `review_ai_output`;
-  structural schema/OpenAPI/event-payload identity- and vote-leakage
-  checks; a direct-construction proof that no `anomaly_indication` target
-  type is vote/ballot-linked; and an AST-based import scan confirming
-  `ai-processing-service` never imports voting/tally/delegation/account/
-  identity/credential service code at all). CT-00-11 (AI Human Control)
-  moves from not-applicable to fully and centrally passing for the first
-  time, in a new dedicated file, `test_ct00_11_ai_human_control.py`
-  (five end-to-end proofs: no review at all, silence never implying
-  approval, an explicit rejection, a successful approval, and the
-  official-publication path's additional published-disclosure
-  requirement). CT-00-10 (Rule Freeze) and CT-00-12 (Emergency Stop) are
-  explicitly documented not-applicable for this pack (required scope item
-  17); `test_ct00_11_12_not_applicable.py` is renamed
-  `test_ct00_12_emergency_stop_not_applicable.py` to reflect that CT-00-11
+  as applicable (schema validation and unknown-processing*status/
+  human_review_status rejection; two `parse**`functions and their`Unknown*Error`s newly added to `domain.py`; forbidden-transition cases
+for both status planes; event idempotency, unsupported-event-version,
+and audit-creation checks for `request_ai_processing`; the flagship
+self-review-prohibition authorization test for `review_ai_output`;
+structural schema/OpenAPI/event-payload identity- and vote-leakage
+checks; a direct-construction proof that no `anomaly_indication`target
+type is vote/ballot-linked; and an AST-based import scan confirming`ai-processing-service`never imports voting/tally/delegation/account/
+identity/credential service code at all). CT-00-11 (AI Human Control)
+moves from not-applicable to fully and centrally passing for the first
+time, in a new dedicated file,`test_ct00_11_ai_human_control.py`(five end-to-end proofs: no review at all, silence never implying
+approval, an explicit rejection, a successful approval, and the
+official-publication path's additional published-disclosure
+requirement). CT-00-10 (Rule Freeze) and CT-00-12 (Emergency Stop) are
+explicitly documented not-applicable for this pack (required scope item
+17);`test_ct00_11_12_not_applicable.py`is renamed`test_ct00_12_emergency_stop_not_applicable.py` to reflect that CT-00-11
   is no longer among the not-applicable markers it records.
 - `REPOSITORY_VERSION` `0.5.0 → 0.6.0` (`packages/python/epd2-core/src/
 epd2_core/version.py`, `packages/typescript/epd2-types/src/version.ts`,

@@ -42,14 +42,31 @@
     "created_at": { "type": "string", "format": "date-time" },
     "human_review_status": {
       "type": "string",
-      "enum": ["not_required", "pending", "approved", "approved_with_changes", "rejected", "superseded"]
+      "enum": [
+        "not_required",
+        "pending",
+        "approved",
+        "approved_with_changes",
+        "rejected",
+        "superseded"
+      ]
     },
     "correction_reference": { "type": ["string", "null"] },
     "processing_status": {
       "type": "string",
-      "enum": ["requested", "input_prepared", "processing", "completed", "failed", "rejected_by_policy"]
+      "enum": [
+        "requested",
+        "input_prepared",
+        "processing",
+        "completed",
+        "failed",
+        "rejected_by_policy"
+      ]
     },
-    "supersedes_ai_processing_record_id": { "type": ["string", "null"], "format": "uuid" },
+    "supersedes_ai_processing_record_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
     "deployment_version": { "type": ["string", "null"] },
     "system_policy_version": { "type": ["string", "null"] },
     "generation_settings": { "type": ["object", "null"] },
@@ -58,16 +75,32 @@
     "external_provider_flag": { "type": "boolean" },
     "input_hash": { "type": ["string", "null"] },
     "output_hash": { "type": ["string", "null"] },
-    "confidence_score": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+    "confidence_score": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
     "uncertainty_indicator": { "type": ["string", "null"] },
     "explanation_reference": { "type": ["string", "null"] },
-    "reason_codes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "reason_codes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
     "completed_at": { "type": ["string", "null"], "format": "date-time" },
     "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
     "redaction_manifest": { "type": ["object", "null"] },
     "disclosure_required": { "type": "boolean" },
-    "disclosure_package_reference": { "type": ["string", "null"], "format": "uuid" },
-    "disclosure_receipt_reference": { "type": ["string", "null"], "format": "uuid" },
-    "superseded_by_ai_processing_record_id": { "type": "string", "format": "uuid" }
+    "disclosure_package_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "disclosure_receipt_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "superseded_by_ai_processing_record_id": {
+      "type": "string",
+      "format": "uuid"
+    }
   }
 }

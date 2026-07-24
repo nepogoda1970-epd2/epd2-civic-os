@@ -17,8 +17,8 @@ row resolves here).
 move together:
 
 - `processing_status` — the technical pipeline plane: `requested ->
-  input_prepared -> processing -> {completed | failed |
-  rejected_by_policy}`, with `rejected_by_policy` also directly reachable
+input_prepared -> processing -> {completed | failed |
+rejected_by_policy}`, with `rejected_by_policy` also directly reachable
   from `requested` or `input_prepared`
   (`domain.PROCESSING_STATUS_ALLOWED_TRANSITIONS`). Has **no stored
   `superseded` value** — whether a processing attempt has been superseded
@@ -41,7 +41,7 @@ move together:
 
 Both statuses' `superseded` meaning routes through exactly one shared
 field, `supersedes_ai_processing_record_id` (19c.2) —
-`application.supersede_ai_processing_record` is the *only* mechanism by
+`application.supersede_ai_processing_record` is the _only_ mechanism by
 which either a technical processing attempt or a human review outcome is
 ever corrected: it always creates a brand-new row, never rewrites the
 superseded row's own fields. Its `supersession_kind` parameter
@@ -125,7 +125,7 @@ Four reviewer roles (`domain.REVIEWER_ROLE_CODES`): `ai_output_reviewer`,
 `domain.required_reviewer_role_codes` maps a use class/target type to its
 required base reviewer role; `is_official_publication = True` overrides
 this and requires `ai_publication_reviewer` specifically. Self-review is
-*prohibited*, not merely discouraged, for moderation-, governance-,
+_prohibited_, not merely discouraged, for moderation-, governance-,
 ballot-adjacent-, and official-publication uses
 (`domain.review_requires_independent_reviewer`,
 `AIReviewSelfApprovalProhibitedError`) — `review_ai_output` compares the
@@ -142,7 +142,7 @@ because no such interface is ever constructed or passed to it.
 `provider.assert_external_provider_use_allowed` fail-closes an external
 (non-self-hosted) submission unless the use class is one of the three
 approved low-risk classes (`summarization`, `drafting`,
-`recommendation` — `anomaly_indication` is always self-hosted-only) *and*
+`recommendation` — `anomaly_indication` is always self-hosted-only) _and_
 `processing_region`/`data_retention_mode` are both recognized values;
 unknown region or retention mode is fail-closed. `ScriptedAIModelProvider`
 and `redaction.ScriptedRedactionValidator` are the only implementations
@@ -162,7 +162,7 @@ package through `transparency-service.publish_ledger_entry` and records
 the returned `public_ledger_entry_id` as `disclosure_receipt_reference`
 (`DisclosureStatus` becomes `published`); (5)
 `assert_disclosure_complete_for_official_finalization` is the read-only
-gate an *owning* service calls, from its own finalize command, before
+gate an _owning_ service calls, from its own finalize command, before
 completing an official/public artifact — `ai-processing-service` never
 marks another entity "finalized" itself, mirroring
 `governance-service.get_finality_status`'s own role as a read another
@@ -195,18 +195,18 @@ it — kept as a defense-in-depth reason code per required scope item 11).
 
 ## Application commands -> canon events (section 20.12)
 
-| Command                                | Transition                                        | Event                                |
-| --------------------------------------- | -------------------------------------------------- | -------------------------------------- |
-| `request_ai_processing`                 | (create) `-> requested`                            | `ai.processing_requested` (+ `ai.output_reviewed` if consequential) |
-| `prepare_input`                         | `requested -> input_prepared` or `-> rejected_by_policy` | `ai.input_prepared` or `ai.processing_rejected_by_policy` |
-| `begin_processing`                      | `input_prepared -> processing`                     | _(none — audited only)_                |
-| `complete_processing_with_provider`     | `processing -> completed` or `-> failed`           | `ai.output_created` or `ai.processing_failed` |
-| `fail_processing`                       | `processing -> failed`                             | `ai.processing_failed`                 |
-| `reject_processing_by_policy`           | `* -> rejected_by_policy`                           | `ai.processing_rejected_by_policy`     |
-| `review_ai_output`                      | `pending -> {approved \| approved_with_changes \| rejected}` | `ai.output_accepted`/`ai.output_corrected`/`ai.output_rejected` |
-| `supersede_ai_processing_record`        | (create new row)                                    | `ai.processing_record_superseded` or `ai.review_outcome_superseded` |
-| `create_disclosure_package`             | n/a (sets `disclosure_package_reference`)           | _(none — audited only)_                |
-| `publish_ai_disclosure`                 | n/a (sets `disclosure_receipt_reference`)           | _(none — audited only; delegates to `transparency-service`)_ |
+| Command                             | Transition                                                   | Event                                                               |
+| ----------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `request_ai_processing`             | (create) `-> requested`                                      | `ai.processing_requested` (+ `ai.output_reviewed` if consequential) |
+| `prepare_input`                     | `requested -> input_prepared` or `-> rejected_by_policy`     | `ai.input_prepared` or `ai.processing_rejected_by_policy`           |
+| `begin_processing`                  | `input_prepared -> processing`                               | _(none — audited only)_                                             |
+| `complete_processing_with_provider` | `processing -> completed` or `-> failed`                     | `ai.output_created` or `ai.processing_failed`                       |
+| `fail_processing`                   | `processing -> failed`                                       | `ai.processing_failed`                                              |
+| `reject_processing_by_policy`       | `* -> rejected_by_policy`                                    | `ai.processing_rejected_by_policy`                                  |
+| `review_ai_output`                  | `pending -> {approved \| approved_with_changes \| rejected}` | `ai.output_accepted`/`ai.output_corrected`/`ai.output_rejected`     |
+| `supersede_ai_processing_record`    | (create new row)                                             | `ai.processing_record_superseded` or `ai.review_outcome_superseded` |
+| `create_disclosure_package`         | n/a (sets `disclosure_package_reference`)                    | _(none — audited only)_                                             |
+| `publish_ai_disclosure`             | n/a (sets `disclosure_receipt_reference`)                    | _(none — audited only; delegates to `transparency-service`)_        |
 
 Every command follows the shared shape: `actor: ActorRef,
 actor_is_authorized: bool, correlation_id: UUID, clock: Clock, event_id:
@@ -231,8 +231,7 @@ data ever becomes public — every field on it is already public-safe.
 - **No autonomous tool execution.** `AIModelProvider` has no callback,
   tool, or command-issuing interface at all — this is a structural
   property, not a runtime check with a bypass to guard against.
-- **Emergency/Crisis Override is out of scope** (required scope item
-  19) — nothing in this pack reads, writes, or references
+- **Emergency/Crisis Override is out of scope** (required scope item 19) — nothing in this pack reads, writes, or references
   `EmergencyAction`.
 
 ## Reason codes

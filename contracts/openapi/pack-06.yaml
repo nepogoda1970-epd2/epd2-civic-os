@@ -102,7 +102,8 @@ paths:
                 type: object
                 required: [record]
                 properties:
-                  record: { $ref: "../schemas/ai-processing-record.schema.json" }
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
                   event: { $ref: "../schemas/event-envelope.schema.json" }
         "403":
           description: PERMISSION_DENIED (CT-00-06).
@@ -144,7 +145,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  record: { $ref: "../schemas/ai-processing-record.schema.json" }
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
         "404":
           description: VALIDATION_RECORD_NOT_FOUND.
         "422":
@@ -202,7 +204,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  record: { $ref: "../schemas/ai-processing-record.schema.json" }
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
         "422":
           description: AI_MODEL_UNAVAILABLE, AI_PROCESSING_TIMEOUT, AI_OUTPUT_MALFORMED, AI_MODEL_VERSION_UNSUPPORTED, AI_CONFIDENCE_BELOW_THRESHOLD.
 
@@ -254,7 +257,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  record: { $ref: "../schemas/ai-processing-record.schema.json" }
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
         "403":
           description: AI_REVIEWER_ROLE_INVALID, AI_REVIEWER_SCOPE_MISMATCH, AI_REVIEW_SELF_APPROVAL_PROHIBITED.
 
@@ -290,7 +294,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  package: { $ref: "../schemas/ai-disclosure-package.schema.json" }
+                  package:
+                    { $ref: "../schemas/ai-disclosure-package.schema.json" }
         "409":
           description: AI_CONSEQUENTIAL_OUTPUT_NOT_REVIEWED, AI_HUMAN_REVIEWER_MISSING, AI_OUTPUT_REJECTED_BY_HUMAN.
 
@@ -348,6 +353,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  record: { $ref: "../schemas/ai-processing-record.schema.json" }
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
         "404":
           description: VALIDATION_RECORD_NOT_FOUND.

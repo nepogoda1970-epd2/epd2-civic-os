@@ -1,23 +1,93 @@
 # CLAUDE-PACK-06 — AI Processing Context: Handover Report
 
-**Revision 1 — local PASS.** This report follows the same honesty
-convention `docs/handover/PACK-02-REPORT.md` through
-`docs/handover/PACK-05-REPORT.md` established: every check this sandbox
-can actually run is run for real (not skipped, not asserted from memory)
-and its literal output is quoted below; every check this sandbox itself
-cannot run (network-gated `uv lock`/`npm install`, and everything
-downstream of them locally — `npm run typecheck`, ESLint, the
-TypeScript/frontend test suites, `next build`) is named explicitly as
-not run locally, for the same reason PACK-02 through PACK-05 already
-documented (`pypi.org`/`files.pythonhosted.org`/`registry.npmjs.org` all
-return `403` from this sandbox). Unlike PACK-05's report, this revision
-has not yet had an external GitHub Actions run against its candidate
-archive — this is the local-verification counterpart of PACK-05's own
-revision 1, not yet a `0c`-style externally-confirmed PASS.
+**Revision 2 — local PASS, one external Prettier finding fixed.** This
+report follows the same honesty convention
+`docs/handover/PACK-02-REPORT.md` through `docs/handover/PACK-05-REPORT.md`
+established: every check this sandbox can actually run is run for real
+(not skipped, not asserted from memory) and its literal output is quoted
+below; every check this sandbox itself cannot run (network-gated
+`uv lock`/`npm install`, and everything downstream of them locally —
+`npm run typecheck`, ESLint, the TypeScript/frontend test suites,
+`next build`) is named explicitly as not run locally, for the same reason
+PACK-02 through PACK-05 already documented
+(`pypi.org`/`files.pythonhosted.org`/`registry.npmjs.org` all return
+`403` from this sandbox). This revision has not yet had a full external
+GitHub Actions run complete successfully — see section 0a for the one
+finding reported so far and its fix — so this remains the
+local-verification counterpart of PACK-05's own pre-PASS revisions, not
+yet a `0c`-style externally-confirmed PASS.
 
 ```text
-PACK-06 local PASS
+PACK-06 local PASS (revision 2)
 ```
+
+## 0a. External Prettier finding and fix (revision 2)
+
+The first real external GitHub Actions run against
+`epd2-civic-os-PACK-06-final-candidate.zip` reported a Prettier
+format-check failure on exactly six files, all newly written this pack
+and never run through Prettier locally before revision 1's export:
+
+```text
+[warn] CHANGELOG.md
+[warn] contracts/events/ai-processing-record-payload.v1.schema.json
+[warn] contracts/openapi/pack-06.yaml
+[warn] contracts/schemas/ai-processing-record.schema.json
+[warn] docs/handover/PACK-06-REPORT.md
+[warn] services/ai-processing-service/README.md
+[warn] Code style issues found in 6 files. Run Prettier with --write to fix.
+make: *** [Makefile:22: format-check] Error 1
+```
+
+Unlike some earlier packs' own first Prettier findings, this sandbox's
+own system Prettier (3.8.1) reproduced the identical six-file list
+before any fix was applied — no version-disagreement diagnosis was
+needed this time. Fixed with the repository's own exact command,
+`npm run format` (`prettier --write .`, resolving to the same command
+`make format` runs):
+
+```text
+$ npm run format
+> prettier --write .
+... (every other tracked file reported "(unchanged)") ...
+services/ai-processing-service/README.md 30ms
+CHANGELOG.md ...ms
+docs/handover/PACK-06-REPORT.md ...ms
+contracts/events/ai-processing-record-payload.v1.schema.json ...ms
+contracts/openapi/pack-06.yaml ...ms
+contracts/schemas/ai-processing-record.schema.json ...ms
+
+$ npm run format:check
+> prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+Re-verified with a file-by-file diff against the revision-1 archive
+that every change is pure formatting, nothing semantic: the two JSON
+Schema files had their `enum` arrays re-wrapped onto multiple lines
+(Prettier's `printWidth` line-break rule — same array elements, same
+order, same values); `contracts/openapi/pack-06.yaml` had one flow-style
+YAML mapping (`record: { $ref: ... }`) re-wrapped across two lines in
+four places (same key, same `$ref` value); `services/ai-processing-service/README.md`
+and `docs/handover/PACK-06-REPORT.md` had `*emphasis*`-style markdown
+markers normalized to `_emphasis_` style plus one markdown table's
+column widths re-padded (same cell content); `CHANGELOG.md` had several
+long lines re-wrapped at Prettier's line-length boundary (same words,
+same order). No reason code, schema field, enum value, test, canon
+text, ADR text, or version string was touched — confirmed by re-running
+the complete local verification suite after the fix: identical to
+revision 1 in every respect (363/363 required paths, canon checksum
+unchanged, Ruff clean, mypy clean across all sixteen groups, 1815
+passed / 4 skipped / 0 failed, `prettier --check .` now also clean
+across the full tree).
+
+`make format-check`'s own first step, `uv run ruff format --check .`,
+still cannot run in this sandbox (network-gated `uv sync`, section 1) —
+the standalone `/root/.local/bin/ruff format --check .` and
+`/opt/node22/bin/prettier --check .` (== `npm run format:check`) were
+run directly instead, both clean, exactly as every prior pack's own
+local-only revision already documents for this same sandbox ceiling.
 
 ## 0. What CLAUDE-PACK-06 adds
 
@@ -157,7 +227,7 @@ every other Python service (no new third-party package).
 
 - `services/ai-processing-service/` — `pyproject.toml`, `README.md`,
   `src/epd2_ai_processing_service/{__init__.py, domain.py, application.py,
-  events.py, exceptions.py, storage.py, provider.py, redaction.py}`,
+events.py, exceptions.py, storage.py, provider.py, redaction.py}`,
   `tests/{test_domain.py, test_application.py, test_storage.py}`.
 - `contracts/reason-codes/pack-06.yml` — 29 entries.
 - `contracts/openapi/pack-06.yaml` — 8 operations, tag
@@ -254,7 +324,7 @@ honestly rather than omitted:
    across multiple lines — no logic change.
 8. **`scripts/check_repository.py`'s `REQUIRED_PATHS` list initially had
    zero PACK-06 entries**, despite the check reporting "OK" (the check
-   only validates presence of *listed* paths, never completeness of the
+   only validates presence of _listed_ paths, never completeness of the
    list itself — a pre-existing property of this script, not a defect
    introduced this pass). Fixed by adding every real PACK-06 path this
    pass actually created (five ADRs, the owner-decisions/spec/report
@@ -334,6 +404,50 @@ documented not-applicable, each with an explicitly reasoned skip.
 
 ## 10. Commands executed this pass, and results
 
+### Revision 2 re-verification (after the section 0a Prettier fix)
+
+```text
+✅ npm run format   (the fix)
+   → prettier --write . — exactly the 6 flagged files reformatted,
+     every other tracked file reported "(unchanged)"
+
+✅ npm run format:check   (after the fix)
+   → Checking formatting...
+     All matched files use Prettier code style!
+
+✅ /root/.local/bin/ruff format --check .
+   → 173 files already formatted
+
+✅ /root/.local/bin/ruff check .
+   → All checks passed!
+
+✅ python3 scripts/check_repository.py
+   → OK: all 363 required paths are present.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
+   374b25fddfab88846622bf078b35c4246d8ad8c5d65bf43e6ac4e82653f74f74
+   (unchanged, section 2)
+
+✅ mypy — all sixteen scoped groups
+   → Success: no issues found, zero errors, across every group
+
+✅ PYTHONPATH=<all 15 src/ dirs>:<system python3 dist-packages> pytest -q
+   → 1815 passed, 4 skipped, 0 failed — identical to revision 1
+```
+
+Every number above is identical to revision 1 (section below) except
+`prettier --check .`, which is now clean where it previously flagged
+six files — confirming the fix was pure reformatting with no other
+effect on the repository.
+
+### Revision 1 (original local verification)
+
 ```text
 ✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
    374b25fddfab88846622bf078b35c4246d8ad8c5d65bf43e6ac4e82653f74f74
@@ -387,12 +501,15 @@ documented not-applicable, each with an explicitly reasoned skip.
 ## 11. Readiness conclusion
 
 ```text
-PACK-06 local PASS
+PACK-06 local PASS (revision 2)
 ```
 
 Every check this sandbox can run has passed: required structure (363 of
 363 paths), no forbidden paths, all version sources consistent, Ruff
-format and lint clean, mypy clean across all sixteen scoped groups with
+format and lint clean, a real `prettier --check .` clean across the full
+tree (revision 2, section 0a — the one external CI finding so far, six
+files, all pure reformatting, fixed with the repository's own
+`npm run format`), mypy clean across all sixteen scoped groups with
 zero errors and zero blanket suppressions, 1815 passing Python tests
 with 0 failures and exactly 4 genuine, individually-documented skips
 (1 hypothesis-unavailable, 3 CT-00-10/11/12 not-applicable-in-earlier-
