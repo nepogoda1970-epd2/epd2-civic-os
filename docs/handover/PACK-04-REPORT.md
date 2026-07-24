@@ -1,33 +1,38 @@
 # CLAUDE-PACK-04 — Transparency Context: Handover Report
 
-**Revision 3 — a second, real Prettier-relevant finding fixed (section
-0b: this report's own revision-1 text contained a markdown-mangled list
-item); external GitHub Actions confirmation of the resulting candidate
-is the one step this sandbox still cannot itself perform.**
+**Revision 4 — PASS.** Revisions 1 through 3 each closed a real,
+externally-found gap — a 10-file Prettier formatting gap (revision 2,
+section 0a) and a genuine markdown-authoring defect in this report's own
+prose (revision 3, section 0b). A subsequent external GitHub Actions run
+against the revision-3 candidate archive, with genuine PyPI/npm network
+access, completed the full pipeline successfully end to end (section
+0c): 1599 Python tests passed, 2 skipped (the same genuine CT-00-11/12
+not-applicable markers this report has always documented), TypeScript
+tests passed, frontend tests passed, a successful Next.js production
+build, and Ruff, Prettier, ESLint, and mypy all clean, with all 305
+required paths present and no forbidden files. No source code, test,
+schema, workflow, or canon content was changed to reach this result —
+this revision is a documentation-only update recording a genuine,
+already-achieved PASS.
+
+```text
+PACK-04 PASS
+```
 
 This report follows the same honesty convention
 `docs/handover/PACK-02-REPORT.md` and `docs/handover/PACK-03-REPORT.md`
 established: every check this sandbox can actually run is run for real
 (not skipped, not asserted from memory) and its literal output is quoted
-below; every check this sandbox cannot run (network-gated `uv
-lock`/`npm install`, and everything downstream of them —
+below; every check this sandbox itself cannot run (network-gated `uv
+lock`/`npm install`, and everything downstream of them locally —
 `npm run typecheck`, ESLint, the TypeScript/frontend test suites, `next
-build`) is named explicitly as not run, with the same reason PACK-02 and
-PACK-03 already documented (`pypi.org`/`files.pythonhosted.org`/
-`registry.npmjs.org` all return `403` from this sandbox, reconfirmed
-this pass, section 1). Per this pack's own instruction ("do not mark
-PASS if any verification step could not be completed"), this report does
-not claim a CI-confirmed `PACK-04 PASS` — that requires the external
-GitHub Actions run this sandbox cannot perform. What it does claim,
-and backs with literal command output below, is: every check
-this environment is able to execute passes cleanly, with zero
-unexplained skips and zero failures.
-
-```text
-PACK-04 LOCAL VERIFICATION: PASS
-PACK-04 EXTERNAL CI CONFIRMATION: PENDING (network-gated, same as
-                                   PACK-02/03's own early-revision reports)
-```
+build`) is named explicitly as not run locally, with the same reason
+PACK-02 and PACK-03 already documented (`pypi.org`/
+`files.pythonhosted.org`/`registry.npmjs.org` all return `403` from this
+sandbox). That local ceiling is exactly what the external GitHub Actions
+run in section 0c closes: it has genuine network access, regenerated
+both lock files for real, and ran the complete pipeline end to end. This
+report now claims a genuine, externally-confirmed `PACK-04 PASS`.
 
 ## 0a. External verification finding and fix (revision 2)
 
@@ -138,6 +143,68 @@ revision 2 in every respect (305/305 required paths, canon checksum
 unchanged, Ruff clean, mypy clean across all fourteen scoped groups,
 1592 passed / 3 skipped / 0 failed, section 11). `.github/workflows/*.yml`
 was not touched.
+
+## 0c. External verification: PASS (revision 4)
+
+A subsequent external GitHub Actions run — against the revision-3
+candidate archive (`epd2-civic-os-PACK-04-final-candidate-v3.zip`), with
+genuine PyPI/npm network access — completed the full `make verify`
+pipeline successfully:
+
+```text
+Status: PASS
+Python:     1599 passed, 2 skipped, 0 failed
+TypeScript: passed
+Frontend:   passed
+Next.js production build: successful
+Ruff, Prettier, ESLint, mypy: clean
+scripts/check_repository.py: all 305 required paths present
+scripts/check_forbidden_files.py: no forbidden paths found
+```
+
+These results were reported directly by the project owner after running
+the real workflow, not independently inspected by this sandbox against a
+raw returned log or tree this round — this sandbox still has no path to
+a returned CI artifact or genuine network access itself (section 1
+below is unchanged). The reported numbers are, however, independently
+_reconcilable_ against this sandbox's own last local run rather than
+accepted blind: revision 3's local pytest run reported `1592 passed, 3
+skipped` — 1 skip for `tests/contract/test_property_based.py`
+(`pytest.importorskip("hypothesis")`, a single module-level skip outcome
+since `hypothesis` cannot be installed here) and 2 for the genuine
+CT-00-11/12 not-applicable markers. A real `hypothesis` install turning
+that one collection-level skip into real passes for that module's test
+functions predicts exactly the reported `1592 + 7 = 1599` passed and
+`3 - 1 = 2` skipped — the identical arithmetic pattern, and the identical
+`+7`/`-1` delta, that PACK-03's own revision 4 (section 0c of that
+report) already established for this same sandbox/CI gap. This
+arithmetic match is meaningful corroboration, not proof of an
+independent log inspection, and this report says so plainly rather than
+implying more certainty than this sandbox actually has.
+
+The workflow's own lock-file steps (`.github/workflows/verify-and-package.yml`
+lines "Generate Python lock file: uv lock" and "Generate Node lock file
+and install dependencies: npm install") always regenerate `uv.lock` and
+`package-lock.json` fresh from the current `pyproject.toml`/`package.json`
+on every run — they never read or depend on whatever lock file happens
+to be committed in the tree. This means the sandbox's inability to run
+`uv lock`/`npm install` locally (section 1/3, unchanged) was always a
+_local verification ceiling_, never a _CI blocker_ — the successful CI
+run above is exactly the confirmation of that. This working tree's own
+committed `uv.lock`/`package-lock.json` remain exactly as they were
+before this revision — genuinely stale, but inconsequential to this
+PASS, since CI never reads them and no PACK-04 service depends on their
+committed content. They were left untouched rather than hand-edited to
+look regenerated, since a hand-written lock file would not be a real one
+(the same principle `docs/handover/PACK-02-REPORT.md` section 3 and
+`docs/handover/PACK-03-REPORT.md` section 0c both state for their own,
+now-closed, identical-in-kind gap).
+
+No source code, test, schema, workflow file, or canon text was changed
+to reach this PASS — revisions 2 and 3 (sections 0a/0b) were the last
+substantive fixes, both formatting/documentation-only as those sections
+detail; this revision only records the external result and updates this
+report's own status language accordingly (sections 3, 11, 12).
 
 ## 0. What CLAUDE-PACK-04 adds
 
@@ -269,7 +336,7 @@ from `">=0.1.0 <0.4.0"` to `">=0.1.0 <0.5.0"` to admit the new
 repository version, mirroring exactly how PACK-03 widened this same
 field for its own `REPOSITORY_VERSION` bump (section 2 of that report).
 
-## 3. Lock files — still open, same reason as PACK-02/03's early revisions
+## 3. Lock files — closed (revision 4)
 
 ```text
 uv.lock:            Not regenerated locally — `uv lock` requires PyPI
@@ -277,14 +344,18 @@ uv.lock:            Not regenerated locally — `uv lock` requires PyPI
 package-lock.json:  Not regenerated locally — same reason, npm registry.
 ```
 
-Per PACK-03's own precedent (that report's section 3, section 0c), this
-is not expected to actually block CI: a GitHub Actions run's own
-lock-generation steps run `uv lock` / `npm install` fresh from the
-current `pyproject.toml`/`package.json` regardless of what is committed
-in this tree, so a genuinely blocked local lock-file regeneration has
-not historically been a real gap once external network access is
-available. This working tree's own committed `uv.lock`/`package-lock.json`
-are left exactly as they were — not hand-edited to look regenerated.
+This sandbox's own local ceiling above is unchanged and is not expected
+to change (it never has real PyPI/npm network access). It is, however,
+no longer an open gap for the pack as a whole: the external GitHub
+Actions run recorded in section 0c has genuine network access, and its
+own lock-generation steps (`uv lock`, `npm install`) regenerate both
+lock files fresh from the current `pyproject.toml`/`package.json` on
+every run, independent of whatever is committed in this tree — exactly
+as PACK-03's own revision 4 (that report's section 0c) already
+established for this identical sandbox/CI split. This working tree's own
+committed `uv.lock`/`package-lock.json` are left exactly as they were —
+not hand-edited to look regenerated — since CI never reads them and no
+PACK-04 service depends on their committed content.
 
 ## 4. Files added or changed this pass
 
@@ -567,6 +638,68 @@ zero unused.
 
 ## 11. Commands executed this pass, and results
 
+### Revision 4: external GitHub Actions verification — PASS (final, source of truth)
+
+Run against the revision-3 candidate archive
+(`epd2-civic-os-PACK-04-final-candidate-v3.zip`), with genuine PyPI/npm
+network access. Results as reported to this report's author by the
+project owner (see section 0c for the full reconciliation against this
+sandbox's own last local run):
+
+```text
+✅ uv lock / uv sync
+   → generated a genuine uv.lock covering all thirteen workspace
+     members and installed from it (section 0c)
+
+✅ npm install
+   → generated a genuine package-lock.json and installed from it
+
+✅ scripts/check_repository.py
+   → OK: all 305 required paths are present.
+
+✅ scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ ruff format --check . / ruff check .
+   → clean
+
+✅ prettier --check .
+   → clean
+
+✅ eslint .
+   → clean
+
+✅ mypy — all fourteen scoped groups
+   → clean
+
+✅ npm run typecheck — both TypeScript workspaces
+   → clean
+
+✅ pytest -q
+   → 1599 passed, 2 skipped, 0 failed
+     (2 skips: the same genuine CT-00-11/CT-00-12 not-applicable markers
+     this report has always documented — zero unexplained skips, zero
+     failures; count is higher than this sandbox's own local
+     1592 passed/3 skipped because a real `hypothesis` install lets
+     `tests/contract/test_property_based.py` run for real instead of the
+     whole module import-skipping, section 0c)
+
+✅ TypeScript unit tests
+   → passed
+
+✅ frontend unit tests
+   → passed
+
+✅ next build
+   → successful production build
+```
+
+This sandbox did not independently inspect a raw log or extract/diff a
+returned tree this round (section 0c states this plainly) — the numbers
+above are the project owner's direct report of the actual run,
+reconciled (not merely accepted) against this sandbox's own last local
+numbers.
+
 ### Revision 2 re-verification (after the section 0a Prettier fix)
 
 ```text
@@ -661,39 +794,45 @@ results identical to revision 1:
 ## 12. Readiness conclusion
 
 ```text
-PACK-04 LOCAL VERIFICATION: PASS
-PACK-04 EXTERNAL CI CONFIRMATION: PENDING
+PACK-04 PASS
 ```
 
-Every check this sandbox is able to run passes cleanly: all 305 required
-paths present, no forbidden paths, all version sources consistent, a
-real system Prettier check clean (section 0a — the one genuine,
-external-CI-found gap this revision closes), Ruff format and lint
-clean, mypy clean across all fourteen scoped groups with zero errors and
-zero blanket suppressions (one documented, precedented
-`# type: ignore[arg-type]` pattern, section 5, identical to the one
-already used in four PACK-03 services' own idempotency tests), 1592
-passing Python tests with 0 failures and exactly 3 genuine skips
-(hypothesis unavailability plus the 2 pre-existing CT-00-11/CT-00-12
-not-applicable markers), and all 77 JSON/YAML contract files parsing
-cleanly. `docs/canonical/TZ-00-domain-event-canon.md` remains
-byte-identical throughout (section 2) and `CANON_VERSION` is unchanged.
-No check was weakened, no empty file was written to satisfy a path
-requirement, no reason code was hidden, no legitimate field was stripped
-from a service's own contract to make a test pass, no logic/schema/test/
-workflow/canon content changed by the section 0a fix (formatting only,
-independently re-confirmed, section 0a/11), and no unlinkability claim
-is made without the automated test that backs it (section 9).
+Every check this repository defines has now passed, both locally (as far
+as this sandbox allows, revisions 1 through 3) and, decisively, by a
+complete external GitHub Actions run with real network access (section
+0c, revision 4): required structure (305 of 305 paths), no forbidden
+paths, all version sources consistent, Ruff format and lint clean, a
+real Prettier format check clean, ESLint clean, mypy clean across all
+fourteen scoped groups with zero errors and zero blanket suppressions
+(one documented, precedented `# type: ignore[arg-type]` pattern, section
+5, identical to the one already used in four PACK-03 services' own
+idempotency tests), 1599 passing Python tests with 0 failures and
+exactly 2 genuine CT-00-11/CT-00-12 not-applicable skips (zero
+unexplained skips), TypeScript tests passed, frontend tests passed, and
+a successful Next.js production build. This revision closes the single
+remaining Definition-of-Done gap from revisions 1 through 3: `uv.lock`
+and `package-lock.json` were regenerated for real by the workflow's own
+lock-generation steps, which — as section 0c explains — always run
+fresh from the current `pyproject.toml`/`package.json` regardless of
+what is committed, so this sandbox's own inability to run `uv
+lock`/`npm install` locally was never actually a blocker for CI, only for
+this sandbox's own local verification ceiling.
 
-The one thing this report does not claim — deliberately, per this
-pack's own instruction — is a CI-confirmed `PACK-04 PASS`: `uv.lock` and
-`package-lock.json` regeneration, and everything downstream of them on
-the TypeScript/frontend side, require real PyPI/npm network access this
-sandbox does not have (section 1/3). Per PACK-03's own precedent
-(section 3 of that report), this has not historically been a real
-blocker once a genuine GitHub Actions run is available, since that
-workflow's own lock-generation steps run fresh from
-`pyproject.toml`/`package.json` regardless of what is committed here —
-but this report does not assert that outcome without having actually
-seen it happen, which is exactly the distinction this pack's own
-honesty instruction asks for.
+`docs/canonical/TZ-00-domain-event-canon.md` remains byte-identical
+throughout (section 2) and `CANON_VERSION` is unchanged. No check was
+weakened, no empty file was written to satisfy a path requirement, no
+reason code was hidden, no legitimate field was stripped from a
+service's own contract to make a test pass, no logic/schema/test/
+workflow/canon content changed by either the section 0a or section 0b
+fix (both formatting/documentation-only, independently re-confirmed),
+and no unlinkability claim is made without the automated test that backs
+it (section 9).
+
+This report incorporates two real fixes surfaced across two rounds of
+external GitHub Actions verification — a 10-file Prettier formatting gap
+(section 0a) and a genuine markdown-authoring defect in this report's own
+prose (section 0b) — each closed with a precise, source- or
+documentation-level fix, re-verified locally after each fix, and now
+confirmed by a clean external PASS (section 0c) with no further findings.
+`PACK-04 PASS` is now a genuine, externally-confirmed status, not a
+local-only claim.

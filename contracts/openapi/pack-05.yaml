@@ -1,0 +1,714 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-05 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the one PACK-05 service
+    (governance-service, ADR-016). No production HTTP server ships in
+    this pack — these paths document, one-to-one, every real command
+    function in epd2_governance_service.application and are exercised in
+    tests via those application-layer functions directly, not over
+    HTTP. Every path maps to exactly one real command; none of this
+    file's paths invent an HTTP surface a command function does not
+    already provide. Request bodies list only genuine business fields —
+    actor identity, authorization, correlation/causation ids, the clock,
+    and the idempotency event_id are transport/session concerns, the
+    same convention contracts/openapi/pack-02.yaml through
+    pack-04.yaml already follow.
+
+    Per canon 19b.1/19b.6 and ADR-020, no path or schema in this file
+    ever declares actor_id, assigned_by, proposed_by_role_id,
+    approved_by_role_id, rejected_by_role_id, or
+    submitter_authorization_reference as part of a *response* body —
+    those are internal fields, present only in the stored entity
+    schemas (contracts/schemas/*.json), never in a public wire payload
+    (mirroring pack-04.yaml's identical rule for its own restricted
+    fields).
+
+    The deployment-time bootstrap seed command
+    (epd2_governance_service.bootstrap.run_bootstrap_seed) is
+    deliberately absent from this file — item 6 of PACK-05's required
+    scope states it is "not exposed through normal API"; it has no
+    HTTP-shaped contract at all, by design.
+
+    voting-service's own new command
+    (epd2_voting_service.application.invalidate_ballot, ADR-017 Option
+    B) is documented in contracts/openapi/pack-03.yaml under the
+    voting-service tag, not here — it is physically owned by
+    voting-service, even though it reads a GovernanceDecision produced
+    by this pack.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://governance.epd2.example
+    description: governance-service (not deployed in PACK-05 — contract only)
+
+paths:
+  # ==========================================================================
+  # governance-service — RoleAssignment
+  # ==========================================================================
+  /role-assignments:
+    post:
+      operationId: requestRoleAssignment
+      summary: Create a new RoleAssignment in pending status
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.request_role_assignment.
+        role_code must be one of the 8 pilot role codes (ADR-020 §5);
+        the granting RoleAssignment (granter_role_assignment_id) must
+        be active, and no role may grant a RoleAssignment to its own
+        actor (ADR-020 item 6).
+      tags: [governance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  role_assignment_id,
+                  actor_id,
+                  role_code,
+                  scope_id,
+                  valid_from,
+                  granter_role_assignment_id,
+                ]
+              properties:
+                role_assignment_id: { type: string, format: uuid }
+                actor_id: { type: string, format: uuid }
+                role_code:
+                  type: string
+                  enum:
+                    [
+                      governance_policy_proposer,
+                      governance_policy_approver,
+                      governance_reviewer,
+                      technical_challenge_reviewer,
+                      ballot_invalidation_proposer,
+                      ballot_invalidation_approver,
+                      oversight_reviewer,
+                      observer,
+                    ]
+                scope_id: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, "null"], format: date-time }
+                granter_role_assignment_id: { type: string, format: uuid }
+                approval_reference: { type: [string, "null"] }
+      responses:
+        "201":
+          description: Role assignment requested; governance.role_assignment_requested emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment: { $ref: "../schemas/role-assignment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), ROLE_ASSIGNMENT_NOT_ACTIVE — granter
+            is not active, or SAME_ACTOR_APPROVAL_REJECTED — granter's actor
+            equals the new assignment's actor.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such granter_role_assignment_id.
+
+  /role-assignments/{roleAssignmentId}/activate:
+    post:
+      operationId: activateRoleAssignment
+      summary: pending -> active
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.activate_role_assignment.
+      tags: [governance-service]
+      parameters:
+        - name: roleAssignmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role assignment activated; governance.role_assignment_activated emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment: { $ref: "../schemas/role-assignment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such role_assignment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /role-assignments/{roleAssignmentId}/revoke:
+    post:
+      operationId: revokeRoleAssignment
+      summary: active|pending|suspended -> revoked
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.revoke_role_assignment.
+      tags: [governance-service]
+      parameters:
+        - name: roleAssignmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role assignment revoked; governance.role_assignment_revoked emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment: { $ref: "../schemas/role-assignment.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such role_assignment_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /role-assignments/{roleAssignmentId}:
+    get:
+      operationId: getRoleAssignment
+      summary: Plain, unaudited read of one RoleAssignment by id
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.get_role_assignment.
+      tags: [governance-service]
+      parameters:
+        - name: roleAssignmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Role assignment found.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/role-assignment.schema.json" }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such role_assignment_id.
+
+  # ==========================================================================
+  # governance-service — GovernancePolicy
+  # ==========================================================================
+  /governance-policies:
+    post:
+      operationId: proposeGovernancePolicy
+      summary: Create a new GovernancePolicy in draft status
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.propose_governance_policy.
+        version is assigned automatically as one more than the highest
+        version ever created for policy_type. Both proposed_by_role_id
+        and approved_by_role_id must already be active, in the correct
+        role, and distinct actors (ADR-020 item 1) at proposal time.
+      tags: [governance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  governance_policy_id,
+                  policy_type,
+                  rule_definition,
+                  effective_from,
+                  proposed_by_role_id,
+                  approved_by_role_id,
+                ]
+              properties:
+                governance_policy_id: { type: string, format: uuid }
+                policy_type:
+                  type: string
+                  enum:
+                    [
+                      role_taxonomy,
+                      approval_rule,
+                      challenge_rule,
+                      oversight_rule,
+                    ]
+                rule_definition: { type: object }
+                effective_from: { type: string, format: date-time }
+                proposed_by_role_id: { type: string, format: uuid }
+                approved_by_role_id: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Governance policy proposed; governance.policy_proposed emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [policy]
+                properties:
+                  policy: { $ref: "../schemas/governance-policy.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), TWO_ACTOR_APPROVAL_REQUIRED,
+            ROLE_ASSIGNMENT_NOT_ACTIVE, ROLE_ASSIGNMENT_SCOPE_MISMATCH, or
+            SAME_ACTOR_APPROVAL_REJECTED.
+
+  /governance-policies/{governancePolicyId}/activate:
+    post:
+      operationId: activateGovernancePolicy
+      summary: draft -> active (may also supersede a prior active policy of the same type)
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.activate_governance_policy.
+        Re-validates both proposed_by_role_id and approved_by_role_id are
+        still active, in the correct role, in scope, and distinct
+        actors. If another policy is already active for the same
+        policy_type, this call also transitions it active -> superseded
+        (canon 19b.2: at most one active version at a time) and emits
+        governance.policy_superseded for it.
+      tags: [governance-service]
+      parameters:
+        - name: governancePolicyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: >-
+            Governance policy activated; governance.policy_activated emitted
+            (and governance.policy_superseded for the prior active policy of
+            the same type, if any).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [policy]
+                properties:
+                  policy: { $ref: "../schemas/governance-policy.schema.json" }
+                  superseded_policy:
+                    oneOf:
+                      - { $ref: "../schemas/governance-policy.schema.json" }
+                      - type: "null"
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), TWO_ACTOR_APPROVAL_REQUIRED,
+            ROLE_ASSIGNMENT_NOT_ACTIVE, ROLE_ASSIGNMENT_SCOPE_MISMATCH, or
+            SAME_ACTOR_APPROVAL_REJECTED.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such governance_policy_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  # ==========================================================================
+  # governance-service — GovernanceDecision
+  # ==========================================================================
+  /governance-decisions:
+    post:
+      operationId: proposeGovernanceDecision
+      summary: Create a new GovernanceDecision in proposed status
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.propose_governance_decision.
+        decision_type is a discriminator (minimum: ballot_invalidation,
+        technical_challenge_adjudication, result_finality_determination,
+        mandate, oversight_directive); subject_reference's shape depends
+        on decision_type. For decision_type=result_finality_determination,
+        canon 19b.5's "no finality while any challenge remains
+        unresolved" and "exactly one current non-superseded
+        determination" rules are checked here too (in addition to the
+        authoritative check at approval time).
+      tags: [governance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  governance_decision_id,
+                  decision_type,
+                  subject_reference,
+                  proposed_by_role_id,
+                  reason_code,
+                  evidence_references,
+                ]
+              properties:
+                governance_decision_id: { type: string, format: uuid }
+                decision_type:
+                  type: string
+                  enum:
+                    [
+                      ballot_invalidation,
+                      technical_challenge_adjudication,
+                      result_finality_determination,
+                      mandate,
+                      oversight_directive,
+                    ]
+                subject_reference: { type: object }
+                proposed_by_role_id: { type: string, format: uuid }
+                reason_code: { type: string, minLength: 1 }
+                evidence_references:
+                  type: array
+                  items: { type: string, minLength: 1 }
+                supersedes_decision_id: { type: [string, "null"], format: uuid }
+      responses:
+        "201":
+          description: Governance decision proposed; governance.decision_proposed emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision]
+                properties:
+                  decision:
+                    { $ref: "../schemas/governance-decision.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), ROLE_ASSIGNMENT_NOT_ACTIVE, or
+            ROLE_ASSIGNMENT_SCOPE_MISMATCH.
+        "409":
+          description: >-
+            RESULT_FINALITY_DETERMINATION_DUPLICATE — a non-superseded
+            result_finality_determination already exists for this
+            result_publication.
+        "422":
+          description: >-
+            RESULT_FINALITY_BLOCKED_BY_OPEN_CHALLENGE — the referenced
+            result_publication still has an unresolved technical challenge.
+
+  /governance-decisions/{governanceDecisionId}/approve:
+    post:
+      operationId: approveGovernanceDecision
+      summary: proposed -> approved
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.approve_governance_decision.
+        Two-actor approval is required for every GovernanceDecision
+        approval (ADR-020 item 1), which includes ballot invalidation and
+        result-finality determination as named decision_type values. When
+        decision_type=technical_challenge_adjudication, also transitions
+        the linked TechnicalChallenge to upheld (canon 19b.4). When
+        decision_type=result_finality_determination, requires
+        finality_outcome and re-validates canon 19b.5's rules. When this
+        decision's own supersedes_decision_id was set at proposal time,
+        also emits governance.decision_superseded for the decision it
+        supersedes.
+      tags: [governance-service]
+      parameters:
+        - name: governanceDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [approved_by_role_id]
+              properties:
+                approved_by_role_id: { type: string, format: uuid }
+                finality_outcome:
+                  type: [string, "null"]
+                  enum: [final, invalidated, null]
+      responses:
+        "200":
+          description: >-
+            Governance decision approved; governance.decision_approved
+            emitted (and governance.technical_challenge_adjudicated /
+            governance.decision_superseded, as applicable).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision]
+                properties:
+                  decision:
+                    { $ref: "../schemas/governance-decision.schema.json" }
+                  superseded_decision:
+                    oneOf:
+                      - { $ref: "../schemas/governance-decision.schema.json" }
+                      - type: "null"
+                  challenge:
+                    oneOf:
+                      - { $ref: "../schemas/technical-challenge.schema.json" }
+                      - type: "null"
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), TWO_ACTOR_APPROVAL_REQUIRED,
+            ROLE_ASSIGNMENT_NOT_ACTIVE, ROLE_ASSIGNMENT_SCOPE_MISMATCH, or
+            SAME_ACTOR_APPROVAL_REJECTED.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such governance_decision_id.
+        "409":
+          description: >-
+            RESULT_FINALITY_DETERMINATION_DUPLICATE (re-validated at
+            approval time).
+        "422":
+          description: >-
+            VALIDATION_FORBIDDEN_TRANSITION (CT-00-03), or
+            RESULT_FINALITY_BLOCKED_BY_OPEN_CHALLENGE (re-validated at
+            approval time), or TECHNICAL_CHALLENGE_ALREADY_ADJUDICATED.
+
+  /governance-decisions/{governanceDecisionId}/reject:
+    post:
+      operationId: rejectGovernanceDecision
+      summary: proposed -> rejected
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.reject_governance_decision.
+        Two-actor approval is required (ADR-020 item 1: proposer and
+        rejecter must be distinct, both active and in scope). When
+        decision_type=technical_challenge_adjudication, also transitions
+        the linked TechnicalChallenge to rejected.
+      tags: [governance-service]
+      parameters:
+        - name: governanceDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [rejected_by_role_id]
+              properties:
+                rejected_by_role_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: >-
+            Governance decision rejected; governance.decision_rejected
+            emitted (and governance.technical_challenge_adjudicated, if
+            applicable).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [decision]
+                properties:
+                  decision:
+                    { $ref: "../schemas/governance-decision.schema.json" }
+                  challenge:
+                    oneOf:
+                      - { $ref: "../schemas/technical-challenge.schema.json" }
+                      - type: "null"
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), TWO_ACTOR_APPROVAL_REQUIRED,
+            ROLE_ASSIGNMENT_NOT_ACTIVE, ROLE_ASSIGNMENT_SCOPE_MISMATCH, or
+            SAME_ACTOR_APPROVAL_REJECTED.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such governance_decision_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /governance-decisions/{governanceDecisionId}:
+    get:
+      operationId: getGovernanceDecision
+      summary: Plain, unaudited read of one GovernanceDecision by id
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.get_governance_decision. Added
+        under ADR-017 as the one authorized way
+        voting-service.invalidate_ballot may read a GovernanceDecision
+        before invalidating its own Ballot (canon 19b.6) — the first
+        reverse/bidirectional cross-pack read edge in this project.
+      tags: [governance-service]
+      parameters:
+        - name: governanceDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Governance decision found.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/governance-decision.schema.json" }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such governance_decision_id.
+
+  /result-publications/{resultPublicationId}/finality-status:
+    get:
+      operationId: getFinalityStatus
+      summary: Derived FinalityStatus read model for a ResultPublication
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.get_finality_status. Never a
+        stored field of any entity (canon 19b.3/19b.6) — computed fresh
+        from TechnicalChallenge state and the current, non-superseded
+        result_finality_determination GovernanceDecision (if any) for
+        this result_publication_id. ResultPublication itself is never
+        written by this pack; this is the sole authoritative way to learn
+        a result's finality.
+      tags: [governance-service]
+      parameters:
+        - name: resultPublicationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Finality status computed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [finality_status]
+                properties:
+                  finality_status:
+                    type: string
+                    enum: [provisional, finality_blocked, final, invalidated]
+
+  # ==========================================================================
+  # governance-service — TechnicalChallenge
+  # ==========================================================================
+  /technical-challenges:
+    post:
+      operationId: submitTechnicalChallenge
+      summary: Create a new TechnicalChallenge in submitted status
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.submit_technical_challenge.
+        submitted_at (the command's own clock reading) must strictly
+        precede the referenced ResultPublication.challenge_deadline_at
+        (read via epd2_tally_service.application.get_result_publication,
+        ADR-012/017). A role_assignment-type
+        submitter_authorization_reference is validated locally (must
+        resolve to an active, in-scope RoleAssignment); a
+        participation_credential-type reference is accepted as an
+        opaque, caller-supplied proof and never dereferenced (canon
+        19b.4, mirroring PACK-04's publish_ledger_entry raw_content
+        precedent).
+      tags: [governance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  technical_challenge_id,
+                  result_publication_id,
+                  submitter_authorization_type,
+                  submitter_authorization_reference,
+                  challenge_reason_code,
+                  evidence_references,
+                ]
+              properties:
+                technical_challenge_id: { type: string, format: uuid }
+                result_publication_id: { type: string, format: uuid }
+                submitter_authorization_type:
+                  type: string
+                  enum: [participation_credential, role_assignment]
+                submitter_authorization_reference:
+                  { type: string, minLength: 1 }
+                challenge_reason_code: { type: string, minLength: 1 }
+                evidence_references:
+                  type: array
+                  items: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Technical challenge submitted; governance.technical_challenge_submitted emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [challenge]
+                properties:
+                  challenge:
+                    { $ref: "../schemas/technical-challenge.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), or
+            TECHNICAL_CHALLENGE_SUBMITTER_INELIGIBLE — submitter's
+            RoleAssignment is not active/in-scope, or does not match
+            ADR-020 item 2's eligibility criteria.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such result_publication_id.
+        "422":
+          description: TECHNICAL_CHALLENGE_WINDOW_CLOSED — the challenge deadline has passed.
+
+  /technical-challenges/{technicalChallengeId}/begin-review:
+    post:
+      operationId: beginTechnicalChallengeReview
+      summary: submitted -> under_review
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.begin_technical_challenge_review.
+        Deliberately emits no canonical event — canon section 20.15's
+        twelve-event catalog names only
+        governance.technical_challenge_submitted and
+        governance.technical_challenge_adjudicated; this transition is
+        audited (CT-00-07) but not represented as a domain event, since
+        adding a thirteenth event not in canon 0.4.0 is out of this
+        pack's scope.
+      tags: [governance-service]
+      parameters:
+        - name: technicalChallengeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Technical challenge review started; audited, no domain event.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [challenge]
+                properties:
+                  challenge:
+                    { $ref: "../schemas/technical-challenge.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such technical_challenge_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
+  /technical-challenges/{technicalChallengeId}:
+    get:
+      operationId: getTechnicalChallenge
+      summary: Plain, unaudited read of one TechnicalChallenge by id
+      description: >
+        Owned by governance-service. Maps to
+        epd2_governance_service.application.get_technical_challenge.
+      tags: [governance-service]
+      parameters:
+        - name: technicalChallengeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Technical challenge found.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/technical-challenge.schema.json" }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such technical_challenge_id.

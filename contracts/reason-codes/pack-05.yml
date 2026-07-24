@@ -1,0 +1,298 @@
+# Centralized PACK-05 reason-code registry (ADR-019).
+#
+# This is the single source of truth for every `reason_code` string
+# literal used in the one PACK-05 service's (governance-service) `src/`.
+# No PACK-05 service may use a free-text string in place of a registered
+# code (canon section 24: "reason code не заменяется свободным текстом").
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml,
+# contracts/reason-codes/pack-03.yml, and contracts/reason-codes/pack-04.yml
+# (ADR-006 Option B precedent, extended by ADR-014 and now ADR-019, Option
+# A): each pack's services have their own reason-code registry; codes that
+# multiple packs need (e.g. PERMISSION_DENIED, VALIDATION_UNKNOWN_STATUS)
+# are independently redeclared here rather than imported from an earlier
+# pack's file, so each pack's registry remains a complete, standalone
+# source of truth for its own services.
+#
+# `BALLOT_INVALIDATION_NOT_AUTHORIZED` is independently redeclared here
+# AND in contracts/reason-codes/pack-03.yml, following the same
+# already-established "reused generic code" pattern: the reason_code
+# literal is used by both governance-service's own documentation-copy
+# exception class and voting-service's real `invalidate_ballot` guard
+# (ADR-017 Option B), so `test_reason_codes_registry.py`'s per-pack scan
+# requires it registered in both packs' own registries.
+#
+# `source: canon` entries are the shared/generic canon section-24 codes
+# this pack reuses verbatim, copied from
+# docs/canonical/TZ-00-domain-event-canon.md, canon version 0.4.0 - their
+# meaning must never be changed here without a canon ADR and version bump.
+# `source: pack-05-spec` entries are the nine codes
+# `docs/handover/PACK-05-SPEC.md` section 7 originally proposed, carried
+# forward unchanged by ADR-019. `source: pack-05-adr-019` entries are the
+# four additive codes ADR-019 introduced per the owner's explicit
+# instruction (backward-compatible additions, canon section 25's "Minor"
+# category, changing no existing canon code's meaning). `source:
+# pack-05-service` entries are this service's own additive
+# duplicate-conflict and audit-success classification codes, not named by
+# ADR-019 itself but following the same additive pattern ADR-006/ADR-014
+# already established for PACK-03's and PACK-04's own services.
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+# Validated structurally and scanned for every `reason_code` literal used
+# in governance-service by `tests/contract/test_reason_codes_registry.py`.
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: An entity's status (or an equivalent closed-value field) does not match any known enum value.
+  severity: error
+  description: This value is not a recognized status.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: canon
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: An attempted status transition is not permitted from the entity's current status.
+  severity: error
+  description: This status change is not allowed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: canon
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: No record exists for the given identifier.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: canon
+- code: PERMISSION_DENIED
+  meaning: The acting party is not authorized to perform the requested action.
+  severity: error
+  description: You are not authorized to perform this action.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: canon
+- code: ROLE_ASSIGNMENT_NOT_ACTIVE
+  meaning:
+    A RoleAssignment referenced by a two-actor approval check is not currently
+    `active` (it may be `pending`, `suspended`, `expired`, or `revoked`).
+  severity: error
+  description: This role assignment is not currently active.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: ROLE_ASSIGNMENT_SCOPE_MISMATCH
+  meaning:
+    An active RoleAssignment's `scope_id` does not cover the subject scope the
+    requested action targets (and is not the GLOBAL_SCOPE_ID sentinel).
+  severity: error
+  description: This role assignment is not scoped to cover this action.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: GOVERNANCE_POLICY_VIOLATION
+  meaning:
+    An action would conflict with an active GovernancePolicy's rule_definition
+    (reserved for future rule-engine enforcement; defense-in-depth).
+  severity: error
+  description: This action violates an active governance policy.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: TWO_ACTOR_APPROVAL_REQUIRED
+  meaning: A GovernancePolicy activation, GovernanceDecision approval, ballot
+    invalidation, or result-finality determination was attempted without both
+    a distinct, active, in-scope proposer and approver RoleAssignment.
+  severity: error
+  description: This action requires approval by a second, distinct authorized actor.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: SAME_ACTOR_APPROVAL_REJECTED
+  meaning:
+    The proposer and approver (or rejecter) RoleAssignments resolve to the
+    same underlying actor_id - no role may approve, reject, seed, or grant
+    its own assignment.
+  severity: error
+  description: The same actor may not both propose and approve this action.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: TECHNICAL_CHALLENGE_WINDOW_CLOSED
+  meaning: A TechnicalChallenge was submitted at or after the referenced
+    ResultPublication's `challenge_deadline_at`.
+  severity: error
+  description: The technical challenge window for this result has closed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: TECHNICAL_CHALLENGE_ALREADY_ADJUDICATED
+  meaning:
+    A TechnicalChallenge already in a terminal status (`upheld`/`rejected`) was
+    targeted by a new adjudication attempt.
+  severity: error
+  description: This technical challenge has already been adjudicated.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: GOVERNANCE_DECISION_NOT_APPROVED
+  meaning:
+    A downstream action (e.g. voting-service.invalidate_ballot) requires an
+    `approved` GovernanceDecision but the referenced decision is `proposed` or
+    `rejected`.
+  severity: error
+  description: The referenced governance decision has not been approved.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: BALLOT_INVALIDATION_NOT_AUTHORIZED
+  meaning:
+    voting-service.invalidate_ballot was called without a currently-approved,
+    correctly-scoped ballot_invalidation GovernanceDecision (PACK-05, ADR-017
+    Option B).
+  severity: error
+  description: Ballot invalidation requires an approved, correctly scoped governance decision.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-spec
+- code: RESULT_FINALITY_BLOCKED_BY_OPEN_CHALLENGE
+  meaning:
+    A result_finality_determination GovernanceDecision was attempted for a
+    ResultPublication that still has one or more submitted/under_review
+    TechnicalChallenge records (ADR-018, D6).
+  severity: error
+  description: This result cannot be made final while a technical challenge is unresolved.
+  retryable: true
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-adr-019
+- code: RESULT_FINALITY_DETERMINATION_DUPLICATE
+  meaning:
+    A second, independent result_finality_determination decision was attempted
+    for a ResultPublication that already has an approved, non-superseded one
+    (ADR-018, D6) - a superseding decision must set `supersedes_decision_id`
+    instead.
+  severity: error
+  description: This result publication already has a current finality determination.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-adr-019
+- code: GOVERNANCE_DECISION_SUPERSEDED
+  meaning: A command attempted to act on a GovernanceDecision (e.g.
+    voting-service.invalidate_ballot's validation read) whose current status
+    is superseded - only the superseding decision, never the superseded one,
+    may authorize a downstream action.
+  severity: error
+  description: This governance decision has been superseded by a later one.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-adr-019
+- code: TECHNICAL_CHALLENGE_SUBMITTER_INELIGIBLE
+  meaning:
+    submit_technical_challenge was called by an actor whose RoleAssignment is
+    not active, not in scope for the referenced ResultPublication, or does
+    not match ADR-020 item 2's eligible-participant/authorized-observer
+    criteria.
+  severity: error
+  description: This submitter is not eligible to submit a technical challenge.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-adr-019
+- code: RESULT_FINALITY_NOT_AUTHORIZED
+  meaning: Reserved, narrowed by ADR-017 - applies only to a would-be direct
+    query/action against ResultPublication finality state that bypasses
+    governance-service.get_finality_status entirely; no tally-service command
+    currently exists for this to gate.
+  severity: error
+  description: Direct access to result finality state outside the governance read model is not authorized.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-adr-019
+- code: ROLE_ASSIGNMENT_DUPLICATE_CONFLICT
+  meaning: A repeated request_role_assignment request reused an id with different content.
+  severity: error
+  description: A role assignment with this identifier already exists with different content.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_POLICY_DUPLICATE_CONFLICT
+  meaning: A repeated propose_governance_policy request reused an id with different content.
+  severity: error
+  description: A governance policy with this identifier already exists with different content.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_DECISION_DUPLICATE_CONFLICT
+  meaning: A repeated propose_governance_decision request reused an id with different content.
+  severity: error
+  description: A governance decision with this identifier already exists with different content.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: TECHNICAL_CHALLENGE_DUPLICATE_CONFLICT
+  meaning: A repeated submit_technical_challenge request reused an id with different content.
+  severity: error
+  description: A technical challenge with this identifier already exists with different content.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_BOOTSTRAP_ALREADY_EXECUTED
+  meaning: The deployment-time bootstrap seed command was invoked after it had
+    already run successfully once - the seed is permanently disabled after
+    its first successful execution.
+  severity: error
+  description: The bootstrap seed has already been executed and cannot run again.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_ROLE_ASSIGNMENT_STATUS_CHANGED
+  meaning: AuditEvent.reason_code classification for a RoleAssignment status transition that reaches a canonical event.
+  severity: info
+  description: A role assignment's status was changed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_POLICY_STATUS_CHANGED
+  meaning: AuditEvent.reason_code classification for a GovernancePolicy status transition that reaches a canonical event.
+  severity: info
+  description: A governance policy's status was changed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: GOVERNANCE_DECISION_STATUS_CHANGED
+  meaning: AuditEvent.reason_code classification for a GovernanceDecision status transition (proposed/approved/rejected) that reaches a canonical event.
+  severity: info
+  description: A governance decision's status was changed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service
+- code: TECHNICAL_CHALLENGE_STATUS_CHANGED
+  meaning: AuditEvent.reason_code classification for a TechnicalChallenge status transition that reaches a canonical event (or the audited-but-eventless submitted -> under_review transition).
+  severity: info
+  description: A technical challenge's status was changed.
+  retryable: false
+  owner: Governance Context (governance-service)
+  introduced_in_version: 0.5.0
+  source: pack-05-service

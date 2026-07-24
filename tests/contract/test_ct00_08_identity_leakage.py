@@ -28,6 +28,7 @@ from _schema_helpers import (
     OPENAPI_PATH,
     PACK03_OPENAPI_PATH,
     PACK04_OPENAPI_PATH,
+    PACK05_OPENAPI_PATH,
     load_event_schema,
     load_schema,
     to_jsonable,
@@ -46,6 +47,8 @@ from epd2_credential_service.domain import FORBIDDEN_FIELD_NAMES, CredentialType
 from epd2_credential_service.events import credential_full_state_payload
 from epd2_credential_service.storage import InMemoryCredentialStore
 from epd2_delegation_service.domain import FORBIDDEN_FIELD_NAMES as DELEGATION_FORBIDDEN
+from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
+from epd2_governance_service.storage import InMemoryRoleAssignmentStore
 from epd2_initiative_service.domain import FORBIDDEN_FIELD_NAMES as SUPPORT_FORBIDDEN
 from epd2_tally_service.domain import FORBIDDEN_FIELD_NAMES as TALLY_FORBIDDEN
 from epd2_transparency_service.domain import FORBIDDEN_FIELD_NAMES as TRANSPARENCY_FORBIDDEN
@@ -624,5 +627,164 @@ def test_openapi_transparency_responses_do_not_reference_structurally_forbidden_
     leaked = declared & TRANSPARENCY_STRUCTURAL_FORBIDDEN
     assert leaked == set(), (
         f"transparency-service OpenAPI paths/schemas declare structurally forbidden "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-05: governance-service (ADR-016/ADR-018/ADR-020). Two distinct
+# forbidden-field sets, mirroring the PACK-04 split above:
+#
+# - `GOVERNANCE_STRUCTURAL_FORBIDDEN` must never appear ANYWHERE, including
+#   this pack's own *stored* entity schemas - canon 19b.3's explicit rule
+#   that a `GovernanceDecision.subject_reference` must never reference a
+#   `VoteEnvelope` directly (no reverse vote-linkability path), plus the
+#   three identity-domain fields this pack has no legitimate reason to
+#   ever declare (it never touches identity/account storage at all).
+# - `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN` are fields that ARE legitimate on
+#   the *stored* domain objects (`actor_id`, `assigned_by`, the three
+#   `*_role_id` fields, `submitter_authorization_reference`) but must never
+#   appear in a *public* event payload (canon 19b.1/19b.3/19b.4) - checked
+#   against the four event payload schemas and a real end-to-end command
+#   call, never against the stored entity schemas themselves.
+# =============================================================================
+
+GOVERNANCE_STRUCTURAL_FORBIDDEN = frozenset(
+    {"vote_envelope_id", "identity_record_id", "person_id", "account_id"}
+)
+
+GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN = frozenset(
+    {
+        "actor_id",
+        "assigned_by",
+        "proposed_by_role_id",
+        "approved_by_role_id",
+        "rejected_by_role_id",
+        "submitter_authorization_reference",
+    }
+)
+
+
+@pytest.mark.parametrize(
+    "schema_name",
+    [
+        "role-assignment.schema.json",
+        "governance-policy.schema.json",
+        "governance-decision.schema.json",
+        "technical-challenge.schema.json",
+    ],
+)
+def test_governance_entity_schema_forbids_structural_fields(schema_name: str) -> None:
+    schema = load_schema(schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in GOVERNANCE_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{schema_name} must never declare {forbidden!r}"
+        )
+
+
+@pytest.mark.parametrize(
+    "event_schema_name",
+    [
+        "governance-role-assignment-payload.v1.schema.json",
+        "governance-policy-payload.v1.schema.json",
+        "governance-decision-payload.v1.schema.json",
+        "governance-technical-challenge-payload.v1.schema.json",
+    ],
+)
+def test_governance_event_payload_schemas_forbid_all_forbidden_fields(
+    event_schema_name: str,
+) -> None:
+    """Unlike the stored entity schemas above, an event *payload* schema
+    must never declare ANY of `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN` -
+    including the `*_role_id`/`actor_id`/`assigned_by`/
+    `submitter_authorization_reference` fields, which are never published
+    verbatim (canon 19b.1/19b.3/19b.4)."""
+    schema = load_event_schema(event_schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{event_schema_name} must never declare {forbidden!r}"
+        )
+
+
+def test_role_assignment_requested_event_has_no_actor_id_or_assigned_by() -> None:
+    """End-to-end proof (not just schema-level): a real
+    `request_role_assignment` call's emitted event payload never contains
+    `actor_id` or `assigned_by`, even though the stored `RoleAssignment`
+    domain object retains both."""
+    from epd2_core.clock import FixedClock as _Clock
+    from epd2_governance_service.application import request_role_assignment
+
+    clock = _Clock(datetime(2026, 1, 5, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="service")
+    audit_store = InMemoryAuditEventStore()
+    role_store = InMemoryRoleAssignmentStore()
+
+    granter_actor_id = uuid4()
+    granter = role_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=granter_actor_id,
+            role_code="governance_policy_approver",
+            scope_id=uuid4(),
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    new_actor_id = uuid4()
+    result = request_role_assignment(
+        role_store,
+        audit_store,
+        role_assignment_id=uuid4(),
+        actor_id=new_actor_id,
+        role_code="observer",
+        scope_id=uuid4(),
+        valid_from=clock.now(),
+        valid_until=None,
+        granter_role_assignment_id=granter.role_assignment_id,
+        approval_reference=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "actor_id" not in payload_json
+    assert "assigned_by" not in payload_json
+    assert str(new_actor_id) not in json.dumps(payload_json)
+    assert str(granter.role_assignment_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain both (they are real fields).
+    assert result.assignment.actor_id == new_actor_id
+    assert result.assignment.assigned_by == granter.role_assignment_id
+
+
+def _pack05_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK05_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_governance_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack05_spec()
+    governance_paths = _credential_service_paths(spec, service_tag="governance-service")
+    assert governance_paths, "expected at least one governance-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(governance_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(governance_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & GOVERNANCE_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"governance-service OpenAPI paths/schemas declare structurally forbidden "
         f"field(s) as an actual property: {sorted(leaked)}"
     )

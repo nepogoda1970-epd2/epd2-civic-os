@@ -9,6 +9,7 @@ dependencies = [
     "epd2-audit-core",
     "epd2-credential-service",
     "epd2-eligibility-service",
+    "epd2-governance-service",
 ]
 
 [build-system]

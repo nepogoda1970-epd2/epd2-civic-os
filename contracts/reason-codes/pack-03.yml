@@ -709,3 +709,16 @@
   owner: delegation-service
   introduced_in_version: pack-03-0.1.0
   source: pack-03-adr-006
+- code: BALLOT_INVALIDATION_NOT_AUTHORIZED
+  meaning:
+    voting-service.invalidate_ballot was called without a currently-approved,
+    correctly-scoped ballot_invalidation GovernanceDecision (PACK-05, ADR-017
+    Option B) - the caller supplied a governance_decision_id that does not
+    resolve to an approved, non-superseded decision whose subject_reference
+    names this exact ballot_id.
+  severity: error
+  description: Ballot invalidation requires an approved, correctly scoped governance decision.
+  retryable: false
+  owner: voting-service
+  introduced_in_version: pack-03-0.2.0
+  source: pack-05-adr-017

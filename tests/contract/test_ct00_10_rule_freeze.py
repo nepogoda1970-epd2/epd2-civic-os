@@ -37,6 +37,23 @@ from epd2_eligibility_service.storage import (
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
 )
+from epd2_governance_service.application import (
+    approve_governance_decision,
+    propose_governance_decision,
+    reject_governance_decision,
+)
+from epd2_governance_service.domain import (
+    GLOBAL_SCOPE_ID,
+    GovernanceDecisionType,
+    RoleAssignment,
+    RoleAssignmentStatus,
+)
+from epd2_governance_service.exceptions import ForbiddenGovernanceDecisionTransitionError
+from epd2_governance_service.storage import (
+    InMemoryGovernanceDecisionStore,
+    InMemoryRoleAssignmentStore,
+    InMemoryTechnicalChallengeStore,
+)
 from epd2_voting_service.application import create_ballot, submit_ballot_for_configuration_review
 from epd2_voting_service.domain import BallotMethod
 from epd2_voting_service.exceptions import BallotConfigurationLockedError
@@ -320,6 +337,96 @@ def test_delegation_snapshot_resubmission_with_different_content_is_frozen(
             scope_type="ballot",
             scope_id=scope_id,
             direct_voters=frozenset(),
+            actor=actor,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+
+
+# =============================================================================
+# PACK-05: `GovernanceDecision` (governance-service, canon 19b.3) - the
+# "freeze after commitment" invariant applied to this pack's own entity: a
+# `GovernanceDecision` is immutable once `approved` or `rejected` - no
+# further transition of the SAME row is ever allowed (a correction is
+# always a brand-new decision with `supersedes_decision_id` set, never a
+# further status change of this one).
+# =============================================================================
+
+
+def test_approved_governance_decision_cannot_then_be_rejected(
+    governance_decision_store: InMemoryGovernanceDecisionStore,
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    technical_challenge_store: InMemoryTechnicalChallengeStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    proposer = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="ballot_invalidation_proposer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    approver = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="ballot_invalidation_approver",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    ballot_id = uuid4()
+    decision = propose_governance_decision(
+        governance_decision_store,
+        role_assignment_store,
+        technical_challenge_store,
+        audit_store,
+        governance_decision_id=uuid4(),
+        decision_type=GovernanceDecisionType.BALLOT_INVALIDATION,
+        subject_reference={"ballot_id": str(ballot_id)},
+        proposed_by_role_id=proposer.role_assignment_id,
+        reason_code="X",
+        evidence_references=(),
+        supersedes_decision_id=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    ).decision
+    approve_governance_decision(
+        governance_decision_store,
+        role_assignment_store,
+        technical_challenge_store,
+        audit_store,
+        governance_decision_id=decision.governance_decision_id,
+        approved_by_role_id=approver.role_assignment_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    with pytest.raises(ForbiddenGovernanceDecisionTransitionError):
+        reject_governance_decision(
+            governance_decision_store,
+            role_assignment_store,
+            technical_challenge_store,
+            audit_store,
+            governance_decision_id=decision.governance_decision_id,
+            rejected_by_role_id=approver.role_assignment_id,
             actor=actor,
             actor_is_authorized=True,
             correlation_id=uuid4(),

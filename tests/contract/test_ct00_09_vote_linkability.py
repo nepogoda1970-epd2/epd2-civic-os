@@ -451,3 +451,98 @@ def test_voting_service_never_imports_account_or_identity_service() -> None:
                 continue
             leaked = names & forbidden_modules
             assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+
+
+# =============================================================================
+# PACK-05 (governance-service): canon 19b.1's own explicit prohibition -
+# "no RoleAssignment (any role_code) may decrypt/retrieve/link a secret
+# vote" - and canon 19b.3's structural rule that a `GovernanceDecision.
+# subject_reference` must never reference a `VoteEnvelope` directly (no
+# reverse vote-linkability path, required scope item 11). Mirrors the
+# PACK-04 section above: (1) a real, direct construction attempt proves
+# `vote_envelope_id` is rejected structurally, and (2) an AST-based import
+# scan confirms governance-service never imports
+# `epd2_voting_service.domain`/`epd2_tally_service.domain` (only their
+# `.application` modules, per ADR-017), and never imports
+# `epd2_delegation_service`, `epd2_account_service`, or
+# `epd2_identity_service` at all.
+# =============================================================================
+
+
+def test_governance_decision_subject_reference_rejects_vote_envelope_id() -> None:
+    """`GovernanceDecision.subject_reference` must never reference a
+    `VoteEnvelope` directly (canon 19b.3) - checked here at the
+    cross-pack CT-00-09 level, complementing governance-service's own
+    `tests/test_domain.py` unit coverage of the same invariant."""
+    from datetime import UTC, datetime
+
+    import pytest
+
+    from epd2_governance_service.domain import GovernanceDecision, GovernanceDecisionStatus
+    from epd2_governance_service.domain import GovernanceDecisionType as _DecisionType
+
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    with pytest.raises(ValueError, match="VoteEnvelope"):
+        GovernanceDecision(
+            governance_decision_id=uuid4(),
+            decision_type=_DecisionType.BALLOT_INVALIDATION,
+            subject_reference={"vote_envelope_id": str(uuid4())},
+            proposed_by_role_id=uuid4(),
+            approved_by_role_id=None,
+            rejected_by_role_id=None,
+            reason_code="X",
+            evidence_references=(),
+            finality_outcome=None,
+            created_at=now,
+            decided_at=None,
+            supersedes_decision_id=None,
+            status=GovernanceDecisionStatus.PROPOSED,
+        )
+
+
+def test_governance_service_never_imports_delegation_account_or_identity_service() -> None:
+    """AST-based import-boundary check (mirroring
+    `test_transparency_service_never_imports_delegation_or_voting_domain`
+    above): no module in `epd2_governance_service` ever imports
+    `epd2_delegation_service`, `epd2_account_service`, or
+    `epd2_identity_service` at all - this pack has no dependency on any of
+    the three (no reverse vote-linkability path; no PACK-05 access to
+    identity/account storage, required scope item 11)."""
+    import epd2_governance_service
+
+    package_dir = Path(inspect.getfile(epd2_governance_service)).parent
+    forbidden_modules = {"epd2_delegation_service", "epd2_account_service", "epd2_identity_service"}
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {node.module.split(".")[0]} if node.module else set()
+            else:
+                continue
+            leaked = names & forbidden_modules
+            assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+
+
+def test_governance_service_never_imports_voting_or_tally_domain_directly() -> None:
+    """AST-based import-boundary check: no module in
+    `epd2_governance_service` imports `epd2_voting_service.domain` or
+    `epd2_tally_service.domain` directly (the modules that actually carry
+    `VoteEnvelope`/`Tally`/`ResultPublication` internals) - ADR-017's one
+    sanctioned pair of upstream imports is
+    `epd2_voting_service.application`/`epd2_tally_service.application`
+    only (see `tests/repository/test_service_boundaries.py` for the full
+    AST-based enforcement of this boundary)."""
+    import epd2_governance_service
+
+    package_dir = Path(inspect.getfile(epd2_governance_service)).parent
+    forbidden_full_names = {"epd2_voting_service.domain", "epd2_tally_service.domain"}
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                assert node.module not in forbidden_full_names, (
+                    f"{py_file} imports {node.module!r} directly - only the "
+                    f"matching .application module is ADR-017-sanctioned"
+                )

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governance-technical-challenge-payload.v1.schema.json",
+  "title": "governance.technical_challenge_* event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.15. Produced by epd2_governance_service.events.technical_challenge_public_payload, shared verbatim by two distinct event_type builders: build_technical_challenge_submitted_event (governance.technical_challenge_submitted), build_technical_challenge_adjudicated_event (governance.technical_challenge_adjudicated) - verified by reading events.py, both call the shared payload function and differ only in event_type. Deliberately omits submitter_authorization_reference entirely in every case (canon 19b.4: never published in original form; no generalized-label substitute field exists in this pack's scope). The submitted -> under_review transition has no corresponding canonical event and therefore no payload schema here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "technical_challenge_id",
+    "result_publication_id",
+    "submitter_authorization_type",
+    "challenge_reason_code",
+    "evidence_references",
+    "submitted_at",
+    "governance_decision_id",
+    "status"
+  ],
+  "properties": {
+    "technical_challenge_id": { "type": "string", "format": "uuid" },
+    "result_publication_id": { "type": "string", "format": "uuid" },
+    "submitter_authorization_type": {
+      "type": "string",
+      "enum": ["participation_credential", "role_assignment"]
+    },
+    "challenge_reason_code": { "type": "string", "minLength": 1 },
+    "evidence_references": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "governance_decision_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["submitted", "under_review", "upheld", "rejected"]
+    }
+  }
+}

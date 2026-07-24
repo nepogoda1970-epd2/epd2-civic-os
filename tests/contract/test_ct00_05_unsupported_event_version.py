@@ -18,6 +18,8 @@ from epd2_credential_service.events import SUPPORTED_MAJOR_VERSIONS as CREDENTIA
 from epd2_delegation_service.events import SUPPORTED_MAJOR_VERSIONS as DELEGATION_MAJORS
 from epd2_deliberation_service.events import SUPPORTED_MAJOR_VERSIONS as DELIBERATION_MAJORS
 from epd2_eligibility_service.events import SUPPORTED_MAJOR_VERSIONS as ELIGIBILITY_MAJORS
+from epd2_governance_service.events import SUPPORTED_MAJOR_VERSIONS as GOVERNANCE_MAJORS
+from epd2_governance_service.storage import InMemoryRoleAssignmentStore
 from epd2_identity_service.events import SUPPORTED_MAJOR_VERSIONS as IDENTITY_MAJORS
 from epd2_initiative_service.events import SUPPORTED_MAJOR_VERSIONS as INITIATIVE_MAJORS
 from epd2_moderation_service.events import SUPPORTED_MAJOR_VERSIONS as MODERATION_MAJORS
@@ -38,6 +40,7 @@ from epd2_voting_service.storage import InMemoryBallotStore
         MODERATION_MAJORS,
         TALLY_MAJORS,
         VOTING_MAJORS,
+        GOVERNANCE_MAJORS,
         frozenset({1}),
     ],
 )
@@ -103,6 +106,62 @@ def test_real_pack03_ballot_opened_envelope_rejects_an_unsupported_major_version
 
     # Accepted against the real, matching major version set.
     assert_supported_major_version(envelope.event_version, VOTING_MAJORS)
+
+    # Rejected against a frozenset that deliberately excludes it.
+    with pytest.raises(UnsupportedEventVersionError):
+        assert_supported_major_version(envelope.event_version, frozenset({99}))
+
+
+def test_real_pack05_role_assignment_requested_envelope_rejects_an_unsupported_major_version(
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Exercises `assert_supported_major_version` against a real PACK-05
+    event envelope's own `event_version` (a `governance.
+    role_assignment_requested` envelope, governance-service) - mirrors
+    `test_real_pack03_ballot_opened_envelope_rejects_an_unsupported_major_version`
+    above, but for the one PACK-05 service."""
+    from uuid import uuid4
+
+    from epd2_governance_service.application import request_role_assignment
+    from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
+
+    granter = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="governance_policy_approver",
+            scope_id=uuid4(),
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    result = request_role_assignment(
+        role_assignment_store,
+        audit_store,
+        role_assignment_id=uuid4(),
+        actor_id=uuid4(),
+        role_code="observer",
+        scope_id=uuid4(),
+        valid_from=clock.now(),
+        valid_until=None,
+        granter_role_assignment_id=granter.role_assignment_id,
+        approval_reference=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    envelope = result.event
+    assert envelope is not None
+
+    # Accepted against the real, matching major version set.
+    assert_supported_major_version(envelope.event_version, GOVERNANCE_MAJORS)
 
     # Rejected against a frozenset that deliberately excludes it.
     with pytest.raises(UnsupportedEventVersionError):

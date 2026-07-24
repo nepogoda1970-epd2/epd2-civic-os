@@ -1,7 +1,7 @@
 # EPD² CIVIC OS
 ## ТЗ-00. Каноническая модель домена и событий
 
-**Версия:** 0.3.0  
+**Версия:** 0.4.0  
 **Статус:** working canon  
 **Владелец документа:** EPD Plattform e.V.  
 **Назначение:** единая обязательная спецификация для всех разработчиков и модулей EPD²  
@@ -1662,6 +1662,422 @@ Emergency/Crisis Override (раздел 19) также не входит в на
 
 ---
 
+# 19b. Governance (Governance Context)
+
+Добавлено версией канона 0.4.0 (ADR-018, ADR-020, приняты 2026-07-23) и
+реализует сущности контекста 5.12 (Governance Context). Раздел вставлен
+под номером 19b, между разделами 19a (Transparency Context) и 20
+(Канонический каталог событий), чтобы не переносить нумерацию уже
+существующих разделов 20–30, на которые ссылаются ранее принятые ADR и
+отчёты — тот же приём, использованный при добавлении раздела 19a
+(ADR-013, версия 0.3.0).
+
+`RoleAssignment` (8.4) уже полностью определена канонически; настоящий
+раздел не изменяет её поля, идентификатор, статусы или владельца, а
+только интегрирует её как центральную сущность полномочий, на которой
+строятся три новые сущности ниже. `GovernancePolicy`, `GovernanceDecision`
+и `TechnicalChallenge` физически реализуются вместе с `RoleAssignment`
+одним сервисом, `governance-service` (ADR-016). Transparency Context
+(19a), ИИ-обработка (раздел 17) и Emergency/Crisis Override (раздел 19)
+не входят в настоящий раздел и не расширяются им — подробности
+разделения приведены в 19b.7.
+
+## 19b.1. RoleAssignment — интеграция и уточнение AdministratorRole
+
+`RoleAssignment` (8.4) не получает новых полей настоящим разделом; поля
+(`role_assignment_id`, `actor_id`, `role_code`, `scope_id`, `valid_from`,
+`valid_until`, `assigned_by`, `approval_reference`), статусы (`pending`,
+`active`, `suspended`, `expired`, `revoked`) и владелец ("Permission /
+Role Service", раздел 22) остаются без изменений. Каждая ссылка вида
+`proposed_by_role_id`, `approved_by_role_id`, `rejected_by_role_id` во
+всех трёх новых сущностях ниже — ссылка на
+`RoleAssignment.role_assignment_id`.
+
+Закрытый перечень допустимых значений `RoleAssignment.role_code` для
+пилотной версии Governance Context (ADR-020, §5):
+`governance_policy_proposer`, `governance_policy_approver`,
+`governance_reviewer`, `technical_challenge_reviewer`,
+`ballot_invalidation_proposer`, `ballot_invalidation_approver`,
+`oversight_reviewer`, `observer`. Этот перечень — содержимое первой
+версии `GovernancePolicy` (`policy_type = "role_taxonomy"`, 19b.2), а не
+самостоятельное канонически зафиксированное значение — `role_code`
+остаётся открытой строкой на уровне канона (8.4), как и прежде.
+
+**Уточнение `AdministratorRole` (раздел 23):** `AdministratorRole`, ранее
+упоминавшаяся только в разделе 23 без собственного определения, **не
+является отдельной канонической сущностью**. Она обозначает концепцию
+`RoleAssignment.role_code` (предлагаемое буквальное значение, если оно
+будет введено репозиторной таксономией: `"administrator"`) — обычную
+`RoleAssignment`, ограниченную по scope как любая другая, а не
+структурно отдельную сущность со своими полями или строкой владения.
+Соответствующая запись раздела 23 переформулирована и обобщена за
+пределы одного буквального имени роли: **ни одна `RoleAssignment`,
+независимо от значения `role_code`, не вправе расшифровывать, получать
+или связывать тайный голос** (см. раздел 23). Это не ограничение новой
+возможности — уже сегодня ни один код в репозитории не расшифровывает и
+не связывает `VoteEnvelope` с личностью (структурные гарантии
+CT-00-08/09 это уже обеспечивают); правило лишь делает запрет явным и
+именованным для любой Governance-роли, которую вводит настоящий раздел,
+закрывая возможность прочитать будущую "administrator"- или
+"governance"-подобную роль как неявное исключение из CT-00-09.
+
+## 19b.2. GovernancePolicy
+
+Реализует часть 5.12 "политика полномочий; версии правил" —
+версионируемая, активируемая политика полномочий, аналог
+`DisclosurePolicy` (19a.3) для Governance Context.
+
+### Поля
+
+- `governance_policy_id` — UUID.
+- `policy_type` — enum: `role_taxonomy`, `approval_rule`,
+  `challenge_rule`, `oversight_rule` — категория политики полномочий,
+  которую версионирует данная запись.
+- `rule_definition` — JSON-объект, версионируемое содержимое политики
+  (например, для `policy_type = "role_taxonomy"` — закрытый набор
+  допустимых значений `role_code` и правило, какая роль вправе выдавать
+  какую другую роль, согласно ADR-020, §5).
+- `effective_from` — timestamp.
+- `proposed_by_role_id` — UUID, ссылка на `RoleAssignment` — актор,
+  предложивший данную версию.
+- `approved_by_role_id` — UUID, **не nullable**: любая версия
+  `GovernancePolicy` требует явного, утверждённого двумя акторами
+  перехода в `active` (INV-08; тот же приём, что и
+  `DisclosurePolicy.approved_by_role_id`, 19a.3). `approved_by_role_id`
+  должен отличаться от `proposed_by_role_id` — проверяется в момент
+  активации, а не только документируется.
+- `version` — целое число, монотонно возрастающее в пределах одного
+  `policy_type`.
+- `status` — enum: `draft`, `active`, `superseded`.
+
+### Статусы и переходы
+
+`draft → active` (требует заполненного `approved_by_role_id`, отличного
+от `proposed_by_role_id`); `active → superseded` (только когда для того
+же `policy_type` активируется новая версия — не более одной активной
+версии на `policy_type` одновременно, тот же принцип, что и у
+`DisclosurePolicy`). Возврат к `draft` невозможен.
+
+### Запрещённые связи
+
+- `GovernancePolicy → RoleAssignment.actor_id` в любом публично
+  доступном представлении — запрещено (внутренние данные полномочий, та
+  же категория ограничения, что и у `DisclosurePolicy.approved_by_role_id`,
+  19a.3).
+
+### Владелец
+
+Governance Policy Service (раздел 22).
+
+## 19b.3. GovernanceDecision
+
+Реализует часть 5.12 "review procedures", а также "governance decisions
+and mandates", "ballot invalidation authorization" и "oversight and
+review workflows". Одна сущность с дискриминатором `decision_type` —
+тот же приём консолидации, что и у `PublicLedgerEntry.subject_type`
+(19a.1).
+
+### Поля
+
+- `governance_decision_id` — UUID.
+- `decision_type` — enum, **обязан включать не менее**:
+  `ballot_invalidation`, `technical_challenge_adjudication`,
+  `result_finality_determination`, `mandate`, `oversight_directive`.
+- `subject_reference` — JSON-объект, идентифицирующий предмет решения,
+  форма которого зависит от `decision_type`:
+  - `ballot_invalidation` → `{"ballot_id": <UUID>}`;
+  - `technical_challenge_adjudication` → `{"technical_challenge_id":
+<UUID>}`;
+  - `result_finality_determination` → `{"result_publication_id":
+<UUID>}`;
+  - `mandate` / `oversight_directive` → произвольная форма, ограниченная
+    предметом мандата/директивы (например, `RoleAssignment.scope_id`,
+    `ModerationCase.moderation_case_id`) — конкретный допустимый набор
+    форм для этих двух типов фиксируется отдельной реализационной
+    задачей, а не настоящим разделом, поскольку ни один из них не
+    порождает межпакетную запись (19b.6).
+- `proposed_by_role_id` — UUID, ссылка на `RoleAssignment`.
+- `approved_by_role_id` — nullable UUID, обязателен и должен отличаться
+  от `proposed_by_role_id` до перехода `status` в `approved` (INV-08).
+- `rejected_by_role_id` — nullable UUID, заполняется только при переходе
+  `status` в `rejected`; также должен отличаться от
+  `proposed_by_role_id`.
+- `reason_code` — строка, из `contracts/reason-codes/pack-05.yml` либо
+  переиспользуемого общего набора (раздел 24).
+- `evidence_references` — список строк, произвольные ссылки на
+  подтверждающие материалы (аналогично
+  `EmergencyAction.evidence_references`, 19.1).
+- `finality_outcome` — **nullable** enum, **имеет смысл только при
+  `decision_type = "result_finality_determination"`** и **содержит
+  только сохранённые, утверждённые значения: `final`, `invalidated`**.
+  Именно это поле — а не какое-либо поле `ResultPublication` (15.6) —
+  является местом, где хранится состояние окончательности результата; оно
+  заполняется ровно один раз, когда решение с `decision_type =
+"result_finality_determination"` переходит в `approved` (никогда
+  раньше, никогда для `rejected` или ещё `proposed` записи). См.
+  подраздел "FinalityStatus (производная модель чтения)" ниже для
+  отдельного, производного четырёхзначного представления, в которое
+  агрегируются эти два сохранённых значения.
+- `created_at` — timestamp.
+- `decided_at` — nullable timestamp, заполняется при переходе `status` в
+  `approved` или `rejected`.
+- `supersedes_decision_id` — nullable UUID. Любая `GovernanceDecision`
+  неизменяема после перехода в `approved` или `rejected`. Исправление
+  или отмена — никогда не редактирование существующей записи, а всегда
+  **новая** запись `GovernanceDecision` с заполненным
+  `supersedes_decision_id`, указывающим на заменяемое решение. Факт «это
+  решение заменено» — производный, вычисляемый на момент чтения, тем же
+  способом, что и `PublicLedgerEntry.supersedes_entry_id` (19a.1);
+  никогда не записывается обратно в исходную запись и никогда не
+  представляется отдельным хранимым значением статуса (см. `status`
+  ниже).
+- `status` — enum: `proposed`, `approved`, `rejected`. **`superseded` не
+  является хранимым значением.**
+
+### Статусы и переходы
+
+`proposed → approved` (требует `approved_by_role_id`, отличного от
+`proposed_by_role_id`); `proposed → rejected` (требует
+`rejected_by_role_id`, отличного от `proposed_by_role_id`). **Перехода в
+какое-либо значение `superseded` не существует, поскольку такого
+хранимого значения не существует.** После перехода записи в `approved`
+или `rejected` поле `status` никогда более не изменяется никакой
+командой — факт «решение заменено» устанавливается исключительно
+производной проверкой на момент чтения (существует ли другая
+`GovernanceDecision` с `supersedes_decision_id`, равным идентификатору
+данной записи) — тот же принцип «производный факт, не хранимое
+значение», что и у `PublicLedgerEntry` (19a.1). Возврат к `proposed`
+невозможен.
+
+**Неизменяемость:** после перехода `GovernanceDecision` в `approved` или
+`rejected` ни одно поле этой записи — включая `finality_outcome`,
+`evidence_references` или `reason_code` — не может быть переписано
+никакой последующей командой. Изменение позиции, новое обстоятельство
+или исправление ошибочного решения представляется **исключительно**
+новой `GovernanceDecision` с заполненным `supersedes_decision_id`, а не
+обновлением исходной записи.
+
+### FinalityStatus (производная модель чтения)
+
+Не поле канонической сущности — тип модели чтения (query/read-model),
+возвращаемый функцией `get_finality_status(result_publication_id)`
+governance-сервиса (19b.6). Четыре значения:
+
+- `provisional` — **только производное.** Для данной `ResultPublication`
+  ещё не существует ни одной `result_finality_determination`
+  `GovernanceDecision` (утверждённой или иной), и ни одна
+  `TechnicalChallenge` против неё в данный момент не остаётся
+  нерассмотренной.
+- `finality_blocked` — **только производное.** Одна или более
+  `TechnicalChallenge` против данной `ResultPublication` остаются в
+  статусе `submitted` или `under_review` (19b.5) — определение
+  окончательности структурно запрещено, пока это условие сохраняется.
+- `final` — **отражает хранимое значение.** Последняя, не заменённая,
+  `approved`-запись `result_finality_determination` `GovernanceDecision`
+  для данной `ResultPublication` имеет `finality_outcome = "final"`.
+- `invalidated` — **отражает хранимое значение.** Симметрично `final`,
+  для `finality_outcome = "invalidated"`.
+
+`provisional` и `finality_blocked` **никогда не записываются** как
+значение `GovernanceDecision.finality_outcome` — они существуют
+исключительно как результат запроса `get_finality_status`, вычисляемый
+заново при каждом обращении из статусов `TechnicalChallenge` и
+наличия/отсутствия утверждённого, не заменённого решения
+`result_finality_determination`. `final`/`invalidated` — **единственные**
+два значения, которые может принимать само поле `finality_outcome`;
+`FinalityStatus` лишь передаёт их без изменения, когда хранимое решение
+существует. Это разделение — одно хранимое двузначное поле плюс
+отдельный производный четырёхзначный тип модели чтения — обязательно к
+реализации как два различных определения типа в схемах и коде, никогда
+как один общий четырёхзначный enum, используемый непоследовательно в
+обоих местах.
+
+### Запрещённые связи
+
+- `GovernanceDecision → RoleAssignment.actor_id` в любом публично
+  доступном представлении — запрещено.
+- `GovernanceDecision.subject_reference → VoteEnvelope` — запрещено; ни
+  один `decision_type` не вправе ссылаться на отдельный `VoteEnvelope`,
+  только на агрегатные идентификаторы `ResultPublication`/`Ballot`.
+- `GovernanceDecision → расшифровка, получение или связывание тайного
+голоса` — повторяет обобщённый запрет 19b.1 применительно к данной
+  сущности: ни одна `GovernanceDecision`, независимо от `decision_type`
+  или того, какая `RoleAssignment` её предложила/утвердила, не вправе
+  санкционировать расшифровку, получение или связывание тайного голоса.
+
+### Владелец
+
+Governance Decision Service (раздел 22).
+
+## 19b.4. TechnicalChallenge
+
+Реализует механизм регистрации и рассмотрения технического возражения
+против `ResultPublication` (15.6) до наступления её
+`challenge_deadline_at`, упомянутый в 15.6 как требующий отдельного
+канонического либо утверждённого механизма. Адъюдикация технического
+возражения структурно отделена от `GovernanceDecision`, которая по нему
+выносится (19b.3, `decision_type = "technical_challenge_adjudication"`)
+— тот же приём разделения, что и у `ModerationCase`/`ModerationDecision`
+(раздел 14).
+
+### Поля
+
+- `technical_challenge_id` — UUID.
+- `result_publication_id` — UUID, оспариваемая `ResultPublication`
+  (15.6).
+- `submitter_authorization_type` — enum: `participation_credential`,
+  `role_assignment`.
+- `submitter_authorization_reference` — непрозрачная, ограниченная в
+  доступе ссылка на применимое доказательство полномочия подачи; никогда
+  не разбирается, не разрешается и не разыменовывается никаким
+  публично-ориентированным кодом. Форма зависит от
+  `submitter_authorization_type`:
+  - `participation_credential` — допущенный участник подаёт возражение
+    через действительный, привязанный к конкретному Ballot
+    `ParticipationCredential` (10.1); ссылка — непрозрачное значение
+    вида credential-commitment, никогда не само секретное содержимое
+    credential и не разрешаемый указатель на `Account`/`IdentityRecord`
+    участника.
+  - `role_assignment` — уполномоченный наблюдатель/рецензент подаёт
+    возражение через активную, входящую в scope `RoleAssignment`; ссылка
+    — идентификатор этой `RoleAssignment`.
+
+  Ни `Account`, ни `IdentityRecord`, ни персональный идентификатор, ни
+  секретное содержимое credential, ни `actor_id`, ни UUID
+  `RoleAssignment` не могут появляться в публичном выводе; необработанная
+  ссылка на полномочие остаётся ограниченной в доступе; рецензенты
+  возражения не получают обратного пути от `ParticipationCredential` к
+  личности участника.
+
+  **Граница проверки:** `governance-service` проверяет ссылку типа
+  `role_assignment` локально (`RoleAssignment` — его собственная
+  сущность, проверка активности/scope — локальный запрос, межпакетное
+  чтение не требуется). Ссылка типа `participation_credential` не
+  проверяется повторно у `credential-service`/`eligibility-service` —
+  настоящий раздел не вводит нового межпакетного чтения; ссылка
+  принимается как предоставленное вызывающей стороной, структурно
+  непрозрачное доказательство (тот же принцип, что и у
+  caller-supplied `raw_content` в `publish_ledger_entry`, 19a).
+- `challenge_reason_code` — строка, из `contracts/reason-codes/pack-05.yml`.
+- `evidence_references` — список строк.
+- `submitted_at` — timestamp. Должен строго предшествовать
+  `ResultPublication.challenge_deadline_at` (15.6) оспариваемой записи —
+  проверяется в момент подачи.
+- `governance_decision_id` — nullable UUID, заполняется при вынесении
+  решения: `GovernanceDecision` (19b.3, `decision_type =
+"technical_challenge_adjudication"`), которая рассматривает именно это
+  возражение.
+- `status` — enum: `submitted`, `under_review`, `upheld`, `rejected`.
+
+### Статусы и переходы
+
+`submitted → under_review` (начинается рассмотрение); `under_review →
+upheld` либо `under_review → rejected` (через связанную
+`GovernanceDecision`, 19b.3). **Перехода из `upheld` или `rejected`
+не существует** — `TechnicalChallenge` никогда не подаётся и не
+рассматривается повторно после достижения любого из этих терминальных
+статусов; новое сомнение в целостности той же `ResultPublication`
+требует полностью новой записи `TechnicalChallenge`, сохраняя полную
+историю, а не переписывая один итог другим.
+
+### Запрещённые связи
+
+- `TechnicalChallenge.submitter_authorization_reference → публичное
+содержимое` — запрещено в исходном виде в любом публично доступном
+  представлении; допустима только утверждённая генерализованная
+  ролевая метка для пути `role_assignment`, если вообще какое-либо
+  представление показывается; путь `participation_credential` не имеет
+  публичного представления вовсе.
+- `TechnicalChallenge → Account` / `IdentityRecord` / персональный
+  идентификатор / секретное содержимое credential / `actor_id` / UUID
+  `RoleAssignment`, в любом публичном выводе — запрещено.
+- `TechnicalChallenge → VoteEnvelope` — запрещено; возражение касается
+  агрегатной целостности `ResultPublication`, никогда отдельного голоса.
+
+### Владелец
+
+Technical Challenge Service (раздел 22).
+
+## 19b.5. Правило агрегатного определения окончательности результата
+
+Определяет, как `GovernanceDecision` (19b.3) и `TechnicalChallenge`
+(19b.4) структурно взаимодействуют между собой:
+
+- Каждая `TechnicalChallenge` против данной `ResultPublication` получает
+  **собственную** `GovernanceDecision` с `decision_type =
+"technical_challenge_adjudication"` — адъюдикация всегда один-к-одному
+  с возражением, по которому выносится решение, никогда не
+  объединяется по нескольким возражениям сразу.
+- **Ровно одна** агрегатная `GovernanceDecision` с `decision_type =
+"result_finality_determination"` создаётся для данной
+  `ResultPublication`, и только после того, как **каждая**
+  `TechnicalChallenge`, поданная против неё, достигла `upheld` или
+  `rejected`. Определение окончательности для данной
+  `ResultPublication` структурно запрещено, пока хотя бы одна
+  `TechnicalChallenge` остаётся в статусе `submitted` или
+  `under_review`.
+- **Противоречащие друг другу решения об окончательности запрещены**:
+  как только для `ResultPublication` существует утверждённая, не
+  заменённая `result_finality_determination`, второе, независимое
+  решение того же типа для той же `ResultPublication` создано быть не
+  может — только новое решение с `supersedes_decision_id`, указывающим
+  на предыдущее, вправе его заменить, никогда второе самостоятельное
+  решение рядом с первым.
+- Если `challenge_deadline_at` наступает при **нуле** поданных записей
+  `TechnicalChallenge`, `GovernanceDecision` с `decision_type =
+"result_finality_determination"` всё равно **обязательна** и требует
+  явного утверждения двумя акторами — истечение срока является
+  предпосылкой для её создания, но никогда не заменяет её (наступление
+  `challenge_deadline_at` остаётся необходимым, но не достаточным
+  условием окончательности, как и указано в 15.6).
+
+## 19b.6. Межпакетная граница записи (Ballot, ResultPublication)
+
+Governance Context нуждается в чтении состояния, которым владеют другие
+контуры (`Ballot`, 15.1, и `ResultPublication`, 15.6), и в возможности,
+чтобы утверждённое решение реально изменяло состояние сущности, которой
+Governance Context не владеет. Настоящий подраздел фиксирует принятую
+асимметричную модель:
+
+- **Инвалидация Ballot:** `voting-service` остаётся **единственным**
+  модулем записи `Ballot`. Он получает собственную, узко специализированную
+  команду, которая перед переходом `Ballot.status → invalidated`
+  подтверждает, что ссылающееся решение — `GovernanceDecision` (19b.3) с
+  `decision_type = "ballot_invalidation"` — уже `approved` и относится
+  именно к данному `Ballot`, посредством чтения из Governance Context.
+  Governance Context никогда не записывает `Ballot` напрямую и не
+  получает какой-либо функции записи, направленной в `voting-service`.
+- **Окончательность результата:** ни `ResultPublication` (15.6), ни
+  владеющий ею модуль не получают новой команды записи или нового поля.
+  Состояние окончательности результата целиком представлено и
+  запрашивается через `GovernanceDecision.finality_outcome` (19b.3) и
+  производную модель `FinalityStatus` (19b.3) — через функцию чтения
+  `get_finality_status(result_publication_id)`, реализуемую Governance
+  Context. Модуль, владеющий `ResultPublication`, отвечает только на
+  чтение (существование записи, `challenge_deadline_at`) и никогда не
+  запрашивается и не отвечает на вопрос об окончательности напрямую.
+
+Правило INV-02 (один владелец каждой сущности) сохраняется в полном
+объёме: `voting-service` остаётся единственным модулем, когда-либо
+записывающим `Ballot.status`; `ResultPublication` не получает второго
+модуля записи, поскольку не получает записи вовсе со стороны Governance
+Context.
+
+## 19b.7. Структурное разделение с другими контурами
+
+Ни одна из четырёх сущностей настоящего раздела (`RoleAssignment` в её
+интеграции здесь, `GovernancePolicy`, `GovernanceDecision`,
+`TechnicalChallenge`) не требует существования `PublicLedgerEntry`,
+`AuditExportPackage`, `DisclosurePolicy` или `LobbyLogEntry` (19a),
+`AIProcessingRecord` (17.1) или `EmergencyAction` (19.1). Настоящий
+раздел не реализует Transparency Context, ИИ-обработку или
+Emergency/Crisis Override и не расширяет их. Governance-решение,
+становящееся публично видимым (например, через будущую публикацию в
+`PublicLedgerEntry`), остаётся будущим вопросом Transparency Context, а
+не записью или чтением настоящего раздела.
+
+---
+
 # 20. Канонические системные события
 
 ## 20.1. Account
@@ -1822,6 +2238,31 @@ Emergency/Crisis Override (раздел 19) также не входит в на
 замещающей записи (19a.1, 19a.4) — не при изменении существующей
 строки, поскольку такое изменение не допускается.
 
+## 20.15. Governance
+
+Добавлено версией канона 0.4.0 (ADR-018). События создаются
+исключительно `governance-service` (19b) при предложении, утверждении,
+отклонении, замене или подаче/адъюдикации записей настоящего раздела.
+
+- `governance.role_assignment_requested`
+- `governance.role_assignment_activated`
+- `governance.role_assignment_revoked`
+- `governance.policy_proposed`
+- `governance.policy_activated`
+- `governance.policy_superseded`
+- `governance.decision_proposed`
+- `governance.decision_approved`
+- `governance.decision_rejected`
+- `governance.decision_superseded`
+- `governance.technical_challenge_submitted`
+- `governance.technical_challenge_adjudicated`
+
+`governance.decision_superseded` создаётся при утверждении новой,
+замещающей `GovernanceDecision` с заполненным `supersedes_decision_id`
+(19b.3) — не при изменении статуса замещаемой записи, поскольку
+`GovernanceDecision.status` не хранит значения `superseded` и не
+переписывается после `approved`/`rejected` (19b.3).
+
 ---
 
 # 21. Стандарт события
@@ -1900,13 +2341,24 @@ Emergency/Crisis Override (раздел 19) также не входит в на
 | AuditExportPackage | Audit Export Service |
 | DisclosurePolicy | Disclosure Policy Service |
 | LobbyLogEntry | Lobby Log Service |
+| GovernancePolicy | Governance Policy Service |
+| GovernanceDecision | Governance Decision Service |
+| TechnicalChallenge | Technical Challenge Service |
 
-Четыре новые строки (`PublicLedgerEntry`, `AuditExportPackage`,
+Четыре строки (`PublicLedgerEntry`, `AuditExportPackage`,
 `DisclosurePolicy`, `LobbyLogEntry`) добавлены версией канона 0.3.0
 (ADR-013, раздел 19a). Физически все четыре реализуются одним сервисом,
 `transparency-service` (ADR-011) — как и для ряда более ранних записей
 этой матрицы, один физический сервис может владеть несколькими
 канонически названными модулями.
+
+Три строки (`GovernancePolicy`, `GovernanceDecision`,
+`TechnicalChallenge`) добавлены версией канона 0.4.0 (ADR-018, раздел
+19b). Физически все три реализуются одним сервисом, `governance-service`
+(ADR-016), вместе с уже существующей строкой `RoleAssignment`
+("Permission / Role Service", без изменений настоящей версией) — тот же
+принцип "один физический сервис — несколько канонически названных
+модулей".
 
 ---
 
@@ -1921,13 +2373,23 @@ Emergency/Crisis Override (раздел 19) также не входит в на
 - `AIProcessingRecord → скрытый IdentityRecord`, если личность не требуется для заявленной операции
 - `PublicLedgerEntry → непубличные персональные данные`
 - `ModerationDecision → возможность физического удаления AuditEvent`
-- `AdministratorRole → право расшифровать тайные голоса`
+- `RoleAssignment (любой role_code, включая "administrator") →
+расшифровка, получение или связывание тайного голоса` (изменено 0.4.0,
+  19b.1 — ранее сформулировано как `AdministratorRole → право
+расшифровать тайные голоса`; `AdministratorRole` не является отдельной
+  сущностью, см. 19b.1)
 - `Identity provider reference → Participation database`
 - `Credential → полная копия личных данных`
 - `PublicLedgerEntry → Account` / `IdentityRecord` / `ParticipationCredential` / `VoteEnvelope` / `Delegation` / `DelegationSnapshot` (добавлено 0.3.0, 19a.1)
 - `AuditExportPackage → AuditEvent.actor_id` / `actor_type` / `before_hash` / `after_hash` (добавлено 0.3.0, 19a.2)
 - `published_by_role_id` / `requested_by_role_id` / `approved_by_role_id` / `submitted_by_role_id` → публикация в исходном виде (добавлено 0.3.0, 19a.6) — допустима только генерализованная метка роли
 - `DisclosurePolicy.field_rules` → переклассификация структурно запрещённого поля в класс, отличный от `prohibited` (добавлено 0.3.0, 19a.3)
+- `GovernancePolicy → RoleAssignment.actor_id` в публично доступном представлении (добавлено 0.4.0, 19b.2)
+- `GovernanceDecision → RoleAssignment.actor_id` в публично доступном представлении (добавлено 0.4.0, 19b.3)
+- `GovernanceDecision.subject_reference → VoteEnvelope` (добавлено 0.4.0, 19b.3)
+- `TechnicalChallenge.submitter_authorization_reference` → публикация в исходном виде (добавлено 0.4.0, 19b.4)
+- `TechnicalChallenge → Account` / `IdentityRecord` / персональный идентификатор / секретное содержимое credential / `actor_id` / UUID `RoleAssignment`, в публичном выводе (добавлено 0.4.0, 19b.4)
+- `TechnicalChallenge → VoteEnvelope` (добавлено 0.4.0, 19b.4)
 
 ---
 

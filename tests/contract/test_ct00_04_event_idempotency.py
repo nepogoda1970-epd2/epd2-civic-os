@@ -27,6 +27,9 @@ from epd2_eligibility_service.storage import (
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
 )
+from epd2_governance_service.application import request_role_assignment
+from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
+from epd2_governance_service.storage import InMemoryRoleAssignmentStore
 from epd2_voting_service.application import (
     approve_ballot_configuration,
     cast_vote,
@@ -361,3 +364,57 @@ def test_repeated_create_delegation_with_same_event_id_is_idempotent(
     entries = audit_store.list_by_aggregate("delegation", delegation_id)
     assert len(entries) == 1
     assert entries[0].audit_event_id == first.audit_event.audit_event_id
+
+
+# =============================================================================
+# PACK-05: `request_role_assignment` (governance-service).
+# =============================================================================
+
+
+def test_repeated_request_role_assignment_with_same_event_id_is_idempotent(
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """A caller retrying the exact same `request_role_assignment` command
+    (same `role_assignment_id`, same content, same caller-supplied
+    `event_id`) must not create a second stored `RoleAssignment` or a
+    second audit entry."""
+    granter = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="governance_policy_approver",
+            scope_id=uuid4(),
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    role_assignment_id = uuid4()
+    event_id = uuid4()
+    kwargs = dict(
+        role_assignment_id=role_assignment_id,
+        actor_id=uuid4(),
+        role_code="observer",
+        scope_id=uuid4(),
+        valid_from=clock.now(),
+        valid_until=None,
+        granter_role_assignment_id=granter.role_assignment_id,
+        approval_reference=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+        event_id=event_id,
+    )
+    first = request_role_assignment(role_assignment_store, audit_store, **kwargs)  # type: ignore[arg-type]
+    second = request_role_assignment(role_assignment_store, audit_store, **kwargs)  # type: ignore[arg-type]
+
+    assert first.assignment == second.assignment
+    assert first.audit_event.audit_event_id == second.audit_event.audit_event_id
+    entries = audit_store.list_by_aggregate("role_assignment", role_assignment_id)
+    assert len(entries) == 1

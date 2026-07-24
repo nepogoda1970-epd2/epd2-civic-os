@@ -69,6 +69,11 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/adr/ADR-013-canon-0.3.0-transparency-context-additions.md",
     "docs/adr/ADR-014-pack-04-reason-code-additions.md",
     "docs/adr/ADR-015-disclosure-redaction-lobby-log-defaults.md",
+    "docs/adr/ADR-016-pack-05-governance-service-decomposition.md",
+    "docs/adr/ADR-017-pack-05-cross-pack-boundary.md",
+    "docs/adr/ADR-018-canon-0.4.0-governance-context-additions.md",
+    "docs/adr/ADR-019-pack-05-reason-code-additions.md",
+    "docs/adr/ADR-020-pack-05-authority-roles-challenge-lifecycle.md",
     # Docs: development
     "docs/development/local-development.md",
     "docs/development/repository-rules.md",
@@ -76,6 +81,7 @@ REQUIRED_PATHS: tuple[str, ...] = (
     # Docs: review
     "docs/review/OPEN_QUESTIONS.md",
     "docs/review/KNOWN_LIMITATIONS.md",
+    "docs/review/PACK-05-OWNER-DECISIONS.md",
     # Docs: handover
     "docs/handover/PACK-01-REPORT.md",
     "docs/handover/PACK-02-REPORT.md",
@@ -83,6 +89,8 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-03-SPEC.md",
     "docs/handover/PACK-04-SPEC.md",
     "docs/handover/PACK-04-REPORT.md",
+    "docs/handover/PACK-05-SPEC.md",
+    "docs/handover/PACK-05-REPORT.md",
     # Contracts
     "contracts/README.md",
     "contracts/openapi",
@@ -166,6 +174,20 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "contracts/events/transparency-lobby-log-entry-payload.v1.schema.json",
     # Contracts: PACK-04 OpenAPI
     "contracts/openapi/pack-04.yaml",
+    # Contracts: PACK-05 reason codes registry
+    "contracts/reason-codes/pack-05.yml",
+    # Contracts: PACK-05 JSON Schemas
+    "contracts/schemas/role-assignment.schema.json",
+    "contracts/schemas/governance-policy.schema.json",
+    "contracts/schemas/governance-decision.schema.json",
+    "contracts/schemas/technical-challenge.schema.json",
+    # Contracts: PACK-05 event payload schemas
+    "contracts/events/governance-role-assignment-payload.v1.schema.json",
+    "contracts/events/governance-policy-payload.v1.schema.json",
+    "contracts/events/governance-decision-payload.v1.schema.json",
+    "contracts/events/governance-technical-challenge-payload.v1.schema.json",
+    # Contracts: PACK-05 OpenAPI
+    "contracts/openapi/pack-05.yaml",
     # Services (placeholder)
     "services/README.md",
     # Services: account-service
@@ -299,6 +321,20 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/transparency-service/tests/test_domain.py",
     "services/transparency-service/tests/test_application.py",
     "services/transparency-service/tests/test_storage.py",
+    # Services: governance-service
+    "services/governance-service/README.md",
+    "services/governance-service/pyproject.toml",
+    "services/governance-service/src/epd2_governance_service/__init__.py",
+    "services/governance-service/src/epd2_governance_service/domain.py",
+    "services/governance-service/src/epd2_governance_service/application.py",
+    "services/governance-service/src/epd2_governance_service/events.py",
+    "services/governance-service/src/epd2_governance_service/exceptions.py",
+    "services/governance-service/src/epd2_governance_service/storage.py",
+    "services/governance-service/src/epd2_governance_service/bootstrap.py",
+    "services/governance-service/tests/test_domain.py",
+    "services/governance-service/tests/test_application.py",
+    "services/governance-service/tests/test_storage.py",
+    "services/governance-service/tests/test_bootstrap.py",
     # Services: audit-core
     "services/audit-core/README.md",
     "services/audit-core/pyproject.toml",

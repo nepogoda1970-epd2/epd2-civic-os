@@ -13,5 +13,5 @@
  * scripts/verify_versions.py.
  */
 
-export const CANON_VERSION = "0.3.0";
-export const REPOSITORY_VERSION = "0.4.0";
+export const CANON_VERSION = "0.4.0";
+export const REPOSITORY_VERSION = "0.5.0";

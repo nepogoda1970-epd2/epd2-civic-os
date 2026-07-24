@@ -17,6 +17,7 @@ dependencies = [
     "epd2-tally-service",
     "epd2-delegation-service",
     "epd2-transparency-service",
+    "epd2-governance-service",
 ]
 
 # Lower bounds are the versions this repository's checks (Ruff ruleset,
@@ -58,6 +59,7 @@ members = [
     "services/tally-service",
     "services/delegation-service",
     "services/transparency-service",
+    "services/governance-service",
 ]
 
 [tool.uv.sources]
@@ -74,6 +76,7 @@ epd2-voting-service = { workspace = true }
 epd2-tally-service = { workspace = true }
 epd2-delegation-service = { workspace = true }
 epd2-transparency-service = { workspace = true }
+epd2-governance-service = { workspace = true }
 
 # --- Ruff ---
 [tool.ruff]
@@ -93,6 +96,7 @@ src = [
     "services/tally-service/src",
     "services/delegation-service/src",
     "services/transparency-service/src",
+    "services/governance-service/src",
     "scripts",
     "tests",
 ]
@@ -115,6 +119,7 @@ known-first-party = [
     "epd2_tally_service",
     "epd2_delegation_service",
     "epd2_transparency_service",
+    "epd2_governance_service",
 ]
 
 # --- mypy ---
@@ -134,6 +139,7 @@ mypy_path = [
     "services/tally-service/src",
     "services/delegation-service/src",
     "services/transparency-service/src",
+    "services/governance-service/src",
 ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -199,6 +205,7 @@ testpaths = [
     "services/tally-service/tests",
     "services/delegation-service/tests",
     "services/transparency-service/tests",
+    "services/governance-service/tests",
 ]
 # --import-mode=importlib: several services intentionally use the same
 # test file basenames (test_domain.py, test_application.py, ...) - this

@@ -55,6 +55,7 @@ typecheck:
 	uv run mypy services/tally-service
 	uv run mypy services/delegation-service
 	uv run mypy services/transparency-service
+	uv run mypy services/governance-service
 	npm run typecheck --workspace=packages/typescript/epd2-types
 	npm run typecheck --workspace=frontend/web-shell
 

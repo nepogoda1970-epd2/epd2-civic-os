@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governance-decision-payload.v1.schema.json",
+  "title": "governance.decision_* event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.15. Produced by epd2_governance_service.events.governance_decision_public_payload, shared verbatim by four distinct event_type builders: build_decision_proposed_event (governance.decision_proposed), build_decision_approved_event (governance.decision_approved), build_decision_rejected_event (governance.decision_rejected), build_decision_superseded_event (governance.decision_superseded, emitted on the SUPERSEDING decision's own approval, never on the superseded record's own status change since it never changes) - verified by reading events.py, all four call the shared payload function and differ only in event_type/subject. Deliberately omits proposed_by_role_id, approved_by_role_id, and rejected_by_role_id entirely (canon 19b.3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "governance_decision_id",
+    "decision_type",
+    "subject_reference",
+    "reason_code",
+    "evidence_references",
+    "finality_outcome",
+    "created_at",
+    "decided_at",
+    "supersedes_decision_id",
+    "status"
+  ],
+  "properties": {
+    "governance_decision_id": { "type": "string", "format": "uuid" },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "ballot_invalidation",
+        "technical_challenge_adjudication",
+        "result_finality_determination",
+        "mandate",
+        "oversight_directive"
+      ]
+    },
+    "subject_reference": { "type": "object" },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "evidence_references": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "finality_outcome": {
+      "type": ["string", "null"],
+      "enum": ["final", "invalidated", null]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "decided_at": { "type": ["string", "null"], "format": "date-time" },
+    "supersedes_decision_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["proposed", "approved", "rejected"] }
+  }
+}

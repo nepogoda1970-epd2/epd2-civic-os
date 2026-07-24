@@ -34,6 +34,12 @@ from epd2_eligibility_service.storage import (
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
 )
+from epd2_governance_service.storage import (
+    InMemoryGovernanceDecisionStore,
+    InMemoryGovernancePolicyStore,
+    InMemoryRoleAssignmentStore,
+    InMemoryTechnicalChallengeStore,
+)
 from epd2_identity_service.storage import InMemoryIdentityRecordStore
 from epd2_initiative_service.storage import (
     InMemoryAmendmentStore,
@@ -203,3 +209,29 @@ def delegation_store() -> InMemoryDelegationStore:
 @pytest.fixture
 def delegation_snapshot_store() -> InMemoryDelegationSnapshotStore:
     return InMemoryDelegationSnapshotStore()
+
+
+# ---------------------------------------------------------------------------
+# PACK-05 store fixtures (governance-service) - mirror the PACK-02/PACK-03
+# fixtures above exactly.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def role_assignment_store() -> InMemoryRoleAssignmentStore:
+    return InMemoryRoleAssignmentStore()
+
+
+@pytest.fixture
+def governance_policy_store() -> InMemoryGovernancePolicyStore:
+    return InMemoryGovernancePolicyStore()
+
+
+@pytest.fixture
+def governance_decision_store() -> InMemoryGovernanceDecisionStore:
+    return InMemoryGovernanceDecisionStore()
+
+
+@pytest.fixture
+def technical_challenge_store() -> InMemoryTechnicalChallengeStore:
+    return InMemoryTechnicalChallengeStore()

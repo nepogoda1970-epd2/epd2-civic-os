@@ -26,6 +26,9 @@ from epd2_eligibility_service.storage import (
     InMemoryEligibilityDecisionStore,
     InMemoryEligibilityRuleStore,
 )
+from epd2_governance_service.application import request_role_assignment
+from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
+from epd2_governance_service.storage import InMemoryRoleAssignmentStore
 from epd2_identity_service.application import start_identity_verification
 from epd2_identity_service.storage import InMemoryIdentityRecordStore
 from epd2_initiative_service.application import create_initiative
@@ -325,6 +328,45 @@ def test_delegation_creation_creates_an_audit_event(
         valid_from=clock.now(),
         valid_until=None,
         revocation_status="not_revoked",
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    assert audit_store.get_by_event_id(result.audit_event.audit_event_id) is not None
+
+
+def test_role_assignment_request_creates_an_audit_event(
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """PACK-05: `request_role_assignment` (governance-service)."""
+    granter = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="governance_policy_approver",
+            scope_id=uuid4(),
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    result = request_role_assignment(
+        role_assignment_store,
+        audit_store,
+        role_assignment_id=uuid4(),
+        actor_id=uuid4(),
+        role_code="observer",
+        scope_id=uuid4(),
+        valid_from=clock.now(),
+        valid_until=None,
+        granter_role_assignment_id=granter.role_assignment_id,
+        approval_reference=None,
         actor=actor,
         actor_is_authorized=True,
         correlation_id=uuid4(),

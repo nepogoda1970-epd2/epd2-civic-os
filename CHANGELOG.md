@@ -5,6 +5,187 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - canon minor version 0.4.0 (Governance Context)
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.3.0 →
+0.4.0` (ADR-018 and ADR-020, both accepted with amendments) — the third
+  edit to this document's own text since its original acceptance (after
+  ADR-010's `0.1.0 → 0.2.0` and ADR-013's `0.2.0 → 0.3.0`). Adds a new
+  section 19b ("Governance Context") defining three new canonical
+  entities — `GovernancePolicy`, `GovernanceDecision`,
+  `TechnicalChallenge` — with full fields, identifiers, statuses,
+  owners, invariants, allowed transitions, forbidden links, and immutable
+  correction/superseding semantics, and fully integrating the
+  already-canon-defined `RoleAssignment` (8.4, unchanged) as the
+  authority reference every new entity relies on; a new section 20.15
+  with the twelve-event Governance canonical event catalog; three new
+  section 22 ownership-matrix rows; and section 23 forbidden-link
+  entries reworded (the undefined `AdministratorRole` reference
+  generalized to any `RoleAssignment` regardless of `role_code`) and
+  extended for the three new entities. `GovernanceDecision`'s stored
+  status enum is exactly `proposed`/`approved`/`rejected` (no stored
+  `superseded` value; corrections use `supersedes_decision_id`,
+  superseded-ness is derived at query time); `finality_outcome` stores
+  only `final`/`invalidated`, with a separate four-value `FinalityStatus`
+  read-model type (`provisional`/`finality_blocked`/`final`/
+  `invalidated`) documented as a query/read-model, not a stored field.
+  `TechnicalChallenge` uses `submitter_authorization_type`
+  (`participation_credential`/`role_assignment`) plus an opaque
+  `submitter_authorization_reference`, never a mandatory
+  `RoleAssignment`-only reference. The accepted cross-pack write
+  boundary (ADR-017) is recorded as its own subsection (19b.6):
+  `voting-service` remains the sole writer of `Ballot`; `governance-service`
+  never mutates `Ballot` or `ResultPublication` storage; result finality
+  is represented and queried entirely through `governance-service`.
+  Transparency Context (19a), AI-processing (section 17), and
+  Emergency/Crisis Override (section 19) remain explicitly untouched and
+  unimplemented by this addition (19b.7). `docs/canonical/canon-version.json`,
+  `packages/python/epd2-core/src/epd2_core/version.py`, and
+  `packages/typescript/epd2-types/src/version.ts` updated to match, with
+  both version-consistency unit tests updated and
+  `scripts/verify_versions.py` passing; `REPOSITORY_VERSION` is unchanged
+  (`0.4.0`) since no `governance-service` code exists yet — this is a
+  canon-only change, per CLAUDE-PACK-05's own governance round
+  (`docs/adr/ADR-016` through `ADR-020`, all `accepted`;
+  `docs/review/PACK-05-OWNER-DECISIONS.md`).
+
+## [0.5.0] - governance context (implementation)
+
+### Added
+
+- A new, independent, in-memory-backed service, `governance-service`
+  (CLAUDE-PACK-05, "Governance Context"), with its own `README.md`,
+  `pyproject.toml`, `src/`, `tests/`, storage interfaces, and in-memory
+  reference adapters, implementing exactly the canon 0.4.0 section 19b
+  text and ADR-016 through ADR-020 (all `accepted`) with no further canon
+  edit.
+- All four canon 19b entities: `RoleAssignment` (canon 8.4, physically
+  relocated into `governance-service` per ADR-016; `role_code` remains an
+  open string at canon level, with the closed 8-value pilot taxonomy
+  enforced only at the application layer), `GovernancePolicy`,
+  `GovernanceDecision` (a single entity with a `decision_type`
+  discriminator covering `ballot_invalidation`,
+  `technical_challenge_adjudication`, `result_finality_determination`,
+  `mandate`, `oversight_directive`; stored status is exactly
+  `proposed`/`approved`/`rejected` — no stored `superseded` value,
+  corrections use `supersedes_decision_id`), and `TechnicalChallenge`,
+  plus the derived, never-stored `FinalityStatus` read model
+  (`provisional`/`finality_blocked`/`final`/`invalidated`, a distinct type
+  from the stored `finality_outcome`).
+- Fourteen application-layer commands (`request_role_assignment`,
+  `activate_role_assignment`, `revoke_role_assignment`,
+  `get_role_assignment`, `propose_governance_policy`,
+  `activate_governance_policy`, `propose_governance_decision`,
+  `approve_governance_decision`, `reject_governance_decision`,
+  `get_governance_decision`, `is_current_approved_decision`,
+  `get_finality_status`, `submit_technical_challenge`,
+  `begin_technical_challenge_review`, `get_technical_challenge`), each
+  with `epd2_audit_core` audit entries, CT-00-04 idempotency, and the
+  twelve canonical Governance events (canon section 20.15).
+- Two-actor approval enforced end-to-end (ADR-020 item 1): proposer and
+  approver must resolve to distinct `actor_id`s via two active, in-scope
+  `RoleAssignment`s, required for `GovernancePolicy` activation, every
+  `GovernanceDecision` approval/rejection, ballot invalidation, and
+  result-finality determination; no role may approve or grant its own
+  assignment (`SAME_ACTOR_APPROVAL_REJECTED`).
+- The pilot role taxonomy (`PILOT_ROLE_CODES`, ADR-020 §5):
+  `governance_policy_proposer`, `governance_policy_approver`,
+  `governance_reviewer`, `technical_challenge_reviewer`,
+  `ballot_invalidation_proposer`, `ballot_invalidation_approver`,
+  `oversight_reviewer`, `observer`, enforced only where a `RoleAssignment`
+  is created or used, never as a canon-level closed enum.
+- A deployment-time-only bootstrap seed (`bootstrap.py`,
+  `run_bootstrap_seed`): not exposed through the normal API surface,
+  creates exactly two distinct-actor initial `RoleAssignment`s, produces
+  an immutable, checksummed `BootstrapSeedManifest`, records real
+  `AuditEvent`s, and is permanently disabled after its first successful
+  execution (`BootstrapAlreadyExecutedError`).
+- `TechnicalChallenge` submission and adjudication (canon 19b.4/19b.5):
+  eligible participants via a caller-supplied, never-dereferenced
+  `participation_credential`-type reference (mirroring PACK-04's
+  `publish_ledger_entry` `raw_content` precedent), or authorized
+  observers/reviewers via a locally-validated, active, in-scope
+  `role_assignment`-type reference; adjudication is always a side effect
+  of approving/rejecting the linked `technical_challenge_adjudication`
+  `GovernanceDecision`, never a standalone command; finality is blocked
+  while any challenge remains `submitted`/`under_review`; a zero-challenge
+  result still requires an explicit two-actor
+  `result_finality_determination` decision (deadline expiry alone is
+  never sufficient).
+- Ballot invalidation via the accepted ADR-017 Option B: `voting-service`
+  remains the sole writer of `Ballot`, gaining one narrow new command
+  (`epd2_voting_service.application.invalidate_ballot`) that verifies an
+  approved, correctly-scoped `ballot_invalidation` `GovernanceDecision`
+  (read via the new `epd2_governance_service.application.
+get_governance_decision`/`is_current_approved_decision`, the first
+  bidirectional cross-pack `.application`-only read edge in this
+  project) before transitioning `Ballot` to `invalidated`;
+  `governance-service` never writes `voting-service` storage directly.
+- `contracts/openapi/pack-05.yaml` (17 operations, tag
+  `governance-service`; the bootstrap seed command deliberately has no
+  HTTP-shaped path at all, per required scope item 6), plus a new
+  `invalidateBallot` operation added to `contracts/openapi/pack-03.yaml`
+  under the `voting-service` tag. `contracts/reason-codes/pack-05.yml`
+  (27 entries: 9 carried forward from the PACK-05 spec, 4 new per
+  ADR-019, reused generics, and this service's own additive
+  duplicate-conflict/audit-classification codes);
+  `BALLOT_INVALIDATION_NOT_AUTHORIZED` independently redeclared in
+  `contracts/reason-codes/pack-03.yml` too, since the literal is used by
+  a real `voting-service` guard. Four entity JSON Schemas
+  (`role-assignment`, `governance-policy`, `governance-decision`,
+  `technical-challenge`) and four event-payload JSON Schemas, all
+  validated against real generated payloads.
+- `tests/repository/test_service_boundaries.py` extended with seven new
+  PACK-05 boundary tests (no PACK-05-to-PACK-05 cross-service import, no
+  PACK-02/04 service imports PACK-05, only `voting-service` among PACK-03
+  may import `governance-service`, that edge is `.application`-only in
+  both directions and matches ADR-017, PACK-05 calls only the
+  ADR-017-named upstream applications
+  `epd2_voting_service.application`/`epd2_tally_service.application`,
+  PACK-05 never imports the excluded identity/account/eligibility/
+  credential/initiative/deliberation/moderation/delegation/transparency
+  services, and `tally-service` never imports `governance-service`).
+- `tests/contract/test_ct00_01_schema_validation.py` through
+  `test_ct00_10_rule_freeze.py` each extended with a PACK-05 section
+  (schema validation for all four entities and their event payloads;
+  unknown-status/forbidden-transition parametrized cases for all four
+  status enums; event idempotency, unsupported-event-version,
+  audit-creation checks for `request_role_assignment`; the flagship
+  two-actor authorization test for `activate_governance_policy`; and
+  `GovernanceDecision`'s "immutable once approved/rejected" freeze
+  invariant). `test_ct00_08_identity_leakage.py` and
+  `test_ct00_09_vote_linkability.py` extended with structural schema
+  checks, a real end-to-end command call proving `actor_id`/
+  `assigned_by`/`*_role_id`/`submitter_authorization_reference` never
+  reach a public event payload, an AST-based import scan confirming
+  `governance-service` never imports `epd2_delegation_service`/
+  `epd2_account_service`/`epd2_identity_service` or
+  `epd2_voting_service.domain`/`epd2_tally_service.domain` directly, and
+  a direct-construction proof that `GovernanceDecision.subject_reference`
+  rejects `vote_envelope_id` (no reverse vote-linkability path).
+  `test_ct00_11_12_not_applicable.py` updated to record PACK-05's
+  identical AI-processing/Emergency-Override exclusion (required scope
+  item 13) alongside PACK-02's and PACK-03's.
+- `REPOSITORY_VERSION` `0.4.0 → 0.5.0` (`packages/python/epd2-core/src/
+epd2_core/version.py`, `packages/typescript/epd2-types/src/
+version.ts`, both version-consistency unit tests, and
+  `docs/canonical/canon-version.json`'s `repository_compatibility` upper
+  bound widened to admit it). `CANON_VERSION` is unchanged (`0.4.0`) —
+  this round implements the already-accepted canon 19b text; no further
+  canon edit was made.
+- `docs/handover/PACK-05-REPORT.md`.
+
+### Verified
+
+- **PACK-05 PASS**: see `docs/handover/PACK-05-REPORT.md` for the full
+  local verification record (test counts, tool versions, and the
+  documented pre-existing sandbox limitations — TypeScript test execution
+  and `hypothesis` are both genuinely unavailable in this local sandbox,
+  as they were for PACK-03/PACK-04, and are exercised for real in GitHub
+  Actions CI instead).
+
 ## [Unreleased] - canon minor version 0.3.0 (Transparency Context)
 
 ### Changed
@@ -119,6 +300,16 @@ version.ts`, both version-consistency unit tests, and
   this round implements the already-accepted canon 19a text; no further
   canon edit was made.
 - `docs/handover/PACK-04-REPORT.md`.
+
+### Verified
+
+- **PACK-04 PASS**, confirmed by a complete external GitHub Actions run
+  with real network access: 1599 Python tests passed, 2 skipped (genuine
+  CT-00-11/12 not-applicable markers), TypeScript tests passed, frontend
+  tests passed, a successful Next.js production build, and Ruff,
+  Prettier, ESLint, and mypy all clean, with all 305 required paths
+  present and no forbidden files. Full detail:
+  `docs/handover/PACK-04-REPORT.md`.
 
 ## [0.3.0] - participation and decision kernel
 

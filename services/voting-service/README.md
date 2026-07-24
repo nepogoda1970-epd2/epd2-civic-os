@@ -36,19 +36,29 @@ option sets (`single_choice`/`yes_no`) would make a direct hash of the
 choice itself dictionary-attackable. A receipt lets a voter verify
 inclusion without publicly revealing what they chose (canon 15.4).
 
-## No PACK-03-reachable invalidation (ADR-009 item 14, amended)
+## Ballot invalidation (ADR-009 item 14, amended; PACK-05, ADR-017 Option B)
 
 `ALLOWED_TRANSITIONS` includes `draft/configuration_review/scheduled ->
-invalidated` at the domain/state-machine level only, so CT-00-02/CT-00-03
-can test `BallotStatus.INVALIDATED`'s structural existence. **No
-function in `application.py` ever produces this transition or emits a
-`ballot.invalidated` event** - there is no `invalidate_ballot` command,
-and no other command reaches `invalidated` as a side effect. Authorization
-for invalidation belongs entirely to the future Governance service (canon
-5.12); this service only implements the state/transition structurally per
-ADR-009 item 14's amendment. `cancel_ballot` (a normal, always-available
-withdrawal path with no special authorization concern) is the only
-early-exit command this service exposes.
+invalidated` at the domain/state-machine level (unchanged since
+CLAUDE-PACK-03); CT-00-02/CT-00-03 already exercise
+`BallotStatus.INVALIDATED`'s structural existence. Until PACK-05, no
+command in `application.py` ever produced this transition. PACK-05 adds
+exactly one narrow command, `application.invalidate_ballot`, per ADR-017's
+accepted Option B: it reads an already-`approved`, correctly-scoped,
+non-superseded `GovernanceDecision` (`decision_type =
+ballot_invalidation`, `subject_reference.ballot_id` matching this
+`Ballot`) via `epd2_governance_service.application.
+get_governance_decision`/`is_current_approved_decision` (never
+`.storage`/`.domain` - the same ADR-008-style `.application`-only
+boundary this service already respects for `epd2_credential_service`/
+`epd2_eligibility_service`, now exercised in the reverse direction for
+the first time in this project: PACK-03 reading PACK-05). `voting-service`
+remains the sole writer of `Ballot` throughout - `governance-service`
+never receives a write path into this service's storage.
+`BallotInvalidationNotAuthorizedError` is raised when no such decision
+can be found. `cancel_ballot` (a normal, always-available withdrawal
+path with no special authorization concern) remains the only early-exit
+command available with no upstream dependency.
 
 ## Second-actor ballot approval (ADR-009 item 7 / INV-08)
 

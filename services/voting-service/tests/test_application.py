@@ -8,7 +8,6 @@ Exercises the full command set against real PACK-02 collaborators
 
 from __future__ import annotations
 
-import ast
 import inspect
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
@@ -42,6 +41,7 @@ from epd2_voting_service.application import (
     close_ballot,
     create_ballot,
     get_ballot,
+    invalidate_ballot,
     issue_vote_receipt,
     open_ballot,
     pause_ballot,
@@ -59,6 +59,7 @@ from epd2_voting_service.domain import (
 from epd2_voting_service.exceptions import (
     BallotAlreadyClosedError,
     BallotConfigurationLockedError,
+    BallotInvalidationNotAuthorizedError,
     BallotNotOpenError,
     DuplicateVoteError,
     UnknownEligibilitySnapshotReferenceError,
@@ -1129,30 +1130,197 @@ def test_issue_vote_receipt_rejects_non_eligible_envelope() -> None:
         )
 
 
-# --- ADR-009 item 14: no reachable invalidate command ------------------------
+# --- PACK-05 (ADR-017 Option B): invalidate_ballot ---------------------------
 
 
-def test_no_application_command_can_reach_invalidated() -> None:
-    """Structural proof of ADR-009 item 14 (amended): no function in
-    `application.py` is named like an invalidation command, and no
-    function body ever references `BallotStatus.INVALIDATED`."""
-    import epd2_voting_service.application as application_module
-
-    source = inspect.getsource(application_module)
-    tree = ast.parse(source)
-
-    function_names = {
-        node.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-    }
-    for name in function_names:
-        assert "invalidat" not in name.lower(), f"found forbidden command-like name: {name}"
-
-    assert "INVALIDATED" not in source, (
-        "application.py must never reference BallotStatus.INVALIDATED - "
-        "invalidation is a Governance-service concern (ADR-009 item 14)"
+def _create_test_ballot(fx: _Fixture, *, ballot_id: UUID, creator: ActorRef) -> None:
+    create_ballot(
+        fx.ballot_store,
+        fx.audit_store,
+        ballot_id=ballot_id,
+        space_id=uuid4(),
+        subject_type="initiative",
+        subject_id=uuid4(),
+        question="Should we adopt this proposal?",
+        ballot_method=BallotMethod.YES_NO,
+        secrecy_mode="secret",
+        eligibility_rule_version=1,
+        delegation_policy_version=1,
+        quorum_rule="simple_majority",
+        threshold_rule="simple_majority",
+        opens_at=_OPENS_AT,
+        closes_at=_CLOSES_AT,
+        challenge_window_hours=None,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
     )
+
+
+class _FakeApprovedBallotInvalidationDecision:
+    """A minimal stand-in for a `governance-service`
+    `GovernanceDecision`, used only to exercise `invalidate_ballot`'s own
+    logic in isolation from a real `epd2_governance_service` store -
+    this module intentionally has no import of
+    `epd2_governance_service.storage`/`.domain` (ADR-017), so its own
+    tests construct the smallest duck-typed object `invalidate_ballot`
+    actually reads from (`decision_type.value`,
+    `subject_reference.get(...)`, `.governance_decision_id`, `.status`).
+    """
+
+    def __init__(self, *, ballot_id: UUID, decision_type: str = "ballot_invalidation") -> None:
+        self.governance_decision_id = uuid4()
+        self.decision_type = _FakeDecisionType(decision_type)
+        self.subject_reference = {"ballot_id": str(ballot_id)}
+        self.status = _FakeDecisionStatus("approved")
+
+
+class _FakeDecisionType:
+    def __init__(self, value: str) -> None:
+        self.value = value
+
+
+class _FakeDecisionStatus:
+    def __init__(self, value: str) -> None:
+        self.value = value
+
+
+class _FakeGovernanceDecisionStore:
+    """Duck-typed stand-in for governance-service's own store, wired
+    directly to `epd2_governance_service.application.get_governance_decision`
+    /`is_current_approved_decision`'s expected `.get`/`.find_superseding`
+    surface."""
+
+    def __init__(self, decision: _FakeApprovedBallotInvalidationDecision | None) -> None:
+        self._decision = decision
+        self._superseded = False
+
+    def get(self, governance_decision_id: UUID) -> object | None:
+        if (
+            self._decision is not None
+            and self._decision.governance_decision_id == governance_decision_id
+        ):
+            return self._decision
+        return None
+
+    def find_superseding(self, governance_decision_id: UUID) -> object | None:
+        return object() if self._superseded else None
+
+
+def test_invalidate_ballot_succeeds_with_approved_scoped_decision() -> None:
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    _create_test_ballot(fx, ballot_id=ballot_id, creator=creator)
+
+    decision = _FakeApprovedBallotInvalidationDecision(ballot_id=ballot_id)
+    governance_decision_store = _FakeGovernanceDecisionStore(decision)
+
+    result = invalidate_ballot(
+        fx.ballot_store,
+        governance_decision_store,
+        fx.audit_store,
+        ballot_id=ballot_id,
+        governance_decision_id=decision.governance_decision_id,
+        actor=creator,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    )
+    assert result.ballot.status is BallotStatus.INVALIDATED
+    assert result.event is not None
+    assert result.event.event_type == "ballot.invalidated"
+
+
+def test_invalidate_ballot_rejects_wrong_ballot_scope() -> None:
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    _create_test_ballot(fx, ballot_id=ballot_id, creator=creator)
+
+    decision = _FakeApprovedBallotInvalidationDecision(ballot_id=uuid4())  # different ballot
+    governance_decision_store = _FakeGovernanceDecisionStore(decision)
+
+    with pytest.raises(BallotInvalidationNotAuthorizedError):
+        invalidate_ballot(
+            fx.ballot_store,
+            governance_decision_store,
+            fx.audit_store,
+            ballot_id=ballot_id,
+            governance_decision_id=decision.governance_decision_id,
+            actor=creator,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=_CLOCK,
+        )
+
+
+def test_invalidate_ballot_rejects_wrong_decision_type() -> None:
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    _create_test_ballot(fx, ballot_id=ballot_id, creator=creator)
+
+    decision = _FakeApprovedBallotInvalidationDecision(ballot_id=ballot_id, decision_type="mandate")
+    governance_decision_store = _FakeGovernanceDecisionStore(decision)
+
+    with pytest.raises(BallotInvalidationNotAuthorizedError):
+        invalidate_ballot(
+            fx.ballot_store,
+            governance_decision_store,
+            fx.audit_store,
+            ballot_id=ballot_id,
+            governance_decision_id=decision.governance_decision_id,
+            actor=creator,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=_CLOCK,
+        )
+
+
+def test_invalidate_ballot_rejects_unknown_decision_id() -> None:
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    _create_test_ballot(fx, ballot_id=ballot_id, creator=creator)
+
+    governance_decision_store = _FakeGovernanceDecisionStore(None)
+
+    with pytest.raises(BallotInvalidationNotAuthorizedError):
+        invalidate_ballot(
+            fx.ballot_store,
+            governance_decision_store,
+            fx.audit_store,
+            ballot_id=ballot_id,
+            governance_decision_id=uuid4(),
+            actor=creator,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=_CLOCK,
+        )
+
+
+def test_invalidate_ballot_without_permission_is_denied() -> None:
+    fx = _Fixture()
+    creator = _actor()
+    ballot_id = uuid4()
+    _create_test_ballot(fx, ballot_id=ballot_id, creator=creator)
+    decision = _FakeApprovedBallotInvalidationDecision(ballot_id=ballot_id)
+    governance_decision_store = _FakeGovernanceDecisionStore(decision)
+
+    with pytest.raises(PermissionDeniedError):
+        invalidate_ballot(
+            fx.ballot_store,
+            governance_decision_store,
+            fx.audit_store,
+            ballot_id=ballot_id,
+            governance_decision_id=decision.governance_decision_id,
+            actor=creator,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=_CLOCK,
+        )
 
 
 def test_application_module_path_exists() -> None:

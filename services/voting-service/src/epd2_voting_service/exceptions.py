@@ -61,6 +61,16 @@ class BallotAlreadyClosedError(ValueError):
     reason_code = "BALLOT_ALREADY_CLOSED"
 
 
+class BallotInvalidationNotAuthorizedError(ValueError):
+    """PACK-05 (ADR-017 Option B). Raised by `invalidate_ballot` when no
+    approved, correctly-scoped `GovernanceDecision` (`decision_type =
+    ballot_invalidation`, `subject_reference.ballot_id` matching this
+    `Ballot`, and not itself superseded) can be found via
+    `epd2_governance_service.application.get_governance_decision`."""
+
+    reason_code = "BALLOT_INVALIDATION_NOT_AUTHORIZED"
+
+
 class UnknownEligibilitySnapshotReferenceError(ValueError):
     """Raised by `submit_ballot_for_configuration_review` when the
     `eligibility_snapshot_id` it is asked to freeze against does not

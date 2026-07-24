@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/technical-challenge.schema.json",
+  "title": "TechnicalChallenge",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19b.4 (added by canon 0.4.0, ADR-018). Owned by governance-service (epd2_governance_service.domain.TechnicalChallenge). submitter_authorization_reference is a real, stored, opaque value here (mirroring PublicLedgerEntry.published_by_role_id's precedent) - the 'never published verbatim' rule is enforced one layer up, in events.py's *_public_payload, which omits this field entirely from every event. submitted_at must strictly precede the referenced ResultPublication.challenge_deadline_at. governance_decision_id must be set once status is upheld or rejected (adjudication is always a side effect of approving/rejecting the linked GovernanceDecision, never a standalone command). Terminal states (upheld/rejected) have no further transitions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "technical_challenge_id",
+    "result_publication_id",
+    "submitter_authorization_type",
+    "submitter_authorization_reference",
+    "challenge_reason_code",
+    "evidence_references",
+    "submitted_at",
+    "governance_decision_id",
+    "status"
+  ],
+  "properties": {
+    "technical_challenge_id": { "type": "string", "format": "uuid" },
+    "result_publication_id": { "type": "string", "format": "uuid" },
+    "submitter_authorization_type": {
+      "type": "string",
+      "enum": ["participation_credential", "role_assignment"]
+    },
+    "submitter_authorization_reference": { "type": "string", "minLength": 1 },
+    "challenge_reason_code": { "type": "string", "minLength": 1 },
+    "evidence_references": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "governance_decision_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["submitted", "under_review", "upheld", "rejected"]
+    }
+  }
+}

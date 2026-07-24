@@ -19,6 +19,16 @@ well-formed OpenAPI 3.x, and every operation's `tags` value is exactly
 one-service pack has no "subset of many services" question to check;
 this is a stricter, exact-match assertion for that reason).
 
+Also validates `contracts/openapi/pack-05.yaml` (added alongside, not
+replacing, the PACK-02/PACK-03/PACK-04 assertions above): it exists,
+parses as well-formed OpenAPI 3.x, and every operation's `tags` value is
+exactly `["governance-service"]` (ADR-016's single-service
+decomposition, mirroring PACK-04's own exact-match assertion). Also
+checks that `contracts/openapi/pack-03.yaml`'s new `invalidateBallot`
+operation (ADR-017 Option B) is tagged `voting-service`, not
+`governance-service` - it is physically owned by voting-service even
+though it reads a GovernanceDecision produced by governance-service.
+
 Requires PyYAML; skipped locally (see LOCAL_VERIFICATION.md), run for real
 in CI.
 """
@@ -33,6 +43,7 @@ from _schema_helpers import (
     PACK03_OPENAPI_PATH,
     PACK03_SERVICE_DIRS,
     PACK04_OPENAPI_PATH,
+    PACK05_OPENAPI_PATH,
 )
 
 yaml = pytest.importorskip("yaml")
@@ -65,6 +76,11 @@ def _pack03_spec() -> dict[str, Any]:
 
 def _pack04_spec() -> dict[str, Any]:
     parsed: dict[str, Any] = yaml.safe_load(PACK04_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return parsed
+
+
+def _pack05_spec() -> dict[str, Any]:
+    parsed: dict[str, Any] = yaml.safe_load(PACK05_OPENAPI_PATH.read_text(encoding="utf-8"))
     return parsed
 
 
@@ -187,4 +203,88 @@ def test_pack04_tags_are_exactly_transparency_service() -> None:
             used_tags.update(operation.get("tags", []))
     assert used_tags == {"transparency-service"}, (
         f"pack-04.yaml must use exactly the tag 'transparency-service', found: {used_tags}"
+    )
+
+
+# --- PACK-05 (contracts/openapi/pack-05.yaml) -------------------------------
+
+
+def test_pack05_openapi_file_is_well_formed_yaml() -> None:
+    spec = _pack05_spec()
+    assert spec["openapi"].startswith("3.")
+    assert "paths" in spec
+    assert len(spec["paths"]) > 0
+
+
+def test_pack05_each_operation_is_owned_by_exactly_one_service_tag() -> None:
+    spec = _pack05_spec()
+    for path, path_item in spec["paths"].items():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            tags = operation.get("tags", [])
+            assert len(tags) == 1, f"{path} {method} must have exactly one owning service tag"
+
+
+def test_pack05_tags_are_exactly_governance_service() -> None:
+    """ADR-016: PACK-05 has exactly one service. Every operation's `tags`
+    value in `pack-05.yaml` must be `["governance-service"]` - never a
+    stray/misspelled tag, and never a PACK-02/03/04 service name
+    (PACK-05's own contract owns only PACK-05 paths)."""
+    spec = _pack05_spec()
+    used_tags: set[str] = set()
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            used_tags.update(operation.get("tags", []))
+    assert used_tags == {"governance-service"}, (
+        f"pack-05.yaml must use exactly the tag 'governance-service', found: {used_tags}"
+    )
+
+
+def test_pack05_bootstrap_seed_command_has_no_openapi_path() -> None:
+    """PACK-05 required scope item 6: the deployment-time bootstrap seed
+    command is not exposed through normal API. Structurally verified: no
+    operationId in pack-05.yaml ever mentions "bootstrap" or "seed"."""
+    spec = _pack05_spec()
+    for path, path_item in spec["paths"].items():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            operation_id = operation.get("operationId", "")
+            lowered = operation_id.lower()
+            assert "bootstrap" not in lowered and "seed" not in lowered, (
+                f"{path} {method} operationId {operation_id!r} suggests the bootstrap seed "
+                "command is exposed through the API contract, contradicting required scope item 6"
+            )
+
+
+def test_pack03_invalidate_ballot_operation_is_tagged_voting_service() -> None:
+    """ADR-017 Option B: `invalidate_ballot` is physically owned by
+    voting-service (PACK-03), not governance-service, even though it
+    reads a GovernanceDecision. Its OpenAPI operation must live in
+    `pack-03.yaml` tagged `voting-service`, never in `pack-05.yaml`."""
+    pack03_spec = _pack03_spec()
+    found = False
+    for path_item in pack03_spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            if operation.get("operationId") == "invalidateBallot":
+                found = True
+                assert operation.get("tags") == ["voting-service"], (
+                    f"invalidateBallot must be tagged voting-service, not {operation.get('tags')}"
+                )
+    assert found, "expected an invalidateBallot operation in pack-03.yaml"
+
+    pack05_spec = _pack05_spec()
+    pack05_operation_ids = {
+        operation.get("operationId")
+        for path_item in pack05_spec["paths"].values()
+        for method, operation in path_item.items()
+        if method in {"get", "post", "put", "patch", "delete"}
+    }
+    assert "invalidateBallot" not in pack05_operation_ids, (
+        "invalidateBallot must not also appear in pack-05.yaml - it is owned by voting-service"
     )

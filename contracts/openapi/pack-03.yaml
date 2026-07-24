@@ -2218,6 +2218,59 @@ paths:
         "422":
           description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
 
+  /ballots/{ballotId}/invalidate:
+    post:
+      operationId: invalidateBallot
+      summary: Invalidate a ballot on the authority of an approved GovernanceDecision
+      description: >
+        Owned by voting-service. Maps to
+        epd2_voting_service.application.invalidate_ballot (PACK-05,
+        ADR-017 Option B). voting-service remains the sole writer of
+        Ballot — this is the one narrow, additional command that verifies
+        an approved, correctly-scoped `ballot_invalidation`
+        GovernanceDecision (read via
+        epd2_governance_service.application.get_governance_decision /
+        is_current_approved_decision — voting-service never writes
+        governance-service storage, and governance-service never writes
+        Ballot directly) before transitioning the ballot to invalidated.
+      tags: [voting-service]
+      parameters:
+        - name: ballotId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [governance_decision_id]
+              properties:
+                governance_decision_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Ballot invalidated; canon's ballot.invalidated event emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ballot]
+                properties:
+                  ballot: { $ref: "../schemas/ballot.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: >-
+            PERMISSION_DENIED (CT-00-06), or
+            BALLOT_INVALIDATION_NOT_AUTHORIZED — the referenced
+            GovernanceDecision is not an approved, non-superseded
+            ballot_invalidation decision scoped to this exact ballot_id.
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND — no such ballot_id or governance_decision_id.
+        "422":
+          description: VALIDATION_FORBIDDEN_TRANSITION (CT-00-03).
+
   /ballots/{ballotId}/votes:
     post:
       operationId: castVote

@@ -26,6 +26,22 @@ from epd2_deliberation_service.exceptions import (
     ForbiddenContributionVisibilityTransitionError,
     ForbiddenDiscussionTransitionError,
 )
+from epd2_governance_service.domain import (
+    GovernanceDecisionStatus,
+    GovernancePolicyStatus,
+    RoleAssignmentStatus,
+    TechnicalChallengeStatus,
+    assert_governance_decision_transition_allowed,
+    assert_governance_policy_transition_allowed,
+    assert_role_assignment_transition_allowed,
+    assert_technical_challenge_transition_allowed,
+)
+from epd2_governance_service.exceptions import (
+    ForbiddenGovernanceDecisionTransitionError,
+    ForbiddenGovernancePolicyTransitionError,
+    ForbiddenRoleAssignmentTransitionError,
+    ForbiddenTechnicalChallengeTransitionError,
+)
 from epd2_identity_service.domain import VerificationStatus
 from epd2_identity_service.domain import assert_transition_allowed as assert_identity_transition
 from epd2_identity_service.exceptions import ForbiddenVerificationTransitionError
@@ -220,3 +236,81 @@ def test_ballot_tallying_and_tallied_never_precede_closed() -> None:
             continue
         with pytest.raises(ForbiddenBallotTransitionError):
             assert_ballot_transition_allowed(source, BallotStatus.TALLIED)
+
+
+# =============================================================================
+# PACK-05: at least one real forbidden pair from each of governance-service's
+# four entities with a real state machine, mirroring the PACK-03 section
+# above.
+# =============================================================================
+
+
+def test_role_assignment_revoked_is_terminal() -> None:
+    with pytest.raises(ForbiddenRoleAssignmentTransitionError) as excinfo:
+        assert_role_assignment_transition_allowed(
+            RoleAssignmentStatus.REVOKED, RoleAssignmentStatus.ACTIVE
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_role_assignment_expired_cannot_go_directly_to_active() -> None:
+    with pytest.raises(ForbiddenRoleAssignmentTransitionError):
+        assert_role_assignment_transition_allowed(
+            RoleAssignmentStatus.EXPIRED, RoleAssignmentStatus.ACTIVE
+        )
+
+
+def test_governance_policy_superseded_is_terminal() -> None:
+    """PACK-05 spec's own explicitly-named case: a `GovernancePolicy`
+    never returns to `draft`, and `superseded` has no outgoing
+    transitions (canon 19b.2: at most one active version per policy_type,
+    superseding is one-directional)."""
+    with pytest.raises(ForbiddenGovernancePolicyTransitionError) as excinfo:
+        assert_governance_policy_transition_allowed(
+            GovernancePolicyStatus.SUPERSEDED, GovernancePolicyStatus.ACTIVE
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_governance_policy_draft_cannot_go_directly_to_superseded() -> None:
+    with pytest.raises(ForbiddenGovernancePolicyTransitionError):
+        assert_governance_policy_transition_allowed(
+            GovernancePolicyStatus.DRAFT, GovernancePolicyStatus.SUPERSEDED
+        )
+
+
+def test_governance_decision_approved_is_terminal() -> None:
+    """PACK-05 spec's own explicitly-named case: a `GovernanceDecision` is
+    immutable once `approved` or `rejected` (canon 19b.3) - there is no
+    stored `superseded` status at all; corrections are always a new row."""
+    with pytest.raises(ForbiddenGovernanceDecisionTransitionError) as excinfo:
+        assert_governance_decision_transition_allowed(
+            GovernanceDecisionStatus.APPROVED, GovernanceDecisionStatus.REJECTED
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_governance_decision_rejected_is_terminal() -> None:
+    with pytest.raises(ForbiddenGovernanceDecisionTransitionError):
+        assert_governance_decision_transition_allowed(
+            GovernanceDecisionStatus.REJECTED, GovernanceDecisionStatus.APPROVED
+        )
+
+
+def test_technical_challenge_upheld_is_terminal() -> None:
+    with pytest.raises(ForbiddenTechnicalChallengeTransitionError) as excinfo:
+        assert_technical_challenge_transition_allowed(
+            TechnicalChallengeStatus.UPHELD, TechnicalChallengeStatus.UNDER_REVIEW
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_technical_challenge_submitted_cannot_go_directly_to_upheld() -> None:
+    """PACK-05 spec's own explicitly-named case: adjudication (`upheld`/
+    `rejected`) is only reachable through `under_review`, never directly
+    from `submitted` (canon 19b.4: adjudication is always a side effect
+    of deciding the linked `GovernanceDecision`)."""
+    with pytest.raises(ForbiddenTechnicalChallengeTransitionError):
+        assert_technical_challenge_transition_allowed(
+            TechnicalChallengeStatus.SUBMITTED, TechnicalChallengeStatus.UPHELD
+        )

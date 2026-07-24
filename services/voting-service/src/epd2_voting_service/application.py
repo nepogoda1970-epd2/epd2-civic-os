@@ -33,6 +33,10 @@ from epd2_core.event_envelope import ActorRef, EventEnvelope, compute_payload_ha
 from epd2_core.identifiers import generate_uuid
 from epd2_credential_service.application import validate_participation_credential
 from epd2_eligibility_service.application import get_eligibility_snapshot
+from epd2_governance_service.application import (
+    get_governance_decision,
+    is_current_approved_decision,
+)
 from epd2_voting_service.domain import (
     Ballot,
     BallotMethod,
@@ -54,6 +58,7 @@ from epd2_voting_service.events import (
     build_ballot_closed_event,
     build_ballot_configuration_locked_event,
     build_ballot_created_event,
+    build_ballot_invalidated_event,
     build_ballot_opened_event,
     build_ballot_paused_event,
     build_ballot_resumed_event,
@@ -67,6 +72,7 @@ from epd2_voting_service.events import (
 from epd2_voting_service.exceptions import (
     BallotAlreadyClosedError,
     BallotConfigurationLockedError,
+    BallotInvalidationNotAuthorizedError,
     BallotNotOpenError,
     DuplicateVoteError,
     UnknownBallotError,
@@ -1065,6 +1071,99 @@ def issue_vote_receipt(
         clock=clock,
     )
     return IssueReceiptResult(receipt=stored, audit_event=audit_event)
+
+
+def invalidate_ballot(
+    ballot_store: BallotStore,
+    governance_decision_store: Any,
+    audit_store: AuditEventStore,
+    *,
+    ballot_id: UUID,
+    governance_decision_id: UUID,
+    actor: ActorRef,
+    actor_is_authorized: bool,
+    correlation_id: UUID,
+    clock: Clock,
+    event_id: UUID | None = None,
+) -> BallotResult:
+    """PACK-05 (ADR-017 Option B, canon 19b.6): the one narrow command
+    that lets `voting-service` reach `BallotStatus.INVALIDATED`
+    (`draft`/`configuration_review`/`scheduled -> invalidated`), gated
+    on reading an already-`approved`, correctly-scoped, non-superseded
+    `GovernanceDecision` (`decision_type = ballot_invalidation`,
+    `subject_reference.ballot_id` matching this `ballot_id`) from
+    `governance-service`. `voting-service` remains the sole writer of
+    `Ballot`; `governance-service` is never called to mutate anything
+    here, only read, via
+    `epd2_governance_service.application.get_governance_decision`/
+    `is_current_approved_decision` (never `.storage`/`.domain`) - the
+    first reverse cross-pack read edge in this project (ADR-017).
+
+    `governance_decision_store` is accepted as an `Any`-typed passthrough
+    parameter, the same convention this module already uses for
+    `credential_store`/`eligibility_snapshot_store` (ADR-008): this
+    module has no import of `epd2_governance_service.storage` or
+    `epd2_governance_service.domain` anywhere, so it cannot reach past
+    `governance-service`'s own public application-layer contract.
+    """
+    if not actor_is_authorized:
+        raise PermissionDeniedError("actor is not authorized to invalidate a ballot")
+
+    ballot = ballot_store.get(ballot_id)
+    if ballot is None:
+        raise UnknownBallotError(f"unknown ballot_id: {ballot_id}")
+
+    decision = get_governance_decision(
+        governance_decision_store, governance_decision_id=governance_decision_id
+    )
+    if (
+        decision is None
+        or decision.decision_type.value != "ballot_invalidation"
+        or decision.subject_reference.get("ballot_id") != str(ballot_id)
+        or not is_current_approved_decision(governance_decision_store, decision)
+    ):
+        raise BallotInvalidationNotAuthorizedError(
+            "no approved, correctly-scoped, non-superseded ballot_invalidation "
+            f"GovernanceDecision found for ballot {ballot_id} "
+            f"(governance_decision_id={governance_decision_id})"
+        )
+
+    now = clock.now()
+    before_hash = compute_payload_hash(ballot_full_state_payload(ballot))
+    updated = ballot.with_status(BallotStatus.INVALIDATED)
+    stored = ballot_store.save(updated)
+
+    resolved_event_id = event_id if event_id is not None else generate_uuid()
+    event = build_ballot_invalidated_event(
+        event_id=resolved_event_id,
+        ballot=stored,
+        governance_decision_id=governance_decision_id,
+        actor=actor,
+        correlation_id=correlation_id,
+        causation_id=None,
+        occurred_at=now,
+    )
+    audit_event = append_audit_event(
+        audit_store,
+        AppendAuditEventRequest(
+            audit_event_id=resolved_event_id,
+            event_type=event.event_type,
+            occurred_at=now,
+            actor_id=actor.actor_id,
+            actor_type=actor.actor_type,
+            target_type="ballot",
+            target_id=stored.ballot_id,
+            action="invalidate",
+            reason_code=_BALLOT_STATUS_CHANGED,
+            policy_version=AUDIT_POLICY_VERSION,
+            correlation_id=correlation_id,
+            source_service=_SOURCE_SERVICE,
+            before_hash=before_hash,
+            after_hash=compute_payload_hash(ballot_full_state_payload(stored)),
+        ),
+        clock=clock,
+    )
+    return BallotResult(ballot=stored, event=event, audit_event=audit_event)
 
 
 def get_ballot(store: BallotStore, *, ballot_id: UUID) -> Ballot | None:

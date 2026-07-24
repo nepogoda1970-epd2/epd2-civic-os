@@ -172,11 +172,13 @@ def test_ballot_forbidden_transition_from_published() -> None:
         ballot.with_status(BallotStatus.OPEN)
 
 
-def test_ballot_invalidated_reachable_only_structurally() -> None:
-    """ADR-009 item 14 (amended): the domain/state-machine level must
-    still support `invalidated` (for CT-00-02/CT-00-03), even though no
-    `application.py` command ever reaches it - see
-    `tests/test_application.py`'s absence-of-command test."""
+def test_ballot_invalidated_transition() -> None:
+    """ADR-009 item 14 (amended): the domain/state-machine level has
+    always supported `invalidated` (for CT-00-02/CT-00-03). PACK-05
+    (ADR-017 Option B) adds the one narrow `application.invalidate_ballot`
+    command that actually reaches it, gated on an approved
+    `GovernanceDecision` read from `governance-service` - see
+    `tests/test_application.py`'s `test_invalidate_ballot_*` tests."""
     ballot = _make_ballot(status=BallotStatus.DRAFT)
     updated = ballot.with_status(BallotStatus.INVALIDATED)
     assert updated.status == BallotStatus.INVALIDATED

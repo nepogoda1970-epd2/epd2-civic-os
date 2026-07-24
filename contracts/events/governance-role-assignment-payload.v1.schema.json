@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governance-role-assignment-payload.v1.schema.json",
+  "title": "governance.role_assignment_* event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.15. Produced by epd2_governance_service.events.role_assignment_public_payload, shared verbatim by three distinct event_type builders: build_role_assignment_requested_event (governance.role_assignment_requested), build_role_assignment_activated_event (governance.role_assignment_activated), build_role_assignment_revoked_event (governance.role_assignment_revoked) - verified by reading events.py, all three call the shared payload function and differ only in event_type. Deliberately omits actor_id and assigned_by entirely (canon 19b.1: a RoleAssignment is internal authority-plumbing; no external event payload reveals which actor holds which role).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role_assignment_id",
+    "role_code",
+    "scope_id",
+    "valid_from",
+    "valid_until",
+    "approval_reference",
+    "status"
+  ],
+  "properties": {
+    "role_assignment_id": { "type": "string", "format": "uuid" },
+    "role_code": { "type": "string", "minLength": 1 },
+    "scope_id": { "type": "string", "format": "uuid" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "approval_reference": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "active", "suspended", "expired", "revoked"]
+    }
+  }
+}

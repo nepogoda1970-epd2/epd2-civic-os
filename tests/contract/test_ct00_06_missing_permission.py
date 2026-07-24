@@ -34,6 +34,22 @@ from epd2_eligibility_service.storage import (
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
 )
+from epd2_governance_service.application import (
+    activate_governance_policy,
+    propose_governance_policy,
+)
+from epd2_governance_service.domain import (
+    GLOBAL_SCOPE_ID,
+    GovernancePolicyStatus,
+    GovernancePolicyType,
+    RoleAssignment,
+    RoleAssignmentStatus,
+)
+from epd2_governance_service.exceptions import SameActorApprovalRejectedError
+from epd2_governance_service.storage import (
+    InMemoryGovernancePolicyStore,
+    InMemoryRoleAssignmentStore,
+)
 from epd2_identity_service.application import (
     PermissionDeniedError as IdentityPermissionDeniedError,
 )
@@ -526,3 +542,132 @@ def test_approve_ballot_configuration_succeeds_for_a_different_actor(
         clock=clock,
     )
     assert result.ballot.status == BallotStatus.SCHEDULED
+
+
+# =============================================================================
+# PACK-05: the flagship two-actor authorization test named explicitly by the
+# pack's required scope (item 4) - `activate_governance_policy`'s proposer
+# and approver `RoleAssignment`s must resolve to distinct actors (ADR-020
+# item 1). Mirrors the PACK-03 `decide_appeal`/
+# `approve_ballot_configuration` pattern above: a rejection case and a real,
+# end-to-end success case for the "different actor" path.
+# =============================================================================
+
+
+def test_propose_governance_policy_rejects_same_actor_as_proposer_and_approver(
+    governance_policy_store: InMemoryGovernancePolicyStore,
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Both `proposed_by_role_id` and `approved_by_role_id` must resolve
+    to distinct actors, even when they are two different `RoleAssignment`
+    records (ADR-020 item 1: 'no role may approve or grant its own
+    assignment' applies to two-actor approval generally, not only literal
+    self-approval)."""
+    same_actor_id = uuid4()
+    proposer_role = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=same_actor_id,
+            role_code="governance_policy_proposer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    approver_role = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=same_actor_id,
+            role_code="governance_policy_approver",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    with pytest.raises(SameActorApprovalRejectedError) as excinfo:
+        propose_governance_policy(
+            governance_policy_store,
+            role_assignment_store,
+            audit_store,
+            governance_policy_id=uuid4(),
+            policy_type=GovernancePolicyType.ROLE_TAXONOMY,
+            rule_definition={},
+            effective_from=clock.now(),
+            proposed_by_role_id=proposer_role.role_assignment_id,
+            approved_by_role_id=approver_role.role_assignment_id,
+            actor=actor,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "SAME_ACTOR_APPROVAL_REJECTED"
+
+
+def test_activate_governance_policy_succeeds_for_distinct_proposer_and_approver(
+    governance_policy_store: InMemoryGovernancePolicyStore,
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    proposer_role = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="governance_policy_proposer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    approver_role = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="governance_policy_approver",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    policy = propose_governance_policy(
+        governance_policy_store,
+        role_assignment_store,
+        audit_store,
+        governance_policy_id=uuid4(),
+        policy_type=GovernancePolicyType.ROLE_TAXONOMY,
+        rule_definition={},
+        effective_from=clock.now(),
+        proposed_by_role_id=proposer_role.role_assignment_id,
+        approved_by_role_id=approver_role.role_assignment_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    ).policy
+    result = activate_governance_policy(
+        governance_policy_store,
+        role_assignment_store,
+        audit_store,
+        governance_policy_id=policy.governance_policy_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    assert result.policy.status == GovernancePolicyStatus.ACTIVE

@@ -45,6 +45,23 @@ test("current versions match the expected skeleton version", () => {
   // LobbyLogEntry) against the already-accepted canon 0.3.0 text and
   // ADR-011 through ADR-015 - no further canon edit was made, so
   // CANON_VERSION is unchanged.
-  assert.equal(CANON_VERSION, "0.3.0");
-  assert.equal(REPOSITORY_VERSION, "0.4.0");
+  // CANON_VERSION moved 0.3.0 -> 0.4.0 per ADR-018 and ADR-020 (both
+  // accepted with amendments): new canon section 19b (Governance
+  // Context) defining GovernancePolicy, GovernanceDecision,
+  // TechnicalChallenge, and integrating the already-existing
+  // RoleAssignment (8.4); a new section 20.15 event catalog; three new
+  // section 22 ownership-matrix rows; and the reworded/extended section
+  // 23 forbidden-link entries (AdministratorRole generalized to any
+  // RoleAssignment role_code) - a backward-compatible (minor) canon
+  // addition per canon section 25. This round was a canon-only change
+  // for CLAUDE-PACK-05 governance; no governance-service code existed
+  // yet, so REPOSITORY_VERSION was unchanged at the time.
+  // REPOSITORY_VERSION moved 0.4.0 -> 0.5.0 for CLAUDE-PACK-05
+  // (Governance Context): implements governance-service
+  // (RoleAssignment/GovernancePolicy/GovernanceDecision/
+  // TechnicalChallenge) against the already-accepted canon 0.4.0 text
+  // and ADR-016 through ADR-020 - no further canon edit was made, so
+  // CANON_VERSION is unchanged.
+  assert.equal(CANON_VERSION, "0.4.0");
+  assert.equal(REPOSITORY_VERSION, "0.5.0");
 });

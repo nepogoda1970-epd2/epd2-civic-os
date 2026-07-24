@@ -2,11 +2,13 @@
 `ballot.created`, `ballot.configuration_locked`, `ballot.scheduled`,
 `ballot.opened`, `ballot.paused`, `ballot.resumed`, `vote.received`,
 `vote.validated`, `vote.rejected`, `vote.superseded`, `ballot.closed`,
-`ballot.cancelled`.
+`ballot.cancelled`, `ballot.invalidated`.
 
 `tally.*`/`result.published` belong to `tally-service`, not this
-service - never built here. No `ballot.invalidated` builder exists in
-this module at all (ADR-009 item 14, amended) - see README.md.
+service - never built here. `build_ballot_invalidated_event` (below) is
+now used by exactly one command, `application.invalidate_ballot`
+(PACK-05, ADR-017 Option B) - see README.md's "No PACK-03-reachable
+invalidation" section, updated for PACK-05.
 
 No payload here ever includes `credential_proof`'s referenced
 credential's own identity-adjacent data, or
@@ -393,6 +395,39 @@ def build_vote_superseded_event(
         producer="voting-service",
         actor=actor,
         subject=SubjectRef(subject_type="vote_envelope", subject_id=envelope.vote_envelope_id),
+        correlation_id=correlation_id,
+        causation_id=causation_id,
+        payload=payload,
+    )
+
+
+def build_ballot_invalidated_event(
+    *,
+    event_id: UUID,
+    ballot: Ballot,
+    governance_decision_id: UUID,
+    actor: ActorRef,
+    correlation_id: UUID,
+    causation_id: UUID | None,
+    occurred_at: datetime,
+) -> EventEnvelope:
+    """PACK-05 (ADR-017 Option B): emitted by
+    `application.invalidate_ballot` after confirming an approved,
+    correctly-scoped `GovernanceDecision` (`decision_type =
+    ballot_invalidation`) authorizes this transition. `governance_
+    decision_id` is included so any downstream consumer can trace the
+    invalidation back to the authorizing decision without this service
+    ever storing or re-deriving that authority itself."""
+    payload = ballot_state_payload(ballot)
+    payload["governance_decision_id"] = str(governance_decision_id)
+    return build_event_envelope(
+        event_id=event_id,
+        event_type="ballot.invalidated",
+        event_version=EVENT_VERSION,
+        occurred_at=occurred_at,
+        producer="voting-service",
+        actor=actor,
+        subject=SubjectRef(subject_type="ballot", subject_id=ballot.ballot_id),
         correlation_id=correlation_id,
         causation_id=causation_id,
         payload=payload,

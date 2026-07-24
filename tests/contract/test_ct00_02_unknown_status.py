@@ -27,6 +27,18 @@ from epd2_deliberation_service.exceptions import (
 )
 from epd2_eligibility_service.domain import parse_decision_value
 from epd2_eligibility_service.exceptions import UnknownEligibilityDecisionValueError
+from epd2_governance_service.domain import (
+    parse_governance_decision_status,
+    parse_governance_policy_status,
+    parse_role_assignment_status,
+    parse_technical_challenge_status,
+)
+from epd2_governance_service.exceptions import (
+    UnknownGovernanceDecisionStatusError,
+    UnknownGovernancePolicyStatusError,
+    UnknownRoleAssignmentStatusError,
+    UnknownTechnicalChallengeStatusError,
+)
 from epd2_identity_service.domain import parse_status as parse_identity_status
 from epd2_identity_service.exceptions import UnknownVerificationStatusError
 from epd2_initiative_service.domain import (
@@ -167,6 +179,36 @@ _PACK03_PARSE_CASES = (
     ids=[fn.__name__ for fn, _ in _PACK03_PARSE_CASES],
 )
 def test_pack03_unknown_enum_value_is_rejected(
+    parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
+) -> None:
+    with pytest.raises(expected_exception) as excinfo:
+        parse_fn("not_a_real_value")
+    error = excinfo.value
+    assert isinstance(error, _ReasonCodedError)
+    assert error.reason_code == "VALIDATION_UNKNOWN_STATUS"
+
+
+# =============================================================================
+# PACK-05: the one PACK-05 service's (governance-service) four status enums'
+# own `parse_*` functions, mirroring the PACK-03 parametrized block above.
+# =============================================================================
+
+#: (parse_fn, expected_exception_type) for all 4 PACK-05 status enums:
+#: RoleAssignment, GovernancePolicy, GovernanceDecision, TechnicalChallenge.
+_PACK05_PARSE_CASES = (
+    (parse_role_assignment_status, UnknownRoleAssignmentStatusError),
+    (parse_governance_policy_status, UnknownGovernancePolicyStatusError),
+    (parse_governance_decision_status, UnknownGovernanceDecisionStatusError),
+    (parse_technical_challenge_status, UnknownTechnicalChallengeStatusError),
+)
+
+
+@pytest.mark.parametrize(
+    "parse_fn,expected_exception",
+    _PACK05_PARSE_CASES,
+    ids=[fn.__name__ for fn, _ in _PACK05_PARSE_CASES],
+)
+def test_pack05_unknown_enum_value_is_rejected(
     parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
 ) -> None:
     with pytest.raises(expected_exception) as excinfo:
