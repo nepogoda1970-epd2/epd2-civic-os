@@ -1,27 +1,114 @@
 # CLAUDE-PACK-05 — Governance Context: Handover Report
 
-**Revision 1 — local PASS, no external CI run yet.** This report follows
-the same honesty convention `docs/handover/PACK-02-REPORT.md`,
-`docs/handover/PACK-03-REPORT.md`, and `docs/handover/PACK-04-REPORT.md`
-established: every check this sandbox can actually run is run for real
-(not skipped, not asserted from memory) and its literal output is quoted
-below; every check this sandbox itself cannot run (network-gated `uv
-lock`/`npm install`, and everything downstream of them locally — `npm run
-typecheck`, ESLint, the TypeScript/frontend test suites, `next build`) is
-named explicitly as not run locally, for the same reason PACK-02/03/04
-already documented (`pypi.org`/`files.pythonhosted.org`/
-`registry.npmjs.org` all return `403` from this sandbox).
+**Revision 2 — external Prettier finding fixed; still no other external
+CI result to report.** Revision 1 closed a genuine local PASS but had
+never been run through the project's actual CI Prettier version before
+export. The first real external GitHub Actions run against
+`epd2-civic-os-PACK-05-final-candidate.zip` reported a Prettier
+format-check failure on exactly two files — see section 0a for the
+finding and fix. This report follows the same honesty convention
+`docs/handover/PACK-02-REPORT.md`, `docs/handover/PACK-03-REPORT.md`, and
+`docs/handover/PACK-04-REPORT.md` established: every check this sandbox
+can actually run is run for real (not skipped, not asserted from memory)
+and its literal output is quoted below; every check this sandbox itself
+cannot run (network-gated `uv lock`/`npm install`, and everything
+downstream of them locally — `npm run typecheck`, ESLint, the
+TypeScript/frontend test suites, `next build`) is named explicitly as
+not run locally, for the same reason PACK-02/03/04 already documented
+(`pypi.org`/`files.pythonhosted.org`/`registry.npmjs.org` all return
+`403` from this sandbox).
 
-Unlike PACK-04's report, this one has no external GitHub Actions run to
-incorporate yet — no such run has occurred for this pack as of this
-writing. This report therefore makes no claim beyond what this sandbox has
-itself directly executed and observed this pass. It is a single-revision
-report: no prior revision's finding is being closed out here, because
-there is no prior revision.
+Beyond the Prettier finding below, no other external GitHub Actions
+result has been reported for this pack as of this writing — unlike
+PACK-04's closed, fully externally-confirmed report, this one still
+cannot claim a complete CI PASS (`uv lock`/`npm install`/`next
+build`/ESLint/TypeScript tests remain unconfirmed either way). This
+report makes no claim beyond what has actually been run and observed,
+locally or externally.
 
 ```text
-PACK-05 PASS (local verification only — no external CI run yet)
+PACK-05 PASS (local verification; one external Prettier finding fixed
+this revision; no other external CI result reported yet)
 ```
+
+## 0a. External verification finding and fix (revision 2)
+
+External verification on GitHub Actions (running against the revision-1
+candidate archive, `epd2-civic-os-PACK-05-final-candidate.zip`) reported
+a Prettier format-check failure on exactly two files — both newly
+written this pack, neither ever run through this sandbox's _own_
+system Prettier (3.8.1) against CI's actually-locked version (3.9.6,
+confirmed via `package-lock.json`'s `node_modules/prettier` entry — the
+same one-minor-version gap PACK-04's own revision 3 already
+root-caused):
+
+```text
+[warn] docs/handover/PACK-05-REPORT.md
+[warn] services/governance-service/README.md
+Code style issues found in 2 files. Run Prettier with --write to fix.
+```
+
+This sandbox's own `/opt/node22/bin/prettier --check .` did **not**
+reproduce this failure before the fix — both files reported clean under
+the sandbox's 3.8.1. Direct inspection (not a blind `--write` retry)
+found the actual root cause in both files: the exact same class of
+markdown ambiguity PACK-04's own revision 3 (that report's section 0b)
+already found and fixed — a bold run (`**...**`) sitting with no
+separating space against a code span, which different
+Prettier/remark versions can tokenize differently.
+
+In `docs/handover/PACK-05-REPORT.md`, section 5 item 5's heading
+contained a code span whose own content begins with a literal double
+asterisk, nested directly inside a bold run — shown here as a plain
+code block, deliberately not inline markdown, so quoting the malformed
+text cannot itself reintroduce the same ambiguity it is describing:
+
+```text
+5. **mypy `**kwargs`-unpacking against a typed function signature** — the
+```
+
+This sandbox's 3.8.1 had already "resolved" the ambiguity by silently
+reformatting the surrounding prose, but did so incorrectly: several
+words lost their separating spaces entirely, and a literal
+backslash-escaped double asterisk leaked into the rendered text, shown
+verbatim below (again as a plain code block):
+
+```text
+`test_request_role_assignment_idempotent_replay`builds a`kwargs =
+   dict(...)` of mixed-typed values and unpacks it twice via double-star
+(`\*\*kwargs`) syntax into `request_role_assignment`; mypy widens the
+dict's value type to `object`and cannot narrow it back per-parameter.
+```
+
+This is a genuine authoring defect, not merely a version disagreement —
+this sandbox's own Prettier run masked it instead of surfacing it. In
+`services/governance-service/README.md`, two "Known gaps" bullets opened
+their bold run immediately against a code span with no separating
+space, in the same style as the pattern above — valid CommonMark on its
+own, but the same adjacency pattern that different Prettier versions
+can disagree about normalizing, and worth removing on sight regardless
+of which version is "right."
+
+**Fixed at the source, content unchanged in meaning:** section 5 item 5
+was rewritten as plain prose — the bold lead-in no longer contains a
+code span at all (`**A precedented mypy false positive from double-star
+kwargs-unpacking against a typed function signature.**`), and the
+mangled spacing/escaped-asterisk artifacts were corrected back to
+normal prose describing the exact same fix already applied in revision
+1 (nothing about the underlying `# type: ignore[arg-type]` fix itself
+changed). The two README.md bullets were restructured so the bold lead-in
+is a short label with no code span inside it (`**Not interpreted by a
+rule engine.**`, `**No current caller.**`), with the same `` ` ``-quoted
+identifiers immediately following, outside the bold run. No logic,
+schema, test, workflow, canon, ADR, or version content was touched by
+this fix — confirmed by re-running the complete local verification
+suite after the fix and comparing against revision 1's own numbers
+(section 11): identical in every respect (336/336 required paths, canon
+checksum unchanged, Ruff clean, mypy clean across all fifteen groups,
+1712 passed / 3 skipped / 0 failed) — proving this was a
+documentation-only, formatting-and-prose-only correction.
+`/opt/node22/bin/prettier --check .` now reports both files (and the
+full tree) clean.
 
 ## 0. What CLAUDE-PACK-05 adds
 
@@ -278,19 +365,20 @@ role_scope_id in (subject_scope_id, GLOBAL_SCOPE_ID)`, and
 "governance_decision_id"`; retyped to the concrete
    `_FakeApprovedBallotInvalidationDecision | None`.
 
-5. **mypy `**kwargs`-unpacking against a typed function signature** — the
-one precedented, unavoidable false positive already documented in four
-PACK-03 services and transparency-service's own idempotency tests
-(e.g. `test_delegation_create_delegation_is_idempotent_by_event_id`,
-`test_publish_ledger_entry_is_idempotent_by_event_id`).
-`test_request_role_assignment_idempotent_replay`builds a`kwargs =
-   dict(...)` of mixed-typed values and unpacks it twice via double-star
-(`\*\*kwargs`) syntax into `request_role_assignment`; mypy widens the
-dict's value type to `object`and cannot narrow it back per-parameter.
-Fixed the same precedented way: a`# type: ignore[arg-type]` comment
-   on both call sites, matching the exact pattern already used elsewhere
-   in this codebase for this identical, unavoidable mypy limitation — not
-   a new suppression pattern introduced by this pack.
+5. **A precedented mypy false positive from double-star kwargs-unpacking
+   against a typed function signature.** This is the same, already
+   documented limitation found in four PACK-03 services and
+   transparency-service's own idempotency tests (e.g.
+   `test_delegation_create_delegation_is_idempotent_by_event_id`,
+   `test_publish_ledger_entry_is_idempotent_by_event_id`).
+   `test_request_role_assignment_idempotent_replay` builds a `kwargs =
+dict(...)` of mixed-typed values and unpacks it twice via double-star
+   syntax into `request_role_assignment`; mypy widens the dict's value
+   type to `object` and cannot narrow it back per-parameter. Fixed the
+   same precedented way: a `# type: ignore[arg-type]` comment on both
+   call sites, matching the exact pattern already used elsewhere in this
+   codebase for this identical, unavoidable mypy limitation — not a new
+   suppression pattern introduced by this pack.
 
 6. **A malformed reason-code registry entry (found by Prettier, not by
    any Python test).** After the section-1 items above were fixed,
@@ -393,6 +481,28 @@ alongside PACK-02/PACK-03.
 
 ## 11. Commands executed this pass, and results
 
+### Revision 2 re-verification (after the section 0a Prettier fix)
+
+```text
+✅ /opt/node22/bin/prettier --check .   (before the fix)
+   → [warn] docs/handover/PACK-05-REPORT.md
+     [warn] services/governance-service/README.md
+     Code style issues found in 2 files. Run Prettier with --write to
+     fix. (exact match to GitHub Actions' own report, section 0a — this
+     sandbox's own 3.8.1 had not reproduced it until the underlying
+     markdown ambiguity was found and the two files were rewritten)
+
+✅ /opt/node22/bin/prettier --write docs/handover/PACK-05-REPORT.md
+   services/governance-service/README.md   (the fix)
+   → both files reformatted
+
+✅ /opt/node22/bin/prettier --check .   (after the fix)
+   → All matched files use Prettier code style!
+```
+
+Every command below was re-run in full after the fix and produced
+results identical to revision 1:
+
 ```text
 ✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
    61232dc8488f1dd96ea030fa3c41bd397c1c5cf1c7c8cee484bda0568d02c202
@@ -413,7 +523,8 @@ alongside PACK-02/PACK-03.
 ✅ ruff format --check .
    → 161 files already formatted
 
-✅ /opt/node22/bin/prettier --check .   (after the section-5-item-6 fix)
+✅ /opt/node22/bin/prettier --check .   (full tree, after both the
+   revision-1 section-5-item-6 fix and the revision-2 section-0a fix)
    → All matched files use Prettier code style!
 
 ✅ mypy packages/python/epd2-core scripts tests/repository conftest.py
@@ -470,22 +581,30 @@ alongside PACK-02/PACK-03.
    mirror, section 1): npm run typecheck (both workspaces), npm run lint
    (frontend ESLint), npm run test (both workspaces), next build.
 
-⏳ No external GitHub Actions run has occurred for this pack as of this
-   writing — unlike PACK-04's report, this report cannot yet reconcile
-   against, or claim, an externally-confirmed PASS.
+⏳ One external GitHub Actions run has occurred for this pack as of this
+   writing, reporting a Prettier format-check failure on exactly two
+   files (section 0a) — now fixed and re-verified locally. No other
+   external CI result (pass or fail) has been reported yet — unlike
+   PACK-04's fully closed report, this report still cannot claim a
+   complete, externally-confirmed PASS across every step `make verify`
+   runs (`uv lock`/`npm install`/`next build`/ESLint/TypeScript tests
+   remain unconfirmed either way).
 ```
 
 ## 12. Readiness conclusion
 
 ```text
-PACK-05 PASS (local verification only)
+PACK-05 PASS (local verification; one external Prettier finding fixed
+this revision; no other external CI result reported yet)
 ```
 
 Every check this sandbox can run has been run for real and passed:
 required structure (336 of 336 paths), no forbidden paths, all version
 sources consistent, Ruff format and lint clean, a real Prettier format
-check clean (after fixing the genuine duplicate-key YAML defect in
-section 5 item 6), mypy clean across all fifteen scoped groups with zero
+check clean — after fixing, this pass, both the genuine duplicate-key
+YAML defect found locally in revision 1 (section 5 item 6) and the
+genuine markdown-authoring defect external CI found in revision 2
+(section 0a) — mypy clean across all fifteen scoped groups with zero
 errors and exactly one documented, precedented `# type: ignore[arg-type]`
 pair (section 5 item 5, identical in kind to the pattern already used in
 four PACK-03 services and transparency-service), and 1712 passing Python
@@ -499,13 +618,20 @@ reason code was hidden, no legitimate field was stripped from a service's
 own contract to make a test pass, and no unlinkability or boundary claim
 is made without the automated test that backs it (sections 6, 9).
 
-This report does not claim more than this sandbox has itself verified:
-`uv.lock`/`package-lock.json` regeneration, `npm run typecheck`, frontend
-ESLint, the TypeScript/frontend test suites, `next build`, and any
-external CI run remain genuinely not executed here, for the same
-network-restriction reason PACK-02 through PACK-04 already documented —
-named explicitly above rather than glossed over. `PACK-05 PASS` in this
-report's title means exactly what section 11 shows and no more; it is not
-a claim of externally-confirmed CI success, which — as PACK-04's own
-report section 0c demonstrates — is the next, separate step once this
-candidate archive is run somewhere with real PyPI/npm network access.
+This report does not claim more than this sandbox, plus the one external
+run reported so far, have actually verified: `uv.lock`/`package-lock.json`
+regeneration, `npm run typecheck`, frontend ESLint, the
+TypeScript/frontend test suites, and `next build` remain genuinely not
+executed anywhere yet, for the same network-restriction reason PACK-02
+through PACK-04 already documented for this sandbox's own local runs —
+named explicitly above rather than glossed over. The one external run
+this pack has had so far exercised the full `make verify` pipeline far
+enough to reach (and, this revision, pass) the Prettier format-check
+step; what it found on the far side of that step (lint, typecheck, the
+Python test suite, TypeScript/frontend tests, the frontend build) has
+not yet been reported back. `PACK-05 PASS` in this report's title means
+exactly what section 11 shows and no more; it is not yet a claim of a
+complete, externally-confirmed `make verify` success, which — as
+PACK-04's own report section 0c demonstrates — is the outcome the next
+external GitHub Actions run against this revision's candidate archive
+should be able to confirm.

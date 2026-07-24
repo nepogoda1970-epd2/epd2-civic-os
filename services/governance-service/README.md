@@ -205,13 +205,13 @@ reverse vote-linkability path exists anywhere in this pack.
 
 ## Known gaps (documented, not silently dropped)
 
-- **`GovernancePolicy.rule_definition` is not interpreted by a rule
-  engine.** It is stored and versioned exactly as proposed; enforcement
-  of its content against a live command is reserved future work
+- **Not interpreted by a rule engine.** `GovernancePolicy.rule_definition`
+  is stored and versioned exactly as proposed; enforcement of its
+  content against a live command is reserved future work
   (`GOVERNANCE_POLICY_VIOLATION` is a defined, defense-in-depth reason
   code with no current caller).
-- **`ResultFinalityNotAuthorizedError` has no current caller.** ADR-017
-  narrows its meaning to a would-be direct query/action against
+- **No current caller.** `ResultFinalityNotAuthorizedError`'s meaning is
+  narrowed by ADR-017 to a would-be direct query/action against
   `ResultPublication` finality state that bypasses
   `get_finality_status` entirely — no `tally-service` command exists yet
   for it to gate.
