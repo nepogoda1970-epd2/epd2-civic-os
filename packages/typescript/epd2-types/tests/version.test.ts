@@ -62,6 +62,21 @@ test("current versions match the expected skeleton version", () => {
   // TechnicalChallenge) against the already-accepted canon 0.4.0 text
   // and ADR-016 through ADR-020 - no further canon edit was made, so
   // CANON_VERSION is unchanged.
-  assert.equal(CANON_VERSION, "0.4.0");
-  assert.equal(REPOSITORY_VERSION, "0.5.0");
+  // CANON_VERSION moved 0.4.0 -> 0.5.0 per ADR-023 and ADR-025 (both
+  // accepted with amendments): new canon section 19c (AI Processing
+  // Context), extending the already-existing section 17
+  // (AIProcessingRecord) with an independent processing_status field
+  // kept structurally separate from human_review_status, a unified
+  // supersedes_ai_processing_record_id field, a redaction_manifest
+  // embedded value object, and disclosure-lifecycle fields - a
+  // backward-compatible (minor) canon addition per canon section 25.
+  // REPOSITORY_VERSION moved 0.5.0 -> 0.6.0 for CLAUDE-PACK-06 (AI
+  // Processing Context): implements ai-processing-service
+  // (AIProcessingRecord's processing_status/human_review_status split,
+  // redaction_manifest, disclosure lifecycle) against the
+  // already-accepted canon 0.5.0 text and ADR-021 through ADR-025 - no
+  // further canon edit was made beyond ADR-023/ADR-025 above, so
+  // CANON_VERSION is unchanged by this repository-side bump itself.
+  assert.equal(CANON_VERSION, "0.5.0");
+  assert.equal(REPOSITORY_VERSION, "0.6.0");
 });
