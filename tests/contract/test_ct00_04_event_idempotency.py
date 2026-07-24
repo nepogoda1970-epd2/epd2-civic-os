@@ -10,6 +10,8 @@ from uuid import uuid4
 
 import pytest
 
+from epd2_ai_processing_service.application import request_ai_processing
+from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
 from epd2_audit_core.exceptions import AuditEventConflictError
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
@@ -417,4 +419,47 @@ def test_repeated_request_role_assignment_with_same_event_id_is_idempotent(
     assert first.assignment == second.assignment
     assert first.audit_event.audit_event_id == second.audit_event.audit_event_id
     entries = audit_store.list_by_aggregate("role_assignment", role_assignment_id)
+    assert len(entries) == 1
+
+
+# =============================================================================
+# PACK-06: `request_ai_processing` (ai-processing-service).
+# =============================================================================
+
+
+def test_repeated_request_ai_processing_with_same_event_id_is_idempotent(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """A caller retrying the exact same `request_ai_processing` command
+    (same `ai_processing_record_id`, same content, same caller-supplied
+    `event_id`) must not create a second stored `AIProcessingRecord` or a
+    second audit entry."""
+    record_store = InMemoryAIProcessingRecordStore()
+    record_id = uuid4()
+    event_id = uuid4()
+    kwargs = dict(
+        ai_processing_record_id=record_id,
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=False,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+        event_id=event_id,
+    )
+    first = request_ai_processing(record_store, audit_store, **kwargs)  # type: ignore[arg-type]
+    second = request_ai_processing(record_store, audit_store, **kwargs)  # type: ignore[arg-type]
+
+    assert first.record == second.record
+    assert first.audit_event.audit_event_id == second.audit_event.audit_event_id
+    entries = audit_store.list_by_aggregate("ai_processing_record", record_id)
     assert len(entries) == 1

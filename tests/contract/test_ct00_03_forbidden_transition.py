@@ -8,6 +8,14 @@ import pytest
 from epd2_account_service.domain import AccountStatus
 from epd2_account_service.domain import assert_transition_allowed as assert_account_transition
 from epd2_account_service.exceptions import ForbiddenAccountTransitionError
+from epd2_ai_processing_service.domain import (
+    ForbiddenHumanReviewStatusTransitionError,
+    ForbiddenProcessingStatusTransitionError,
+    HumanReviewStatus,
+    ProcessingStatus,
+    assert_human_review_status_transition_allowed,
+    assert_processing_status_transition_allowed,
+)
 from epd2_credential_service.domain import CredentialStatus
 from epd2_credential_service.domain import assert_transition_allowed as assert_credential_transition
 from epd2_credential_service.exceptions import ForbiddenCredentialTransitionError
@@ -313,4 +321,53 @@ def test_technical_challenge_submitted_cannot_go_directly_to_upheld() -> None:
     with pytest.raises(ForbiddenTechnicalChallengeTransitionError):
         assert_technical_challenge_transition_allowed(
             TechnicalChallengeStatus.SUBMITTED, TechnicalChallengeStatus.UPHELD
+        )
+
+
+# =============================================================================
+# PACK-06: at least one real forbidden pair from each of ai-processing-
+# service's two status planes (`processing_status`, `human_review_status`),
+# mirroring the PACK-05 section above.
+# =============================================================================
+
+
+def test_processing_status_completed_is_terminal() -> None:
+    """canon 19c.1: `completed`, `failed`, and `rejected_by_policy` are
+    all terminal - no further processing_status transition is ever
+    allowed once one is reached."""
+    with pytest.raises(ForbiddenProcessingStatusTransitionError) as excinfo:
+        assert_processing_status_transition_allowed(
+            ProcessingStatus.COMPLETED, ProcessingStatus.PROCESSING
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_processing_status_requested_cannot_go_directly_to_processing() -> None:
+    """`processing` is only reachable through `input_prepared` -
+    redaction validation is never skippable (required scope item 6)."""
+    with pytest.raises(ForbiddenProcessingStatusTransitionError):
+        assert_processing_status_transition_allowed(
+            ProcessingStatus.REQUESTED, ProcessingStatus.PROCESSING
+        )
+
+
+def test_human_review_status_approved_is_terminal() -> None:
+    """A `human_review_status` outcome, once reached, is never further
+    transitioned - a correction is always a brand-new
+    `AIProcessingRecord` with `supersedes_ai_processing_record_id` set
+    (canon 19c.2), never a further status change of this same row."""
+    with pytest.raises(ForbiddenHumanReviewStatusTransitionError) as excinfo:
+        assert_human_review_status_transition_allowed(
+            HumanReviewStatus.APPROVED, HumanReviewStatus.REJECTED
+        )
+    assert excinfo.value.reason_code == "VALIDATION_FORBIDDEN_TRANSITION"
+
+
+def test_human_review_status_not_required_cannot_go_to_approved() -> None:
+    """required scope item 4: `not_required` is decided once, at
+    creation, for non-consequential output only - it is never itself the
+    starting point of a real review outcome transition."""
+    with pytest.raises(ForbiddenHumanReviewStatusTransitionError):
+        assert_human_review_status_transition_allowed(
+            HumanReviewStatus.NOT_REQUIRED, HumanReviewStatus.APPROVED
         )

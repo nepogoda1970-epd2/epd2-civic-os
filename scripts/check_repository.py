@@ -74,6 +74,11 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/adr/ADR-018-canon-0.4.0-governance-context-additions.md",
     "docs/adr/ADR-019-pack-05-reason-code-additions.md",
     "docs/adr/ADR-020-pack-05-authority-roles-challenge-lifecycle.md",
+    "docs/adr/ADR-021-pack-06-ai-processing-service-decomposition.md",
+    "docs/adr/ADR-022-pack-06-cross-pack-boundary.md",
+    "docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md",
+    "docs/adr/ADR-024-pack-06-reason-code-additions.md",
+    "docs/adr/ADR-025-pack-06-use-policy-redaction-providers-disclosure.md",
     # Docs: development
     "docs/development/local-development.md",
     "docs/development/repository-rules.md",
@@ -82,6 +87,7 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/review/OPEN_QUESTIONS.md",
     "docs/review/KNOWN_LIMITATIONS.md",
     "docs/review/PACK-05-OWNER-DECISIONS.md",
+    "docs/review/PACK-06-OWNER-DECISIONS.md",
     # Docs: handover
     "docs/handover/PACK-01-REPORT.md",
     "docs/handover/PACK-02-REPORT.md",
@@ -91,6 +97,8 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-04-REPORT.md",
     "docs/handover/PACK-05-SPEC.md",
     "docs/handover/PACK-05-REPORT.md",
+    "docs/handover/PACK-06-SPEC.md",
+    "docs/handover/PACK-06-REPORT.md",
     # Contracts
     "contracts/README.md",
     "contracts/openapi",
@@ -188,6 +196,15 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "contracts/events/governance-technical-challenge-payload.v1.schema.json",
     # Contracts: PACK-05 OpenAPI
     "contracts/openapi/pack-05.yaml",
+    # Contracts: PACK-06 reason codes registry
+    "contracts/reason-codes/pack-06.yml",
+    # Contracts: PACK-06 JSON Schemas
+    "contracts/schemas/ai-processing-record.schema.json",
+    "contracts/schemas/ai-disclosure-package.schema.json",
+    # Contracts: PACK-06 event payload schemas
+    "contracts/events/ai-processing-record-payload.v1.schema.json",
+    # Contracts: PACK-06 OpenAPI
+    "contracts/openapi/pack-06.yaml",
     # Services (placeholder)
     "services/README.md",
     # Services: account-service
@@ -335,6 +352,20 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/governance-service/tests/test_application.py",
     "services/governance-service/tests/test_storage.py",
     "services/governance-service/tests/test_bootstrap.py",
+    # Services: ai-processing-service
+    "services/ai-processing-service/README.md",
+    "services/ai-processing-service/pyproject.toml",
+    "services/ai-processing-service/src/epd2_ai_processing_service/__init__.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/domain.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/application.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/events.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/exceptions.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/storage.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/provider.py",
+    "services/ai-processing-service/src/epd2_ai_processing_service/redaction.py",
+    "services/ai-processing-service/tests/test_domain.py",
+    "services/ai-processing-service/tests/test_application.py",
+    "services/ai-processing-service/tests/test_storage.py",
     # Services: audit-core
     "services/audit-core/README.md",
     "services/audit-core/pyproject.toml",
@@ -397,7 +428,8 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "tests/contract/test_ct00_08_identity_leakage.py",
     "tests/contract/test_ct00_09_vote_linkability.py",
     "tests/contract/test_ct00_10_rule_freeze.py",
-    "tests/contract/test_ct00_11_12_not_applicable.py",
+    "tests/contract/test_ct00_11_ai_human_control.py",
+    "tests/contract/test_ct00_12_emergency_stop_not_applicable.py",
     "tests/contract/test_state_transitions.py",
     "tests/contract/test_audit.py",
     "tests/contract/test_reason_codes_registry.py",

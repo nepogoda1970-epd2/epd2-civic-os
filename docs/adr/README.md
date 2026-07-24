@@ -7,8 +7,8 @@
 - ADR нумеруются последовательно: `ADR-001`, `ADR-002`, ...
 - До статуса `accepted` предложенное изменение **не** включается в рабочий
   код.
-- Действующая версия канона: **`0.4.0`**
-  (`docs/canonical/canon-version.json`), с 2026-07-23 (ADR-018, ADR-020).
+- Действующая версия канона: **`0.5.0`**
+  (`docs/canonical/canon-version.json`), с 2026-07-24 (ADR-023, ADR-025).
 
 ## Статусы ADR
 
@@ -21,28 +21,102 @@
 
 ## Список ADR
 
-| ADR                                                                 | Тема                                                                                                                     | Статус                                                                                                                                |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-001](./ADR-001-repository-strategy.md)                         | Use a modular monorepo for the initial development stage                                                                 | accepted                                                                                                                              |
-| [ADR-002](./ADR-002-identity-participation-separation.md)           | Identity/participation separation and canonical event/name resolution                                                    | accepted                                                                                                                              |
-| [ADR-003](./ADR-003-append-only-audit-hash-chain.md)                | Append-only Audit Core with sequential hash chaining                                                                     | accepted                                                                                                                              |
-| [ADR-004](./ADR-004-reason-code-registry.md)                        | Centralized PACK-02 reason-code registry and additive codes                                                              | accepted                                                                                                                              |
-| [ADR-005](./ADR-005-pack-03-service-decomposition.md)               | PACK-03 service decomposition (Participation and Decision Kernel)                                                        | accepted                                                                                                                              |
-| [ADR-006](./ADR-006-pack-03-reason-code-additions.md)               | PACK-03 reason-code registry and additive codes                                                                          | accepted                                                                                                                              |
-| ADR-007                                                             | reserved — not used by this governance round                                                                             | —                                                                                                                                     |
-| [ADR-008](./ADR-008-pack-03-pack-02-integration-boundary.md)        | PACK-03 to PACK-02 integration boundary                                                                                  | accepted                                                                                                                              |
-| [ADR-009](./ADR-009-voting-delegation-quorum-defaults.md)           | Voting, delegation, quorum, tie, challenge, and finality defaults                                                        | accepted (amended: items 13, 14)                                                                                                      |
-| [ADR-010](./ADR-010-ballot-challenge-window-canon-addition.md)      | Canon minor-version addition: Ballot challenge window / ResultPublication finality                                       | accepted (amended: finality wording)                                                                                                  |
-| [ADR-011](./ADR-011-pack-04-transparency-service-decomposition.md)  | PACK-04 Transparency service decomposition                                                                               | accepted                                                                                                                              |
-| [ADR-012](./ADR-012-pack-04-cross-pack-read-boundary.md)            | PACK-04 cross-pack read boundary and dependency matrix                                                                   | accepted                                                                                                                              |
-| [ADR-013](./ADR-013-canon-0.3.0-transparency-context-additions.md)  | Canon minor-version addition: Transparency Context entities, events, ownership (`0.2.0 → 0.3.0`, implemented 2026-07-23) | accepted (amended: proof semantics, DisclosurePolicy field model, correction semantics, role references)                              |
-| [ADR-014](./ADR-014-pack-04-reason-code-additions.md)               | PACK-04 reason-code registry and additive codes                                                                          | accepted                                                                                                                              |
-| [ADR-015](./ADR-015-disclosure-redaction-lobby-log-defaults.md)     | Disclosure, redaction, public audit export, and Lobby Log defaults                                                       | accepted (amended: Lobby Log timing, reviewer identity, small-cell threshold, audit-proof semantics)                                  |
-| [ADR-016](./ADR-016-pack-05-governance-service-decomposition.md)    | PACK-05 Governance service decomposition                                                                                 | accepted                                                                                                                              |
-| [ADR-017](./ADR-017-pack-05-cross-pack-boundary.md)                 | PACK-05 cross-pack boundary — reads, and the ballot/result write question                                                | accepted                                                                                                                              |
-| [ADR-018](./ADR-018-canon-0.4.0-governance-context-additions.md)    | Canon minor-version addition: Governance Context entities, events, ownership (`0.3.0 → 0.4.0`, implemented 2026-07-23)   | accepted (amended: TechnicalChallenge submitter authorization, finality_outcome/FinalityStatus split, GovernanceDecision status enum) |
-| [ADR-019](./ADR-019-pack-05-reason-code-additions.md)               | PACK-05 reason-code registry and additive codes                                                                          | accepted                                                                                                                              |
-| [ADR-020](./ADR-020-pack-05-authority-roles-challenge-lifecycle.md) | PACK-05 authority, roles, and challenge-lifecycle defaults                                                               | accepted (amended: challenge-submission alignment, bootstrap mechanism fully specified)                                               |
+| ADR                                                                       | Тема                                                                                                                       | Статус                                                                                                                                |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [ADR-001](./ADR-001-repository-strategy.md)                               | Use a modular monorepo for the initial development stage                                                                   | accepted                                                                                                                              |
+| [ADR-002](./ADR-002-identity-participation-separation.md)                 | Identity/participation separation and canonical event/name resolution                                                      | accepted                                                                                                                              |
+| [ADR-003](./ADR-003-append-only-audit-hash-chain.md)                      | Append-only Audit Core with sequential hash chaining                                                                       | accepted                                                                                                                              |
+| [ADR-004](./ADR-004-reason-code-registry.md)                              | Centralized PACK-02 reason-code registry and additive codes                                                                | accepted                                                                                                                              |
+| [ADR-005](./ADR-005-pack-03-service-decomposition.md)                     | PACK-03 service decomposition (Participation and Decision Kernel)                                                          | accepted                                                                                                                              |
+| [ADR-006](./ADR-006-pack-03-reason-code-additions.md)                     | PACK-03 reason-code registry and additive codes                                                                            | accepted                                                                                                                              |
+| ADR-007                                                                   | reserved — not used by this governance round                                                                               | —                                                                                                                                     |
+| [ADR-008](./ADR-008-pack-03-pack-02-integration-boundary.md)              | PACK-03 to PACK-02 integration boundary                                                                                    | accepted                                                                                                                              |
+| [ADR-009](./ADR-009-voting-delegation-quorum-defaults.md)                 | Voting, delegation, quorum, tie, challenge, and finality defaults                                                          | accepted (amended: items 13, 14)                                                                                                      |
+| [ADR-010](./ADR-010-ballot-challenge-window-canon-addition.md)            | Canon minor-version addition: Ballot challenge window / ResultPublication finality                                         | accepted (amended: finality wording)                                                                                                  |
+| [ADR-011](./ADR-011-pack-04-transparency-service-decomposition.md)        | PACK-04 Transparency service decomposition                                                                                 | accepted                                                                                                                              |
+| [ADR-012](./ADR-012-pack-04-cross-pack-read-boundary.md)                  | PACK-04 cross-pack read boundary and dependency matrix                                                                     | accepted                                                                                                                              |
+| [ADR-013](./ADR-013-canon-0.3.0-transparency-context-additions.md)        | Canon minor-version addition: Transparency Context entities, events, ownership (`0.2.0 → 0.3.0`, implemented 2026-07-23)   | accepted (amended: proof semantics, DisclosurePolicy field model, correction semantics, role references)                              |
+| [ADR-014](./ADR-014-pack-04-reason-code-additions.md)                     | PACK-04 reason-code registry and additive codes                                                                            | accepted                                                                                                                              |
+| [ADR-015](./ADR-015-disclosure-redaction-lobby-log-defaults.md)           | Disclosure, redaction, public audit export, and Lobby Log defaults                                                         | accepted (amended: Lobby Log timing, reviewer identity, small-cell threshold, audit-proof semantics)                                  |
+| [ADR-016](./ADR-016-pack-05-governance-service-decomposition.md)          | PACK-05 Governance service decomposition                                                                                   | accepted                                                                                                                              |
+| [ADR-017](./ADR-017-pack-05-cross-pack-boundary.md)                       | PACK-05 cross-pack boundary — reads, and the ballot/result write question                                                  | accepted                                                                                                                              |
+| [ADR-018](./ADR-018-canon-0.4.0-governance-context-additions.md)          | Canon minor-version addition: Governance Context entities, events, ownership (`0.3.0 → 0.4.0`, implemented 2026-07-23)     | accepted (amended: TechnicalChallenge submitter authorization, finality_outcome/FinalityStatus split, GovernanceDecision status enum) |
+| [ADR-019](./ADR-019-pack-05-reason-code-additions.md)                     | PACK-05 reason-code registry and additive codes                                                                            | accepted                                                                                                                              |
+| [ADR-020](./ADR-020-pack-05-authority-roles-challenge-lifecycle.md)       | PACK-05 authority, roles, and challenge-lifecycle defaults                                                                 | accepted (amended: challenge-submission alignment, bootstrap mechanism fully specified)                                               |
+| [ADR-021](./ADR-021-pack-06-ai-processing-service-decomposition.md)       | PACK-06 AI Processing service decomposition                                                                                | accepted                                                                                                                              |
+| [ADR-022](./ADR-022-pack-06-cross-pack-boundary.md)                       | PACK-06 cross-pack boundary — one narrow read into `governance-service` for reviewer verification                          | accepted (amended: `verify_role_assignment_for_action` replaces local reviewer-check logic)                                           |
+| [ADR-023](./ADR-023-canon-0.5.0-ai-processing-context-additions.md)       | Canon minor-version addition: `AIProcessingRecord` field/status/event extensions (`0.4.0 → 0.5.0`, implemented 2026-07-24) | accepted (amended: `RedactionManifest` canonicalized, disclosure-lifecycle fields and `DisclosureStatus` added)                       |
+| [ADR-024](./ADR-024-pack-06-reason-code-additions.md)                     | PACK-06 reason-code registry and additive codes                                                                            | accepted                                                                                                                              |
+| [ADR-025](./ADR-025-pack-06-use-policy-redaction-providers-disclosure.md) | PACK-06 use-class policy, redaction enforcement, providers, and mandatory disclosure                                       | accepted (amended: explicit five-step `AIDisclosurePackage` disclosure protocol replaces informal orchestration rule)                 |
+
+ADR-021 through ADR-025 are this project's fourth governance round, for
+CLAUDE-PACK-06 (`docs/handover/PACK-06-SPEC.md`, AI Processing Context)
+— see `docs/review/PACK-06-OWNER-DECISIONS.md` for the resolved decision
+record. **The project owner acted on all five drafted ADRs on
+2026-07-24.** ADR-021 and ADR-024 were accepted exactly as proposed, no
+amendments. ADR-022, ADR-023, and ADR-025 were accepted with amendments,
+each fully incorporated into the ADR's own Decision text — see each
+ADR's own "Owner decision" section for the exact amended text.
+**ADR-023's (and, for its repository-side content, ADR-025's) canon edit
+has now been implemented** (2026-07-24, as its own separate, dedicated
+task, per that acceptance's own explicit deferral) — see the paragraph
+below for the resulting canon 19c content and checksum. **No
+`services/ai-processing-service` directory, schema, OpenAPI file, or
+reason-code registry exists yet** — implementation of
+`ai-processing-service` itself remains a separate, later task, gated on
+these five accepted ADRs and on the canon content below, but not
+authorized by either alone.
+
+**ADR-023's canon edit has been implemented in the canon itself**
+(2026-07-24), as its own separate, dedicated task following ADR-023's
+(and ADR-025's) acceptance (this project's fourth canon-text edit, after
+ADR-010's, ADR-013's, and ADR-018's): a new section 19c ("ИИ-обработка —
+расширение / AI Processing Context") extends the already-canon-defined
+`AIProcessingRecord` (17.1, twelve existing fields and six-value
+`human_review_status` both unchanged) with a new, independent
+`processing_status` field (six values, no stored `superseded`), a
+unified `supersedes_ai_processing_record_id` field, fifteen further
+model-governance/provenance/confidence/explainability/lifecycle fields,
+a new canonical embedded `redaction_manifest` value object (nine
+sub-fields), three disclosure-lifecycle fields plus a derived
+`DisclosureStatus` read-model type, `AIDisclosurePackage` defined
+explicitly as a contract/value object (never a canonical
+system-of-record entity), and a mandatory five-step disclosure protocol
+— including all of ADR-023's and ADR-025's own Owner-decision
+amendments. Section 20.12's AI event catalog is corrected
+(`ai.output.corrected` → `ai.output_corrected`) and gains six new
+events; section 22's ownership matrix gains no new row
+(`AIProcessingRecord`'s existing ownership is unchanged); section 23's
+forbidden-links list gains new entries for the no-autonomous-decision,
+no-identity-reverse-lookup, no-vote-linkage-reconstruction,
+no-model-provider-mutation-authority, no-raw-private-input-in-
+disclosure, and no-hidden-reasoning-claim invariants. `canon_version`
+moved `0.4.0 → 0.5.0`, mirrored across
+`docs/canonical/canon-version.json`,
+`packages/python/epd2-core/src/epd2_core/version.py`, and
+`packages/typescript/epd2-types/src/version.ts`, with both
+version-consistency unit tests updated and `scripts/verify_versions.py`
+passing:
+
+```text
+sha256(docs/canonical/TZ-00-domain-event-canon.md) =
+  374b25fddfab88846622bf078b35c4246d8ad8c5d65bf43e6ac4e82653f74f74
+CANON_VERSION = 0.5.0
+```
+
+This is a canon-only change: no `services/ai-processing-service`
+directory, JSON Schema, OpenAPI file, or reason-code registry was
+created, and no PACK-02/03/04/05 source code was touched. ADR-022's own
+content — the `verify_role_assignment_for_action` function signature and
+the repository-level reviewer-role taxonomy — remains repository-side,
+not canon text, since canon does not name specific cross-pack functions;
+ADR-025's own content — the provider-abstraction interface and the
+`AIDisclosurePackage` JSON Schema — likewise remains repository-side;
+canon 19c only records the canon-shaped parts of ADR-023's and ADR-025's
+decisions (the field/status/event additions and the structural
+invariants). Implementation of `ai-processing-service` remains a
+separate, later task, gated on this canon content but not authorized by
+it alone.
 
 ADR-016 through ADR-020 are this project's third governance round,
 drafted and accepted for CLAUDE-PACK-05 (`docs/handover/PACK-05-SPEC.md`,

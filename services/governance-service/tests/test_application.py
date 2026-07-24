@@ -6,6 +6,7 @@ and multiple-challenge/finality rules (ADR-020, canon 19b.5)."""
 
 from __future__ import annotations
 
+from dataclasses import fields
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
@@ -209,6 +210,109 @@ def test_role_assignment_public_payload_omits_actor_and_assigned_by(fx: Fixture)
     payload = role_assignment_public_payload(assignment)
     assert "actor_id" not in payload
     assert "assigned_by" not in payload
+
+
+# --- verify_role_assignment_for_action (ADR-022, PACK-06's one narrow read) -----
+
+
+def test_verify_role_assignment_for_action_authorized(fx: Fixture) -> None:
+    reviewer = fx.grant_active_role("ai_output_reviewer", scope_id=GLOBAL_SCOPE_ID)
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=reviewer.role_assignment_id,
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=GLOBAL_SCOPE_ID,
+        action_code="review_summarization_output",
+        evaluated_at=NOW,
+    )
+    assert result.authorized is True
+    assert result.verified_actor_reference == reviewer.actor_id
+    assert result.verified_scope_reference == reviewer.scope_id
+    assert result.reason_code is None
+
+
+def test_verify_role_assignment_for_action_unknown_role_assignment(fx: Fixture) -> None:
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=uuid4(),
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=GLOBAL_SCOPE_ID,
+        action_code="review_summarization_output",
+        evaluated_at=NOW,
+    )
+    assert result.authorized is False
+    assert result.verified_actor_reference is None
+    assert result.verified_scope_reference is None
+    assert result.reason_code == "VALIDATION_RECORD_NOT_FOUND"
+
+
+def test_verify_role_assignment_for_action_not_active(fx: Fixture) -> None:
+    expired = fx.role_store.create(
+        _direct_role_assignment(role_code="ai_output_reviewer", scope_id=GLOBAL_SCOPE_ID)
+    )
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=expired.role_assignment_id,
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=GLOBAL_SCOPE_ID,
+        action_code="review_summarization_output",
+        evaluated_at=NOW - timedelta(days=1000),
+    )
+    assert result.authorized is False
+    assert result.reason_code == "ROLE_ASSIGNMENT_NOT_ACTIVE"
+
+
+def test_verify_role_assignment_for_action_wrong_role_code(fx: Fixture) -> None:
+    observer = fx.grant_active_role("observer", scope_id=GLOBAL_SCOPE_ID)
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=observer.role_assignment_id,
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=GLOBAL_SCOPE_ID,
+        action_code="review_summarization_output",
+        evaluated_at=NOW,
+    )
+    assert result.authorized is False
+    assert result.reason_code == "PERMISSION_DENIED"
+
+
+def test_verify_role_assignment_for_action_scope_mismatch(fx: Fixture) -> None:
+    scoped_scope = uuid4()
+    reviewer = fx.grant_active_role("ai_output_reviewer", scope_id=scoped_scope)
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=reviewer.role_assignment_id,
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=uuid4(),
+        action_code="review_summarization_output",
+        evaluated_at=NOW,
+    )
+    assert result.authorized is False
+    assert result.reason_code == "ROLE_ASSIGNMENT_SCOPE_MISMATCH"
+
+
+def test_verify_role_assignment_for_action_never_exposes_role_assignment_row(
+    fx: Fixture,
+) -> None:
+    """ADR-022: the result type carries only the four minimal fields —
+    there is no attribute path back to `role_code`/`status`/
+    `valid_from`/`valid_until`."""
+    reviewer = fx.grant_active_role("ai_output_reviewer", scope_id=GLOBAL_SCOPE_ID)
+    result = app.verify_role_assignment_for_action(
+        fx.role_store,
+        role_assignment_id=reviewer.role_assignment_id,
+        required_role_codes=frozenset({"ai_output_reviewer"}),
+        required_scope_id=GLOBAL_SCOPE_ID,
+        action_code="review_summarization_output",
+        evaluated_at=NOW,
+    )
+    result_fields = {f.name for f in fields(result)}
+    assert result_fields == {
+        "authorized",
+        "verified_actor_reference",
+        "verified_scope_reference",
+        "reason_code",
+    }
 
 
 # --- GovernancePolicy commands --------------------------------------------------

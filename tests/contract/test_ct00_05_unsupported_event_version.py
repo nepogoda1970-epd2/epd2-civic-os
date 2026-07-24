@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import pytest
 
+from epd2_ai_processing_service.events import SUPPORTED_MAJOR_VERSIONS as AI_PROCESSING_MAJORS
+from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
 from epd2_core.event_envelope import (
@@ -41,6 +43,7 @@ from epd2_voting_service.storage import InMemoryBallotStore
         TALLY_MAJORS,
         VOTING_MAJORS,
         GOVERNANCE_MAJORS,
+        AI_PROCESSING_MAJORS,
         frozenset({1}),
     ],
 )
@@ -162,6 +165,48 @@ def test_real_pack05_role_assignment_requested_envelope_rejects_an_unsupported_m
 
     # Accepted against the real, matching major version set.
     assert_supported_major_version(envelope.event_version, GOVERNANCE_MAJORS)
+
+    # Rejected against a frozenset that deliberately excludes it.
+    with pytest.raises(UnsupportedEventVersionError):
+        assert_supported_major_version(envelope.event_version, frozenset({99}))
+
+
+def test_real_pack06_processing_requested_envelope_rejects_an_unsupported_major_version(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Exercises `assert_supported_major_version` against a real PACK-06
+    event envelope's own `event_version` (an `ai.processing_requested`
+    envelope, ai-processing-service) - mirrors the PACK-03/PACK-05 tests
+    above, but for the one PACK-06 service."""
+    from uuid import uuid4
+
+    from epd2_ai_processing_service.application import request_ai_processing
+
+    result = request_ai_processing(
+        InMemoryAIProcessingRecordStore(),
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=False,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    envelope = result.event
+    assert envelope is not None
+
+    # Accepted against the real, matching major version set.
+    assert_supported_major_version(envelope.event_version, AI_PROCESSING_MAJORS)
 
     # Rejected against a frozenset that deliberately excludes it.
     with pytest.raises(UnsupportedEventVersionError):

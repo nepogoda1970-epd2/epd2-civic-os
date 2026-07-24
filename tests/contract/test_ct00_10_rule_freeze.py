@@ -8,6 +8,25 @@ rule_version)` pair is created, its content is immutable - the same
 "freeze after commitment" invariant CT-00-10 tests for `Ballot`, applied
 to the one canon entity in this pack's scope that has a freeze
 requirement.
+
+PACK-06 (ai-processing-service) does not extend this file - required
+scope item 17 explicitly documents CT-00-10 as not applicable for this
+pack (see `test_ct00_10_not_applicable_in_pack06` below), rather than
+extended-and-passed like CT-00-01 through CT-00-09. This is not because
+`AIProcessingRecord` lacks any freeze-shaped behavior at all -
+`RedactionManifest` is an immutable embedded value object,
+`disclosure_package_reference`/`disclosure_receipt_reference` are each
+"already set and never rewritten" (see `AIProcessingRecord.
+with_disclosure_package_reference`/`with_disclosure_receipt_reference`),
+and a terminal `processing_status` has no further outgoing transition at
+all - but each of these is already the direct subject of this pack's own
+CT-00-03 (Forbidden Transition) coverage and `services/ai-processing-
+service/tests/test_domain.py`'s own transition tests, not a distinct
+"rule version/ballot configuration" freeze concept CT-00-10 was written
+to test (canon 27's own CT-00-10 wording names `Ballot`, a voting-service
+concept this pack never touches at all). Introducing a second, PACK-06-
+specific interpretation of "rule freeze" here would duplicate coverage
+CT-00-03 already owns rather than add anything CT-00-10 uniquely tests.
 """
 
 from __future__ import annotations
@@ -432,3 +451,27 @@ def test_approved_governance_decision_cannot_then_be_rejected(
             correlation_id=uuid4(),
             clock=clock,
         )
+
+
+# =============================================================================
+# PACK-06: documented NOT APPLICABLE (required scope item 17) - see the
+# module docstring's PACK-06 paragraph above for the full reasoning.
+# =============================================================================
+
+
+@pytest.mark.skip(
+    reason=(
+        "CT-00-10 NOT APPLICABLE in PACK-06 (ai-processing-service): required "
+        "scope item 17 documents this explicitly rather than extending it. "
+        "canon 27's CT-00-10 wording names Ballot configuration freeze, a "
+        "voting-service concept ai-processing-service never touches. This "
+        "pack's own freeze-shaped invariants (RedactionManifest immutability; "
+        "disclosure_package_reference/disclosure_receipt_reference each set "
+        "exactly once; terminal processing_status having no further "
+        "transition) are already covered by this pack's own CT-00-03 "
+        "(Forbidden Transition) tests, not a distinct rule-version/ballot "
+        "freeze concept."
+    )
+)
+def test_ct00_10_not_applicable_in_pack06() -> None:
+    raise AssertionError("must not run - CT-00-10 is not applicable in PACK-06")

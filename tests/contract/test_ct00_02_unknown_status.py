@@ -11,6 +11,14 @@ import pytest
 
 from epd2_account_service.domain import parse_status as parse_account_status
 from epd2_account_service.exceptions import UnknownAccountStatusError
+from epd2_ai_processing_service.domain import (
+    parse_human_review_status,
+    parse_processing_status,
+)
+from epd2_ai_processing_service.exceptions import (
+    UnknownHumanReviewStatusError,
+    UnknownProcessingStatusError,
+)
 from epd2_credential_service.domain import parse_status as parse_credential_status
 from epd2_credential_service.exceptions import UnknownCredentialStatusError
 from epd2_delegation_service.domain import parse_delegation_status
@@ -209,6 +217,35 @@ _PACK05_PARSE_CASES = (
     ids=[fn.__name__ for fn, _ in _PACK05_PARSE_CASES],
 )
 def test_pack05_unknown_enum_value_is_rejected(
+    parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
+) -> None:
+    with pytest.raises(expected_exception) as excinfo:
+        parse_fn("not_a_real_value")
+    error = excinfo.value
+    assert isinstance(error, _ReasonCodedError)
+    assert error.reason_code == "VALIDATION_UNKNOWN_STATUS"
+
+
+# =============================================================================
+# PACK-06: the one PACK-06 service's (ai-processing-service) two status
+# enums' own `parse_*` functions, mirroring the PACK-05 parametrized block
+# above.
+# =============================================================================
+
+#: (parse_fn, expected_exception_type) for both PACK-06 status enums:
+#: ProcessingStatus, HumanReviewStatus.
+_PACK06_PARSE_CASES = (
+    (parse_processing_status, UnknownProcessingStatusError),
+    (parse_human_review_status, UnknownHumanReviewStatusError),
+)
+
+
+@pytest.mark.parametrize(
+    "parse_fn,expected_exception",
+    _PACK06_PARSE_CASES,
+    ids=[fn.__name__ for fn, _ in _PACK06_PARSE_CASES],
+)
+def test_pack06_unknown_enum_value_is_rejected(
     parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
 ) -> None:
     with pytest.raises(expected_exception) as excinfo:

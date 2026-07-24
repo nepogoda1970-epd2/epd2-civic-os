@@ -11,6 +11,8 @@ from uuid import uuid4
 
 from epd2_account_service.application import create_account
 from epd2_account_service.storage import InMemoryAccountStore
+from epd2_ai_processing_service.application import request_ai_processing
+from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
 from epd2_core.event_envelope import ActorRef
@@ -367,6 +369,33 @@ def test_role_assignment_request_creates_an_audit_event(
         valid_until=None,
         granter_role_assignment_id=granter.role_assignment_id,
         approval_reference=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    assert audit_store.get_by_event_id(result.audit_event.audit_event_id) is not None
+
+
+def test_request_ai_processing_creates_an_audit_event(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """PACK-06: `request_ai_processing` (ai-processing-service)."""
+    result = request_ai_processing(
+        InMemoryAIProcessingRecordStore(),
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=False,
         actor=actor,
         actor_is_authorized=True,
         correlation_id=uuid4(),

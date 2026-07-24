@@ -20,6 +20,9 @@ from _schema_helpers import envelope_to_jsonable, load_schema, to_jsonable
 from epd2_account_service.application import create_account
 from epd2_account_service.events import account_state_payload
 from epd2_account_service.storage import InMemoryAccountStore
+from epd2_ai_processing_service.application import request_ai_processing
+from epd2_ai_processing_service.events import ai_processing_record_full_state_payload
+from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
 from epd2_core.event_envelope import ActorRef
@@ -650,3 +653,81 @@ def test_result_publication_instance_validates_against_schema(
         to_jsonable(result_publication_state_payload(result.result)),
         load_schema("result-publication.schema.json"),
     )
+
+
+# =============================================================================
+# PACK-06: `AIProcessingRecord` (ai-processing-service) against
+# `contracts/schemas/ai-processing-record.schema.json`.
+# =============================================================================
+
+
+def test_ai_processing_record_instance_validates_against_schema(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    result = request_ai_processing(
+        InMemoryAIProcessingRecordStore(),
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=False,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    validate(
+        to_jsonable(ai_processing_record_full_state_payload(result.record)),
+        load_schema("ai-processing-record.schema.json"),
+    )
+    validate(envelope_to_jsonable(result.event), load_schema("event-envelope.schema.json"))
+
+
+def test_ai_processing_record_unknown_processing_status_is_rejected_by_schema() -> None:
+    schema = load_schema("ai-processing-record.schema.json")
+    instance: dict[str, object] = {
+        "ai_processing_record_id": str(uuid4()),
+        "purpose_code": "summarization",
+        "target_type": "initiative",
+        "target_id": str(uuid4()),
+        "input_version": "v1",
+        "model_provider": "internal",
+        "model_name": "internal-model",
+        "model_version": "1.0",
+        "prompt_template_version": "v1",
+        "output_reference": None,
+        "created_at": datetime(2026, 1, 1, tzinfo=UTC).isoformat(),
+        "human_review_status": "not_required",
+        "correction_reference": None,
+        "processing_status": "not_a_real_status",
+        "supersedes_ai_processing_record_id": None,
+        "deployment_version": None,
+        "system_policy_version": None,
+        "generation_settings": None,
+        "processing_region": None,
+        "data_retention_mode": None,
+        "external_provider_flag": False,
+        "input_hash": None,
+        "output_hash": None,
+        "confidence_score": None,
+        "uncertainty_indicator": None,
+        "explanation_reference": None,
+        "reason_codes": [],
+        "human_reviewer_reference": None,
+        "completed_at": None,
+        "reviewed_at": None,
+        "redaction_manifest": None,
+        "disclosure_required": False,
+        "disclosure_package_reference": None,
+        "disclosure_receipt_reference": None,
+    }
+    with pytest.raises(SchemaValidationError):
+        validate(instance, schema)

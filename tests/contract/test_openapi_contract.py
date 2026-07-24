@@ -44,6 +44,7 @@ from _schema_helpers import (
     PACK03_SERVICE_DIRS,
     PACK04_OPENAPI_PATH,
     PACK05_OPENAPI_PATH,
+    PACK06_OPENAPI_PATH,
 )
 
 yaml = pytest.importorskip("yaml")
@@ -81,6 +82,11 @@ def _pack04_spec() -> dict[str, Any]:
 
 def _pack05_spec() -> dict[str, Any]:
     parsed: dict[str, Any] = yaml.safe_load(PACK05_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return parsed
+
+
+def _pack06_spec() -> dict[str, Any]:
+    parsed: dict[str, Any] = yaml.safe_load(PACK06_OPENAPI_PATH.read_text(encoding="utf-8"))
     return parsed
 
 
@@ -288,3 +294,56 @@ def test_pack03_invalidate_ballot_operation_is_tagged_voting_service() -> None:
     assert "invalidateBallot" not in pack05_operation_ids, (
         "invalidateBallot must not also appear in pack-05.yaml - it is owned by voting-service"
     )
+
+
+# --- PACK-06 (contracts/openapi/pack-06.yaml) -------------------------------
+
+
+def test_pack06_openapi_file_is_well_formed_yaml() -> None:
+    spec = _pack06_spec()
+    assert spec["openapi"].startswith("3.")
+    assert "paths" in spec
+    assert len(spec["paths"]) > 0
+
+
+def test_pack06_each_operation_is_owned_by_exactly_one_service_tag() -> None:
+    spec = _pack06_spec()
+    for path, path_item in spec["paths"].items():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            tags = operation.get("tags", [])
+            assert len(tags) == 1, f"{path} {method} must have exactly one owning service tag"
+
+
+def test_pack06_tags_are_exactly_ai_processing_service() -> None:
+    """ADR-021: PACK-06 has exactly one service. Every operation's `tags`
+    value in `pack-06.yaml` must be `["ai-processing-service"]` - never a
+    stray/misspelled tag, and never a PACK-02/03/04/05 service name
+    (PACK-06's own contract owns only PACK-06 paths)."""
+    spec = _pack06_spec()
+    used_tags: set[str] = set()
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            used_tags.update(operation.get("tags", []))
+    assert used_tags == {"ai-processing-service"}, (
+        f"pack-06.yaml must use exactly the tag 'ai-processing-service', found: {used_tags}"
+    )
+
+
+def test_pack06_verify_role_assignment_for_action_has_no_openapi_path() -> None:
+    """ADR-022: `verify_role_assignment_for_action` is a narrow, internal,
+    cross-pack read `ai-processing-service`'s own commands call directly
+    - never a PACK-06 HTTP endpoint in its own right."""
+    spec = _pack06_spec()
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            operation_id = operation.get("operationId", "")
+            assert "verifyRoleAssignment" not in operation_id, (
+                f"operationId {operation_id!r} suggests verify_role_assignment_for_action is "
+                "exposed as its own PACK-06 endpoint, contradicting ADR-022"
+            )

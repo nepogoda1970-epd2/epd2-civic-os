@@ -73,12 +73,21 @@ PACK05_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (all four packs).
+# package import name -> its src/ directory, for the one PACK-06 service
+# (ADR-021's single-service decomposition).
+PACK06_SERVICE_PACKAGES = {
+    "epd2_ai_processing_service": (
+        REPO_ROOT / "services/ai-processing-service/src/epd2_ai_processing_service"
+    ),
+}
+
+# Every service in the repository (all five packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
     **PACK04_SERVICE_PACKAGES,
     **PACK05_SERVICE_PACKAGES,
+    **PACK06_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -176,6 +185,40 @@ ALLOWED_PACK03_TO_PACK05_APPLICATION_MODULES: dict[str, frozenset[str]] = {
     "epd2_voting_service": frozenset({"epd2_governance_service.application"}),
 }
 
+# ADR-022 Decision: the exact, enumerated PACK-06 -> PACK-05 read edge,
+# scoped to `epd2_governance_service.application` only - never
+# `.storage`/`.domain` (the same INV-03 boundary every other cross-pack
+# edge in this project already respects).
+ALLOWED_PACK06_TO_PACK05_APPLICATION_MODULES: dict[str, frozenset[str]] = {
+    "epd2_ai_processing_service": frozenset({"epd2_governance_service.application"}),
+}
+
+# ADR-022's own stated aspiration ("a future contract test" to confirm
+# only one function is imported) - the strictest, single-function entry
+# in this whole matrix: `ai-processing-service` may import exactly
+# `verify_role_assignment_for_action` from `epd2_governance_service.
+# application`, never `get_role_assignment`, `get_governance_decision`,
+# `propose_governance_decision`, or any other function on that module.
+ALLOWED_PACK06_GOVERNANCE_FUNCTIONS: frozenset[str] = frozenset(
+    {"verify_role_assignment_for_action"}
+)
+
+# ADR-025 §5's disclosure protocol: the exact, enumerated PACK-06 ->
+# PACK-04 read/write edge (the first PACK-06 -> PACK-04 edge in this
+# project), scoped to `epd2_transparency_service.application` only -
+# never `.storage`/`.domain`.
+ALLOWED_PACK06_TO_PACK04_APPLICATION_MODULES: dict[str, frozenset[str]] = {
+    "epd2_ai_processing_service": frozenset({"epd2_transparency_service.application"}),
+}
+
+# The disclosure protocol (19c.7 step 3) uses exactly one existing
+# transparency-service command, `publish_ledger_entry` - never
+# `correct_ledger_entry`, `define_disclosure_policy`,
+# `activate_disclosure_policy`, or any other function on that module.
+# `ai-processing-service` never writes `PublicLedgerEntry` itself; this
+# is the one sanctioned call site.
+ALLOWED_PACK06_TRANSPARENCY_FUNCTIONS: frozenset[str] = frozenset({"publish_ledger_entry"})
+
 
 def _imported_roots(source_file: Path) -> set[str]:
     with open(source_file, encoding="utf-8") as f:
@@ -203,6 +246,24 @@ def _imported_module_paths(source_file: Path) -> set[str]:
         elif isinstance(node, ast.ImportFrom) and node.module:
             paths.add(node.module)
     return paths
+
+
+def _imported_names_from_module(source_file: Path, module: str) -> set[str]:
+    """The specific names imported via `from <module> import name1, name2`
+    - needed for ADR-022's stricter, single-function check (only
+    `verify_role_assignment_for_action` may ever be imported from
+    `epd2_governance_service.application`, not merely "some function on
+    that module"). A bare `import <module>` (never used by any real call
+    site in this repository for a cross-pack edge) is not resolved here -
+    only the `from ... import ...` form this project's convention
+    actually uses."""
+    with open(source_file, encoding="utf-8") as f:
+        tree = ast.parse(f.read(), filename=str(source_file))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == module:
+            names.update(alias.name for alias in node.names)
+    return names
 
 
 def test_no_pack02_service_imports_another_pack02_services_package_except_audit_core() -> None:
@@ -580,6 +641,179 @@ def test_tally_service_never_imports_governance_service() -> None:
             violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
     assert violations == [], "tally-service must not import governance-service:\n" + "\n".join(
         violations
+    )
+
+
+def test_no_pack06_service_imports_another_pack06_services_package() -> None:
+    """There is only one PACK-06 service today (ADR-021), so this is
+    currently vacuous, but it is kept for symmetry with
+    `test_no_pack05_service_imports_another_pack05_services_package` and
+    to fail loudly if a second PACK-06 service is ever added without
+    updating this file."""
+    violations: list[str] = []
+    for package_name, src_dir in PACK06_SERVICE_PACKAGES.items():
+        forbidden = set(PACK06_SERVICE_PACKAGES) - {package_name}
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & forbidden
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "Forbidden PACK-06<->PACK-06 imports found:\n" + "\n".join(violations)
+
+
+def test_no_other_service_imports_pack06_service() -> None:
+    """ADR-021/ADR-022: the dependency direction is one-way -
+    `ai-processing-service` reads from `governance-service` and
+    `transparency-service`; no service anywhere in the repository
+    (PACK-02 through PACK-05) may import it back. Nobody ever reads
+    `AIProcessingRecord` via a Python import - only the resulting opaque
+    `PublicLedgerEntry`, once published, is externally visible."""
+    violations: list[str] = []
+    other_packages = {
+        **PACK02_SERVICE_PACKAGES,
+        **PACK03_SERVICE_PACKAGES,
+        **PACK04_SERVICE_PACKAGES,
+        **PACK05_SERVICE_PACKAGES,
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK06_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import a PACK-06 service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_pack06_service_only_calls_upstream_applications_named_in_adr022_and_adr025() -> None:
+    """ADR-022/ADR-025 §5 Decision: `ai-processing-service` may depend on
+    an upstream service ONLY via that service's `.application` submodule,
+    and only on the specific edges these ADRs enumerate
+    (`epd2_governance_service`/`epd2_transparency_service`) - never
+    `.storage`/`.domain`, and never a service not named for it (in
+    particular, never any PACK-02 identity/account/eligibility/
+    credential service, `epd2_initiative_service`,
+    `epd2_deliberation_service`, `epd2_moderation_service`,
+    `epd2_voting_service`, `epd2_tally_service`, or
+    `epd2_delegation_service`)."""
+    violations: list[str] = []
+    allowed_paths = (
+        ALLOWED_PACK06_TO_PACK05_APPLICATION_MODULES["epd2_ai_processing_service"]
+        | ALLOWED_PACK06_TO_PACK04_APPLICATION_MODULES["epd2_ai_processing_service"]
+    )
+    allowed_roots = {path.split(".")[0] for path in allowed_paths}
+    forbidden_roots = (
+        set(PACK02_SERVICE_PACKAGES)
+        | set(PACK03_SERVICE_PACKAGES)
+        | set(PACK05_SERVICE_PACKAGES)
+        | set(PACK04_SERVICE_PACKAGES)
+    ) - {"epd2_audit_core"}
+    src_dir = PACK06_SERVICE_PACKAGES["epd2_ai_processing_service"]
+    for py_file in sorted(src_dir.rglob("*.py")):
+        roots = _imported_roots(py_file)
+        touched_forbidden_universe = roots & forbidden_roots
+        if not touched_forbidden_universe:
+            continue
+        unauthorized_roots = touched_forbidden_universe - allowed_roots
+        if unauthorized_roots:
+            violations.append(
+                f"{py_file.relative_to(REPO_ROOT)} imports unauthorized service(s) "
+                f"{sorted(unauthorized_roots)} (not an ADR-022/ADR-025 edge)"
+            )
+            continue
+        module_paths = _imported_module_paths(py_file)
+        for root in touched_forbidden_universe:
+            touched_dotted = {p for p in module_paths if p == root or p.startswith(root + ".")}
+            bad_paths = touched_dotted - allowed_paths
+            if bad_paths:
+                root_allowed = sorted(p for p in allowed_paths if p.startswith(root))
+                violations.append(
+                    f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad_paths)} - "
+                    f"only {root_allowed} is authorized for epd2_ai_processing_service "
+                    "(ADR-022/ADR-025)"
+                )
+    assert violations == [], "Unauthorized PACK-06 -> upstream imports found:\n" + "\n".join(
+        violations
+    )
+
+
+def test_pack06_service_never_imports_excluded_services() -> None:
+    """ADR-022's explicit exclusions, tested as positive assertions (not
+    merely "unlisted") per this project's own convention: `ai-processing-
+    service` must never import any PACK-02 identity/account/eligibility/
+    credential service, `epd2_initiative_service`,
+    `epd2_deliberation_service`, `epd2_moderation_service`,
+    `epd2_voting_service`, `epd2_tally_service`, or
+    `epd2_delegation_service` - no identity/account/credential/voting/
+    tally/moderation storage access anywhere (required scope item 16)."""
+    excluded = frozenset(
+        {
+            "epd2_account_service",
+            "epd2_identity_service",
+            "epd2_eligibility_service",
+            "epd2_credential_service",
+            "epd2_initiative_service",
+            "epd2_deliberation_service",
+            "epd2_moderation_service",
+            "epd2_voting_service",
+            "epd2_tally_service",
+            "epd2_delegation_service",
+        }
+    )
+    violations: list[str] = []
+    for src_dir in PACK06_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & excluded
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "ADR-022-excluded imports found in ai-processing-service:\n" + "\n".join(violations)
+    )
+
+
+def test_pack06_to_pack05_edge_imports_only_verify_role_assignment_for_action() -> None:
+    """ADR-022's own stated aspiration, now enforced: the single strictest
+    entry in this whole matrix - `ai-processing-service` may import
+    exactly one name, `verify_role_assignment_for_action`, from
+    `epd2_governance_service.application`. Never `get_role_assignment`,
+    never `.domain` (`RoleAssignment`/`RoleAssignmentStatus`/
+    `scope_covers`/`GLOBAL_SCOPE_ID`), never any policy/decision/
+    technical-challenge command."""
+    src_dir = PACK06_SERVICE_PACKAGES["epd2_ai_processing_service"]
+    violations: list[str] = []
+    for py_file in sorted(src_dir.rglob("*.py")):
+        imported_names = _imported_names_from_module(py_file, "epd2_governance_service.application")
+        unauthorized = imported_names - ALLOWED_PACK06_GOVERNANCE_FUNCTIONS
+        if unauthorized:
+            violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(unauthorized)}")
+    assert violations == [], (
+        "Unauthorized epd2_governance_service.application imports found (ADR-022 requires "
+        "exactly verify_role_assignment_for_action):\n" + "\n".join(violations)
+    )
+
+
+def test_pack06_to_pack04_edge_imports_only_publish_ledger_entry() -> None:
+    """ADR-025 §5: `ai-processing-service` may import exactly one name,
+    `publish_ledger_entry`, from `epd2_transparency_service.application`
+    - never `correct_ledger_entry`, `define_disclosure_policy`,
+    `activate_disclosure_policy`, or any other function; never `.domain`
+    (`LedgerSubjectType` is resolved by the caller and passed through as
+    an opaque `subject_type` parameter - see `application.
+    publish_ai_disclosure`'s own docstring)."""
+    src_dir = PACK06_SERVICE_PACKAGES["epd2_ai_processing_service"]
+    violations: list[str] = []
+    for py_file in sorted(src_dir.rglob("*.py")):
+        imported_names = _imported_names_from_module(
+            py_file, "epd2_transparency_service.application"
+        )
+        unauthorized = imported_names - ALLOWED_PACK06_TRANSPARENCY_FUNCTIONS
+        if unauthorized:
+            violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(unauthorized)}")
+    assert violations == [], (
+        "Unauthorized epd2_transparency_service.application imports found (ADR-025 §5 requires "
+        "exactly publish_ledger_entry):\n" + "\n".join(violations)
     )
 
 

@@ -546,3 +546,79 @@ def test_governance_service_never_imports_voting_or_tally_domain_directly() -> N
                     f"{py_file} imports {node.module!r} directly - only the "
                     f"matching .application module is ADR-017-sanctioned"
                 )
+
+
+# =============================================================================
+# PACK-06 (ai-processing-service): required scope item 7's strict data
+# boundary explicitly forbids VoteEnvelope content/vote-linkability data as
+# AI processing input, and required scope item 16 forbids this service any
+# voting/tally/delegation/account/identity storage access at all. Mirrors
+# the PACK-05 section above: (1) a real, direct construction attempt proves
+# a vote/ballot-shaped target_type is rejected structurally (the closed
+# `anomaly_indication` allow-list contains no vote-linked target_type at
+# all - the same invariant `test_anomaly_indication_never_reconstructs_
+# vote_linkage` in this service's own tests/test_application.py already
+# unit-tests), and (2) an AST-based import scan confirms ai-processing-
+# service never imports epd2_voting_service, epd2_tally_service,
+# epd2_delegation_service, epd2_account_service, epd2_identity_service, or
+# epd2_credential_service at all (required scope item 16's exhaustive
+# "no identity/account/credential/voting/tally/moderation storage access"
+# boundary - the only two upstream services this pack ever imports at all
+# are governance-service and transparency-service, each through exactly one
+# named `.application` function, per ADR-022/ADR-025 and this pack's own
+# `tests/repository/test_service_boundaries.py` AST enforcement).
+# =============================================================================
+
+
+def test_ai_processing_rejects_vote_or_ballot_shaped_target_type() -> None:
+    """`assert_purpose_target_combination_allowed` rejects `vote_envelope`/
+    `ballot` as a `target_type` for every use class - there is no
+    combination in `PERMITTED_PURPOSE_TARGET_COMBINATIONS` that admits a
+    vote-linked target at all, so AI processing structurally cannot be
+    requested against vote content."""
+    import pytest
+
+    from epd2_ai_processing_service.domain import (
+        AITargetReferenceMalformedError,
+        UseClass,
+        assert_purpose_target_combination_allowed,
+    )
+
+    for use_class in UseClass:
+        for bad_target in ("vote_envelope", "ballot"):
+            with pytest.raises(AITargetReferenceMalformedError):
+                assert_purpose_target_combination_allowed(use_class, bad_target)
+
+
+def test_ai_processing_service_never_imports_voting_tally_delegation_account_or_identity() -> None:
+    """AST-based import-boundary check (mirroring
+    `test_governance_service_never_imports_delegation_account_or_identity_service`
+    above): no module in `epd2_ai_processing_service` ever imports
+    `epd2_voting_service`, `epd2_tally_service`, `epd2_delegation_service`,
+    `epd2_account_service`, `epd2_identity_service`, or
+    `epd2_credential_service` at all - this pack has no dependency on any
+    of the six (no reverse vote-linkability path; no PACK-06 access to
+    identity/account/credential/voting/tally storage, required scope
+    item 16)."""
+    import epd2_ai_processing_service
+
+    package_dir = Path(inspect.getfile(epd2_ai_processing_service)).parent
+    forbidden_modules = {
+        "epd2_voting_service",
+        "epd2_tally_service",
+        "epd2_delegation_service",
+        "epd2_account_service",
+        "epd2_identity_service",
+        "epd2_credential_service",
+    }
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {node.module.split(".")[0]} if node.module else set()
+            else:
+                continue
+            leaked = names & forbidden_modules
+            assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"

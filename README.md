@@ -8,18 +8,28 @@ EPD² Civic OS — открытая цифровая инфраструктур�
 
 Настоящий репозиторий реализует **CLAUDE-PACK-01 — Repository Skeleton**,
 **CLAUDE-PACK-02 — Identity Separation and Audit Kernel**,
-**CLAUDE-PACK-03 — Participation and Decision Kernel** и
-**CLAUDE-PACK-04 — Transparency Context**: стартовый
-монорепо-каркас платформы плюс двенадцать независимых сервисов —
+**CLAUDE-PACK-03 — Participation and Decision Kernel**,
+**CLAUDE-PACK-04 — Transparency Context**,
+**CLAUDE-PACK-05 — Governance Context** и
+**CLAUDE-PACK-06 — AI Processing Context**: стартовый
+монорепо-каркас платформы плюс четырнадцать независимых сервисов —
 account, identity, eligibility, credential, audit-core (PACK-02, участие
 и идентичность структурно разделены, каждое критическое действие
 записывается в append-only, hash-chained журнал аудита), initiative,
 deliberation, moderation, voting, tally, delegation (PACK-03, полный
 цикл гражданской инициативы, обсуждения, модерации, голосования, подсчёта
-и делегирования) и transparency-service (PACK-04, публичный реестр,
-audit export, политика раскрытия данных, реестр лоббистских контактов).
-Остальная бизнес-логика (governance, AI-обработка, emergency actions)
-пока не реализована — см. `docs/review/KNOWN_LIMITATIONS.md`.
+и делегирования), transparency-service (PACK-04, публичный реестр,
+audit export, политика раскрытия данных, реестр лоббистских контактов),
+governance-service (PACK-05, роли участников, политики и решения органов
+управления, технические оспаривания и производный статус финальности
+результатов голосования) и ai-processing-service (PACK-06,
+`AIProcessingRecord` с двумя независимыми статусными плоскостями,
+канонический встроенный `redaction_manifest`, производный
+`DisclosureStatus`, `AIDisclosurePackage`, шесть закрытых классов
+использования и обязательный протокол раскрытия — ИИ остаётся строго
+консультативным и никогда не получает полномочий на автономную мутацию
+Civic OS). Остальная бизнес-логика (emergency actions) пока не
+реализована — см. `docs/review/KNOWN_LIMITATIONS.md`.
 
 ## Статус проекта
 
@@ -54,20 +64,64 @@ audit export, политика раскрытия данных, реестр л�
   описания, `docs/handover/PACK-04-SPEC.md`,
   `docs/adr/ADR-013-canon-0.3.0-transparency-context-additions.md`,
   `docs/review/PACK-04-OWNER-DECISIONS.md`.
-- Canon version: `0.4.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
+- Этап: governance context (CLAUDE-PACK-05) — **PACK-05 PASS**,
+  подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock`/`package-lock.json` регенерированы по-настоящему,
+  1719 Python-тестов пройдены (2 пропуска — те же CT-00-11/12
+  not-applicable маркеры), TypeScript (3/3) и frontend (2/2) тесты и
+  `next build` пройдены полностью, Prettier/lint/typecheck — чисто, все
+  336 обязательных путей на месте, запрещённых файлов нет. Один новый
+  сервис: `governance-service` (`RoleAssignment`, `GovernancePolicy`,
+  `GovernanceDecision`, `TechnicalChallenge`, производный read model
+  `FinalityStatus`; ADR-016–020, канон раздел 19b). См.
+  `docs/handover/PACK-05-REPORT.md` для полного описания,
+  `docs/handover/PACK-05-SPEC.md`,
+  `docs/adr/ADR-018-canon-0.4.0-governance-context-additions.md`,
+  `docs/review/PACK-05-OWNER-DECISIONS.md`.
+- Этап: AI processing context (CLAUDE-PACK-06) — **PACK-06 PASS**
+  (локальная верификация в этой песочнице; см.
+  `docs/handover/PACK-06-REPORT.md` для точных команд и результатов и
+  раздела с сетевыми ограничениями песочницы). Один новый сервис:
+  `ai-processing-service` (`AIProcessingRecord` с плоскостями
+  `processing_status`/`human_review_status`, каноническим встроенным
+  `redaction_manifest`, производным read model `DisclosureStatus`,
+  контрактным объектом `AIDisclosurePackage`; ADR-021–025, канон раздел
+  19c). Один узкий read-зависимый переход в `governance-service`
+  (`verify_role_assignment_for_action`) и вызов
+  `transparency-service.publish_ledger_entry` для обязательного
+  протокола раскрытия — сам сервис никогда не пишет
+  `PublicLedgerEntry` напрямую. См. `docs/handover/PACK-06-REPORT.md`
+  для полного описания, `docs/handover/PACK-06-SPEC.md`,
+  `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
+  `docs/review/PACK-06-OWNER-DECISIONS.md`.
+- Canon version: `0.5.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
   Изменения текста канона: PACK-03 под ADR-010 (`0.1.0 → 0.2.0`,
   добавление `Ballot.challenge_window_hours` /
   `ResultPublication.challenge_deadline_at`); CLAUDE-PACK-04 под ADR-013
   (`0.2.0 → 0.3.0`, раздел 19a Transparency Context); CLAUDE-PACK-05 под
   ADR-018/ADR-020 (`0.3.0 → 0.4.0`, раздел 19b Governance Context —
   `GovernancePolicy`, `GovernanceDecision`, `TechnicalChallenge`,
-  интеграция уже существующей `RoleAssignment`).
-- Repository version: `0.4.0` (CLAUDE-PACK-04 implementation:
-  `transparency-service` и связанные контракты/тесты; канон-раунд
-  CLAUDE-PACK-05 — канон-только изменение, `governance-service` пока не
-  реализован).
-- База данных, event bus, аутентификация, deployment, governance-сервис и
-  AI-обработка пока не реализованы.
+  интеграция уже существующей `RoleAssignment`); CLAUDE-PACK-06
+  под ADR-023/ADR-025 (`0.4.0 → 0.5.0`, раздел 19c AI Processing
+  Context — расширение уже существующей `AIProcessingRecord` полями
+  `processing_status`, `supersedes_ai_processing_record_id`,
+  каноническим встроенным `redaction_manifest`, полями жизненного цикла
+  раскрытия и производным `DisclosureStatus`; `AIDisclosurePackage` как
+  договорной объект). Канон не изменялся при реализации самого сервиса
+  (`services/ai-processing-service`) — эта реализация использует уже
+  принятый канон 0.5.0 и ADR-021–025 без дальнейших правок текста канона
+  (см. `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
+  `docs/review/PACK-06-OWNER-DECISIONS.md`).
+- Repository version: `0.6.0` (CLAUDE-PACK-06 implementation:
+  `ai-processing-service` и связанные контракты/тесты —
+  `AIProcessingRecord`, `RedactionManifest`, `AIDisclosurePackage` и
+  производный read model `DisclosureStatus`; см.
+  `docs/handover/PACK-06-REPORT.md`). Предыдущая версия `0.5.0`
+  соответствовала CLAUDE-PACK-05 implementation (`governance-service`;
+  подтверждено внешним прогоном GitHub Actions, см.
+  `docs/handover/PACK-05-REPORT.md`).
+- База данных, event bus, аутентификация, deployment и AI-обработка пока
+  не реализованы.
 
 ## Архитектурный принцип
 
@@ -124,11 +178,12 @@ make verify     # полный цикл проверок (repo checks, format, l
 epd2-civic-os/
 ├── docs/                 # канон, архитектура, ADR, отчёты, открытые вопросы
 ├── contracts/            # будущие контракты: OpenAPI, события, схемы, reason codes
-├── services/              # двенадцать сервисов: account, identity,
+├── services/              # четырнадцать сервисов: account, identity,
 │                          # eligibility, credential, audit-core (PACK-02),
 │                          # initiative, deliberation, moderation, voting,
 │                          # tally, delegation (PACK-03), transparency
-│                          # (PACK-04)
+│                          # (PACK-04), governance (PACK-05),
+│                          # ai-processing (PACK-06)
 ├── packages/
 │   ├── python/epd2-core        # общий Python-пакет: версии, идентификаторы
 │   └── typescript/epd2-types   # общий TypeScript-пакет: версии
@@ -165,8 +220,13 @@ epd2-civic-os/
 - Спецификация PACK-04: `docs/handover/PACK-04-SPEC.md`
 - Отчёт по PACK-04: `docs/handover/PACK-04-REPORT.md`
 - Спецификация PACK-05: `docs/handover/PACK-05-SPEC.md`
+- Отчёт по PACK-05: `docs/handover/PACK-05-REPORT.md`
 - Governance ADR (PACK-05): `docs/adr/ADR-016` — `docs/adr/ADR-020`,
   `docs/review/PACK-05-OWNER-DECISIONS.md`
+- Спецификация PACK-06: `docs/handover/PACK-06-SPEC.md`
+- Отчёт по PACK-06: `docs/handover/PACK-06-REPORT.md`
+- AI Processing Context ADR (PACK-06): `docs/adr/ADR-021` —
+  `docs/adr/ADR-025`, `docs/review/PACK-06-OWNER-DECISIONS.md`
 - Локальная доверификация (генерация lock-файлов, `next build`): `LOCAL_VERIFICATION.md`
 - Одноразовая проверка на GitHub Actions (когда нет доступа к обычной
   среде с интернетом): `GITHUB_ACTIONS_START.md`,
@@ -178,11 +238,14 @@ epd2-civic-os/
 
 Реализованы: Account, Identity, Eligibility, Credential, Audit Core
 (PACK-02), Initiative, Discussion (Deliberation), Moderation, Voting,
-Tally, Delegation (PACK-03) и Transparency (PACK-04: `PublicLedgerEntry`,
-`AuditExportPackage`, `DisclosurePolicy`, `LobbyLogEntry`). Governance
-Context определён в каноне (0.4.0, раздел 19b: `GovernancePolicy`,
-`GovernanceDecision`, `TechnicalChallenge`, интеграция `RoleAssignment`),
-но `governance-service` **ещё не реализован** — это канон-только
-изменение (ADR-018/ADR-020). **Ещё не реализованы**: Organization,
-Governance (сервис), AI-обработка, Emergency/Crisis Override — см.
-`docs/review/KNOWN_LIMITATIONS.md`.
+Tally, Delegation (PACK-03), Transparency (PACK-04: `PublicLedgerEntry`,
+`AuditExportPackage`, `DisclosurePolicy`, `LobbyLogEntry`), Governance
+(PACK-05: `RoleAssignment`, `GovernancePolicy`, `GovernanceDecision`,
+`TechnicalChallenge`, производный read model `FinalityStatus`; канон
+раздел 19b, ADR-016 — ADR-020) и AI Processing (PACK-06:
+`ai-processing-service` — `AIProcessingRecord` с плоскостями
+`processing_status`/`human_review_status`, канонический встроенный
+`redaction_manifest`, производный read model `DisclosureStatus`,
+контрактный объект `AIDisclosurePackage`; канон раздел 19c, ADR-021 —
+ADR-025). **Ещё не реализованы**: Organization, Emergency/Crisis
+Override — см. `docs/review/KNOWN_LIMITATIONS.md`.

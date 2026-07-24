@@ -29,6 +29,7 @@ from _schema_helpers import (
     PACK03_OPENAPI_PATH,
     PACK04_OPENAPI_PATH,
     PACK05_OPENAPI_PATH,
+    PACK06_OPENAPI_PATH,
     load_event_schema,
     load_schema,
     to_jsonable,
@@ -786,5 +787,175 @@ def test_openapi_governance_responses_do_not_reference_structurally_forbidden_fi
     leaked = declared & GOVERNANCE_STRUCTURAL_FORBIDDEN
     assert leaked == set(), (
         f"governance-service OpenAPI paths/schemas declare structurally forbidden "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-06: ai-processing-service (ADR-021 through ADR-025). Two distinct
+# forbidden-field sets, mirroring the PACK-05 split above:
+#
+# - `AI_STRUCTURAL_FORBIDDEN` must never appear ANYWHERE, including this
+#   pack's own *stored* entity schema and OpenAPI response bodies - canon
+#   19c.9's invariants that AIProcessingRecord/RedactionManifest/
+#   AIDisclosurePackage never reverse-lookup identity, never reconstruct
+#   vote linkage, and never store raw input/removed values/hidden
+#   reasoning (19c.4/19c.6/19c.9; required scope item 7's strict data
+#   boundary).
+# - `AI_PUBLIC_PAYLOAD_FORBIDDEN` (`human_reviewer_reference`) IS
+#   legitimate on the *stored* `AIProcessingRecord` (canon 19c.3) but
+#   must never appear in a *public* event payload (mirrors
+#   `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN`'s treatment of `*_role_id`
+#   fields) - checked against the event payload schema and a real
+#   end-to-end command call, never against the OpenAPI response/entity
+#   schema (which legitimately declares it, the same way
+#   governance-decision.schema.json legitimately declares
+#   `proposed_by_role_id`).
+# =============================================================================
+
+AI_STRUCTURAL_FORBIDDEN = frozenset(
+    {
+        "vote_envelope_id",
+        "identity_record_id",
+        "person_id",
+        "account_id",
+        "credential_secret",
+        "raw_input",
+        "removed_values",
+        "hidden_reasoning",
+    }
+)
+
+AI_PUBLIC_PAYLOAD_FORBIDDEN = frozenset({"human_reviewer_reference"})
+
+
+def test_ai_processing_record_schema_forbids_structural_fields() -> None:
+    schema = load_schema("ai-processing-record.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"ai-processing-record.schema.json must never declare {forbidden!r}"
+        )
+    redaction_manifest_properties = schema["properties"]["redaction_manifest"]["properties"]
+    for forbidden in AI_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in redaction_manifest_properties, (
+            f"the embedded redaction_manifest object must never declare {forbidden!r}"
+        )
+
+
+def test_ai_disclosure_package_schema_forbids_structural_fields() -> None:
+    schema = load_schema("ai-disclosure-package.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_STRUCTURAL_FORBIDDEN | AI_PUBLIC_PAYLOAD_FORBIDDEN | {"role_assignment_id"}:
+        assert forbidden not in schema["properties"], (
+            f"ai-disclosure-package.schema.json must never declare {forbidden!r}"
+        )
+
+
+def test_ai_processing_record_event_payload_schema_forbids_human_reviewer_reference() -> None:
+    schema = load_event_schema("ai-processing-record-payload.v1.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_PUBLIC_PAYLOAD_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"ai-processing-record-payload.v1.schema.json must never declare {forbidden!r}"
+        )
+
+
+def test_ai_output_accepted_event_has_no_human_reviewer_reference() -> None:
+    """End-to-end proof: a real `review_ai_output` approval call's emitted
+    `ai.output_accepted` payload never contains `human_reviewer_reference`,
+    even though the stored `AIProcessingRecord` retains it."""
+    from epd2_ai_processing_service.application import request_ai_processing, review_ai_output
+    from epd2_ai_processing_service.domain import HumanReviewStatus
+    from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
+    from epd2_governance_service.domain import GLOBAL_SCOPE_ID
+
+    clock = FixedClock(datetime(2026, 7, 24, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="service")
+    audit_store = InMemoryAuditEventStore()
+    record_store = InMemoryAIProcessingRecordStore()
+    role_store = InMemoryRoleAssignmentStore()
+
+    reviewer_actor_id = uuid4()
+    reviewer = role_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=reviewer_actor_id,
+            role_code="ai_output_reviewer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+
+    requesting_actor_reference = uuid4()
+    created = request_ai_processing(
+        record_store,
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=True,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    result = review_ai_output(
+        record_store,
+        audit_store,
+        role_store,
+        ai_processing_record_id=created.record.ai_processing_record_id,
+        reviewer_role_assignment_id=reviewer.role_assignment_id,
+        reviewer_subject_scope_id=GLOBAL_SCOPE_ID,
+        requesting_actor_reference=requesting_actor_reference,
+        is_official_publication=False,
+        outcome=HumanReviewStatus.APPROVED,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "human_reviewer_reference" not in payload_json
+    assert str(reviewer_actor_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain it (it is a real field).
+    assert result.record.human_reviewer_reference == reviewer_actor_id
+
+
+def _pack06_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK06_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_ai_processing_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack06_spec()
+    ai_paths = _credential_service_paths(spec, service_tag="ai-processing-service")
+    assert ai_paths, "expected at least one ai-processing-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(ai_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(ai_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & AI_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"ai-processing-service OpenAPI paths/schemas declare structurally forbidden "
         f"field(s) as an actual property: {sorted(leaked)}"
     )

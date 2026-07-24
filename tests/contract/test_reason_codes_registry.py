@@ -35,6 +35,8 @@ from _schema_helpers import (
     PACK04_SERVICE_DIRS,
     PACK05_REASON_CODES_PATH,
     PACK05_SERVICE_DIRS,
+    PACK06_REASON_CODES_PATH,
+    PACK06_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -53,6 +55,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-03", PACK03_REASON_CODES_PATH, PACK03_SERVICE_DIRS, 60),
     ("pack-04", PACK04_REASON_CODES_PATH, PACK04_SERVICE_DIRS, 18),
     ("pack-05", PACK05_REASON_CODES_PATH, PACK05_SERVICE_DIRS, 25),
+    ("pack-06", PACK06_REASON_CODES_PATH, PACK06_SERVICE_DIRS, 22),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 

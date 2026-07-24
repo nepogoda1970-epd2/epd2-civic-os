@@ -5,6 +5,222 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - canon minor version 0.5.0 (AI Processing Context)
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.4.0 →
+0.5.0` (ADR-023 and ADR-025, both accepted with amendments) — the
+  fourth edit to this document's own text since its original acceptance
+  (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 → 0.3.0`, and
+  ADR-018/ADR-020's `0.3.0 → 0.4.0`). Adds a new section 19c ("ИИ-
+  обработка — расширение / AI Processing Context"), extending the
+  already-existing section 17 (`AIProcessingRecord`, unchanged twelve
+  fields and six-value `human_review_status`) rather than defining a new
+  entity. Adds a new, independent `processing_status` field
+  (`requested`/`input_prepared`/`processing`/`completed`/`failed`/
+  `rejected_by_policy` — deliberately no stored `superseded` value) kept
+  structurally separate from `human_review_status`; a unified
+  `supersedes_ai_processing_record_id` field generalizing
+  `GovernanceDecision.supersedes_decision_id`'s derived-supersession
+  pattern to cover both a superseded processing run and a superseded
+  review outcome; fifteen further fields (model/deployment governance,
+  provenance/integrity, confidence/uncertainty, explainability,
+  human-reviewer provenance, lifecycle timestamps); a new
+  `redaction_manifest` embedded, immutable value object (nine sub-
+  fields: `redaction_policy_reference`, `redaction_policy_version`,
+  `input_classification`, `checked_field_categories`,
+  `removed_field_categories`, `prepared_input_hash`, `validator_version`,
+  `validated_at`, `result`) replacing what would otherwise have been a
+  flat `redaction_policy_reference`/`redaction_applied` field pair; three
+  disclosure-lifecycle fields (`disclosure_required`,
+  `disclosure_package_reference`, `disclosure_receipt_reference`) plus a
+  derived, non-stored `DisclosureStatus` read-model type
+  (`not_required`/`pending_package`/`pending_publication`/`published`),
+  mirroring `GovernanceDecision`/`FinalityStatus`'s own stored-vs-derived
+  split; and `AIDisclosurePackage`, defined explicitly as a contract/
+  value object — never a canonical system-of-record entity, never
+  persisted by either `ai-processing-service` or `transparency-service`,
+  its only durable trace being the resulting `PublicLedgerEntry` row
+  (already canon, 19a.1, owned by `transparency-service`, unchanged) plus
+  the two opaque reference fields on `AIProcessingRecord`. A mandatory,
+  explicit five-step disclosure protocol is recorded (19c.7): verified
+  human approval, immutable `AIDisclosurePackage` creation,
+  `transparency-service` publication through its existing
+  `publish_ledger_entry` path, receipt recording, and fail-closed
+  finalization gating on `DisclosureStatus = published`. Section 20.12's
+  AI event catalog is corrected (`ai.output.corrected` →
+  `ai.output_corrected`) and expanded with six new events. Section 22's
+  ownership matrix gains no new row (`AIProcessingRecord`'s existing "AI
+  Accountability Service" ownership is unchanged; `redaction_manifest`
+  and `AIDisclosurePackage` are, respectively, an embedded value object
+  and a contract/value object, not separately owned entities). Section
+  23's forbidden-links list gains new entries covering no-autonomous-
+  decision, no-identity-reverse-lookup, no-vote-linkage-reconstruction,
+  no-model-provider-mutation-authority, no-raw-private-input-in-
+  disclosure, and no-hidden-reasoning-claim invariants.
+  `docs/canonical/canon-version.json`,
+  `packages/python/epd2-core/src/epd2_core/version.py`, and
+  `packages/typescript/epd2-types/src/version.ts` updated to match, with
+  both version-consistency unit tests updated and
+  `scripts/verify_versions.py` passing; `REPOSITORY_VERSION` is
+  unchanged (`0.5.0`) since no `ai-processing-service` code exists yet —
+  this is a canon-only change, per CLAUDE-PACK-06's own governance round
+  (`docs/adr/ADR-021` through `ADR-025`, all `accepted`;
+  `docs/review/PACK-06-OWNER-DECISIONS.md`).
+
+## [0.6.0] - AI processing context (implementation)
+
+### Added
+
+- A new, independent, in-memory-backed service, `ai-processing-service`
+  (CLAUDE-PACK-06, "AI Processing Context"), with its own `README.md`,
+  `pyproject.toml`, `src/`, `tests/`, storage interfaces, model-provider
+  and redaction-validator abstractions, and in-memory reference adapters,
+  implementing exactly the canon 0.5.0 section 19c text and ADR-021
+  through ADR-025 (all `accepted`) with no further canon edit.
+- The one canon entity this pack owns, `AIProcessingRecord` (canon 17.1,
+  extended by 19c), with two independent, structurally separate status
+  planes: `processing_status` (`requested -> input_prepared -> processing
+  -> {completed | failed | rejected_by_policy}`, `rejected_by_policy`
+  also directly reachable from `requested`; no stored `superseded` value)
+  and `human_review_status` (canon's unchanged six-value enum; `superseded`
+  is never directly stored, only ever surfaced by the derived
+  `derive_effective_human_review_status` read model, mirroring
+  `GovernanceDecision`/`FinalityStatus`'s own stored-vs-derived split).
+  Both statuses' `superseded` meaning route through one shared field,
+  `supersedes_ai_processing_record_id`. The embedded, immutable
+  `RedactionManifest` value object (nine fields) and the
+  `AIDisclosurePackage` contract/value object (never persisted by either
+  `ai-processing-service` or `transparency-service` — its only durable
+  trace is the resulting `PublicLedgerEntry` row plus two opaque
+  reference fields on `AIProcessingRecord`) are both implemented exactly
+  per canon 19c.4/19c.6.
+- Fifteen application-layer commands (`request_ai_processing`,
+  `prepare_input`, `begin_processing`, `complete_processing_with_provider`,
+  `fail_processing`, `reject_processing_by_policy`, `review_ai_output`,
+  `supersede_ai_processing_record`, `assert_consequential_output_reviewed`,
+  `create_disclosure_package`, `publish_ai_disclosure`,
+  `assert_disclosure_complete_for_official_finalization`,
+  `get_ai_processing_record`, `get_disclosure_status`,
+  `get_effective_human_review_status`), each with `epd2_audit_core` audit
+  entries, CT-00-04 idempotency where applicable, and eleven canonical AI
+  events (canon section 20.12, corrected `ai.output.corrected` ->
+  `ai.output_corrected`, plus six new events).
+- `human_review_status` decided exactly once, at `request_ai_processing`
+  (`pending` if `is_consequential`, else `not_required`); silence,
+  timeout, a missing reviewer, or missing role verification never imply
+  approval — every consequential output can finish only through an
+  explicit `approved`/`approved_with_changes`/`rejected` outcome recorded
+  by `review_ai_output`.
+- Fourteen named fail-closed conditions (model unavailable, timeout,
+  malformed output, unsupported model version, low confidence, policy
+  conflict, redaction failure, prompt-injection signal, prohibited data,
+  missing human reviewer, invalid reviewer role, reviewer scope mismatch,
+  unverified input provenance, missing required disclosure), each mapped
+  to its own registered reason code and exercised end-to-end.
+- The narrow governance read dependency (ADR-022):
+  `epd2_governance_service.application.verify_role_assignment_for_action`,
+  returning only `authorized`/`verified_actor_reference`/
+  `verified_scope_reference`/`reason_code` — the sole function
+  `ai-processing-service` ever imports from `governance-service`, enforced
+  by an AST-based contract test. Four reviewer roles
+  (`ai_output_reviewer`, `ai_moderation_reviewer`, `ai_governance_reviewer`,
+  `ai_publication_reviewer`), purpose/scope-specific authorization, and
+  self-review prohibition for moderation/governance/ballot-adjacent/
+  official-publication uses.
+- Six closed use classes (`summarization`, `classification`,
+  `recommendation`, `drafting`, `anomaly_indication`,
+  `policy_compliance_assistance`) with closed `purpose_code`/`target_type`
+  allow-lists (ADR-025 §2) — `anomaly_indication`'s allow-list contains no
+  vote/ballot-linked `target_type` at all, structurally preventing AI
+  processing from ever reconstructing vote linkage.
+- A provider abstraction (`AIModelProvider` Protocol: `submit`/`cancel`
+  only, no callback/tool/command parameter of any kind, so a model
+  provider structurally cannot mutate Civic OS) and a redaction-validator
+  abstraction (`RedactionValidator` Protocol), both with scripted test
+  doubles. External providers are forbidden for voting/tally/
+  participation-pattern/credential/identity/governance-sensitive/
+  unrestricted-audit data and for `anomaly_indication` (self-hosted
+  required); unknown `processing_region`/`data_retention_mode` is
+  fail-closed.
+- The mandatory five-step disclosure protocol (ADR-025 §5, canon 19c.7):
+  verified approval, immutable `AIDisclosurePackage` creation,
+  `transparency-service` publication through its existing
+  `publish_ledger_entry` (never a direct transparency-storage write by
+  this service), receipt recording, and fail-closed finalization gating
+  on `DisclosureStatus = published`.
+- `contracts/openapi/pack-06.yaml` (tag `ai-processing-service`;
+  `verify_role_assignment_for_action` deliberately has no HTTP-shaped
+  path), `contracts/reason-codes/pack-06.yml` (29 entries: 4 generic/canon,
+  15 from the PACK-06 spec, 7 additive per ADR-024, 1 this service's own
+  duplicate-conflict code, plus 1 audit-classification code and 1
+  governance-owned code registered here purely for this file's own
+  completeness, following the same cross-pack duplication precedent
+  `PERMISSION_DENIED` already uses). Two entity JSON Schemas
+  (`ai-processing-record`, `ai-disclosure-package`) and one event-payload
+  JSON Schema, all validated against real generated payloads.
+- `tests/repository/test_service_boundaries.py` extended with seven new
+  PACK-06 boundary tests (no PACK-06-to-PACK-06 cross-service import, no
+  other service imports PACK-06, PACK-06 calls only the ADR-022/ADR-025-
+  named upstream applications, PACK-06 never imports the excluded
+  identity/account/credential/eligibility/initiative/deliberation/
+  moderation/delegation/voting/tally services, and the governance-service
+  and transparency-service edges are each restricted by an AST-based
+  scan to exactly one named function).
+- `tests/contract/test_ct00_01_schema_validation.py` through
+  `test_ct00_09_vote_linkability.py` each extended with a PACK-06 section
+  as applicable (schema validation and unknown-processing_status/
+  human_review_status rejection; two `parse_*` functions and their
+  `Unknown*Error`s newly added to `domain.py`; forbidden-transition cases
+  for both status planes; event idempotency, unsupported-event-version,
+  and audit-creation checks for `request_ai_processing`; the flagship
+  self-review-prohibition authorization test for `review_ai_output`;
+  structural schema/OpenAPI/event-payload identity- and vote-leakage
+  checks; a direct-construction proof that no `anomaly_indication` target
+  type is vote/ballot-linked; and an AST-based import scan confirming
+  `ai-processing-service` never imports voting/tally/delegation/account/
+  identity/credential service code at all). CT-00-11 (AI Human Control)
+  moves from not-applicable to fully and centrally passing for the first
+  time, in a new dedicated file, `test_ct00_11_ai_human_control.py`
+  (five end-to-end proofs: no review at all, silence never implying
+  approval, an explicit rejection, a successful approval, and the
+  official-publication path's additional published-disclosure
+  requirement). CT-00-10 (Rule Freeze) and CT-00-12 (Emergency Stop) are
+  explicitly documented not-applicable for this pack (required scope item
+  17); `test_ct00_11_12_not_applicable.py` is renamed
+  `test_ct00_12_emergency_stop_not_applicable.py` to reflect that CT-00-11
+  is no longer among the not-applicable markers it records.
+- `REPOSITORY_VERSION` `0.5.0 → 0.6.0` (`packages/python/epd2-core/src/
+epd2_core/version.py`, `packages/typescript/epd2-types/src/version.ts`,
+  both version-consistency unit tests, and `docs/canonical/canon-
+version.json`'s `repository_compatibility` upper bound widened to admit
+  it). `CANON_VERSION` is unchanged (`0.5.0`) — this round implements the
+  already-accepted canon 19c text; no further canon edit was made.
+- `docs/handover/PACK-06-REPORT.md`.
+
+### Verified
+
+- **PACK-06 local PASS**: full local verification suite run honestly —
+  `ruff check .` (all checks passed) and `ruff format --check .` (173
+  files already formatted); mypy clean across all 16 scoped groups
+  (fifteen pre-existing plus `services/ai-processing-service`), zero
+  errors; the complete pytest suite, 1815 passed / 4 skipped / 0 failed
+  (the 4 skips: `test_property_based.py` — `hypothesis` genuinely
+  unavailable in this sandbox — plus the three genuine
+  CT-00-10/CT-00-11/CT-00-12 not-applicable-in-earlier-packs markers);
+  `scripts/check_repository.py` — all 363 required paths present;
+  `scripts/check_forbidden_files.py` — no forbidden paths found;
+  `scripts/verify_versions.py` — all version sources consistent. Full
+  detail, including every command's literal output, in
+  `docs/handover/PACK-06-REPORT.md`. No network access to install
+  `hypothesis` or run the TypeScript/frontend toolchains locally in this
+  sandbox — see `LOCAL_VERIFICATION.md` for what this sandbox can and
+  cannot execute; unlike PACK-02 through PACK-05, this pack has not yet
+  had an external GitHub Actions run confirm the pipeline end to end, so
+  this is honestly recorded as a local-only PASS, not yet an
+  externally-confirmed one.
+
 ## [Unreleased] - canon minor version 0.4.0 (Governance Context)
 
 ### Changed
@@ -179,12 +395,16 @@ version.ts`, both version-consistency unit tests, and
 
 ### Verified
 
-- **PACK-05 PASS**: see `docs/handover/PACK-05-REPORT.md` for the full
-  local verification record (test counts, tool versions, and the
-  documented pre-existing sandbox limitations — TypeScript test execution
-  and `hypothesis` are both genuinely unavailable in this local sandbox,
-  as they were for PACK-03/PACK-04, and are exercised for real in GitHub
-  Actions CI instead).
+- **PACK-05 PASS**, confirmed by a complete external GitHub Actions run
+  with real network access: 1719 Python tests passed, 2 skipped (genuine
+  CT-00-11/12 not-applicable markers), TypeScript tests passed (3/3),
+  frontend tests passed (2/2), a successful Next.js production build, and
+  Prettier, lint, and type checks all clean, with all 336 required paths
+  present and no forbidden files. Two real, externally-found Prettier
+  gaps were fixed en route (a two-file formatting gap, and a malformed
+  Markdown table in `services/governance-service/README.md`) before this
+  PASS; neither changed any implementation logic, schema, test, canon, or
+  ADR content. Full detail: `docs/handover/PACK-05-REPORT.md`.
 
 ## [Unreleased] - canon minor version 0.3.0 (Transparency Context)
 

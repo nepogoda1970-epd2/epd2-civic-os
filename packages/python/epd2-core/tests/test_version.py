@@ -55,6 +55,31 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # (RoleAssignment/GovernancePolicy/GovernanceDecision/
     # TechnicalChallenge) against the already-accepted canon 0.4.0 text
     # and ADR-016 through ADR-020 - no further canon edit was made, so
-    # CANON_VERSION is unchanged.
-    assert CANON_VERSION == "0.4.0"
-    assert REPOSITORY_VERSION == "0.5.0"
+    # CANON_VERSION is unchanged at that point.
+    # CANON_VERSION moved 0.4.0 -> 0.5.0 per ADR-023 and ADR-025 (both
+    # accepted with amendments): new canon section 19c (AI Processing
+    # Context, an extension of the already-existing section 17) adding
+    # AIProcessingRecord.processing_status (six values, no stored
+    # superseded), supersedes_ai_processing_record_id (a unified,
+    # derived-at-read-time supersession mechanism covering both a
+    # superseded processing run and a superseded review outcome), the
+    # canonical embedded redaction_manifest value object (nine sub-fields),
+    # the disclosure-lifecycle fields plus the derived DisclosureStatus
+    # read model, and AIDisclosurePackage as a contract/value object (not
+    # a canonical system-of-record entity); a corrected/expanded section
+    # 20.12 AI event catalog (ai.output.corrected -> ai.output_corrected,
+    # plus six new events); and new section 23 forbidden-link entries - a
+    # backward-compatible (minor) canon addition per canon section 25.
+    # This round is a canon-only change for CLAUDE-PACK-06 governance; no
+    # ai-processing-service code exists yet, so REPOSITORY_VERSION is
+    # unchanged at 0.5.0 (both versions now coincidentally match, as they
+    # did transiently around PACK-04/PACK-05, but remain tracked
+    # independently).
+    # REPOSITORY_VERSION moved 0.5.0 -> 0.6.0 for CLAUDE-PACK-06 (AI
+    # Processing Context): implements ai-processing-service
+    # (AIProcessingRecord/RedactionManifest/AIDisclosurePackage) against
+    # the already-accepted canon 0.5.0 text and ADR-021 through ADR-025 -
+    # no further canon edit was made, so CANON_VERSION is unchanged at
+    # 0.5.0.
+    assert CANON_VERSION == "0.5.0"
+    assert REPOSITORY_VERSION == "0.6.0"

@@ -12,6 +12,23 @@ from epd2_account_service.application import PermissionDeniedError as AccountPer
 from epd2_account_service.application import change_account_status, create_account
 from epd2_account_service.domain import AccountStatus
 from epd2_account_service.storage import InMemoryAccountStore
+from epd2_ai_processing_service.application import (
+    begin_processing,
+    complete_processing_with_provider,
+    prepare_input,
+    request_ai_processing,
+    review_ai_output,
+)
+from epd2_ai_processing_service.domain import HumanReviewStatus, RedactionManifest, RedactionResult
+from epd2_ai_processing_service.exceptions import (
+    AIReviewSelfApprovalProhibitedError,
+)
+from epd2_ai_processing_service.exceptions import (
+    PermissionDeniedError as AIProcessingPermissionDeniedError,
+)
+from epd2_ai_processing_service.provider import ProviderOutcome, ScriptedAIModelProvider
+from epd2_ai_processing_service.redaction import ScriptedRedactionValidator
+from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
 from epd2_core.event_envelope import ActorRef
@@ -671,3 +688,213 @@ def test_activate_governance_policy_succeeds_for_distinct_proposer_and_approver(
         clock=clock,
     )
     assert result.policy.status == GovernancePolicyStatus.ACTIVE
+
+
+# =============================================================================
+# PACK-06: a plain `actor_is_authorized=False` rejection
+# (`request_ai_processing`), plus this pack's own flagship two-actor
+# authorization test (`review_ai_output`'s self-review prohibition for
+# moderation-adjacent uses, ADR-025 §3) - mirroring the PACK-03/PACK-05
+# rejection-then-success pattern above.
+# =============================================================================
+
+
+def _manifest_for_ct00_06() -> RedactionManifest:
+    from datetime import datetime as _datetime
+
+    return RedactionManifest(
+        redaction_policy_reference="policy-1",
+        redaction_policy_version="1.0",
+        input_classification="public",
+        checked_field_categories=("identity", "credential", "vote_linkage"),
+        removed_field_categories=(),
+        prepared_input_hash="hash-1",
+        validator_version="1.0",
+        validated_at=_datetime(2026, 1, 1, tzinfo=UTC),
+        result=RedactionResult.PASS,
+    )
+
+
+def test_request_ai_processing_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    with pytest.raises(AIProcessingPermissionDeniedError) as excinfo:
+        request_ai_processing(
+            InMemoryAIProcessingRecordStore(),
+            audit_store,
+            ai_processing_record_id=uuid4(),
+            purpose_code="summarization",
+            target_type="initiative",
+            target_id=uuid4(),
+            input_version="v1",
+            model_provider="internal",
+            model_name="internal-model",
+            model_version="1.0",
+            prompt_template_version="v1",
+            is_consequential=False,
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+
+
+def _completed_moderation_classification_record(
+    record_store: InMemoryAIProcessingRecordStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> UUID:
+    """Real `request -> input_prepared -> processing -> completed` chain
+    for a `classification` use on a `contribution` target (moderation-
+    adjacent, requiring an independent reviewer per ADR-025 §3) -
+    `review_ai_output`'s own self-review check needs a real completed,
+    consequential record to review. Returns `ai_processing_record_id`."""
+    created = request_ai_processing(
+        record_store,
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="classification",
+        target_type="contribution",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=True,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    record_id = created.record.ai_processing_record_id
+    prepare_input(
+        record_store,
+        audit_store,
+        ai_processing_record_id=record_id,
+        redaction_validator=ScriptedRedactionValidator(_manifest_for_ct00_06()),
+        input_reference="input-ref-1",
+        declared_input_classification="public",
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    begin_processing(
+        record_store,
+        audit_store,
+        ai_processing_record_id=record_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    complete_processing_with_provider(
+        record_store,
+        audit_store,
+        ai_processing_record_id=record_id,
+        provider=ScriptedAIModelProvider(
+            outcome=ProviderOutcome(
+                output_reference="output-ref-1",
+                output_hash="output-hash-1",
+                confidence_score=0.9,
+                uncertainty_indicator=None,
+                explanation_reference=None,
+                reason_codes=(),
+            )
+        ),
+        prepared_input_reference="input-ref-1",
+        timeout_seconds=30.0,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    return record_id
+
+
+def test_review_ai_output_rejects_the_requesting_actor_as_reviewer(
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """ADR-025 §3: a `classification` review of a moderation-adjacent
+    target requires an independent reviewer - the same actor who
+    requested the AI processing may never also approve its own output."""
+    record_store = InMemoryAIProcessingRecordStore()
+    record_id = _completed_moderation_classification_record(record_store, audit_store, actor, clock)
+    requesting_actor_reference = uuid4()
+    reviewer = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=requesting_actor_reference,
+            role_code="ai_moderation_reviewer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    with pytest.raises(AIReviewSelfApprovalProhibitedError) as excinfo:
+        review_ai_output(
+            record_store,
+            audit_store,
+            role_assignment_store,
+            ai_processing_record_id=record_id,
+            reviewer_role_assignment_id=reviewer.role_assignment_id,
+            reviewer_subject_scope_id=GLOBAL_SCOPE_ID,
+            requesting_actor_reference=requesting_actor_reference,
+            is_official_publication=False,
+            outcome=HumanReviewStatus.APPROVED,
+            actor=actor,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "AI_REVIEW_SELF_APPROVAL_PROHIBITED"
+
+
+def test_review_ai_output_succeeds_for_a_different_reviewer(
+    role_assignment_store: InMemoryRoleAssignmentStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    record_store = InMemoryAIProcessingRecordStore()
+    record_id = _completed_moderation_classification_record(record_store, audit_store, actor, clock)
+    reviewer = role_assignment_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=uuid4(),
+            role_code="ai_moderation_reviewer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    result = review_ai_output(
+        record_store,
+        audit_store,
+        role_assignment_store,
+        ai_processing_record_id=record_id,
+        reviewer_role_assignment_id=reviewer.role_assignment_id,
+        reviewer_subject_scope_id=GLOBAL_SCOPE_ID,
+        requesting_actor_reference=uuid4(),
+        is_official_publication=False,
+        outcome=HumanReviewStatus.APPROVED,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    assert result.record.human_review_status is HumanReviewStatus.APPROVED

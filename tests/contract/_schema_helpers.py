@@ -36,6 +36,11 @@ PACK04_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-04.yaml"
 PACK05_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-05.yml"
 PACK05_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-05.yaml"
 
+#: PACK-06's own reason-code registry / OpenAPI contract - added alongside
+#: (never replacing) the PACK-02/PACK-03/PACK-04/PACK-05 constants above.
+PACK06_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-06.yml"
+PACK06_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-06.yaml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -58,6 +63,7 @@ PACK03_SERVICE_DIRS: tuple[str, ...] = (
 )
 PACK04_SERVICE_DIRS: tuple[str, ...] = ("transparency-service",)
 PACK05_SERVICE_DIRS: tuple[str, ...] = ("governance-service",)
+PACK06_SERVICE_DIRS: tuple[str, ...] = ("ai-processing-service",)
 
 
 def load_schema(name: str) -> dict[str, Any]:

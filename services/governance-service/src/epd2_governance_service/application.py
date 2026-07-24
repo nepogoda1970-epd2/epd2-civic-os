@@ -4,8 +4,11 @@
 `propose_governance_decision`, `approve_governance_decision`,
 `reject_governance_decision`, `submit_technical_challenge`,
 `begin_technical_challenge_review`, plus the read functions
-`get_governance_decision` and `get_finality_status` — canon section 19b,
-canon section 20.15's twelve-event catalog, ADR-016 through ADR-020.
+`get_governance_decision`, `get_finality_status`, and
+`verify_role_assignment_for_action` — canon section 19b, canon section
+20.15's twelve-event catalog, ADR-016 through ADR-020, and ADR-022
+(`verify_role_assignment_for_action`, PACK-06's one narrow, purpose-built
+read into this service).
 
 Every state-changing command below accepts an optional caller-supplied
 `event_id` (CT-00-04), the same idempotency pattern every prior pack's
@@ -557,6 +560,97 @@ def get_role_assignment(
 ) -> RoleAssignment | None:
     """Plain, unaudited read of one `RoleAssignment` by id."""
     return store.get(role_assignment_id)
+
+
+@dataclass(frozen=True, slots=True)
+class RoleVerificationResult:
+    """ADR-022's purpose-built cross-pack verdict for
+    `verify_role_assignment_for_action` — deliberately minimal (canon
+    carries no field for this; this type is repository-side only).
+    `verified_actor_reference`/`verified_scope_reference` are populated
+    only when `authorized` is `True`; `reason_code` only when it is
+    `False`. The caller never receives the underlying `RoleAssignment`
+    row itself."""
+
+    authorized: bool
+    verified_actor_reference: UUID | None
+    verified_scope_reference: UUID | None
+    reason_code: str | None
+
+
+def verify_role_assignment_for_action(
+    role_store: RoleAssignmentStore,
+    *,
+    role_assignment_id: UUID,
+    required_role_codes: frozenset[str],
+    required_scope_id: UUID,
+    action_code: str,
+    evaluated_at: datetime,
+) -> RoleVerificationResult:
+    """ADR-022's one narrow, purpose-built read `ai-processing-service` (and
+    only `ai-processing-service`) may call: performs the entire active-
+    status/time-window/suspension/revocation/scope-coverage/role-code
+    check *inside* `governance-service`, using the same
+    `_require_active_in_scope_role` helper this pack's own commands
+    already use, and returns only a minimal verdict — never the
+    underlying `RoleAssignment` row, and never any of `status`,
+    `role_code`, `scope_id`, `valid_from`, `valid_until` directly.
+
+    `action_code` is accepted and passed through only as a forward-
+    compatible hook (ADR-022: "for its own audit/logging purposes ... a
+    future `GovernancePolicy` ... could key role-applicability rules on
+    `action_code` without changing this function's signature"); this
+    read is unaudited, like `get_role_assignment`, so `action_code` is
+    not itself persisted anywhere by this implementation.
+
+    This is the only `governance-service.application` function
+    `ai-processing-service` may import (`tests/repository/
+    test_service_boundaries.py`); every other role-assignment/policy/
+    decision/technical-challenge command and read stays out of reach.
+    """
+    del action_code
+    try:
+        role = _require_active_in_scope_role(
+            role_store,
+            role_assignment_id=role_assignment_id,
+            allowed_role_codes=required_role_codes,
+            subject_scope_id=required_scope_id,
+            now=evaluated_at,
+        )
+    except UnknownRoleAssignmentError as exc:
+        return RoleVerificationResult(
+            authorized=False,
+            verified_actor_reference=None,
+            verified_scope_reference=None,
+            reason_code=exc.reason_code,
+        )
+    except RoleAssignmentNotActiveError as exc:
+        return RoleVerificationResult(
+            authorized=False,
+            verified_actor_reference=None,
+            verified_scope_reference=None,
+            reason_code=exc.reason_code,
+        )
+    except PermissionDeniedError as exc:
+        return RoleVerificationResult(
+            authorized=False,
+            verified_actor_reference=None,
+            verified_scope_reference=None,
+            reason_code=exc.reason_code,
+        )
+    except RoleAssignmentScopeMismatchError as exc:
+        return RoleVerificationResult(
+            authorized=False,
+            verified_actor_reference=None,
+            verified_scope_reference=None,
+            reason_code=exc.reason_code,
+        )
+    return RoleVerificationResult(
+        authorized=True,
+        verified_actor_reference=role.actor_id,
+        verified_scope_reference=role.scope_id,
+        reason_code=None,
+    )
 
 
 # ---------------------------------------------------------------------------
