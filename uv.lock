@@ -9,12 +9,23 @@ resolution-markers = [
 [manifest]
 members = [
     "epd2-account-service",
+    "epd2-ai-processing-service",
     "epd2-audit-core",
     "epd2-civic-os",
     "epd2-core",
     "epd2-credential-service",
+    "epd2-delegation-service",
+    "epd2-deliberation-service",
     "epd2-eligibility-service",
+    "epd2-governance-service",
     "epd2-identity-service",
+    "epd2-initiative-service",
+    "epd2-membership-service",
+    "epd2-moderation-service",
+    "epd2-organization-service",
+    "epd2-tally-service",
+    "epd2-transparency-service",
+    "epd2-voting-service",
 ]
 
 [[package]]
@@ -147,6 +158,25 @@ requires-dist = [
 ]
 
 [[package]]
+name = "epd2-ai-processing-service"
+version = "0.1.0"
+source = { editable = "services/ai-processing-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+    { name = "epd2-governance-service" },
+    { name = "epd2-transparency-service" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+    { name = "epd2-governance-service", editable = "services/governance-service" },
+    { name = "epd2-transparency-service", editable = "services/transparency-service" },
+]
+
+[[package]]
 name = "epd2-audit-core"
 version = "0.1.0"
 source = { editable = "services/audit-core" }
@@ -163,11 +193,22 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "epd2-account-service" },
+    { name = "epd2-ai-processing-service" },
     { name = "epd2-audit-core" },
     { name = "epd2-core" },
     { name = "epd2-credential-service" },
+    { name = "epd2-delegation-service" },
+    { name = "epd2-deliberation-service" },
     { name = "epd2-eligibility-service" },
+    { name = "epd2-governance-service" },
     { name = "epd2-identity-service" },
+    { name = "epd2-initiative-service" },
+    { name = "epd2-membership-service" },
+    { name = "epd2-moderation-service" },
+    { name = "epd2-organization-service" },
+    { name = "epd2-tally-service" },
+    { name = "epd2-transparency-service" },
+    { name = "epd2-voting-service" },
 ]
 
 [package.dev-dependencies]
@@ -186,11 +227,22 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "epd2-account-service", editable = "services/account-service" },
+    { name = "epd2-ai-processing-service", editable = "services/ai-processing-service" },
     { name = "epd2-audit-core", editable = "services/audit-core" },
     { name = "epd2-core", editable = "packages/python/epd2-core" },
     { name = "epd2-credential-service", editable = "services/credential-service" },
+    { name = "epd2-delegation-service", editable = "services/delegation-service" },
+    { name = "epd2-deliberation-service", editable = "services/deliberation-service" },
     { name = "epd2-eligibility-service", editable = "services/eligibility-service" },
+    { name = "epd2-governance-service", editable = "services/governance-service" },
     { name = "epd2-identity-service", editable = "services/identity-service" },
+    { name = "epd2-initiative-service", editable = "services/initiative-service" },
+    { name = "epd2-membership-service", editable = "services/membership-service" },
+    { name = "epd2-moderation-service", editable = "services/moderation-service" },
+    { name = "epd2-organization-service", editable = "services/organization-service" },
+    { name = "epd2-tally-service", editable = "services/tally-service" },
+    { name = "epd2-transparency-service", editable = "services/transparency-service" },
+    { name = "epd2-voting-service", editable = "services/voting-service" },
 ]
 
 [package.metadata.requires-dev]
@@ -233,6 +285,36 @@ requires-dist = [
 ]
 
 [[package]]
+name = "epd2-delegation-service"
+version = "0.1.0"
+source = { editable = "services/delegation-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-deliberation-service"
+version = "0.1.0"
+source = { editable = "services/deliberation-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
 name = "epd2-eligibility-service"
 version = "0.1.0"
 source = { editable = "services/eligibility-service" }
@@ -248,6 +330,25 @@ requires-dist = [
 ]
 
 [[package]]
+name = "epd2-governance-service"
+version = "0.1.0"
+source = { editable = "services/governance-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+    { name = "epd2-tally-service" },
+    { name = "epd2-voting-service" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+    { name = "epd2-tally-service", editable = "services/tally-service" },
+    { name = "epd2-voting-service", editable = "services/voting-service" },
+]
+
+[[package]]
 name = "epd2-identity-service"
 version = "0.1.0"
 source = { editable = "services/identity-service" }
@@ -260,6 +361,129 @@ dependencies = [
 requires-dist = [
     { name = "epd2-audit-core", editable = "services/audit-core" },
     { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-initiative-service"
+version = "0.1.0"
+source = { editable = "services/initiative-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+    { name = "epd2-credential-service" },
+    { name = "epd2-eligibility-service" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+    { name = "epd2-credential-service", editable = "services/credential-service" },
+    { name = "epd2-eligibility-service", editable = "services/eligibility-service" },
+]
+
+[[package]]
+name = "epd2-membership-service"
+version = "0.1.0"
+source = { editable = "services/membership-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-moderation-service"
+version = "0.1.0"
+source = { editable = "services/moderation-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-organization-service"
+version = "0.1.0"
+source = { editable = "services/organization-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-tally-service"
+version = "0.1.0"
+source = { editable = "services/tally-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-transparency-service"
+version = "0.1.0"
+source = { editable = "services/transparency-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+    { name = "epd2-initiative-service" },
+    { name = "epd2-moderation-service" },
+    { name = "epd2-tally-service" },
+    { name = "epd2-voting-service" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+    { name = "epd2-initiative-service", editable = "services/initiative-service" },
+    { name = "epd2-moderation-service", editable = "services/moderation-service" },
+    { name = "epd2-tally-service", editable = "services/tally-service" },
+    { name = "epd2-voting-service", editable = "services/voting-service" },
+]
+
+[[package]]
+name = "epd2-voting-service"
+version = "0.1.0"
+source = { editable = "services/voting-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+    { name = "epd2-credential-service" },
+    { name = "epd2-eligibility-service" },
+    { name = "epd2-governance-service" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+    { name = "epd2-credential-service", editable = "services/credential-service" },
+    { name = "epd2-eligibility-service", editable = "services/eligibility-service" },
+    { name = "epd2-governance-service", editable = "services/governance-service" },
 ]
 
 [[package]]

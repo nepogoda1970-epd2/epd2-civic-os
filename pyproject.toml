@@ -20,6 +20,7 @@ dependencies = [
     "epd2-governance-service",
     "epd2-ai-processing-service",
     "epd2-membership-service",
+    "epd2-organization-service",
 ]
 
 # Lower bounds are the versions this repository's checks (Ruff ruleset,
@@ -64,6 +65,7 @@ members = [
     "services/governance-service",
     "services/ai-processing-service",
     "services/membership-service",
+    "services/organization-service",
 ]
 
 [tool.uv.sources]
@@ -83,6 +85,7 @@ epd2-transparency-service = { workspace = true }
 epd2-governance-service = { workspace = true }
 epd2-ai-processing-service = { workspace = true }
 epd2-membership-service = { workspace = true }
+epd2-organization-service = { workspace = true }
 
 # --- Ruff ---
 [tool.ruff]
@@ -105,6 +108,7 @@ src = [
     "services/governance-service/src",
     "services/ai-processing-service/src",
     "services/membership-service/src",
+    "services/organization-service/src",
     "scripts",
     "tests",
 ]
@@ -130,6 +134,7 @@ known-first-party = [
     "epd2_governance_service",
     "epd2_ai_processing_service",
     "epd2_membership_service",
+    "epd2_organization_service",
 ]
 
 # --- mypy ---
@@ -152,6 +157,7 @@ mypy_path = [
     "services/governance-service/src",
     "services/ai-processing-service/src",
     "services/membership-service/src",
+    "services/organization-service/src",
 ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -220,6 +226,7 @@ testpaths = [
     "services/governance-service/tests",
     "services/ai-processing-service/tests",
     "services/membership-service/tests",
+    "services/organization-service/tests",
 ]
 # --import-mode=importlib: several services intentionally use the same
 # test file basenames (test_domain.py, test_application.py, ...) - this
