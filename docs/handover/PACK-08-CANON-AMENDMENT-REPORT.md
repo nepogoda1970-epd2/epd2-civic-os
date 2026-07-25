@@ -32,9 +32,9 @@ REPOSITORY_VERSION = 0.7.0   (unchanged — see section 3)
 
 ADR-037 is now `accepted`:
 
-| ADR     | Subject                                             | Status                 |
-| ------- | ---------------------------------------------------- | ---------------------- |
-| ADR-037 | Organization and Regional Scope Canon Amendment       | `accepted`, 2026-07-25 |
+| ADR     | Subject                                         | Status                 |
+| ------- | ----------------------------------------------- | ---------------------- |
+| ADR-037 | Organization and Regional Scope Canon Amendment | `accepted`, 2026-07-25 |
 
 ADR-032 through ADR-036 remain `accepted` (unchanged by this round —
 they were accepted in the prior PACK-08 spec-correction round). ADR-037
@@ -252,7 +252,7 @@ claimed PASS.
 git-tracked/untracked-but-not-ignored paths via `git ls-files --cached
 --others --exclude-standard`; when `.git` is absent — as here — it
 falls back to a full, `.gitignore`-blind filesystem walk
-(`_walk_all_paths()`), which flags *any* cache directory present on
+(`_walk_all_paths()`), which flags _any_ cache directory present on
 disk as forbidden, regardless of whether it would ever actually be
 committed. This is why `tests/repository/test_no_forbidden_paths_present`
 failed in the original run below, and in every prior verification round
@@ -364,11 +364,11 @@ cleanup) — kept for the audit trail, not as a current claim</summary>
   extended (13 events + documentation); section 22 extended (5 rows);
   section 23 extended (11 entries); section 24 extended (10 codes).
 - `docs/canonical/canon-version.json` — `canon_version: "0.6.0" →
-  "0.7.0"`.
+"0.7.0"`.
 - `packages/python/epd2-core/src/epd2_core/version.py` —
   `CANON_VERSION = "0.6.0" → "0.7.0"`.
 - `packages/typescript/epd2-types/src/version.ts` — `CANON_VERSION =
-  "0.6.0" → "0.7.0"`.
+"0.6.0" → "0.7.0"`.
 - `packages/python/epd2-core/tests/test_version.py` — updated expected
   `CANON_VERSION` assertion and history comment.
 - `packages/typescript/epd2-types/tests/version.test.ts` — updated

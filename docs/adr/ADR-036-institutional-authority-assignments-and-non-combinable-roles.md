@@ -18,7 +18,7 @@ minimum non-combinable-role matrix is adopted, superseding and
 extending this ADR's original four-pair starting set:
 
 1. An `election officer` cannot simultaneously act as `election
-   auditor` for the same process/scope.
+auditor` for the same process/scope.
 2. An `election board member` cannot independently approve their own
    appointment or removal.
 3. A `finance auditor` cannot simultaneously be `finance administrator`

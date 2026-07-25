@@ -48,6 +48,9 @@
     "valid_from": { "type": "string", "format": "date-time" },
     "valid_until": { "type": ["string", "null"], "format": "date-time" },
     "supersedes_relation_id": { "type": ["string", "null"], "format": "uuid" },
-    "authorizing_decision_reference": { "type": ["string", "null"], "format": "uuid" }
+    "authorizing_decision_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
   }
 }

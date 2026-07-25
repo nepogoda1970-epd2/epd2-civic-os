@@ -21,12 +21,7 @@
     },
     "authentication_assurance_level": {
       "type": "string",
-      "enum": [
-        "none",
-        "low",
-        "substantial",
-        "high"
-      ]
+      "enum": ["none", "low", "substantial", "high"]
     }
   }
 }

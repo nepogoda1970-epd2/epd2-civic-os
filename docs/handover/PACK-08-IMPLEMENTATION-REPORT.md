@@ -264,7 +264,7 @@ Results:
   (including this report and `docs/packs/PACK-08-IMPLEMENTATION.md`); no
   forbidden paths reported by the script itself.
 - **`scripts/verify_versions.py`:** `OK: all version sources are
-  consistent.` (`CANON_VERSION 0.7.0` / `REPOSITORY_VERSION 0.8.0`
+consistent.` (`CANON_VERSION 0.7.0` / `REPOSITORY_VERSION 0.8.0`
   everywhere they are declared, including the corrected `CHANGELOG.md`
   `## [0.8.0]` heading placement).
 - **TypeScript unit tests (frontend):** **11 passed, 0 failed** (2
@@ -277,7 +277,7 @@ Results:
   entirely to the missing, project-pinned `@types/react`/`next` packages
   (no `node_modules` — see section 1); after filtering those out, **zero
   genuine type errors** in this round's new code. One genuine type issue
-  this check *did* surface and that was fixed for real (not filtered
+  this check _did_ surface and that was fixed for real (not filtered
   out): an `'organization' is possibly 'undefined'` narrowing gap after
   `notFound()` in `app/organizations/[id]/page.tsx`, fixed by adding an
   explicit `return null;` after the `notFound()` call so control-flow
@@ -401,7 +401,7 @@ every ADR-032–037 status (all remain `accepted`), and all implementation
 code (`services/organization-service/`, `governance-service`,
 `ai-processing-service` — none of these were touched; this is a
 documentation-only correction to how an already-correct, already-
-implemented dispatch behavior is *described*, not a change to that
+implemented dispatch behavior is _described_, not a change to that
 behavior itself).
 
 **Documentation and repository checks re-run honestly after this
@@ -409,14 +409,14 @@ correction** (same commands as section 6b, re-executed from a clean
 cache state):
 
 - `python3 scripts/check_repository.py` → `OK: all 445 required paths
-  are present.` (unchanged path count — this correction edited existing
+are present.` (unchanged path count — this correction edited existing
   required files, added none).
 - `python3 scripts/verify_versions.py` → `OK: all version sources are
-  consistent.`
+consistent.`
 - `python3 scripts/check_forbidden_files.py` → `OK: no forbidden paths
-  found.`
+found.`
 - `/root/.local/bin/pytest -p no:cacheprovider packages/python/epd2-core
-  tests/repository tests/contract services -q` → **2141 passed, 5
+tests/repository tests/contract services -q` → **2141 passed, 5
   skipped, 0 failed** — identical to section 6b's figures, as expected:
   this correction touched only Markdown documentation, no test, schema,
   or source file, so no Python test outcome could change.
@@ -424,7 +424,7 @@ cache state):
   `/root/.local/bin/ruff format --no-cache --check .` → both clean,
   unchanged from section 6b (Markdown is outside Ruff's scope).
 - Frontend TypeScript unit tests (`node --import <tsx-loader> --test
-  tests/*.test.ts`) → **11 passed, 0 failed**, unchanged from section 6b
+tests/*.test.ts`) → **11 passed, 0 failed**, unchanged from section 6b
   — no frontend file was touched by this correction.
 
 **New archive:** `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-CI-CANDIDATE.zip`

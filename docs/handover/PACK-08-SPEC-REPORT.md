@@ -159,7 +159,7 @@ GAP-052 through GAP-055 (`docs/review/KNOWN_LIMITATIONS.md`,
 `docs/review/PACK-07-OWNER-DECISIONS.md`) was **not** performed this
 round — tracked as `docs/packs/PACK-08-OPEN-DECISIONS.md` item OD-17,
 since the master baseline itself frames that supersession as a PACK-08
-*implementation*-round action, not a specification-round action.
+_implementation_-round action, not a specification-round action.
 
 ## 5. Versions
 
@@ -197,7 +197,7 @@ ADR-031 and PACK-07's own `SPEC`/`SPEC-FINAL`/`CANON-AMENDMENT-REPORT`/
 `OWNER-DECISIONS` documents were likewise never added to
 `REQUIRED_PATHS` during the PACK-07 specification/canon round (only
 contract/service paths were added, during PACK-07's later
-*implementation* round) — confirmed by inspecting
+_implementation_ round) — confirmed by inspecting
 `scripts/check_repository.py`'s own current content before drafting
 this report. This round follows the same precedent rather than
 introducing a new one; extending `REQUIRED_PATHS` to track every

@@ -32,11 +32,7 @@
     },
     "status": {
       "type": "string",
-      "enum": [
-        "draft",
-        "active",
-        "superseded"
-      ]
+      "enum": ["draft", "active", "superseded"]
     },
     "action_code": {
       "type": "string",
@@ -57,27 +53,14 @@
       "properties": {
         "required_identity_assurance_level": {
           "type": "string",
-          "enum": [
-            "none",
-            "low",
-            "substantial",
-            "high"
-          ]
+          "enum": ["none", "low", "substantial", "high"]
         },
         "required_authentication_assurance_level": {
           "type": "string",
-          "enum": [
-            "none",
-            "low",
-            "substantial",
-            "high"
-          ]
+          "enum": ["none", "low", "substantial", "high"]
         },
         "required_attribute_freshness": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "description": "ISO-8601 duration (e.g. 'P30D'), or null for no freshness requirement."
         }
       }
@@ -90,45 +73,27 @@
       "minLength": 1
     },
     "maximum_authentication_age": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "description": "ISO-8601 duration (e.g. 'PT15M'), or null for no maximum-age check."
     },
     "effective_from": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "effective_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "supersedes_requirement_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "signed_policy_digest_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     },
     "transparency_log_commitment_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     }
   }

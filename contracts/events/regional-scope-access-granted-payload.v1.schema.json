@@ -5,11 +5,23 @@
   "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events.build_regional_scope_access_granted_event, and only ever emitted for access modes 2-5 (ancestor_scope/descendant_scope/delegated_cross_scope/temporary_supervision) via epd2_organization_service.application.record_regional_scope_access_grant - never for mode 1 (exact_scope, the ordinary default) or mode 6 (institutional_oversight_without_data_access, which grants no data access by definition). Minimum payload only: the evaluated OrganizationalScope (scope_type/scope_reference), which access mode applied, policy_version, effective_time, and recorded_at - never the requesting actor's identity beyond the envelope's own ActorRef.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["scope_type", "scope_reference", "mode", "policy_version", "effective_time", "recorded_at"],
+  "required": [
+    "scope_type",
+    "scope_reference",
+    "mode",
+    "policy_version",
+    "effective_time",
+    "recorded_at"
+  ],
   "properties": {
     "scope_type": {
       "type": "string",
-      "enum": ["organization_scope", "jurisdiction_scope", "civic_space_scope", "process_scope"]
+      "enum": [
+        "organization_scope",
+        "jurisdiction_scope",
+        "civic_space_scope",
+        "process_scope"
+      ]
     },
     "scope_reference": { "type": "string", "minLength": 1 },
     "mode": {

@@ -169,8 +169,8 @@ common fields (section 6 of the specification: `valid_from`,
 surface (three JSON Schemas, three OpenAPI path groups, three sets of
 tests) for no boundary benefit — unlike ADR-032's rejection of
 splitting `Organization`/`CivicSpace` (a genuine, evolvable-independently
-split), here the three categories are three *interpretations of the
-same underlying fact shape* (node A relates to node B, this way, during
+split), here the three categories are three _interpretations of the
+same underlying fact shape_ (node A relates to node B, this way, during
 this period), not three independently evolving domains.
 
 ## Owner decision — `parent_reference` is a non-authoritative projection
@@ -213,7 +213,7 @@ not applied uniformly, and every test asserting "no cycles" must
 specify which category it is asserting about, per
 `docs/packs/PACK-08-SPECIFICATION.md` section 5.1's explicit
 distinction. Renaming/territorial-reassignment (specification section
-7.1) is modeled as a hierarchy-category relation *version* change
+7.1) is modeled as a hierarchy-category relation _version_ change
 (the old edge's `valid_until` is set; a new edge is created), never an
 in-place field edit — mirroring the immutable-correction discipline
 already established for `ProcessEligibilityPolicy` (ADR-028/30).
@@ -246,7 +246,7 @@ terminate correctly.
 None — `OrganizationalRelation` is a wholly new entity; no existing
 canon entity or service field is altered by this ADR. Future
 implementation must ensure `organization-service`'s own relation-write
-path is the *only* writer, per ADR-032, so no existing service's own
+path is the _only_ writer, per ADR-032, so no existing service's own
 ad hoc "parent" or "region" field is retroactively treated as
 equivalent to a real `OrganizationalRelation` record without the
 explicit per-field decision ADR-035 makes.

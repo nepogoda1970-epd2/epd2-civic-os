@@ -50,7 +50,7 @@ this matrix.
   referent; `membership-service` continues to own the field itself
   (the foreign-key-shaped reference lives on `Membership`, unchanged).
 - **Compatibility strategy:** none needed — the field's shape (a UUID)
-  does not change; only its *validation behavior* changes, once a
+  does not change; only its _validation behavior_ changes, once a
   future implementation pack wires a narrow
   `organization-service` read into `membership-service`'s own
   application layer to confirm the referenced `Organization` exists and
@@ -135,7 +135,7 @@ classification:** every existing and future `role_code` on
 - **Current meaning:** a generic `UUID` scope reference, consumed by
   `governance-service`'s own `scope_covers(role_scope_id, subject_scope_id)`
   helper, across every `role_code` this service defines — the field
-  itself carries no information about *what kind* of scope it names.
+  itself carries no information about _what kind_ of scope it names.
 - **Target meaning:** depends on the specific `role_code` — some
   existing/future roles are genuinely organizationally scoped
   (category 1); some may reference a `CivicSpace` (category 3); some
@@ -167,7 +167,7 @@ classification:** every existing and future `role_code` on
   of their platform-wide scope.
 - **Compatibility strategy:** none needed at the field level — `scope_id`
   remains a single `UUID` field regardless of classification; only the
-  *validation and interpretation* differs by `role_code`, applied at
+  _validation and interpretation_ differs by `role_code`, applied at
   the application layer, not the schema layer. Category-6 (invalid/
   legacy ambiguous) `role_code` values receive no compatibility
   strategy at all until reclassified — they are migration-blocked, not
@@ -217,7 +217,7 @@ classification:** every existing and future `role_code` on
   only" per ADR-028 (section 17/29 reference), never dereferenced.
 - **Target meaning:** unchanged for now — remains process-local. A
   future process type that is genuinely organization-bound may
-  *additionally* carry a distinct `OrganizationalScope` reference field
+  _additionally_ carry a distinct `OrganizationalScope` reference field
   (specification section 4), but `scope_type`/`scope_id` themselves are
   not reclassified.
 - **Classification:** 2 — remains a process-local, opaque scope.
@@ -291,19 +291,19 @@ classification:** every existing and future `role_code` on
 
 ## 3. Summary table
 
-| Field | Service | Classification | Change required now |
-|---|---|---|---|
-| `Membership.organization_id` | membership-service | 1 — becomes organization reference | None (behavioral only, future) |
-| `Membership.region_code` | membership-service | 4 — compatibility strategy | None (future additive field) |
-| `RoleAssignment.scope_id` | governance-service | per-`role_code`, six-category scheme (org/jurisdiction/CivicSpace/process-local/global-system/invalid-ambiguous) | None (future per-role decision table; category-6 entries migration-blocked) |
-| `ProcessEligibilityPolicy.jurisdiction` | eligibility-service | 3 — legal jurisdiction | None |
-| `ProcessEligibilityPolicy.scope_type`/`scope_id` | eligibility-service | 2 — process-local | None |
-| `PartyMembershipEligibilityPolicy.scope_type`/`scope_id` | membership-service | 2 — process-local | None |
-| `ParticipationCredential.scope_type`/`scope_id` | credential-service | 2 — process-local | None |
-| `Delegation.scope_type`/`scope_id` | delegation-service | 2 — process-local | None |
-| `required_scope_type`/`required_scope_id` (capability-check literals) | voting-service, initiative-service | 2 — process-local | None |
-| `GENERALIZE_TO_ROLE_SCOPE` | transparency-service | false cognate | None |
-| `civic_space_id` (naming convention only) | n/a — no field exists | naming clarification | None |
+| Field                                                                 | Service                            | Classification                                                                                                   | Change required now                                                         |
+| --------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `Membership.organization_id`                                          | membership-service                 | 1 — becomes organization reference                                                                               | None (behavioral only, future)                                              |
+| `Membership.region_code`                                              | membership-service                 | 4 — compatibility strategy                                                                                       | None (future additive field)                                                |
+| `RoleAssignment.scope_id`                                             | governance-service                 | per-`role_code`, six-category scheme (org/jurisdiction/CivicSpace/process-local/global-system/invalid-ambiguous) | None (future per-role decision table; category-6 entries migration-blocked) |
+| `ProcessEligibilityPolicy.jurisdiction`                               | eligibility-service                | 3 — legal jurisdiction                                                                                           | None                                                                        |
+| `ProcessEligibilityPolicy.scope_type`/`scope_id`                      | eligibility-service                | 2 — process-local                                                                                                | None                                                                        |
+| `PartyMembershipEligibilityPolicy.scope_type`/`scope_id`              | membership-service                 | 2 — process-local                                                                                                | None                                                                        |
+| `ParticipationCredential.scope_type`/`scope_id`                       | credential-service                 | 2 — process-local                                                                                                | None                                                                        |
+| `Delegation.scope_type`/`scope_id`                                    | delegation-service                 | 2 — process-local                                                                                                | None                                                                        |
+| `required_scope_type`/`required_scope_id` (capability-check literals) | voting-service, initiative-service | 2 — process-local                                                                                                | None                                                                        |
+| `GENERALIZE_TO_ROLE_SCOPE`                                            | transparency-service               | false cognate                                                                                                    | None                                                                        |
+| `civic_space_id` (naming convention only)                             | n/a — no field exists              | naming clarification                                                                                             | None                                                                        |
 
 **No automated bulk rewrite occurs as a result of this document.**
 Every "None" above means literally none — this matrix records

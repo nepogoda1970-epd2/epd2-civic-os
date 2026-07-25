@@ -39,10 +39,7 @@
       ]
     },
     "decision_authority_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

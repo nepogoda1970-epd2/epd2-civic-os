@@ -36,38 +36,22 @@
     },
     "status": {
       "type": "string",
-      "enum": [
-        "draft",
-        "active",
-        "superseded"
-      ]
+      "enum": ["draft", "active", "superseded"]
     },
     "scope_type": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     },
     "scope_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "effective_from": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "effective_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "adopted_by_decision_id": {
@@ -112,30 +96,18 @@
       }
     },
     "membership_duration_rules": {
-      "type": [
-        "object",
-        "null"
-      ]
+      "type": ["object", "null"]
     },
     "supersedes_policy_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "signed_policy_digest_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     },
     "transparency_log_commitment_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     }
   }

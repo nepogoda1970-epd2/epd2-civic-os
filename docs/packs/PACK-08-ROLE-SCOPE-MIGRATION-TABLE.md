@@ -12,7 +12,7 @@ begins (tracked there as OD-11, "enumeration still open"). This document
 closes that enumeration.
 
 **No field, schema, event, or API is changed by this document.** Every
-row records a classification and a migration action for a *future*
+row records a classification and a migration action for a _future_
 implementation to execute, individually, under its own review — exactly
 as section 2.3 of the migration matrix already stipulated. This
 implementation round's own code (`organization-service`) does not
@@ -57,7 +57,7 @@ fixtures) found exactly two services that define or consume real
    (`_POLICY_PROPOSER_ROLES`, `_POLICY_APPROVER_ROLES`,
    `_DECISION_PROPOSER_ROLES`, `_DECISION_APPROVER_ROLES`) and the
    `bootstrap.py` seed.
-2. `ai-processing-service` — consumes the *same* `RoleAssignment`/
+2. `ai-processing-service` — consumes the _same_ `RoleAssignment`/
    `scope_id` field via `governance-service`'s narrow read,
    `verify_role_assignment_for_action` (ADR-022's one sanctioned
    cross-service edge), and defines its own 4-value reviewer taxonomy,
@@ -99,7 +99,7 @@ scope, **4** process-local scope, **5** global/system scope,
 - **Current meaning:** proposes a `GovernancePolicy` (`propose_governance_policy`). `scope_id` is checked against the literal `GLOBAL_SCOPE_ID` constant, hardcoded at the call site — never a caller-supplied or subject-derived value.
 - **Target scope class:** **5 — global/system scope.**
 - **Canonical owner going forward:** unchanged — `governance-service`.
-- **Migration action:** none required. A future `organization-service`-aware read may *additionally* verify the acting actor's own `Organization`/`OrganizationalAuthority` standing before honoring a global-scoped grant (defense in depth), but the `RoleAssignment.scope_id` field itself needs no change.
+- **Migration action:** none required. A future `organization-service`-aware read may _additionally_ verify the acting actor's own `Organization`/`OrganizationalAuthority` standing before honoring a global-scoped grant (defense in depth), but the `RoleAssignment.scope_id` field itself needs no change.
 - **Compatibility rule:** global scope never implies universal administrative access (HI-11) — unchanged whether or not `organization-service` is ever consulted for this role_code.
 - **Authorization impact:** none — `governance-service`'s own proposer check is unaffected by PACK-08.
 - **Event impact:** none — `governance-role-assignment-payload.v1.schema.json` unaffected.
@@ -136,7 +136,7 @@ scope, **4** process-local scope, **5** global/system scope,
 ### 2.5 `technical_challenge_reviewer`
 
 - **Source file / owner:** `_DECISION_PROPOSER_ROLES[TECHNICAL_CHALLENGE_ADJUDICATION]` and `_DECISION_APPROVER_ROLES[TECHNICAL_CHALLENGE_ADJUDICATION]`; `governance-service`.
-- **Current meaning:** proposes/reviews a technical-challenge adjudication decision. `scope_id` must cover the *challenged `ResultPublication`'s* id (`_decision_subject_scope_id`'s own documented reasoning: scoped ahead of time against the result being reviewed, not the challenge's own randomly-generated id).
+- **Current meaning:** proposes/reviews a technical-challenge adjudication decision. `scope_id` must cover the _challenged `ResultPublication`'s_ id (`_decision_subject_scope_id`'s own documented reasoning: scoped ahead of time against the result being reviewed, not the challenge's own randomly-generated id).
 - **Target scope class:** **4 — process-local scope** (`ResultPublication` is owned by `tally-service`, not an organizational entity).
 - **Canonical owner going forward / migration action / compatibility rule / impacts:** unchanged, no organization-service edge warranted — identical reasoning to 2.3.
 - **Test requirement:** none beyond existing coverage.
@@ -265,21 +265,21 @@ one role_code whose scope class depends on an explicit context key
 per context — never as a single row asserting two scope classes for one
 bare role_code (see the correction note in section 2.7).
 
-| `role_code` | Context key | Owning service | Target scope class | Migration-blocked? |
-|---|---|---|---|---|
-| `governance_policy_proposer` | n/a (single context) | governance-service | 5 — global/system | No |
-| `governance_policy_approver` | n/a (single context) | governance-service | 5 — global/system | No |
-| `ballot_invalidation_proposer` | n/a (single context) | governance-service | 4 — process-local | No |
-| `ballot_invalidation_approver` | n/a (single context) | governance-service | 4 — process-local | No |
-| `technical_challenge_reviewer` | n/a (single context) | governance-service | 4 — process-local | No |
-| `governance_reviewer` | n/a (single context) | governance-service | 4 — process-local | No |
-| `oversight_reviewer` (2.7.1) | `decision_type` ∈ {`MANDATE`, `OVERSIGHT_DIRECTIVE`} | governance-service | 5 — global/system | No |
-| `oversight_reviewer` (2.7.2) | `decision_type` = `RESULT_FINALITY_DETERMINATION` | governance-service | 4 — process-local | No |
-| `observer` | n/a (single context) | governance-service | 5 — global/system (by actual usage; not yet load-bearing) | No (classification safe; authorization wiring itself does not exist yet, see 2.8) |
-| `ai_output_reviewer` | n/a (single context) | ai-processing-service (via governance-service's field) | 4 — process-local | No |
-| `ai_moderation_reviewer` | n/a (single context) | ai-processing-service (via governance-service's field) | 4 — process-local | No |
-| `ai_governance_reviewer` | n/a (single context) | ai-processing-service (via governance-service's field) | 4 — process-local | No |
-| `ai_publication_reviewer` | n/a (single context) | ai-processing-service (via governance-service's field) | 4 — process-local | No |
+| `role_code`                    | Context key                                          | Owning service                                         | Target scope class                                        | Migration-blocked?                                                                |
+| ------------------------------ | ---------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `governance_policy_proposer`   | n/a (single context)                                 | governance-service                                     | 5 — global/system                                         | No                                                                                |
+| `governance_policy_approver`   | n/a (single context)                                 | governance-service                                     | 5 — global/system                                         | No                                                                                |
+| `ballot_invalidation_proposer` | n/a (single context)                                 | governance-service                                     | 4 — process-local                                         | No                                                                                |
+| `ballot_invalidation_approver` | n/a (single context)                                 | governance-service                                     | 4 — process-local                                         | No                                                                                |
+| `technical_challenge_reviewer` | n/a (single context)                                 | governance-service                                     | 4 — process-local                                         | No                                                                                |
+| `governance_reviewer`          | n/a (single context)                                 | governance-service                                     | 4 — process-local                                         | No                                                                                |
+| `oversight_reviewer` (2.7.1)   | `decision_type` ∈ {`MANDATE`, `OVERSIGHT_DIRECTIVE`} | governance-service                                     | 5 — global/system                                         | No                                                                                |
+| `oversight_reviewer` (2.7.2)   | `decision_type` = `RESULT_FINALITY_DETERMINATION`    | governance-service                                     | 4 — process-local                                         | No                                                                                |
+| `observer`                     | n/a (single context)                                 | governance-service                                     | 5 — global/system (by actual usage; not yet load-bearing) | No (classification safe; authorization wiring itself does not exist yet, see 2.8) |
+| `ai_output_reviewer`           | n/a (single context)                                 | ai-processing-service (via governance-service's field) | 4 — process-local                                         | No                                                                                |
+| `ai_moderation_reviewer`       | n/a (single context)                                 | ai-processing-service (via governance-service's field) | 4 — process-local                                         | No                                                                                |
+| `ai_governance_reviewer`       | n/a (single context)                                 | ai-processing-service (via governance-service's field) | 4 — process-local                                         | No                                                                                |
+| `ai_publication_reviewer`      | n/a (single context)                                 | ai-processing-service (via governance-service's field) | 4 — process-local                                         | No                                                                                |
 
 **No `role_code` in the repository is classified into category 6
 (invalid/legacy ambiguous) or marked BLOCKED.** Every value has a

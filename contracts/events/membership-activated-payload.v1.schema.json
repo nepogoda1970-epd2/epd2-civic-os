@@ -5,10 +5,7 @@
   "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.9/19d.16 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_membership_activated_event - the distinct, final step following an approved MembershipApplication (ADR-030 item 2). Never carries region_code/organization_id on the wire (ADR-030 item 5). membership_status is always 'active' here - activate_membership is the only function that ever constructs this event.",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "membership_id",
-    "membership_status"
-  ],
+  "required": ["membership_id", "membership_status"],
   "properties": {
     "membership_id": {
       "type": "string",
@@ -16,9 +13,7 @@
     },
     "membership_status": {
       "type": "string",
-      "enum": [
-        "active"
-      ]
+      "enum": ["active"]
     }
   }
 }

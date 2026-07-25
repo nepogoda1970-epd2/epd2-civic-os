@@ -34,40 +34,40 @@ production-базы данных). Подробности — в
 не было предпринято здесь, чтобы не путать факты реализации PACK-08 с
 ретроактивной правкой более старых записей.
 
-| Domain                  | Future owner                  | Current implementation                                 |
-| ----------------------- | ----------------------------- | ------------------------------------------------------ |
-| Account                 | Account Service               | Implemented (PACK-02) — `services/account-service`     |
-| IdentityRecord          | Identity Verification Service | Implemented (PACK-02) — `services/identity-service`    |
-| EligibilityRule         | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service` |
-| EligibilityDecision     | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service` |
-| EligibilitySnapshot     | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service` |
-| ParticipationCredential | Credential Issuer             | Implemented (PACK-02) — `services/credential-service`  |
-| Organization            | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| CivicSpace              | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalUnit      | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalRelation  | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalHierarchyOverlapPolicy | Organization Service | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalInheritancePolicy | Organization Service  | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalAuthority | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| Membership              | Membership Service            | Not implemented                                        |
-| RoleAssignment          | Permission / Role Service     | Not implemented                                        |
-| Initiative              | Initiative Service            | Not implemented                                        |
-| InitiativeVersion       | Initiative Service            | Not implemented                                        |
-| Amendment               | Amendment Service             | Not implemented                                        |
-| SourceRecord            | Evidence Service              | Not implemented                                        |
-| Discussion              | Discussion Service            | Not implemented                                        |
-| Contribution            | Discussion Service            | Not implemented                                        |
-| ModerationCase          | Moderation Service            | Not implemented                                        |
-| ModerationDecision      | Moderation Service            | Not implemented                                        |
-| Appeal                  | Appeal Service                | Not implemented                                        |
-| Ballot                  | Ballot Definition Service     | Not implemented                                        |
-| BallotOption            | Ballot Definition Service     | Not implemented                                        |
-| VoteEnvelope            | Vote Casting Service          | Not implemented                                        |
-| VoteReceipt             | Receipt Service               | Not implemented                                        |
-| Tally                   | Tally Service                 | Not implemented                                        |
-| ResultPublication       | Result Publication Service    | Not implemented                                        |
-| Delegation              | Delegation Service            | Not implemented                                        |
-| DelegationSnapshot      | Delegation Resolution Engine  | Not implemented                                        |
-| AIProcessingRecord      | AI Accountability Service     | Not implemented                                        |
-| AuditEvent              | Audit Core                    | Implemented (PACK-02) — `services/audit-core`          |
-| EmergencyAction         | Governance / Crisis Service   | Not implemented                                        |
+| Domain                               | Future owner                  | Current implementation                                  |
+| ------------------------------------ | ----------------------------- | ------------------------------------------------------- |
+| Account                              | Account Service               | Implemented (PACK-02) — `services/account-service`      |
+| IdentityRecord                       | Identity Verification Service | Implemented (PACK-02) — `services/identity-service`     |
+| EligibilityRule                      | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
+| EligibilityDecision                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
+| EligibilitySnapshot                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
+| ParticipationCredential              | Credential Issuer             | Implemented (PACK-02) — `services/credential-service`   |
+| Organization                         | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| CivicSpace                           | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalUnit                   | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalRelation               | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalHierarchyOverlapPolicy | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalInheritancePolicy      | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalAuthority              | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| Membership                           | Membership Service            | Not implemented                                         |
+| RoleAssignment                       | Permission / Role Service     | Not implemented                                         |
+| Initiative                           | Initiative Service            | Not implemented                                         |
+| InitiativeVersion                    | Initiative Service            | Not implemented                                         |
+| Amendment                            | Amendment Service             | Not implemented                                         |
+| SourceRecord                         | Evidence Service              | Not implemented                                         |
+| Discussion                           | Discussion Service            | Not implemented                                         |
+| Contribution                         | Discussion Service            | Not implemented                                         |
+| ModerationCase                       | Moderation Service            | Not implemented                                         |
+| ModerationDecision                   | Moderation Service            | Not implemented                                         |
+| Appeal                               | Appeal Service                | Not implemented                                         |
+| Ballot                               | Ballot Definition Service     | Not implemented                                         |
+| BallotOption                         | Ballot Definition Service     | Not implemented                                         |
+| VoteEnvelope                         | Vote Casting Service          | Not implemented                                         |
+| VoteReceipt                          | Receipt Service               | Not implemented                                         |
+| Tally                                | Tally Service                 | Not implemented                                         |
+| ResultPublication                    | Result Publication Service    | Not implemented                                         |
+| Delegation                           | Delegation Service            | Not implemented                                         |
+| DelegationSnapshot                   | Delegation Resolution Engine  | Not implemented                                         |
+| AIProcessingRecord                   | AI Accountability Service     | Not implemented                                         |
+| AuditEvent                           | Audit Core                    | Implemented (PACK-02) — `services/audit-core`           |
+| EmergencyAction                      | Governance / Crisis Service   | Not implemented                                         |

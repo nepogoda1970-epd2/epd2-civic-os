@@ -28,7 +28,12 @@
     "role_code": { "type": "string", "minLength": 1 },
     "scope_type": {
       "type": "string",
-      "enum": ["organization_scope", "jurisdiction_scope", "civic_space_scope", "process_scope"]
+      "enum": [
+        "organization_scope",
+        "jurisdiction_scope",
+        "civic_space_scope",
+        "process_scope"
+      ]
     },
     "scope_reference": { "type": "string", "minLength": 1 },
     "appointing_authority_reference": { "type": "string", "format": "uuid" },

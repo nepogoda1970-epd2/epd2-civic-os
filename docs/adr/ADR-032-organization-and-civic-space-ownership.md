@@ -143,7 +143,7 @@ they are both consumed by authorization logic.
 **Rejected: Option B.** `membership-service` is already the newest,
 most recently stabilized service (PACK-07); adding the organization
 domain to it would repeat Option A's blurring in the opposite
-direction — party membership is a *consumer* of organizational
+direction — party membership is a _consumer_ of organizational
 structure (a member's `Membership.organization_id` names which
 organization they belong to), not the natural owner of that structure
 itself. Every other domain that will eventually need organizational

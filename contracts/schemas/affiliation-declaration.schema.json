@@ -65,39 +65,22 @@
     },
     "verification_status": {
       "type": "string",
-      "enum": [
-        "declared",
-        "verified",
-        "disputed",
-        "unverifiable"
-      ]
+      "enum": ["declared", "verified", "disputed", "unverifiable"]
     },
     "supersedes_declaration_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "verified_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "verified_by": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

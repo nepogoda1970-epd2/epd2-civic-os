@@ -234,7 +234,7 @@ gain an explicit `superseded-by` reference once PACK-08 is implemented:
 statement. **This specification round does not edit any of the four** —
 per the governing request's scope (specification and ADRs only, no
 implementation), and because the master baseline itself frames this as
-a PACK-08 *implementation* action, not a specification-round action.
+a PACK-08 _implementation_ action, not a specification-round action.
 Confirm this sequencing (defer to implementation) is correct, or
 whether the specification round should perform these edits now, before
 implementation is authorized.
@@ -269,23 +269,23 @@ for the identical restatement of this gate.
 
 **Updated in the correction round (2026-07-25)** — status column added.
 
-| ID | Topic | Depends on | Priority | Status |
-|---|---|---|---|---|
-| OD-1 | Canon owner-label alignment | ADR-032 | Low | Open |
-| OD-2 | `OrganizationalUnit` specialization | ADR-032 | Medium | Open |
-| OD-3 | Reverse read edge to governance-service | ADR-032 | Medium | Open |
-| OD-4 | `relation_type` extensibility | ADR-033 | Low | Open |
-| OD-5 | Organizational graph model / multiple-parent overlap | ADR-033 | Medium | **Closed** |
-| OD-6 | `operates_within`/`participates_in` cardinality | ADR-033 | Low | Open |
-| OD-7 | Complete non-combinable-role matrix | ADR-036 | **High** | **Partially closed** (minimum baseline adopted) |
-| OD-8 | Inheritance-policy ownership | ADR-034 | Medium | **Closed** |
-| OD-9 | Denial reason-code granularity | ADR-034 | Low | Open |
-| OD-10 | Temporary-supervision max duration | ADR-034 | Medium | **Closed** |
-| OD-11 | `RoleAssignment.scope_id` decision table | ADR-035 | **High** | **Closed** (enumeration complete, see `PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md`) |
-| OD-12 | `region_code` deprecation window | ADR-035 | Medium | Open |
-| OD-13 | Possible `scope_id` rename | ADR-035 | Low | Open |
-| OD-14 | `party_arbitrator` incompatibility set | ADR-036 | Deferred (PACK-09) | Open |
-| OD-15 | Data-access/procedural-authority defaults | ADR-036 | Medium | Open |
-| OD-16 | Authority-revocation appeal path | ADR-036 | Deferred (PACK-09) | Open |
-| OD-17 | Stale-document supersession sequencing | Master baseline | Medium | Open |
-| OD-18 | Whether canon amendment is mandatory | All five ADRs | **High** | **Closed definitively** (mandatory, not conditional) |
+| ID    | Topic                                                | Depends on      | Priority           | Status                                                                         |
+| ----- | ---------------------------------------------------- | --------------- | ------------------ | ------------------------------------------------------------------------------ |
+| OD-1  | Canon owner-label alignment                          | ADR-032         | Low                | Open                                                                           |
+| OD-2  | `OrganizationalUnit` specialization                  | ADR-032         | Medium             | Open                                                                           |
+| OD-3  | Reverse read edge to governance-service              | ADR-032         | Medium             | Open                                                                           |
+| OD-4  | `relation_type` extensibility                        | ADR-033         | Low                | Open                                                                           |
+| OD-5  | Organizational graph model / multiple-parent overlap | ADR-033         | Medium             | **Closed**                                                                     |
+| OD-6  | `operates_within`/`participates_in` cardinality      | ADR-033         | Low                | Open                                                                           |
+| OD-7  | Complete non-combinable-role matrix                  | ADR-036         | **High**           | **Partially closed** (minimum baseline adopted)                                |
+| OD-8  | Inheritance-policy ownership                         | ADR-034         | Medium             | **Closed**                                                                     |
+| OD-9  | Denial reason-code granularity                       | ADR-034         | Low                | Open                                                                           |
+| OD-10 | Temporary-supervision max duration                   | ADR-034         | Medium             | **Closed**                                                                     |
+| OD-11 | `RoleAssignment.scope_id` decision table             | ADR-035         | **High**           | **Closed** (enumeration complete, see `PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md`) |
+| OD-12 | `region_code` deprecation window                     | ADR-035         | Medium             | Open                                                                           |
+| OD-13 | Possible `scope_id` rename                           | ADR-035         | Low                | Open                                                                           |
+| OD-14 | `party_arbitrator` incompatibility set               | ADR-036         | Deferred (PACK-09) | Open                                                                           |
+| OD-15 | Data-access/procedural-authority defaults            | ADR-036         | Medium             | Open                                                                           |
+| OD-16 | Authority-revocation appeal path                     | ADR-036         | Deferred (PACK-09) | Open                                                                           |
+| OD-17 | Stale-document supersession sequencing               | Master baseline | Medium             | Open                                                                           |
+| OD-18 | Whether canon amendment is mandatory                 | All five ADRs   | **High**           | **Closed definitively** (mandatory, not conditional)                           |

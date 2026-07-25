@@ -34,18 +34,18 @@ in `tests/repository/test_service_boundaries.py`).
 
 ### 1.1 Domain model (`src/epd2_organization_service/domain.py`)
 
-| Entity / value | Canon reference | Key fields (canon-exact names) |
-| --- | --- | --- |
-| `Organization` | 8.1 (extended) | `organization_id`, `name`, `legal_operator`, `organization_type`, `status`, `default_policy_version`, `organization_profile`, `effective_from`, `effective_until`, `dissolved_at`, `successor_reference`, `parent_reference` |
-| `OrganizationalUnit` | 19e.4 | `organizational_unit_id`, `owning_organization_id`, `unit_type`, `status`, `valid_from`, `valid_until`, `recorded_at` |
-| `CivicSpace` | 8.2 (confirmed unchanged) | `space_id`, `organization_id`, `name`, `space_type`, `visibility`, `participation_policy_id`, `status` |
-| `OrganizationalRelation` | 19e.7 | `relation_id`, `relation_version`, `relation_type`, `source_organization_id`, `target_organization_id`, `status`, `valid_from`, `valid_until`, `recorded_at`, `supersedes_relation_id`, `authorizing_decision_reference` |
-| `OrganizationalHierarchyOverlapPolicy` | 19e.8 | `policy_id`, `policy_version`, `applicable_relation_types`, `overlap_permitted`, `authorizing_decision_reference`, `status`, `valid_from`, `valid_until` |
-| `OrganizationalInheritancePolicy` | 19e.9 | `policy_id`, `policy_version`, `role_code`, `inheritance_mode`, `authorizing_decision_reference`, `status`, `valid_from`, `valid_until` |
-| `OrganizationalScope` (value shape) | 19e.11 | `scope_type`, `scope_reference`, `owning_domain`, `valid_from`, `valid_until`, `policy_version` |
-| `OrganizationalAuthority` | 19e.15 | `authority_id`, `authority_version`, `role_code`, `scope`, `appointing_authority_reference`, `assigned_subject_reference`, `valid_from`, `status`, `policy_version`, `decision_reference`, `audit_reference`, `valid_until`, `revocation_reason_reference`, `grants_procedural_authority`, `grants_data_access` |
-| `RegionalScopeAccessDecision` (value, not stored) | 19e.12 | `allowed`, `reason_code`, `evaluated_scope`, `policy_version`, `effective_time`, `mode`, `audit_reference` |
-| `ScopeDelegationGrant` | 19e.12 mode 4 | `grant_id`, `delegate_scope`, `target_scope`, `action_code`, `authorizing_decision_reference`, `policy_version`, `valid_from`, `valid_until`, `status` |
+| Entity / value                                    | Canon reference           | Key fields (canon-exact names)                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Organization`                                    | 8.1 (extended)            | `organization_id`, `name`, `legal_operator`, `organization_type`, `status`, `default_policy_version`, `organization_profile`, `effective_from`, `effective_until`, `dissolved_at`, `successor_reference`, `parent_reference`                                                                                    |
+| `OrganizationalUnit`                              | 19e.4                     | `organizational_unit_id`, `owning_organization_id`, `unit_type`, `status`, `valid_from`, `valid_until`, `recorded_at`                                                                                                                                                                                           |
+| `CivicSpace`                                      | 8.2 (confirmed unchanged) | `space_id`, `organization_id`, `name`, `space_type`, `visibility`, `participation_policy_id`, `status`                                                                                                                                                                                                          |
+| `OrganizationalRelation`                          | 19e.7                     | `relation_id`, `relation_version`, `relation_type`, `source_organization_id`, `target_organization_id`, `status`, `valid_from`, `valid_until`, `recorded_at`, `supersedes_relation_id`, `authorizing_decision_reference`                                                                                        |
+| `OrganizationalHierarchyOverlapPolicy`            | 19e.8                     | `policy_id`, `policy_version`, `applicable_relation_types`, `overlap_permitted`, `authorizing_decision_reference`, `status`, `valid_from`, `valid_until`                                                                                                                                                        |
+| `OrganizationalInheritancePolicy`                 | 19e.9                     | `policy_id`, `policy_version`, `role_code`, `inheritance_mode`, `authorizing_decision_reference`, `status`, `valid_from`, `valid_until`                                                                                                                                                                         |
+| `OrganizationalScope` (value shape)               | 19e.11                    | `scope_type`, `scope_reference`, `owning_domain`, `valid_from`, `valid_until`, `policy_version`                                                                                                                                                                                                                 |
+| `OrganizationalAuthority`                         | 19e.15                    | `authority_id`, `authority_version`, `role_code`, `scope`, `appointing_authority_reference`, `assigned_subject_reference`, `valid_from`, `status`, `policy_version`, `decision_reference`, `audit_reference`, `valid_until`, `revocation_reason_reference`, `grants_procedural_authority`, `grants_data_access` |
+| `RegionalScopeAccessDecision` (value, not stored) | 19e.12                    | `allowed`, `reason_code`, `evaluated_scope`, `policy_version`, `effective_time`, `mode`, `audit_reference`                                                                                                                                                                                                      |
+| `ScopeDelegationGrant`                            | 19e.12 mode 4             | `grant_id`, `delegate_scope`, `target_scope`, `action_code`, `authorizing_decision_reference`, `policy_version`, `valid_from`, `valid_until`, `status`                                                                                                                                                          |
 
 Four-value `OrganizationStatus` (`draft`/`active`/`restricted`/`archived`)
 and its allowed-transition set are canon 8.1/19e.10-exact. Nine-value
@@ -72,15 +72,15 @@ performed).
   `temporary_supervision_by` are cycle-checked.
 - **Hierarchy cycle detection** — `would_create_hierarchy_cycle` (fixed
   this round; see section 3) and `would_create_supervision_cycle` (already
-  correct) both walk from the *candidate parent/supervisor* up through
-  existing edges looking for the *candidate child/supervisee* — the
+  correct) both walk from the _candidate parent/supervisor_ up through
+  existing edges looking for the _candidate child/supervisee_ — the
   correct direction for detecting that the new edge would close a loop.
 - **Overlap policy resolution** — `resolve_for_relation_type` picks the
   highest-version active, in-window, applicable-type policy; unresolved
   falls back to a documented default.
 - **Temporary supervision** — `assert_temporary_supervision_window_valid`
   enforces a mandatory `valid_until` and the `TEMPORARY_SUPERVISION_DEFAULT_MAX_DAYS
-  = 90` default ceiling (ADR-034), overridable only via an explicit,
+= 90` default ceiling (ADR-034), overridable only via an explicit,
   audited decision reference.
 - **Regional scope authorization (default-deny, six access modes)** —
   `check_regional_scope_access`-shaped logic in `application.py` returns a
@@ -142,10 +142,10 @@ requires it). This closes OD-11 in `docs/packs/PACK-08-OPEN-DECISIONS.md`.
 ## 3. Bug found and fixed during implementation
 
 `would_create_hierarchy_cycle` originally searched in the wrong direction
-(started from the candidate *child* looking for the candidate *parent*
+(started from the candidate _child_ looking for the candidate _parent_
 among the child's own ancestors — the inverse of the correct check).
-Fixed to start from the candidate *parent* and walk up existing
-`parent_of` edges looking for the candidate *child* — detecting that the
+Fixed to start from the candidate _parent_ and walk up existing
+`parent_of` edges looking for the candidate _child_ — detecting that the
 candidate child is already a transitive parent of the candidate parent,
 which is exactly the condition under which adding `parent -> child` would
 close a cycle. See the inline comment in `domain.py` for the full

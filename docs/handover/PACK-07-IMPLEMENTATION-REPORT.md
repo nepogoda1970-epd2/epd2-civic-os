@@ -339,4 +339,4 @@ directories don't exist yet.
   frontend build output, verification-result ZIPs, nested ZIPs, and
   temporary logs/machine-specific artifacts) reflecting the
   externally-verified PACK-07 implementation at `REPOSITORY_VERSION
-  0.7.0` / `CANON_VERSION 0.6.0`.
+0.7.0` / `CANON_VERSION 0.6.0`.

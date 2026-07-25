@@ -33,7 +33,7 @@ this specific field:
    global/system classification never implies universal administrative
    access** — HI-11 (no universal administrator) applies to
    global/system-scoped roles exactly as it does to every other role;
-   "global scope" describes the role's *scope field*, not a grant of
+   "global scope" describes the role's _scope field_, not a grant of
    authority over every domain.
 6. **Invalid/legacy ambiguous** — the `role_code`'s current usage cannot
    be classified into 1–5 without further review. **A `role_code`
@@ -164,7 +164,7 @@ here:
 per-`role_code`, not universal, and is now governed by the six-category
 scheme fixed in the "Owner decision" section above, not by this ADR's
 four top-level categories directly.** The four categories immediately
-above continue to govern the *other five* fields in scope for this ADR
+above continue to govern the _other five_ fields in scope for this ADR
 (`Membership.organization_id`, `Membership.region_code`,
 `ProcessEligibilityPolicy.jurisdiction`/`scope_type`/`scope_id`, and the
 process-local `scope_type`/`scope_id` pairs on credential-service,

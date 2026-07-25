@@ -160,9 +160,9 @@ one another, or collapsed into a single generic "scope" field:
   `delegation-service`, `voting-service`, `initiative-service`,
   `eligibility-service`, and `membership-service` to mean "the specific
   object instance this capability check or policy applies to" — which,
-  today, is *not* an organizational reference in most of those services
+  today, is _not_ an organizational reference in most of those services
   (section 11). A process-local scope reference may, going forward,
-  *also* carry an `OrganizationalScope` reference where the process is
+  _also_ carry an `OrganizationalScope` reference where the process is
   organization-bound (ADR-034/ADR-035), but it never becomes
   synonymous with `Organization` or `Jurisdiction`.
 
@@ -295,7 +295,7 @@ redesign" requirement:
 
 **This specification does not assume the organizational hierarchy is
 always a simple tree.** Sections 5–6 and ADR-033 fix the exact graph
-model; the summary carried forward here: the *common* Bund →
+model; the summary carried forward here: the _common_ Bund →
 Landesverband → Kreisverband/Bezirksverband → Ortsverband/Ortsgruppe
 chain is expected to be tree-shaped for most nodes, but
 `OrganizationalRelation` itself supports multiple parent-shaped edges,
@@ -322,7 +322,7 @@ ADR-035 rely on:
   belongs to Kreisverband X") — three genuinely different facts about
   the same policy record, never collapsed into one field.
 - `Membership.organization_id` (canon 8.3) is the clearest existing
-  example of a field that *already looks like* an `Organization`
+  example of a field that _already looks like_ an `Organization`
   reference but, today, is never dereferenced or validated by any
   service (`docs/handover/PACK-07-SPEC-FINAL.md` section 11) — PACK-08
   is what gives that field a real referent for the first time (section
@@ -516,8 +516,8 @@ organization, or to any resulting node of a merger or split, without an
 explicit governed decision.** This is a hard, structural invariant,
 proposed for canon alongside INV-08/INV-09/INV-10 and mirroring
 `HARD-INVARIANTS-0.8.md`'s HI-09 (no automated final deprivation of
-rights) applied to the *positive* direction (no automated final
-*grant* of rights either):
+rights) applied to the _positive_ direction (no automated final
+_grant_ of rights either):
 
 - A `merged_into`/`split_from`/`successor_of` relation, by itself, never
   activates, transfers, or extends any `OrganizationalAuthority` or
@@ -765,7 +765,7 @@ the classification categories applied:
   (`docs/handover/PACK-07-SPEC-FINAL.md` section 11); PACK-08 gives it,
   for the first time, a real `Organization` node to resolve against,
   additively, with no schema break (the field itself is unchanged; only
-  a future implementation pack's *behavior* around it changes).
+  a future implementation pack's _behavior_ around it changes).
 - **Remains process-local, opaque scope:** the `scope_type`/`scope_id`
   pairs on `credential-service`, `delegation-service`,
   `voting-service`/`initiative-service` (used as `required_scope_type`/
@@ -817,8 +817,7 @@ review.
   through the same opaque, domain-scoped reference convention already
   established project-wide (ADR-031's anti-correlation principle),
   never a raw name or a cross-domain identifier.
-- **Minimum necessary claims.** `check_regional_scope_access` (section
-  8) returns a boolean and, where useful, a reason code — never an
+- **Minimum necessary claims.** `check_regional_scope_access` (section 8) returns a boolean and, where useful, a reason code — never an
   `Organization` graph, a member list, or a role-holder list.
 - **Scoped read models.** `OrganizationalStatus` (section 3.1) and any
   future organization-browser read model (section 14) return only the

@@ -67,10 +67,7 @@
       "format": "uuid"
     },
     "affiliation_declaration_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "reason_codes": {
@@ -88,31 +85,19 @@
       }
     },
     "decision_authority_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "decided_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "supersedes_conflict_assessment_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "re_evaluation_due_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     }
   }
