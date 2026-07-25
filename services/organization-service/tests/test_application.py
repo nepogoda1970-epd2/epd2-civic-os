@@ -12,6 +12,10 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+
+from epd2_audit_core.storage import InMemoryAuditEventStore
+from epd2_core.clock import FixedClock
+from epd2_core.event_envelope import ActorRef
 from epd2_organization_service.application import (
     activate_organization,
     activate_organizational_authority,
@@ -58,10 +62,6 @@ from epd2_organization_service.storage import (
     InMemoryOrganizationStore,
     InMemoryScopeDelegationGrantStore,
 )
-
-from epd2_audit_core.storage import InMemoryAuditEventStore
-from epd2_core.clock import FixedClock
-from epd2_core.event_envelope import ActorRef
 
 T0 = datetime(2026, 1, 1, tzinfo=UTC)
 

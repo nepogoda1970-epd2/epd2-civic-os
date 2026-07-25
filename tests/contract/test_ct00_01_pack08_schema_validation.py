@@ -27,6 +27,9 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from _schema_helpers import load_event_schema, load_schema, to_jsonable
+
+from epd2_core.event_envelope import ActorRef
+from epd2_core.minimal_json_schema import validate
 from epd2_organization_service.domain import (
     AccessMode,
     AuthorityStatus,
@@ -52,9 +55,6 @@ from epd2_organization_service.events import (
     build_regional_scope_access_granted_event,
     build_regional_scope_access_revoked_event,
 )
-
-from epd2_core.event_envelope import ActorRef
-from epd2_core.minimal_json_schema import validate
 
 _OCCURRED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
