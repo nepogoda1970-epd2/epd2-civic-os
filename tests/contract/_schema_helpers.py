@@ -47,6 +47,13 @@ PACK06_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-06.yaml"
 PACK07_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-07.yml"
 PACK07_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-07.yaml"
 
+#: PACK-08's own reason-code registry / OpenAPI contract (canon-0.7.0
+#: implementation round, section 19e, ADR-032 through ADR-037) - added
+#: alongside (never replacing) the PACK-02 through PACK-07 constants
+#: above.
+PACK08_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-08.yml"
+PACK08_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-08.yaml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -80,6 +87,11 @@ PACK06_SERVICE_DIRS: tuple[str, ...] = ("ai-processing-service",)
 #: `src/` trees mix genuinely-PACK-02 and genuinely-PACK-07 reason-code
 #: literals together.
 PACK07_SERVICE_DIRS: tuple[str, ...] = ("membership-service",)
+#: PACK-08's one wholly new service (organization-service). Like PACK-02
+#: through PACK-06 (and unlike PACK-07), PACK-08 introduces a fully
+#: disjoint service directory - no existing service is extended in place
+#: this round, so no "shared with an earlier pack" union is needed here.
+PACK08_SERVICE_DIRS: tuple[str, ...] = ("organization-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code

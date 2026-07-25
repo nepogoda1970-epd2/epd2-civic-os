@@ -12,8 +12,27 @@
 `IdentityRecord`, `EligibilityRule`, `EligibilityDecision`,
 `EligibilitySnapshot`, `ParticipationCredential`, `AuditEvent`. Подробности —
 в `docs/architecture/identity-participation-separation.md` и
-`docs/architecture/audit-kernel.md`. Остальные сущности в таблице
-по-прежнему не реализованы.
+`docs/architecture/audit-kernel.md`.
+
+**CLAUDE-PACK-08 (implementation round)** реализовал `Organization` и
+`CivicSpace` (canon 8.1/8.2, расширенные ADR-032–ADR-037) и четыре новые
+канонические сущности из canon 19e (Organization & Regional Scope Context) —
+`OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy` — а
+также `OrganizationalAuthority`, все как единственный владелец в новом
+`services/organization-service` (in-memory reference adapter, без
+production-базы данных). Подробности — в
+`docs/packs/PACK-08-IMPLEMENTATION.md` и
+`docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`.
+
+Известный пробел (не устранён в рамках PACK-08, зафиксирован честно): строки
+ниже для сущностей, реализованных в PACK-03–PACK-07 (например `Membership`,
+`RoleAssignment`, `Initiative*`, `Ballot*`, `AIProcessingRecord` и т. д.),
+по-прежнему помечены как «Not implemented», хотя соответствующие сервисы уже
+существуют в репозитории. Эта таблица не обновлялась систематически в тех
+раундах; исправление всей истории таблицы выходит за рамки задачи PACK-08 и
+не было предпринято здесь, чтобы не путать факты реализации PACK-08 с
+ретроактивной правкой более старых записей.
 
 | Domain                  | Future owner                  | Current implementation                                 |
 | ----------------------- | ----------------------------- | ------------------------------------------------------ |
@@ -23,8 +42,13 @@
 | EligibilityDecision     | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service` |
 | EligibilitySnapshot     | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service` |
 | ParticipationCredential | Credential Issuer             | Implemented (PACK-02) — `services/credential-service`  |
-| Organization            | Organization Service          | Not implemented                                        |
-| CivicSpace              | Organization Service          | Not implemented                                        |
+| Organization            | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| CivicSpace              | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalUnit      | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalRelation  | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalHierarchyOverlapPolicy | Organization Service | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalInheritancePolicy | Organization Service  | Implemented (PACK-08) — `services/organization-service` |
+| OrganizationalAuthority | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
 | Membership              | Membership Service            | Not implemented                                        |
 | RoleAssignment          | Permission / Role Service     | Not implemented                                        |
 | Initiative              | Initiative Service            | Not implemented                                        |

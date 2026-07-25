@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/organizational-relation-created-payload.v1.schema.json",
+  "title": "organizational_relation.created event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events.build_organizational_relation_created_event. Minimum payload only: the relation's own id, relation_type, its derived relation_category, status, effective_time (the relation's own valid_from), recorded_at, and decision_reference where an authorizing_decision_reference was supplied - never source_organization_id/target_organization_id (those live only on the SubjectRef/audit trail and the full relation_state_payload used for after_hash, not the broadcast wire event).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "relation_id",
+    "relation_type",
+    "relation_category",
+    "status",
+    "effective_time",
+    "recorded_at"
+  ],
+  "properties": {
+    "relation_id": { "type": "string", "format": "uuid" },
+    "relation_type": {
+      "type": "string",
+      "enum": [
+        "parent_of",
+        "subordinate_to",
+        "affiliated_with",
+        "successor_of",
+        "merged_into",
+        "split_from",
+        "temporary_supervision_by",
+        "operates_within",
+        "participates_in"
+      ]
+    },
+    "relation_category": {
+      "type": "string",
+      "enum": ["hierarchy", "continuity", "cooperation"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded", "ended"]
+    },
+    "effective_time": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "decision_reference": { "type": "string", "format": "uuid" }
+  }
+}

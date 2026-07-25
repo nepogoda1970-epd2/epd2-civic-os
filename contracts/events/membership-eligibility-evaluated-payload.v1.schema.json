@@ -5,7 +5,10 @@
   "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.9 Stage A (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_membership_eligibility_evaluated_event. Carries only a recommended outcome - canon 19d.16's hard human-control invariant means this can never itself be read as a final decision.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["membership_application_id", "recommended_approval"],
+  "required": [
+    "membership_application_id",
+    "recommended_approval"
+  ],
   "properties": {
     "membership_application_id": {
       "type": "string",

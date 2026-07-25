@@ -5,6 +5,211 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - canon minor version 0.7.0 (Organization & Regional Scope Context)
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.6.0 →
+0.7.0` (ADR-037, accepted, following ADR-032 through ADR-036's own
+  prior acceptance in the PACK-08 spec-correction round) — the sixth
+  edit to this document's own text since its original acceptance
+  (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 → 0.3.0`,
+  ADR-018/ADR-020's `0.3.0 → 0.4.0`, ADR-023/ADR-025's `0.4.0 → 0.5.0`,
+  and ADR-026 through ADR-031's `0.5.0 → 0.6.0`). Adds a new section 19e
+  ("Организация и региональная авторизация — расширение / Organization
+  & Regional Scope Context"), inserted between sections 19d and 20, the
+  same non-renumbering technique used for 19a/19b/19c/19d. Extends
+  `Organization` (8.1) with six additive fields
+  (`organization_profile`, `parent_reference`, `effective_from`,
+  `effective_until`, `dissolved_at`, `successor_reference`); confirms
+  `CivicSpace` (8.2) unchanged; defines four wholly new canonical
+  entities owned by `organization-service` (`OrganizationalUnit`,
+  `OrganizationalRelation`, `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`) plus `OrganizationalAuthority`
+  (distinct from, and cross-referenced only by opaque reference with,
+  the unchanged `RoleAssignment`, 8.4) and the reusable
+  `OrganizationalScope` value shape (not separately owned, the same
+  status as `RedactionManifest`/`AIDisclosurePackage`). Canonizes:
+  four non-interchangeable concepts (Organization/Jurisdiction/
+  CivicSpace/process-local Scope) and a no-silent-field-reinterpretation
+  rule for `organization_id`/`jurisdiction`/`region_code`/`scope_id`/
+  `civic_space_id`; multiple typed directed graphs for organizational
+  relationships (not a strict tree), with relation-type-specific cycle
+  and overlap rules; `parent_reference`'s non-authoritative,
+  derived-projection status; uniform effective dating (valid_from/
+  valid_until/recorded_at/supersedes/historical queryability/
+  future-dated changes/overlap validation) across `Organization`/
+  `OrganizationalUnit`/`OrganizationalRelation`/`OrganizationalAuthority`;
+  canonical reorganization rules (creation/activation/suspension/
+  dissolution/merger/split/successor/renaming/territorial reassignment)
+  with a hard no-automatic-rights-transfer invariant; default-deny
+  regional scope authorization with six explicit access modes and hard
+  anti-confused-deputy/anti-role-name-as-proof/no-universal-
+  administrator rules; inheritance-policy ownership (restrict-never-
+  broaden); a 90-day default maximum for temporary supervision; seven
+  named institutional roles and a minimum eight-bullet non-combinable-
+  role baseline (subject to legal refinement); role/authority lifecycle
+  rules; extended identity-minimization rules; and a six-category
+  classification requirement for `RoleAssignment.scope_id` (8.4 itself
+  unchanged in fields/status/owner). Section 20.5 (Organization events)
+  gains thirteen entries and full payload/timing/audit/privacy
+  documentation; section 22 gains five new ownership-matrix rows;
+  section 23 gains new forbidden-link entries; section 24 gains ten new
+  reason codes (`ORGANIZATION_NOT_ACTIVE` through
+  `HISTORICAL_SCOPE_NOT_EFFECTIVE`) — no existing code or event name
+  renamed or repurposed; no naming conflict found.
+  `docs/canonical/canon-version.json`,
+  `packages/python/epd2-core/src/epd2_core/version.py`, and
+  `packages/typescript/epd2-types/src/version.ts` updated to match, with
+  both version-consistency unit tests updated and
+  `scripts/verify_versions.py` passing; `REPOSITORY_VERSION` is
+  unchanged (`0.7.0`) — this is a canon-only change, per CLAUDE-PACK-08's
+  own canon-amendment round (`docs/adr/ADR-037`;
+  `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`). No
+  `organization-service` code, database, migration, event bus, frontend,
+  schema, OpenAPI file, or reason-code registry file was created.
+- `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`.
+
+### Verified
+
+- **Local, honest self-report only — no external GitHub Actions run was
+  performed or is claimed for PACK-08, at any stage, including this
+  canon-amendment round.** Fresh local re-run in this sandbox: Ruff
+  (lint + format) clean; mypy clean for `epd2-core`/`scripts`/
+  `tests/repository`/`tests/contract` and for all 15 services
+  individually; Python test suite: 2020 passed, 5 skipped, 1 failed (the
+  expected, self-resolving `test_no_forbidden_paths_present`
+  cache-artifact detection — 0 real failures); all 402 required paths
+  present; version consistency passed. Full detail:
+  `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md` section 6.
+
+## [0.8.0] - organization & regional scope context (implementation)
+
+### Added
+
+- A new, independent, in-memory-backed service, `organization-service`
+  (CLAUDE-PACK-08 IMPLEMENTATION ROUND, "Organization & Regional Scope
+  Context"), with its own `README.md`, `pyproject.toml`, `src/`,
+  `tests/`, storage interfaces, and in-memory reference adapters —
+  implementing canon 0.7.0 section 19e and ADR-032 through ADR-037
+  (all `accepted`) with no further canon edit. Sole authoritative owner
+  of `Organization`, `OrganizationalUnit`, `CivicSpace` (first real
+  implementation in this repository), `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`, `OrganizationalAuthority`, and the
+  reusable `OrganizationalScope` value shape.
+- Organization lifecycle: create/activate/suspend/dissolve/rename,
+  reorganization (merge/split/declare-successor) with a hard
+  no-automatic-role/authority/access-transfer invariant
+  (`assert_successor_transfer_has_own_decision`), effective dating
+  (`valid_from`/`valid_until`/`recorded_at`/`supersedes`, deterministic
+  current/historical/future-dated queries).
+- `OrganizationalRelation`: nine relation types across three derived
+  categories (hierarchy/continuity/cooperation); deterministic
+  hierarchy-cycle detection (`would_create_hierarchy_cycle`) and
+  temporary-supervision-cycle detection
+  (`would_create_supervision_cycle`); policy-gated overlap validation
+  (`OrganizationalHierarchyOverlapPolicy`); territorial reassignment;
+  a derived, non-authoritative `parent_reference` read model
+  (`recompute_parent_reference`, never itself a source of truth).
+- Regional scope authorization (canon 19e.12): a default-deny, pure,
+  side-effect-free atomic capability check
+  (`check_regional_scope_access`) implementing all six access modes
+  (exact/ancestor/descendant-scope, delegated cross-scope via the new
+  `ScopeDelegationGrant` reference entity, temporary supervision,
+  institutional oversight without data access); inheritance-policy
+  ownership (`OrganizationalInheritancePolicy`, restrict-never-broaden);
+  a separate, explicit grant/revocation recording step
+  (`record_regional_scope_access_grant`/
+  `record_regional_scope_access_revocation`) that emits
+  `regional_scope_access.granted`/`.revoked` only for modes 2–5.
+- Temporary supervision (canon 19e.14): mandatory `valid_from`/
+  `valid_until`, a 90-day default maximum
+  (`TEMPORARY_SUPERVISION_DEFAULT_MAX_DAYS`), rejection of open-ended
+  windows, extension only through a new governed decision with its own
+  audit record (`extend_temporary_supervision`).
+- Institutional authority (canon 19e.15–19e.17): `OrganizationalAuthority`
+  with canon's own exact field names (`role_code`/`scope`, not
+  `authority_type`/four separate scope fields — the same reconciliation
+  ADR-037 itself performed); self-assignment rejection; the eight-rule
+  role-incompatibility baseline (`PAIRWISE_INCOMPATIBLE_ROLES`, version
+  `"1.0"`, versioned/extensible); dual-control enforcement (`proposed`
+  status plus a distinct-actor `activate_organizational_authority`
+  step); expired/revoked/suspended-authority rejection
+  (`assert_authority_usable`).
+- Thirteen canonical events (canon 20.5/19e.20): `organization.created`
+  (first real implementation) plus `organization.activated`/
+  `.suspended`/`.dissolved`/`.merged`/`.split`/`.successor_declared`,
+  `organizational_relation.created`/`.ended`,
+  `organizational_authority.assigned`/`.revoked`,
+  `regional_scope_access.granted`/`.revoked` — minimum-necessary payload
+  only, no global user identifiers, no unrelated identity data.
+- Ten canon section 24 reason codes (`ORGANIZATION_NOT_ACTIVE` through
+  `HISTORICAL_SCOPE_NOT_EFFECTIVE`) plus 22 narrowly-necessary additive
+  implementation reason codes (audit/event bookkeeping, dual-control and
+  self-assignment guards, temporary-supervision window/extension guards)
+  — `contracts/reason-codes/pack-08.yml`, 32 entries total.
+- Five new entity JSON Schemas (`organization`, `organizational-unit`,
+  `civic-space`, `organizational-relation`, `organizational-authority`)
+  and seven new event-payload JSON Schemas under `contracts/schemas/`/
+  `contracts/events/`; `contracts/openapi/pack-08.yaml` (nine minimal
+  reference operations, per this round's own "minimal reference APIs
+  only" instruction — organization lifecycle-transition commands and
+  OrganizationalUnit management are deliberately not exposed as HTTP
+  paths, mirroring PACK-05's own bootstrap-seed precedent).
+- `docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md`: the complete,
+  per-`role_code` enumeration `docs/packs/PACK-08-MIGRATION-MATRIX.md`
+  section 2.3 (OD-11) required before any migration touching
+  `RoleAssignment.scope_id` could begin — all 12 `role_code` values
+  found in the repository classified against the six-category scheme,
+  none migration-blocked (`oversight_reviewer` carries a documented dual
+  classification, `observer` a documented not-yet-load-bearing note,
+  neither an unresolved ambiguity). Closes OD-11 fully.
+- `docs/packs/PACK-08-IMPLEMENTATION.md`,
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`.
+
+### Changed
+
+- `REPOSITORY_VERSION`: `0.7.0 → 0.8.0`
+  (`packages/python/epd2-core/src/epd2_core/version.py`,
+  `packages/typescript/epd2-types/src/version.ts`, both
+  version-consistency unit tests updated). `CANON_VERSION` unchanged at
+  `0.7.0` — no canon-owned file was touched this round; `sha256sum
+  docs/canonical/TZ-00-domain-event-canon.md` still returns
+  `a16341a66ce39514e6d8cd6d7a6dde8fc37b0430e3e9ddd7bfd284b116cb9072`,
+  confirmed unchanged.
+- `docs/canonical/canon-version.json`: `repository_compatibility` upper
+  bound widened `<0.8.0 → <0.9.0`.
+- `docs/architecture/data-ownership.md`: `Organization`/`CivicSpace`
+  rows updated from "Not implemented" to "Implemented (PACK-08)"; new
+  rows added for `OrganizationalUnit`/`OrganizationalRelation`/
+  `OrganizationalHierarchyOverlapPolicy`/
+  `OrganizationalInheritancePolicy`/`OrganizationalAuthority`.
+- `tests/repository/test_service_boundaries.py`: new
+  `PACK08_SERVICE_PACKAGES` (`organization-service`, the one wholly new
+  PACK-08 service) plus positive-assertion boundary tests confirming it
+  depends on no other service this round and no other service depends on
+  it.
+- `tests/contract/_schema_helpers.py`, `test_reason_codes_registry.py`,
+  `test_openapi_contract.py`: extended with PACK-08's own registry/
+  contract constants and checks, following the PACK-04/05/06/07
+  single-service exact-tag-match precedent.
+- `tests/contract/test_ct00_01_pack08_schema_validation.py`: new file
+  (mirroring the `test_ct00_01_pack07_schema_validation.py` precedent of
+  a dedicated file per schema-heavy pack).
+- `scripts/check_repository.py`: `REQUIRED_PATHS` extended with every
+  file above, plus this round's own `docs/packs/PACK-08-*.md`/
+  `docs/handover/PACK-08-*.md` entries (the PACK-07/ADR-026–037/
+  `docs/packs/` entries from earlier rounds were not previously present
+  in `REQUIRED_PATHS` and are a pre-existing gap this round does not
+  retroactively backfill — see the implementation report).
+
+### Verified
+
+- **Local, honest self-report only — no external GitHub Actions run was
+  performed or is claimed for this implementation round.** Full detail:
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`.
+
 ## [0.7.0] - participation & membership context (implementation)
 
 ### Added
@@ -28,7 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and its fail-closed `check_step_up_requirement` evaluation (canon
   19d.8); `DigitalDecision`/`AssemblyDecision` and the formal-confirmation
   lifecycle (canon 19d.12: `DigitalDecision → FormalConfirmationRequired
-→ AssemblyDecision → Confirmed | Rejected | ReturnedForRevision`, with
+  → AssemblyDecision → Confirmed | Rejected | ReturnedForRevision`, with
   a required `divergence_explanation` whenever the final legal decision
   diverges from the digital result, and no silent-approval timeout);
   `AtomicCapabilityResult`/`check_atomic_capability` and scoped
@@ -41,12 +246,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lifecycle plus `incompatibility_rules`/`membership_duration_rules`);
   `MembershipApplication`'s six-state lifecycle (canon 19d.9:
   `application_pending → eligibility_review → human_decision_pending →
-approved → rejected → activated`), with Stage A
-  (`evaluate_membership_application_eligibility`) _always_ landing on
+  approved → rejected → activated`), with Stage A
+  (`evaluate_membership_application_eligibility`) *always* landing on
   `human_decision_pending` regardless of its own recommendation, and
   Stage B (`record_membership_human_decision`) the only path to
   `approved`/`rejected` — each requiring an externally-verified
-  `decision_authority_reference`; `activate_membership` as the _only_
+  `decision_authority_reference`; `activate_membership` as the *only*
   function in the service that ever constructs an `active`
   `Membership` row, layered without overloading `Membership.membership_status`
   (canon 8.3, unchanged, first real implementation); `AffiliationDeclaration`
@@ -81,9 +286,9 @@ approved → rejected → activated`), with Stage A
   section (eight tests, one per restricted field/entity).
 - The ADR-027 cross-service edge matrix, all `.application`-only:
   `eligibility-service → {identity-service, membership-service,
-governance-service, credential-service}`,
+  governance-service, credential-service}`,
   `membership-service → {identity-service, eligibility-service,
-governance-service}` — enforced by seven new/extended AST-based tests
+  governance-service}` — enforced by seven new/extended AST-based tests
   in `tests/repository/test_service_boundaries.py`, and three
   deliberately-duplicated (never imported) logic pieces — the four-gate
   critical-policy activation gate, the polymorphic `Appeal` entity, and
@@ -157,23 +362,31 @@ version.json`'s `repository_compatibility` upper bound widened to admit
 
 ### Verified
 
-- Full local verification suite run in this repository's sandboxed,
-  network-restricted environment (see `LOCAL_VERIFICATION.md`): Ruff
-  (lint + format) clean; mypy clean per-service and for
-  `packages/python/epd2-core`/`scripts`/`tests/repository`/
-  `tests/contract` (run separately per the `Makefile`'s own documented
-  `--import-mode=importlib` limitation); the complete Python test suite
-  passing, including PACK-07's own `tests/contract`/`tests/repository`
-  additions, using the standalone-`pytest`/`PYTHONPATH` workaround
-  `LOCAL_VERIFICATION.md` documents, refined this round to also expose a
-  local PyYAML install so the reason-code-registry and OpenAPI contract
-  tests run for real locally instead of skipping. TypeScript/Prettier/
-  frontend-build verification remains unavailable in this sandbox (no
-  network access to install `npm`/`prettier`/Next.js toolchain
-  dependencies) and is explicitly reported as not run locally, not
-  claimed as passing. **This is a local, honest self-report — not an
-  external GitHub Actions PASS.** Full detail, including every command's
-  literal output: `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`.
+- **External GitHub Actions run: PASS.** Real network access, real
+  dependency installation. Exact results: all 402 required paths present;
+  no forbidden paths; version consistency passed; Ruff formatting (359
+  files already formatted) and lint passed; Prettier passed; ESLint
+  passed; mypy passed for all services; Python 2028 passed / 4 skipped /
+  0 failed; TypeScript 3/3 passed; frontend 2/2 passed; Next.js 15.5.21
+  production build passed. This closes out PACK-07 implementation as a
+  genuine external PASS, not a local self-report.
+- Full local verification suite also run in this repository's sandboxed,
+  network-restricted environment during implementation (see
+  `LOCAL_VERIFICATION.md`): Ruff (lint + format) clean; mypy clean
+  per-service and for `packages/python/epd2-core`/`scripts`/
+  `tests/repository`/`tests/contract` (run separately per the
+  `Makefile`'s own documented `--import-mode=importlib` limitation); the
+  complete Python test suite passing (2020 passed, 5 skipped — the
+  `hypothesis`-unavailable skip and cache-related forbidden-paths check
+  that the external, clean-checkout run above doesn't hit), including
+  PACK-07's own `tests/contract`/`tests/repository` additions, using the
+  standalone-`pytest`/`PYTHONPATH` workaround `LOCAL_VERIFICATION.md`
+  documents. TypeScript/Prettier/frontend-build verification was
+  unavailable in this sandbox alone (no network access to install
+  `npm`/`prettier`/Next.js toolchain dependencies) — that gap is exactly
+  what the external GitHub Actions run above closes. Full detail,
+  including every command's literal output and the external PASS
+  results: `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`.
 
 ## [Unreleased] - canon minor version 0.6.0 (Participation & Membership Context)
 
@@ -183,8 +396,8 @@ version.json`'s `repository_compatibility` upper bound widened to admit
 0.6.0` (ADR-026 through ADR-031, all `accepted`, no further amendment)
   — the fifth edit to this document's own text since its original
   acceptance (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 →
-0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
-→ 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
+  0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
+  → 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
   & Membership Context"), inserted between sections 19c and 20, the same
   non-renumbering technique used for 19a/19b/19c. Ten new canonical
   entities: `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,

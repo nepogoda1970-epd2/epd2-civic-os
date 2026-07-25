@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/organizational-relation-ended-payload.v1.schema.json",
+  "title": "organizational_relation.ended event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events.build_organizational_relation_ended_event. Minimum payload only: the relation's own id, its new status (ended), effective_time (the relation's own valid_until, or the occurrence time if valid_until was not yet set at the moment of ending), and recorded_at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["relation_id", "status", "effective_time", "recorded_at"],
+  "properties": {
+    "relation_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded", "ended"]
+    },
+    "effective_time": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" }
+  }
+}

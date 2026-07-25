@@ -44,18 +44,32 @@
     },
     "status": {
       "type": "string",
-      "enum": ["pending", "confirmed", "rejected", "returned_for_revision"]
+      "enum": [
+        "pending",
+        "confirmed",
+        "rejected",
+        "returned_for_revision"
+      ]
     },
     "final_legal_decision": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "divergence_explanation": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "decided_at": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     }
   }

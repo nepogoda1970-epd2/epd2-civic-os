@@ -11,9 +11,10 @@ EPD² Civic OS — открытая цифровая инфраструктур�
 **CLAUDE-PACK-03 — Participation and Decision Kernel**,
 **CLAUDE-PACK-04 — Transparency Context**,
 **CLAUDE-PACK-05 — Governance Context**,
-**CLAUDE-PACK-06 — AI Processing Context** и
-**CLAUDE-PACK-07 — Participation & Membership Context**: стартовый
-монорепо-каркас платформы плюс пятнадцать независимых сервисов —
+**CLAUDE-PACK-06 — AI Processing Context**,
+**CLAUDE-PACK-07 — Participation & Membership Context** и
+**CLAUDE-PACK-08 — Organization & Regional Scope Foundation**: стартовый
+монорепо-каркас платформы плюс шестнадцать независимых сервисов —
 account, identity, eligibility, credential, audit-core (PACK-02, участие
 и идентичность структурно разделены, каждое критическое действие
 записывается в append-only, hash-chained журнал аудита), initiative,
@@ -37,9 +38,19 @@ Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
 (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
 `StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`,
 четыре раздельных признака избирательного права) и `identity-service`
-(`AuthenticationContext`, восемь новых полей `IdentityRecord`). Остальная
-бизнес-логика (emergency actions, полная модель Regional Organization,
-реальная eID-интеграция) пока не реализована — см.
+(`AuthenticationContext`, восемь новых полей `IdentityRecord`), а также
+**organization-service** (PACK-08, `Organization`/`CivicSpace` — канон
+8.1/8.2, шесть дополнительных полей `Organization` — плюс четыре новые
+сущности `OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`
+и `OrganizationalAuthority`: default-deny региональная
+scope-авторизация с шестью явными режимами доступа, временный надзор с
+90-дневным лимитом по умолчанию, институциональные полномочия с
+базовой матрицей несовместимости ролей, шестикатегорийная
+классификация `RoleAssignment.scope_id`; ADR-032–037, канон раздел
+19e). Остальная бизнес-логика (emergency actions, реальная
+eID-интеграция, географическая/избирательная привязка регионов сверх
+организационной модели PACK-08) пока не реализована — см.
 `docs/review/KNOWN_LIMITATIONS.md`.
 
 ## Статус проекта
@@ -110,15 +121,18 @@ Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
   `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
   `docs/review/PACK-06-OWNER-DECISIONS.md`.
 - Этап: participation & membership context (CLAUDE-PACK-07,
-  implementation) — **локально проверено, внешний прогон GitHub Actions
-  не выполнялся для этого раунда** (честно указано как таковое, а не
-  заявлено как PASS): 2020 Python-тестов пройдено, 5 пропущено (те же
-  CT-00-10/CT-00-11/CT-00-12 not-applicable маркеры плюс
-  `hypothesis`-пропуск), 0 неудачных; Ruff/mypy — чисто; все 402
-  обязательных пути на месте. TypeScript/Prettier/ESLint/frontend build
-  не выполнялись в этой песочнице (нет сетевого доступа к реестру npm —
-  `npm install --offline` завершается `ENOTCACHED`) и не заявлены как
-  пройденные. Один новый сервис: `membership-service`
+  implementation) — **PACK-07 PASS**, подтверждено внешним прогоном
+  GitHub Actions с реальным сетевым доступом: 2028 Python-тестов
+  пройдено, 4 пропущено, 0 неудачных; TypeScript (3/3) и frontend (2/2)
+  тесты и сборка Next.js 15.5.21 пройдены полностью; Ruff (формат: 359
+  файлов уже отформатированы; lint — чисто), Prettier, ESLint, mypy — все
+  чисто для всех сервисов; все 402 обязательных пути на месте;
+  запрещённых файлов нет; проверка согласованности версий пройдена. (В
+  ходе локальной разработки в этой песочнице без сетевого доступа было
+  получено 2020 Python-тестов пройдено / 5 пропущено — разница объясняется
+  тем, что внешняя среда устанавливает `hypothesis` по-настоящему и
+  стартует с чистого чекаута; см. `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`
+  раздел 6a/6b для полного сопоставления.) Один новый сервис: `membership-service`
   (`PartyMembershipEligibilityPolicy`, `Membership`, `MembershipApplication`,
   `AffiliationDeclaration`, `ConflictAssessment`, переиспользуемый
   `Appeal`); расширение на месте `eligibility-service`
@@ -129,7 +143,7 @@ Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
   и `identity-service` (`AuthenticationContext`, восемь новых полей
   `IdentityRecord`); ADR-026–031, канон раздел 19d. См.
   `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` для полного описания.
-- Canon version: `0.6.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
+- Canon version: `0.7.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
   Изменения текста канона: PACK-03 под ADR-010 (`0.1.0 → 0.2.0`,
   добавление `Ballot.challenge_window_hours` /
   `ResultPublication.challenge_deadline_at`); CLAUDE-PACK-04 под ADR-013
@@ -169,8 +183,69 @@ Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
   на момент того канонического раунда ни `membership-service`, ни
   расширение `eligibility-service` ещё не были реализованы; оба теперь
   реализованы в CLAUDE-PACK-07's implementation-раунде (см. запись выше и
-  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`).
-- Repository version: `0.7.0` (CLAUDE-PACK-07 implementation:
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`). CLAUDE-PACK-08 под
+  ADR-032 через ADR-037 (`0.6.0 → 0.7.0`, раздел 19e Organization &
+  Regional Scope Context — расширение `Organization` (8.1) шестью
+  дополнительными полями; подтверждение `CivicSpace` (8.2) без
+  изменений; четыре новые сущности, владеемые `organization-service`
+  (`OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`),
+  плюс `OrganizationalAuthority` и переиспользуемый объект-значение
+  `OrganizationalScope`; множественные типизированные направленные
+  графы организационных отношений вместо простого дерева; default-deny
+  региональная scope-авторизация с шестью явными режимами; владение
+  политикой наследования; 90-дневный лимит временного надзора по
+  умолчанию; минимальная базовая матрица несовместимости
+  институциональных ролей; шестикатегорийная классификация
+  `RoleAssignment.scope_id` (8.4 без изменений полей/статуса/владельца)).
+  ADR-032 через ADR-036 приняты (`accepted`) в раунде коррекции
+  спецификации PACK-08, предшествовавшем настоящему каноническому
+  раунду; их принятие само по себе не авторизовало правку канона —
+  ADR-037 является тем отдельным, посвящённым каноническому раунду,
+  который эту правку авторизует и выполняет (тот же приём, что уже
+  применялся к ADR-010/013/018/020/023/025/028). Канон не изменялся при
+  реализации самого сервиса `organization-service` — такой реализации
+  ещё не существует; настоящий раунд — исключительно канонический/
+  документационный, без сервисного кода, схем, событийного транспорта
+  или production-интеграции (см.
+  `docs/adr/ADR-037-organization-and-regional-scope-canon-amendment.md`,
+  `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`,
+  `docs/packs/PACK-08-OPEN-DECISIONS.md`). Внешний прогон GitHub Actions
+  для PACK-08 не выполнялся ни на одном этапе, включая настоящий
+  канонический раунд — только честный локальный самоотчёт
+  (`docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md` раздел 6).
+- Этап: organization & regional scope foundation (CLAUDE-PACK-08,
+  implementation) — **локальный самоотчёт, без внешнего прогона GitHub
+  Actions**: 2141 Python-тест пройден, 5 пропущено, 0 неудачных (Ruff
+  lint/format, mypy — чисто для всех 16 сервисов и `tests/contract`);
+  все 445 обязательных путей на месте; запрещённых файлов нет; проверка
+  согласованности версий пройдена. Frontend: 11 TypeScript unit-тестов
+  пройдено (глобальный `tsx`-биндинг, без `node_modules`), `tsc
+  --noEmit` — без реальных ошибок в новом коде (шум от отсутствующих
+  `@types/react`/`next` отфильтрован), Prettier — чисто; ESLint и
+  production-сборка Next.js не выполнялись в этой песочнице (нет
+  сетевого доступа к npm — тот же документированный разрыв, что и у
+  каждого предыдущего пакета). Один новый сервис:
+  `organization-service` (`Organization`/`CivicSpace`,
+  `OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`, `OrganizationalAuthority`; ADR-032
+  — ADR-037, канон раздел 19e); обязательная миграционная таблица
+  `RoleAssignment.scope_id` по всем 12 реальным значениям `role_code`
+  (`docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md` — ноль
+  заблокированных, ноль неоднозначных); минимальный read-only
+  frontend vertical slice `/organizations` (немецкий — авторитетный
+  текст, английский — только информационная подпись; статические
+  примерные данные, без бэкенда). См.
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` и
+  `docs/packs/PACK-08-IMPLEMENTATION.md` для полного описания.
+- Repository version: `0.8.0` (CLAUDE-PACK-08 implementation:
+  `organization-service` — `Organization`, `CivicSpace`,
+  `OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`, `OrganizationalAuthority`; см.
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`. Предыдущая версия
+  `0.7.0` соответствовала CLAUDE-PACK-07 implementation:
   `membership-service` и расширение `eligibility-service`/
   `identity-service` — `PartyMembershipEligibilityPolicy`, `Membership`,
   `MembershipApplication`, `AffiliationDeclaration`, `ConflictAssessment`,
@@ -186,8 +261,9 @@ Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
   соответствовала CLAUDE-PACK-05 implementation (`governance-service`;
   подтверждено внешним прогоном GitHub Actions, см.
   `docs/handover/PACK-05-REPORT.md`).
-- База данных, event bus, аутентификация, deployment, полная модель
-  Regional Organization, реальная eID-интеграция пока не
+- База данных, event bus, аутентификация, deployment, реальная
+  eID-интеграция, географическая/избирательная привязка регионов сверх
+  организационной модели `organization-service` (PACK-08) пока не
   реализованы.
 
 ## Архитектурный принцип
@@ -245,12 +321,13 @@ make verify     # полный цикл проверок (repo checks, format, l
 epd2-civic-os/
 ├── docs/                 # канон, архитектура, ADR, отчёты, открытые вопросы
 ├── contracts/            # будущие контракты: OpenAPI, события, схемы, reason codes
-├── services/              # пятнадцать сервисов: account, identity,
+├── services/              # шестнадцать сервисов: account, identity,
 │                          # eligibility, credential, audit-core (PACK-02),
 │                          # initiative, deliberation, moderation, voting,
 │                          # tally, delegation (PACK-03), transparency
 │                          # (PACK-04), governance (PACK-05),
-│                          # ai-processing (PACK-06), membership (PACK-07)
+│                          # ai-processing (PACK-06), membership (PACK-07),
+│                          # organization (PACK-08)
 ├── packages/
 │   ├── python/epd2-core        # общий Python-пакет: версии, идентификаторы
 │   └── typescript/epd2-types   # общий TypeScript-пакет: версии
@@ -304,6 +381,24 @@ epd2-civic-os/
 - Отчёт о раунде реализации PACK-07 (`membership-service`, расширение
   `eligibility-service`/`identity-service`):
   `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`
+- Спецификация PACK-08 (Organization & Regional Scope Foundation):
+  `docs/packs/PACK-08-SPECIFICATION.md`,
+  `docs/packs/PACK-08-MIGRATION-MATRIX.md`,
+  `docs/packs/PACK-08-OPEN-DECISIONS.md`
+- Organization & Regional Scope Context ADR (PACK-08): `docs/adr/ADR-032`
+  — `docs/adr/ADR-037`
+- Отчёт о раунде спецификации/ADR PACK-08:
+  `docs/handover/PACK-08-SPEC-REPORT.md`
+- Отчёт о каноническом раунде PACK-08 (canon-only, без реализации
+  сервисов): `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`
+- Обязательная миграционная таблица `RoleAssignment.scope_id` (PACK-08):
+  `docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md`
+- Технический справочник по реализации PACK-08 (`organization-service`,
+  контракты, frontend vertical slice):
+  `docs/packs/PACK-08-IMPLEMENTATION.md`
+- Отчёт о раунде реализации PACK-08 (`organization-service`, локальный
+  самоотчёт без внешнего прогона GitHub Actions):
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`
 - Локальная доверификация (генерация lock-файлов, `next build`): `LOCAL_VERIFICATION.md`
 - Одноразовая проверка на GitHub Actions (когда нет доступа к обычной
   среде с интернетом): `GITHUB_ACTIONS_START.md`,
@@ -332,10 +427,21 @@ ADR-026 — ADR-031, `membership-service` — `PartyMembershipEligibilityPolicy`
 `ProcessEligibilityPolicy`, `StepUpAuthenticationRequirement`,
 `DigitalDecision`, `AssemblyDecision`, четыре раздельных признака
 избирательного права; расширение `identity-service` —
-`AuthenticationContext`, восемь новых полей `IdentityRecord`; локально
-проверено, см. `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` — внешний
-прогон GitHub Actions для этого раунда реализации ещё не выполнялся).
-**Ещё не реализованы**: полная модель Regional Organization,
-Emergency/Crisis Override, реальная eID/eIDAS-интеграция,
-криптографические протоколы голосования — см.
-`docs/review/KNOWN_LIMITATIONS.md`.
+`AuthenticationContext`, восемь новых полей `IdentityRecord`; **PACK-07
+PASS**, подтверждено внешним прогоном GitHub Actions, см.
+`docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`) и Organization &
+Regional Scope (PACK-08: канон раздел 19e, ADR-032 — ADR-037,
+`organization-service` — `Organization`/`CivicSpace`,
+`OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`,
+`OrganizationalAuthority`; default-deny региональная scope-авторизация
+с шестью режимами доступа, временный надзор, институциональные
+полномочия с базовой матрицей несовместимости ролей, обязательная
+миграционная таблица `RoleAssignment.scope_id`, минимальный read-only
+frontend vertical slice `/organizations`; **локальный самоотчёт, без
+внешнего прогона GitHub Actions**, см.
+`docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`).
+**Ещё не реализованы**: Emergency/Crisis Override, реальная
+eID/eIDAS-интеграция, криптографические протоколы голосования,
+географическая/избирательная привязка регионов сверх организационной
+модели PACK-08 — см. `docs/review/KNOWN_LIMITATIONS.md`.

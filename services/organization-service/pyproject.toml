@@ -1,0 +1,17 @@
+[project]
+name = "epd2-organization-service"
+version = "0.1.0"
+description = "EPD2 Civic OS Organization & Regional Scope Service — owns Organization (8.1, extended)/OrganizationalUnit/CivicSpace (8.2)/OrganizationalRelation/OrganizationalHierarchyOverlapPolicy/OrganizationalInheritancePolicy/OrganizationalAuthority (canon section 19e, PACK-08 implementation round)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "epd2-core",
+    "epd2-audit-core",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/epd2_organization_service"]

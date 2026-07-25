@@ -7,8 +7,8 @@
 - ADR нумеруются последовательно: `ADR-001`, `ADR-002`, ...
 - До статуса `accepted` предложенное изменение **не** включается в рабочий
   код.
-- Действующая версия канона: **`0.5.0`**
-  (`docs/canonical/canon-version.json`), с 2026-07-24 (ADR-023, ADR-025).
+- Действующая версия канона: **`0.7.0`**
+  (`docs/canonical/canon-version.json`), с 2026-07-25 (ADR-037).
 
 ## Статусы ADR
 
@@ -54,6 +54,99 @@
 | [ADR-029](./ADR-029-pack-07-reason-code-additions.md)                                   | PACK-07 reason-code registry and additive codes                                                                                                                                                     | proposed                                                                                                                              |
 | [ADR-030](./ADR-030-pack-07-policy-mechanics-human-decisions.md)                        | PACK-07 policy mechanics, `MembershipApplication` lifecycle, consequential human decisions, and appeal-model resolution                                                                             | proposed                                                                                                                              |
 | [ADR-031](./ADR-031-pack-07-security-architecture-anti-correlation-protocol-agility.md) | PACK-07 security architecture — domain pseudonyms, anti-correlation invariant, Credential Issuer boundary, cryptographic-protocol agility, audit/queue properties, future-pack boundaries           | proposed                                                                                                                              |
+| [ADR-032](./ADR-032-organization-and-civic-space-ownership.md)                          | PACK-08 Organization and CivicSpace ownership — new `organization-service`, narrow-read boundary for every other service                                                                            | accepted                                                                                                                              |
+| [ADR-033](./ADR-033-organizational-relationships-effective-dating-and-reorganization.md) | PACK-08 organizational relationships, effective dating, and reorganization — multiple typed relationship graphs (hierarchy/continuity/cooperation), not a strict tree                               | accepted                                                                                                                              |
+| [ADR-034](./ADR-034-regional-scope-authorization-and-inheritance.md)                     | PACK-08 regional scope authorization and inheritance — default-deny, six explicit access modes, anti-confused-deputy/anti-role-name-as-proof                                                        | accepted                                                                                                                              |
+| [ADR-035](./ADR-035-cross-domain-scope-classification-and-migration.md)                 | PACK-08 cross-domain scope classification and migration — field-by-field decision for `organization_id`/`region_code`/`jurisdiction`/`scope_type`/`scope_id`, no automated bulk rewrite              | accepted                                                                                                                              |
+| [ADR-036](./ADR-036-institutional-authority-assignments-and-non-combinable-roles.md)    | PACK-08 institutional authority assignments and non-combinable roles — new `OrganizationalAuthority` entity, role-lifecycle invariants, no-implicit-transfer rule                                    | accepted                                                                                                                              |
+| [ADR-037](./ADR-037-organization-and-regional-scope-canon-amendment.md)                 | Organization and Regional Scope Canon Amendment — canon minor-version addition: new section 19e (`0.6.0 → 0.7.0`, implemented 2026-07-25)                                                           | accepted                                                                                                                              |
+
+ADR-037 is this project's seventh governance round, the canon-amendment
+round for CLAUDE-PACK-08 that ADR-032 through ADR-036's own acceptance
+required before implementation. `CANON_VERSION` moved `0.6.0 → 0.7.0`:
+new canon section 19e ("Организация и региональная авторизация —
+расширение / Organization & Regional Scope Context"), inserted between
+sections 19d and 20 (the established non-renumbering technique). Full
+detail: `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`,
+`docs/canonical/PACK-08-GLOSSARY.md`. **No `services/organization-service`
+directory, schema, OpenAPI file, or reason-code registry exists yet** —
+implementation of `organization-service` itself remains a separate,
+later task, gated on this canon content and on ADR-032 through ADR-036,
+but not authorized by any of them alone.
+
+**ADR-037's canon edit has been implemented in the canon itself**
+(2026-07-25), in the same round as its own acceptance (unlike ADR-032
+through ADR-036, whose acceptance deliberately deferred the canon edit
+to this dedicated later task — the pattern ADR-010/013/018/020/023/025/028
+each already established): canon section 19e extends `Organization`
+(8.1) with six additive fields (`organization_profile`,
+`parent_reference`, `effective_from`, `effective_until`, `dissolved_at`,
+`successor_reference`); confirms `CivicSpace` (8.2) unchanged; defines
+`OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`,
+and `OrganizationalAuthority` (all owned by `organization-service`) plus
+the reusable `OrganizationalScope` value shape; canonizes multiple
+typed directed graphs for organizational relationships, effective
+dating, reorganization rules (with the hard no-automatic-rights-
+transfer invariant), default-deny regional scope authorization (six
+access modes), inheritance-policy ownership, the 90-day
+temporary-supervision default, the institutional-role minimum
+non-combinable-role baseline, role/authority lifecycle rules, extended
+identity-minimization rules, and the six-category
+`RoleAssignment.scope_id` classification requirement (8.4 itself
+unchanged in fields/status/owner). Section 20.5 gains thirteen new
+events with full payload/timing/audit/privacy documentation; section 22
+gains five new ownership-matrix rows; section 23 gains new
+forbidden-link entries; section 24 gains ten new reason codes.
+`canon_version` moved `0.6.0 → 0.7.0`, mirrored across
+`docs/canonical/canon-version.json`,
+`packages/python/epd2-core/src/epd2_core/version.py`, and
+`packages/typescript/epd2-types/src/version.ts`, with both
+version-consistency unit tests updated and `scripts/verify_versions.py`
+passing:
+
+```text
+sha256(docs/canonical/TZ-00-domain-event-canon.md) =
+  a16341a66ce39514e6d8cd6d7a6dde8fc37b0430e3e9ddd7bfd284b116cb9072
+CANON_VERSION = 0.7.0
+```
+
+This is a canon-only change: no `services/organization-service`
+directory, JSON Schema, OpenAPI file, or reason-code registry was
+created, and no PACK-01 through PACK-07 source code was touched.
+Implementation of `organization-service` remains a separate, later
+task, gated on this canon content but not authorized by it alone.
+
+ADR-032 through ADR-036 are this project's sixth governance round, for
+CLAUDE-PACK-08 (`docs/packs/PACK-08-SPECIFICATION.md`, Organization &
+Regional Scope Foundation) — a specification/ADR round only, authorized
+against the approved `MASTER-ARCHITECTURE-0.8.md`/`MASTER-ROADMAP-0.8.md`/
+`HARD-INVARIANTS-0.8.md`/`ARCHITECTURE-GAP-REGISTER.md` planning
+baseline and `PACK-08-PROPOSAL.md`. All five ADRs were drafted
+`proposed` on 2026-07-25, then moved to **`accepted`** the same day in a
+subsequent targeted correction round ("PACK-08 SPEC CORRECTION + OWNER
+DECISIONS") once that round's owner decisions settled every core
+architectural question each ADR raised — organizational graph model
+(multiple typed directed graphs, not a strict tree), inheritance-policy
+ownership, temporary-supervision maximum duration, a minimum
+non-combinable-role baseline, `RoleAssignment.scope_id`'s six-category
+classification, and `parent_reference`'s non-authoritative status.
+**Every one of the five ADRs' own acceptance is explicitly qualified:
+acceptance does not authorize implementation, and a canon amendment is
+now confirmed as a mandatory precondition — not conditional — before
+any PACK-08 implementation begins** (each ADR's own "Related canon
+version" section restates this identically). No canon edit has been
+performed at this stage (canon `0.6.0` is read and classified, never
+amended; `CANON_VERSION` and the canon checksum are unchanged by both
+the original round and the correction round). No service code, schema,
+or contract file was created — see
+`docs/handover/PACK-08-SPEC-REPORT.md` for the complete scope-discipline
+statement and correction-round file list, and
+`docs/packs/PACK-08-OPEN-DECISIONS.md` for the eighteen open decisions
+(OD-1 through OD-18) this round surfaces — OD-5/OD-8/OD-10 closed,
+OD-7/OD-11 partially closed, OD-18 closed definitively, the remainder
+still open — for owner/legal/security review before any implementation
+round is authorized.
 
 ADR-026 through ADR-031 are this project's fifth governance round, for
 CLAUDE-PACK-07 (`docs/handover/PACK-07-SPEC.md`, Participation & Membership

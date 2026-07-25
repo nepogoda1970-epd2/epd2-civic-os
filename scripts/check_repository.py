@@ -99,6 +99,15 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-05-REPORT.md",
     "docs/handover/PACK-06-SPEC.md",
     "docs/handover/PACK-06-REPORT.md",
+    "docs/handover/PACK-08-SPEC-REPORT.md",
+    "docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md",
+    "docs/handover/PACK-08-IMPLEMENTATION-REPORT.md",
+    # Docs: packs (PACK-08 IMPLEMENTATION ROUND)
+    "docs/packs/PACK-08-SPECIFICATION.md",
+    "docs/packs/PACK-08-MIGRATION-MATRIX.md",
+    "docs/packs/PACK-08-OPEN-DECISIONS.md",
+    "docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md",
+    "docs/packs/PACK-08-IMPLEMENTATION.md",
     # Contracts
     "contracts/README.md",
     "contracts/openapi",
@@ -233,6 +242,24 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "contracts/events/conflict-decision-recorded-payload.v1.schema.json",
     # Contracts: PACK-07 OpenAPI
     "contracts/openapi/pack-07.yaml",
+    # Contracts: PACK-08 reason codes registry
+    "contracts/reason-codes/pack-08.yml",
+    # Contracts: PACK-08 JSON Schemas
+    "contracts/schemas/organization.schema.json",
+    "contracts/schemas/organizational-unit.schema.json",
+    "contracts/schemas/civic-space.schema.json",
+    "contracts/schemas/organizational-relation.schema.json",
+    "contracts/schemas/organizational-authority.schema.json",
+    # Contracts: PACK-08 event payload schemas
+    "contracts/events/organization-status-payload.v1.schema.json",
+    "contracts/events/organizational-relation-created-payload.v1.schema.json",
+    "contracts/events/organizational-relation-ended-payload.v1.schema.json",
+    "contracts/events/organizational-authority-assigned-payload.v1.schema.json",
+    "contracts/events/organizational-authority-revoked-payload.v1.schema.json",
+    "contracts/events/regional-scope-access-granted-payload.v1.schema.json",
+    "contracts/events/regional-scope-access-revoked-payload.v1.schema.json",
+    # Contracts: PACK-08 OpenAPI
+    "contracts/openapi/pack-08.yaml",
     # Services (placeholder)
     "services/README.md",
     # Services: account-service
@@ -421,6 +448,18 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/membership-service/tests/test_domain.py",
     "services/membership-service/tests/test_application.py",
     "services/membership-service/tests/test_storage.py",
+    # Services: organization-service (PACK-08's one wholly new service)
+    "services/organization-service/README.md",
+    "services/organization-service/pyproject.toml",
+    "services/organization-service/src/epd2_organization_service/__init__.py",
+    "services/organization-service/src/epd2_organization_service/domain.py",
+    "services/organization-service/src/epd2_organization_service/application.py",
+    "services/organization-service/src/epd2_organization_service/events.py",
+    "services/organization-service/src/epd2_organization_service/exceptions.py",
+    "services/organization-service/src/epd2_organization_service/storage.py",
+    "services/organization-service/tests/test_domain.py",
+    "services/organization-service/tests/test_application.py",
+    "services/organization-service/tests/test_storage.py",
     # Python packages
     "packages/python/README.md",
     "packages/python/epd2-core/README.md",
@@ -448,6 +487,16 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "frontend/web-shell/app/layout.tsx",
     "frontend/web-shell/app/page.tsx",
     "frontend/web-shell/tests/smoke.test.ts",
+    # Frontend: PACK-08 /organizations read-only vertical slice
+    "frontend/web-shell/app/organizations/data.ts",
+    "frontend/web-shell/app/organizations/labels.ts",
+    "frontend/web-shell/app/organizations/authorization.ts",
+    "frontend/web-shell/app/organizations/Bilingual.tsx",
+    "frontend/web-shell/app/organizations/AsOfSelector.tsx",
+    "frontend/web-shell/app/organizations/page.tsx",
+    "frontend/web-shell/app/organizations/[id]/page.tsx",
+    "frontend/web-shell/app/organizations/dev-authorization-console/page.tsx",
+    "frontend/web-shell/tests/organizations.test.ts",
     # Scripts
     "scripts/check_repository.py",
     "scripts/check_forbidden_files.py",
@@ -463,6 +512,7 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "tests/contract/_schema_helpers.py",
     "tests/contract/test_ct00_01_schema_validation.py",
     "tests/contract/test_ct00_01_pack07_schema_validation.py",
+    "tests/contract/test_ct00_01_pack08_schema_validation.py",
     "tests/contract/test_ct00_02_unknown_status.py",
     "tests/contract/test_ct00_03_forbidden_transition.py",
     "tests/contract/test_ct00_04_event_idempotency.py",

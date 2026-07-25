@@ -60,6 +60,7 @@ from _schema_helpers import (
     PACK06_OPENAPI_PATH,
     PACK07_OPENAPI_PATH,
     PACK07_SERVICE_DIRS,
+    PACK08_OPENAPI_PATH,
 )
 
 yaml = pytest.importorskip("yaml")
@@ -117,6 +118,11 @@ def _pack06_spec() -> dict[str, Any]:
 
 def _pack07_spec() -> dict[str, Any]:
     parsed: dict[str, Any] = yaml.safe_load(PACK07_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return parsed
+
+
+def _pack08_spec() -> dict[str, Any]:
+    parsed: dict[str, Any] = yaml.safe_load(PACK08_OPENAPI_PATH.read_text(encoding="utf-8"))
     return parsed
 
 
@@ -465,3 +471,80 @@ def test_pack07_adr027_narrow_cross_pack_reads_have_no_openapi_path() -> None:
                     f"operationId {operation_id!r} suggests {fragment} is exposed as its own "
                     "PACK-07 endpoint, contradicting ADR-027"
                 )
+
+
+# --- PACK-08 (contracts/openapi/pack-08.yaml) -------------------------------
+
+
+def test_pack08_openapi_file_is_well_formed_yaml() -> None:
+    spec = _pack08_spec()
+    assert spec["openapi"].startswith("3.")
+    assert "paths" in spec
+    assert len(spec["paths"]) > 0
+
+
+def test_pack08_each_operation_is_owned_by_exactly_one_service_tag() -> None:
+    spec = _pack08_spec()
+    for path, path_item in spec["paths"].items():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            tags = operation.get("tags", [])
+            assert len(tags) == 1, f"{path} {method} must have exactly one owning service tag"
+
+
+def test_pack08_tags_are_exactly_organization_service() -> None:
+    """ADR-032 through ADR-037: PACK-08 has exactly one service. Every
+    operation's `tags` value in `pack-08.yaml` must be
+    `["organization-service"]` - never a stray/misspelled tag, and never
+    a PACK-02 through PACK-07 service name (PACK-08's own contract owns
+    only PACK-08 paths)."""
+    spec = _pack08_spec()
+    used_tags: set[str] = set()
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            used_tags.update(operation.get("tags", []))
+    assert used_tags == {"organization-service"}, (
+        f"pack-08.yaml must use exactly the tag 'organization-service', found: {used_tags}"
+    )
+
+
+def test_pack08_lifecycle_transition_commands_have_no_openapi_path() -> None:
+    """Task section 19's own 'minimal reference APIs only' instruction:
+    organization lifecycle-transition commands (activate/suspend/
+    dissolve/merge/split/declare_successor) exist in the application
+    layer but are deliberately not exposed as their own HTTP paths in
+    this minimal reference contract - mirroring PACK-05's own precedent
+    of omitting its bootstrap-seed command."""
+    spec = _pack08_spec()
+    forbidden_operation_id_fragments = (
+        "activateOrganization",
+        "suspendOrganization",
+        "dissolveOrganization",
+        "mergeOrganization",
+        "splitOrganization",
+        "declareSuccessor",
+    )
+    for path_item in spec["paths"].values():
+        for method, operation in path_item.items():
+            if method not in {"get", "post", "put", "patch", "delete"}:
+                continue
+            operation_id = operation.get("operationId", "")
+            for fragment in forbidden_operation_id_fragments:
+                assert fragment not in operation_id, (
+                    f"operationId {operation_id!r} suggests {fragment} is exposed as its own "
+                    "PACK-08 endpoint, contradicting the minimal reference API scope"
+                )
+
+
+def test_pack08_no_bulk_cross_regional_directory_endpoint() -> None:
+    """Task section 19: 'no bulk cross-regional directory endpoint' and
+    'no public member directory' - every PACK-08 GET operation is scoped
+    to a specific id or a specific (scope_type, scope_reference) pair,
+    never an unscoped list-everything query."""
+    spec = _pack08_spec()
+    for path in spec["paths"]:
+        lowered = path.lower()
+        assert "directory" not in lowered, f"path {path!r} suggests a directory-shaped endpoint"

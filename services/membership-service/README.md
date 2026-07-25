@@ -11,9 +11,9 @@ directly (INV-03).
 
 ## Scope split from `eligibility-service` (ADR-026)
 
-`eligibility-service` owns _general_ participant eligibility
+`eligibility-service` owns *general* participant eligibility
 (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`) and never
-creates or modifies `Membership`. This service owns _party-specific_
+creates or modifies `Membership`. This service owns *party-specific*
 membership admission, continuing eligibility, affiliation, and conflict
 concerns, and never computes an electoral-eligibility claim itself
 (canon 19d.1/19d.3) — it only ever exposes the two narrow derived

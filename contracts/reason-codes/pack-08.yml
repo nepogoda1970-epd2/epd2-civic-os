@@ -1,0 +1,416 @@
+# Centralized PACK-08 reason-code registry (canon-0.7.0 section 19e /
+# section 24's own 10-code list, ADR-032 through ADR-037).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced by the PACK-08 implementation round: the 10 codes
+# canon section 24 itself names for the Organization & Regional Scope
+# domain, plus the narrowly-necessary additive codes
+# `organization-service` (PACK-08's one wholly new service) uses for its
+# own audit/event bookkeeping (creation/activation/status-change
+# confirmations, relation/authority lifecycle markers), following the
+# same additive pattern ADR-004/ADR-014/ADR-019/ADR-024/pack-07's own
+# registry already established. No PACK-08 code path may use a free-text
+# string in place of a registered code (canon section 24).
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-07.yml (ADR-006 Option B precedent): codes that multiple
+# packs need (e.g. PERMISSION_DENIED, VALIDATION_UNKNOWN_STATUS,
+# VALIDATION_FORBIDDEN_TRANSITION, VALIDATION_RECORD_NOT_FOUND) are
+# independently redeclared here rather than imported from an earlier
+# pack's file, so this file remains a complete, standalone source of
+# truth for organization-service's own scan
+# (`tests/contract/test_reason_codes_registry.py`'s `PACK08_SERVICE_DIRS`).
+# `organization-service` is a single, wholly new service (no existing
+# PACK-02-through-PACK-07 service is extended in place this round), so
+# unlike PACK-07's file there is no "shared with an earlier pack's
+# service directory" union needed for the literal-usage check.
+#
+# `source: canon-24` entries are canon section 24's own explicitly-named
+# 10-code list for the Organization & Regional Scope domain (task item 18
+# of the PACK-08 implementation scope), copied verbatim. `source:
+# pack-08-service` entries are additive codes this implementation round
+# introduced for its own audit/event bookkeeping (organization lifecycle
+# confirmations, relation/authority lifecycle markers, dual-control/
+# temporary-supervision guards), following the same additive pattern
+# established by every earlier pack's registry. `source: pack-02-reused`
+# entries are generic, pre-existing PACK-02 codes reused verbatim by
+# organization-service (already registered in pack-02.yml; independently
+# redeclared here so this file stays a complete, standalone reference for
+# organization-service's own scan).
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+
+# --- Canon section 24's ten Organization & Regional Scope codes ----------
+
+- code: ORGANIZATION_NOT_ACTIVE
+  meaning: >-
+    The referenced Organization is not currently in an active status
+    (canon 8.1) - a draft, restricted, or archived organization cannot
+    issue new organizational authority or otherwise act as an active
+    party to the requested operation.
+  severity: error
+  description: This organization is not currently active.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The supplied OrganizationalScope does not match the scope actually
+    required for the requested operation (scope_type and/or
+    scope_reference differ).
+  severity: error
+  description: The organizational scope provided does not match what is required for this action.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: CROSS_SCOPE_ACCESS_DENIED
+  meaning: >-
+    A regional-scope-authorization check (canon 19e.12) evaluated all six
+    access modes (exact/ancestor/descendant/delegated-cross-scope/
+    temporary-supervision/institutional-oversight-without-data-access)
+    and found no grant covering the requested (actor_scope, target_scope,
+    action_code) triple - the engine's default is deny.
+  severity: error
+  description: You are not authorized to access this organizational scope.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: AUTHORITY_ASSIGNMENT_INVALID
+  meaning: >-
+    An OrganizationalAuthority assignment failed validation - e.g. the
+    appointing organization is not active, the assignment's effective
+    window is invalid, or a required policy_version/decision_reference is
+    missing.
+  severity: error
+  description: This authority assignment is not valid.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: AUTHORITY_ROLE_INCOMPATIBLE
+  meaning: >-
+    The candidate role_code conflicts with an existing active role_code
+    already held by the same assigned_subject_reference in the same
+    OrganizationalScope, per the role incompatibility baseline (canon
+    19e.16, PAIRWISE_INCOMPATIBLE_ROLES).
+  severity: error
+  description: This role cannot be combined with a role you already hold in this scope.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: AUTHORITY_SCOPE_INVALID
+  meaning: >-
+    An OrganizationalAuthority's own OrganizationalScope value fails
+    validation (e.g. empty scope_reference/owning_domain, or a scope
+    shape inconsistent with the authority's role_code).
+  severity: error
+  description: The scope specified for this authority is not valid.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: SUCCESSOR_TRANSFER_REQUIRES_DECISION
+  meaning: >-
+    Canon 19e.10's hard invariant: a merge/split/successor relation alone
+    never automatically transfers role, authority, access, or entitlement
+    - any such transfer requires its own, explicit, distinct governed
+    decision reference, separate from the reorganization's own decision.
+  severity: error
+  description: Transferring authority as part of a reorganization requires its own separate governed decision.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: ORGANIZATIONAL_RELATION_OVERLAP
+  meaning: >-
+    A new hierarchy-category relation's [valid_from, valid_until) window
+    overlaps an existing active relation asserting a different parent for
+    the same child (or a second concurrent child for the same
+    parent-shaped role), and no OrganizationalHierarchyOverlapPolicy
+    explicitly permits the overlap.
+  severity: error
+  description: This organizational relationship overlaps with an existing one that is not permitted to coexist.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: ORGANIZATIONAL_CYCLE_FORBIDDEN
+  meaning: >-
+    Adding the candidate relation would create a cycle in a
+    hierarchy-category relation type (parent_of/subordinate_to, cycles
+    forbidden without exception - canon 19e.7) or in
+    temporary_supervision_by (canon 19e.7's own no-cycle rule for that
+    cooperation-category type).
+  severity: error
+  description: This organizational relationship would create a forbidden cycle.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+- code: HISTORICAL_SCOPE_NOT_EFFECTIVE
+  meaning: >-
+    A historical or future-dated query's evaluation time does not fall
+    within the referenced record's [valid_from, valid_until) effective
+    window.
+  severity: error
+  description: This organizational record was not effective at the requested time.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: canon-24
+
+# --- Organization lifecycle (canon 19e.10, ADR-034) - additive audit/
+#     event bookkeeping codes -------------------------------------------
+
+- code: ORGANIZATION_CREATED
+  meaning: A new Organization was created in draft status.
+  severity: info
+  description: The organization has been created.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_ACTIVATED
+  meaning: An Organization transitioned draft -> active.
+  severity: info
+  description: The organization has been activated.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_SUSPENDED
+  meaning: An Organization transitioned active -> restricted.
+  severity: info
+  description: The organization has been suspended.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_DISSOLVED
+  meaning: An Organization transitioned to archived, with dissolved_at recorded.
+  severity: info
+  description: The organization has been dissolved.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_MERGED
+  meaning: >-
+    One or more source Organizations were dissolved and a merged_into
+    relation was created toward the target Organization, under one
+    governed reorganization decision.
+  severity: info
+  description: The organization has been merged.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_SPLIT
+  meaning: >-
+    A source Organization produced one or more resulting Organizations
+    via split_from relations, under one governed reorganization decision.
+  severity: info
+  description: The organization has been split.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_SUCCESSOR_DECLARED
+  meaning: >-
+    A successor_of relation was created between a predecessor and
+    successor Organization, and the predecessor's successor_reference was
+    populated.
+  severity: info
+  description: A successor organization has been declared.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_DUAL_CONTROL_VIOLATION
+  meaning: >-
+    The same actor attempted to both propose/appoint and activate the
+    same OrganizationalAuthority assignment - canon 19e.17 rule 8's dual
+    control requirement (one person cannot satisfy both sides of a
+    dual-control action).
+  severity: error
+  description: The same person cannot both propose and activate this authority assignment.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATION_SELF_ASSIGNMENT_FORBIDDEN
+  meaning: >-
+    An OrganizationalAuthority's appointing_authority_reference equals its
+    own assigned_subject_reference - self-assignment is forbidden (canon
+    19e.16 rule 6 / 19e.17 rule 4).
+  severity: error
+  description: You cannot appoint yourself to this authority.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+# --- OrganizationalRelation / graph lifecycle (canon 19e.7, 19e.9) -------
+
+- code: ORGANIZATIONAL_RELATION_CREATED
+  meaning: A new OrganizationalRelation was created between two Organizations.
+  severity: info
+  description: The organizational relationship has been created.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATIONAL_RELATION_ENDED
+  meaning: An active OrganizationalRelation was ended by setting its valid_until.
+  severity: info
+  description: The organizational relationship has ended.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+# --- OrganizationalAuthority lifecycle (canon 19e.15-19e.17) -------------
+
+- code: ORGANIZATIONAL_AUTHORITY_ASSIGNED
+  meaning: A new OrganizationalAuthority row was created (proposed or, absent dual control, immediately active).
+  severity: info
+  description: The authority has been assigned.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATIONAL_AUTHORITY_REVOKED
+  meaning: An active or suspended OrganizationalAuthority was revoked, with a revocation_reason_reference recorded.
+  severity: info
+  description: The authority has been revoked.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: ORGANIZATIONAL_AUTHORITY_NOT_USABLE
+  meaning: >-
+    A referenced OrganizationalAuthority is not usable at the requested
+    time - expired, revoked, suspended, or not yet effective (canon
+    19e.17 rule 7).
+  severity: error
+  description: This authority cannot currently be used.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+# --- Regional scope authorization (canon 19e.12) - grant/revocation
+#     audit markers, distinct from the deny-path canon-24 code above ----
+
+- code: REGIONAL_SCOPE_ACCESS_GRANTED
+  meaning: >-
+    A regional-scope-authorization decision for access modes 2-5
+    (ancestor/descendant/delegated-cross-scope/temporary-supervision) was
+    recorded as an explicit, audited grant.
+  severity: info
+  description: Regional scope access has been granted.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: REGIONAL_SCOPE_ACCESS_REVOKED
+  meaning: A previously-recorded regional-scope-access grant was explicitly revoked.
+  severity: info
+  description: Regional scope access has been revoked.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+# --- Temporary supervision (canon 19e.14) --------------------------------
+
+- code: TEMPORARY_SUPERVISION_WINDOW_INVALID
+  meaning: >-
+    A temporary_supervision_by relation's window is invalid - missing
+    valid_until (open-ended), valid_until not after valid_from, or the
+    window exceeds the maximum duration (default 90 days, a future legal
+    review may set a narrower, never wider, limit).
+  severity: error
+  description: The temporary supervision window is not valid.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+- code: TEMPORARY_SUPERVISION_EXTENSION_REQUIRES_DECISION
+  meaning: >-
+    Extending a temporary_supervision_by relation requires a new,
+    distinct governed decision and its own audit record - never a silent
+    mutation of the existing relation's window.
+  severity: error
+  description: Extending temporary supervision requires a new governed decision.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-08-service
+
+# --- Generic, pre-existing PACK-02 codes reused verbatim by
+#     organization-service (already registered in pack-02.yml;
+#     independently redeclared here so this file stays a complete,
+#     standalone source of truth for organization-service's own scan) ---
+
+- code: PERMISSION_DENIED
+  meaning: The acting party is not authorized to perform the requested action.
+  severity: error
+  description: You are not authorized to perform this action.
+  retryable: false
+  owner: shared (all bounded contexts)
+  introduced_in_version: 0.8.0
+  source: pack-02-reused
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: A status/type/enum value could not be parsed - the supplied string is not one of the known values.
+  severity: error
+  description: The value provided is not a recognized status or type.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-02-reused
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: The requested status transition is not allowed from the current status.
+  severity: error
+  description: This status change is not allowed.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-02-reused
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: No record exists for the given identifier.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+  source: pack-02-reused

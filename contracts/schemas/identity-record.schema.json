@@ -57,17 +57,8 @@
       "enum": ["none", "low", "substantial", "high"]
     },
     "identity_scheme": { "type": ["string", "null"], "minLength": 1 },
-    "attribute_verification_level": {
-      "type": ["string", "null"],
-      "minLength": 1
-    },
-    "attribute_verified_at": {
-      "type": ["string", "null"],
-      "format": "date-time"
-    },
-    "attribute_valid_until": {
-      "type": ["string", "null"],
-      "format": "date-time"
-    }
+    "attribute_verification_level": { "type": ["string", "null"], "minLength": 1 },
+    "attribute_verified_at": { "type": ["string", "null"], "format": "date-time" },
+    "attribute_valid_until": { "type": ["string", "null"], "format": "date-time" }
   }
 }

@@ -48,7 +48,11 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "active", "superseded"]
+      "enum": [
+        "draft",
+        "active",
+        "superseded"
+      ]
     },
     "process_type": {
       "type": "string",
@@ -59,11 +63,17 @@
       "minLength": 1
     },
     "scope_type": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "scope_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "uuid"
     },
     "adopted_by": {
@@ -78,52 +88,94 @@
       }
     },
     "citizenship_rule_reference": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "residence_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "habitual_residence_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "minimum_age": {
-      "type": ["integer", "null"]
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "active_electoral_eligibility_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "passive_electoral_eligibility_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "party_internal_voting_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "party_office_candidacy_rule": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "effective_from": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "effective_until": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "legal_basis": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "supersedes_policy_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "uuid"
     },
     "signed_policy_digest_reference": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "transparency_log_commitment_reference": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "decision_effect": {
@@ -140,7 +192,10 @@
       "type": "boolean"
     },
     "formal_confirmation_authority": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "secret_ballot_required": {
@@ -154,11 +209,17 @@
       }
     },
     "required_assurance_level": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Nullable AssuranceRequirement value object (required_identity_assurance_level, required_authentication_assurance_level, required_attribute_freshness) when not null - see step-up-authentication-requirement.schema.json's assurance_requirement property for the same shape's full, non-nullable schema. Left as a bare nullable object here (matching this repository's convention for nullable embedded value objects, e.g. identity-record.schema.json's residence_status) since this repository's dependency-free CT-00-01 validator (epd2_core.minimal_json_schema) has no anyOf/oneOf support to express 'object-with-this-shape-or-null' structurally."
     },
     "accessibility_profile": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     }
   }

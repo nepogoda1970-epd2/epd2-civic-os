@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/civic-space.schema.json",
+  "title": "CivicSpace",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 8.2 (unchanged seven-field set), PACK-08 implementation round - the first real implementation of CivicSpace in this repository (previously 'Not implemented' per docs/architecture/data-ownership.md). Owned by organization-service (epd2_organization_service.domain.CivicSpace). status is one of draft/active/read_only/suspended/archived (canon 8.2's own five-value list, distinct from Organization's four-value list).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "space_id",
+    "organization_id",
+    "name",
+    "space_type",
+    "visibility",
+    "participation_policy_id",
+    "status"
+  ],
+  "properties": {
+    "space_id": { "type": "string", "format": "uuid" },
+    "organization_id": { "type": "string", "format": "uuid" },
+    "name": { "type": "string", "minLength": 1 },
+    "space_type": { "type": "string", "minLength": 1 },
+    "visibility": { "type": "string", "minLength": 1 },
+    "participation_policy_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "read_only", "suspended", "archived"]
+    }
+  }
+}

@@ -1,11 +1,12 @@
 # CLAUDE-PACK-07 — Participation & Membership Context: Implementation Handover Report
 
-Status: **local verification complete, PASS reported honestly as a local
-result.** This report does **not** claim an external GitHub Actions PASS —
-no such run has been performed for this round. See section 6 for exactly
-what could and could not be verified in this sandbox, and
-`LOCAL_VERIFICATION.md` for the general procedure to finish verification on
-a machine with normal internet access.
+Status: **PASS — externally verified.** This round's implementation was
+verified by an external GitHub Actions run with real network access,
+confirming the full stack — including the TypeScript, Prettier, ESLint,
+and Next.js production-build checks that this sandbox's no-network
+limitation could not perform locally. Section 6 records both the local
+verification performed in this sandbox during implementation and the exact
+external GitHub Actions results that closed this round out.
 
 This report covers the **implementation round** that follows
 `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md` (the canon-only round that
@@ -61,8 +62,10 @@ unconditionally in this sandbox. `hypothesis` remains unavailable this way
 workspace's own `node_modules` are not installed (`npm install --offline`
 fails with `ENOTCACHED` — no cached registry response, confirming this is
 the same no-network ceiling, not a new one). TypeScript unit tests,
-Prettier, ESLint, and the Next.js frontend build were therefore **not run**
-this round and are **not** claimed as passing.
+Prettier, ESLint, and the Next.js frontend build could therefore not be run
+in this sandbox during implementation. This gap is now closed: the
+external GitHub Actions run (real network access, dependencies installed
+for real) executed and passed all of them — see section 6a.
 
 ## 2. Canon integrity
 
@@ -219,6 +222,43 @@ ADR-027, the four narrow internal cross-pack reads
 
 ## 6. Verification performed this round
 
+### 6a. External GitHub Actions verification — PASS
+
+An external GitHub Actions run, with real network access and real
+dependency installation (`uv.lock`/`package-lock.json` resolved for real,
+not the local standalone-binary workaround below), verified this round's
+implementation end to end. Exact reported results:
+
+- **Status: PASS**
+- All 402 required paths present.
+- No forbidden paths.
+- Version consistency check passed.
+- Ruff formatting: 359 files already formatted.
+- Ruff lint: passed.
+- Prettier: passed.
+- ESLint: passed.
+- mypy: passed for all services.
+- Python: **2028 passed, 4 skipped, 0 failed**.
+- TypeScript: **3/3 passed**.
+- Frontend: **2/2 passed**.
+- Next.js 15.5.21 production build: passed.
+
+The external Python figures (2028 passed / 4 skipped) differ slightly from
+the local sandbox run recorded in section 6b (2020 passed / 5 skipped)
+because the external environment has real network access: it installs
+`hypothesis` for real (so `test_property_based.py` runs instead of
+skipping) and starts from a clean checkout with no leftover
+`__pycache__`/tool-cache directories from an active local verification
+session (so `test_no_forbidden_paths_present` passes outright rather than
+via the "clean immediately before archiving" workaround this sandbox
+relied on). Both figures describe the same implementation; neither
+contradicts the other.
+
+This is now a **genuine external GitHub Actions PASS** for the PACK-07
+implementation round — not a local self-report.
+
+### 6b. Local verification performed during implementation
+
 Commands (from repository root):
 
 ```bash
@@ -269,13 +309,15 @@ Results:
   (`CANON_VERSION 0.6.0` / `REPOSITORY_VERSION 0.7.0` everywhere they are
   declared).
 - **TypeScript unit tests, Prettier, ESLint, Next.js build:** **not run**
-  this round — `npm install --offline` fails with `ENOTCACHED` (no cached
-  registry response), the same no-network ceiling documented for every
-  prior pack. Not claimed as passing.
+  in this sandbox — `npm install --offline` fails with `ENOTCACHED` (no
+  cached registry response), the same no-network ceiling documented for
+  every prior pack. Not claimed as passing from this local run alone.
 
-This is a **local, honest self-report**, not an external GitHub Actions
-PASS. No claim is made here about what a real CI run with network access
-would find in the TypeScript/frontend toolchain.
+This local run was, at the time, an honest self-report rather than an
+external GitHub Actions PASS. It has since been superseded by the genuine
+external GitHub Actions PASS recorded in section 6a, which covers exactly
+the TypeScript/Prettier/ESLint/Next.js-build ground this sandbox could not
+reach.
 
 ## 7. Before archiving
 
@@ -288,10 +330,13 @@ directories don't exist yet.
 
 ## 8. Deliverables
 
-- `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` (this file).
-- `README.md`, `CHANGELOG.md` (updated).
-- `epd2-civic-os-PACK-07-IMPLEMENTATION-CANDIDATE.zip` — one complete,
-  clean archive (excludes `.git/`, `node_modules/`, `.venv/`, all
-  caches/coverage/build artifacts, nested ZIPs, and prior
-  verification-result archives), suitable for GitHub Actions
-  verification.
+- `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` (this file, updated for
+  closeout to record the genuine external PASS).
+- `README.md`, `CHANGELOG.md` (updated for closeout).
+- `epd2-civic-os-PACK-07-IMPLEMENTATION-0.7.0-PASS.zip` — one complete,
+  clean archive (excludes `.git/`, `node_modules/`, `.venv/`,
+  `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`,
+  frontend build output, verification-result ZIPs, nested ZIPs, and
+  temporary logs/machine-specific artifacts) reflecting the
+  externally-verified PACK-07 implementation at `REPOSITORY_VERSION
+  0.7.0` / `CANON_VERSION 0.6.0`.

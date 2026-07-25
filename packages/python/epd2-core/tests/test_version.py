@@ -115,7 +115,43 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # the four separated electoral-eligibility claims,
     # AuthenticationContext, canon 19d.2's eight IdentityRecord fields)
     # against the already-accepted canon 0.6.0 text and ADR-026 through
-    # ADR-031 - no further canon edit was made, so CANON_VERSION is
-    # unchanged at 0.6.0.
-    assert CANON_VERSION == "0.6.0"
-    assert REPOSITORY_VERSION == "0.7.0"
+    # ADR-031 - no further canon edit was made, so CANON_VERSION was
+    # unchanged at 0.6.0 at that point.
+    # CANON_VERSION moved 0.6.0 -> 0.7.0 per ADR-032 through ADR-037 (all
+    # accepted, ADR-032 through ADR-036 accepted in the PACK-08 spec-
+    # correction round, ADR-037 accepted in this canon-amendment round):
+    # new canon section 19e (Organization & Regional Scope Context)
+    # extending Organization (8.1, six new additive fields) and confirming
+    # CivicSpace (8.2, unchanged); four wholly new canonical entities
+    # (OrganizationalUnit, OrganizationalRelation,
+    # OrganizationalHierarchyOverlapPolicy, OrganizationalInheritancePolicy,
+    # OrganizationalAuthority) plus the reusable OrganizationalScope value
+    # shape; the multiple-typed-directed-graph relationship model with
+    # relation-type-specific cycle/overlap rules; canonical effective
+    # dating, reorganization, default-deny regional scope authorization
+    # (six access modes), inheritance-policy ownership, the 90-day
+    # temporary-supervision default, institutional authority assignments
+    # and their minimum non-combinable-role baseline, role/authority
+    # lifecycle rules, extended identity-minimization rules, and the
+    # six-category RoleAssignment.scope_id classification requirement (8.4
+    # itself unchanged in fields/status/owner); thirteen new section 20.5
+    # events; five new section 22 ownership-matrix rows; new section 23
+    # forbidden-link entries; ten new section 24 reason codes - a
+    # backward-compatible (minor) canon addition per canon section 25.
+    # This round is a canon-only change for CLAUDE-PACK-08 governance; no
+    # organization-service code exists yet, so REPOSITORY_VERSION is
+    # unchanged at 0.7.0 (both versions again coincidentally match, as
+    # they have at several earlier points, but remain tracked
+    # independently).
+    # REPOSITORY_VERSION moved 0.7.0 -> 0.8.0 for the CLAUDE-PACK-08
+    # IMPLEMENTATION ROUND: implements organization-service (a wholly new
+    # service - Organization/OrganizationalUnit/CivicSpace/
+    # OrganizationalRelation/OrganizationalHierarchyOverlapPolicy/
+    # OrganizationalInheritancePolicy/OrganizationalAuthority, the
+    # regional-scope-authorization engine, the role-incompatibility
+    # baseline, temporary supervision, and the thirteen canon 20.5 events)
+    # against the already-accepted canon 0.7.0 text and ADR-032 through
+    # ADR-037 - no further canon edit was made (no canon-owned file was
+    # touched this round), so CANON_VERSION is unchanged at 0.7.0.
+    assert CANON_VERSION == "0.7.0"
+    assert REPOSITORY_VERSION == "0.8.0"

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/organizational-authority.schema.json",
+  "title": "OrganizationalAuthority",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19e.15's exact field set (role_code/scope, not authority_type/four separate scope fields - the same naming reconciliation ADR-037 itself performed), PACK-08 implementation round. Owned by organization-service (epd2_organization_service.domain.OrganizationalAuthority). grants_procedural_authority/grants_data_access are independent booleans - authority title alone must never itself create access (canon 19e.15/19e.17). scope is a flattened OrganizationalScope (scope_type/scope_reference), never four separate scope fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_id",
+    "authority_version",
+    "role_code",
+    "scope_type",
+    "scope_reference",
+    "appointing_authority_reference",
+    "assigned_subject_reference",
+    "valid_from",
+    "valid_until",
+    "status",
+    "policy_version",
+    "decision_reference",
+    "revocation_reason_reference",
+    "grants_procedural_authority",
+    "grants_data_access"
+  ],
+  "properties": {
+    "authority_id": { "type": "string", "format": "uuid" },
+    "authority_version": { "type": "integer" },
+    "role_code": { "type": "string", "minLength": 1 },
+    "scope_type": {
+      "type": "string",
+      "enum": ["organization_scope", "jurisdiction_scope", "civic_space_scope", "process_scope"]
+    },
+    "scope_reference": { "type": "string", "minLength": 1 },
+    "appointing_authority_reference": { "type": "string", "format": "uuid" },
+    "assigned_subject_reference": { "type": "string", "format": "uuid" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "active", "suspended", "revoked", "expired"]
+    },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "decision_reference": { "type": "string", "format": "uuid" },
+    "revocation_reason_reference": { "type": ["string", "null"] },
+    "grants_procedural_authority": { "type": "boolean" },
+    "grants_data_access": { "type": "boolean" }
+  }
+}

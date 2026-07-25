@@ -92,7 +92,21 @@ PACK07_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (all six packs).
+# package import name -> its src/ directory, for the one PACK-08 service
+# (ADR-032 through ADR-037's single-service decomposition, PACK-08
+# IMPLEMENTATION ROUND). `organization-service` deliberately depends on
+# NO other service this round (see docs/packs/PACK-08-IMPLEMENTATION.md's
+# cross-service boundary decision) - no ALLOWED_PACK08_TO_*_MODULES
+# mapping exists because there is no such edge to enumerate. A future
+# round may add one under its own ADR, the same way every earlier
+# cross-pack edge in this file was introduced.
+PACK08_SERVICE_PACKAGES = {
+    "epd2_organization_service": (
+        REPO_ROOT / "services/organization-service/src/epd2_organization_service"
+    ),
+}
+
+# Every service in the repository (all eight packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
@@ -100,6 +114,7 @@ SERVICE_PACKAGES = {
     **PACK05_SERVICE_PACKAGES,
     **PACK06_SERVICE_PACKAGES,
     **PACK07_SERVICE_PACKAGES,
+    **PACK08_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -1007,6 +1022,69 @@ def test_no_other_service_imports_membership_service() -> None:
             if bad:
                 violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
     assert violations == [], "No other service may import membership-service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_no_pack08_service_imports_another_pack08_services_package() -> None:
+    """There is only one PACK-08 service today (organization-service,
+    ADR-032 through ADR-037), so this is currently vacuous, but it is
+    kept for symmetry with `test_no_pack05_service_imports_another_pack05_services_package`
+    / `test_no_pack06_service_imports_another_pack06_services_package` and
+    to fail loudly if a second PACK-08 service is ever added without
+    updating this file."""
+    violations: list[str] = []
+    for package_name, src_dir in PACK08_SERVICE_PACKAGES.items():
+        forbidden = set(PACK08_SERVICE_PACKAGES) - {package_name}
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & forbidden
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "Forbidden PACK-08<->PACK-08 imports found:\n" + "\n".join(violations)
+
+
+def test_organization_service_imports_no_other_service_at_all() -> None:
+    """PACK-08 IMPLEMENTATION ROUND's own scope decision (see
+    docs/packs/PACK-08-IMPLEMENTATION.md): `organization-service` is
+    wired to depend on NO other service this round - it imports only
+    `epd2_core`/`epd2_audit_core` (ALWAYS_ALLOWED) and its own package.
+    Unlike every other pack's own cross-pack-edge test above, there is no
+    `ALLOWED_PACK08_TO_*_APPLICATION_MODULES` mapping to check against,
+    because no such edge exists at all - this test asserts that absence
+    positively, so a future accidental import doesn't silently slip in
+    unreviewed."""
+    src_dir = PACK08_SERVICE_PACKAGES["epd2_organization_service"]
+    forbidden = set(SERVICE_PACKAGES) - {"epd2_organization_service", "epd2_audit_core"}
+    violations: list[str] = []
+    for py_file in sorted(src_dir.rglob("*.py")):
+        roots = _imported_roots(py_file)
+        bad = roots & forbidden
+        if bad:
+            violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "organization-service must not import any other service this round:\n"
+        + "\n".join(violations)
+    )
+
+
+def test_no_other_service_imports_organization_service() -> None:
+    """The dependency direction (there is none, this round):
+    `organization-service` is not read by any other service via Python
+    import this round - other services may only consume its read models/
+    capability results in a future round, under its own ADR, per task
+    section 3."""
+    violations: list[str] = []
+    other_packages = {
+        name: path for name, path in SERVICE_PACKAGES.items() if name != "epd2_organization_service"
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK08_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import organization-service:\n" + "\n".join(
         violations
     )
 

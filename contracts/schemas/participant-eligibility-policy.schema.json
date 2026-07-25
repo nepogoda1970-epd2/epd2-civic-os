@@ -34,22 +34,38 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "active", "superseded"]
+      "enum": [
+        "draft",
+        "active",
+        "superseded"
+      ]
     },
     "scope_type": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "scope_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "uuid"
     },
     "effective_from": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "effective_until": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "adopted_by_decision_id": {
@@ -61,17 +77,27 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["action_code", "minimum_age", "maximum_age"],
+        "required": [
+          "action_code",
+          "minimum_age",
+          "maximum_age"
+        ],
         "properties": {
           "action_code": {
             "type": "string",
             "minLength": 1
           },
           "minimum_age": {
-            "type": ["integer", "null"]
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "maximum_age": {
-            "type": ["integer", "null"]
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         }
       }
@@ -101,15 +127,24 @@
       }
     },
     "supersedes_policy_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "uuid"
     },
     "signed_policy_digest_reference": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     },
     "transparency_log_commitment_reference": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "minLength": 1
     }
   }

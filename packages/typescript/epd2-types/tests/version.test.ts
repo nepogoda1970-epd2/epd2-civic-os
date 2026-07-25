@@ -104,8 +104,35 @@ test("current versions match the expected skeleton version", () => {
   // the four separated electoral-eligibility claims,
   // AuthenticationContext, canon 19d.2's eight IdentityRecord fields)
   // against the already-accepted canon 0.6.0 text and ADR-026 through
-  // ADR-031 - no further canon edit was made, so CANON_VERSION is
-  // unchanged by this repository-side bump.
-  assert.equal(CANON_VERSION, "0.6.0");
-  assert.equal(REPOSITORY_VERSION, "0.7.0");
+  // ADR-031 - no further canon edit was made, so CANON_VERSION was
+  // unchanged by this repository-side bump, at 0.6.0.
+  // CANON_VERSION moved 0.6.0 -> 0.7.0 per ADR-032 through ADR-037 (all
+  // accepted): new canon section 19e (Organization & Regional Scope
+  // Context) extending Organization (8.1) and confirming CivicSpace
+  // (8.2, unchanged); four new canonical entities (OrganizationalUnit,
+  // OrganizationalRelation, OrganizationalHierarchyOverlapPolicy,
+  // OrganizationalInheritancePolicy) plus OrganizationalAuthority and the
+  // reusable OrganizationalScope value shape; multiple-typed-directed-
+  // graph relationships; effective dating; reorganization rules;
+  // default-deny regional scope authorization; inheritance-policy
+  // ownership; the 90-day temporary-supervision default; institutional
+  // authority assignments and their non-combinable-role baseline; role/
+  // authority lifecycle rules; extended identity minimization; and the
+  // RoleAssignment.scope_id six-category classification requirement
+  // (8.4 itself unchanged) - a backward-compatible (minor) canon
+  // addition. This round is a canon-only change for CLAUDE-PACK-08
+  // governance; no organization-service code exists yet, so
+  // REPOSITORY_VERSION is unchanged at 0.7.0.
+  // REPOSITORY_VERSION moved 0.7.0 -> 0.8.0 for the CLAUDE-PACK-08
+  // IMPLEMENTATION ROUND: implements organization-service (a wholly new
+  // service - Organization/OrganizationalUnit/CivicSpace/
+  // OrganizationalRelation/OrganizationalHierarchyOverlapPolicy/
+  // OrganizationalInheritancePolicy/OrganizationalAuthority, the
+  // regional-scope-authorization engine, the role-incompatibility
+  // baseline, temporary supervision, and the thirteen canon 20.5 events)
+  // against the already-accepted canon 0.7.0 text and ADR-032 through
+  // ADR-037 - no further canon edit was made (no canon-owned file was
+  // touched this round), so CANON_VERSION is unchanged at 0.7.0.
+  assert.equal(CANON_VERSION, "0.7.0");
+  assert.equal(REPOSITORY_VERSION, "0.8.0");
 });

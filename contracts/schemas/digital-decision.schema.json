@@ -41,7 +41,10 @@
     },
     "status": {
       "type": "string",
-      "enum": ["final", "formal_confirmation_required"]
+      "enum": [
+        "final",
+        "formal_confirmation_required"
+      ]
     },
     "recorded_at": {
       "type": "string",

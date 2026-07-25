@@ -1,0 +1,642 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-08 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the one PACK-08 service
+    (organization-service, canon-0.7.0 section 19e; ADR-032 through
+    ADR-037). No production HTTP server ships in this pack — these
+    paths document, one-to-one, a deliberately minimal subset of real
+    command/query functions in epd2_organization_service.application,
+    and are exercised in tests via those application-layer functions
+    directly, not over HTTP. Every path maps to exactly one real
+    function; none of this file's paths invent an HTTP surface a
+    function does not already provide.
+
+    Per task section 19's own "minimal reference APIs only" instruction,
+    this file documents exactly the nine operation shapes that section
+    lists — create organization; read current/historical organization;
+    create/end relation; query relationship graph; assign/revoke
+    authority; check regional capability; list scoped authority
+    assignments; read current/historical CivicSpace; inspect effective
+    scope — and nothing beyond them. In particular, organization
+    lifecycle-transition commands (activate/suspend/dissolve/merge/
+    split/declare_successor) and OrganizationalUnit management exist in
+    the application layer but are deliberately NOT exposed as their own
+    HTTP paths in this minimal reference contract; a future
+    implementation pack may add them, additively, under its own review.
+    This mirrors PACK-05's own precedent of omitting its bootstrap-seed
+    command from its OpenAPI contract by deliberate design, not
+    oversight.
+
+    Request bodies list only genuine business fields — actor identity,
+    authorization, correlation/causation ids, the clock, and the
+    idempotency event_id are transport/session concerns, the same
+    convention every earlier pack's own OpenAPI contract already
+    follows.
+
+    Per task section 19's own rules: no bulk cross-regional directory
+    endpoint and no public member directory exist in this file (there is
+    no "list all organizations"/"list all authority holders across
+    scopes" path at all); every authorization-consequential path is
+    described as evaluated server-side, never trusting frontend input;
+    checkRegionalCapability is the one atomic capability check this
+    contract exposes, returning only the minimal
+    RegionalScopeAccessDecision shape (canon 19e.12/section 22) — never
+    any broader identity or membership data.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://organization.epd2.example
+    description: organization-service (not deployed in PACK-08 — contract only)
+
+paths:
+  # ==========================================================================
+  # organization-service — Organization
+  # ==========================================================================
+  /organizations:
+    post:
+      operationId: createOrganization
+      summary: Create a new Organization in draft status
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.create_organization.
+        Never activated automatically (canon 19e.10) — a separate,
+        non-public activation step is required before the organization
+        may issue authority or otherwise act as active.
+      tags: [organization-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  organization_id,
+                  name,
+                  legal_operator,
+                  organization_type,
+                  organization_profile,
+                  default_policy_version,
+                  effective_from,
+                  authorizing_decision_reference,
+                ]
+              properties:
+                organization_id: { type: string, format: uuid }
+                name: { type: string, minLength: 1 }
+                legal_operator: { type: string, minLength: 1 }
+                organization_type: { type: string, minLength: 1 }
+                organization_profile:
+                  type: string
+                  description: >
+                    Extensible without schema redesign (task section 5);
+                    the known baseline values are bund, landesverband,
+                    kreisverband, bezirksverband, ortsverband,
+                    ortsgruppe, non_territorial_unit,
+                    cross_regional_unit, special_unit.
+                default_policy_version: { type: string, minLength: 1 }
+                effective_from: { type: string, format: date-time }
+                authorizing_decision_reference: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Organization created in draft status
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organization.schema.json"
+        "403":
+          description: Actor not authorized (PERMISSION_DENIED)
+
+  /organizations/{organization_id}:
+    get:
+      operationId: getOrganization
+      summary: Read current or historical Organization state
+      description: >
+        Owned by organization-service. Current state (as_of omitted) or
+        historical/future-dated state (as_of supplied) — canon 19e.9's
+        effective-dating rules: current state never overwrites
+        historical truth; a historical query is always answerable.
+        Returns HISTORICAL_SCOPE_NOT_EFFECTIVE if as_of falls outside
+        every recorded version's [valid_from, valid_until) window.
+      tags: [organization-service]
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: as_of
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+          description: Evaluate state as of this time; omit for current state.
+      responses:
+        "200":
+          description: Organization state at the requested time
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organization.schema.json"
+        "404":
+          description: Unknown organization_id (VALIDATION_RECORD_NOT_FOUND)
+
+  # ==========================================================================
+  # organization-service — CivicSpace (canon 8.2, first real implementation)
+  # ==========================================================================
+  /civic-spaces/{space_id}:
+    get:
+      operationId: getCivicSpace
+      summary: Read current or historical CivicSpace state
+      description: >
+        Owned by organization-service. Mirrors getOrganization's
+        current/historical as_of convention.
+      tags: [organization-service]
+      parameters:
+        - name: space_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: as_of
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: CivicSpace state at the requested time
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/civic-space.schema.json"
+        "404":
+          description: Unknown space_id (VALIDATION_RECORD_NOT_FOUND)
+
+  # ==========================================================================
+  # organization-service — OrganizationalRelation (canon 19e.7)
+  # ==========================================================================
+  /organizational-relations:
+    post:
+      operationId: createOrganizationalRelation
+      summary: Create a new typed OrganizationalRelation between two Organizations
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.create_organizational_relation.
+        Validated before saving: hierarchy-category cycle forbidden
+        (ORGANIZATIONAL_CYCLE_FORBIDDEN), unpermitted hierarchy overlap
+        forbidden (ORGANIZATIONAL_RELATION_OVERLAP), and, for
+        temporary_supervision_by, a mandatory bounded window (max 90
+        days by default, TEMPORARY_SUPERVISION_WINDOW_INVALID
+        otherwise).
+      tags: [organization-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  relation_id,
+                  relation_type,
+                  source_organization_id,
+                  target_organization_id,
+                  valid_from,
+                ]
+              properties:
+                relation_id: { type: string, format: uuid }
+                relation_type:
+                  type: string
+                  enum:
+                    [
+                      parent_of,
+                      subordinate_to,
+                      affiliated_with,
+                      successor_of,
+                      merged_into,
+                      split_from,
+                      temporary_supervision_by,
+                      operates_within,
+                      participates_in,
+                    ]
+                source_organization_id: { type: string, format: uuid }
+                target_organization_id: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, "null"], format: date-time }
+                authorizing_decision_reference:
+                  type: [string, "null"]
+                  format: uuid
+      responses:
+        "201":
+          description: OrganizationalRelation created
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organizational-relation.schema.json"
+        "409":
+          description: >
+            Cycle forbidden, unpermitted overlap, or invalid temporary
+            supervision window (ORGANIZATIONAL_CYCLE_FORBIDDEN /
+            ORGANIZATIONAL_RELATION_OVERLAP /
+            TEMPORARY_SUPERVISION_WINDOW_INVALID)
+
+  /organizational-relations/{relation_id}/end:
+    post:
+      operationId: endOrganizationalRelation
+      summary: End an active OrganizationalRelation
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.end_organizational_relation.
+        Sets valid_until and status=ended — never an in-place edit of any
+        other field (canon 19e.9/19e.10); the ended record remains
+        queryable historically.
+      tags: [organization-service]
+      parameters:
+        - name: relation_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [valid_until]
+              properties:
+                valid_until: { type: string, format: date-time }
+      responses:
+        "200":
+          description: OrganizationalRelation ended
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organizational-relation.schema.json"
+        "404":
+          description: Unknown relation_id (VALIDATION_RECORD_NOT_FOUND)
+
+  /organizational-relations/graph:
+    get:
+      operationId: queryRelationshipGraph
+      summary: Query the currently-active typed relationship graph for one Organization
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.storage.OrganizationalRelationStore
+        .list_active_for_organization — every currently-active relation
+        (any relation_type) where the given organization_id is either
+        the source or the target. Multiple relation types between the
+        same two Organizations are returned as separate rows, never
+        merged. Never a bulk, unscoped, cross-regional directory query —
+        always scoped to exactly one organization_id.
+      tags: [organization-service]
+      parameters:
+        - name: organization_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: relation_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              [
+                parent_of,
+                subordinate_to,
+                affiliated_with,
+                successor_of,
+                merged_into,
+                split_from,
+                temporary_supervision_by,
+                operates_within,
+                participates_in,
+              ]
+          description: Optionally narrow the result to one relation_type.
+      responses:
+        "200":
+          description: Every currently-active relation touching organization_id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "../schemas/organizational-relation.schema.json"
+
+  # ==========================================================================
+  # organization-service — OrganizationalAuthority (canon 19e.15-19e.17)
+  # ==========================================================================
+  /organizational-authorities:
+    post:
+      operationId: assignOrganizationalAuthority
+      summary: Assign a new OrganizationalAuthority
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.assign_organizational_authority.
+        Self-assignment forbidden
+        (ORGANIZATION_SELF_ASSIGNMENT_FORBIDDEN); role-incompatibility
+        baseline enforced (AUTHORITY_ROLE_INCOMPATIBLE); the appointing
+        Organization must be active (ORGANIZATION_NOT_ACTIVE). Where
+        require_dual_control is true, the created row starts in
+        proposed status and requires a separate
+        activateOrganizationalAuthority-shaped call (not itself exposed
+        as its own path in this minimal contract) by a distinct actor
+        before becoming active.
+      tags: [organization-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  authority_id,
+                  role_code,
+                  scope_type,
+                  scope_reference,
+                  appointing_authority_reference,
+                  assigned_subject_reference,
+                  valid_from,
+                  policy_version,
+                  decision_reference,
+                ]
+              properties:
+                authority_id: { type: string, format: uuid }
+                role_code: { type: string, minLength: 1 }
+                scope_type:
+                  type: string
+                  enum:
+                    [
+                      organization_scope,
+                      jurisdiction_scope,
+                      civic_space_scope,
+                      process_scope,
+                    ]
+                scope_reference: { type: string, minLength: 1 }
+                appointing_authority_reference: { type: string, format: uuid }
+                assigned_subject_reference: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, "null"], format: date-time }
+                policy_version: { type: string, minLength: 1 }
+                decision_reference: { type: string, format: uuid }
+                grants_procedural_authority: { type: boolean, default: false }
+                grants_data_access: { type: boolean, default: false }
+      responses:
+        "201":
+          description: OrganizationalAuthority assigned (proposed or active)
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organizational-authority.schema.json"
+        "409":
+          description: >
+            Self-assignment, incompatible role, or inactive appointing
+            organization (ORGANIZATION_SELF_ASSIGNMENT_FORBIDDEN /
+            AUTHORITY_ROLE_INCOMPATIBLE / ORGANIZATION_NOT_ACTIVE)
+
+  /organizational-authorities/{authority_id}/revoke:
+    post:
+      operationId: revokeOrganizationalAuthority
+      summary: Revoke an active or suspended OrganizationalAuthority
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.revoke_organizational_authority.
+        Requires a revocation_reason_reference.
+      tags: [organization-service]
+      parameters:
+        - name: authority_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revocation_reason_reference]
+              properties:
+                revocation_reason_reference: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: OrganizationalAuthority revoked
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/organizational-authority.schema.json"
+        "404":
+          description: Unknown authority_id (VALIDATION_RECORD_NOT_FOUND)
+
+  /organizational-authorities/scoped:
+    get:
+      operationId: listScopedAuthorityAssignments
+      summary: List active OrganizationalAuthority assignments for one scope
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.storage.OrganizationalAuthorityStore
+        .list_active_for_scope. Never a bulk cross-regional or
+        cross-scope directory — always scoped to exactly one
+        (scope_type, scope_reference) pair, evaluated at exactly one
+        point in time.
+      tags: [organization-service]
+      parameters:
+        - name: scope_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              [
+                organization_scope,
+                jurisdiction_scope,
+                civic_space_scope,
+                process_scope,
+              ]
+        - name: scope_reference
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: as_of
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Every active OrganizationalAuthority in the given scope at as_of
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "../schemas/organizational-authority.schema.json"
+
+  # ==========================================================================
+  # organization-service — Regional scope authorization (canon 19e.12)
+  # ==========================================================================
+  /regional-scope-access-checks:
+    post:
+      operationId: checkRegionalCapability
+      summary: Evaluate one atomic regional-scope-authorization question
+      description: >
+        Owned by organization-service. Maps to
+        epd2_organization_service.application.check_regional_scope_access
+        — a single-purpose, side-effect-free, default-deny read
+        implementing all six canon 19e.12 access modes (exact/ancestor/
+        descendant-scope, delegated cross-scope, temporary supervision,
+        institutional oversight without data access). Role names and
+        hierarchy position are never, by themselves, proof of authority;
+        this endpoint is the only sanctioned way any caller learns
+        whether an actor_scope may perform action_code against
+        target_scope. Response is the minimal RegionalScopeAccessDecision
+        shape only (canon section 22) — never broader identity data.
+      tags: [organization-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  actor_scope_type,
+                  actor_scope_reference,
+                  target_scope_type,
+                  target_scope_reference,
+                  action_code,
+                ]
+              properties:
+                actor_scope_type:
+                  type: string
+                  enum:
+                    [
+                      organization_scope,
+                      jurisdiction_scope,
+                      civic_space_scope,
+                      process_scope,
+                    ]
+                actor_scope_reference: { type: string, minLength: 1 }
+                target_scope_type:
+                  type: string
+                  enum:
+                    [
+                      organization_scope,
+                      jurisdiction_scope,
+                      civic_space_scope,
+                      process_scope,
+                    ]
+                target_scope_reference: { type: string, minLength: 1 }
+                role_code: { type: [string, "null"] }
+                action_code: { type: string, minLength: 1 }
+                access_kind:
+                  type: string
+                  enum: [data_access, procedural_oversight]
+                  default: data_access
+      responses:
+        "200":
+          description: Atomic, minimal regional-scope-access decision
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  [
+                    allowed,
+                    reason_code,
+                    scope_type,
+                    scope_reference,
+                    policy_version,
+                    effective_time,
+                  ]
+                properties:
+                  allowed: { type: boolean }
+                  reason_code: { type: string }
+                  scope_type:
+                    type: string
+                    enum:
+                      [
+                        organization_scope,
+                        jurisdiction_scope,
+                        civic_space_scope,
+                        process_scope,
+                      ]
+                  scope_reference: { type: string }
+                  policy_version: { type: [string, "null"] }
+                  effective_time: { type: string, format: date-time }
+                  mode:
+                    type: [string, "null"]
+                    enum:
+                      [
+                        exact_scope,
+                        ancestor_scope,
+                        descendant_scope,
+                        delegated_cross_scope,
+                        temporary_supervision,
+                        institutional_oversight_without_data_access,
+                        null,
+                      ]
+                  audit_reference: { type: [string, "null"], format: uuid }
+
+  /organizational-scopes/effective:
+    get:
+      operationId: inspectEffectiveScope
+      summary: Inspect the effective OrganizationalScope for one reference at one time
+      description: >
+        Owned by organization-service. A narrow, read-only inspection
+        endpoint (task section 19's own "inspect effective scope" item) —
+        resolves whether an OrganizationalScope reference is currently
+        effective and, if applicable, which OrganizationalInheritancePolicy
+        (canon 19e.13) governs it. Never itself an authorization decision
+        — checkRegionalCapability is the only endpoint that makes one.
+      tags: [organization-service]
+      parameters:
+        - name: scope_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              [
+                organization_scope,
+                jurisdiction_scope,
+                civic_space_scope,
+                process_scope,
+              ]
+        - name: scope_reference
+          in: query
+          required: true
+          schema: { type: string, minLength: 1 }
+        - name: as_of
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Whether the scope reference is effective at as_of, and the governing policy_version if any
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [scope_type, scope_reference, effective]
+                properties:
+                  scope_type:
+                    type: string
+                    enum:
+                      [
+                        organization_scope,
+                        jurisdiction_scope,
+                        civic_space_scope,
+                        process_scope,
+                      ]
+                  scope_reference: { type: string }
+                  effective: { type: boolean }
+                  policy_version: { type: [string, "null"] }
+        "409":
+          description: Requested time falls outside every recorded effective window (HISTORICAL_SCOPE_NOT_EFFECTIVE)

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/organizational-relation.schema.json",
+  "title": "OrganizationalRelation",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19e.7, PACK-08 implementation round. Multiple typed directed graphs between Organizations - a simple tree is not authoritative. relation_type is one of nine values across three derived relation_category groups: hierarchy (parent_of, subordinate_to - cycles forbidden without exception), continuity (successor_of, merged_into, split_from - append-only, never implies automatic role/authority transfer), cooperation (affiliated_with, temporary_supervision_by, operates_within, participates_in - general graph, mutual affiliated_with edges permitted, temporary_supervision_by may not cycle). Owned by organization-service (epd2_organization_service.domain.OrganizationalRelation). Every historical relation remains queryable - current state never overwrites it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "relation_id",
+    "relation_version",
+    "relation_type",
+    "relation_category",
+    "source_organization_id",
+    "target_organization_id",
+    "status",
+    "valid_from",
+    "valid_until",
+    "supersedes_relation_id",
+    "authorizing_decision_reference"
+  ],
+  "properties": {
+    "relation_id": { "type": "string", "format": "uuid" },
+    "relation_version": { "type": "integer" },
+    "relation_type": {
+      "type": "string",
+      "enum": [
+        "parent_of",
+        "subordinate_to",
+        "affiliated_with",
+        "successor_of",
+        "merged_into",
+        "split_from",
+        "temporary_supervision_by",
+        "operates_within",
+        "participates_in"
+      ]
+    },
+    "relation_category": {
+      "type": "string",
+      "enum": ["hierarchy", "continuity", "cooperation"]
+    },
+    "source_organization_id": { "type": "string", "format": "uuid" },
+    "target_organization_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded", "ended"]
+    },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "supersedes_relation_id": { "type": ["string", "null"], "format": "uuid" },
+    "authorizing_decision_reference": { "type": ["string", "null"], "format": "uuid" }
+  }
+}
