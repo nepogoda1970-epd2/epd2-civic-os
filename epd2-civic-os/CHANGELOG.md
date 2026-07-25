@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 0.6.0` (ADR-026 through ADR-031, all `accepted`, no further amendment)
   — the fifth edit to this document's own text since its original
   acceptance (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 →
-  0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
-  → 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
+0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
+→ 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
   & Membership Context"), inserted between sections 19c and 20, the same
   non-renumbering technique used for 19a/19b/19c. Ten new canonical
   entities: `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,

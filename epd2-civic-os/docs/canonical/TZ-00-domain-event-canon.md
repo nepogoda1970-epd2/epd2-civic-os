@@ -1,4 +1,5 @@
 # EPD² CIVIC OS
+
 ## ТЗ-00. Каноническая модель домена и событий
 
 **Версия:** 0.6.0  
@@ -1958,6 +1959,7 @@ Governance Decision Service (раздел 22).
   принимается как предоставленное вызывающей стороной, структурно
   непрозрачное доказательство (тот же принцип, что и у
   caller-supplied `raw_content` в `publish_ledger_entry`, 19a).
+
 - `challenge_reason_code` — строка, из `contracts/reason-codes/pack-05.yml`.
 - `evidence_references` — список строк.
 - `submitted_at` — timestamp. Должен строго предшествовать
@@ -2418,8 +2420,7 @@ Emergency/Crisis Override и не расширяет их. Единственн�
 Governance Context) — репозиторный, не канонический, и не описывается
 настоящим разделом.
 
-Настоящий раздел, вместе с уже существующим инвариантом INV-07 (раздел
-9) и раздела 23, закрепляет следующие структурные инварианты для
+Настоящий раздел, вместе с уже существующим инвариантом INV-07 (раздел 9) и раздела 23, закрепляет следующие структурные инварианты для
 ИИ-обработки:
 
 - Ни `AIProcessingRecord`, ни какой-либо процесс настоящего раздела не
@@ -3397,53 +3398,53 @@ rejected`.
 
 # 22. Матрица владения сущностями
 
-| Сущность | Модуль-владелец |
-|---|---|
-| Account | Account Service |
-| IdentityRecord | Identity Verification Service |
-| EligibilityRule | Eligibility Engine |
-| EligibilityDecision | Eligibility Engine |
-| ParticipationCredential | Credential Issuer |
-| Organization | Organization Service |
-| CivicSpace | Organization Service |
-| Membership | Membership Service |
-| RoleAssignment | Permission / Role Service |
-| Initiative | Initiative Service |
-| InitiativeVersion | Initiative Service |
-| Amendment | Amendment Service |
-| SourceRecord | Evidence Service |
-| Discussion | Discussion Service |
-| Contribution | Discussion Service |
-| ModerationCase | Moderation Service |
-| ModerationDecision | Moderation Service |
-| Appeal | Appeal Service |
-| Ballot | Ballot Definition Service |
-| VoteEnvelope | Vote Casting Service |
-| VoteReceipt | Receipt Service |
-| Tally | Tally Service |
-| ResultPublication | Result Publication Service |
-| Delegation | Delegation Service |
-| DelegationSnapshot | Delegation Resolution Engine |
-| AIProcessingRecord | AI Accountability Service |
-| AuditEvent | Audit Core |
-| EmergencyAction | Governance / Crisis Service |
-| PublicLedgerEntry | Public Ledger Service |
-| AuditExportPackage | Audit Export Service |
-| DisclosurePolicy | Disclosure Policy Service |
-| LobbyLogEntry | Lobby Log Service |
-| GovernancePolicy | Governance Policy Service |
-| GovernanceDecision | Governance Decision Service |
-| TechnicalChallenge | Technical Challenge Service |
-| ParticipantEligibilityPolicy | Eligibility Engine |
-| ProcessEligibilityPolicy | Eligibility Engine |
-| StepUpAuthenticationRequirement | Eligibility Engine |
-| DigitalDecision | Eligibility Engine |
-| AssemblyDecision | Eligibility Engine |
-| PartyMembershipEligibilityPolicy | Membership Service |
-| AffiliationDeclaration | Membership Service |
-| ConflictAssessment | Membership Service |
-| MembershipApplication | Membership Service |
-| AuthenticationContext | Identity Verification Service |
+| Сущность                         | Модуль-владелец               |
+| -------------------------------- | ----------------------------- |
+| Account                          | Account Service               |
+| IdentityRecord                   | Identity Verification Service |
+| EligibilityRule                  | Eligibility Engine            |
+| EligibilityDecision              | Eligibility Engine            |
+| ParticipationCredential          | Credential Issuer             |
+| Organization                     | Organization Service          |
+| CivicSpace                       | Organization Service          |
+| Membership                       | Membership Service            |
+| RoleAssignment                   | Permission / Role Service     |
+| Initiative                       | Initiative Service            |
+| InitiativeVersion                | Initiative Service            |
+| Amendment                        | Amendment Service             |
+| SourceRecord                     | Evidence Service              |
+| Discussion                       | Discussion Service            |
+| Contribution                     | Discussion Service            |
+| ModerationCase                   | Moderation Service            |
+| ModerationDecision               | Moderation Service            |
+| Appeal                           | Appeal Service                |
+| Ballot                           | Ballot Definition Service     |
+| VoteEnvelope                     | Vote Casting Service          |
+| VoteReceipt                      | Receipt Service               |
+| Tally                            | Tally Service                 |
+| ResultPublication                | Result Publication Service    |
+| Delegation                       | Delegation Service            |
+| DelegationSnapshot               | Delegation Resolution Engine  |
+| AIProcessingRecord               | AI Accountability Service     |
+| AuditEvent                       | Audit Core                    |
+| EmergencyAction                  | Governance / Crisis Service   |
+| PublicLedgerEntry                | Public Ledger Service         |
+| AuditExportPackage               | Audit Export Service          |
+| DisclosurePolicy                 | Disclosure Policy Service     |
+| LobbyLogEntry                    | Lobby Log Service             |
+| GovernancePolicy                 | Governance Policy Service     |
+| GovernanceDecision               | Governance Decision Service   |
+| TechnicalChallenge               | Technical Challenge Service   |
+| ParticipantEligibilityPolicy     | Eligibility Engine            |
+| ProcessEligibilityPolicy         | Eligibility Engine            |
+| StepUpAuthenticationRequirement  | Eligibility Engine            |
+| DigitalDecision                  | Eligibility Engine            |
+| AssemblyDecision                 | Eligibility Engine            |
+| PartyMembershipEligibilityPolicy | Membership Service            |
+| AffiliationDeclaration           | Membership Service            |
+| ConflictAssessment               | Membership Service            |
+| MembershipApplication            | Membership Service            |
+| AuthenticationContext            | Identity Verification Service |
 
 Четыре строки (`PublicLedgerEntry`, `AuditExportPackage`,
 `DisclosurePolicy`, `LobbyLogEntry`) добавлены версией канона 0.3.0
