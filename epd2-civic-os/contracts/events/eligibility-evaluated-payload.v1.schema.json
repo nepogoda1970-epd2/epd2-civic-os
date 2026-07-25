@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/eligibility-evaluated-payload.v1.schema.json",
+  "title": "eligibility.evaluated event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.3. Produced by epd2_eligibility_service.events.build_evaluated_event. Deliberately excludes evaluated_claims (see epd2_eligibility_service.events.decision_state_payload for the full state used by Audit Core's hashing).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eligibility_decision_id",
+    "eligibility_rule_id",
+    "rule_version",
+    "decision",
+    "reason_codes"
+  ],
+  "properties": {
+    "eligibility_decision_id": { "type": "string", "format": "uuid" },
+    "eligibility_rule_id": { "type": "string", "format": "uuid" },
+    "rule_version": { "type": "integer" },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "not_eligible",
+        "pending",
+        "expired",
+        "manual_review_required"
+      ]
+    },
+    "reason_codes": { "type": "array", "items": { "type": "string" } }
+  }
+}

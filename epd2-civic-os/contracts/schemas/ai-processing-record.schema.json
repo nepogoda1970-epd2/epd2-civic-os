@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/ai-processing-record.schema.json",
+  "title": "AIProcessingRecord",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 17.1 (original) extended by section 19c (added by canon 0.5.0, ADR-023/ADR-025). Owned by ai-processing-service (epd2_ai_processing_service.domain.AIProcessingRecord) - the pack's one canonical entity. processing_status and human_review_status are independent, closed statuses; neither ever stores the value 'superseded' as a direct command result - supersession is always derived by checking whether another record's supersedes_ai_processing_record_id points at this one. redaction_manifest is an immutable, embedded value object (19c.4), required once processing_status has reached input_prepared. disclosure_required/disclosure_package_reference/disclosure_receipt_reference back the derived, non-stored DisclosureStatus read model (19c.5) - never a field of this schema itself.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ai_processing_record_id",
+    "purpose_code",
+    "target_type",
+    "target_id",
+    "input_version",
+    "model_provider",
+    "model_name",
+    "model_version",
+    "prompt_template_version",
+    "output_reference",
+    "created_at",
+    "human_review_status",
+    "correction_reference",
+    "processing_status",
+    "supersedes_ai_processing_record_id",
+    "deployment_version",
+    "system_policy_version",
+    "generation_settings",
+    "processing_region",
+    "data_retention_mode",
+    "external_provider_flag",
+    "input_hash",
+    "output_hash",
+    "confidence_score",
+    "uncertainty_indicator",
+    "explanation_reference",
+    "reason_codes",
+    "human_reviewer_reference",
+    "completed_at",
+    "reviewed_at",
+    "redaction_manifest",
+    "disclosure_required",
+    "disclosure_package_reference",
+    "disclosure_receipt_reference"
+  ],
+  "properties": {
+    "ai_processing_record_id": { "type": "string", "format": "uuid" },
+    "purpose_code": {
+      "type": "string",
+      "enum": [
+        "summarization",
+        "classification",
+        "recommendation",
+        "drafting",
+        "anomaly_indication",
+        "policy_compliance_assistance"
+      ]
+    },
+    "target_type": { "type": "string", "minLength": 1 },
+    "target_id": { "type": "string", "format": "uuid" },
+    "input_version": { "type": "string", "minLength": 1 },
+    "model_provider": { "type": "string", "minLength": 1 },
+    "model_name": { "type": "string", "minLength": 1 },
+    "model_version": { "type": "string", "minLength": 1 },
+    "prompt_template_version": { "type": "string", "minLength": 1 },
+    "output_reference": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "human_review_status": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "pending",
+        "approved",
+        "approved_with_changes",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "correction_reference": { "type": ["string", "null"] },
+    "processing_status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "input_prepared",
+        "processing",
+        "completed",
+        "failed",
+        "rejected_by_policy"
+      ]
+    },
+    "supersedes_ai_processing_record_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "deployment_version": { "type": ["string", "null"] },
+    "system_policy_version": { "type": ["string", "null"] },
+    "generation_settings": { "type": ["object", "null"] },
+    "processing_region": { "type": ["string", "null"] },
+    "data_retention_mode": { "type": ["string", "null"] },
+    "external_provider_flag": { "type": "boolean" },
+    "input_hash": { "type": ["string", "null"] },
+    "output_hash": { "type": ["string", "null"] },
+    "confidence_score": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "uncertainty_indicator": { "type": ["string", "null"] },
+    "explanation_reference": { "type": ["string", "null"] },
+    "reason_codes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "human_reviewer_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+    "redaction_manifest": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": [
+        "redaction_policy_reference",
+        "redaction_policy_version",
+        "input_classification",
+        "checked_field_categories",
+        "removed_field_categories",
+        "prepared_input_hash",
+        "validator_version",
+        "validated_at",
+        "result"
+      ],
+      "properties": {
+        "redaction_policy_reference": { "type": "string", "minLength": 1 },
+        "redaction_policy_version": { "type": "string", "minLength": 1 },
+        "input_classification": { "type": "string", "minLength": 1 },
+        "checked_field_categories": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "removed_field_categories": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "prepared_input_hash": { "type": "string", "minLength": 1 },
+        "validator_version": { "type": "string", "minLength": 1 },
+        "validated_at": { "type": "string", "format": "date-time" },
+        "result": { "type": "string", "enum": ["pass", "fail"] }
+      }
+    },
+    "disclosure_required": { "type": "boolean" },
+    "disclosure_package_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "disclosure_receipt_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

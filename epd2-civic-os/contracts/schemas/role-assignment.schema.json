@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/role-assignment.schema.json",
+  "title": "RoleAssignment",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 8.4 (fields unchanged) / 19b.1 (PACK-05 physical ownership, ADR-016). Owned by governance-service (epd2_governance_service.domain.RoleAssignment). role_code remains an open string at canon level - the closed 8-value pilot taxonomy (ADR-020, section 5: governance_policy_proposer, governance_policy_approver, governance_reviewer, technical_challenge_reviewer, ballot_invalidation_proposer, ballot_invalidation_approver, oversight_reviewer, observer) is enforced only at the application layer, never here. Status pending -> active -> suspended/expired/revoked (or pending -> revoked directly).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role_assignment_id",
+    "actor_id",
+    "role_code",
+    "scope_id",
+    "valid_from",
+    "valid_until",
+    "assigned_by",
+    "approval_reference",
+    "status"
+  ],
+  "properties": {
+    "role_assignment_id": { "type": "string", "format": "uuid" },
+    "actor_id": { "type": "string", "format": "uuid" },
+    "role_code": { "type": "string", "minLength": 1 },
+    "scope_id": { "type": "string", "format": "uuid" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "assigned_by": { "type": "string", "format": "uuid" },
+    "approval_reference": { "type": ["string", "null"] },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "active", "suspended", "expired", "revoked"]
+    }
+  }
+}

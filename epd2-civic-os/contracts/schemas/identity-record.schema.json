@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/identity-record.schema.json",
+  "title": "IdentityRecord",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 7.3. Owned by identity-service (epd2_identity_service.domain.IdentityRecord). Forbidden per canon: voting lists, chosen options, initiative lists, political preferences, delegations - none of those fields exist here (additionalProperties: false enforces this structurally).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity_record_id",
+    "account_id",
+    "verification_provider",
+    "verification_level",
+    "verification_status",
+    "verified_at",
+    "expires_at",
+    "country",
+    "duplicate_check_status",
+    "provider_reference"
+  ],
+  "properties": {
+    "identity_record_id": { "type": "string", "format": "uuid" },
+    "account_id": { "type": "string", "format": "uuid" },
+    "verification_provider": { "type": "string", "minLength": 1 },
+    "verification_level": { "type": "string", "minLength": 1 },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "failed",
+        "expired",
+        "duplicate_suspected",
+        "manual_review_required"
+      ]
+    },
+    "verified_at": { "type": ["string", "null"], "format": "date-time" },
+    "expires_at": { "type": ["string", "null"], "format": "date-time" },
+    "country": { "type": "string", "minLength": 1 },
+    "duplicate_check_status": { "type": "string", "minLength": 1 },
+    "provider_reference": { "type": "string", "minLength": 1 }
+  }
+}

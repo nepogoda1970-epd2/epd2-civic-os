@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/moderation-decision-payload.v1.schema.json",
+  "title": "moderation.decision_issued / moderation.decision_enforced event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.9. Produced by epd2_moderation_service.events.decision_state_payload, shared verbatim by build_decision_issued_event (moderation.decision_issued) and build_decision_enforced_event (moderation.decision_enforced) - verified by reading events.py, both call the identical payload function. Unlike ModerationCase/Appeal, there is no separate 'minimal' variant here: ModerationDecision is immutable and already small, so its complete state is the natural event payload for both event types. effective_until is nullable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "moderation_decision_id",
+    "case_id",
+    "decision_type",
+    "reason_code",
+    "policy_reference",
+    "decided_by",
+    "effective_from",
+    "effective_until",
+    "public_explanation",
+    "audit_reference"
+  ],
+  "properties": {
+    "moderation_decision_id": { "type": "string", "format": "uuid" },
+    "case_id": { "type": "string", "format": "uuid" },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "no_action",
+        "warning",
+        "temporary_hide",
+        "restore",
+        "participation_limit",
+        "account_restriction_request",
+        "escalate",
+        "remove_from_public_view"
+      ]
+    },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "policy_reference": { "type": "string", "minLength": 1 },
+    "decided_by": { "type": "string", "format": "uuid" },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "effective_until": { "type": ["string", "null"], "format": "date-time" },
+    "public_explanation": { "type": "string" },
+    "audit_reference": { "type": "string", "minLength": 1 }
+  }
+}

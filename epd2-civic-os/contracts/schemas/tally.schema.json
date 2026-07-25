@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/tally.schema.json",
+  "title": "Tally",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 15.5 (ADR-005 item 5 consolidates 'Tally Service'/'Result Publication Service' into tally-service). Owned by tally-service (epd2_tally_service.domain.Tally). additionalProperties: false is a load-bearing identity-separation control (ADR-009 item 15: aggregate counts + hash-only audit-chain proof, never vote contents): account_id, person_id, and identity_record_id are all forbidden and cannot appear on an instance that validates against this schema (epd2_tally_service.domain.FORBIDDEN_FIELD_NAMES). `result_data` is a plain per-option vote-count breakdown (Mapping[str, int]) - this service's own documented judgment call for a shape canon leaves open. tally-service never imports epd2_voting_service (ADR-008 item 3) - every field here is either caller-supplied or computed from caller-supplied plain parameters, never derived from a real VoteEnvelope this service reads itself.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tally_id",
+    "ballot_id",
+    "input_set_hash",
+    "algorithm_version",
+    "started_at",
+    "completed_at",
+    "result_data",
+    "invalid_vote_count",
+    "tally_signature",
+    "verification_status"
+  ],
+  "properties": {
+    "tally_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "input_set_hash": { "type": "string", "minLength": 1 },
+    "algorithm_version": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "result_data": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "invalid_vote_count": { "type": "integer", "minimum": 0 },
+    "tally_signature": { "type": ["string", "null"] },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "verification_failed",
+        "verified",
+        "superseded"
+      ]
+    }
+  }
+}

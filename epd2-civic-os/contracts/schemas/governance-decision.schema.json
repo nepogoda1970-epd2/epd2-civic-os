@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/governance-decision.schema.json",
+  "title": "GovernanceDecision",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19b.3 (added by canon 0.4.0, ADR-018). Owned by governance-service (epd2_governance_service.domain.GovernanceDecision). One entity with a decision_type discriminator (minimum: ballot_invalidation, technical_challenge_adjudication, result_finality_determination, mandate, oversight_directive). status is ONLY proposed/approved/rejected - 'superseded' is never a stored value; supersession is always derived by checking whether another decision's supersedes_decision_id points at this one. finality_outcome is only ever set (exactly once, at approval) when decision_type=result_finality_determination, and is a distinct type from the derived FinalityStatus read model. Immutable once approved/rejected - corrections are always new decisions with supersedes_decision_id set.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "governance_decision_id",
+    "decision_type",
+    "subject_reference",
+    "proposed_by_role_id",
+    "approved_by_role_id",
+    "rejected_by_role_id",
+    "reason_code",
+    "evidence_references",
+    "finality_outcome",
+    "created_at",
+    "decided_at",
+    "supersedes_decision_id",
+    "status"
+  ],
+  "properties": {
+    "governance_decision_id": { "type": "string", "format": "uuid" },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "ballot_invalidation",
+        "technical_challenge_adjudication",
+        "result_finality_determination",
+        "mandate",
+        "oversight_directive"
+      ]
+    },
+    "subject_reference": { "type": "object" },
+    "proposed_by_role_id": { "type": "string", "format": "uuid" },
+    "approved_by_role_id": { "type": ["string", "null"], "format": "uuid" },
+    "rejected_by_role_id": { "type": ["string", "null"], "format": "uuid" },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "evidence_references": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "finality_outcome": {
+      "type": ["string", "null"],
+      "enum": ["final", "invalidated", null]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "decided_at": { "type": ["string", "null"], "format": "date-time" },
+    "supersedes_decision_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": { "type": "string", "enum": ["proposed", "approved", "rejected"] }
+  }
+}

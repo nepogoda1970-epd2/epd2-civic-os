@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+coverage
+.venv
+uv.lock
+package-lock.json
+
+# Canonical document is frozen and must not be reformatted outside an
+# accepted ADR (see docs/canonical/README.md).
+docs/canonical/TZ-00-domain-event-canon.md

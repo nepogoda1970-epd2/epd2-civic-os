@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/amendment.schema.json",
+  "title": "Amendment",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 11.4. Owned by initiative-service (epd2_initiative_service.domain.Amendment). `decision_reference` is nullable - None until a discussion outcome (accept/reject) sets it; canon lists the field but not its nullability (README.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "amendment_id",
+    "initiative_id",
+    "target_version_id",
+    "proposer_actor_id",
+    "proposed_change",
+    "justification",
+    "status",
+    "decision_reference"
+  ],
+  "properties": {
+    "amendment_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "target_version_id": { "type": "string", "format": "uuid" },
+    "proposer_actor_id": { "type": "string", "format": "uuid" },
+    "proposed_change": { "type": "string" },
+    "justification": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "published",
+        "under_discussion",
+        "accepted",
+        "rejected",
+        "withdrawn",
+        "superseded"
+      ]
+    },
+    "decision_reference": { "type": ["string", "null"], "format": "uuid" }
+  }
+}

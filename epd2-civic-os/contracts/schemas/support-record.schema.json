@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/support-record.schema.json",
+  "title": "SupportRecord",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 11.3. Owned by initiative-service (epd2_initiative_service.domain.SupportRecord). additionalProperties: false is a load-bearing identity-separation control (INV-01/INV-03, mirroring participation-credential.schema.json's own pattern): account_id, person_id, and identity_record_id are all forbidden and cannot appear on an instance that validates against this schema - a SupportRecord may only ever carry the opaque support_actor_reference/credential_reference references, never a direct account/person/identity-record link (epd2_initiative_service.domain.FORBIDDEN_FIELD_NAMES).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "support_record_id",
+    "initiative_id",
+    "support_actor_reference",
+    "credential_reference",
+    "created_at",
+    "status"
+  ],
+  "properties": {
+    "support_record_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "support_actor_reference": { "type": "string", "format": "uuid" },
+    "credential_reference": { "type": "string", "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["active", "withdrawn", "invalidated"]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governance-policy-payload.v1.schema.json",
+  "title": "governance.policy_* event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.15. Produced by epd2_governance_service.events.governance_policy_public_payload, shared verbatim by three distinct event_type builders: build_policy_proposed_event (governance.policy_proposed), build_policy_activated_event (governance.policy_activated), build_policy_superseded_event (governance.policy_superseded) - verified by reading events.py, all three call the shared payload function and differ only in event_type. Deliberately omits proposed_by_role_id and approved_by_role_id entirely (canon 19b.2).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "governance_policy_id",
+    "policy_type",
+    "rule_definition",
+    "effective_from",
+    "version",
+    "status"
+  ],
+  "properties": {
+    "governance_policy_id": { "type": "string", "format": "uuid" },
+    "policy_type": {
+      "type": "string",
+      "enum": [
+        "role_taxonomy",
+        "approval_rule",
+        "challenge_rule",
+        "oversight_rule"
+      ]
+    },
+    "rule_definition": { "type": "object" },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft", "active", "superseded"] }
+  }
+}

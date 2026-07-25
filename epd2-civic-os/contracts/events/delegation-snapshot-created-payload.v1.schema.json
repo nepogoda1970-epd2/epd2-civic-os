@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/delegation-snapshot-created-payload.v1.schema.json",
+  "title": "delegation.snapshot_created event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.11. Produced by epd2_delegation_service.events.delegation_snapshot_state_payload, used by build_delegation_snapshot_created_event. additionalProperties: false is a load-bearing identity-separation control: account_id, person_id, and identity_record_id are all forbidden and cannot appear on a payload that validates against this schema - resolved_weights maps an opaque delegate_actor_id (as a string key) to an integer weight only, never an identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delegation_snapshot_id",
+    "ballot_id",
+    "policy_version",
+    "created_at",
+    "input_hash",
+    "resolved_weights",
+    "cycle_records",
+    "snapshot_hash"
+  ],
+  "properties": {
+    "delegation_snapshot_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "policy_version": { "type": "integer", "minimum": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "input_hash": { "type": "string", "minLength": 1 },
+    "resolved_weights": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "cycle_records": { "type": "array", "items": { "type": "string" } },
+    "snapshot_hash": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/eligibility-snapshot.schema.json",
+  "title": "EligibilitySnapshot",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 9.3. Owned by eligibility-service (epd2_eligibility_service.domain.EligibilitySnapshot). Immutable once created; digest is order-independent (epd2_eligibility_service.domain.compute_snapshot_digest).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eligibility_snapshot_id",
+    "eligibility_rule_id",
+    "rule_version",
+    "created_at",
+    "eligible_decision_ids",
+    "eligible_count",
+    "digest"
+  ],
+  "properties": {
+    "eligibility_snapshot_id": { "type": "string", "format": "uuid" },
+    "eligibility_rule_id": { "type": "string", "format": "uuid" },
+    "rule_version": { "type": "integer" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "eligible_decision_ids": {
+      "type": "array",
+      "items": { "type": "string", "format": "uuid" }
+    },
+    "eligible_count": { "type": "integer" },
+    "digest": { "type": "string", "minLength": 64 }
+  }
+}

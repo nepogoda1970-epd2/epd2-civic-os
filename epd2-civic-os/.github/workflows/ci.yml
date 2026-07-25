@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify repository skeleton
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install Python dependencies (frozen — must match uv.lock exactly)
+        run: uv sync --all-groups --frozen
+
+      - name: Install Node dependencies (reproducible — must match package-lock.json exactly)
+        run: npm ci
+
+      - name: Fail if lock files were modified by install
+        run: git diff --exit-code -- uv.lock package-lock.json
+
+      - name: Repository structure check
+        run: |
+          uv run python scripts/check_repository.py
+          uv run python scripts/check_forbidden_files.py
+          uv run python scripts/verify_versions.py
+
+      - name: Formatting check (Python)
+        run: uv run ruff format --check .
+
+      - name: Formatting check (Prettier)
+        run: npm run format:check
+
+      - name: Lint (Python)
+        run: uv run ruff check .
+
+      - name: Type check (Python)
+        run: uv run mypy .
+
+      - name: Python tests
+        run: uv run pytest
+
+      - name: Type check (TypeScript — epd2-types)
+        run: npm run typecheck --workspace=packages/typescript/epd2-types
+
+      - name: Type check (TypeScript — web-shell)
+        run: npm run typecheck --workspace=frontend/web-shell
+
+      - name: Lint (frontend)
+        run: npm run lint --workspace=frontend/web-shell
+
+      - name: TypeScript tests
+        run: npm run test --workspace=packages/typescript/epd2-types
+
+      - name: Frontend tests
+        run: npm run test --workspace=frontend/web-shell
+
+      - name: Frontend build
+        run: npm run build --workspace=frontend/web-shell
+
+# This workflow does not use any repository secrets, does not deploy
+# anything, and does not publish any package. It only verifies the
+# repository skeleton.

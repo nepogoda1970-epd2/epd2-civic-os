@@ -1,0 +1,17 @@
+{
+  "name": "epd2-civic-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EPD2 Civic OS monorepo workspace root (infrastructure skeleton, no business logic)",
+  "workspaces": [
+    "packages/typescript/epd2-types",
+    "frontend/web-shell"
+  ],
+  "scripts": {
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0"
+  }
+}
