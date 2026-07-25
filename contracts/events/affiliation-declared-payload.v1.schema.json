@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/affiliation-declared-payload.v1.schema.json",
+  "title": "membership.affiliation_declared event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.10 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_affiliation_declared_event. Never carries declared_reference itself on the wire (an opaque reference, but still restricted-by-default affiliation content, ADR-030 item 5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "affiliation_declaration_id",
+    "affiliation_type",
+    "status"
+  ],
+  "properties": {
+    "affiliation_declaration_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "affiliation_type": {
+      "type": "string",
+      "enum": [
+        "other_party_membership",
+        "political_association_membership",
+        "public_office",
+        "elected_office",
+        "lobbying_or_interest_representation",
+        "organizational_leadership_or_employment",
+        "declared_incompatible_organization"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "acknowledged",
+        "superseded",
+        "withdrawn"
+      ]
+    }
+  }
+}

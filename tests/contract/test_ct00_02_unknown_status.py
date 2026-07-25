@@ -33,8 +33,22 @@ from epd2_deliberation_service.exceptions import (
     UnknownContributionVisibilityStatusError,
     UnknownDiscussionStatusError,
 )
-from epd2_eligibility_service.domain import parse_decision_value
-from epd2_eligibility_service.exceptions import UnknownEligibilityDecisionValueError
+from epd2_eligibility_service.domain import (
+    parse_assembly_decision_status,
+    parse_decision_value,
+    parse_digital_decision_status,
+)
+from epd2_eligibility_service.domain import (
+    parse_critical_policy_status as parse_eligibility_critical_policy_status,
+)
+from epd2_eligibility_service.exceptions import (
+    UnknownAssemblyDecisionStatusError,
+    UnknownDigitalDecisionStatusError,
+    UnknownEligibilityDecisionValueError,
+)
+from epd2_eligibility_service.exceptions import (
+    UnknownCriticalPolicyStatusError as UnknownEligibilityCriticalPolicyStatusError,
+)
 from epd2_governance_service.domain import (
     parse_governance_decision_status,
     parse_governance_policy_status,
@@ -60,6 +74,38 @@ from epd2_initiative_service.exceptions import (
     UnknownInitiativeStatusError,
     UnknownSourceVerificationStatusError,
     UnknownSupportStatusError,
+)
+from epd2_membership_service.domain import (
+    parse_affiliation_status,
+    parse_affiliation_type,
+    parse_affiliation_verification_status,
+    parse_conflict_assessment_status,
+    parse_conflict_type,
+    parse_incompatibility_level,
+    parse_membership_application_status,
+    parse_membership_status,
+)
+from epd2_membership_service.domain import (
+    parse_appeal_status as parse_membership_appeal_status,
+)
+from epd2_membership_service.domain import (
+    parse_critical_policy_status as parse_membership_critical_policy_status,
+)
+from epd2_membership_service.exceptions import (
+    UnknownAffiliationStatusError,
+    UnknownAffiliationTypeError,
+    UnknownAffiliationVerificationStatusError,
+    UnknownConflictAssessmentStatusError,
+    UnknownConflictTypeError,
+    UnknownIncompatibilityLevelError,
+    UnknownMembershipApplicationStatusError,
+    UnknownMembershipStatusError,
+)
+from epd2_membership_service.exceptions import (
+    UnknownAppealStatusError as UnknownMembershipAppealStatusError,
+)
+from epd2_membership_service.exceptions import (
+    UnknownCriticalPolicyStatusError as UnknownMembershipCriticalPolicyStatusError,
 )
 from epd2_moderation_service.domain import (
     parse_appeal_status,
@@ -246,6 +292,60 @@ _PACK06_PARSE_CASES = (
     ids=[fn.__name__ for fn, _ in _PACK06_PARSE_CASES],
 )
 def test_pack06_unknown_enum_value_is_rejected(
+    parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
+) -> None:
+    with pytest.raises(expected_exception) as excinfo:
+        parse_fn("not_a_real_value")
+    error = excinfo.value
+    assert isinstance(error, _ReasonCodedError)
+    assert error.reason_code == "VALIDATION_UNKNOWN_STATUS"
+
+
+# =============================================================================
+# PACK-07: the two PACK-07 services' (eligibility-service, membership-service)
+# own status/type enums' `parse_*` functions, mirroring the PACK-05/PACK-06
+# parametrized blocks above. `membership_appeal`/`membership_critical_policy`
+# aliases avoid colliding with moderation-service's own same-named
+# `parse_appeal_status`/`UnknownAppealStatusError` and eligibility-service's
+# own same-named critical-policy parse function, already imported above.
+# =============================================================================
+
+#: (parse_fn, expected_exception_type) for eligibility-service's 3 new
+#: PACK-07 status enums: CriticalPolicyStatus, DigitalDecisionStatus,
+#: AssemblyDecisionStatus.
+_PACK07_ELIGIBILITY_PARSE_CASES = (
+    (parse_eligibility_critical_policy_status, UnknownEligibilityCriticalPolicyStatusError),
+    (parse_digital_decision_status, UnknownDigitalDecisionStatusError),
+    (parse_assembly_decision_status, UnknownAssemblyDecisionStatusError),
+)
+
+#: (parse_fn, expected_exception_type) for membership-service's 9 own
+#: status/type enums: CriticalPolicyStatus, MembershipStatus,
+#: MembershipApplicationStatus, AffiliationType, AffiliationStatus,
+#: AffiliationVerificationStatus, ConflictType, IncompatibilityLevel,
+#: ConflictAssessmentStatus, AppealStatus (membership-service's own
+#: documented duplicate of moderation-service's Appeal, see
+#: `tests/repository/test_pack07_duplicated_logic_parity.py`).
+_PACK07_MEMBERSHIP_PARSE_CASES = (
+    (parse_membership_critical_policy_status, UnknownMembershipCriticalPolicyStatusError),
+    (parse_membership_status, UnknownMembershipStatusError),
+    (parse_membership_application_status, UnknownMembershipApplicationStatusError),
+    (parse_affiliation_type, UnknownAffiliationTypeError),
+    (parse_affiliation_status, UnknownAffiliationStatusError),
+    (parse_affiliation_verification_status, UnknownAffiliationVerificationStatusError),
+    (parse_conflict_type, UnknownConflictTypeError),
+    (parse_incompatibility_level, UnknownIncompatibilityLevelError),
+    (parse_conflict_assessment_status, UnknownConflictAssessmentStatusError),
+    (parse_membership_appeal_status, UnknownMembershipAppealStatusError),
+)
+
+
+@pytest.mark.parametrize(
+    "parse_fn,expected_exception",
+    _PACK07_ELIGIBILITY_PARSE_CASES + _PACK07_MEMBERSHIP_PARSE_CASES,
+    ids=[fn.__name__ for fn, _ in _PACK07_ELIGIBILITY_PARSE_CASES + _PACK07_MEMBERSHIP_PARSE_CASES],
+)
+def test_pack07_unknown_enum_value_is_rejected(
     parse_fn: Callable[[str], Enum], expected_exception: type[Exception]
 ) -> None:
     with pytest.raises(expected_exception) as excinfo:

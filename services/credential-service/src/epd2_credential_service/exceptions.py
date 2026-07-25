@@ -7,6 +7,15 @@ class UnknownCredentialStatusError(ValueError):
     reason_code = "VALIDATION_UNKNOWN_STATUS"
 
 
+class UnknownCredentialTypeError(ValueError):
+    """CT-00-02 fail-closed parsing for `CredentialType` - PACK-07
+    implementation round addition, needed once `issue_participation_credential`
+    accepts a plain `str` at its new eligibility-service cross-pack
+    boundary (see `domain.parse_credential_type`)."""
+
+    reason_code = "VALIDATION_UNKNOWN_STATUS"
+
+
 class ForbiddenCredentialTransitionError(ValueError):
     reason_code = "VALIDATION_FORBIDDEN_TRANSITION"
 

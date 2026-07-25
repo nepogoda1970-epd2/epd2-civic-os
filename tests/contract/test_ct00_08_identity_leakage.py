@@ -20,7 +20,7 @@ Checked here, per pack section 12.2's explicit list:
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from uuid import uuid4
 
 import pytest
@@ -50,6 +50,7 @@ from epd2_credential_service.storage import InMemoryCredentialStore
 from epd2_delegation_service.domain import FORBIDDEN_FIELD_NAMES as DELEGATION_FORBIDDEN
 from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
 from epd2_governance_service.storage import InMemoryRoleAssignmentStore
+from epd2_identity_service.domain import IdentityRecord
 from epd2_initiative_service.domain import FORBIDDEN_FIELD_NAMES as SUPPORT_FORBIDDEN
 from epd2_tally_service.domain import FORBIDDEN_FIELD_NAMES as TALLY_FORBIDDEN
 from epd2_transparency_service.domain import FORBIDDEN_FIELD_NAMES as TRANSPARENCY_FORBIDDEN
@@ -959,3 +960,303 @@ def test_openapi_ai_processing_responses_do_not_reference_structurally_forbidden
         f"ai-processing-service OpenAPI paths/schemas declare structurally forbidden "
         f"field(s) as an actual property: {sorted(leaked)}"
     )
+
+
+# =============================================================================
+# PACK-07: identity-service (canon 19d.2/19d.8) and membership-service
+# (canon 19d.9 through 19d.11), ADR-030. Unlike PACK-04 through PACK-06,
+# this pack has no single stored/public schema split - instead, several
+# distinct `build_*_event` functions each carry their own explicit,
+# docstring-documented "never on the wire" invariant (ADR-030 item 5's
+# disclosure-by-default prohibition). Each test below constructs the real
+# domain entity via its dataclass constructor with the sensitive field(s)
+# deliberately populated to a non-default, identifiable value, builds the
+# real wire event via the real `build_*_event` function, and proves the
+# sensitive field is absent from `event.payload` - never a schema-level
+# proxy check, since these events do not (yet) all have their own
+# `*-payload.v1.schema.json` file the way PACK-02 through PACK-06 do.
+# =============================================================================
+
+#: Canon 19d.2's additive `IdentityRecord` fields that must never appear on
+#: any identity-service *wire* event payload (`build_identity_event`/
+#: `build_authentication_context_event`) - they may appear only in
+#: `identity_record_payload`, the internal Audit Core before/after-hash
+#: snapshot, which is a distinct, non-wire function.
+IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS = frozenset(
+    {
+        "date_of_birth",
+        "citizenship_status",
+        "residence_status",
+        "identity_scheme",
+        "attribute_verification_level",
+        "attribute_verified_at",
+        "attribute_valid_until",
+    }
+)
+
+
+def _make_identity_record_with_attributes() -> IdentityRecord:
+    from epd2_identity_service.domain import (
+        IdentityAssuranceLevel,
+        VerificationStatus,
+    )
+
+    return IdentityRecord(
+        identity_record_id=uuid4(),
+        account_id=uuid4(),
+        verification_provider="provider",
+        verification_level="substantial",
+        verification_status=VerificationStatus.VERIFIED,
+        verified_at=datetime(2026, 1, 1, tzinfo=UTC),
+        expires_at=None,
+        country="DE",
+        duplicate_check_status="unique",
+        provider_reference="secret-provider-reference-98765",
+        date_of_birth=date(1990, 5, 17),
+        citizenship_status=("DE", "FR"),
+        residence_status={"region": "berlin"},
+        identity_assurance_level=IdentityAssuranceLevel.SUBSTANTIAL,
+        identity_scheme="eidas-notified-scheme",
+        attribute_verification_level="high",
+        attribute_verified_at=datetime(2026, 1, 1, tzinfo=UTC),
+        attribute_valid_until=datetime(2027, 1, 1, tzinfo=UTC),
+    )
+
+
+def test_identity_wire_event_never_carries_canon_19d2_additive_attribute_fields() -> None:
+    """`build_identity_event`'s docstring is explicit: never any of canon
+    19d.2's identity/attribute fields, even though `identity_record_payload`
+    (the internal audit-hash snapshot, a different function) does carry
+    them all - proving that difference is real, not just documented."""
+    from epd2_identity_service.events import build_identity_event, identity_record_payload
+
+    record = _make_identity_record_with_attributes()
+    event = build_identity_event(
+        event_id=uuid4(),
+        event_type="identity.verification_started",
+        record=record,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden not in event.payload, (
+            f"identity.verification_started wire payload must never carry {forbidden!r}"
+        )
+    # But the internal, non-wire audit-hash snapshot DOES carry all of them
+    # (it is a different function with a different, documented purpose).
+    audit_snapshot = identity_record_payload(record)
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden in audit_snapshot
+
+
+def test_authentication_context_established_event_has_no_provider_reference() -> None:
+    """`build_authentication_context_event`'s docstring: never
+    `provider_reference` (an opaque infrastructure reference) or any
+    `IdentityRecord` field."""
+    from epd2_identity_service.domain import AuthenticationAssuranceLevel, AuthenticationContext
+    from epd2_identity_service.events import build_authentication_context_event
+
+    context = AuthenticationContext(
+        authentication_context_id=uuid4(),
+        account_id=uuid4(),
+        authentication_method="password",
+        authentication_assurance_level=AuthenticationAssuranceLevel.SUBSTANTIAL,
+        session_authenticated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        provider_reference="secret-idp-session-token",
+    )
+    event = build_authentication_context_event(
+        event_id=uuid4(),
+        event_type="identity.authentication_context_established",
+        context=context,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "provider_reference" not in event.payload
+    assert context.provider_reference not in json.dumps(to_jsonable(event.payload))
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden not in event.payload
+
+
+def test_step_up_authentication_completed_event_has_no_provider_reference() -> None:
+    """Same invariant as above, exercised for
+    `identity.step_up_authentication_completed` - the other event built by
+    `build_authentication_context_event`."""
+    from epd2_identity_service.domain import AuthenticationAssuranceLevel, AuthenticationContext
+    from epd2_identity_service.events import build_authentication_context_event
+
+    context = AuthenticationContext(
+        authentication_context_id=uuid4(),
+        account_id=uuid4(),
+        authentication_method="webauthn",
+        authentication_assurance_level=AuthenticationAssuranceLevel.HIGH,
+        session_authenticated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        provider_reference="secret-idp-session-token-2",
+        step_up_completed_at=datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
+    )
+    event = build_authentication_context_event(
+        event_id=uuid4(),
+        event_type="identity.step_up_authentication_completed",
+        context=context,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=uuid4(),
+        occurred_at=datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
+    )
+    assert "provider_reference" not in event.payload
+    assert context.provider_reference not in json.dumps(to_jsonable(event.payload))
+
+
+def test_membership_application_submitted_event_has_no_affiliation_or_identity_content() -> None:
+    """`build_membership_application_submitted_event`'s docstring:
+    deliberately minimal, never any `AffiliationDeclaration`/identity
+    content."""
+    from epd2_membership_service.domain import MembershipApplication, MembershipApplicationStatus
+    from epd2_membership_service.events import build_membership_application_submitted_event
+
+    application = MembershipApplication(
+        membership_application_id=uuid4(),
+        subject_reference=uuid4(),
+        status=MembershipApplicationStatus.ELIGIBILITY_REVIEW,
+    )
+    event = build_membership_application_submitted_event(
+        event_id=uuid4(),
+        application=application,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    for forbidden in (
+        "declared_reference",
+        "affiliation_type",
+        "affiliation_declaration_id",
+        "subject_reference",
+    ):
+        assert forbidden not in event.payload
+
+
+def test_membership_activated_event_has_no_region_code_or_organization_id() -> None:
+    """`build_membership_activated_event`'s docstring: never carries
+    `region_code`/`organization_id` on the wire (ADR-030 item 5)."""
+    from epd2_membership_service.domain import Membership, MembershipStatus
+    from epd2_membership_service.events import build_membership_activated_event
+
+    membership = Membership(
+        membership_id=uuid4(),
+        account_reference=uuid4(),
+        organization_id=uuid4(),
+        membership_type="party_member",
+        membership_status=MembershipStatus.ACTIVE,
+        effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+        effective_until=None,
+        region_code="berlin-mitte",
+    )
+    event = build_membership_activated_event(
+        event_id=uuid4(),
+        membership=membership,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "region_code" not in event.payload
+    assert "organization_id" not in event.payload
+    assert "account_reference" not in event.payload
+    assert str(membership.organization_id) not in json.dumps(to_jsonable(event.payload))
+
+
+def test_membership_suspended_event_has_no_region_code_or_organization_id() -> None:
+    """Same invariant as above, exercised for `build_membership_suspended_event`."""
+    from epd2_membership_service.domain import Membership, MembershipStatus
+    from epd2_membership_service.events import build_membership_suspended_event
+
+    membership = Membership(
+        membership_id=uuid4(),
+        account_reference=uuid4(),
+        organization_id=uuid4(),
+        membership_type="party_member",
+        membership_status=MembershipStatus.SUSPENDED,
+        effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+        effective_until=None,
+        region_code="hamburg-nord",
+    )
+    event = build_membership_suspended_event(
+        event_id=uuid4(),
+        membership=membership,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "region_code" not in event.payload
+    assert "organization_id" not in event.payload
+
+
+def test_affiliation_declared_event_has_no_declared_reference() -> None:
+    """`build_affiliation_declared_event`'s docstring: never carries
+    `declared_reference` itself on the wire - an opaque reference, but
+    still restricted-by-default affiliation content (ADR-030 item 5)."""
+    from epd2_membership_service.domain import (
+        AffiliationDeclaration,
+        AffiliationStatus,
+        AffiliationType,
+    )
+    from epd2_membership_service.events import build_affiliation_declared_event
+
+    declaration = AffiliationDeclaration(
+        affiliation_declaration_id=uuid4(),
+        subject_reference=uuid4(),
+        affiliation_type=AffiliationType.OTHER_PARTY_MEMBERSHIP,
+        declared_reference="opaque-org-reference-4471",
+        declared_at=datetime(2026, 1, 1, tzinfo=UTC),
+        status=AffiliationStatus.SUBMITTED,
+        valid_from=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    event = build_affiliation_declared_event(
+        event_id=uuid4(),
+        declaration=declaration,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "declared_reference" not in event.payload
+    assert declaration.declared_reference not in json.dumps(to_jsonable(event.payload))
+
+
+def test_conflict_assessment_opened_event_has_no_evidence_references_or_reason_codes() -> None:
+    """`build_conflict_assessment_opened_event`'s docstring: never carries
+    `evidence_references`/`reason_codes` on the wire (ADR-030 item 5)."""
+    from epd2_membership_service.domain import (
+        ConflictAssessment,
+        ConflictAssessmentStatus,
+        ConflictType,
+        IncompatibilityLevel,
+    )
+    from epd2_membership_service.events import build_conflict_assessment_opened_event
+
+    assessment = ConflictAssessment(
+        conflict_assessment_id=uuid4(),
+        subject_reference=uuid4(),
+        conflict_type=ConflictType.DUAL_PARTY_MEMBERSHIP,
+        incompatibility_level=IncompatibilityLevel.NONE,
+        status=ConflictAssessmentStatus.PENDING,
+        reviewed_by_role_reference=uuid4(),
+        reason_codes=("DUAL_MEMBERSHIP_SUSPECTED",),
+        evidence_references=("evidence-doc-778",),
+    )
+    event = build_conflict_assessment_opened_event(
+        event_id=uuid4(),
+        assessment=assessment,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "evidence_references" not in event.payload
+    assert "reason_codes" not in event.payload
+    assert "evidence-doc-778" not in json.dumps(to_jsonable(event.payload))

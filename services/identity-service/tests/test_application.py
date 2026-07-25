@@ -12,13 +12,27 @@ from epd2_core.clock import FixedClock
 from epd2_core.event_envelope import ActorRef
 from epd2_identity_service.application import (
     PermissionDeniedError,
+    establish_authentication_context,
+    get_authentication_context,
+    record_identity_attributes,
+    record_step_up_completion,
     record_verification_result,
     revoke_verification,
     start_identity_verification,
 )
-from epd2_identity_service.domain import VerificationStatus
-from epd2_identity_service.exceptions import UnknownIdentityRecordError
-from epd2_identity_service.storage import InMemoryIdentityRecordStore
+from epd2_identity_service.domain import (
+    AuthenticationAssuranceLevel,
+    IdentityAssuranceLevel,
+    VerificationStatus,
+)
+from epd2_identity_service.exceptions import (
+    UnknownAuthenticationContextError,
+    UnknownIdentityRecordError,
+)
+from epd2_identity_service.storage import (
+    InMemoryAuthenticationContextStore,
+    InMemoryIdentityRecordStore,
+)
 
 _CLOCK = FixedClock(datetime(2026, 1, 1, tzinfo=UTC))
 _ACTOR = ActorRef(actor_id=uuid4(), actor_type="service")
@@ -231,6 +245,152 @@ def test_revoke_verification_without_permission_is_denied() -> None:
             identity_record_id=verified.identity_record_id,
             actor=_ACTOR,
             actor_is_authorized=False,
+            correlation_id=uuid4(),
+            causation_id=None,
+            clock=_CLOCK,
+        )
+
+
+# --- PACK-07 additions (canon 19d.2 / 19d.8, canon-0.6.0) -------------------
+
+
+def test_record_identity_attributes_updates_only_attribute_fields() -> None:
+    store = InMemoryIdentityRecordStore()
+    audit_store = InMemoryAuditEventStore()
+    record = _start(store, audit_store)
+    result = record_identity_attributes(
+        store,
+        audit_store,
+        identity_record_id=record.identity_record_id,  # type: ignore[attr-defined]
+        citizenship_status=("DE", "FR"),
+        identity_assurance_level=IdentityAssuranceLevel.SUBSTANTIAL,
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        causation_id=None,
+        clock=_CLOCK,
+    )
+    assert result.record.citizenship_status == ("DE", "FR")
+    assert result.record.identity_assurance_level == IdentityAssuranceLevel.SUBSTANTIAL
+    assert result.record.verification_status == VerificationStatus.PENDING  # unchanged
+    assert result.event is not None
+    assert "citizenship_status" not in result.event.payload  # never on the wire event
+    assert result.audit_event is not None
+    assert result.audit_event.reason_code == "IDENTITY_ATTRIBUTES_RECORDED"
+
+
+def test_record_identity_attributes_rejects_unauthorized_actor() -> None:
+    store = InMemoryIdentityRecordStore()
+    audit_store = InMemoryAuditEventStore()
+    record = _start(store, audit_store)
+    with pytest.raises(PermissionDeniedError):
+        record_identity_attributes(
+            store,
+            audit_store,
+            identity_record_id=record.identity_record_id,  # type: ignore[attr-defined]
+            actor=_ACTOR,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            causation_id=None,
+            clock=_CLOCK,
+        )
+
+
+def test_record_identity_attributes_unknown_record() -> None:
+    store = InMemoryIdentityRecordStore()
+    audit_store = InMemoryAuditEventStore()
+    with pytest.raises(UnknownIdentityRecordError):
+        record_identity_attributes(
+            store,
+            audit_store,
+            identity_record_id=uuid4(),
+            actor=_ACTOR,
+            actor_is_authorized=True,
+            correlation_id=uuid4(),
+            causation_id=None,
+            clock=_CLOCK,
+        )
+
+
+def test_establish_authentication_context() -> None:
+    store = InMemoryAuthenticationContextStore()
+    audit_store = InMemoryAuditEventStore()
+    result = establish_authentication_context(
+        store,
+        audit_store,
+        account_id=uuid4(),
+        authentication_method="password_totp",
+        authentication_assurance_level=AuthenticationAssuranceLevel.SUBSTANTIAL,
+        provider_reference="provider-ref",
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    )
+    assert result.context.step_up_completed_at is None
+    assert result.context.session_authenticated_at == _CLOCK.now()
+    fetched = get_authentication_context(
+        store, authentication_context_id=result.context.authentication_context_id
+    )
+    assert fetched == result.context
+
+
+def test_establish_authentication_context_rejects_unauthorized_actor() -> None:
+    store = InMemoryAuthenticationContextStore()
+    audit_store = InMemoryAuditEventStore()
+    with pytest.raises(PermissionDeniedError):
+        establish_authentication_context(
+            store,
+            audit_store,
+            account_id=uuid4(),
+            authentication_method="password_totp",
+            authentication_assurance_level=AuthenticationAssuranceLevel.SUBSTANTIAL,
+            provider_reference="provider-ref",
+            actor=_ACTOR,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=_CLOCK,
+        )
+
+
+def test_record_step_up_completion() -> None:
+    store = InMemoryAuthenticationContextStore()
+    audit_store = InMemoryAuditEventStore()
+    established = establish_authentication_context(
+        store,
+        audit_store,
+        account_id=uuid4(),
+        authentication_method="password_totp",
+        authentication_assurance_level=AuthenticationAssuranceLevel.LOW,
+        provider_reference="provider-ref",
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=_CLOCK,
+    )
+    result = record_step_up_completion(
+        store,
+        audit_store,
+        authentication_context_id=established.context.authentication_context_id,
+        actor=_ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        causation_id=None,
+        clock=_CLOCK,
+    )
+    assert result.context.step_up_completed_at == _CLOCK.now()
+
+
+def test_record_step_up_completion_unknown_context() -> None:
+    store = InMemoryAuthenticationContextStore()
+    audit_store = InMemoryAuditEventStore()
+    with pytest.raises(UnknownAuthenticationContextError):
+        record_step_up_completion(
+            store,
+            audit_store,
+            authentication_context_id=uuid4(),
+            actor=_ACTOR,
+            actor_is_authorized=True,
             correlation_id=uuid4(),
             causation_id=None,
             clock=_CLOCK,

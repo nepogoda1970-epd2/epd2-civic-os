@@ -5,6 +5,277 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - participation & membership context (implementation)
+
+### Added
+
+- A new, independent, in-memory-backed service, `membership-service`
+  (CLAUDE-PACK-07, "Participation & Membership Context"), with its own
+  `README.md`, `pyproject.toml`, `src/`, `tests/`, storage interfaces,
+  and in-memory reference adapters, plus in-place extensions to the two
+  pre-existing PACK-02 services `eligibility-service` and
+  `identity-service` — implementing exactly the canon 0.6.0 section 19d
+  text and ADR-026 through ADR-031 (all `accepted`) with no further
+  canon edit.
+- `eligibility-service`: `ParticipantEligibilityPolicy` and
+  `ProcessEligibilityPolicy` (canon 19d.4/19d.5), each a versioned,
+  activatable critical policy with the shared four-gate activation rule
+  (canon 19d.7: approved `GovernanceDecision`, multi-person approval,
+  signed policy digest, transparency-log commitment); the four
+  separated electoral-eligibility claims (canon 19d.3) computed by
+  `evaluate_process_eligibility_claims`, replacing the generic
+  `electoral_eligibility_met` concept everywhere; `StepUpAuthenticationRequirement`
+  and its fail-closed `check_step_up_requirement` evaluation (canon
+  19d.8); `DigitalDecision`/`AssemblyDecision` and the formal-confirmation
+  lifecycle (canon 19d.12: `DigitalDecision → FormalConfirmationRequired
+  → AssemblyDecision → Confirmed | Rejected | ReturnedForRevision`, with
+  a required `divergence_explanation` whenever the final legal decision
+  diverges from the digital result, and no silent-approval timeout);
+  `AtomicCapabilityResult`/`check_atomic_capability` and scoped
+  capability-token issuance (canon 19d.14) via the narrow
+  `epd2_credential_service.application.issue_participation_credential`
+  read (ADR-027) — `ParticipationRightsProfile` itself stays internal,
+  derived, non-authoritative, and non-persisted throughout.
+- `membership-service`: `PartyMembershipEligibilityPolicy` (canon 19d.6,
+  structurally separate from `ParticipantEligibilityPolicy`, sharing its
+  lifecycle plus `incompatibility_rules`/`membership_duration_rules`);
+  `MembershipApplication`'s six-state lifecycle (canon 19d.9:
+  `application_pending → eligibility_review → human_decision_pending →
+  approved → rejected → activated`), with Stage A
+  (`evaluate_membership_application_eligibility`) *always* landing on
+  `human_decision_pending` regardless of its own recommendation, and
+  Stage B (`record_membership_human_decision`) the only path to
+  `approved`/`rejected` — each requiring an externally-verified
+  `decision_authority_reference`; `activate_membership` as the *only*
+  function in the service that ever constructs an `active`
+  `Membership` row, layered without overloading `Membership.membership_status`
+  (canon 8.3, unchanged, first real implementation); `AffiliationDeclaration`
+  (canon 19d.10, immutable/versioned, `declared_reference` an opaque
+  reference never a free-text organization name); `ConflictAssessment`
+  (canon 19d.11, `decision_authority_reference` mandatory once
+  `resolved_incompatible`, enforced fail-closed at construction); the
+  polymorphic `Appeal` model reused (a documented, tested duplicate of
+  `epd2_moderation_service.domain.Appeal` — no separate `MembershipAppeal`
+  was needed, so no new ADR was required per required scope item 9).
+- `identity-service`: `AuthenticationContext` (canon 19d.8) and
+  `record_step_up_completion`; `IdentityRecord` (7.3) gains eight new
+  fields (`date_of_birth`, `citizenship_status`, `residence_status`,
+  `identity_assurance_level`, `identity_scheme`,
+  `attribute_verification_level`, `attribute_verified_at`,
+  `attribute_valid_until`) — all-`None`/empty/`none`-default, backward
+  compatible; the two narrow ADR-027 cross-pack reads
+  `get_identity_participation_claims`/`check_authentication_step_up_satisfied`.
+- Canon 19d.16's hard human-control invariant (no automated process may
+  finally decide membership rejection/suspension/expulsion/incompatibility/
+  denial of fundamental rights/restoration denial) is structurally
+  enforced, not just documented: every consequential membership/conflict
+  outcome requires an externally-verified `decision_authority_reference`,
+  proven end-to-end in `services/membership-service/tests/test_application.py`
+  (`test_stage_a_always_transitions_to_human_decision_pending_regardless_of_recommendation`,
+  `test_activate_membership_is_the_only_path_to_active_status`,
+  `test_record_conflict_decision_requires_decision_authority_when_incompatible`).
+- Membership disclosure restricted by default (ADR-030 item 5): no
+  application/status/rejection/suspension/termination/affiliation/conflict
+  evidence is exposed on any wire event payload — proven structurally in
+  `tests/contract/test_ct00_08_identity_leakage.py`'s new PACK-07
+  section (eight tests, one per restricted field/entity).
+- The ADR-027 cross-service edge matrix, all `.application`-only:
+  `eligibility-service → {identity-service, membership-service,
+  governance-service, credential-service}`,
+  `membership-service → {identity-service, eligibility-service,
+  governance-service}` — enforced by seven new/extended AST-based tests
+  in `tests/repository/test_service_boundaries.py`, and three
+  deliberately-duplicated (never imported) logic pieces — the four-gate
+  critical-policy activation gate, the polymorphic `Appeal` entity, and
+  the step-up assurance-evaluation logic — proven byte-for-byte
+  equivalent across their service copies by the new
+  `tests/repository/test_pack07_duplicated_logic_parity.py`.
+- `contracts/openapi/pack-07.yaml` (tags `eligibility-service`/
+  `membership-service`; the four ADR-027 narrow cross-pack reads
+  deliberately have no HTTP-shaped path), `contracts/reason-codes/pack-07.yml`
+  (38 entries, including the four separated-electoral-eligibility-claim
+  codes and four membership human-control codes required scope item 15
+  names explicitly). Ten new entity JSON Schemas
+  (`participant-eligibility-policy`, `process-eligibility-policy`,
+  `step-up-authentication-requirement`, `digital-decision`,
+  `assembly-decision`, `party-membership-eligibility-policy`,
+  `membership`, `membership-application`, `affiliation-declaration`,
+  `conflict-assessment`) and twelve new event-payload JSON Schemas (the
+  thirteenth named event, `EligibilityEvaluated`, reuses PACK-02's
+  existing schema unchanged), all validated against real,
+  directly-constructed domain instances in the new
+  `tests/contract/test_ct00_01_pack07_schema_validation.py`.
+  `contracts/schemas/identity-record.schema.json` updated to add canon
+  19d.2's eight additive fields to `required`/`properties` (the one
+  real, pre-existing contract-test gap this round found and fixed).
+- `tests/contract/test_ct00_02_unknown_status.py` through
+  `test_ct00_09_vote_linkability.py` each extended with a PACK-07
+  section as applicable (19 new unknown-status/type `parse_*` cases
+  across both services' 12 new enums; 12 forbidden-transition cases;
+  event-idempotency and unsupported-event-version checks for
+  representative commands from both services; missing-permission and
+  audit-creation checks across both services' command surfaces; the
+  eight identity-leakage proofs named above; an AST-based import scan
+  confirming neither PACK-07 service imports voting/tally/delegation
+  domain code, plus a direct-construction proof that
+  `ProcessEligibilityClaims`/`MembershipLayerClaims` carry no
+  vote/ballot-linkable field). CT-00-11 (AI Human Control) and CT-00-12
+  (Emergency Stop) are explicitly documented not-applicable for this
+  pack (required scope item 19 excludes new AI-processing functionality
+  and no `EmergencyAction` exists in scope) — extending
+  `test_ct00_12_emergency_stop_not_applicable.py`'s historical
+  not-applicable list a fourth/fifth time. CT-00-10 (Rule Freeze) is
+  also documented not-applicable, honestly reporting one related gap
+  rather than glossing over it: canon 19d.7's `CriticalPolicyVersionFrozenError`
+  is declared in both services' `exceptions.py` for forward
+  compatibility but deliberately never raised this round — enforcing it
+  needs a persisted Process/Election lifecycle-tracking aggregate this
+  pack does not introduce (see that exception class's own docstring).
+- One genuine, pre-existing production bug found and fixed via this
+  round's own contract-test work (not present in any external report):
+  `epd2_membership_service.events.conflict_assessment_state_payload`
+  (documented as a "full, canonically-hashable snapshot ... used for
+  Audit Core's `after_hash`") was silently missing three of
+  `ConflictAssessment`'s thirteen fields (`evidence_references`,
+  `supersedes_conflict_assessment_id`, `re_evaluation_due_at`) — those
+  three fields were outside Audit Core's tamper-evidence hash. Fixed to
+  cover all thirteen fields.
+- `REPOSITORY_VERSION` `0.6.0 → 0.7.0` (`packages/python/epd2-core/src/
+epd2_core/version.py`, `packages/typescript/epd2-types/src/version.ts`,
+  both version-consistency unit tests, and `docs/canonical/canon-
+version.json`'s `repository_compatibility` upper bound widened to admit
+  it). `CANON_VERSION` is unchanged (`0.6.0`) — this round implements the
+  already-accepted canon 19d text; no further canon edit was made.
+  `packages/typescript/epd2-types` deliberately gains no PACK-07 domain
+  types — this shared package has held "no business logic" (only
+  version constants) as an explicit, unbroken architectural boundary
+  since PACK-01, honored here rather than overridden; canon
+  cross-language contract parity is carried entirely by the JSON
+  Schemas and OpenAPI spec named above, exactly as it has been for
+  PACK-02 through PACK-06.
+- `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`.
+
+### Verified
+
+- Full local verification suite run in this repository's sandboxed,
+  network-restricted environment (see `LOCAL_VERIFICATION.md`): Ruff
+  (lint + format) clean; mypy clean per-service and for
+  `packages/python/epd2-core`/`scripts`/`tests/repository`/
+  `tests/contract` (run separately per the `Makefile`'s own documented
+  `--import-mode=importlib` limitation); the complete Python test suite
+  passing, including PACK-07's own `tests/contract`/`tests/repository`
+  additions, using the standalone-`pytest`/`PYTHONPATH` workaround
+  `LOCAL_VERIFICATION.md` documents, refined this round to also expose a
+  local PyYAML install so the reason-code-registry and OpenAPI contract
+  tests run for real locally instead of skipping. TypeScript/Prettier/
+  frontend-build verification remains unavailable in this sandbox (no
+  network access to install `npm`/`prettier`/Next.js toolchain
+  dependencies) and is explicitly reported as not run locally, not
+  claimed as passing. **This is a local, honest self-report — not an
+  external GitHub Actions PASS.** Full detail, including every command's
+  literal output: `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`.
+
+## [Unreleased] - canon minor version 0.6.0 (Participation & Membership Context)
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.5.0 →
+0.6.0` (ADR-026 through ADR-031, all `accepted`, no further amendment)
+  — the fifth edit to this document's own text since its original
+  acceptance (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 →
+  0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
+  → 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
+  & Membership Context"), inserted between sections 19c and 20, the same
+  non-renumbering technique used for 19a/19b/19c. Ten new canonical
+  entities: `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision` (owner: Eligibility Engine, i.e. `eligibility-service`,
+  extended for the first time since PACK-02); `PartyMembershipEligibilityPolicy`,
+  `AffiliationDeclaration`, `ConflictAssessment`, `MembershipApplication`
+  (owner: Membership Service, i.e. the new `membership-service`);
+  `AuthenticationContext` (owner: Identity Verification Service, i.e.
+  `identity-service`, extended). `IdentityRecord` (7.3) gains eight new
+  fields (`date_of_birth`, `citizenship_status`, `residence_status`,
+  `identity_assurance_level`, `identity_scheme`,
+  `attribute_verification_level`, `attribute_verified_at`,
+  `attribute_valid_until`); its existing ten fields are unchanged. The
+  generic `electoral_eligibility_met` concept — never itself a canonical
+  field — is replaced everywhere by four separated claims
+  (`active_electoral_eligibility_met`, `passive_electoral_eligibility_met`,
+  `party_internal_voting_eligibility_met`,
+  `party_office_candidacy_eligibility_met`). `MembershipApplication`'s
+  six-state lifecycle (`application_pending`, `eligibility_review`,
+  `human_decision_pending`, `approved`, `rejected`, `activated`) is
+  layered on top of, without overloading, `Membership.membership_status`
+  (8.3), which keeps all eight existing fields, seven existing status
+  values, and its owner unchanged. `AffiliationDeclaration` gains five
+  temporal/verification fields (`valid_from`, `valid_until`,
+  `verification_status`, `verified_at`, `verified_by`).
+  `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `PartyMembershipEligibilityPolicy`, and `StepUpAuthenticationRequirement`
+  are classified as "critical policies," each gaining
+  `signed_policy_digest_reference`/`transparency_log_commitment_reference`
+  and a four-independent-gate activation rule (verified
+  `GovernanceDecision`, `multi_person_approval_met`, signed digest,
+  transparency-log commitment) plus a policy-freeze rule extending
+  CT-00-10. `ProcessEligibilityPolicy` also carries seven legal-effect
+  fields (`decision_effect`, `formal_confirmation_required`,
+  `formal_confirmation_authority`, `secret_ballot_required`,
+  `permitted_participation_mode`, `required_assurance_level`,
+  `accessibility_profile`) and the `DigitalDecision → AssemblyDecision`
+  formal-confirmation lifecycle. `ParticipationRightsProfile` is
+  characterized as an internal, non-authoritative, never-stored derived
+  model; the only two permitted enforcement mechanisms anywhere in this
+  context are an atomic capability check or a single-purpose scoped
+  capability token. `Appeal` (14.3) gains a documentation clarification
+  only (`decision_id` as a polymorphic target reference, a standing
+  default for any future appealable decision type) — no field, status,
+  or owner change. The consequential-human-control hard invariant widens
+  to a seventh, open-ended category (denial of a fundamental member
+  right, however produced). `DomainPseudonymReference`,
+  `AntiCorrelationInvariant`, and `CryptographicProtocolProfile` are
+  named with their governing invariants stated (the latter's gate now
+  nine items, adding timing/transport unlinkability and
+  privacy-preserving revocation) but not defined as fully fielded
+  entities, deferred to future implementing ADRs. A future
+  architectural requirement for consequential AI-generated summaries
+  (deterministic source-reference mapping, coverage metadata, human-
+  review status, immutable `AIProcessingRecord` linkage) is recorded by
+  reference only — `AIProcessingRecord` (17.1, 19c) itself is not
+  modified. Section 20 gains a new event catalog subsection (20.16) and
+  three completing `Membership` (20.5) event names
+  (`membership.terminated`, `.rejected`, `.expired`). Section 22 gains
+  ten new ownership-matrix rows; section 23 gains new forbidden-link
+  entries. `docs/canonical/canon-version.json`,
+  `packages/python/epd2-core/src/epd2_core/version.py`, and
+  `packages/typescript/epd2-types/src/version.ts` updated to match, with
+  both version-consistency unit tests updated and
+  `scripts/verify_versions.py` passing; `REPOSITORY_VERSION` is
+  unchanged (`0.6.0`) since no `membership-service` or
+  `eligibility-service` extension code exists yet — this is a canon-only
+  change, per CLAUDE-PACK-07's own governance round (`docs/adr/ADR-026`
+  through `ADR-031`, all `accepted`; `docs/review/PACK-07-OWNER-DECISIONS.md`).
+- `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`.
+
+### Verified
+
+- **PACK-07 canon round PASS**, confirmed by a complete external GitHub
+  Actions run with real network access: 1822 Python tests passed, 3
+  skipped (the same genuine CT-00-10/CT-00-12 not-applicable markers as
+  the PACK-06 PASS baseline above — this canon-only round touched no
+  test file besides the two version-consistency unit tests, which
+  pass), TypeScript tests passed (3/3), frontend tests passed (2/2), a
+  successful Next.js production build, and Prettier, Ruff, ESLint, and
+  mypy all clean, with all 363 required paths present and no forbidden
+  files. See `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md` (§7) for
+  the full breakdown, including reconciliation against this sandbox's
+  own local run (1815 passed, 4 skipped — `hypothesis` cannot be
+  installed here, so its one property-based test module import-skips
+  as a single unit instead of running its seven tests individually).
+  This is a canon/ADR-acceptance PASS only — no `membership-service`/
+  `eligibility-service` implementation PASS is claimed; that remains a
+  distinct, future implementation round.
+
 ## [Unreleased] - canon minor version 0.5.0 (AI Processing Context)
 
 ### Changed
@@ -204,25 +475,25 @@ version.json`'s `repository_compatibility` upper bound widened to admit
 
 ### Verified
 
-- **PACK-06 local PASS**: full local verification suite run honestly —
-  `ruff check .` (all checks passed) and `ruff format --check .` (173
-  files already formatted); mypy clean across all 16 scoped groups
-  (fifteen pre-existing plus `services/ai-processing-service`), zero
-  errors; the complete pytest suite, 1815 passed / 4 skipped / 0 failed
-  (the 4 skips: `test_property_based.py` — `hypothesis` genuinely
-  unavailable in this sandbox — plus the three genuine
-  CT-00-10/CT-00-11/CT-00-12 not-applicable-in-earlier-packs markers);
-  `scripts/check_repository.py` — all 363 required paths present;
-  `scripts/check_forbidden_files.py` — no forbidden paths found;
-  `scripts/verify_versions.py` — all version sources consistent. Full
-  detail, including every command's literal output, in
-  `docs/handover/PACK-06-REPORT.md`. No network access to install
-  `hypothesis` or run the TypeScript/frontend toolchains locally in this
-  sandbox — see `LOCAL_VERIFICATION.md` for what this sandbox can and
-  cannot execute; unlike PACK-02 through PACK-05, this pack has not yet
-  had an external GitHub Actions run confirm the pipeline end to end, so
-  this is honestly recorded as a local-only PASS, not yet an
-  externally-confirmed one.
+- **PACK-06 PASS**, confirmed by a complete external GitHub Actions run
+  with real network access: 1822 Python tests passed, 3 skipped
+  (genuine CT-00-10/CT-00-12 not-applicable-in-earlier-packs markers —
+  CT-00-11 is no longer among them, now fully applicable and passing
+  for PACK-06, section 0 above), TypeScript tests passed (3/3), frontend
+  tests passed (2/2), a successful Next.js production build, and
+  Prettier, Ruff, ESLint, and mypy all clean, with all 363 required
+  paths present and no forbidden files. Three real, externally-found
+  gaps were fixed en route to this PASS, each touching exactly one file
+  and no implementation logic, schema, canon, or ADR content: a
+  six-file Prettier formatting gap (revision 2); a Markdown authoring
+  defect in this file's own PACK-06 test-coverage bullet — asterisks
+  used as informal wildcard shorthand inside/adjacent to inline code
+  spans, plus missing whitespace collapsing distinct words together
+  (revision 3); and a stale hardcoded TypeScript version-test literal in
+  `version.test.ts` still expecting `CANON_VERSION 0.4.0`/
+  `REPOSITORY_VERSION 0.5.0` instead of the correct `0.5.0`/`0.6.0`
+  (revision 4). Full detail, including every command's literal output
+  and the external run's exact results: `docs/handover/PACK-06-REPORT.md`.
 
 ## [Unreleased] - canon minor version 0.4.0 (Governance Context)
 

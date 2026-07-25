@@ -1,27 +1,28 @@
 # CLAUDE-PACK-06 — AI Processing Context: Handover Report
 
-**Revision 2 — local PASS, one external Prettier finding fixed.** This
-report follows the same honesty convention
-`docs/handover/PACK-02-REPORT.md` through `docs/handover/PACK-05-REPORT.md`
-established: every check this sandbox can actually run is run for real
-(not skipped, not asserted from memory) and its literal output is quoted
-below; every check this sandbox itself cannot run (network-gated
-`uv lock`/`npm install`, and everything downstream of them locally —
-`npm run typecheck`, ESLint, the TypeScript/frontend test suites,
-`next build`) is named explicitly as not run locally, for the same reason
-PACK-02 through PACK-05 already documented
-(`pypi.org`/`files.pythonhosted.org`/`registry.npmjs.org` all return
-`403` from this sandbox). This revision has not yet had a full external
-GitHub Actions run complete successfully — see section 0a for the one
-finding reported so far and its fix — so this remains the
-local-verification counterpart of PACK-05's own pre-PASS revisions, not
-yet a `0c`-style externally-confirmed PASS.
+**PACK-06 PASS — confirmed by a complete external GitHub Actions run
+with real network access.** This report follows the same honesty
+convention `docs/handover/PACK-02-REPORT.md` through
+`docs/handover/PACK-05-REPORT.md` established: every check this sandbox
+can actually run is run for real (not skipped, not asserted from memory)
+and its literal output is quoted below; every check this sandbox itself
+cannot run (network-gated `uv lock`/`npm install`, and everything
+downstream of them locally — `npm run typecheck`, ESLint, the
+TypeScript/frontend test suites, `next build`) is named explicitly as
+not run locally, for the same reason PACK-02 through PACK-05 already
+documented (`pypi.org`/`files.pythonhosted.org`/`registry.npmjs.org` all
+return `403` from this sandbox). Sections 0a through 0c below record the
+three real gaps external GitHub Actions runs found and this pack fixed
+en route (a six-file Prettier formatting gap, a `CHANGELOG.md` Markdown
+authoring defect, and a stale TypeScript version-test literal); section
+0d records the final external run's own results, matching PACK-05's own
+`0a`–`0c`-then-PASS revision history pattern.
 
 ```text
-PACK-06 local PASS (revision 2)
+PACK-06 PASS (external GitHub Actions confirmed)
 ```
 
-## 0a. External Prettier finding and fix (revision 2)
+## 0a. First external Prettier finding and fix (revision 2)
 
 The first real external GitHub Actions run against
 `epd2-civic-os-PACK-06-final-candidate.zip` reported a Prettier
@@ -89,6 +90,124 @@ the standalone `/root/.local/bin/ruff format --check .` and
 run directly instead, both clean, exactly as every prior pack's own
 local-only revision already documents for this same sandbox ceiling.
 
+## 0b. Second external Prettier finding, real root cause found (revision 3)
+
+The next external GitHub Actions run — against the revision-2 candidate
+archive — reported Prettier still failing on exactly one file,
+`CHANGELOG.md`, despite this sandbox's own system Prettier (3.8.1)
+reporting that file clean both before and after the revision-2 fix.
+Reading the file directly (rather than assuming another Prettier
+version disagreement) found a genuine Markdown authoring defect: the
+`[0.6.0]` entry's PACK-06 test-coverage bullet had lost its
+list-continuation indentation and inter-word spacing across roughly
+twenty lines. A literal `*` was used as an ad hoc wildcard
+(`unknown-processing*status`, `` `parse**` ``/`` `Unknown*Error` ``) —
+asterisks are Markdown emphasis delimiters, and a bare `*`/`**` sitting
+inside plain prose or straddling a code-span boundary is a genuinely
+ambiguous construct different Markdown/Prettier tokenizer versions parse
+differently; several inline code spans were also missing their
+surrounding whitespace, collapsing distinct words into single unbroken
+tokens. The wildcard shorthand was also factually imprecise — the two
+functions and two exceptions it abbreviated are
+`parse_processing_status`/`parse_human_review_status` and
+`UnknownProcessingStatusError`/`UnknownHumanReviewStatusError`
+(confirmed by reading `services/ai-processing-service/src/
+epd2_ai_processing_service/domain.py` and `exceptions.py` directly).
+
+**Fixed at the source, content unchanged in meaning:** the bullet was
+rewritten in full — correct list-continuation indentation, a space
+around every inline code span, and every wildcard-style abbreviation
+replaced with the real names spelled out in full. Verified with the
+repository's own exact command:
+
+```text
+$ /opt/node22/bin/prettier --write CHANGELOG.md
+CHANGELOG.md 192ms (unchanged)
+
+$ /opt/node22/bin/prettier --check CHANGELOG.md
+Checking formatting...
+All matched files use Prettier code style!
+```
+
+Only `CHANGELOG.md` was touched this round (per that round's explicit
+instruction) — confirmed by diffing the full working tree against the
+revision-2 archive, which showed exactly one file differing. The
+complete local verification suite was re-run and matched revision 2 in
+every other respect: 363/363 required paths, canon checksum unchanged,
+`verify_versions.py` consistent, mypy clean across all sixteen scoped
+groups, and pytest — 1815 passed, 4 skipped, 0 failed.
+
+## 0c. Stale TypeScript version-test literal found and fixed (revision 4)
+
+The next external GitHub Actions run — against the revision-3 candidate
+archive — reported the Prettier finding resolved, but a new failure in
+the TypeScript unit test suite:
+`packages/typescript/epd2-types/tests/version.test.ts`'s "current
+versions match the expected skeleton version" test asserted
+`CANON_VERSION === "0.4.0"` and `REPOSITORY_VERSION === "0.5.0"`, stale
+literals never updated when this pack's own canon and repository
+version bumps happened (section 2). `scripts/verify_versions.py` — which
+checks the actual source-of-truth files against each other — had already
+been passing throughout, confirming this was purely a stale test literal,
+never a source-of-truth inconsistency.
+
+**Fixed — only the one test file touched:** updated the two stale
+assertions to `CANON_VERSION, "0.5.0"` and `REPOSITORY_VERSION, "0.6.0"`,
+and added two further narrative comments (matching this file's own
+established convention of documenting every prior version transition)
+describing the `0.4.0 → 0.5.0` canon bump (ADR-023/ADR-025, canon
+section 19c) and the `0.5.0 → 0.6.0` repository bump (ADR-021 through
+ADR-025), cross-checked directly against `CHANGELOG.md` and the ADR
+filenames on disk. A repository-wide grep confirmed this is the only
+TypeScript test file referencing `CANON_VERSION`/`REPOSITORY_VERSION` at
+all, so no other stale literal existed to fix.
+
+`npm test --workspace packages/typescript/epd2-types` could not be run
+in this sandbox (the same pre-existing network ceiling, section 1) — as
+an honest substitute, the fixed test's logic was verified manually by
+running its assertions (plain, type-annotation-free JavaScript already)
+against the real `version.ts` values with Node's built-in test runner
+outside the repository tree: all 3 tests passed, including the
+previously-failing one. The full local verification suite was re-run
+and matched revision 3 in every other respect: 363/363 required paths,
+canon checksum unchanged, `verify_versions.py` consistent, mypy clean
+across all fifteen scoped Python groups, and pytest — 1815 passed, 4
+skipped, 0 failed.
+
+## 0d. Final external GitHub Actions run — PASS confirmed
+
+The external GitHub Actions run against the revision-4 candidate
+archive completed successfully with real network access:
+
+```text
+Status: PASS
+Python: 1822 passed, 3 skipped, 0 failed
+TypeScript: 3/3 passed
+Frontend tests: 2/2 passed
+Next.js production build: successful
+Prettier: passed
+Ruff: passed
+ESLint: passed
+mypy: passed
+Required paths: all 363 present
+Forbidden files: none
+```
+
+The 3 skips are the genuine CT-00-10/CT-00-12 not-applicable-in-earlier-
+packs markers (section 9); CT-00-11 is no longer among them — it is now
+fully applicable and passing for PACK-06 for the first time (section 0
+above). This is the first PACK-06 external run with `hypothesis`
+installed and the TypeScript/frontend toolchains available, so it is
+also the first run to actually execute `test_property_based.py`,
+`npm run typecheck`/ESLint/the TypeScript unit tests, and `next build` —
+all of which this local sandbox has never been able to run itself
+(section 1). No further fix was needed for this run: it confirms
+revision 4 (section 0c) as the closing candidate. `REPOSITORY_VERSION`
+remains `0.6.0`, `CANON_VERSION` remains `0.5.0`, and the canon checksum
+is unchanged (section 2) — nothing in this closeout pass touched
+implementation logic, schemas, tests, canon, ADRs, versions, or the
+workflow.
+
 ## 0. What CLAUDE-PACK-06 adds
 
 Implements the AI Processing Context (canon section 17.1, extended by
@@ -151,10 +270,12 @@ pack.
 
 This pack makes no TypeScript/frontend source change beyond the
 `REPOSITORY_VERSION` mirror in
-`packages/typescript/epd2-types/src/version.ts` (already covered by
-`version.test.ts`, section 2) — `npm run typecheck`, ESLint, the
-TypeScript/frontend unit test suites, and `next build` were not run
-locally, consistent with every prior pack's local-only revisions.
+`packages/typescript/epd2-types/src/version.ts` and the
+`version.test.ts` assertions that check it (section 2, section 0c) —
+`npm run typecheck`, ESLint, the TypeScript/frontend unit test suites,
+and `next build` could not be run locally in this sandbox for the
+network reason above; all of them ran for real in the final external
+GitHub Actions run (section 0d) and passed.
 
 ## 2. Canon integrity
 
@@ -404,6 +525,95 @@ documented not-applicable, each with an explicitly reasoned skip.
 
 ## 10. Commands executed this pass, and results
 
+### Final external GitHub Actions run — PASS (section 0d)
+
+```text
+✅ Status: PASS
+✅ Python: 1822 passed, 3 skipped, 0 failed
+✅ TypeScript: 3/3 passed
+✅ Frontend tests: 2/2 passed
+✅ Next.js production build: successful
+✅ Prettier: passed
+✅ Ruff: passed
+✅ ESLint: passed
+✅ mypy: passed
+✅ Required paths: all 363 present
+✅ Forbidden files: none
+```
+
+This is the authoritative, externally-confirmed result for the
+candidate this report closes out. `REPOSITORY_VERSION` (`0.6.0`),
+`CANON_VERSION` (`0.5.0`), and the canon checksum (section 2) are
+unchanged from every local run below.
+
+### Revision 4 re-verification (after the section 0c TypeScript version-test fix)
+
+```text
+✅ /opt/node22/bin/prettier --check .
+   → Checking formatting...
+     All matched files use Prettier code style!
+
+✅ /root/.local/bin/ruff format --check .
+   → 173 files already formatted
+
+✅ /root/.local/bin/ruff check .
+   → All checks passed!
+
+✅ python3 scripts/check_repository.py
+   → OK: all 363 required paths are present.
+
+✅ python3 scripts/check_forbidden_files.py
+   → OK: no forbidden paths found.
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
+   374b25fddfab88846622bf078b35c4246d8ad8c5d65bf43e6ac4e82653f74f74
+   (unchanged, section 2)
+
+✅ mypy — all fifteen scoped Python groups
+   → Success: no issues found, zero errors, across every group
+
+✅ PYTHONPATH=<all 15 src/ dirs>:<system python3 dist-packages> pytest -q
+   → 1815 passed, 4 skipped, 0 failed — identical to revision 3
+
+✅ Manual Node `node:test` run of version.test.ts's logic against real
+   version.ts values (tsx unavailable, section 0c)
+   → 3/3 passed, including the previously-failing skeleton-version test
+
+❌ npm test --workspace packages/typescript/epd2-types
+   → could not run in this sandbox (tsx not installable, section 1/0c)
+```
+
+### Revision 3 re-verification (after the section 0b CHANGELOG.md fix)
+
+```text
+✅ /opt/node22/bin/prettier --write CHANGELOG.md
+   → CHANGELOG.md 192ms (unchanged)
+
+✅ /opt/node22/bin/prettier --check CHANGELOG.md
+   → Checking formatting...
+     All matched files use Prettier code style!
+
+✅ npm run format:check   (full tree)
+   → Checking formatting...
+     All matched files use Prettier code style!
+
+✅ python3 scripts/check_repository.py
+   → OK: all 363 required paths are present.
+
+✅ python3 scripts/verify_versions.py
+   → OK: all version sources are consistent.
+
+✅ sha256sum docs/canonical/TZ-00-domain-event-canon.md
+   374b25fddfab88846622bf078b35c4246d8ad8c5d65bf43e6ac4e82653f74f74
+   (unchanged, section 2)
+
+✅ PYTHONPATH=<all 15 src/ dirs>:<system python3 dist-packages> pytest -q
+   → 1815 passed, 4 skipped, 0 failed — identical to revision 2
+```
+
 ### Revision 2 re-verification (after the section 0a Prettier fix)
 
 ```text
@@ -487,44 +697,54 @@ effect on the repository.
      pypi.org/files.pythonhosted.org/registry.npmjs.org returns 403,
      reconfirmed this pass)
 
-⏳ Not run this pass (same network restriction; PACK-06 makes no
-   frontend/TypeScript source change beyond the REPOSITORY_VERSION
-   mirror, section 1): npm run typecheck (both workspaces), npm run lint
-   (frontend ESLint), npm run test (both workspaces), next build.
-
-⏳ No external GitHub Actions run has occurred yet against this pack's
-   candidate archive — this report records a local-only PASS, the
-   counterpart to PACK-05's own revision-1 report before its own
-   external verification rounds (sections 0a-0c of that report).
+➖ Not run this pass in this sandbox (same network restriction, section
+   1): npm run typecheck (both workspaces), npm run lint (frontend
+   ESLint), npm run test (both workspaces), next build. All four ran for
+   real in the final external GitHub Actions run (section 0d) and
+   passed: TypeScript 3/3, frontend tests 2/2, Next.js production build
+   successful, ESLint clean.
 ```
 
 ## 11. Readiness conclusion
 
 ```text
-PACK-06 local PASS (revision 2)
+PACK-06 PASS (external GitHub Actions confirmed)
 ```
 
-Every check this sandbox can run has passed: required structure (363 of
-363 paths), no forbidden paths, all version sources consistent, Ruff
-format and lint clean, a real `prettier --check .` clean across the full
-tree (revision 2, section 0a — the one external CI finding so far, six
-files, all pure reformatting, fixed with the repository's own
-`npm run format`), mypy clean across all sixteen scoped groups with
-zero errors and zero blanket suppressions, 1815 passing Python tests
-with 0 failures and exactly 4 genuine, individually-documented skips
-(1 hypothesis-unavailable, 3 CT-00-10/11/12 not-applicable-in-earlier-
-packs markers). `docs/canonical/TZ-00-domain-event-canon.md` remains
-byte-identical throughout (section 2) and `CANON_VERSION` is unchanged
-at `0.5.0` — this pass implements already-accepted canon text and makes
-no canon edit of its own. `REPOSITORY_VERSION` moved `0.5.0 → 0.6.0`,
-enforced by `scripts/verify_versions.py`.
+**PACK-06 PASS**, confirmed by a complete external GitHub Actions run
+with real network access (section 0d): 1822 Python tests passed, 3
+skipped (genuine CT-00-10/CT-00-12 not-applicable-in-earlier-packs
+markers — CT-00-11 is no longer among them, now fully applicable and
+passing for PACK-06 for the first time, section 0), TypeScript tests
+passed (3/3), frontend tests passed (2/2), a successful Next.js
+production build, and Prettier, Ruff, ESLint, and mypy all clean, with
+all 363 required paths present and no forbidden files. Every check this
+sandbox can itself run independently confirms the same picture locally:
+required structure (363 of 363 paths), no forbidden paths, all version
+sources consistent, Ruff format and lint clean, `prettier --check .`
+clean across the full tree, mypy clean across all fifteen scoped Python
+groups with zero errors and zero blanket suppressions, and 1815 passing
+Python tests with 0 failures and exactly 4 genuine, individually-
+documented skips locally (1 hypothesis-unavailable in this sandbox only
+— it ran for real externally, contributing to the 1822/3 external
+numbers above — plus the 3 CT-00-10/12 not-applicable markers).
+`docs/canonical/TZ-00-domain-event-canon.md` remains byte-identical
+throughout (section 2) and `CANON_VERSION` is unchanged at `0.5.0` —
+this pass implements already-accepted canon text and makes no canon
+edit of its own. `REPOSITORY_VERSION` moved `0.5.0 → 0.6.0`, enforced by
+`scripts/verify_versions.py`.
 
-No check was weakened, no empty file was written to satisfy a path
-requirement, no reason code was hidden, no legitimate field was stripped
-from this service's own contract to make a test pass, and no
-data-boundary or fail-closed claim is made without the automated test
-that backs it (sections 6, 7, 8, 9). This report has not yet been
-confirmed by an external GitHub Actions run with genuine network access
-— unlike PACK-02 through PACK-05's own final revisions, `PACK-06 local
-PASS` is, honestly, a local-only claim at this point, exactly scoped to
-what this sandbox itself can verify.
+Three real gaps were found and fixed en route to this PASS — a
+six-file Prettier formatting gap (revision 2, section 0a), a Markdown
+authoring defect in `CHANGELOG.md` (revision 3, section 0b), and a
+stale hardcoded TypeScript version-test literal (revision 4, section
+0c) — each touching exactly the one file needed and no implementation
+logic, schema, canon, or ADR content. No check was weakened, no empty
+file was written to satisfy a path requirement, no reason code was
+hidden, no legitimate field was stripped from this service's own
+contract to make a test pass, and no data-boundary or fail-closed claim
+is made without the automated test that backs it (sections 6, 7, 8, 9).
+Unlike this report's own revision-2 draft, `PACK-06 PASS` is no longer a
+local-only claim — it is now confirmed end to end by a real external
+GitHub Actions run with genuine network access, matching PACK-02
+through PACK-05's own final, externally-confirmed revisions.

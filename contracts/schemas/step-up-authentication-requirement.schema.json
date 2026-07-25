@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/step-up-authentication-requirement.schema.json",
+  "title": "StepUpAuthenticationRequirement",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.8 (canon-0.6.0, PACK-07, ADR-026). Owned by eligibility-service (epd2_eligibility_service.domain.StepUpAuthenticationRequirement) - a critical policy (section 19d.7) naming what assurance a given action_code requires. maximum_authentication_age is an ISO-8601 duration string or null (no maximum-age check performed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requirement_id",
+    "requirement_version",
+    "status",
+    "action_code",
+    "required_authentication_context",
+    "assurance_requirement",
+    "fresh_authentication_required",
+    "reauthentication_reason",
+    "maximum_authentication_age",
+    "effective_from",
+    "effective_until",
+    "supersedes_requirement_id",
+    "signed_policy_digest_reference",
+    "transparency_log_commitment_reference"
+  ],
+  "properties": {
+    "requirement_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "requirement_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "superseded"
+      ]
+    },
+    "action_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_authentication_context": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assurance_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_identity_assurance_level",
+        "required_authentication_assurance_level",
+        "required_attribute_freshness"
+      ],
+      "properties": {
+        "required_identity_assurance_level": {
+          "type": "string",
+          "enum": [
+            "none",
+            "low",
+            "substantial",
+            "high"
+          ]
+        },
+        "required_authentication_assurance_level": {
+          "type": "string",
+          "enum": [
+            "none",
+            "low",
+            "substantial",
+            "high"
+          ]
+        },
+        "required_attribute_freshness": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISO-8601 duration (e.g. 'P30D'), or null for no freshness requirement."
+        }
+      }
+    },
+    "fresh_authentication_required": {
+      "type": "boolean"
+    },
+    "reauthentication_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maximum_authentication_age": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "ISO-8601 duration (e.g. 'PT15M'), or null for no maximum-age check."
+    },
+    "effective_from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "effective_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "supersedes_requirement_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "signed_policy_digest_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "transparency_log_commitment_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  }
+}

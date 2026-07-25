@@ -205,6 +205,34 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "contracts/events/ai-processing-record-payload.v1.schema.json",
     # Contracts: PACK-06 OpenAPI
     "contracts/openapi/pack-06.yaml",
+    # Contracts: PACK-07 reason codes registry
+    "contracts/reason-codes/pack-07.yml",
+    # Contracts: PACK-07 JSON Schemas
+    "contracts/schemas/participant-eligibility-policy.schema.json",
+    "contracts/schemas/process-eligibility-policy.schema.json",
+    "contracts/schemas/step-up-authentication-requirement.schema.json",
+    "contracts/schemas/digital-decision.schema.json",
+    "contracts/schemas/assembly-decision.schema.json",
+    "contracts/schemas/party-membership-eligibility-policy.schema.json",
+    "contracts/schemas/membership.schema.json",
+    "contracts/schemas/membership-application.schema.json",
+    "contracts/schemas/affiliation-declaration.schema.json",
+    "contracts/schemas/conflict-assessment.schema.json",
+    # Contracts: PACK-07 event payload schemas
+    "contracts/events/participation-rights-derived-payload.v1.schema.json",
+    "contracts/events/formal-confirmation-requested-payload.v1.schema.json",
+    "contracts/events/formal-confirmation-recorded-payload.v1.schema.json",
+    "contracts/events/authentication-context-event-payload.v1.schema.json",
+    "contracts/events/membership-application-submitted-payload.v1.schema.json",
+    "contracts/events/membership-eligibility-evaluated-payload.v1.schema.json",
+    "contracts/events/membership-decision-recorded-payload.v1.schema.json",
+    "contracts/events/membership-activated-payload.v1.schema.json",
+    "contracts/events/membership-suspended-payload.v1.schema.json",
+    "contracts/events/affiliation-declared-payload.v1.schema.json",
+    "contracts/events/conflict-assessment-opened-payload.v1.schema.json",
+    "contracts/events/conflict-decision-recorded-payload.v1.schema.json",
+    # Contracts: PACK-07 OpenAPI
+    "contracts/openapi/pack-07.yaml",
     # Services (placeholder)
     "services/README.md",
     # Services: account-service
@@ -229,6 +257,7 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/identity-service/src/epd2_identity_service/storage.py",
     "services/identity-service/tests/test_domain.py",
     "services/identity-service/tests/test_application.py",
+    "services/identity-service/tests/test_application_pack07.py",
     # Services: eligibility-service
     "services/eligibility-service/README.md",
     "services/eligibility-service/pyproject.toml",
@@ -240,6 +269,7 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/eligibility-service/src/epd2_eligibility_service/storage.py",
     "services/eligibility-service/tests/test_domain.py",
     "services/eligibility-service/tests/test_application.py",
+    "services/eligibility-service/tests/test_application_pack07.py",
     # Services: credential-service
     "services/credential-service/README.md",
     "services/credential-service/pyproject.toml",
@@ -379,6 +409,18 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "services/audit-core/tests/test_application.py",
     "services/audit-core/tests/test_hash_chain.py",
     "services/audit-core/tests/test_storage.py",
+    # Services: membership-service (PACK-07's one wholly new service)
+    "services/membership-service/README.md",
+    "services/membership-service/pyproject.toml",
+    "services/membership-service/src/epd2_membership_service/__init__.py",
+    "services/membership-service/src/epd2_membership_service/domain.py",
+    "services/membership-service/src/epd2_membership_service/application.py",
+    "services/membership-service/src/epd2_membership_service/events.py",
+    "services/membership-service/src/epd2_membership_service/exceptions.py",
+    "services/membership-service/src/epd2_membership_service/storage.py",
+    "services/membership-service/tests/test_domain.py",
+    "services/membership-service/tests/test_application.py",
+    "services/membership-service/tests/test_storage.py",
     # Python packages
     "packages/python/README.md",
     "packages/python/epd2-core/README.md",
@@ -415,10 +457,12 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "tests/repository/test_forbidden_paths.py",
     "tests/repository/test_version_consistency.py",
     "tests/repository/test_service_boundaries.py",
+    "tests/repository/test_pack07_duplicated_logic_parity.py",
     # Tests: PACK-02 contract test suite
     "tests/contract/conftest.py",
     "tests/contract/_schema_helpers.py",
     "tests/contract/test_ct00_01_schema_validation.py",
+    "tests/contract/test_ct00_01_pack07_schema_validation.py",
     "tests/contract/test_ct00_02_unknown_status.py",
     "tests/contract/test_ct00_03_forbidden_transition.py",
     "tests/contract/test_ct00_04_event_idempotency.py",

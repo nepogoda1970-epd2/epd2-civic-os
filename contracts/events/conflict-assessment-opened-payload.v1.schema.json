@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/conflict-assessment-opened-payload.v1.schema.json",
+  "title": "membership.conflict_assessment_opened event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.11 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_conflict_assessment_opened_event. Never carries evidence_references/reason_codes on the wire (ADR-030 item 5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conflict_assessment_id",
+    "conflict_type",
+    "status"
+  ],
+  "properties": {
+    "conflict_assessment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "conflict_type": {
+      "type": "string",
+      "enum": [
+        "dual_party_membership",
+        "political_association_conflict",
+        "public_office_incompatibility",
+        "lobbying_role_incompatibility",
+        "organizational_affiliation_conflict",
+        "declared_incompatible_organization"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "under_review",
+        "resolved_no_conflict",
+        "resolved_conditional",
+        "resolved_incompatible",
+        "appealed",
+        "overturned",
+        "expired_reevaluation_due"
+      ]
+    }
+  }
+}

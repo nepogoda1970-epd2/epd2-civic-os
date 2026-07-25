@@ -42,14 +42,23 @@ from epd2_eligibility_service.application import (
     PermissionDeniedError as EligibilityPermissionDeniedError,
 )
 from epd2_eligibility_service.application import (
+    activate_participant_eligibility_policy,
     create_eligibility_rule,
     create_eligibility_snapshot,
     evaluate_eligibility,
+    propose_participant_eligibility_policy,
+    record_digital_decision,
+)
+from epd2_eligibility_service.domain import (
+    CriticalPolicyStatus as EligibilityCriticalPolicyStatus,
 )
 from epd2_eligibility_service.storage import (
+    InMemoryAssemblyDecisionStore,
+    InMemoryDigitalDecisionStore,
     InMemoryEligibilityDecisionStore,
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
+    InMemoryParticipantEligibilityPolicyStore,
 )
 from epd2_governance_service.application import (
     activate_governance_policy,
@@ -57,6 +66,9 @@ from epd2_governance_service.application import (
 )
 from epd2_governance_service.domain import (
     GLOBAL_SCOPE_ID,
+    GovernanceDecision,
+    GovernanceDecisionStatus,
+    GovernanceDecisionType,
     GovernancePolicyStatus,
     GovernancePolicyType,
     RoleAssignment,
@@ -64,6 +76,7 @@ from epd2_governance_service.domain import (
 )
 from epd2_governance_service.exceptions import SameActorApprovalRejectedError
 from epd2_governance_service.storage import (
+    InMemoryGovernanceDecisionStore,
     InMemoryGovernancePolicyStore,
     InMemoryRoleAssignmentStore,
 )
@@ -74,8 +87,31 @@ from epd2_identity_service.application import (
     record_verification_result,
     start_identity_verification,
 )
-from epd2_identity_service.domain import VerificationStatus
+from epd2_identity_service.domain import IdentityAssuranceLevel, IdentityRecord, VerificationStatus
 from epd2_identity_service.storage import InMemoryIdentityRecordStore
+from epd2_membership_service.application import (
+    PermissionDeniedError as MembershipPermissionDeniedError,
+)
+from epd2_membership_service.application import (
+    activate_membership,
+    declare_affiliation,
+    evaluate_membership_application_eligibility,
+    record_membership_human_decision,
+    submit_membership_application,
+)
+from epd2_membership_service.domain import (
+    CriticalPolicyStatus as MembershipCriticalPolicyStatus,
+)
+from epd2_membership_service.domain import (
+    MembershipApplicationStatus,
+    PartyMembershipEligibilityPolicy,
+)
+from epd2_membership_service.storage import (
+    InMemoryAffiliationDeclarationStore,
+    InMemoryMembershipApplicationStore,
+    InMemoryMembershipStore,
+    InMemoryPartyMembershipEligibilityPolicyStore,
+)
 from epd2_moderation_service.application import (
     PermissionDeniedError as ModerationPermissionDeniedError,
 )
@@ -898,3 +934,317 @@ def test_review_ai_output_succeeds_for_a_different_reviewer(
         clock=clock,
     )
     assert result.record.human_review_status is HumanReviewStatus.APPROVED
+
+
+# =============================================================================
+# PACK-07 (canon-0.6.0, canon 19d.4-19d.14, ADR-026 through ADR-031): a plain
+# `actor_is_authorized=False` rejection across a representative sample of
+# both new services' critical commands - `eligibility-service`'s critical
+# policy activation and formal digital-decision recording, and
+# `membership-service`'s application submission, Stage B human decision,
+# activation, and affiliation declaration. Each also asserts the state
+# change did not happen, mirroring this file's own established pattern.
+# =============================================================================
+
+
+def test_activate_participant_eligibility_policy_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    governance_decision_store: InMemoryGovernanceDecisionStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    policy_store = InMemoryParticipantEligibilityPolicyStore()
+    policy = propose_participant_eligibility_policy(
+        policy_store,
+        policy_id=uuid4(),
+        policy_version=1,
+        scope_type=None,
+        scope_id=None,
+        effective_from=clock.now(),
+        effective_until=None,
+        adopted_by_decision_id=uuid4(),
+    )
+    with pytest.raises(EligibilityPermissionDeniedError) as excinfo:
+        activate_participant_eligibility_policy(
+            policy_store,
+            governance_decision_store,
+            audit_store,
+            policy_id=policy.policy_id,
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    unchanged = policy_store.get(policy.policy_id)
+    assert unchanged is not None
+    assert unchanged.status == EligibilityCriticalPolicyStatus.DRAFT
+
+
+def test_record_digital_decision_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    digital_decision_store = InMemoryDigitalDecisionStore()
+    digital_decision_id = uuid4()
+    with pytest.raises(EligibilityPermissionDeniedError) as excinfo:
+        record_digital_decision(
+            digital_decision_store,
+            InMemoryAssemblyDecisionStore(),
+            audit_store,
+            digital_decision_id=digital_decision_id,
+            process_reference={"process_id": str(uuid4())},
+            digital_result="result",
+            decision_effect="advisory",
+            formal_confirmation_required=False,
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    assert digital_decision_store.get(digital_decision_id) is None
+
+
+def test_submit_membership_application_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    application_store = InMemoryMembershipApplicationStore()
+    membership_application_id = uuid4()
+    with pytest.raises(MembershipPermissionDeniedError) as excinfo:
+        submit_membership_application(
+            application_store,
+            audit_store,
+            membership_application_id=membership_application_id,
+            subject_reference=uuid4(),
+            supersedes_membership_application_id=None,
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    assert application_store.get(membership_application_id) is None
+
+
+def _approved_governance_decision_for_membership(
+    store: InMemoryGovernanceDecisionStore, clock: FixedClock
+) -> GovernanceDecision:
+    """Real `proposed -> approved` `GovernanceDecision`, mirroring
+    `_make_approved_governance_decision` in
+    `services/membership-service/tests/test_application.py` -
+    `record_membership_human_decision`'s own decision-authority check
+    (`_verify_decision_authority`) needs a real approved decision to
+    resolve against."""
+    decision = GovernanceDecision(
+        governance_decision_id=uuid4(),
+        decision_type=GovernanceDecisionType.MANDATE,
+        subject_reference={"kind": "membership_decision"},
+        proposed_by_role_id=uuid4(),
+        approved_by_role_id=None,
+        rejected_by_role_id=None,
+        reason_code="MANDATE_ISSUED",
+        evidence_references=(),
+        finality_outcome=None,
+        created_at=clock.now(),
+        decided_at=None,
+        supersedes_decision_id=None,
+        status=GovernanceDecisionStatus.PROPOSED,
+    )
+    store.create(decision)
+    approved = decision.with_approved(
+        approved_by_role_id=uuid4(), decided_at=clock.now(), finality_outcome=None
+    )
+    store.save(approved)
+    return approved
+
+
+def _membership_application_pending_human_decision(
+    application_store: InMemoryMembershipApplicationStore,
+    policy_store: InMemoryPartyMembershipEligibilityPolicyStore,
+    identity_store: InMemoryIdentityRecordStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> UUID:
+    """Real `submit -> Stage A evaluate` chain, landing a real
+    `MembershipApplication` in `human_decision_pending` -
+    `record_membership_human_decision`'s own rejection case needs a real
+    pending application to verify was not mutated. Mirrors
+    `_submit_and_evaluate` in `services/membership-service/tests/
+    test_application.py`. Returns `membership_application_id`."""
+    membership_application_id = uuid4()
+    submit_membership_application(
+        application_store,
+        audit_store,
+        membership_application_id=membership_application_id,
+        subject_reference=uuid4(),
+        supersedes_membership_application_id=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    policy_store.save(
+        PartyMembershipEligibilityPolicy(
+            policy_id=uuid4(),
+            policy_version=1,
+            status=MembershipCriticalPolicyStatus.ACTIVE,
+            scope_type=None,
+            scope_id=None,
+            effective_from=datetime(2025, 1, 1, tzinfo=UTC),
+            effective_until=None,
+            adopted_by_decision_id=uuid4(),
+            incompatibility_rules=(),
+            signed_policy_digest_reference="digest",
+            transparency_log_commitment_reference="commitment",
+        )
+    )
+    identity_record_id = uuid4()
+    identity_store.save(
+        IdentityRecord(
+            identity_record_id=identity_record_id,
+            account_id=uuid4(),
+            verification_provider="provider",
+            verification_level="substantial",
+            verification_status=VerificationStatus.VERIFIED,
+            verified_at=clock.now(),
+            expires_at=None,
+            country="DE",
+            duplicate_check_status="unique",
+            provider_reference="ref",
+            identity_assurance_level=IdentityAssuranceLevel.SUBSTANTIAL,
+        )
+    )
+    evaluate_membership_application_eligibility(
+        application_store,
+        policy_store,
+        identity_store,
+        audit_store,
+        membership_application_id=membership_application_id,
+        identity_record_id=identity_record_id,
+        scope_type=None,
+        scope_id=None,
+        effective_date=clock.now(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    return membership_application_id
+
+
+def test_record_membership_human_decision_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    governance_decision_store: InMemoryGovernanceDecisionStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    application_store = InMemoryMembershipApplicationStore()
+    policy_store = InMemoryPartyMembershipEligibilityPolicyStore()
+    identity_store = InMemoryIdentityRecordStore()
+    membership_application_id = _membership_application_pending_human_decision(
+        application_store, policy_store, identity_store, audit_store, actor, clock
+    )
+    decision = _approved_governance_decision_for_membership(governance_decision_store, clock)
+    with pytest.raises(MembershipPermissionDeniedError) as excinfo:
+        record_membership_human_decision(
+            application_store,
+            InMemoryMembershipStore(),
+            governance_decision_store,
+            audit_store,
+            membership_application_id=membership_application_id,
+            outcome="approved",
+            decision_authority_reference=decision.governance_decision_id,
+            applied_policy_version=1,
+            reason_code="OK",
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    unchanged = application_store.get(membership_application_id)
+    assert unchanged is not None
+    assert unchanged.status == MembershipApplicationStatus.HUMAN_DECISION_PENDING
+
+
+def test_activate_membership_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    governance_decision_store: InMemoryGovernanceDecisionStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    application_store = InMemoryMembershipApplicationStore()
+    policy_store = InMemoryPartyMembershipEligibilityPolicyStore()
+    identity_store = InMemoryIdentityRecordStore()
+    membership_store = InMemoryMembershipStore()
+    membership_application_id = _membership_application_pending_human_decision(
+        application_store, policy_store, identity_store, audit_store, actor, clock
+    )
+    decision = _approved_governance_decision_for_membership(governance_decision_store, clock)
+    record_membership_human_decision(
+        application_store,
+        membership_store,
+        governance_decision_store,
+        audit_store,
+        membership_application_id=membership_application_id,
+        outcome="approved",
+        decision_authority_reference=decision.governance_decision_id,
+        applied_policy_version=1,
+        reason_code="OK",
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    membership_id = uuid4()
+    with pytest.raises(MembershipPermissionDeniedError) as excinfo:
+        activate_membership(
+            application_store,
+            membership_store,
+            audit_store,
+            membership_application_id=membership_application_id,
+            membership_id=membership_id,
+            account_reference=uuid4(),
+            organization_id=uuid4(),
+            membership_type="party",
+            region_code=None,
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    unchanged = application_store.get(membership_application_id)
+    assert unchanged is not None
+    assert unchanged.status == MembershipApplicationStatus.APPROVED
+    assert membership_store.get(membership_id) is None
+
+
+def test_declare_affiliation_without_permission_is_denied(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    store = InMemoryAffiliationDeclarationStore()
+    affiliation_declaration_id = uuid4()
+    with pytest.raises(MembershipPermissionDeniedError) as excinfo:
+        declare_affiliation(
+            store,
+            audit_store,
+            affiliation_declaration_id=affiliation_declaration_id,
+            subject_reference=uuid4(),
+            affiliation_type="other_party_membership",
+            declared_reference="ref-1",
+            valid_from=clock.now(),
+            actor=actor,
+            actor_is_authorized=False,
+            correlation_id=uuid4(),
+            clock=clock,
+        )
+    assert excinfo.value.reason_code == "PERMISSION_DENIED"
+    assert store.get(affiliation_declaration_id) is None

@@ -18,9 +18,9 @@ from epd2_core.identifiers import generate_uuid
 from epd2_credential_service.domain import (
     CURRENT_CREDENTIAL_VERSION,
     CredentialStatus,
-    CredentialType,
     ParticipationCredential,
     ValidationResult,
+    parse_credential_type,
 )
 from epd2_credential_service.events import (
     build_credential_issued_event,
@@ -67,7 +67,7 @@ def issue_participation_credential(
     audit_store: AuditEventStore,
     *,
     credential_id: UUID,
-    credential_type: CredentialType,
+    credential_type: str,
     scope_type: str,
     scope_id: UUID,
     valid_from: datetime,
@@ -100,15 +100,25 @@ def issue_participation_credential(
     therefore a fresh audit entry - see
     `docs/review/OPEN_QUESTIONS.md` for why the other services' analogous
     commands do not yet accept this parameter too.
+
+    `credential_type` is a plain `str` (PACK-07 implementation round
+    change), parsed fail-closed via `domain.parse_credential_type` -
+    widened from the original `CredentialType` parameter type so
+    `eligibility-service` can call this function (canon 19d.14's
+    single-purpose scoped capability token mechanism) without importing
+    `epd2_credential_service.domain`, which `tests/repository/
+    test_service_boundaries.py` forbids (`.application` only). Canon
+    section 10.1's five-value `CredentialType` list itself is unchanged.
     """
     if not actor_is_authorized:
         raise PermissionDeniedError("actor is not authorized to issue a credential")
 
+    resolved_credential_type = parse_credential_type(credential_type)
     resolved_event_id = event_id if event_id is not None else generate_uuid()
     now = clock.now()
     credential = ParticipationCredential(
         credential_id=credential_id,
-        credential_type=credential_type,
+        credential_type=resolved_credential_type,
         scope_type=scope_type,
         scope_id=scope_id,
         issued_at=now,

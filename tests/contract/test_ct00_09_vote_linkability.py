@@ -13,6 +13,7 @@ guarantee doesn't have to be retrofitted later under time pressure.
 from __future__ import annotations
 
 import ast
+import dataclasses
 import inspect
 import json
 from datetime import timedelta
@@ -622,3 +623,57 @@ def test_ai_processing_service_never_imports_voting_tally_delegation_account_or_
                 continue
             leaked = names & forbidden_modules
             assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+
+
+# =============================================================================
+# PACK-07 (eligibility-service extensions, membership-service): neither
+# service has any dependency on vote-linked content at all - unlike
+# PACK-06's boundary check above, eligibility-service DOES have legitimate
+# ADR-027 `.application`-only edges into identity-service/credential-service/
+# governance-service/membership-service, so only voting/tally/delegation
+# (the actual vote-linkable services) are forbidden here, not the full
+# PACK-06-style exclusion set.
+# =============================================================================
+
+
+def test_pack07_services_never_import_voting_tally_or_delegation_domain() -> None:
+    """AST-based import-boundary check (mirroring
+    `test_ai_processing_service_never_imports_voting_tally_delegation_account_or_identity`
+    above, narrowed to the three genuinely vote-linked services): no module
+    in `epd2_eligibility_service` or `epd2_membership_service` ever imports
+    `epd2_voting_service`, `epd2_tally_service`, or `epd2_delegation_service`
+    - matching `tests/repository/test_service_boundaries.py`'s own ADR-027
+    edge-matrix enforcement, checked here from the vote-linkability angle
+    specifically."""
+    import epd2_eligibility_service
+    import epd2_membership_service
+
+    forbidden_modules = {"epd2_voting_service", "epd2_tally_service", "epd2_delegation_service"}
+    for package in (epd2_eligibility_service, epd2_membership_service):
+        package_dir = Path(inspect.getfile(package)).parent
+        for py_file in package_dir.rglob("*.py"):
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    names = {alias.name.split(".")[0] for alias in node.names}
+                elif isinstance(node, ast.ImportFrom):
+                    names = {node.module.split(".")[0]} if node.module else set()
+                else:
+                    continue
+                leaked = names & forbidden_modules
+                assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+
+
+def test_process_eligibility_claims_carries_no_vote_or_ballot_linkable_field() -> None:
+    """`ProcessEligibilityClaims` (canon 19d.3) and `MembershipLayerClaims`
+    (canon 19d.1/19d.3) are the two narrow claim shapes PACK-07 computes -
+    neither ever carries a `vote_envelope_id`/`ballot_id`-shaped field, so
+    a claim result can never be used to link a participant to a specific
+    vote."""
+    from epd2_eligibility_service.domain import MembershipLayerClaims, ProcessEligibilityClaims
+
+    forbidden_field_names = {"vote_envelope_id", "ballot_id", "vote_id"}
+    for cls in (ProcessEligibilityClaims, MembershipLayerClaims):
+        field_names = {f.name for f in dataclasses.fields(cls)}
+        leaked = field_names & forbidden_field_names
+        assert not leaked, f"{cls.__name__} has forbidden field(s): {leaked}"

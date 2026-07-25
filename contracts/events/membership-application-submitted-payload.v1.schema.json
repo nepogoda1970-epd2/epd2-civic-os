@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/membership-application-submitted-payload.v1.schema.json",
+  "title": "membership.membership_application_submitted event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.9 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_membership_application_submitted_event. Deliberately minimal - never carries any AffiliationDeclaration/identity content (ADR-030 item 5's disclosure-by-default prohibition).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "membership_application_id",
+    "status"
+  ],
+  "properties": {
+    "membership_application_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "application_pending",
+        "eligibility_review",
+        "human_decision_pending",
+        "approved",
+        "rejected",
+        "activated"
+      ]
+    }
+  }
+}

@@ -315,6 +315,93 @@ def test_verify_role_assignment_for_action_never_exposes_role_assignment_row(
     }
 
 
+# --- verify_decision_authorizes_policy_activation (PACK-07, canon 19d.7) --------
+
+
+def test_verify_decision_authorizes_policy_activation_authorized(fx: Fixture) -> None:
+    ballot_id = uuid4()
+    proposer = fx.grant_active_role("ballot_invalidation_proposer", scope_id=ballot_id)
+    approver = fx.grant_active_role("ballot_invalidation_approver", scope_id=ballot_id)
+    proposed = _propose_ballot_invalidation(fx, proposer, ballot_id)
+    approved = app.approve_governance_decision(
+        fx.decision_store,
+        fx.role_store,
+        fx.challenge_store,
+        fx.audit_store,
+        governance_decision_id=proposed.decision.governance_decision_id,
+        approved_by_role_id=approver.role_assignment_id,
+        actor=ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=fx.clock,
+    )
+    result = app.verify_decision_authorizes_policy_activation(
+        fx.decision_store,
+        governance_decision_id=approved.decision.governance_decision_id,
+    )
+    assert result.authorized is True
+    assert result.multi_person_approval_met is True
+    assert result.verified_decision_reference == approved.decision.governance_decision_id
+    assert result.reason_code is None
+
+
+def test_verify_decision_authorizes_policy_activation_unknown_decision(fx: Fixture) -> None:
+    result = app.verify_decision_authorizes_policy_activation(
+        fx.decision_store, governance_decision_id=uuid4()
+    )
+    assert result.authorized is False
+    assert result.multi_person_approval_met is False
+    assert result.verified_decision_reference is None
+    assert result.reason_code == "VALIDATION_RECORD_NOT_FOUND"
+
+
+def test_verify_decision_authorizes_policy_activation_not_yet_approved(fx: Fixture) -> None:
+    ballot_id = uuid4()
+    proposer = fx.grant_active_role("ballot_invalidation_proposer", scope_id=ballot_id)
+    proposed = _propose_ballot_invalidation(fx, proposer, ballot_id)
+    result = app.verify_decision_authorizes_policy_activation(
+        fx.decision_store, governance_decision_id=proposed.decision.governance_decision_id
+    )
+    assert result.authorized is False
+    assert result.multi_person_approval_met is False
+    assert result.reason_code == "GOVERNANCE_DECISION_NOT_APPROVED"
+
+
+def test_verify_decision_authorizes_policy_activation_never_exposes_role_ids(
+    fx: Fixture,
+) -> None:
+    """PACK-07's own reuse of ADR-022's non-disclosure rule (canon
+    19d.7: "сам список утверждающих вызывающей стороне не передаётся")
+    — the result type carries only the four minimal fields."""
+    ballot_id = uuid4()
+    proposer = fx.grant_active_role("ballot_invalidation_proposer", scope_id=ballot_id)
+    approver = fx.grant_active_role("ballot_invalidation_approver", scope_id=ballot_id)
+    proposed = _propose_ballot_invalidation(fx, proposer, ballot_id)
+    approved = app.approve_governance_decision(
+        fx.decision_store,
+        fx.role_store,
+        fx.challenge_store,
+        fx.audit_store,
+        governance_decision_id=proposed.decision.governance_decision_id,
+        approved_by_role_id=approver.role_assignment_id,
+        actor=ACTOR,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=fx.clock,
+    )
+    result = app.verify_decision_authorizes_policy_activation(
+        fx.decision_store,
+        governance_decision_id=approved.decision.governance_decision_id,
+    )
+    result_fields = {f.name for f in fields(result)}
+    assert result_fields == {
+        "authorized",
+        "multi_person_approval_met",
+        "verified_decision_reference",
+        "reason_code",
+    }
+
+
 # --- GovernancePolicy commands --------------------------------------------------
 
 

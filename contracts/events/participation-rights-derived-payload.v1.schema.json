@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/participation-rights-derived-payload.v1.schema.json",
+  "title": "eligibility.participation_rights_derived event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.14 (canon-0.6.0, PACK-07, ADR-026). Produced by epd2_eligibility_service.events.build_participation_rights_derived_event. Marks that a participant-side capability derivation happened for exactly one (subject_reference, process_id, action_code) tuple - never the full, non-persisted ParticipationRightsProfile (canon 19d.1/19d.14). Carries only the four already-public claim booleans, never any identity or membership fact that produced them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subject_reference",
+    "process_id",
+    "action_code",
+    "active_electoral_eligibility_met",
+    "passive_electoral_eligibility_met",
+    "party_internal_voting_eligibility_met",
+    "party_office_candidacy_eligibility_met"
+  ],
+  "properties": {
+    "subject_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "process_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "action_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "active_electoral_eligibility_met": {
+      "type": "boolean"
+    },
+    "passive_electoral_eligibility_met": {
+      "type": "boolean"
+    },
+    "party_internal_voting_eligibility_met": {
+      "type": "boolean"
+    },
+    "party_office_candidacy_eligibility_met": {
+      "type": "boolean"
+    }
+  }
+}

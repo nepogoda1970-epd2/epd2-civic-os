@@ -1,0 +1,497 @@
+# Centralized PACK-07 reason-code registry (canon-0.6.0's own 19d.15 list,
+# ADR-026 through ADR-031).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced by the PACK-07 implementation round: the NEW codes
+# `eligibility-service`/`identity-service` (both pre-existing PACK-02
+# services, extended in place rather than replaced) gained, plus every
+# code `membership-service` (PACK-07's one wholly new service) uses.
+# No PACK-07 code path may use a free-text string in place of a
+# registered code (canon section 24).
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-06.yml (ADR-006 Option B precedent, extended by ADR-014,
+# ADR-019, ADR-024, and now this implementation round): codes that
+# multiple packs need (e.g. PERMISSION_DENIED, VALIDATION_UNKNOWN_STATUS,
+# IDENTITY_NOT_VERIFIED) are independently redeclared here rather than
+# imported from an earlier pack's file, so this file remains a complete,
+# standalone source of truth for membership-service's own scan
+# (`tests/contract/test_reason_codes_registry.py`'s `PACK07_SERVICE_DIRS`).
+#
+# `eligibility-service` and `identity-service` are the one exception to
+# "each pack owns a disjoint set of services": both are PACK-02 services
+# that also gained PACK-07 additive functions in this implementation
+# round. Their own source is checked against the UNION of this file and
+# pack-02.yml (never this file alone) - see
+# `test_reason_codes_registry.py`'s `PACK07_SHARED_WITH_PACK02_SERVICE_DIRS`
+# and its `_EXTRA_REGISTRIES_FOR_LITERAL_CHECK` mapping.
+#
+# `source: canon-19d15` entries are canon 19d.15's own explicitly-approved
+# reason-code list (task 15 of the PACK-07 implementation scope), copied
+# verbatim. `source: pack-07-service` entries are additive codes this
+# implementation round introduced for its own audit/event bookkeeping
+# (activation confirmations, submission/decision markers), following the
+# same additive pattern ADR-004/ADR-014/ADR-019/ADR-024 already
+# established. `source: pack-02-reused` entries are generic, pre-existing
+# PACK-02 codes reused verbatim by membership-service (and, in
+# eligibility-service's/identity-service's own case, already covered by
+# pack-02.yml directly - duplicated here only so this file stays a
+# complete, standalone reference for membership-service's own scan).
+#
+# Loaded at runtime by `epd2_core.reason_codes.ReasonCodeRegistry`.
+
+# --- Canon 19d.15's four separated-eligibility-claim codes ---------------
+
+- code: ACTIVE_ELECTORAL_ELIGIBILITY_NOT_MET
+  meaning: >-
+    The subject does not meet the active electoral eligibility criteria
+    (the right to vote) for the given process, per the resolved
+    ProcessEligibilityPolicy.
+  severity: error
+  description: You do not currently meet the eligibility criteria to vote in this process.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: PASSIVE_ELECTORAL_ELIGIBILITY_NOT_MET
+  meaning: >-
+    The subject does not meet the passive electoral eligibility criteria
+    (the right to stand as a candidate) for the given process, per the
+    resolved ProcessEligibilityPolicy.
+  severity: error
+  description: You do not currently meet the eligibility criteria to stand as a candidate in this process.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: PARTY_INTERNAL_VOTING_ELIGIBILITY_NOT_MET
+  meaning: >-
+    The subject does not meet the party-internal voting eligibility
+    criteria for the given process - either no party-internal-voting
+    rule applies, or the membership-derived claims did not satisfy it.
+  severity: error
+  description: You do not currently meet the eligibility criteria for party-internal voting in this process.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: PARTY_OFFICE_CANDIDACY_ELIGIBILITY_NOT_MET
+  meaning: >-
+    The subject does not meet the party-office candidacy eligibility
+    criteria for the given process - either no party-office-candidacy
+    rule applies, or the membership-derived claims (status and/or
+    duration) did not satisfy it.
+  severity: error
+  description: You do not currently meet the eligibility criteria to run for this party office.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+# --- Canon 19d.15's membership-lifecycle codes ----------------------------
+
+- code: MEMBERSHIP_HUMAN_APPROVAL_REQUIRED
+  meaning: >-
+    A membership application (or a consequential membership/conflict
+    action) requires an authorized human decision before it may proceed
+    further - canon 19d.16's hard human-control invariant: no automated
+    process may finally decide it.
+  severity: info
+  description: This action requires review and a decision by an authorized person before it can proceed.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: MEMBERSHIP_DECISION_AUTHORITY_INVALID
+  meaning: >-
+    The supplied decision_authority_reference does not resolve to a
+    real, approved GovernanceDecision (verified via
+    governance-service.application.verify_decision_authorizes_policy_activation),
+    so the membership/conflict decision it is meant to authorize cannot
+    be recorded.
+  severity: error
+  description: The decision authority reference provided is not valid or not approved.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: MEMBERSHIP_STATUS_DISCLOSURE_PROHIBITED
+  meaning: >-
+    Membership application/status/rejection/suspension/termination/
+    affiliation/conflict-evidence content is restricted by default
+    (ADR-030 item 5) and must never be disclosed to an unauthorized
+    caller.
+  severity: error
+  description: This membership-related information cannot be disclosed.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+- code: MEMBERSHIP_PUBLICATION_CONSENT_MISSING
+  meaning: >-
+    Publishing membership-related information beyond the minimum
+    derived claims requires the subject's explicit consent, which has
+    not been recorded.
+  severity: error
+  description: Publishing this information requires your explicit consent, which has not been given.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: canon-19d15
+
+# --- Critical-policy activation (canon 19d.7), used by both
+#     eligibility-service's and membership-service's own copies of the
+#     four-gate check (documented duplicate, never an import - see
+#     tests/repository/test_pack07_duplicated_logic_parity.py) --------
+
+- code: CRITICAL_POLICY_ACTIVATED
+  meaning: >-
+    A critical policy (ParticipantEligibilityPolicy,
+    ProcessEligibilityPolicy, StepUpAuthenticationRequirement, or
+    PartyMembershipEligibilityPolicy) was successfully transitioned from
+    draft to active after passing all four activation gates.
+  severity: info
+  description: The policy has been activated.
+  retryable: false
+  owner: shared (eligibility-service, membership-service)
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: CRITICAL_POLICY_ACTIVATION_NOT_AUTHORIZED
+  meaning: >-
+    One or more of the four critical-policy activation gates (canon
+    19d.7) failed: the GovernanceDecision was not authorized, multi-
+    person approval was not met, or the signed policy digest /
+    transparency log commitment reference was missing.
+  severity: error
+  description: This policy cannot be activated because one or more required activation conditions were not met.
+  retryable: false
+  owner: shared (eligibility-service, membership-service)
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: CRITICAL_POLICY_VERSION_FROZEN
+  meaning: >-
+    A critical policy version already frozen (active, or superseded)
+    cannot be modified in place - a correction is always a new,
+    separately-versioned policy row.
+  severity: error
+  description: This policy version is frozen and cannot be modified.
+  retryable: false
+  owner: shared (eligibility-service, membership-service)
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Identity-layer participation claims (canon 19d.2/19d.3, ADR-027) ----
+
+- code: IDENTITY_ASSURANCE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The subject's IdentityRecord.identity_assurance_level does not meet
+    the minimum level required for this eligibility/step-up check.
+  severity: error
+  description: Your identity verification level does not meet the minimum required for this action.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: IDENTITY_AGE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The subject does not meet a policy's minimum-age requirement, or no
+    date_of_birth is on record to evaluate it against.
+  severity: error
+  description: You do not meet the minimum age requirement for this action.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: IDENTITY_CITIZENSHIP_REQUIREMENT_NOT_MET
+  meaning: >-
+    The subject's citizenship_status does not intersect the policy's
+    eligible_citizenship_set.
+  severity: error
+  description: Your citizenship status does not meet the requirement for this action.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: IDENTITY_RESIDENCE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The subject's residence_status does not satisfy the policy's
+    residence_rule.
+  severity: error
+  description: Your residence status does not meet the requirement for this action.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: IDENTITY_TERRITORIAL_SCOPE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The subject's residence/habitual-residence data does not satisfy the
+    policy's territorial_scope_rule (habitual_residence_rule).
+  severity: error
+  description: Your registered location does not meet the territorial scope requirement for this action.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: IDENTITY_ATTRIBUTES_RECORDED
+  meaning: >-
+    Canon 19d.2's additive identity attributes (date_of_birth,
+    citizenship_status, residence_status, etc.) were recorded onto an
+    existing IdentityRecord.
+  severity: info
+  description: Your identity attributes have been recorded.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Step-up authentication (canon 19d.8, ADR-030 item 7) ----------------
+
+- code: STEP_UP_AUTHENTICATION_NOT_SATISFIED
+  meaning: >-
+    One or more of the step-up requirement's simultaneous conditions
+    (authentication assurance, identity assurance, session freshness,
+    attribute freshness) was not met - fail-closed, including when no
+    AuthenticationContext/StepUpAuthenticationRequirement can be
+    resolved at all.
+  severity: error
+  description: Additional authentication is required before this action can proceed.
+  retryable: true
+  owner: shared (eligibility-service, identity-service)
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: STEP_UP_AUTHENTICATION_COMPLETED
+  meaning: >-
+    An AuthenticationContext was successfully marked as having
+    completed the required step-up authentication.
+  severity: info
+  description: Additional authentication has been completed.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: AUTHENTICATION_CONTEXT_ESTABLISHED
+  meaning: >-
+    A new AuthenticationContext (canon 19d.8) was recorded for an
+    account's current session.
+  severity: info
+  description: Your authentication session has been established.
+  retryable: false
+  owner: identity-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Atomic capability check / scoped capability token (canon 19d.14) ---
+
+- code: ATOMIC_CAPABILITY_CHECK_DENIED
+  meaning: >-
+    A single-purpose atomic capability check (canon 19d.14) for one
+    (subject, process, action) question was denied.
+  severity: error
+  description: You are not authorized to perform this specific action.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: PARTICIPATION_RIGHTS_DERIVED
+  meaning: >-
+    The ParticipationRightsDerived event was emitted after evaluating
+    one subject's derived participation rights for one action - whether
+    or not a scoped capability token was actually issued.
+  severity: info
+  description: Your participation rights for this action have been evaluated.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Formal confirmation lifecycle (canon 19d.12, ADR-030 item 8) --------
+
+- code: DIGITAL_DECISION_FINAL
+  meaning: >-
+    A DigitalDecision was recorded with formal_confirmation_required=false
+    and is therefore immediately final - no AssemblyDecision is created.
+  severity: info
+  description: The digital decision is final.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: FORMAL_CONFIRMATION_REQUESTED
+  meaning: >-
+    A DigitalDecision was recorded with formal_confirmation_required=true,
+    creating a pending AssemblyDecision awaiting the confirming
+    authority's formal confirmation.
+  severity: info
+  description: Formal confirmation of this decision has been requested.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: FORMAL_CONFIRMATION_RECORDED
+  meaning: >-
+    An AssemblyDecision was resolved (confirmed / rejected / returned
+    for revision) by the confirming authority.
+  severity: info
+  description: The formal confirmation decision has been recorded.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: ASSEMBLY_DECISION_DIVERGENCE_EXPLANATION_REQUIRED
+  meaning: >-
+    An AssemblyDecision's final_legal_decision diverges from its
+    originating DigitalDecision.digital_result, which requires a
+    non-empty divergence_explanation (canon 19d.12) - none was supplied.
+  severity: error
+  description: A divergence explanation is required when the final legal decision differs from the digital result.
+  retryable: false
+  owner: eligibility-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Membership application / affiliation / conflict lifecycle
+#     (canon 19d.9-19d.11, membership-service's own additive
+#     audit/event bookkeeping codes) ---------------------------------
+
+- code: MEMBERSHIP_APPLICATION_SUBMITTED
+  meaning: A new MembershipApplication was created and entered eligibility_review.
+  severity: info
+  description: Your membership application has been submitted.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: MEMBERSHIP_ELIGIBILITY_EVALUATED
+  meaning: >-
+    Stage A's formal eligibility evaluation ran against the active
+    PartyMembershipEligibilityPolicy and produced a recommended (never
+    final) outcome.
+  severity: info
+  description: Your membership application's eligibility has been evaluated and is now awaiting a human decision.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: MEMBERSHIP_ACTIVATED
+  meaning: An approved MembershipApplication was activated, creating an active Membership row.
+  severity: info
+  description: Your membership has been activated.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: AFFILIATION_DECLARED
+  meaning: A new AffiliationDeclaration was submitted for a subject.
+  severity: info
+  description: Your affiliation declaration has been submitted.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: CONFLICT_ASSESSMENT_OPENED
+  meaning: A new ConflictAssessment was opened for a subject's declared affiliation.
+  severity: info
+  description: A conflict assessment has been opened regarding your declared affiliation.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: CONFLICT_DECISION_RECORDED
+  meaning: An authorized human decision resolving a ConflictAssessment was recorded.
+  severity: info
+  description: A decision on your conflict assessment has been recorded.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+- code: CONFLICT_REVIEW_SELF_APPROVAL_PROHIBITED
+  meaning: >-
+    A ConflictAssessment's reviewed_by_role_reference must never equal
+    the subject_reference under assessment (canon 19d.11's own
+    reviewer-separation rule).
+  severity: error
+  description: You cannot review a conflict assessment concerning yourself.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-07-service
+
+# --- Generic, pre-existing PACK-02 codes reused verbatim by
+#     membership-service (already registered in pack-02.yml;
+#     independently redeclared here so this file stays a complete,
+#     standalone source of truth for membership-service's own scan -
+#     see PERMISSION_DENIED's own precedent in every other pack's
+#     registry file) ------------------------------------------------
+
+- code: PERMISSION_DENIED
+  meaning: The acting party is not authorized to perform the requested action.
+  severity: error
+  description: You are not authorized to perform this action.
+  retryable: false
+  owner: shared (all bounded contexts)
+  introduced_in_version: 0.7.0
+  source: pack-02-reused
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: A status/type/enum value could not be parsed - the supplied string is not one of the known values.
+  severity: error
+  description: The value provided is not a recognized status or type.
+  retryable: false
+  owner: shared (eligibility-service, membership-service)
+  introduced_in_version: 0.7.0
+  source: pack-02-reused
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: The requested status transition is not allowed from the current status.
+  severity: error
+  description: This status change is not allowed.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-02-reused
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: No record exists for the given identifier.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: membership-service
+  introduced_in_version: 0.7.0
+  source: pack-02-reused
+
+- code: IDENTITY_NOT_VERIFIED
+  meaning: >-
+    A downstream check (membership eligibility evaluation) requires a
+    verified IdentityRecord, but the referenced identity has not passed
+    verification.
+  severity: error
+  description: Your identity has not been verified yet, so this action cannot proceed.
+  retryable: true
+  owner: shared (identity-service, membership-service)
+  introduced_in_version: 0.7.0
+  source: pack-02-reused

@@ -37,6 +37,8 @@ from _schema_helpers import (
     PACK05_SERVICE_DIRS,
     PACK06_REASON_CODES_PATH,
     PACK06_SERVICE_DIRS,
+    PACK07_REASON_CODES_PATH,
+    PACK07_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -56,8 +58,23 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-04", PACK04_REASON_CODES_PATH, PACK04_SERVICE_DIRS, 18),
     ("pack-05", PACK05_REASON_CODES_PATH, PACK05_SERVICE_DIRS, 25),
     ("pack-06", PACK06_REASON_CODES_PATH, PACK06_SERVICE_DIRS, 22),
+    ("pack-07", PACK07_REASON_CODES_PATH, PACK07_SERVICE_DIRS, 38),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
+
+#: PACK-07 (canon-0.6.0, ADR-026 through ADR-031) is the first pack that
+#: does NOT introduce a wholly disjoint set of service directories: it
+#: also extends two existing PACK-02 services (identity-service,
+#: eligibility-service) in place, so those two directories' `src/` trees
+#: now mix genuinely-PACK-02 and genuinely-PACK-07 reason-code literals
+#: together. For pack-02's own literal-usage check only, this maps
+#: "pack-02" to the additional registry file(s) that must be unioned in
+#: before computing "used but not registered" - never for the other three
+#: checks (required-fields/no-duplicates/loads-via-epd2-core), which
+#: still validate pack-02.yml as its own, independently well-formed file.
+_EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
+    "pack-02": (PACK07_REASON_CODES_PATH,),
+}
 
 
 def _registered_codes(registry_path: Path) -> set[str]:
@@ -151,11 +168,19 @@ def test_every_reason_code_literal_used_in_services_is_registered(
     minimum_size: int,
 ) -> None:
     registered = _registered_codes(registry_path)
+    for extra_registry_path in _EXTRA_REGISTRIES_FOR_LITERAL_CHECK.get(pack_name, ()):
+        registered |= _registered_codes(extra_registry_path)
     used = _reason_code_like_literals_in(service_dir_names)
     missing = sorted(used - registered)
     assert not missing, (
         f"reason_code literal(s) used in {pack_name}'s services/*/src but not registered "
-        f"in {registry_path.name}: {missing}"
+        f"in {registry_path.name}"
+        + (
+            f" (nor in {', '.join(p.name for p in _EXTRA_REGISTRIES_FOR_LITERAL_CHECK[pack_name])})"
+            if pack_name in _EXTRA_REGISTRIES_FOR_LITERAL_CHECK
+            else ""
+        )
+        + f": {missing}"
     )
 
 

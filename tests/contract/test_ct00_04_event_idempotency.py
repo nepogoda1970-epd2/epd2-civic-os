@@ -12,6 +12,7 @@ import pytest
 
 from epd2_ai_processing_service.application import request_ai_processing
 from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
+from epd2_audit_core.application import AppendAuditEventRequest, append_audit_event
 from epd2_audit_core.exceptions import AuditEventConflictError
 from epd2_audit_core.storage import InMemoryAuditEventStore
 from epd2_core.clock import FixedClock
@@ -24,14 +25,22 @@ from epd2_delegation_service.storage import InMemoryDelegationStore
 from epd2_eligibility_service.application import (
     create_eligibility_rule,
     create_eligibility_snapshot,
+    record_digital_decision,
 )
 from epd2_eligibility_service.storage import (
+    InMemoryAssemblyDecisionStore,
+    InMemoryDigitalDecisionStore,
     InMemoryEligibilityRuleStore,
     InMemoryEligibilitySnapshotStore,
 )
 from epd2_governance_service.application import request_role_assignment
 from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
 from epd2_governance_service.storage import InMemoryRoleAssignmentStore
+from epd2_membership_service.application import declare_affiliation, open_conflict_assessment
+from epd2_membership_service.storage import (
+    InMemoryAffiliationDeclarationStore,
+    InMemoryConflictAssessmentStore,
+)
 from epd2_voting_service.application import (
     approve_ballot_configuration,
     cast_vote,
@@ -143,8 +152,6 @@ def test_repeated_event_id_with_different_content_is_a_conflict(
 ) -> None:
     """A direct Audit Core replay with the same `audit_event_id` but
     different content must fail-closed, never silently overwrite."""
-    from epd2_audit_core.application import AppendAuditEventRequest, append_audit_event
-
     shared_id = uuid4()
     base = dict(
         audit_event_id=shared_id,
@@ -462,4 +469,137 @@ def test_repeated_request_ai_processing_with_same_event_id_is_idempotent(
     assert first.record == second.record
     assert first.audit_event.audit_event_id == second.audit_event.audit_event_id
     entries = audit_store.list_by_aggregate("ai_processing_record", record_id)
+    assert len(entries) == 1
+
+
+# =============================================================================
+# PACK-07: `record_digital_decision` (eligibility-service) and
+# `declare_affiliation`/`open_conflict_assessment` (membership-service).
+#
+# Unlike every command exercised above, none of PACK-07's application
+# functions accept a caller-supplied `event_id`/`audit_event_id` - each
+# call mints a fresh one via `generate_uuid()` (`epd2_eligibility_service.
+# application` / `epd2_membership_service.application`), so calling the
+# command itself twice is not the right way to exercise CT-00-04 here (it
+# would just produce two independent audit entries, one per call). What
+# CT-00-04 actually requires - that *reprocessing the same event envelope*
+# never double-appends - is instead exercised directly at the Audit Core
+# boundary: build an `AppendAuditEventRequest` that mirrors a real audit
+# entry a PACK-07 command already produced (same `audit_event_id`, same
+# content - a message-bus redelivery of that exact event) and confirm the
+# second `append_audit_event` call returns the existing record rather than
+# creating a new one, per `epd2_audit_core.application.append_audit_event`'s
+# own idempotency contract (also exercised directly by
+# `test_repeated_event_id_with_different_content_is_a_conflict` above).
+# =============================================================================
+
+
+def _replay_request(audit_event: object) -> AppendAuditEventRequest:
+    """Build an `AppendAuditEventRequest` that exactly reproduces an
+    already-appended `AuditEvent` - i.e. a redelivery of the same event,
+    not a new one - for the PACK-07 tests below."""
+    return AppendAuditEventRequest(
+        audit_event_id=audit_event.audit_event_id,  # type: ignore[attr-defined]
+        event_type=audit_event.event_type,  # type: ignore[attr-defined]
+        occurred_at=audit_event.occurred_at,  # type: ignore[attr-defined]
+        actor_id=audit_event.actor_id,  # type: ignore[attr-defined]
+        actor_type=audit_event.actor_type,  # type: ignore[attr-defined]
+        target_type=audit_event.target_type,  # type: ignore[attr-defined]
+        target_id=audit_event.target_id,  # type: ignore[attr-defined]
+        action=audit_event.action,  # type: ignore[attr-defined]
+        reason_code=audit_event.reason_code,  # type: ignore[attr-defined]
+        policy_version=audit_event.policy_version,  # type: ignore[attr-defined]
+        correlation_id=audit_event.correlation_id,  # type: ignore[attr-defined]
+        source_service=audit_event.source_service,  # type: ignore[attr-defined]
+        before_hash=audit_event.before_hash,  # type: ignore[attr-defined]
+        after_hash=audit_event.after_hash,  # type: ignore[attr-defined]
+    )
+
+
+def test_repeated_record_digital_decision_audit_replay_is_idempotent(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """A message-bus redelivery of the exact same `eligibility.
+    digital_decision_recorded` audit entry (same `audit_event_id`, same
+    content) that `record_digital_decision` (eligibility-service,
+    PACK-07) already appended must not create a second audit entry - see
+    this section's header note on why the command itself is called only
+    once here."""
+    digital_decision_id = uuid4()
+    first = record_digital_decision(
+        InMemoryDigitalDecisionStore(),
+        InMemoryAssemblyDecisionStore(),
+        audit_store,
+        digital_decision_id=digital_decision_id,
+        process_reference={"process_id": str(uuid4())},
+        digital_result="approved",
+        decision_effect="advisory",
+        formal_confirmation_required=False,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    second = append_audit_event(audit_store, _replay_request(first.audit_event), clock=clock)
+
+    assert second == first.audit_event
+    entries = audit_store.list_by_aggregate("digital_decision", digital_decision_id)
+    assert len(entries) == 1
+
+
+def test_repeated_declare_affiliation_audit_replay_is_idempotent(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Same guarantee as above, for `declare_affiliation`'s
+    `AffiliationDeclared` audit entry (membership-service, PACK-07)."""
+    affiliation_declaration_id = uuid4()
+    first = declare_affiliation(
+        InMemoryAffiliationDeclarationStore(),
+        audit_store,
+        affiliation_declaration_id=affiliation_declaration_id,
+        subject_reference=uuid4(),
+        affiliation_type="other_party_membership",
+        declared_reference="Other Party e.V.",
+        valid_from=clock.now(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    second = append_audit_event(audit_store, _replay_request(first.audit_event), clock=clock)
+
+    assert second == first.audit_event
+    entries = audit_store.list_by_aggregate("affiliation_declaration", affiliation_declaration_id)
+    assert len(entries) == 1
+
+
+def test_repeated_open_conflict_assessment_audit_replay_is_idempotent(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Same guarantee as above, for `open_conflict_assessment`'s
+    `ConflictAssessmentOpened` audit entry (membership-service,
+    PACK-07)."""
+    conflict_assessment_id = uuid4()
+    first = open_conflict_assessment(
+        InMemoryConflictAssessmentStore(),
+        audit_store,
+        conflict_assessment_id=conflict_assessment_id,
+        subject_reference=uuid4(),
+        conflict_type="dual_party_membership",
+        reviewed_by_role_reference=uuid4(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    second = append_audit_event(audit_store, _replay_request(first.audit_event), clock=clock)
+
+    assert second == first.audit_event
+    entries = audit_store.list_by_aggregate("conflict_assessment", conflict_assessment_id)
     assert len(entries) == 1

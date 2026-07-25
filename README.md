@@ -10,9 +10,10 @@ EPD² Civic OS — открытая цифровая инфраструктур�
 **CLAUDE-PACK-02 — Identity Separation and Audit Kernel**,
 **CLAUDE-PACK-03 — Participation and Decision Kernel**,
 **CLAUDE-PACK-04 — Transparency Context**,
-**CLAUDE-PACK-05 — Governance Context** и
-**CLAUDE-PACK-06 — AI Processing Context**: стартовый
-монорепо-каркас платформы плюс четырнадцать независимых сервисов —
+**CLAUDE-PACK-05 — Governance Context**,
+**CLAUDE-PACK-06 — AI Processing Context** и
+**CLAUDE-PACK-07 — Participation & Membership Context**: стартовый
+монорепо-каркас платформы плюс пятнадцать независимых сервисов —
 account, identity, eligibility, credential, audit-core (PACK-02, участие
 и идентичность структурно разделены, каждое критическое действие
 записывается в append-only, hash-chained журнал аудита), initiative,
@@ -22,14 +23,24 @@ deliberation, moderation, voting, tally, delegation (PACK-03, полный
 audit export, политика раскрытия данных, реестр лоббистских контактов),
 governance-service (PACK-05, роли участников, политики и решения органов
 управления, технические оспаривания и производный статус финальности
-результатов голосования) и ai-processing-service (PACK-06,
+результатов голосования), ai-processing-service (PACK-06,
 `AIProcessingRecord` с двумя независимыми статусными плоскостями,
 канонический встроенный `redaction_manifest`, производный
 `DisclosureStatus`, `AIDisclosurePackage`, шесть закрытых классов
 использования и обязательный протокол раскрытия — ИИ остаётся строго
 консультативным и никогда не получает полномочий на автономную мутацию
-Civic OS). Остальная бизнес-логика (emergency actions) пока не
-реализована — см. `docs/review/KNOWN_LIMITATIONS.md`.
+Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
+`Membership` — первая реальная реализация канон 8.3, `MembershipApplication`
+с двухэтапным жизненным циклом и жёстким инвариантом человеческого
+контроля, `AffiliationDeclaration`, `ConflictAssessment`, переиспользуемый
+полиморфный `Appeal`), плюс расширение уже существующих `eligibility-service`
+(`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+`StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`,
+четыре раздельных признака избирательного права) и `identity-service`
+(`AuthenticationContext`, восемь новых полей `IdentityRecord`). Остальная
+бизнес-логика (emergency actions, полная модель Regional Organization,
+реальная eID-интеграция) пока не реализована — см.
+`docs/review/KNOWN_LIMITATIONS.md`.
 
 ## Статус проекта
 
@@ -78,11 +89,15 @@ Civic OS). Остальная бизнес-логика (emergency actions) по
   `docs/handover/PACK-05-SPEC.md`,
   `docs/adr/ADR-018-canon-0.4.0-governance-context-additions.md`,
   `docs/review/PACK-05-OWNER-DECISIONS.md`.
-- Этап: AI processing context (CLAUDE-PACK-06) — **PACK-06 PASS**
-  (локальная верификация в этой песочнице; см.
-  `docs/handover/PACK-06-REPORT.md` для точных команд и результатов и
-  раздела с сетевыми ограничениями песочницы). Один новый сервис:
-  `ai-processing-service` (`AIProcessingRecord` с плоскостями
+- Этап: AI processing context (CLAUDE-PACK-06) — **PACK-06 PASS**,
+  подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: 1822 Python-теста пройдены (3 пропуска — те же
+  CT-00-10/CT-00-12 not-applicable-in-earlier-packs маркеры; CT-00-11
+  для PACK-06 больше не в их числе — теперь полностью применим и
+  проходит), TypeScript (3/3) и frontend (2/2) тесты и `next build`
+  пройдены полностью, Prettier/Ruff/ESLint/mypy — чисто, все 363
+  обязательных путей на месте, запрещённых файлов нет. Один новый
+  сервис: `ai-processing-service` (`AIProcessingRecord` с плоскостями
   `processing_status`/`human_review_status`, каноническим встроенным
   `redaction_manifest`, производным read model `DisclosureStatus`,
   контрактным объектом `AIDisclosurePackage`; ADR-021–025, канон раздел
@@ -94,7 +109,27 @@ Civic OS). Остальная бизнес-логика (emergency actions) по
   для полного описания, `docs/handover/PACK-06-SPEC.md`,
   `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
   `docs/review/PACK-06-OWNER-DECISIONS.md`.
-- Canon version: `0.5.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
+- Этап: participation & membership context (CLAUDE-PACK-07,
+  implementation) — **локально проверено, внешний прогон GitHub Actions
+  не выполнялся для этого раунда** (честно указано как таковое, а не
+  заявлено как PASS): 2020 Python-тестов пройдено, 5 пропущено (те же
+  CT-00-10/CT-00-11/CT-00-12 not-applicable маркеры плюс
+  `hypothesis`-пропуск), 0 неудачных; Ruff/mypy — чисто; все 402
+  обязательных пути на месте. TypeScript/Prettier/ESLint/frontend build
+  не выполнялись в этой песочнице (нет сетевого доступа к реестру npm —
+  `npm install --offline` завершается `ENOTCACHED`) и не заявлены как
+  пройденные. Один новый сервис: `membership-service`
+  (`PartyMembershipEligibilityPolicy`, `Membership`, `MembershipApplication`,
+  `AffiliationDeclaration`, `ConflictAssessment`, переиспользуемый
+  `Appeal`); расширение на месте `eligibility-service`
+  (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, четыре раздельных признака избирательного права,
+  атомарные capability-проверки, выпуск ограниченных capability-токенов)
+  и `identity-service` (`AuthenticationContext`, восемь новых полей
+  `IdentityRecord`); ADR-026–031, канон раздел 19d. См.
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` для полного описания.
+- Canon version: `0.6.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
   Изменения текста канона: PACK-03 под ADR-010 (`0.1.0 → 0.2.0`,
   добавление `Ballot.challenge_window_hours` /
   `ResultPublication.challenge_deadline_at`); CLAUDE-PACK-04 под ADR-013
@@ -107,21 +142,53 @@ Civic OS). Остальная бизнес-логика (emergency actions) по
   `processing_status`, `supersedes_ai_processing_record_id`,
   каноническим встроенным `redaction_manifest`, полями жизненного цикла
   раскрытия и производным `DisclosureStatus`; `AIDisclosurePackage` как
-  договорной объект). Канон не изменялся при реализации самого сервиса
-  (`services/ai-processing-service`) — эта реализация использует уже
-  принятый канон 0.5.0 и ADR-021–025 без дальнейших правок текста канона
-  (см. `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
-  `docs/review/PACK-06-OWNER-DECISIONS.md`).
-- Repository version: `0.6.0` (CLAUDE-PACK-06 implementation:
+  договорной объект); CLAUDE-PACK-07 под ADR-026 через ADR-031 (`0.5.0 →
+0.6.0`, раздел 19d Participation & Membership Context — десять новых
+  сущностей (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, `PartyMembershipEligibilityPolicy`,
+  `AffiliationDeclaration`, `ConflictAssessment`, `MembershipApplication`,
+  `AuthenticationContext`); восемь новых полей `IdentityRecord`; четыре
+  раздельных признака избирательного права вместо обобщённого
+  `electoral_eligibility_met`; двухэтапный `MembershipApplication` без
+  перегрузки `Membership.membership_status`; расширенный до семи
+  категорий жёсткий инвариант человеческого контроля; активация
+  критической политики по четырём независимым условиям с заморозкой
+  версии; исключительно два механизма внешней авторизации). Канон не
+  изменялся при реализации самого сервиса `ai-processing-service` —
+  эта реализация использует уже принятый канон 0.5.0 и ADR-021–025 без
+  дальнейших правок текста канона (см.
+  `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
+  `docs/review/PACK-06-OWNER-DECISIONS.md`). CLAUDE-PACK-07's канонический
+  раунд (ADR-026–031, `docs/review/PACK-07-OWNER-DECISIONS.md`,
+  `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`) — также канон-только
+  изменение, подтверждённое внешним прогоном GitHub Actions (PASS: 1822
+  Python-теста пройдено, 3 пропущено, 0 неудачных; TypeScript 3/3;
+  frontend 2/2; успешная сборка Next.js; Prettier/Ruff/ESLint/mypy без
+  замечаний — см. раздел 7 `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`):
+  на момент того канонического раунда ни `membership-service`, ни
+  расширение `eligibility-service` ещё не были реализованы; оба теперь
+  реализованы в CLAUDE-PACK-07's implementation-раунде (см. запись выше и
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`).
+- Repository version: `0.7.0` (CLAUDE-PACK-07 implementation:
+  `membership-service` и расширение `eligibility-service`/
+  `identity-service` — `PartyMembershipEligibilityPolicy`, `Membership`,
+  `MembershipApplication`, `AffiliationDeclaration`, `ConflictAssessment`,
+  `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, `AuthenticationContext`; см.
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`. Предыдущая версия
+  `0.6.0` соответствовала CLAUDE-PACK-06 implementation:
   `ai-processing-service` и связанные контракты/тесты —
   `AIProcessingRecord`, `RedactionManifest`, `AIDisclosurePackage` и
   производный read model `DisclosureStatus`; см.
-  `docs/handover/PACK-06-REPORT.md`). Предыдущая версия `0.5.0`
+  `docs/handover/PACK-06-REPORT.md`. Версия до неё, `0.5.0`,
   соответствовала CLAUDE-PACK-05 implementation (`governance-service`;
   подтверждено внешним прогоном GitHub Actions, см.
   `docs/handover/PACK-05-REPORT.md`).
-- База данных, event bus, аутентификация, deployment и AI-обработка пока
-  не реализованы.
+- База данных, event bus, аутентификация, deployment, полная модель
+  Regional Organization, реальная eID-интеграция пока не
+  реализованы.
 
 ## Архитектурный принцип
 
@@ -178,12 +245,12 @@ make verify     # полный цикл проверок (repo checks, format, l
 epd2-civic-os/
 ├── docs/                 # канон, архитектура, ADR, отчёты, открытые вопросы
 ├── contracts/            # будущие контракты: OpenAPI, события, схемы, reason codes
-├── services/              # четырнадцать сервисов: account, identity,
+├── services/              # пятнадцать сервисов: account, identity,
 │                          # eligibility, credential, audit-core (PACK-02),
 │                          # initiative, deliberation, moderation, voting,
 │                          # tally, delegation (PACK-03), transparency
 │                          # (PACK-04), governance (PACK-05),
-│                          # ai-processing (PACK-06)
+│                          # ai-processing (PACK-06), membership (PACK-07)
 ├── packages/
 │   ├── python/epd2-core        # общий Python-пакет: версии, идентификаторы
 │   └── typescript/epd2-types   # общий TypeScript-пакет: версии
@@ -227,6 +294,16 @@ epd2-civic-os/
 - Отчёт по PACK-06: `docs/handover/PACK-06-REPORT.md`
 - AI Processing Context ADR (PACK-06): `docs/adr/ADR-021` —
   `docs/adr/ADR-025`, `docs/review/PACK-06-OWNER-DECISIONS.md`
+- Спецификация PACK-07 (финальная, консолидированная):
+  `docs/handover/PACK-07-SPEC-FINAL.md` (исходный черновик,
+  `docs/handover/PACK-07-SPEC.md`, помечен superseded)
+- Participation & Membership Context ADR (PACK-07): `docs/adr/ADR-026`
+  — `docs/adr/ADR-031`, `docs/review/PACK-07-OWNER-DECISIONS.md`
+- Отчёт о каноническом раунде PACK-07 (canon-only, без реализации
+  сервисов): `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`
+- Отчёт о раунде реализации PACK-07 (`membership-service`, расширение
+  `eligibility-service`/`identity-service`):
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`
 - Локальная доверификация (генерация lock-файлов, `next build`): `LOCAL_VERIFICATION.md`
 - Одноразовая проверка на GitHub Actions (когда нет доступа к обычной
   среде с интернетом): `GITHUB_ACTIONS_START.md`,
@@ -247,5 +324,18 @@ Tally, Delegation (PACK-03), Transparency (PACK-04: `PublicLedgerEntry`,
 `processing_status`/`human_review_status`, канонический встроенный
 `redaction_manifest`, производный read model `DisclosureStatus`,
 контрактный объект `AIDisclosurePackage`; канон раздел 19c, ADR-021 —
-ADR-025). **Ещё не реализованы**: Organization, Emergency/Crisis
-Override — см. `docs/review/KNOWN_LIMITATIONS.md`.
+ADR-025) и Participation & Membership (PACK-07: канон раздел 19d,
+ADR-026 — ADR-031, `membership-service` — `PartyMembershipEligibilityPolicy`,
+`Membership`, `MembershipApplication`, `AffiliationDeclaration`,
+`ConflictAssessment`, переиспользуемый `Appeal`; расширение
+`eligibility-service` — `ParticipantEligibilityPolicy`,
+`ProcessEligibilityPolicy`, `StepUpAuthenticationRequirement`,
+`DigitalDecision`, `AssemblyDecision`, четыре раздельных признака
+избирательного права; расширение `identity-service` —
+`AuthenticationContext`, восемь новых полей `IdentityRecord`; локально
+проверено, см. `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` — внешний
+прогон GitHub Actions для этого раунда реализации ещё не выполнялся).
+**Ещё не реализованы**: полная модель Regional Organization,
+Emergency/Crisis Override, реальная eID/eIDAS-интеграция,
+криптографические протоколы голосования — см.
+`docs/review/KNOWN_LIMITATIONS.md`.

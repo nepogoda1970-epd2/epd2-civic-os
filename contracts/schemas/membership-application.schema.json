@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/membership-application.schema.json",
+  "title": "MembershipApplication",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.9 (canon-0.6.0, PACK-07, ADR-030). Owned by membership-service (epd2_membership_service.domain.MembershipApplication). decision_authority_reference/applied_policy_version/reason_code/decided_at/audit_event_reference are Stage B's own decision-record fields - all null until Stage B runs (record_membership_human_decision); required once status is approved or rejected (canon 19d.9 Stage B), enforced at the application layer, not structurally by this schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "membership_application_id",
+    "subject_reference",
+    "status",
+    "decision_authority_reference",
+    "applied_policy_version",
+    "reason_code",
+    "decided_at",
+    "audit_event_reference",
+    "supersedes_membership_application_id"
+  ],
+  "properties": {
+    "membership_application_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "subject_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "application_pending",
+        "eligibility_review",
+        "human_decision_pending",
+        "approved",
+        "rejected",
+        "activated"
+      ]
+    },
+    "decision_authority_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "applied_policy_version": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "reason_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "audit_event_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "supersedes_membership_application_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  }
+}

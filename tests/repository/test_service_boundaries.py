@@ -81,13 +81,25 @@ PACK06_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (all five packs).
+# package import name -> its src/ directory, for the one PACK-07 service
+# (ADR-026's single-new-service decomposition - PACK-07 also *extends*
+# eligibility-service, already a PACK-02 service, with new command/read
+# functions rather than a new package; `membership-service` is the only
+# wholly new package this implementation round introduces).
+PACK07_SERVICE_PACKAGES = {
+    "epd2_membership_service": (
+        REPO_ROOT / "services/membership-service/src/epd2_membership_service"
+    ),
+}
+
+# Every service in the repository (all six packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
     **PACK04_SERVICE_PACKAGES,
     **PACK05_SERVICE_PACKAGES,
     **PACK06_SERVICE_PACKAGES,
+    **PACK07_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -219,6 +231,45 @@ ALLOWED_PACK06_TO_PACK04_APPLICATION_MODULES: dict[str, frozenset[str]] = {
 # is the one sanctioned call site.
 ALLOWED_PACK06_TRANSPARENCY_FUNCTIONS: frozenset[str] = frozenset({"publish_ledger_entry"})
 
+# ADR-027 Decision (PACK-07 implementation round, canon-0.6.0): the exact,
+# enumerated cross-service edges `eligibility-service` gains, each scoped
+# to the OTHER service's `.application` submodule only - never
+# `.storage`/`.domain` (the same INV-03 boundary every other cross-pack
+# edge in this project already respects). `epd2_credential_service` was
+# already same-generation (both PACK-02) but had never actually been used
+# until PACK-07's scoped-capability-token mechanism
+# (`derive_and_issue_scoped_capability_token` ->
+# `issue_participation_credential`); `epd2_identity_service` and
+# `epd2_membership_service` are wholly new edges for this service;
+# `epd2_governance_service` reuses PACK-05's existing
+# `verify_decision_authorizes_policy_activation` (the same function
+# `membership-service` also reuses - see below). `epd2_account_service`
+# remains fully excluded - ADR-027 names no such edge.
+ALLOWED_ELIGIBILITY_PACK07_APPLICATION_MODULES: frozenset[str] = frozenset(
+    {
+        "epd2_identity_service.application",
+        "epd2_membership_service.application",
+        "epd2_credential_service.application",
+        "epd2_governance_service.application",
+    }
+)
+
+# ADR-027 Decision: the exact, enumerated cross-service edges
+# `membership-service` (PACK-07's one new service) is authorized to
+# depend on, each scoped to `.application` only. Never
+# `epd2_account_service`, `epd2_credential_service`,
+# `epd2_moderation_service` (its own `Appeal` is a documented duplicate,
+# never an import - see `epd2_membership_service.domain`'s own module
+# docstring and `test_pack07_duplicated_logic_parity.py`), or any other
+# service.
+ALLOWED_MEMBERSHIP_APPLICATION_MODULES: frozenset[str] = frozenset(
+    {
+        "epd2_identity_service.application",
+        "epd2_eligibility_service.application",
+        "epd2_governance_service.application",
+    }
+)
+
 
 def _imported_roots(source_file: Path) -> set[str]:
     with open(source_file, encoding="utf-8") as f:
@@ -268,10 +319,19 @@ def _imported_names_from_module(source_file: Path, module: str) -> set[str]:
 
 def test_no_pack02_service_imports_another_pack02_services_package_except_audit_core() -> None:
     """Unchanged PACK-02 behaviour (CLAUDE-PACK-02's own five-service
-    matrix) - re-run, not weakened, now that PACK-03 exists alongside it."""
+    matrix) - re-run, not weakened, now that PACK-03 exists alongside it.
+
+    `epd2_eligibility_service` gets one narrow exception for PACK-07
+    (ADR-027): it may additionally import `epd2_identity_service` and
+    `epd2_credential_service` (both still same-generation PACK-02
+    services) - checked precisely, application-only, exact-edge, in
+    `test_eligibility_service_pack07_edges_are_application_only_and_match_adr027`
+    below. No other PACK-02 service gets any such exception here."""
     violations: list[str] = []
     for package_name, src_dir in PACK02_SERVICE_PACKAGES.items():
         allowed = ALWAYS_ALLOWED | {package_name}
+        if package_name == "epd2_eligibility_service":
+            allowed = allowed | {"epd2_identity_service", "epd2_credential_service"}
         forbidden = set(PACK02_SERVICE_PACKAGES) - allowed
         for py_file in sorted(src_dir.rglob("*.py")):
             roots = _imported_roots(py_file)
@@ -481,12 +541,21 @@ def test_no_pack02_or_pack04_service_imports_pack05_service() -> None:
     PACK-03 (`voting-service`/`tally-service` only); no PACK-02 service,
     and no PACK-04 service, may import it back. (PACK-03's own reverse
     edge is checked separately below, since `voting-service` is the one
-    explicitly authorized exception - ADR-017's bidirectional edge.)"""
+    explicitly authorized exception - ADR-017's bidirectional edge.)
+
+    `epd2_eligibility_service` gets one additional, narrow exception for
+    PACK-07 (ADR-027): it reuses `verify_decision_authorizes_policy_activation`
+    for critical-policy activation - checked precisely, application-only,
+    exact-function, in
+    `test_eligibility_service_pack07_edges_are_application_only_and_match_adr027`
+    below."""
     violations: list[str] = []
-    for src_dir in {**PACK02_SERVICE_PACKAGES, **PACK04_SERVICE_PACKAGES}.values():
+    for package_name, src_dir in {**PACK02_SERVICE_PACKAGES, **PACK04_SERVICE_PACKAGES}.items():
         for py_file in sorted(src_dir.rglob("*.py")):
             roots = _imported_roots(py_file)
             bad = roots & set(PACK05_SERVICE_PACKAGES)
+            if bad and package_name == "epd2_eligibility_service":
+                continue
             if bad:
                 violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
     assert violations == [], "PACK-02/04 must not import any PACK-05 service:\n" + "\n".join(
@@ -599,7 +668,9 @@ def test_pack05_service_never_imports_excluded_services() -> None:
     credential storage): `governance-service` must never import
     `epd2_account_service`, `epd2_identity_service`,
     `epd2_eligibility_service`, `epd2_credential_service`,
-    `epd2_initiative_service`, `epd2_deliberation_service`,
+    `epd2_membership_service` (PACK-07: `governance-service` is read BY
+    both `eligibility-service` and `membership-service`, never the other
+    way around), `epd2_initiative_service`, `epd2_deliberation_service`,
     `epd2_moderation_service`, `epd2_delegation_service`, or
     `epd2_transparency_service`, under any module path."""
     excluded = frozenset(
@@ -608,6 +679,7 @@ def test_pack05_service_never_imports_excluded_services() -> None:
             "epd2_identity_service",
             "epd2_eligibility_service",
             "epd2_credential_service",
+            "epd2_membership_service",
             "epd2_initiative_service",
             "epd2_deliberation_service",
             "epd2_moderation_service",
@@ -814,6 +886,128 @@ def test_pack06_to_pack04_edge_imports_only_publish_ledger_entry() -> None:
     assert violations == [], (
         "Unauthorized epd2_transparency_service.application imports found (ADR-025 §5 requires "
         "exactly publish_ledger_entry):\n" + "\n".join(violations)
+    )
+
+
+# =============================================================================
+# PACK-07 (canon-0.6.0, ADR-026 through ADR-031) cross-service edges.
+# =============================================================================
+
+
+def test_eligibility_service_pack07_edges_are_application_only_and_match_adr027() -> None:
+    """ADR-027 Decision: `eligibility-service` may depend on
+    `identity-service`/`membership-service`/`credential-service`/
+    `governance-service` ONLY via their `.application` submodule, and
+    only for the four edges ADR-027 enumerates - never `.storage`/
+    `.domain` (INV-03), and never `epd2_account_service` (not named by
+    ADR-027 at all - still fully excluded by the blanket PACK-02 test
+    above)."""
+    violations: list[str] = []
+    src_dir = PACK02_SERVICE_PACKAGES["epd2_eligibility_service"]
+    touched_roots_universe = {
+        "epd2_identity_service",
+        "epd2_membership_service",
+        "epd2_credential_service",
+        "epd2_governance_service",
+    }
+    allowed_roots = {p.split(".")[0] for p in ALLOWED_ELIGIBILITY_PACK07_APPLICATION_MODULES}
+    for py_file in sorted(src_dir.rglob("*.py")):
+        roots = _imported_roots(py_file)
+        touched = roots & touched_roots_universe
+        if not touched:
+            continue
+        unauthorized_roots = touched - allowed_roots
+        if unauthorized_roots:
+            violations.append(
+                f"{py_file.relative_to(REPO_ROOT)} imports unauthorized service(s) "
+                f"{sorted(unauthorized_roots)} (not an ADR-027 edge)"
+            )
+            continue
+        module_paths = _imported_module_paths(py_file)
+        for root in touched:
+            touched_dotted = {p for p in module_paths if p == root or p.startswith(root + ".")}
+            bad_paths = touched_dotted - ALLOWED_ELIGIBILITY_PACK07_APPLICATION_MODULES
+            if bad_paths:
+                root_allowed = sorted(
+                    p for p in ALLOWED_ELIGIBILITY_PACK07_APPLICATION_MODULES if p.startswith(root)
+                )
+                violations.append(
+                    f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad_paths)} - "
+                    f"only {root_allowed} is authorized for epd2_eligibility_service (ADR-027)"
+                )
+    assert violations == [], "Unauthorized eligibility-service PACK-07 imports found:\n" + (
+        "\n".join(violations)
+    )
+
+
+def test_membership_service_edges_are_application_only_and_match_adr027() -> None:
+    """ADR-027 Decision: `membership-service` (PACK-07's one new service)
+    may depend on `identity-service`/`eligibility-service`/
+    `governance-service` ONLY via their `.application` submodule, and
+    only for the three edges ADR-027 enumerates - never `.storage`/
+    `.domain`, and never any other service (in particular, never
+    `epd2_account_service`, `epd2_credential_service`, or
+    `epd2_moderation_service` - its own `Appeal` is a documented
+    duplicate, never an import)."""
+    violations: list[str] = []
+    src_dir = PACK07_SERVICE_PACKAGES["epd2_membership_service"]
+    allowed_roots = {p.split(".")[0] for p in ALLOWED_MEMBERSHIP_APPLICATION_MODULES}
+    forbidden_roots = (set(SERVICE_PACKAGES) - {"epd2_membership_service", "epd2_audit_core"}) | (
+        allowed_roots
+    )
+    for py_file in sorted(src_dir.rglob("*.py")):
+        roots = _imported_roots(py_file)
+        touched = roots & forbidden_roots
+        if not touched:
+            continue
+        unauthorized_roots = touched - allowed_roots
+        if unauthorized_roots:
+            violations.append(
+                f"{py_file.relative_to(REPO_ROOT)} imports unauthorized service(s) "
+                f"{sorted(unauthorized_roots)} (not an ADR-027 edge)"
+            )
+            continue
+        module_paths = _imported_module_paths(py_file)
+        for root in touched:
+            touched_dotted = {p for p in module_paths if p == root or p.startswith(root + ".")}
+            bad_paths = touched_dotted - ALLOWED_MEMBERSHIP_APPLICATION_MODULES
+            if bad_paths:
+                root_allowed = sorted(
+                    p for p in ALLOWED_MEMBERSHIP_APPLICATION_MODULES if p.startswith(root)
+                )
+                violations.append(
+                    f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad_paths)} - "
+                    f"only {root_allowed} is authorized for epd2_membership_service (ADR-027)"
+                )
+    assert violations == [], "Unauthorized membership-service imports found:\n" + "\n".join(
+        violations
+    )
+
+
+def test_no_other_service_imports_membership_service() -> None:
+    """ADR-027's dependency direction: `membership-service` reads from
+    `identity-service`/`eligibility-service`/`governance-service`; none
+    of those, and no other service anywhere in the repository, may
+    import it back. `eligibility-service`'s own read of
+    `epd2_membership_service.application.get_membership_derived_claims`
+    is the one, single, explicitly-authorized exception (checked
+    precisely, application-only, in
+    `test_eligibility_service_pack07_edges_are_application_only_and_match_adr027`
+    above)."""
+    violations: list[str] = []
+    other_packages = {
+        name: path
+        for name, path in SERVICE_PACKAGES.items()
+        if name not in {"epd2_membership_service", "epd2_eligibility_service"}
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK07_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import membership-service:\n" + "\n".join(
+        violations
     )
 
 

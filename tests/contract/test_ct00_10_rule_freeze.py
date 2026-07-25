@@ -475,3 +475,41 @@ def test_approved_governance_decision_cannot_then_be_rejected(
 )
 def test_ct00_10_not_applicable_in_pack06() -> None:
     raise AssertionError("must not run - CT-00-10 is not applicable in PACK-06")
+
+
+# =============================================================================
+# PACK-07: documented NOT APPLICABLE for the same "freeze-shaped invariants
+# already covered elsewhere, not a distinct rule-version/ballot freeze
+# concept" reasoning PACK-06 used above - plus one honestly-reported gap.
+# =============================================================================
+
+
+@pytest.mark.skip(
+    reason=(
+        "CT-00-10 NOT APPLICABLE in PACK-07 (eligibility-service extensions, "
+        "membership-service): canon 27's CT-00-10 wording names Ballot "
+        "configuration freeze, a voting-service concept neither PACK-07 "
+        "service touches. This pack's own freeze-shaped invariants that DO "
+        "hold are covered elsewhere, not by a distinct CT-00-10 test: every "
+        "critical-policy entity (ParticipantEligibilityPolicy, "
+        "ProcessEligibilityPolicy, StepUpAuthenticationRequirement, "
+        "PartyMembershipEligibilityPolicy) is a frozen dataclass whose "
+        "content never mutates in place - superseding always creates a NEW "
+        "versioned record via with_status/dataclasses.replace, never "
+        "rewriting the old one - and DigitalDecision is documented as never "
+        "transitioning after construction (see test_ct00_03_forbidden_"
+        "transition.py's PACK-07 section for the forbidden-transition half "
+        "of this). One related invariant is honestly NOT enforced this "
+        "round, not silently glossed over: canon 19d.7's own "
+        "CriticalPolicyVersionFrozenError (declared in both PACK-07 "
+        "services' exceptions.py) is reserved for a future pack that "
+        "introduces real Process/Election lifecycle tracking - see that "
+        "exception class's own docstring for why raising it now, against no "
+        "real 'is a process using this version' signal, would be worse than "
+        "not enforcing it at all. This is reported here rather than claimed "
+        "as covered, per required scope item 18's no-false-applicability-"
+        "claims requirement."
+    )
+)
+def test_ct00_10_not_applicable_in_pack07() -> None:
+    raise AssertionError("must not run - CT-00-10 is not applicable in PACK-07")

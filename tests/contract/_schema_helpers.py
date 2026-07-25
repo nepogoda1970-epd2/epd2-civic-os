@@ -41,6 +41,12 @@ PACK05_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-05.yaml"
 PACK06_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-06.yml"
 PACK06_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-06.yaml"
 
+#: PACK-07's own reason-code registry / OpenAPI contract (canon-0.6.0
+#: implementation round, ADR-026 through ADR-031) - added alongside
+#: (never replacing) the PACK-02 through PACK-06 constants above.
+PACK07_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-07.yml"
+PACK07_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-07.yaml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -64,6 +70,26 @@ PACK03_SERVICE_DIRS: tuple[str, ...] = (
 PACK04_SERVICE_DIRS: tuple[str, ...] = ("transparency-service",)
 PACK05_SERVICE_DIRS: tuple[str, ...] = ("governance-service",)
 PACK06_SERVICE_DIRS: tuple[str, ...] = ("ai-processing-service",)
+#: PACK-07's one wholly new service (membership-service). Unlike every
+#: pack above, PACK-07 does NOT introduce a disjoint set of service
+#: directories for all of its functionality - it also extends two
+#: existing PACK-02 services (identity-service, eligibility-service) in
+#: place. Those two are intentionally NOT listed here; they stay in
+#: PACK02_SERVICE_DIRS and are handled by
+#: `PACK07_SHARED_WITH_PACK02_SERVICE_DIRS` below instead, since their
+#: `src/` trees mix genuinely-PACK-02 and genuinely-PACK-07 reason-code
+#: literals together.
+PACK07_SERVICE_DIRS: tuple[str, ...] = ("membership-service",)
+
+#: identity-service and eligibility-service (both already listed in
+#: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code
+#: literals in this implementation round (ADR-026 through ADR-031).
+#: `test_reason_codes_registry.py` handles this by unioning pack-02.yml
+#: with pack-07.yml for pack-02's own literal-usage scan (see that file's
+#: `_EXTRA_REGISTRIES_FOR_LITERAL_CHECK`) rather than splitting
+#: `PACK02_SERVICE_DIRS` itself - simpler, and safe here since neither
+#: account-service nor credential-service (the other two PACK02_SERVICE_DIRS
+#: entries) uses any PACK-07 code.
 
 
 def load_schema(name: str) -> dict[str, Any]:

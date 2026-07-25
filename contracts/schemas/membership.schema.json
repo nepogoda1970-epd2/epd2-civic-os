@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/membership.schema.json",
+  "title": "Membership",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 8.3 (first real implementation, canon-0.6.0 PACK-07). Owned by membership-service (epd2_membership_service.domain.Membership). Per canon 19d.9/19d.16, membership_status transitions to active/suspended/terminated/expired are, in this implementation, reached exclusively through MembershipApplication (active) or an explicit authorized human decision - never a bare domain-level transition. Never broadcast on a wire event payload directly (ADR-030 item 5's disclosure-by-default prohibition) - see membership-activated-payload.v1.schema.json/membership-suspended-payload.v1.schema.json for the minimal wire shapes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "membership_id",
+    "account_reference",
+    "organization_id",
+    "membership_type",
+    "membership_status",
+    "effective_from",
+    "effective_until",
+    "region_code"
+  ],
+  "properties": {
+    "membership_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "account_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "membership_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "membership_status": {
+      "type": "string",
+      "enum": [
+        "application_pending",
+        "verification_pending",
+        "active",
+        "suspended",
+        "terminated",
+        "rejected",
+        "expired"
+      ]
+    },
+    "effective_from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "effective_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "region_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  }
+}

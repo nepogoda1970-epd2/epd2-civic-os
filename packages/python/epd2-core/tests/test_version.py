@@ -81,5 +81,41 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # the already-accepted canon 0.5.0 text and ADR-021 through ADR-025 -
     # no further canon edit was made, so CANON_VERSION is unchanged at
     # 0.5.0.
-    assert CANON_VERSION == "0.5.0"
-    assert REPOSITORY_VERSION == "0.6.0"
+    # CANON_VERSION moved 0.5.0 -> 0.6.0 per ADR-026 through ADR-031 (all
+    # accepted, no further amendment): new canon section 19d
+    # (Participation & Membership Context) adding ten new canonical
+    # entities (ParticipantEligibilityPolicy, ProcessEligibilityPolicy,
+    # StepUpAuthenticationRequirement, DigitalDecision, AssemblyDecision,
+    # PartyMembershipEligibilityPolicy, AffiliationDeclaration,
+    # ConflictAssessment, MembershipApplication, AuthenticationContext);
+    # eight new IdentityRecord (7.3) fields; the four separated
+    # electoral-eligibility claims replacing the generic
+    # electoral_eligibility_met concept (never itself canonical); the
+    # two-stage MembershipApplication lifecycle layered without
+    # overloading Membership.membership_status (8.3, unchanged); the
+    # widened seven-category human-control hard invariant; the
+    # critical-policy four-gate activation/policy-freeze rule; the
+    # enforcement-mechanism dichotomy (atomic capability check / scoped
+    # capability token); and ParticipationRightsProfile's internal/
+    # non-authoritative characterization - a backward-compatible (minor)
+    # canon addition per canon section 25. That round was a canon-only
+    # change for CLAUDE-PACK-07 governance; no membership-service or
+    # eligibility-service extension code existed yet, so
+    # REPOSITORY_VERSION stayed unchanged at 0.6.0 at the time (both
+    # versions again coincidentally matched, as they did transiently
+    # before, but remain tracked independently).
+    # REPOSITORY_VERSION moved 0.6.0 -> 0.7.0 for CLAUDE-PACK-07 (business
+    # workflows implementation): implements membership-service (a wholly
+    # new service - PartyMembershipEligibilityPolicy, Membership,
+    # MembershipApplication, AffiliationDeclaration, ConflictAssessment,
+    # its own documented-duplicate Appeal) and extends
+    # eligibility-service/identity-service in place
+    # (ParticipantEligibilityPolicy, ProcessEligibilityPolicy,
+    # StepUpAuthenticationRequirement, DigitalDecision, AssemblyDecision,
+    # the four separated electoral-eligibility claims,
+    # AuthenticationContext, canon 19d.2's eight IdentityRecord fields)
+    # against the already-accepted canon 0.6.0 text and ADR-026 through
+    # ADR-031 - no further canon edit was made, so CANON_VERSION is
+    # unchanged at 0.6.0.
+    assert CANON_VERSION == "0.6.0"
+    assert REPOSITORY_VERSION == "0.7.0"

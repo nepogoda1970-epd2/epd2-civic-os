@@ -18,6 +18,7 @@ from uuid import UUID
 from epd2_credential_service.exceptions import (
     ForbiddenCredentialTransitionError,
     UnknownCredentialStatusError,
+    UnknownCredentialTypeError,
 )
 
 CURRENT_CREDENTIAL_VERSION = 1
@@ -64,6 +65,19 @@ def parse_status(value: str) -> CredentialStatus:
         return CredentialStatus(value)
     except ValueError as exc:
         raise UnknownCredentialStatusError(f"unknown credential status: {value!r}") from exc
+
+
+def parse_credential_type(value: str) -> CredentialType:
+    """CT-00-02 fail-closed parsing for `CredentialType` (PACK-07
+    implementation round addition) - added so `issue_participation_credential`
+    can accept a plain `str` at its cross-service boundary (`eligibility-
+    service` may call `.application` only, never this `.domain` module, per
+    `tests/repository/test_service_boundaries.py`) while still validating
+    against canon section 10.1's exact, unchanged five-value list."""
+    try:
+        return CredentialType(value)
+    except ValueError as exc:
+        raise UnknownCredentialTypeError(f"unknown credential type: {value!r}") from exc
 
 
 def assert_transition_allowed(current: CredentialStatus, target: CredentialStatus) -> None:

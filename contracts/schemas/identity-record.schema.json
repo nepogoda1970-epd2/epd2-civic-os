@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://epd2.example/contracts/schemas/identity-record.schema.json",
   "title": "IdentityRecord",
-  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 7.3. Owned by identity-service (epd2_identity_service.domain.IdentityRecord). Forbidden per canon: voting lists, chosen options, initiative lists, political preferences, delegations - none of those fields exist here (additionalProperties: false enforces this structurally).",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 7.3 (original ten fields) plus section 19d.2's eight additive fields (canon-0.6.0, PACK-07, ADR-026 through ADR-031). Owned by identity-service (epd2_identity_service.domain.IdentityRecord). Forbidden per canon: voting lists, chosen options, initiative lists, political preferences, delegations, full address/document/citizenship records beyond the narrow 19d.2 fields, global cross-domain identifiers - none of those fields exist here (additionalProperties: false enforces this structurally). The eight 19d.2 fields all default to their 'nothing asserted yet' value (null / empty array / identity_assurance_level=none), matching the backward-compatible, minor-version addition canon 19d.2 itself describes.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -15,7 +15,15 @@
     "expires_at",
     "country",
     "duplicate_check_status",
-    "provider_reference"
+    "provider_reference",
+    "date_of_birth",
+    "citizenship_status",
+    "residence_status",
+    "identity_assurance_level",
+    "identity_scheme",
+    "attribute_verification_level",
+    "attribute_verified_at",
+    "attribute_valid_until"
   ],
   "properties": {
     "identity_record_id": { "type": "string", "format": "uuid" },
@@ -37,6 +45,20 @@
     "expires_at": { "type": ["string", "null"], "format": "date-time" },
     "country": { "type": "string", "minLength": 1 },
     "duplicate_check_status": { "type": "string", "minLength": 1 },
-    "provider_reference": { "type": "string", "minLength": 1 }
+    "provider_reference": { "type": "string", "minLength": 1 },
+    "date_of_birth": { "type": ["string", "null"], "format": "date" },
+    "citizenship_status": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "residence_status": { "type": ["object", "null"] },
+    "identity_assurance_level": {
+      "type": "string",
+      "enum": ["none", "low", "substantial", "high"]
+    },
+    "identity_scheme": { "type": ["string", "null"], "minLength": 1 },
+    "attribute_verification_level": { "type": ["string", "null"], "minLength": 1 },
+    "attribute_verified_at": { "type": ["string", "null"], "format": "date-time" },
+    "attribute_valid_until": { "type": ["string", "null"], "format": "date-time" }
   }
 }

@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/process-eligibility-policy.schema.json",
+  "title": "ProcessEligibilityPolicy",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.5 (canon-0.6.0, PACK-07, ADR-026/ADR-030), plus section 19d.5/19d.12's co-located legal-effect/formal-confirmation fields. Owned by eligibility-service (epd2_eligibility_service.domain.ProcessEligibilityPolicy). Parametrizes eligibility for one concrete process - never a permanent property of a person (canon 19d.5's own framing). process_type is deliberately an open string (canon), never an enum here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "policy_version",
+    "status",
+    "process_type",
+    "jurisdiction",
+    "scope_type",
+    "scope_id",
+    "adopted_by",
+    "eligible_citizenship_set",
+    "citizenship_rule_reference",
+    "residence_rule",
+    "habitual_residence_rule",
+    "minimum_age",
+    "active_electoral_eligibility_rule",
+    "passive_electoral_eligibility_rule",
+    "party_internal_voting_rule",
+    "party_office_candidacy_rule",
+    "effective_from",
+    "effective_until",
+    "legal_basis",
+    "supersedes_policy_id",
+    "signed_policy_digest_reference",
+    "transparency_log_commitment_reference",
+    "decision_effect",
+    "formal_confirmation_required",
+    "formal_confirmation_authority",
+    "secret_ballot_required",
+    "permitted_participation_mode",
+    "required_assurance_level",
+    "accessibility_profile"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "superseded"
+      ]
+    },
+    "process_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "jurisdiction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "scope_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "adopted_by": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eligible_citizenship_set": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "citizenship_rule_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "residence_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "habitual_residence_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "minimum_age": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "active_electoral_eligibility_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "passive_electoral_eligibility_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "party_internal_voting_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "party_office_candidacy_rule": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "effective_from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "effective_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "legal_basis": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "supersedes_policy_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "signed_policy_digest_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "transparency_log_commitment_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "decision_effect": {
+      "type": "string",
+      "enum": [
+        "advisory",
+        "politically_binding",
+        "internally_binding",
+        "legally_final",
+        "requires_formal_confirmation"
+      ]
+    },
+    "formal_confirmation_required": {
+      "type": "boolean"
+    },
+    "formal_confirmation_authority": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "secret_ballot_required": {
+      "type": "boolean"
+    },
+    "permitted_participation_mode": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required_assurance_level": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Nullable AssuranceRequirement value object (required_identity_assurance_level, required_authentication_assurance_level, required_attribute_freshness) when not null - see step-up-authentication-requirement.schema.json's assurance_requirement property for the same shape's full, non-nullable schema. Left as a bare nullable object here (matching this repository's convention for nullable embedded value objects, e.g. identity-record.schema.json's residence_status) since this repository's dependency-free CT-00-01 validator (epd2_core.minimal_json_schema) has no anyOf/oneOf support to express 'object-with-this-shape-or-null' structurally."
+    },
+    "accessibility_profile": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  }
+}

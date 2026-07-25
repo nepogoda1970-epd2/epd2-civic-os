@@ -24,6 +24,7 @@ from epd2_governance_service.events import SUPPORTED_MAJOR_VERSIONS as GOVERNANC
 from epd2_governance_service.storage import InMemoryRoleAssignmentStore
 from epd2_identity_service.events import SUPPORTED_MAJOR_VERSIONS as IDENTITY_MAJORS
 from epd2_initiative_service.events import SUPPORTED_MAJOR_VERSIONS as INITIATIVE_MAJORS
+from epd2_membership_service.events import SUPPORTED_MAJOR_VERSIONS as MEMBERSHIP_MAJORS
 from epd2_moderation_service.events import SUPPORTED_MAJOR_VERSIONS as MODERATION_MAJORS
 from epd2_tally_service.events import SUPPORTED_MAJOR_VERSIONS as TALLY_MAJORS
 from epd2_voting_service.events import SUPPORTED_MAJOR_VERSIONS as VOTING_MAJORS
@@ -44,6 +45,7 @@ from epd2_voting_service.storage import InMemoryBallotStore
         VOTING_MAJORS,
         GOVERNANCE_MAJORS,
         AI_PROCESSING_MAJORS,
+        MEMBERSHIP_MAJORS,
         frozenset({1}),
     ],
 )
@@ -207,6 +209,92 @@ def test_real_pack06_processing_requested_envelope_rejects_an_unsupported_major_
 
     # Accepted against the real, matching major version set.
     assert_supported_major_version(envelope.event_version, AI_PROCESSING_MAJORS)
+
+    # Rejected against a frozenset that deliberately excludes it.
+    with pytest.raises(UnsupportedEventVersionError):
+        assert_supported_major_version(envelope.event_version, frozenset({99}))
+
+
+def test_real_pack07_eligibility_decision_envelope_rejects_an_unsupported_major_version(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Exercises `assert_supported_major_version` against a real PACK-07
+    event envelope's own `event_version` (an `eligibility.
+    formal_confirmation_requested` envelope, eligibility-service) - mirrors
+    the PACK-03/PACK-05/PACK-06 tests above, but for the eligibility-service
+    side of PACK-07 (canon 19d.12, ADR-030 item 8)."""
+    from datetime import timedelta
+    from uuid import uuid4
+
+    from epd2_eligibility_service.application import record_digital_decision
+    from epd2_eligibility_service.storage import (
+        InMemoryAssemblyDecisionStore,
+        InMemoryDigitalDecisionStore,
+    )
+
+    result = record_digital_decision(
+        InMemoryDigitalDecisionStore(),
+        InMemoryAssemblyDecisionStore(),
+        audit_store,
+        digital_decision_id=uuid4(),
+        process_reference={"process_type": "initiative", "process_id": str(uuid4())},
+        digital_result="approved",
+        decision_effect="advisory",
+        formal_confirmation_required=True,
+        confirming_authority="city_council",
+        legal_basis="local statute",
+        confirmation_deadline=clock.now() + timedelta(days=7),
+        protocol_or_evidence_reference="protocol-123",
+        assembly_decision_id=uuid4(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    envelope = result.event
+    assert envelope is not None
+
+    # Accepted against the real, matching major version set.
+    assert_supported_major_version(envelope.event_version, ELIGIBILITY_MAJORS)
+
+    # Rejected against a frozenset that deliberately excludes it.
+    with pytest.raises(UnsupportedEventVersionError):
+        assert_supported_major_version(envelope.event_version, frozenset({99}))
+
+
+def test_real_pack07_membership_submitted_envelope_rejects_an_unsupported_major_version(
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """Exercises `assert_supported_major_version` against a real PACK-07
+    event envelope's own `event_version` (a `membership.
+    membership_application_submitted` envelope, membership-service) -
+    mirrors the PACK-03/PACK-05/PACK-06 tests above, but for the
+    membership-service side of PACK-07 (canon 19d.9)."""
+    from uuid import uuid4
+
+    from epd2_membership_service.application import submit_membership_application
+    from epd2_membership_service.storage import InMemoryMembershipApplicationStore
+
+    result = submit_membership_application(
+        InMemoryMembershipApplicationStore(),
+        audit_store,
+        membership_application_id=uuid4(),
+        subject_reference=uuid4(),
+        supersedes_membership_application_id=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    envelope = result.event
+    assert envelope is not None
+
+    # Accepted against the real, matching major version set.
+    assert_supported_major_version(envelope.event_version, MEMBERSHIP_MAJORS)
 
     # Rejected against a frozenset that deliberately excludes it.
     with pytest.raises(UnsupportedEventVersionError):

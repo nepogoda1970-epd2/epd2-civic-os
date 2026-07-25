@@ -92,6 +92,7 @@ from epd2_governance_service.events import (
     technical_challenge_full_state_payload,
 )
 from epd2_governance_service.exceptions import (
+    GovernanceDecisionNotApprovedError,
     GovernanceDecisionSupersededError,
     ResultFinalityBlockedByOpenChallengeError,
     ResultFinalityDeterminationDuplicateError,
@@ -650,6 +651,91 @@ def verify_role_assignment_for_action(
         verified_actor_reference=role.actor_id,
         verified_scope_reference=role.scope_id,
         reason_code=None,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class PolicyActivationAuthorization:
+    """PACK-07's purpose-built cross-pack verdict for
+    `verify_decision_authorizes_policy_activation` (canon 19d.7, item 1
+    and 2 of the critical-policy four-gate activation rule) —
+    deliberately minimal, mirroring `RoleVerificationResult` above.
+    `multi_person_approval_met` is derived, never a stored field: it is
+    `True` exactly when a qualifying `GovernanceDecision` is `approved`
+    and (per the pre-existing INV-08 invariant every `GovernanceDecision`
+    already enforces at construction — `approved_by_role_id` distinct
+    from `proposed_by_role_id`) its proposer and approver are two
+    distinct role actors. This repository does not implement a
+    configurable N-actor approval quorum beyond that already-enforced
+    two-distinct-actor minimum; see
+    `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` for why a richer
+    quorum mechanism is out of this round's scope."""
+
+    authorized: bool
+    multi_person_approval_met: bool
+    verified_decision_reference: UUID | None
+    reason_code: str | None
+
+
+def verify_decision_authorizes_policy_activation(
+    decision_store: GovernanceDecisionStore,
+    *,
+    governance_decision_id: UUID,
+) -> PolicyActivationAuthorization:
+    """Canon 19d.7's narrow, purpose-built read — the exact function
+    name canon itself uses. Confirms `governance_decision_id` resolves
+    to an `approved`, non-superseded `GovernanceDecision` and reports
+    `multi_person_approval_met` (see `PolicyActivationAuthorization`
+    above) — never the underlying `GovernanceDecision` row itself, and
+    never the identity of either approving actor (canon 19d.7: "сам
+    список утверждающих вызывающей стороне не передаётся").
+
+    This is the only `governance-service.application` function
+    `eligibility-service` or `membership-service` may import
+    (`tests/repository/test_service_boundaries.py`) — every other
+    policy/decision/role/technical-challenge command and read stays out
+    of reach, the same single-function restriction ADR-022 already
+    established for `verify_role_assignment_for_action`.
+
+    Does not itself check `signed_policy_digest_reference` or
+    `transparency_log_commitment_reference` (gates 3 and 4 of 19d.7) —
+    those are the calling service's own policy fields, verified by the
+    calling service itself; this function only ever answers gates 1 and
+    2, about the `GovernanceDecision`.
+    """
+    decision = decision_store.get(governance_decision_id)
+    if decision is None:
+        return PolicyActivationAuthorization(
+            authorized=False,
+            multi_person_approval_met=False,
+            verified_decision_reference=None,
+            reason_code=UnknownGovernanceDecisionError.reason_code,
+        )
+    if decision.status is not GovernanceDecisionStatus.APPROVED:
+        return PolicyActivationAuthorization(
+            authorized=False,
+            multi_person_approval_met=False,
+            verified_decision_reference=None,
+            reason_code=GovernanceDecisionNotApprovedError.reason_code,
+        )
+    # A distinct proposer/approver is already a construction-time
+    # invariant of every `approved` `GovernanceDecision` (INV-08) - this
+    # re-check is defense in depth, never trusting a stored object's
+    # having-passed-validation-once as a substitute for verifying the
+    # specific property this function promises.
+    multi_person_approval_met = (
+        decision.approved_by_role_id is not None
+        and decision.approved_by_role_id != decision.proposed_by_role_id
+    )
+    return PolicyActivationAuthorization(
+        authorized=multi_person_approval_met,
+        multi_person_approval_met=multi_person_approval_met,
+        verified_decision_reference=decision.governance_decision_id
+        if multi_person_approval_met
+        else None,
+        reason_code=None
+        if multi_person_approval_met
+        else GovernanceDecisionNotApprovedError.reason_code,
     )
 
 

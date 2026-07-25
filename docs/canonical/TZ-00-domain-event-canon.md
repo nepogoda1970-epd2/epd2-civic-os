@@ -1,7 +1,7 @@
 # EPD² CIVIC OS
 ## ТЗ-00. Каноническая модель домена и событий
 
-**Версия:** 0.5.0  
+**Версия:** 0.6.0  
 **Статус:** working canon  
 **Владелец документа:** EPD Plattform e.V.  
 **Назначение:** единая обязательная спецификация для всех разработчиков и модулей EPD²  
@@ -2451,6 +2451,649 @@ Governance Context) — репозиторный, не канонический,
 
 ---
 
+# 19d. Участие и членство (Participation & Membership Context)
+
+Добавлено версией канона 0.6.0 (ADR-026 через ADR-031, приняты
+2026-07-25) и реализует расширение контура 5.2 (Eligibility Context)
+процесс-специфичной избирательной правоспособностью, а также новый
+слой политики членства в партии, ранее не имевший канонической опоры,
+кроме уже существующих `Membership` (8.3) и `RoleAssignment` (8.4).
+Раздел вставлен под номером 19d, между разделами 19c (AI Processing
+Context) и 20 (Канонический каталог событий), чтобы не переносить
+нумерацию уже существующих разделов 20–30 — тот же приём, использованный
+при добавлении разделов 19a, 19b и 19c.
+
+Десять новых канонических сущностей настоящего раздела физически
+реализуются двумя сервисами: `eligibility-service` (уже существующий с
+PACK-02, впервые расширяемый настоящим разделом) владеет
+`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+`StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`;
+новый `membership-service` владеет `PartyMembershipEligibilityPolicy`,
+`AffiliationDeclaration`, `ConflictAssessment`, `MembershipApplication`;
+`identity-service` (существующий с PACK-02) получает новую сущность
+`AuthenticationContext`. `Membership` (8.3) и `RoleAssignment` (8.4)
+остаются без изменений полей, статусов или владельца. Ни одно поле,
+статус, событие или запрет ни одного другого контура — Governance
+Context (19b), Transparency Context (19a), AI Processing Context (19c),
+Moderation (раздел 14), Emergency/Crisis Override (раздел 19) — не
+изменяется настоящим разделом. Настоящий раздел не авторизует код
+`membership-service`, расширение `eligibility-service`, схемы,
+OpenAPI-файлы или исполняемый реестр reason codes — только
+каноническую модель (раздел 26; `docs/review/PACK-07-OWNER-DECISIONS.md`).
+
+## 19d.1. Обзор: разделение сервисов и `ParticipantEligibilityPolicy` vs `PartyMembershipEligibilityPolicy`
+
+`ParticipantEligibilityPolicy` (19d.4, `eligibility-service`) и
+`PartyMembershipEligibilityPolicy` (19d.6, `membership-service`) —
+структурно раздельные сущности с раздельным версионированием и
+активацией; ни одна не является частным случаем другой.
+`eligibility-service` никогда не создаёт и не изменяет `Membership`;
+`membership-service` никогда не становится владельцем общей
+правоспособности участия Civic OS. Платформенный участник не обязан
+иметь запись `Membership`. `ParticipationRightsProfile` (19d.13) —
+единственная точка, где результаты обоих сервисов и `RoleAssignment`
+сводятся вместе, и делает это исключительно как производное, не
+хранимое представление.
+
+## 19d.2. `IdentityRecord` — дополнительные поля
+
+`IdentityRecord` (7.3) сохраняет все десять существующих полей без
+изменений (`identity_record_id`, `account_id`, `verification_provider`,
+`verification_level`, `verification_status`, `verified_at`,
+`expires_at`, `country`, `duplicate_check_status`,
+`provider_reference`) и владельца (Identity Verification Service).
+Настоящий раздел добавляет восемь новых полей:
+
+- `date_of_birth`.
+- `citizenship_status` — список гражданств; допускает безгражданство и
+  множественное гражданство, никогда не единственное булево значение.
+- `residence_status` — встроенный объект с как минимум `residence_type`
+  (включая значение, соответствующее habitual residence) и
+  `territorial_connection`.
+- `identity_assurance_level` — enum `none`/`low`/`substantial`/`high` —
+  уровень доверия к самому подтверждению личности. Не совпадает и не
+  подменяет `authentication_assurance_level` (19d.8).
+- `identity_scheme` — открытая, расширяемая строка (не менее:
+  `de_personalausweis_online`, `eu_eea_eid_card`, `eidas_foreign_eid`,
+  `other_approved_method`); никогда не является признаком гражданства.
+- `attribute_verification_level`, `attribute_verified_at`,
+  `attribute_valid_until` — актуальность подтверждения **конкретного**
+  атрибута, отдельно от общей верификации личности.
+
+**Обязательное разделение, без исключений:** подтверждение личности
+через любой из перечисленных `identity_scheme` не эквивалентно и не
+подразумевает немецкое (или любое иное конкретное) гражданство.
+`verification_status`/`identity_assurance_level` вычисляются
+исключительно из факта и качества верификации личности и никогда не
+используются как замена, источник или подтверждение
+`citizenship_status`. Ни одно правило настоящего раздела не
+ограничивает верифицированное участие, подачу заявления о партийном
+членстве или партийное членство гражданами одной страны — гражданин
+любого государства ЕС/ЕЭП, верифицированный через любой поддерживаемый
+маршрут, может стать верифицированным участником, заявителем или
+членом при соблюдении применимой политики.
+
+## 19d.3. Четыре отдельных признака избирательного права
+
+Настоящий раздел не вводит и никогда не вводит единого обобщённого
+признака `electoral_eligibility_met` — такого поля, статуса или
+производного значения не существует ни в каноне, ни в одной реализации,
+основанной на нём. Вместо этого — четыре независимо вычисляемых
+булевых признака:
+
+- `active_electoral_eligibility_met` — право голосовать в
+  соответствующем публичном избирательном процессе.
+- `passive_electoral_eligibility_met` — право быть кандидатом в том же
+  публичном избирательном процессе.
+- `party_internal_voting_eligibility_met` — право голосовать во
+  внутрипартийных решениях.
+- `party_office_candidacy_eligibility_met` — право выдвигаться на
+  партийную должность.
+
+Ни одно поле или флаг не представляет «избирательное право» обобщённо
+— каждый потребитель обязан указывать, какой из четырёх вопросов он
+задаёт. Первые два вычисляются исключительно из фактов
+идентификационного слоя (возраст, гражданство, резидентство,
+территориальная связь); последние два дополнительно используют узкое
+чтение `eligibility-service → membership-service`
+(`required_membership_status_met`/`membership_duration_requirement_met`,
+19d.1) — `membership-service` никогда не вычисляет избирательный
+признак самостоятельно. Один и тот же человек может получить разные
+результаты для разных процессов одновременно — это ожидаемое, а не
+ошибочное поведение.
+
+## 19d.4. ParticipantEligibilityPolicy
+
+Версионируемая, активируемая политика общей правоспособности участия
+платформы, того же класса, что `GovernancePolicy` (19b.2) и
+`DisclosurePolicy` (19a.3).
+
+### Поля
+
+- `policy_id`, `policy_version`.
+- `status` — `draft` / `active` / `superseded`.
+- `scope_type`, `scope_id` — nullable, непрозрачная ссылка.
+- `effective_from`, `effective_until` — nullable.
+- `adopted_by_decision_id` — **не nullable**: ссылка на утверждённую
+  `GovernanceDecision` (19d.7).
+- `age_thresholds` — список `{action_code, minimum_age, maximum_age}`.
+- `citizenship_conditions`, `residence_conditions` — списки
+  структурированных условий.
+- `exemptions` — список структурированных исключений.
+- `transitional_rules` — структурированные переходные правила, никогда
+  не применяются неявно.
+- `supersedes_policy_id` — nullable; исправление — всегда новая версия.
+- `signed_policy_digest_reference`, `transparency_log_commitment_reference`
+  — оба **не nullable** при `status = active` (19d.7).
+
+### Статусы и переходы
+
+`draft → active` (только при выполненных условиях 19d.7); `active →
+superseded` (не более одной активной версии на `(scope_type, scope_id)`
+одновременно). Возврат к `draft` невозможен.
+
+### Владелец
+
+`eligibility-service` (раздел 22).
+
+## 19d.5. ProcessEligibilityPolicy
+
+Версионируемая политика, параметризующая избирательную/процессную
+правоспособность для конкретного процесса — никогда не одно постоянное
+свойство человека.
+
+### Поля
+
+- `policy_id`, `policy_version`, `status` — как 19d.4.
+- `process_type` — открытая строка; не менее девяти категорий:
+  `bundestag_election`, `european_parliament_election_de`,
+  `land_election`, `municipal_district_election`,
+  `epd_public_consultation`, `epd_participant_poll`, `epd_member_vote`,
+  `epd_party_office_election`, `epd_public_candidate_nomination`.
+- `jurisdiction`, `scope_type`, `scope_id` — открытые/непрозрачные.
+- `eligible_citizenship_set` — список кодов ISO 3166-1 либо ссылка на
+  правило гражданства.
+- `residence_rule`, `habitual_residence_rule`, `minimum_age`.
+- `active_electoral_eligibility_rule`, `passive_electoral_eligibility_rule`.
+- `party_internal_voting_rule`, `party_office_candidacy_rule` —
+  nullable для непартийных `process_type`.
+- `effective_from`, `effective_until`, `legal_basis` (иллюстративная
+  ссылка, никогда не фиксированное значение), `adopted_by`,
+  `supersedes_policy_id`.
+- `signed_policy_digest_reference`, `transparency_log_commitment_reference`
+  — как 19d.4.
+
+### Дополнительные поля — правовой эффект и формальное подтверждение (19d.12)
+
+- `decision_effect` — enum, не менее: `advisory`, `politically_binding`,
+  `internally_binding`, `legally_final`, `requires_formal_confirmation`.
+- `formal_confirmation_required` — boolean.
+- `formal_confirmation_authority` — открытая ссылка, непрозрачная.
+- `secret_ballot_required` — boolean.
+- `permitted_participation_mode` — открытая строка/множество; никогда
+  не универсальное правило физического присутствия.
+- `required_assurance_level` — nullable ссылка на `AssuranceRequirement`
+  (19d.8).
+- `accessibility_profile` — открытая ссылка; детализация отложена
+  (19d.18).
+
+**Инвариант:** ровно одна `active` версия на `(process_type,
+jurisdiction, scope_type, scope_id)` на данную `effective_date`,
+разрешается заново при каждой оценке, никогда не кешируется как
+постоянный факт. Ни одна дата вступления в силу текущего результата
+голосования по умолчанию не считается юридически окончательной.
+
+### Владелец
+
+`eligibility-service` (раздел 22).
+
+## 19d.6. PartyMembershipEligibilityPolicy
+
+Разделяет поля и жизненный цикл с `ParticipantEligibilityPolicy`
+(19d.4: `policy_id`, `policy_version`, `status`, `scope_type`,
+`scope_id`, `effective_from`, `effective_until`,
+`adopted_by_decision_id`, `age_thresholds`, `citizenship_conditions`,
+`residence_conditions`, `exemptions`, `transitional_rules`,
+`supersedes_policy_id`, `signed_policy_digest_reference`,
+`transparency_log_commitment_reference`), и дополнительно:
+
+- `incompatibility_rules` — список значений `conflict_type` (19d.11).
+- `membership_duration_rules` — nullable.
+
+### Владелец
+
+`membership-service` (раздел 22).
+
+## 19d.7. Критическая политика — активация, многостороннее утверждение, заморозка версии
+
+`ParticipantEligibilityPolicy` (19d.4), `ProcessEligibilityPolicy`
+(19d.5), `PartyMembershipEligibilityPolicy` (19d.6) и
+`StepUpAuthenticationRequirement` (19d.8) — каждая классифицируется как
+**критическая политика**. Переход любой из них в `active` требует
+одновременно и независимо всех четырёх условий; отсутствие любого
+одного — fail-closed отказ активации:
+
+1. Утверждённая, `approved` `GovernanceDecision`
+   (`adopted_by_decision_id`/`adopted_by`).
+2. `multi_person_approval_met = true` — новое булево значение,
+   возвращаемое расширенным `governance-service`-чтением
+   `verify_decision_authorizes_policy_activation` (сконфигурированный
+   минимум различных утверждающих акторов; сам список утверждающих
+   вызывающей стороне не передаётся).
+3. `signed_policy_digest_reference` заполнена — ссылка на
+   криптографическую подпись содержимого версии политики.
+4. `transparency_log_commitment_reference` заполнена — ссылка на
+   публичную фиксацию через уже существующий механизм Transparency
+   Context (`PublicLedgerEntry`/`AuditExportPackage`, 19a) — новая
+   инфраструктура публикации не вводится.
+
+**Заморозка версии (расширяет CT-00-10):** активная версия критической
+политики, уже использованная активным процессом, не может быть
+заменена, пока этот процесс не достигнет терминального состояния —
+тот же принцип, что заморозка `EligibilityRule` при открытии
+голосования (9.1). Факт "используется активным процессом" — производный,
+вычисляемый на момент проверки; отдельное хранимое поле "заморожено"
+не вводится.
+
+## 19d.8. StepUpAuthenticationRequirement и AuthenticationContext
+
+Пять раздельных, никогда не взаимозаменяемых понятий: идентификационная
+уверенность (`identity_assurance_level`, `IdentityRecord`, 19d.2);
+аутентификационная уверенность (`authentication_assurance_level`,
+`AuthenticationContext`, ниже); актуальность атрибута
+(`attribute_verification_level`/`attribute_verified_at`/
+`attribute_valid_until`, `IdentityRecord`, 19d.2, для конкретного
+атрибута); время и метод аутентификации сессии
+(`session_authenticated_at`/`authentication_method`,
+`AuthenticationContext`); ссылка на провайдера
+(`AuthenticationContext.provider_reference`, отдельно от
+`IdentityRecord.provider_reference`).
+
+### AuthenticationContext (новая сущность)
+
+- `authentication_context_id`, `account_id`.
+- `authentication_method` — открытая строка.
+- `authentication_assurance_level` — `none`/`low`/`substantial`/`high`.
+- `session_authenticated_at`, `provider_reference`.
+- `step_up_completed_at` — nullable.
+
+Владелец: `identity-service`.
+
+### StepUpAuthenticationRequirement (новая сущность, критическая политика)
+
+- `requirement_id`, `requirement_version`, `status` (`draft`/`active`/
+  `superseded`).
+- `action_code` — открытая строка.
+- `required_authentication_context`.
+- `assurance_requirement` — встроенный `AssuranceRequirement`:
+  `required_identity_assurance_level`,
+  `required_authentication_assurance_level`,
+  `required_attribute_freshness` (nullable).
+- `fresh_authentication_required` — boolean.
+- `maximum_authentication_age` — nullable.
+- `reauthentication_reason` — reason code.
+- `effective_from`, `effective_until`, `supersedes_requirement_id`.
+- `signed_policy_digest_reference`, `transparency_log_commitment_reference`
+  (19d.7 — тот же четырёхшаговый gate).
+
+**Оценка, fail-closed:** требование удовлетворено только если
+аутентификационная уверенность, идентификационная уверенность,
+свежесть сессии (где применимо) и свежесть атрибута (где применимо)
+выполняются **все одновременно**; ни одно "или"-условие не допускается.
+Отсутствующий, истёкший или неразрешимый `AuthenticationContext` —
+fail-closed отказ, никогда не разрешение по умолчанию.
+
+Владелец: `eligibility-service`.
+
+## 19d.9. MembershipApplication; `Membership` (8.3) без изменений
+
+**Двухэтапный процесс, обязателен без исключений:**
+`Membership.membership_status` (8.3) никогда не переходит напрямую из
+состояния заявки в `active` как автоматический результат оценки
+политики.
+
+- **Этап A — формальная оценка правоспособности.** `membership-service`
+  оценивает заявителя по текущей активной
+  `PartyMembershipEligibilityPolicy`. Положительный результат этапа A
+  сам по себе никогда не создаёт и не активирует запись `Membership`.
+- **Этап B — авторизованное человеческое решение.** Запись `Membership`
+  достигает `active` только после явного, утверждённого решения,
+  несущего: ссылку на решающий орган/актора, версию политики, по
+  которой был пройден этап A, `reason_code`, `decided_at` и ссылку на
+  `AuditEvent`.
+
+### MembershipApplication (новая сущность)
+
+- `membership_application_id`, `subject_reference`.
+- `status` — шесть значений: `application_pending`, `eligibility_review`,
+  `human_decision_pending`, `approved`, `rejected`, `activated`.
+- Поля, необходимые для отражения этапов A/B: ссылка на решающий
+  орган/актора, применённую `policy_version`, `reason_code`,
+  `decided_at`, ссылку на `AuditEvent`.
+- `supersedes_membership_application_id` — nullable; исправление —
+  всегда новая запись, никогда не переписывание существующей.
+
+**Обязательное правило:** ни один код не вправе установить
+`Membership.membership_status = active`, кроме как шагом `activated`,
+следующим за зафиксированным `approved` `MembershipApplication`. Тот же
+двухэтапный принцип симметрично применяется к приостановке,
+прекращению/исключению и восстановлению — ни одна автоматизированная
+система не вправе окончательно принять, отклонить, приостановить или
+исключить человека без человеческого решения (19d.16).
+
+**`Membership` (8.3) не изменяется настоящим разделом:** все восемь
+существующих полей, семь существующих значений `membership_status`
+(`application_pending`, `verification_pending`, `active`, `suspended`,
+`terminated`, `rejected`, `expired`) и владелец остаются без изменений
+— ничего не удалено и не переопределено, в соответствии с
+принципом «только аддитивные изменения» minor-версии канона (раздел
+25). `MembershipApplication` — самостоятельная, независимо
+версионируемая сущность, владеющая переходным (pre-admission)
+жизненным циклом; она не переопределяет и не заменяет ни одно
+хранимое значение `Membership.membership_status`. Практически, при
+реализации настоящего раздела в будущем пакете, переход
+`Membership.membership_status` в `active`/`suspended`/`terminated`/
+`expired` управляется исключительно через `MembershipApplication` и
+симметричные ей решения этапа B; значения `application_pending`,
+`verification_pending` и `rejected` остаются частью хранимого enum
+`Membership.membership_status` для обратной совместимости, но не
+получают новой семантики и не обязательны к производству новой
+реализацией.
+
+### Владелец
+
+`membership-service`.
+
+## 19d.10. AffiliationDeclaration
+
+### Поля
+
+- `affiliation_declaration_id`, `subject_reference`.
+- `affiliation_type` — `other_party_membership`,
+  `political_association_membership`, `public_office`,
+  `elected_office`, `lobbying_or_interest_representation`,
+  `organizational_leadership_or_employment`,
+  `declared_incompatible_organization`.
+- `declared_reference` — непрозрачная ссылка, никогда свободный текст
+  названия организации на уровне схемы.
+- `declared_at`.
+- `status` — `draft` / `submitted` / `under_review` / `acknowledged` /
+  `superseded` / `withdrawn`.
+- `supersedes_declaration_id` — nullable.
+- `valid_from` — собственное фактическое начало действия аффилиации,
+  отдельно от `declared_at`.
+- `valid_until` — nullable; собственное фактическое окончание, если
+  известно.
+- `verification_status` — `declared` / `verified` / `disputed` /
+  `unverifiable`.
+- `verified_at` — nullable.
+- `verified_by` — nullable, непрозрачная ссылка на `RoleAssignment`;
+  никогда не сам заявитель.
+
+Декларации целевые — служат исключительно для `ConflictAssessment`,
+никогда не становятся общей системой политического профилирования.
+
+### Владелец
+
+`membership-service`.
+
+## 19d.11. ConflictAssessment
+
+### Поля
+
+- `conflict_assessment_id`, `subject_reference`.
+- `affiliation_declaration_id` — nullable.
+- `conflict_type` — `dual_party_membership`,
+  `political_association_conflict`, `public_office_incompatibility`,
+  `lobbying_role_incompatibility`, `organizational_affiliation_conflict`,
+  `declared_incompatible_organization`.
+- `incompatibility_level` — `none` / `disclosed_no_conflict` /
+  `conditional_restriction` / `incompatible`.
+- `status` — `pending` / `under_review` / `resolved_no_conflict` /
+  `resolved_conditional` / `resolved_incompatible` / `appealed` /
+  `overturned` / `expired_reevaluation_due`.
+- `reason_codes`, `evidence_references` (непрозрачные).
+- `reviewed_by_role_reference` — непрозрачная ссылка на `RoleAssignment`.
+- `decision_authority_reference` — nullable ссылка на
+  `GovernanceDecision`, обязательна для `resolved_incompatible`.
+- `decided_at`, `supersedes_conflict_assessment_id`,
+  `re_evaluation_due_at` — все nullable, где применимо.
+
+Рецензент, проверяющий `decision_authority_reference`, никогда не
+совпадает с актором, подавшим соответствующую `AffiliationDeclaration`.
+
+### Владелец
+
+`membership-service`.
+
+## 19d.12. DigitalDecision / AssemblyDecision — правовой эффект и формальное подтверждение
+
+Ни один результат цифрового участия или голосования не считается
+юридически окончательным по умолчанию. Где `ProcessEligibilityPolicy.
+formal_confirmation_required = true`, применяется отдельный,
+явный жизненный цикл, никогда не сворачиваемый в сам цифровой
+результат:
+
+### DigitalDecision (новая сущность)
+
+- `digital_decision_id`, `process_reference` (непрозрачная).
+- `digital_result`.
+- `decision_effect` — копируется неизменно из применимой
+  `ProcessEligibilityPolicy`.
+- `formal_confirmation_required` — boolean, копируется аналогично.
+- `status` — `final` / `formal_confirmation_required`.
+- `recorded_at`.
+
+### AssemblyDecision (новая сущность; создаётся только когда `DigitalDecision.status = formal_confirmation_required`)
+
+- `assembly_decision_id`, `digital_decision_id`.
+- `confirming_authority` — копируется из `formal_confirmation_authority`.
+- `legal_basis`, `confirmation_deadline`.
+- `protocol_or_evidence_reference` — непрозрачная.
+- `final_legal_decision`.
+- `divergence_explanation` — nullable; **обязательна**, если
+  `final_legal_decision` расходится с `digital_result`.
+- `status` — `pending` / `confirmed` / `rejected` /
+  `returned_for_revision`.
+- `decided_at`.
+
+**Жизненный цикл:** `DigitalDecision` (`formal_confirmation_required`)
+→ `AssemblyDecision` (`pending`) → `AssemblyDecision` (`confirmed` /
+`rejected` / `returned_for_revision`). `DigitalDecision`, чей
+`decision_effect` не требует формального подтверждения, достигает
+`status = final` напрямую, без создания `AssemblyDecision`. Истёкший
+`confirmation_deadline` никогда не завершает или не переводит
+результат автоматически — молчание никогда не считается одобрением
+(INV-10). Расхождение между `final_legal_decision` и `digital_result`
+без заполненного `divergence_explanation` отклоняется валидацией.
+
+### Владелец
+
+`eligibility-service`.
+
+## 19d.13. ParticipationRightsProfile — внутренняя, невладеемая производная модель
+
+**Внутренняя, неавторитетная, никогда не хранимая производная модель
+чтения** (тот же приём стоимость-vs-хранимого разделения, что и
+`FinalityStatus`/`DisclosureStatus`). Служит исключительно для
+человеко-ориентированного отображения ("что я сейчас могу"); **никогда
+не является механизмом, разрешающим или запрещающим действие.**
+
+### Состав (вычисляется по запросу, никогда не хранится)
+
+- `subject_reference`, `evaluated_at`.
+- `can_read_public`, `can_discuss`, `can_create_initiative`,
+  `can_support_initiative`, `can_join_civic_consultation` —
+  вычисляются `eligibility-service`.
+- `can_apply_for_party_membership`, `can_vote_as_party_member`,
+  `can_stand_for_party_office` — вычисляются `membership-service` из
+  `Membership.membership_status`/`PartyMembershipEligibilityPolicy`,
+  предоставляются `eligibility-service` только как
+  `required_membership_status_met`/`membership_duration_requirement_met`.
+- `can_hold_special_role` — читается без изменений из
+  `RoleAssignment` (`governance-service`).
+
+**Единственно допустимые механизмы авторизации действия (19d.14) —
+никогда чтение и ветвление по настоящей модели.** Ни один сервис,
+frontend или иной потребитель не вправе читать
+`ParticipationRightsProfile` и принимать решение о разрешении действия
+на основе его полей.
+
+### Владелец
+
+Не имеет отдельного владельца — составная производная модель, не
+самостоятельная хранимая сущность (раздел 22).
+
+## 19d.14. Внешняя авторизация — atomic capability check или scoped capability token, исключительно
+
+Любая проверка полномочия на действие в границах настоящего раздела и
+за ними, где участвует хотя бы одна из его сущностей, использует ровно
+один из двух механизмов:
+
+1. **Atomic capability check** — узкое, синхронное,
+   специально-назначенное чтение, возвращающее одно булево значение
+   (либо малый закрытый набор булевых значений и reason codes) ровно
+   на один вопрос авторизации для ровно одного действия — тот же
+   приём, что уже установлен узкими чтениями раздела 5 (в
+   реализационном соглашении) и `verify_role_assignment_for_action`
+   (19b.1)/`verify_decision_authorizes_policy_activation` (19d.7).
+2. **Single-purpose scoped capability token** — существующая
+   `ParticipationCredential` (10.1), ограниченная ровно одним
+   действием или процессом, предъявляемая и проверяемая в момент
+   использования.
+
+Третий механизм не допускается. В частности, чтение
+`ParticipationRightsProfile` (19d.13) и ветвление по его полям **не
+является допустимым механизмом авторизации** ни при каких
+обстоятельствах.
+
+## 19d.15. Appeal — полиморфная целевая ссылка (документальное уточнение)
+
+`Appeal` (14.3) не получает новых полей, статусов или изменений
+владельца настоящим разделом. `Appeal.decision_id` — полиморфная
+целевая ссылка: помимо уже подразумеваемой ссылки на
+`ModerationDecision`, она может указывать на
+`ConflictAssessment.conflict_assessment_id` или
+`MembershipApplication.membership_application_id`, а также на любой
+дальнейший обжалуемый тип решения, который настоящий или будущий
+раздел вводит — это **резервный принцип по умолчанию**, а не
+исключение только для двух названных сущностей. Отдельная,
+специализированная сущность апелляции для нового типа решения
+вводится только там, где отдельный ADR, тем же стандартом прямой
+проверки полей, что применён здесь, доказывает недостаточность формы
+`Appeal`. `Appeal`'s собственные статусы и правило «апелляцию не
+должен окончательно рассматривать автор исходного решения» переносятся
+без изменения смысла на `ConflictAssessment`/`MembershipApplication`:
+рецензент апелляции по `ConflictAssessment` структурно не совпадает с
+`ConflictAssessment.reviewed_by_role_reference`.
+
+## 19d.16. Жёсткий инвариант человеческого контроля
+
+**Семь категорий, ни одна не достижима исключительно автоматизированной
+оценкой политики:** приём в члены (`MembershipApplication → approved`/
+`activated`); отказ (`rejected`); приостановка
+(`Membership.membership_status → suspended`); прекращение/исключение
+(`→ terminated`); установление несовместимости
+(`ConflictAssessment.status → resolved_incompatible`); восстановление
+прав членства; и, как седьмая, открытая категория, **лишение любого
+фундаментального права члена, независимо от способа, которым оно
+произведено.** Ни один программный путь не достигает ни одного из этих
+семи исходов исключительно из булева значения оценки политики,
+истечения времени ожидания или отсутствующего рецензента,
+интерпретируемого как решение — молчание никогда не считается
+одобрением. Настоящий инвариант связывает по **эффекту, а не по
+названию**: новый, ещё не поименованный настоящим разделом тип исхода,
+который по своему эффекту лишает члена фундаментального права,
+покрывается этим инвариантом так же, как если бы он был явно перечислен
+выше. Оценка политики может только рекомендовать, отметить или
+вычислить входное значение; авторизованное человеческое решение,
+ссылающееся на реальную `GovernanceDecision`/
+`decision_authority_reference` там, где это требуется, всегда остаётся
+единственной и непосредственной причиной любого из этих семи исходов.
+
+## 19d.17. Отложенные будущие концепции — доменные псевдонимы, анти-корреляция, криптографический протокол, будущее требование к ИИ-резюме
+
+Настоящий подраздел **называет**, но не определяет как полностью
+оснащённые канонические сущности, три концепции, чья конкретная
+реализация закреплена за будущими пакетами:
+
+- `DomainPseudonymReference` — требование раздельных, доменно-
+  ограниченных псевдонимных идентификаторов как минимум для пяти
+  доменов (участник, членство, правоспособность, выдача credential,
+  голосование); ни один универсальный, постоянный, единый
+  идентификатор личности не вычисляется и не переиспользуется через
+  всю платформу. Алгоритм вывода, ключ и реализация не выбираются
+  настоящим разделом.
+- `AntiCorrelationInvariant` — уточняет уже существующие
+  INV-01/CT-00-08/CT-00-09 явным, поимённым, fail-closed перечнем
+  запрещённых векторов корреляции между слоем
+  идентификации/выдачи credential и анонимным участием или подачей
+  голоса: общие идентификаторы пользователя/запроса/трассировки/
+  аналитики; точное сопоставление по времени; сохранённые IP-адреса в
+  домене бюллетеня; браузерный fingerprinting; общие сессионные cookie
+  между идентифицирующим контекстом и анонимной точкой; корреляция по
+  порядку сообщений; журналы reverse-proxy, содержащие
+  идентифицирующие метаданные. Это структурный, fail-closed инвариант,
+  не рекомендация.
+- `CryptographicProtocolProfile` — абстрактная, версионируемая
+  концепция выбора криптографического протокола; ни Blind Signatures,
+  ни ElGamal, ни гомоморфное шифрование, ни mixnet, ни zero-knowledge
+  proofs не фиксируются настоящим разделом. Любое будущее конкретное
+  принятие протокола потребует как минимум: формальной модели угроз;
+  аудированного протокола; внешней криптографической экспертизы;
+  дизайна управления ключами; защиты от replay; **временнóй
+  неразличимости** (протокол не должен структурно допускать
+  корреляцию по времени); **транспортной неразличимости** (сетевой
+  транспорт не должен допускать связывание через переиспользование
+  соединения, возобновление TLS-сессии или корреляцию по IP);
+  сохраняющего приватность механизма отзыва (событие отзыва не должно
+  само по себе раскрывать, какой credential или какое лицо отозвано);
+  документированной процедуры проверки.
+
+Ни `eligibility-service`, ни `membership-service` не вводят
+собственного анонимного участия, выдачи анонимного credential или
+криптографического протокола — все три концепции выше остаются
+идентифицированными, но не реализованными настоящим разделом,
+закреплены за будущим **Identity & Authentication Security pack** и
+будущим **Verifiable Voting Cryptography pack** соответственно (раздел
+26; не авторизуются ни настоящим разделом, ни ADR-031 к реализации).
+
+**Будущее требование к ИИ-содействующим резюме (не изменяет раздел 17
+или 19c).** Настоящий раздел не вводит и не расширяет
+`AIProcessingRecord` (17.1, 19c) — ни одно его поле не изменяется.
+Тем не менее, зафиксировано как одобренное будущее архитектурное
+требование: любое существенное (consequential) ИИ-сгенерированное
+резюме, где бы на платформе оно ни было впоследствии введено, обязано
+поддерживать: (1) детерминированное сопоставление источников — от
+каждого значимого сегмента резюме к его исходным ссылкам на
+`Contribution`; (2) метаданные покрытия (какая доля/какие части
+исходного материала действительно отражены резюме); (3) явный статус
+человеческой проверки; (4) неизменяемую связь с `AIProcessingRecord`.
+Реализация, включая любое соответствующее добавление поля к
+`AIProcessingRecord`, остаётся отложенной до будущего пакета поправок
+к ИИ-обработке (расширение PACK-06) и не авторизуется, не
+разрабатывается и не выполняется настоящим разделом.
+
+## 19d.18. Структурное разделение с другими контурами
+
+`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+`StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`,
+`PartyMembershipEligibilityPolicy`, `AffiliationDeclaration`,
+`ConflictAssessment`, `MembershipApplication` и `AuthenticationContext`
+не имеют ни одного read- или write-ребра к `voting-service`,
+`tally-service` или `VoteEnvelope` — ни прямо, ни через
+`ParticipationRightsProfile`. Ни `eligibility-service`, ни
+`membership-service` не читают и не изменяют `PublicLedgerEntry`,
+`AuditExportPackage`, `DisclosurePolicy`, `LobbyLogEntry` (19a),
+`GovernancePolicy`, `TechnicalChallenge` (19b, помимо уже названного
+узкого чтения `GovernanceDecision`) или `AIProcessingRecord` (17, 19c)
+напрямую — единственная связь с Governance Context — через уже
+названные узкие чтения (`verify_decision_authorizes_policy_activation`
+и эквивалент для `decision_authority_reference`). Emergency/Crisis
+Override (раздел 19) не входит в настоящий раздел и не расширяется им.
+
+---
+
 # 20. Канонические системные события
 
 ## 20.1. Account
@@ -2498,6 +3141,10 @@ Governance Context) — репозиторный, не канонический,
 - `membership.applied`
 - `membership.activated`
 - `membership.suspended`
+- `membership.terminated` (добавлено 0.6.0, 19d — завершает покрытие
+  переходов `Membership.membership_status`, 8.3)
+- `membership.rejected` (добавлено 0.6.0, 19d)
+- `membership.expired` (добавлено 0.6.0, 19d)
 - `role.assigned`
 - `role.revoked`
 
@@ -2662,6 +3309,50 @@ rejected`.
 `GovernanceDecision.status` не хранит значения `superseded` и не
 переписывается после `approved`/`rejected` (19b.3).
 
+## 20.16. Участие и членство
+
+Добавлено версией канона 0.6.0 (ADR-026 через ADR-031, раздел 19d).
+События создаются исключительно `eligibility-service` и
+`membership-service` при активации/замене политик, обработке заявления
+о членстве, декларации аффилиации, оценке конфликта, а также записи
+цифрового/ассамблейного решения.
+
+- `participant_eligibility_policy.activated`
+- `participant_eligibility_policy.superseded`
+- `process_eligibility_policy.activated`
+- `process_eligibility_policy.superseded`
+- `party_membership_eligibility_policy.activated`
+- `party_membership_eligibility_policy.superseded`
+- `step_up_authentication_requirement.activated`
+- `step_up_authentication_requirement.superseded`
+- `authentication_context.step_up_completed`
+- `membership_application.created`
+- `membership_application.eligibility_reviewed`
+- `membership_application.human_decision_recorded`
+- `membership_application.approved`
+- `membership_application.rejected`
+- `membership_application.activated`
+- `affiliation_declaration.submitted`
+- `affiliation_declaration.updated`
+- `affiliation_declaration.withdrawn`
+- `conflict_assessment.opened`
+- `conflict_assessment.decided`
+- `conflict_assessment.appealed`
+- `conflict_assessment.overturned`
+- `conflict_assessment.reevaluation_due`
+- `digital_decision.recorded`
+- `digital_decision.finalized`
+- `assembly_decision.opened`
+- `assembly_decision.confirmed`
+- `assembly_decision.rejected`
+- `assembly_decision.returned_for_revision`
+
+`ParticipationRightsProfile` (19d.13) — производная модель, никогда не
+хранится и не создаёт собственных событий. `*_policy.superseded`
+создаётся при активации новой, замещающей версии соответствующей
+критической политики (19d.7) — не при изменении статуса замещаемой
+записи.
+
 ---
 
 # 21. Стандарт события
@@ -2743,6 +3434,16 @@ rejected`.
 | GovernancePolicy | Governance Policy Service |
 | GovernanceDecision | Governance Decision Service |
 | TechnicalChallenge | Technical Challenge Service |
+| ParticipantEligibilityPolicy | Eligibility Engine |
+| ProcessEligibilityPolicy | Eligibility Engine |
+| StepUpAuthenticationRequirement | Eligibility Engine |
+| DigitalDecision | Eligibility Engine |
+| AssemblyDecision | Eligibility Engine |
+| PartyMembershipEligibilityPolicy | Membership Service |
+| AffiliationDeclaration | Membership Service |
+| ConflictAssessment | Membership Service |
+| MembershipApplication | Membership Service |
+| AuthenticationContext | Identity Verification Service |
 
 Четыре строки (`PublicLedgerEntry`, `AuditExportPackage`,
 `DisclosurePolicy`, `LobbyLogEntry`) добавлены версией канона 0.3.0
@@ -2767,6 +3468,21 @@ rejected`.
 владеемая сущность. `AIDisclosurePackage` — договорной объект/объект-
 значение (19c.6), никогда не сохраняемый ни `ai-processing-service`, ни
 `transparency-service`, и потому также не получает собственной строки.
+
+Десять строк (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+`StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`,
+`PartyMembershipEligibilityPolicy`, `AffiliationDeclaration`,
+`ConflictAssessment`, `MembershipApplication`, `AuthenticationContext`)
+добавлены версией канона 0.6.0 (ADR-026 через ADR-031, раздел 19d).
+Физически первые пять реализуются существующим `eligibility-service`
+(расширение, первое с PACK-02); следующие четыре — новым
+`membership-service`; последняя — существующим `identity-service`
+(расширение). Строка `Membership` ("Membership Service") уже
+присутствовала в настоящей матрице до версии 0.6.0 и не изменяется —
+`membership-service` теперь физически реализует и её, и четыре новые
+строки выше, тем же принципом "один физический сервис — несколько
+канонически названных модулей". Строка `RoleAssignment` ("Permission /
+Role Service") не изменяется настоящей версией.
 
 ---
 
@@ -2806,6 +3522,13 @@ rejected`.
 - `AIDisclosurePackage` → исходный приватный ввод / исходный приватный результат (кроме отдельно утверждённого для публикации) / скрытый prompt / приватная личность рецензента / UUID `RoleAssignment` / данные identity, account или credential / данные голоса (добавлено 0.5.0, 19c.6)
 - `AIProcessingRecord` / `AIDisclosurePackage` → заявление или представление скрытых рассуждений модели (chain-of-thought) как факта или доказательства (добавлено 0.5.0, 19c.9)
 - Официальный/публичный артефакт, зависящий от ИИ-содействующего результата → завершение при `DisclosureStatus`, отличном от `published` (добавлено 0.5.0, 19c.7)
+- `ParticipantEligibilityPolicy` / `ProcessEligibilityPolicy` / `StepUpAuthenticationRequirement` / `DigitalDecision` / `AssemblyDecision` / `PartyMembershipEligibilityPolicy` / `AffiliationDeclaration` / `ConflictAssessment` / `MembershipApplication` / `AuthenticationContext` → `VoteEnvelope` / `Tally` / `Ballot` (прямо либо через `ParticipationRightsProfile`) (добавлено 0.6.0, 19d.18)
+- Любой сервис или frontend → чтение `ParticipationRightsProfile` и принятие решения о разрешении/запрете действия на его основе (добавлено 0.6.0, 19d.13, 19d.14) — единственно допустимые механизмы авторизации фиксированы 19d.14
+- `IdentityRecord.identity_assurance_level` / `identity_scheme` → подмена, замена или использование как признак `citizenship_status` (добавлено 0.6.0, 19d.2)
+- Любая `RoleAssignment`, участвующая в утверждении критической политики (19d.7) → раскрытие вызывающей стороне полного списка утверждающих акторов, стоящего за `multi_person_approval_met` (добавлено 0.6.0, 19d.7) — передаётся только булево значение
+- `membership-service` → самостоятельное вычисление любого из четырёх признаков избирательного права (19d.3) (добавлено 0.6.0, 19d.3) — вычисление остаётся исключительно за `eligibility-service`
+- `AffiliationDeclaration` / `ConflictAssessment` → публикация вне ограниченного, целевого доступа `ConflictAssessment`-рецензента (добавлено 0.6.0, 19d.10, 19d.11) — данные о членстве и аффилиации ограничены по умолчанию
+- Автоматизированная оценка политики (любая критическая политика, 19d.7, либо `ParticipantEligibilityPolicy`/`ProcessEligibilityPolicy`/`PartyMembershipEligibilityPolicy`) → единоличное, окончательное производство любого из семи исходов раздела 19d.16 (добавлено 0.6.0, 19d.16)
 
 ---
 

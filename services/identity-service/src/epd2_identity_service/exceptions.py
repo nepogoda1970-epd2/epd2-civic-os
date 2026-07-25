@@ -18,3 +18,26 @@ class UnknownIdentityRecordError(ValueError):
     (see ADR-004)."""
 
     reason_code = "VALIDATION_RECORD_NOT_FOUND"
+
+
+# --- PACK-07 additions (canon 19d.2 / 19d.8, canon-0.6.0) -------------------
+# Reuses the same generic `VALIDATION_UNKNOWN_STATUS` code
+# `UnknownVerificationStatusError` already uses, mirroring
+# `UnknownModerationDecisionTypeError`'s precedent for a non-status enum
+# that still needs CT-00-02 fail-closed parsing — no new reason code is
+# registered for either of these.
+
+
+class UnknownIdentityAssuranceLevelError(ValueError):
+    reason_code = "VALIDATION_UNKNOWN_STATUS"
+
+
+class UnknownAuthenticationAssuranceLevelError(ValueError):
+    reason_code = "VALIDATION_UNKNOWN_STATUS"
+
+
+class UnknownAuthenticationContextError(ValueError):
+    """Plain lookup miss - no `AuthenticationContext` exists for the
+    given `authentication_context_id`."""
+
+    reason_code = "VALIDATION_RECORD_NOT_FOUND"
