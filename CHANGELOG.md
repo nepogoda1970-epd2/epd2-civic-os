@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and its fail-closed `check_step_up_requirement` evaluation (canon
   19d.8); `DigitalDecision`/`AssemblyDecision` and the formal-confirmation
   lifecycle (canon 19d.12: `DigitalDecision → FormalConfirmationRequired
-  → AssemblyDecision → Confirmed | Rejected | ReturnedForRevision`, with
+→ AssemblyDecision → Confirmed | Rejected | ReturnedForRevision`, with
   a required `divergence_explanation` whenever the final legal decision
   diverges from the digital result, and no silent-approval timeout);
   `AtomicCapabilityResult`/`check_atomic_capability` and scoped
@@ -41,12 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lifecycle plus `incompatibility_rules`/`membership_duration_rules`);
   `MembershipApplication`'s six-state lifecycle (canon 19d.9:
   `application_pending → eligibility_review → human_decision_pending →
-  approved → rejected → activated`), with Stage A
-  (`evaluate_membership_application_eligibility`) *always* landing on
+approved → rejected → activated`), with Stage A
+  (`evaluate_membership_application_eligibility`) _always_ landing on
   `human_decision_pending` regardless of its own recommendation, and
   Stage B (`record_membership_human_decision`) the only path to
   `approved`/`rejected` — each requiring an externally-verified
-  `decision_authority_reference`; `activate_membership` as the *only*
+  `decision_authority_reference`; `activate_membership` as the _only_
   function in the service that ever constructs an `active`
   `Membership` row, layered without overloading `Membership.membership_status`
   (canon 8.3, unchanged, first real implementation); `AffiliationDeclaration`
@@ -81,9 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   section (eight tests, one per restricted field/entity).
 - The ADR-027 cross-service edge matrix, all `.application`-only:
   `eligibility-service → {identity-service, membership-service,
-  governance-service, credential-service}`,
+governance-service, credential-service}`,
   `membership-service → {identity-service, eligibility-service,
-  governance-service}` — enforced by seven new/extended AST-based tests
+governance-service}` — enforced by seven new/extended AST-based tests
   in `tests/repository/test_service_boundaries.py`, and three
   deliberately-duplicated (never imported) logic pieces — the four-gate
   critical-policy activation gate, the polymorphic `Appeal` entity, and
@@ -183,8 +183,8 @@ version.json`'s `repository_compatibility` upper bound widened to admit
 0.6.0` (ADR-026 through ADR-031, all `accepted`, no further amendment)
   — the fifth edit to this document's own text since its original
   acceptance (after ADR-010's `0.1.0 → 0.2.0`, ADR-013's `0.2.0 →
-  0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
-  → 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
+0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`, and ADR-023/ADR-025's `0.4.0
+→ 0.5.0`). Adds a new section 19d ("Участие и членство / Participation
   & Membership Context"), inserted between sections 19c and 20, the same
   non-renumbering technique used for 19a/19b/19c. Ten new canonical
   entities: `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,

@@ -5,11 +5,7 @@
   "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.11 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_conflict_assessment_opened_event. Never carries evidence_references/reason_codes on the wire (ADR-030 item 5).",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "conflict_assessment_id",
-    "conflict_type",
-    "status"
-  ],
+  "required": ["conflict_assessment_id", "conflict_type", "status"],
   "properties": {
     "conflict_assessment_id": {
       "type": "string",

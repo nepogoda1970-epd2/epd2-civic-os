@@ -32,10 +32,7 @@
       "format": "uuid"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "minLength": 1
     }
   }
