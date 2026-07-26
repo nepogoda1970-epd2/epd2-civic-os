@@ -130,10 +130,12 @@ from epd2_compliance_service.exceptions import (
     DeadlineTriggerInvalidError,
     DPIARequiredError,
     DueProcessPrerequisiteMissingError,
+    DecisionNotEnforceableError,
     DuplicateLegalEffectPreventedError,
     FilingSequenceConflictError,
     InterimMeasureAuthorityDeniedError,
     JurisdictionMissingError,
+    JurisdictionTransferRequiredError,
     LegalHoldPropagationUnresolvedError,
     NoticeMethodInvalidError,
     OrganizationScopeUndeterminedError,
@@ -827,7 +829,7 @@ def test_a_successor_that_does_not_name_what_it_supersedes_is_refused() -> None:
         make_jurisdiction(case, w.authority),
         clock=w.clock,
     ).determination
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(JurisdictionTransferRequiredError) as excinfo:
         transfer_jurisdiction(
             w.cases,
             w.jurisdictions,
@@ -1099,7 +1101,7 @@ def test_a_decision_cannot_become_enforceable_before_it_is_in_effect() -> None:
     w = world()
     case_id = _case_with_jurisdiction(w)
     decision = _issue_decision(w, case_id)
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(DecisionNotEnforceableError) as excinfo:
         make_decision_enforceable(
             w.decisions,
             w.audit,
