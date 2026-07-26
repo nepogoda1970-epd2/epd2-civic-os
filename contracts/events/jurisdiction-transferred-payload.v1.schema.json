@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/jurisdiction-transferred-payload.v1.schema.json",
+  "title": "jurisdiction.transferred payload (v1)",
+  "description": "Wire payload of `jurisdiction.transferred`. Names the successor and closes the outgoing determination's validity window without deleting it. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "basis_reference",
+    "case_id",
+    "case_kind",
+    "determined_at",
+    "jurisdiction_id",
+    "jurisdiction_type",
+    "organization_id",
+    "reason_code",
+    "recorded_at",
+    "status",
+    "successor_jurisdiction_id",
+    "transferred_to_jurisdiction_id",
+    "valid_from",
+    "valid_until"
+  ],
+  "properties": {
+    "basis_reference": {
+      "type": "string"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_kind": {
+      "type": "string"
+    },
+    "determined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "jurisdiction_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "jurisdiction_type": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string"
+    },
+    "successor_jurisdiction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "transferred_to_jurisdiction_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

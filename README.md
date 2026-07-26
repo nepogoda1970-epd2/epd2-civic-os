@@ -239,7 +239,59 @@ eID-интеграция, географическая/избирательна�
   примерные данные, без бэкенда). См.
   `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` и
   `docs/packs/PACK-08-IMPLEMENTATION.md` для полного описания.
-- Repository version: `0.8.0` (CLAUDE-PACK-08 implementation:
+- CLAUDE-PACK-09 (Compliance, Records Governance & Legal Workflows) —
+  **реализован**: `compliance-service` (одна новая служба, ADR-038) —
+  классификация записей и версионированные retention-политики
+  (`RetentionPolicy`, `RetentionStartEvent`, `GovernedRecord`),
+  контролируемое уничтожение через трёхшаговый workflow
+  (`DisposalEligibility` → `DestructionAuthorization` →
+  `DestructionEvidence`, ADR-039), Legal Hold с тремя состояниями
+  (`active`/`released`/`indeterminate`; неизвестное состояние —
+  fail-closed), Data Catalog и Processing Registry (`DataAsset`,
+  `ProcessingActivity`, `LegalBasis` как управляемое перечисление,
+  ADR-040), governed procedural cases и append-only сроки
+  (`ProceduralCase`, `DeadlineDefinition`, `ProceduralDeadline` с явной
+  IANA-таймзоной, ADR-041), запросы субъектов данных (статус
+  верификации личности без хранения самой личности), партийный арбитраж
+  и внутренние споры с проверяемой процессуальной независимостью
+  (ADR-042). Организационная изоляция — плоская: никакого наследования
+  по иерархии Bund/Land/Kreis, пересечение границы требует явно
+  предъявленного `CrossScopeAuthorityGrant`. См.
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md` и
+  `docs/packs/PACK-09-IMPLEMENTATION.md`.
+
+  **Дополнение (Architecture & Domain Framework 0.8.1).** С этого раунда
+  авторитетным документом объёма PACK-09 является Framework 0.8.1
+  (Roadmap Amendment). В ту же службу добавлены: общий legal-case
+  substrate (`LegalCase`, `JurisdictionDetermination`, `CaseParty`,
+  `RepresentationMandate`, `Filing` с неизменяемым docket, `Hearing`,
+  `InterimMeasure`, `ProceduralDecision` с раздельными effect / finality
+  / enforceability, `Remedy`); хуки отвода (`RecusalRecord`,
+  `ReplacementAssignment`); **официальное уведомление как отдельная
+  граница доверия** (ADR-043) — `OfficialNotice`, `ServiceAttempt`
+  (телеметрия провайдера) и `NoticeEffectDecision`, где только последний
+  может запустить процессуальный срок; records governance
+  (`RecordClass`, распространение Legal Hold на реплики/индексы/экспорты)
+  и data-protection governance с DPIA-гейтом, который fail-closed при
+  *отсутствии* определения требования. Стабильные типизированные ссылки
+  для PACK-10/11/19/21-24 опубликованы в `references.py`; глобального
+  идентификатора лица там нет и быть не должно. Ограничения — в
+  `docs/handover/PACK-09-KNOWN-LIMITATIONS.md`.
+
+  **Служба не заявляет автоматического юридического соответствия** GDPR,
+  BDSG или партийному законодательству: она предоставляет управляемый
+  workflow, ссылки на доказательства и auditability. Любое юридическое
+  решение остаётся за человеком вне системы.
+
+- Repository version: `0.9.0` (CLAUDE-PACK-09 implementation:
+  `compliance-service` — `RetentionPolicy`, `GovernedRecord`,
+  `LegalHold`, `DestructionAuthorization`, `DestructionEvidence`,
+  `DataAsset`, `ProcessingActivity`, `ProceduralCase`,
+  `ProceduralDeadline`, `DataSubjectRequest`,
+  `ConflictOfInterestDeclaration`, `CrossScopeAuthorityGrant`; см.
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`. `CANON_VERSION`
+  остаётся `0.7.0` — PACK-09 не вносит изменений в канон. Предыдущая
+  версия `0.8.0` соответствовала CLAUDE-PACK-08 implementation:
   `organization-service` — `Organization`, `CivicSpace`,
   `OrganizationalUnit`, `OrganizationalRelation`,
   `OrganizationalHierarchyOverlapPolicy`,
@@ -265,6 +317,16 @@ eID-интеграция, географическая/избирательна�
   eID-интеграция, географическая/избирательная привязка регионов сверх
   организационной модели `organization-service` (PACK-08) пока не
   реализованы.
+- Партийный финансовый учёт и Rechenschaftsbericht (PACK-10),
+  хранилище документов и криптографическая цепочка версий документов
+  (PACK-11), привилегированное JIT/break-glass администрирование и DLP
+  (PACK-12), production-БД / event bus / schema registry (PACK-13),
+  реальный IAM/eID и выпуск credential (PACK-14), криптографическое
+  голосование (PACK-15/16), production incident response (PACK-17) и
+  полноценные user-facing приложения (PACK-18) остаются намеренно
+  отложенными. PACK-09 содержит для них только типизированные ссылки
+  (`evidence_references`, `completion_evidence_reference`,
+  `identity_verification_reference`) — не реализации.
 
 ## Архитектурный принцип
 

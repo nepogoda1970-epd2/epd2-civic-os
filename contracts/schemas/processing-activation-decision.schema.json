@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/processing-activation-decision.schema.json",
+  "title": "ProcessingActivationDecision",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.dataprotection.ProcessingActivationDecision). A processing activity does not become active because a DPIA was approved; it becomes active because somebody with authority decided so and that decision was recorded with a reason code. Blocked and revoked activations are recorded through the same object, so a refusal is visible rather than silent. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activation_decision_id",
+    "activity_id",
+    "organization_id",
+    "state",
+    "decided_at",
+    "decided_by_authority_reference",
+    "reason_code",
+    "dpia_id",
+    "effective_from",
+    "revoked_at"
+  ],
+  "properties": {
+    "activation_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "not_activated",
+        "activated",
+        "suspended",
+        "deactivated"
+      ]
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decided_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": "string"
+    },
+    "dpia_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "effective_from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

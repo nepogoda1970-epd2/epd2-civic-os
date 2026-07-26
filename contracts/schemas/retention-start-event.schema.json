@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/retention-start-event.schema.json",
+  "title": "RetentionStartEvent",
+  "description": "PACK-09, ADR-039. Owned by compliance-service (epd2_compliance_service.domain.RetentionStartEvent). An explicit, recorded retention-start fact. Retention never starts implicitly: until one of these exists for a record, disposal eligibility fails closed with RETENTION_START_UNDETERMINED (PACK-09 required invariant 15). recorded_at is never before occurred_at. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "retention_start_event_id",
+    "record_id",
+    "organization_id",
+    "trigger",
+    "occurred_at",
+    "recorded_at",
+    "source_reference"
+  ],
+  "properties": {
+    "retention_start_event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "created_at",
+        "case_closed_at",
+        "membership_ended_at",
+        "contract_ended_at",
+        "processing_ended_at"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_reference": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

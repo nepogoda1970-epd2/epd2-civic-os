@@ -1,12 +1,19 @@
 # CLAUDE-PACK-08 — Organization & Regional Scope Foundation: Implementation Handover Report
 
-Status: **local self-report only. No external GitHub Actions run was
-performed or is claimed for this implementation round.** This report
-records exactly what was run in this sandbox, exactly what could not be
-run here (and why — the same documented no-network limitation as every
-prior pack), and exactly what passed, failed, or was skipped. Nothing
-below is rounded up to "0 real failures" language where a real gap
-exists.
+Status: **PASS — externally confirmed via GitHub Actions.** This report
+originally shipped as a local sandbox self-report only (no external CI
+run yet performed). It has since been updated, in place, to record the
+exact result of a real external GitHub Actions run (real network
+access, real `uv`/`npm` dependency installation) — see section 6a for
+the full external result, read directly from that run's own
+`VERIFICATION-RESULT.md`/`VERIFICATION.log`, and section 6b for what
+this sandbox itself ran and verified locally beforehand. Two honest
+caveats are carried forward rather than smoothed over: `Makefile`'s
+`typecheck` target still lacks a 16th `uv run mypy
+services/organization-service` line (section 6a), and this remains an
+in-memory reference implementation with no production claim made
+anywhere (section 8). Nothing below is rounded up to "0 real failures"
+language where a real gap exists.
 
 This report covers the **implementation round** that follows
 `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md` (the canon-only round
@@ -206,10 +213,119 @@ bound widened `<0.8.0 -> <0.9.0`); `CHANGELOG.md` (new `[0.8.0]` entry).
 
 ## 6. Verification performed this round
 
-### 6a. External verification
+### 6a. External GitHub Actions verification — PASS
 
-Not performed, not claimed. This is a local sandbox self-report only, per
-this round's own honest-reporting requirement.
+**Status: PASS.** An external GitHub Actions run
+(`.github/workflows/verify-and-package.yml`, `ubuntu-latest`, Python
+3.12, Node.js 22, real network access — `uv lock`/
+`uv sync --all-groups --frozen`/`npm install` resolved dependencies for
+real, not the local standalone-binary workaround in section 6b) executed
+`make verify` against this pack's implementation, including the "PACK-08
+MIGRATION TABLE CORRECTION" round's fix to
+`docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md` (confirmed present in
+the returned verification-result archive's own copy of that file and of
+this report). Exact reported results, read directly from that run's own
+`VERIFICATION-RESULT.md` and `VERIFICATION.log`:
+
+- `VERIFICATION-RESULT.md`: `Status: PASS` (Runner: GitHub Actions /
+  ubuntu-latest, Python 3.12, Node.js 22).
+- `scripts/check_repository.py`: `OK: all 445 required paths are
+present.`
+- `scripts/check_forbidden_files.py`: `OK: no forbidden paths found.`
+- `scripts/verify_versions.py`: `OK: all version sources are
+consistent.` — `REPOSITORY_VERSION = 0.8.0`, `CANON_VERSION = 0.7.0`
+  confirmed consistent across `packages/python/epd2-core/src/epd2_core/version.py`,
+  `packages/typescript/epd2-types/src/version.ts`, `CHANGELOG.md`, and
+  `docs/canonical/canon-version.json`.
+- Ruff format (`uv run ruff format --check .`): `369 files already
+formatted`.
+- Prettier (`npm run format:check`): `All matched files use Prettier
+code style!`
+- Ruff check (`uv run ruff check .`): `All checks passed!`
+- ESLint (`npm run lint --workspace=frontend/web-shell`): ran to
+  completion with no reported errors (the workflow step, and therefore
+  `make verify` as a whole, would have failed otherwise).
+- mypy: `Success: no issues found` for
+  `packages/python/epd2-core scripts tests/repository conftest.py`
+  (25 files), `tests/contract` (21 files), and **15** of the 16
+  services individually — `account-service` (8 files),
+  `identity-service` (9), `eligibility-service` (9),
+  `credential-service` (11), `audit-core` (10), `initiative-service`
+  (9), `deliberation-service` (9), `moderation-service` (9),
+  `voting-service` (9), `tally-service` (9), `delegation-service` (9),
+  `transparency-service` (9), `governance-service` (11),
+  `ai-processing-service` (11), `membership-service` (9).
+- TypeScript typecheck (`tsc --noEmit`, both `packages/typescript/epd2-types`
+  and `frontend/web-shell`): ran to completion with no reported errors.
+- Python tests (`uv run pytest`, full repo-wide single invocation —
+  `testpaths` includes every service's `tests/`, including
+  `services/organization-service/tests`): **2148 passed, 4 skipped, 0
+  failed** (2152 collected). `services/organization-service/tests/{test_application,test_domain,test_storage}.py`
+  all passed with no failures. The 4 skips are the same pre-existing
+  CT-00-10/11/12 not-applicability markers as every prior pack (none
+  PACK-08-specific); the count is 1 lower than this sandbox's 5 because
+  the external run installs `hypothesis` for real, so
+  `test_property_based.py` runs its real tests (all passing) instead of
+  import-skipping as one unit — the same reconciliation pattern
+  documented in `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` section
+  6a.
+- TypeScript tests: `packages/typescript/epd2-types` — **3 passed, 0
+  failed**. `frontend/web-shell` — **11 passed, 0 failed** (identical to
+  this sandbox's local run in section 6b).
+- Next.js production build (`npm run build --workspace=frontend/web-shell`,
+  Next.js 15.5.21): **passed** — `✓ Compiled successfully`, all 10
+  static/SSG pages generated, including `/organizations`,
+  `/organizations/[id]` (pre-rendered for all 4 sample organization ids
+  via `generateStaticParams`), and `/organizations/dev-authorization-console`.
+
+**`pyproject.toml` is consistent with this PASS result.** The version
+of `pyproject.toml` that was actually built, sent to, and passed by this
+external CI run already registers `organization-service` correctly
+throughout: `[project].dependencies` (`epd2-organization-service`),
+`[tool.uv.workspace].members` and `[tool.uv.sources]`
+(`services/organization-service`), `[tool.ruff].src` and
+`[tool.ruff.lint.isort].known-first-party`
+(`services/organization-service/src`, `epd2_organization_service`),
+`[tool.mypy].mypy_path` (`services/organization-service/src`), and
+`[tool.pytest.ini_options].testpaths` (`services/organization-service/tests`
+— this is exactly why `uv run pytest`'s bare, no-argument invocation
+above could discover and run `organization-service`'s own tests at all).
+This is not a change made in this packaging round — it reflects the
+already-registered, already-passing state this archive is built from.
+`uv.lock` and `package-lock.json` in this archive are the real,
+tool-produced lock files this same external run generated fresh via its
+own `uv lock`/`npm install` steps (real network access) — not
+hand-edited, not regenerated in this sandbox (which still has no live
+PyPI/npm registry access, confirmed again this round: both
+`npm install` and `uv lock` were attempted fresh and both fail the same
+way documented since PACK-01).
+
+**Honest caveat, found while reading this run's own log, not fixed in
+this packaging round (per this round's own "do not change code or
+architecture" instruction):** `Makefile`'s `typecheck` target invokes
+`uv run mypy` once per service by an explicit, hand-maintained list of
+15 services — that list still has no 16th line for
+`uv run mypy services/organization-service`. `VERIFICATION.log`
+confirms this exactly: the per-service mypy invocations run from
+`account-service` through `membership-service` (15 services, matching
+the Makefile's list) and then proceed directly to
+`npm run typecheck --workspace=packages/typescript/epd2-types` — no
+`uv run mypy services/organization-service` line appears anywhere in the
+log. This means **this specific external CI run's `make typecheck` step
+did not separately type-check `organization-service`'s own source
+directory**, even though the overall `make verify` pipeline still
+reports PASS (nothing in it required that check to run). This is not
+merely theoretical: this sandbox's own section 6b run _did_ invoke
+`mypy services/organization-service` directly (outside the Makefile) and
+found it clean (`Success: no issues found in N source files` — see
+section 6b) — so `organization-service`'s type-safety is still
+substantively verified, just not by this external run's own
+`make typecheck` step. The one-line fix
+(`	uv run mypy services/organization-service` added to the `typecheck`
+target's list, after `membership-service`) is left for a future round
+that is allowed to touch build tooling, so as not to bundle an
+untested change into an archive whose entire point is to reflect
+exactly what was verified.
 
 ### 6b. Local verification performed during implementation
 
@@ -323,33 +439,58 @@ satisfied: `domain.py` uses exactly the canon-reconciled names throughout.
 
 ## 8. Was any scope deferred?
 
-Yes, three items, all deliberate and all documented in section 4 and in
-`docs/packs/PACK-08-IMPLEMENTATION.md` section 8: lifecycle-transition
-commands have no public OpenAPI path; cross-cutting aggregator test files
-from earlier packs were not extended with a PACK-08 section (this pack's
-own equivalent coverage lives in its own service test suite instead); the
-pre-existing PACK-07 `REQUIRED_PATHS` gap was documented, not backfilled.
-No production claim is made anywhere in this round — this remains an
-in-memory reference implementation, explicitly not backed by a
-production database (see `docs/review/KNOWN_LIMITATIONS.md`'s
-established pattern). No legal or security blocker was found during this
-round.
+Yes, four items, all deliberate (or, for the fourth, discovered and
+disclosed rather than silently fixed) and all documented in section 4,
+section 6a, and in `docs/packs/PACK-08-IMPLEMENTATION.md` section 8:
+lifecycle-transition commands have no public OpenAPI path; cross-cutting
+aggregator test files from earlier packs were not extended with a
+PACK-08 section (this pack's own equivalent coverage lives in its own
+service test suite instead); the pre-existing PACK-07 `REQUIRED_PATHS`
+gap was documented, not backfilled; and, found only after reading the
+external CI run's own log (section 6a), `Makefile`'s `typecheck` target
+still has no 16th `uv run mypy services/organization-service` line —
+left unfixed per this round's own "do not change code or architecture"
+instruction, and reported honestly rather than left for a reader to
+discover unaided. **No production-ready claim is made anywhere in this
+round or in this archive** — this remains an in-memory reference
+implementation, explicitly not backed by a production database (see
+`docs/review/KNOWN_LIMITATIONS.md`'s established pattern), with no
+production database, event bus, authentication, or deployment
+infrastructure of any kind. No legal or security blocker was found
+during this round.
 
 ## 9. Deliverables
 
-- `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` (this file).
+- `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` (this file, now
+  recording the genuine external PASS in section 6a).
 - `docs/packs/PACK-08-IMPLEMENTATION.md` (technical reference).
 - `README.md`, `CHANGELOG.md` (updated).
-- `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-CANDIDATE.zip` — one
-  complete, clean archive (excludes `.git/`, `node_modules/`, `.venv/`,
-  `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`,
-  frontend build output, verification-result ZIPs, nested ZIPs, and
-  temporary logs/machine-specific artifacts). **Deliberately not labeled
-  "PASS"** — this is a local self-report, not an externally-verified
-  result, per this round's own required-scope instruction.
-- Superseded, for CI purposes, by
-  `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-CI-CANDIDATE.zip` — see
-  section 10.
+- `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-CANDIDATE.zip` — the
+  original local-self-report archive. **Superseded.**
+- `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-CI-CANDIDATE.zip` — the
+  archive carrying the "PACK-08 MIGRATION TABLE CORRECTION" (section 10) that was actually sent to, and passed by, external CI (section
+  6a). **Superseded** by the PASS archive below now that the external
+  result is known and recorded.
+- `epd2-civic-os-PACK-08-IMPLEMENTATION-0.8.0-PASS.zip` — the final,
+  current deliverable: built from the exact tree the external CI run
+  verified (confirmed via its own returned verification-result archive),
+  with this report updated in place to record that result. No service
+  code, contract, schema, test, architecture, or version/checksum file
+  differs from what CI actually tested. One complete, clean archive
+  (excludes `.git/`, `node_modules/`, `.venv/`, `__pycache__/`,
+  `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.next/`, `dist/`,
+  `build/`, nested ZIPs, and verification-result archives — see also the
+  stray, pre-existing nested `epd2-civic-os/` duplicate-content
+  directory noted in section 6a's surrounding investigation, which does
+  not appear in, and was never part of, any archive this project has
+  delivered). **This is the first PACK-08 archive labeled "PASS"** —
+  justified by, and only by, the genuine external GitHub Actions PASS
+  recorded in section 6a. `REPOSITORY_VERSION = 0.8.0`,
+  `CANON_VERSION = 0.7.0`, canon checksum
+  `a16341a66ce39514e6d8cd6d7a6dde8fc37b0430e3e9ddd7bfd284b116cb9072` —
+  all confirmed unchanged and consistent, both by this external PASS and
+  by this sandbox's own independent re-check of the assembled archive
+  before delivery.
 
 ## 10. Migration table correction (post-implementation, pre-CI)
 

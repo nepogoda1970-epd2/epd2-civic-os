@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/procedural-case-status-changed-payload.v1.schema.json",
+  "title": "procedural_case.status_changed event payload (v1)",
+  "description": "PACK-09, ADR-041/ADR-042. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). Carries no party reference at all: which parties hold which procedural role on a case is deliberately not broadcast, only the case's own identity, type, workflow, status and version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "organization_id",
+    "case_type",
+    "workflow_type",
+    "status",
+    "case_version",
+    "reason_code",
+    "outstanding_step_count",
+    "recorded_at"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_type": {
+      "type": "string",
+      "enum": [
+        "data_subject_request",
+        "compliance_review",
+        "party_arbitration",
+        "internal_dispute",
+        "legal_request"
+      ]
+    },
+    "workflow_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "admissibility_review",
+        "active",
+        "stayed",
+        "decided",
+        "closed"
+      ]
+    },
+    "case_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "outstanding_step_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

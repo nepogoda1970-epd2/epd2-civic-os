@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/filing-superseded-payload.v1.schema.json",
+  "title": "filing.superseded payload (v1)",
+  "description": "Wire payload of `filing.superseded`. Correction is supersession, not mutation. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "docket_sequence",
+    "document_reference_count",
+    "evidence_reference_count",
+    "filing_id",
+    "filing_type",
+    "intake_state",
+    "organization_id",
+    "received_at",
+    "recorded_at",
+    "rejection_reason_code",
+    "submitted_at",
+    "successor_filing_id",
+    "superseded_by_filing_id",
+    "supersedes_filing_id"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "docket_sequence": {
+      "type": "integer"
+    },
+    "document_reference_count": {
+      "type": "integer"
+    },
+    "evidence_reference_count": {
+      "type": "integer"
+    },
+    "filing_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "filing_type": {
+      "type": "string"
+    },
+    "intake_state": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rejection_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "successor_filing_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "superseded_by_filing_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "supersedes_filing_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  }
+}

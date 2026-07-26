@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/record-class-registered-payload.v1.schema.json",
+  "title": "record_class.registered payload (v1)",
+  "description": "Wire payload of `record_class.registered`. Publishes the three facts a downstream pack needs to decide whether it may index, export or delete something - data classification, search/export eligibility and hold applicability - without publishing the custodian or the disposition authority. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data_classification",
+    "legal_hold_applicable",
+    "organization_id",
+    "record_category",
+    "record_class_code",
+    "record_class_id",
+    "record_class_version",
+    "recorded_at",
+    "retention_policy_reference",
+    "search_export_eligibility",
+    "sensitivity",
+    "valid_from",
+    "valid_until"
+  ],
+  "properties": {
+    "data_classification": {
+      "type": "string"
+    },
+    "legal_hold_applicable": {
+      "type": "boolean"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_category": {
+      "type": "string"
+    },
+    "record_class_code": {
+      "type": "string"
+    },
+    "record_class_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_class_version": {
+      "type": "integer"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "retention_policy_reference": {
+      "type": "string"
+    },
+    "search_export_eligibility": {
+      "type": "string"
+    },
+    "sensitivity": {
+      "type": "string"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/deadline-triggered-payload.v1.schema.json",
+  "title": "procedural_deadline.triggered payload (v1)",
+  "description": "Wire payload of `procedural_deadline.triggered`. Records which governed source started which deadline, exactly once (Framework hard invariant 59). `source` can never be delivery_telemetry or read_telemetry. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "deadline_id",
+    "notice_effect_id",
+    "organization_id",
+    "recorded_at",
+    "source",
+    "source_reference",
+    "trigger_id",
+    "triggered_at"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deadline_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "notice_effect_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string"
+    },
+    "source_reference": {
+      "type": "string"
+    },
+    "trigger_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "triggered_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

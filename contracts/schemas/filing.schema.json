@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/filing.schema.json",
+  "title": "Filing",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.Filing). One entry in a case's IMMUTABLE docket. `docket_sequence` is assigned by the store, is strictly increasing per case, and is never reused; a rejected filing keeps its position rather than being removed, because 'this was filed and refused' is itself part of the record. `submitted_at` and `received_at` are deliberately distinct so a deadline running from receipt cannot silently use the submitter's clock. Correction is supersession, not mutation. `document_references` and `evidence_references` are PACK-11 placeholders: PACK-09 records that a filing cites material, never the material itself. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "filing_id",
+    "case_id",
+    "organization_id",
+    "docket_sequence",
+    "filing_type",
+    "filed_by_party_reference",
+    "submitted_at",
+    "received_at",
+    "intake_state",
+    "filed_by_representative_reference",
+    "document_references",
+    "evidence_references",
+    "supersedes_filing_id",
+    "superseded_by_filing_id",
+    "rejection_reason_code"
+  ],
+  "properties": {
+    "filing_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "docket_sequence": {
+      "type": "integer"
+    },
+    "filing_type": {
+      "type": "string",
+      "enum": [
+        "initiating_submission",
+        "response",
+        "evidence_submission",
+        "procedural_request",
+        "objection",
+        "withdrawal",
+        "correction"
+      ]
+    },
+    "filed_by_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "intake_state": {
+      "type": "string",
+      "enum": [
+        "received",
+        "admitted",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "filed_by_representative_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "document_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "kind",
+          "external_reference",
+          "organization_id"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "pack-10-finance",
+              "pack-11-documents",
+              "pack-19-candidacy",
+              "pack-21-assemblies",
+              "pack-22-communications"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "external_reference": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "kind",
+          "external_reference",
+          "organization_id"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "pack-10-finance",
+              "pack-11-documents",
+              "pack-19-candidacy",
+              "pack-21-assemblies",
+              "pack-22-communications"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "external_reference": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "supersedes_filing_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "superseded_by_filing_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "rejection_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

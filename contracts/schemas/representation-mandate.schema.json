@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/representation-mandate.schema.json",
+  "title": "RepresentationMandate",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.RepresentationMandate). A mandate is an ENUMERATED SET OF AUTHORITIES, not a role name (Framework hard invariant 15: a role name is not proof of authority). Nothing downstream may infer that a representative can settle a case from the fact that a representative exists. Revocation is forward-looking: acts already accepted under the mandate stay valid and the docket is not rewritten. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mandate_id",
+    "case_id",
+    "organization_id",
+    "represented_party_reference",
+    "representative_reference",
+    "authorities",
+    "valid_from",
+    "status",
+    "valid_until",
+    "revoked_at",
+    "revocation_reason_code",
+    "mandate_basis_reference"
+  ],
+  "properties": {
+    "mandate_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "represented_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "representative_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "authorities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "file_submissions",
+          "receive_service",
+          "attend_hearing",
+          "request_remedy",
+          "withdraw_case"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "revoked",
+        "withdrawn",
+        "expired"
+      ]
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "revocation_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mandate_basis_reference": {
+      "type": "string"
+    }
+  }
+}

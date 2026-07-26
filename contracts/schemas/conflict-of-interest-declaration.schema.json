@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/conflict-of-interest-declaration.schema.json",
+  "title": "ConflictOfInterestDeclaration",
+  "description": "PACK-09, ADR-042. Owned by compliance-service (epd2_compliance_service.domain.ConflictOfInterestDeclaration). A conflict of interest is represented as an EXPLICIT STATE, never as free text that has no effect on the workflow (PACK-09 required invariant 10): 'declared' and 'confirmed' both make the party ineligible to take a separated procedural role or to record a decision. basis_code is a short closed-vocabulary marker; any human narrative lives in a referenced document under PACK-11, never here. A 'confirmed' or 'waived' declaration must record who decided it and when. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "declaration_id",
+    "case_id",
+    "organization_id",
+    "party_reference",
+    "state",
+    "basis_code",
+    "declared_at",
+    "decided_by_party_reference",
+    "decided_at"
+  ],
+  "properties": {
+    "declaration_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": ["none_declared", "declared", "confirmed", "waived"]
+    },
+    "basis_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decided_by_party_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

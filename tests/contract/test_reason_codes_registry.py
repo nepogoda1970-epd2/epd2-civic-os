@@ -3,7 +3,8 @@ a pack's own `services/*/src` is registered in that pack's own
 `contracts/reason-codes/*.yml` (ADR-004's own stated enforcement
 mechanism) - a reason code must never be free text (canon section 24).
 
-Parametrized over all three packs (PACK-02, PACK-03, PACK-04): each scan
+Parametrized over every implementation pack (PACK-02 through PACK-09):
+each scan
 is scoped to only that pack's own service directories
 (`PACK02_SERVICE_DIRS`/`PACK03_SERVICE_DIRS`/`PACK04_SERVICE_DIRS`),
 checked against only that pack's own registry file. `services/*` now
@@ -41,6 +42,8 @@ from _schema_helpers import (
     PACK07_SERVICE_DIRS,
     PACK08_REASON_CODES_PATH,
     PACK08_SERVICE_DIRS,
+    PACK09_REASON_CODES_PATH,
+    PACK09_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -62,6 +65,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-06", PACK06_REASON_CODES_PATH, PACK06_SERVICE_DIRS, 22),
     ("pack-07", PACK07_REASON_CODES_PATH, PACK07_SERVICE_DIRS, 38),
     ("pack-08", PACK08_REASON_CODES_PATH, PACK08_SERVICE_DIRS, 32),
+    ("pack-09", PACK09_REASON_CODES_PATH, PACK09_SERVICE_DIRS, 40),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/hearing.schema.json",
+  "title": "Hearing",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.Hearing). `status` is derived from the last entry of the append-only `history`, never stored. Each history entry records the scheduled instant before and after, so a rescheduling chain is fully reconstructible. `timezone` travels with the hearing so a consumer computing a local-time notice period cannot silently apply its own. Rescheduling a hearing does NOT move any deadline attached to it (Framework hard invariant 60). `minutes_reference` is a PACK-11/PACK-21 placeholder - PACK-09 stores no minutes content. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hearing_id",
+    "case_id",
+    "organization_id",
+    "convening_authority_reference",
+    "agenda_code",
+    "scheduled_at",
+    "timezone",
+    "history",
+    "attendance",
+    "submissions_deadline_id",
+    "minutes_reference",
+    "evidence_references"
+  ],
+  "properties": {
+    "hearing_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "convening_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "agenda_code": {
+      "type": "string"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "status_after",
+          "occurred_at",
+          "scheduled_at_before",
+          "scheduled_at_after",
+          "reason_code",
+          "actor_authority_reference"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer"
+          },
+          "status_after": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "rescheduled",
+              "cancelled",
+              "completed"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduled_at_before": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "scheduled_at_after": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason_code": {
+            "type": "string"
+          },
+          "actor_authority_reference": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "attendance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "party_reference",
+          "state",
+          "recorded_at"
+        ],
+        "properties": {
+          "party_reference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "excused",
+              "represented"
+            ]
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "submissions_deadline_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "minutes_reference": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "kind",
+        "external_reference",
+        "organization_id"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string",
+          "enum": [
+            "pack-10-finance",
+            "pack-11-documents",
+            "pack-19-candidacy",
+            "pack-21-assemblies",
+            "pack-22-communications"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "external_reference": {
+          "type": "string"
+        },
+        "organization_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "kind",
+          "external_reference",
+          "organization_id"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "pack-10-finance",
+              "pack-11-documents",
+              "pack-19-candidacy",
+              "pack-21-assemblies",
+              "pack-22-communications"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "external_reference": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    }
+  }
+}

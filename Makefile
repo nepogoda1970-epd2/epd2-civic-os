@@ -58,6 +58,8 @@ typecheck:
 	uv run mypy services/governance-service
 	uv run mypy services/ai-processing-service
 	uv run mypy services/membership-service
+	uv run mypy services/organization-service
+	uv run mypy services/compliance-service
 	npm run typecheck --workspace=packages/typescript/epd2-types
 	npm run typecheck --workspace=frontend/web-shell
 

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/procedural-deadline.schema.json",
+  "title": "ProceduralDeadline",
+  "description": "PACK-09, ADR-041. Owned by compliance-service (epd2_compliance_service.domain.ProceduralDeadline). status and due_at are DERIVED from the append-only history and are deliberately NOT stored fields: every transition (suspension, resumption, extension, escalation, completion, expiration, supersession) appends a DeadlineHistoryEntry recording due_at_before and due_at_after, so no earlier value is ever overwritten (PACK-09 required invariant 6). Replacing a live deadline requires an explicit supersession recorded on both sides - there is no silent reset (invariant 7). Every timestamp is timezone-aware and the instance carries its own explicit IANA timezone. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deadline_id",
+    "definition_id",
+    "case_id",
+    "organization_id",
+    "deadline_code",
+    "timezone",
+    "started_at",
+    "status",
+    "due_at",
+    "history",
+    "supersedes_deadline_id",
+    "superseded_by_deadline_id"
+  ],
+  "properties": {
+    "deadline_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "definition_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deadline_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "running",
+        "suspended",
+        "satisfied",
+        "expired",
+        "escalated",
+        "cancelled"
+      ]
+    },
+    "due_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "event_type",
+          "occurred_at",
+          "due_at_before",
+          "due_at_after",
+          "remaining_seconds",
+          "reason_code",
+          "actor_party_reference"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "started",
+              "suspended",
+              "resumed",
+              "extended",
+              "satisfied",
+              "expired",
+              "escalated",
+              "cancelled",
+              "superseded"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "due_at_before": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "due_at_after": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "remaining_seconds": {
+            "type": ["integer", "null"],
+            "minimum": 0
+          },
+          "reason_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor_party_reference": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "supersedes_deadline_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "superseded_by_deadline_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

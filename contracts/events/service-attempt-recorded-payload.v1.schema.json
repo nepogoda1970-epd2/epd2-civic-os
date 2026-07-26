@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/service-attempt-recorded-payload.v1.schema.json",
+  "title": "service_attempt.recorded payload (v1)",
+  "description": "Wire payload of `service_attempt.recorded`. Provider telemetry and nothing more: the status fields are named `delivery_telemetry_status` and `read_telemetry_status`, `is_reconciled` travels with them, and `establishes_legal_effect` is literally false (Framework hard invariants 39 and 57). No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attempt_id",
+    "attempted_at",
+    "case_id",
+    "delivery_telemetry_status",
+    "establishes_legal_effect",
+    "failure_reason_code",
+    "has_proof_package",
+    "is_reconciled",
+    "method",
+    "notice_id",
+    "organization_id",
+    "read_telemetry_status",
+    "recorded_at",
+    "supersedes_attempt_id"
+  ],
+  "properties": {
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "attempted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "delivery_telemetry_status": {
+      "type": "string"
+    },
+    "establishes_legal_effect": {
+      "type": "boolean"
+    },
+    "failure_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "has_proof_package": {
+      "type": "boolean"
+    },
+    "is_reconciled": {
+      "type": "boolean"
+    },
+    "method": {
+      "type": "string"
+    },
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "read_telemetry_status": {
+      "type": "string"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "supersedes_attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  }
+}

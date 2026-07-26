@@ -1260,3 +1260,292 @@ def test_conflict_assessment_opened_event_has_no_evidence_references_or_reason_c
     assert "evidence_references" not in event.payload
     assert "reason_codes" not in event.payload
     assert "evidence-doc-778" not in json.dumps(to_jsonable(event.payload))
+
+
+# =============================================================================
+# PACK-09 (compliance-service) — ADR-038 through ADR-042
+#
+# PACK-09's own no-identity guarantee is stronger than "an event payload
+# omits a field": compliance-service is structurally incapable of holding
+# identity at all. A natural person appears only as a per-case handle
+# minted by `domain.mint_case_party_reference` — a random UUID with no
+# meaning, never reused across cases, never derived from any identity,
+# membership or account value, and with no resolution path inside this
+# service. That is what PACK-09 required invariants 1 ("no global user
+# ID") and 11 ("no identity expansion") mean concretely, and the checks
+# below assert it against the real entities and real event payloads
+# rather than against documentation.
+# =============================================================================
+
+
+def test_no_compliance_entity_declares_an_identity_or_global_person_field() -> None:
+    """Every frozen dataclass in `epd2_compliance_service.domain` is
+    checked, not a hand-picked subset — a future entity that added an
+    `email` or `member_id` field would fail here immediately."""
+    import dataclasses as _dataclasses
+
+    from epd2_compliance_service import domain as compliance_domain
+
+    forbidden = {
+        "account_id",
+        "address",
+        "authentication_secret",
+        "credential_secret",
+        "date_of_birth",
+        "eid_attributes",
+        "eid_token",
+        "email",
+        "first_name",
+        "full_name",
+        "given_name",
+        "global_user_id",
+        "identity_document_number",
+        "identity_id",
+        "identity_record",
+        "kyc_payload",
+        "last_name",
+        "member_id",
+        "national_id",
+        "passport_number",
+        "person_id",
+        "phone",
+        "phone_number",
+        "surname",
+        "tax_id",
+        "user_id",
+    }
+    checked = 0
+    for name in dir(compliance_domain):
+        candidate = getattr(compliance_domain, name)
+        if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+            continue
+        checked += 1
+        field_names = {field.name for field in _dataclasses.fields(candidate)}
+        leaked = field_names & forbidden
+        assert not leaked, f"{name} declares identity field(s): {sorted(leaked)}"
+    assert checked >= 15, "expected the PACK-09 domain to expose its full entity set"
+
+
+def test_compliance_services_forbidden_identity_name_list_matches_what_it_rejects() -> None:
+    """`domain.reject_identity_payload_keys` is the runtime gate applied
+    to every free-form metadata mapping this service accepts. Its list and
+    the structural check above must not drift apart."""
+    from epd2_compliance_service.domain import (
+        FORBIDDEN_IDENTITY_FIELD_NAMES,
+        reject_identity_payload_keys,
+    )
+    from epd2_compliance_service.exceptions import (
+        ProcessingRegistryIdentityPayloadRejectedError,
+    )
+
+    assert "user_id" in FORBIDDEN_IDENTITY_FIELD_NAMES
+    assert "email" in FORBIDDEN_IDENTITY_FIELD_NAMES
+    for forbidden_name in sorted(FORBIDDEN_IDENTITY_FIELD_NAMES):
+        try:
+            reject_identity_payload_keys({forbidden_name: "x"}, where="ct-00-08")
+        except ProcessingRegistryIdentityPayloadRejectedError:
+            continue
+        raise AssertionError(f"{forbidden_name} was accepted by the identity gate")
+
+
+def test_case_party_references_are_unlinkable_across_cases() -> None:
+    """Two cases involving the same real person carry two unrelated
+    references. There is no derivation, no seed and no lookup that could
+    turn one into the other — which is exactly why no global user ID
+    exists here."""
+    from epd2_compliance_service.domain import mint_case_party_reference
+
+    minted = {mint_case_party_reference() for _ in range(256)}
+    assert len(minted) == 256
+
+
+def test_no_compliance_event_payload_carries_a_party_reference_or_identity_field() -> None:
+    """The wire payloads are narrower still than the entities: the
+    case-status event carries no party reference at all, and the
+    data-subject-request event carries the verification STATUS but never a
+    verification attribute or the requester's handle."""
+    from datetime import UTC as _UTC
+    from datetime import datetime as _datetime
+
+    from epd2_compliance_service.domain import (
+        CaseStatus,
+        CaseType,
+        DataSubjectRequest,
+        DataSubjectRequestStatus,
+        DataSubjectRequestType,
+        IdentityVerificationStatus,
+        ProceduralCase,
+        mint_case_party_reference,
+    )
+    from epd2_compliance_service.events import (
+        build_case_status_changed_event,
+        build_request_status_changed_event,
+    )
+
+    occurred_at = _datetime(2026, 1, 1, tzinfo=_UTC)
+    authority = mint_case_party_reference()
+    handler = mint_case_party_reference()
+    decision_maker = mint_case_party_reference()
+    requester = mint_case_party_reference()
+
+    case = ProceduralCase(
+        case_id=uuid4(),
+        organization_id=uuid4(),
+        case_type=CaseType.PARTY_ARBITRATION,
+        status=CaseStatus.OPEN,
+        opened_at=occurred_at,
+        subject_reference="dispute:1",
+        procedural_authority_reference=authority,
+        workflow_type="party_arbitration_standard",
+        case_handler_reference=handler,
+        assigned_decision_maker_reference=decision_maker,
+    )
+    case_event = build_case_status_changed_event(
+        event_id=uuid4(),
+        case=case,
+        reason_code="COMPLIANCE_PROCEDURAL_CASE_STATUS_CHANGED",
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=occurred_at,
+    )
+    serialized_case = json.dumps(to_jsonable(case_event.payload))
+    for reference in (authority, handler, decision_maker):
+        assert str(reference) not in serialized_case
+
+    request = DataSubjectRequest(
+        request_id=uuid4(),
+        case_id=case.case_id,
+        organization_id=case.organization_id,
+        request_type=DataSubjectRequestType.ACCESS,
+        status=DataSubjectRequestStatus.RECEIVED,
+        requester_party_reference=requester,
+        received_at=occurred_at,
+        scope_description_code="all_membership_data",
+        identity_verification_status=IdentityVerificationStatus.VERIFIED,
+        identity_verification_reference=uuid4(),
+    )
+    request_event = build_request_status_changed_event(
+        event_id=uuid4(),
+        request=request,
+        reason_code="COMPLIANCE_DATA_SUBJECT_REQUEST_STATUS_CHANGED",
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=occurred_at,
+    )
+    serialized_request = json.dumps(to_jsonable(request_event.payload))
+    assert str(requester) not in serialized_request
+    assert str(request.identity_verification_reference) not in serialized_request
+    assert "identity_verification_status" in request_event.payload
+
+
+def test_set_identity_verification_status_accepts_no_identity_carrying_parameter() -> None:
+    """The one command that touches identity verification at all takes a
+    status and an opaque reference — and nothing else. A future parameter
+    that could carry an attribute, document or eID assertion would fail
+    here."""
+    import inspect as _inspect
+
+    from epd2_compliance_service.application import set_identity_verification_status
+
+    parameters = set(_inspect.signature(set_identity_verification_status).parameters)
+    assert parameters == {
+        "request_store",
+        "context",
+        "request_id",
+        "status",
+        "verification_reference",
+    }
+
+
+# --- PACK-09, Architecture & Domain Framework 0.8.1 additions ---------------
+#
+# Round 1 checked `epd2_compliance_service.domain`. The Framework
+# additions put four more modules into the service - `casework`,
+# `notices`, `dataprotection` and `references` - and a forbidden field
+# added to any of them would have escaped the round-1 check entirely.
+
+
+def _pack09_framework_modules() -> list[object]:
+    from epd2_compliance_service import casework, dataprotection, notices, references
+
+    return [casework, notices, dataprotection, references]
+
+
+def test_no_pack09_framework_dataclass_declares_an_identity_field() -> None:
+    """Framework hard invariant 1: no global user ID. Applied
+    structurally to every dataclass in every new PACK-09 module, so the
+    guarantee does not depend on anybody remembering it."""
+    import dataclasses as _dataclasses
+
+    from epd2_compliance_service.domain import FORBIDDEN_IDENTITY_FIELD_NAMES
+
+    forbidden = set(FORBIDDEN_IDENTITY_FIELD_NAMES)
+    checked = 0
+    for module in _pack09_framework_modules():
+        for name in dir(module):
+            candidate = getattr(module, name)
+            if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+                continue
+            checked += 1
+            field_names = {field.name for field in _dataclasses.fields(candidate)}
+            leaked = field_names & forbidden
+            assert not leaked, f"{name} declares identity field(s): {sorted(leaked)}"
+    assert checked >= 30, "expected the Framework additions to expose their full entity set"
+
+
+def test_the_references_module_publishes_no_person_shaped_reference() -> None:
+    """`references.py` is PACK-09's outward interface. A `PersonRef`,
+    `UserRef` or `MemberRef` there would hand every later pack exactly the
+    global identifier the Framework forbids - so its absence is asserted
+    by name rather than left to review."""
+    from epd2_compliance_service import references
+
+    exported = {name for name in dir(references) if not name.startswith("_")}
+    for forbidden_name in ("PersonRef", "UserRef", "MemberRef", "AccountRef", "IdentityRef"):
+        assert forbidden_name not in exported, (
+            f"references.py exports {forbidden_name}, which would be a global person handle"
+        )
+    assert "CasePartyRef" in exported
+
+
+def test_no_pack09_framework_dataclass_declares_a_voting_or_document_field() -> None:
+    """PACK-09 required invariants 12 and 13, extended to the new
+    modules: no ballot/vote/tally/delegation linkage, and no document or
+    message body anywhere."""
+    import dataclasses as _dataclasses
+
+    forbidden = {
+        "ballot_id",
+        "vote_id",
+        "vote_envelope_id",
+        "tally_id",
+        "delegation_id",
+        "result_publication_id",
+        "document_body",
+        "document_bytes",
+        "message_body",
+        "notice_body",
+        "content",
+        "reasons_text",
+        "narrative",
+    }
+    for module in _pack09_framework_modules():
+        for name in dir(module):
+            candidate = getattr(module, name)
+            if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+                continue
+            field_names = {field.name for field in _dataclasses.fields(candidate)}
+            leaked = field_names & forbidden
+            assert not leaked, f"{name} declares forbidden field(s): {sorted(leaked)}"
+
+
+def test_case_party_handles_are_unlinkable_across_the_new_casework_module() -> None:
+    """The casework module re-exports the minting function; it must be
+    the same unlinkable generator, not a second one with weaker
+    properties."""
+    from epd2_compliance_service.casework import mint_case_party_reference as casework_mint
+    from epd2_compliance_service.domain import mint_case_party_reference as domain_mint
+
+    assert casework_mint is domain_mint or len({casework_mint() for _ in range(256)}) == 256

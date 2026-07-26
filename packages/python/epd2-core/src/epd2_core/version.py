@@ -13,4 +13,4 @@ scripts/verify_versions.py.
 """
 
 CANON_VERSION = "0.7.0"
-REPOSITORY_VERSION = "0.8.0"
+REPOSITORY_VERSION = "0.9.0"

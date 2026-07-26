@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/remedy-registered-payload.v1.schema.json",
+  "title": "remedy.registered payload (v1)",
+  "description": "Wire payload of `remedy.registered`. Publishing the remedy route lets a downstream pack VERIFY the Framework hard invariant 52 requirement rather than assume it. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "available_from",
+    "available_until",
+    "case_id",
+    "deadline_id",
+    "decision_id",
+    "exercised_at",
+    "organization_id",
+    "recorded_at",
+    "remedy_id",
+    "remedy_kind",
+    "resulting_case_id",
+    "status"
+  ],
+  "properties": {
+    "available_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "available_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deadline_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "decision_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "exercised_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "remedy_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "remedy_kind": {
+      "type": "string"
+    },
+    "resulting_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string"
+    }
+  }
+}

@@ -83,6 +83,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   present; version consistency passed. Full detail:
   `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md` section 6.
 
+## [0.9.0] - compliance, records governance & legal workflows (implementation)
+
+CLAUDE-PACK-09. One wholly new service (`compliance-service`, ADR-038)
+plus its contracts and tests. No canon change: `CANON_VERSION` stays
+`0.7.0`, and no canon-owned file was touched.
+
+### Added
+
+- `services/compliance-service` — PACK-09's one new service, owning six
+  entity families across `domain.py`, `application.py`, `events.py`,
+  `storage.py` and `exceptions.py`:
+  - **Records governance** (ADR-039): `RetentionPolicy` (append-only by
+    `(policy_id, policy_version)`), `RetentionStartEvent` (retention never
+    starts implicitly), `GovernedRecord`, `DisposalEligibility`,
+    `DestructionAuthorization`, `DestructionEvidence` (create-once).
+    Destruction is a three-step controlled workflow — evaluate → authorize
+    → execute — and no store in the service exposes a delete method.
+  - **Legal Hold** (ADR-039): `LegalHold` with three states
+    (`active`/`released`/**`indeterminate`**), additive scope over record
+    ids / record classes / case ids, append-only history, and explicit
+    release. An indeterminate hold fails closed with
+    `LEGAL_HOLD_STATE_UNKNOWN`.
+  - **Data Catalog & Processing Registry** (ADR-040): `DataAsset`,
+    `ProcessingActivity`, and `LegalBasis` as a closed, managed
+    classification enum. Mandatory retention references are resolved
+    against the policy store, not merely typed. Identity field names are
+    rejected at construction.
+  - **Governed cases & deadlines** (ADR-041): `ProceduralCase` with
+    constrained transitions, required steps and referenced evidence;
+    `DeadlineDefinition` with a required IANA timezone; and
+    `ProceduralDeadline` whose `status` and `due_at` are _derived_ from an
+    append-only history — neither is a stored field.
+  - **Data-subject and legal requests** (ADR-040/ADR-041):
+    `DataSubjectRequest` holding an identity-verification _status_ plus an
+    opaque reference, and no identity attribute anywhere.
+  - **Party arbitration and disputes** (ADR-042): `DisputeParties`,
+    `CaseRoleAssignment`, `ConflictOfInterestDeclaration` (explicit
+    `ConflictState`, not free text), `CaseDecision`, `AppealReference`, and
+    `domain.assert_decision_maker_eligible` — the single gate that blocks
+    self-appointment, party appointment, handler appointment, undeclared
+    conflicts and blocking conflicts.
+  - **Organizational scope isolation**: `RequestContext` plus
+    `CrossScopeAuthorityGrant` with enumerated `ScopeCapability` values.
+    No hierarchy-derived inheritance; crossing a boundary requires a grant
+    issued by the target organization _and_ presented by the caller.
+- ADR-038 through ADR-042 (full template, accepted 2026-07-26).
+- `contracts/reason-codes/pack-09.yml` — 40 codes, each carrying all seven
+  fields `epd2_core.reason_codes.ReasonCodeRegistry` requires.
+- Fifteen new entity schemas and eight new event payload schemas under
+  `contracts/schemas/` and `contracts/events/`.
+- `contracts/openapi/pack-09.yaml` — 28 operations, every one tagged
+  `compliance-service`, with request bodies, reason-coded error responses
+  and no DELETE method anywhere.
+- Repository verification wiring for PACK-09: `PACK09_*` constants in
+  `tests/contract/_schema_helpers.py`; a pack-09 row in
+  `tests/contract/test_reason_codes_registry.py`; PACK-09 sections in
+  `tests/contract/test_openapi_contract.py`,
+  `test_ct00_08_identity_leakage.py` and
+  `test_ct00_09_vote_linkability.py`; a new
+  `tests/contract/test_ct00_01_pack09_schema_validation.py`; PACK-09
+  boundary tests in `tests/repository/test_service_boundaries.py`; and 44
+  new required paths in `scripts/check_repository.py`.
+
+### Changed
+
+- `REPOSITORY_VERSION`: `0.8.0 → 0.9.0`. `CANON_VERSION` remains `0.7.0`;
+  `docs/canonical/canon-version.json` `repository_compatibility` widened to
+  `>=0.1.0 <0.10.0`.
+- `Makefile` `typecheck` target now also runs `mypy` over
+  `services/organization-service` and `services/compliance-service`, which
+  were both absent from it.
+
+### Added — Architecture & Domain Framework 0.8.1 (same 0.9.0 round)
+
+The **EPD² Architecture & Domain Framework 0.8.1** (Roadmap Amendment)
+became the authoritative scope document for PACK-09 mid-round. Nothing
+above was rewritten; the following was added to the same service, under
+the same dependency rule, with `CANON_VERSION` still `0.7.0`.
+
+- `services/compliance-service/src/epd2_compliance_service/casework.py` —
+  the **common legal-case substrate** (Framework 13.1): `LegalCase`
+  (status derived from an append-only transition history, never stored),
+  `JurisdictionDetermination` (appended, never rewritten; a transfer
+  keeps the outgoing determination's own authority reference and gains a
+  pointer to its successor), `CaseParty` and `RepresentationMandate`
+  (enumerated authorities, not a role name), `Filing` (immutable docket:
+  store-assigned sequence, rejection preserved in place, correction by
+  supersession, `submitted_at` and `received_at` distinct), `Hearing`,
+  `InterimMeasure` (a *granted* measure is constructible only by a human
+  authority, and only with an end or review date plus reasons),
+  `ProceduralDecision` (effect, finality and enforceability as three
+  independent derived facts), `Remedy`, `RecusalRecord` and
+  `ReplacementAssignment`, plus the gates
+  `assert_may_decide_substantively`, `assert_due_process_complete` and
+  `assert_actor_not_recused`.
+- `services/compliance-service/src/epd2_compliance_service/notices.py` —
+  the **official-notice trust boundary** (ADR-043, new): `OfficialNotice`
+  (an authorized object; starts nothing), `ServiceAttempt` (provider
+  telemetry, with `is_reconciled` gating every deemed-service rule),
+  `NoticeEffectDecision` (the only object that can start a procedural
+  deadline) and `DeadlineTrigger` (create-once per deadline).
+  `TriggerSource` names `delivery_telemetry` and `read_telemetry`
+  precisely so both can be refused *by name* rather than by omission.
+- `services/compliance-service/src/epd2_compliance_service/dataprotection.py`
+  — **data-protection governance and the DPIA gate**:
+  `DPIARequirementDetermination` (recorded even when the answer is "no",
+  because its absence is what blocks activation),
+  `DataProtectionImpactAssessment`, `ProcessingActivationDecision`,
+  `TransferAssessment`, `ConsentWithdrawalRecord`, plus
+  `assert_activation_permitted` and `assert_dpo_independence`.
+- `services/compliance-service/src/epd2_compliance_service/references.py`
+  — the **stable typed references** PACK-09 publishes to
+  PACK-10/11/19/21-24 (`LegalCaseRef`, `DeadlineRef`, `NoticeEffectRef`,
+  `HoldRef`, `RecordClassRef` and siblings), plus explicit
+  `PlaceholderRef` forward declarations for objects later packs own.
+  There is no `PersonRef`, `UserRef` or `MemberRef` and there must never
+  be one.
+- `domain.py` additions: `RecordClass` (record owner and disposition
+  authority must differ), `DataClassification`,
+  `SearchExportEligibility`, `HoldPropagationRecord`, `PropagationState`
+  and `assert_hold_propagation_resolved`.
+- `events.py`: **33 new event types** (41 in total), each with a wire
+  payload that carries no party or authority handle at all;
+  `ALL_EVENT_TYPES` and `NON_LEGAL_EFFECT_NOTICE_EVENT_TYPES` make the
+  set and the prohibition testable.
+- `application.py`: 34 new commands, each with scope guards, `event_id`
+  idempotency through Audit Core, an audit append with canonical
+  before/after hashes, and reason-coded refusal — plus
+  `assert_destruction_propagation_resolved` as a separate assertion
+  rather than a widened `authorize_destruction` signature.
+- `storage.py`: 18 new Protocol/in-memory store pairs, including
+  create-once stores for notice effects and deadline triggers and an
+  append-only filing store that compares ten immutable fields on update.
+- `contracts/`: 22 new entity schemas, 33 new event payload schemas,
+  34 new OpenAPI operations (62 in total), and 32 new refusal reason
+  codes plus 18 additive audit classifications in `pack-09.yml` (88 in
+  total).
+- `docs/adr/ADR-043-official-notice-legal-effect-trust-boundary.md` —
+  the round's one new ADR. ADR-038 through ADR-042 each gained a
+  Framework 0.8.1 amendment section.
+- `docs/handover/PACK-09-KNOWN-LIMITATIONS.md` — what this pack does not
+  do, and where each partial guarantee ends.
+- Tests: `test_casework.py`, `test_notices.py`, `test_dataprotection.py`
+  and `test_framework_application.py` in the service suite;
+  `tests/contract/_pack09_framework_samples.py` and
+  `test_ct00_01_pack09_framework_schema_validation.py`; new PACK-09
+  sections in `test_openapi_contract.py` and
+  `test_ct00_08_identity_leakage.py`.
+
+### Changed — Architecture & Domain Framework 0.8.1 (same 0.9.0 round)
+
+- Two reason codes introduced earlier in this same **unreleased** 0.9.0
+  round were renamed in place rather than duplicated:
+  `CROSS_ORGANIZATION_CASE_ACCESS_DENIED` → `CROSS_SCOPE_ACCESS_DENIED`
+  and `DECISION_AUTHORITY_MISSING` → `DECISION_AUTHORITY_DENIED`. The old
+  exception class names remain as aliases, so no call site changed.
+  Registering synonyms would have left two codes meaning one thing.
+- `notices.determine_notice_effect` returns a recorded `NOT_EFFECTIVE`
+  determination when every authorized attempt positively failed, rather
+  than raising. A refusal that raised would leave no record for the
+  parties to see or challenge.
+- Two constructor guards that previously raised a bare `ValueError` now
+  raise their registered reason-coded errors:
+  `InterimMeasure` without an end or review date
+  (`INTERIM_MEASURE_AUTHORITY_DENIED`) and `DeadlineTrigger` from a
+  telemetry source (`DEADLINE_TRIGGER_INVALID`).
+- `scripts/check_repository.py`: 489 → 554 required paths.
+
 ## [0.8.0] - organization & regional scope context (implementation)
 
 ### Added

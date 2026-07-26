@@ -134,5 +134,5 @@ test("current versions match the expected skeleton version", () => {
   // ADR-037 - no further canon edit was made (no canon-owned file was
   // touched this round), so CANON_VERSION is unchanged at 0.7.0.
   assert.equal(CANON_VERSION, "0.7.0");
-  assert.equal(REPOSITORY_VERSION, "0.8.0");
+  assert.equal(REPOSITORY_VERSION, "0.9.0");
 });

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/representation-revoked-payload.v1.schema.json",
+  "title": "representation.revoked payload (v1)",
+  "description": "Wire payload of `representation.revoked`. Revocation invalidates FUTURE acts only; nothing in this payload suggests earlier filings are affected. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authorities",
+    "case_id",
+    "mandate_basis_reference",
+    "mandate_id",
+    "organization_id",
+    "recorded_at",
+    "revocation_reason_code",
+    "revoked_at",
+    "status",
+    "valid_from",
+    "valid_until"
+  ],
+  "properties": {
+    "authorities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mandate_basis_reference": {
+      "type": "string"
+    },
+    "mandate_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revocation_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "revoked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

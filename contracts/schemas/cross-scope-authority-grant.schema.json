@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/cross-scope-authority-grant.schema.json",
+  "title": "CrossScopeAuthorityGrant",
+  "description": "PACK-09, ADR-041. Owned by compliance-service (epd2_compliance_service.domain.CrossScopeAuthorityGrant). The ONLY way any organizational boundary is crossed in PACK-09. There is no hierarchy-derived inheritance: a Bund-level organization holds nothing over a Landesverband's cases unless that Landesverband issued a grant, and a Kreisverband holds nothing over its parent Land's either (PACK-09 required invariant 2). The grant must also be PRESENTED by the caller for the specific operation - merely existing in the store is not enough. capabilities is a closed, enumerated list with no wildcard and no 'all' value. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "granting_organization_id",
+    "grantee_organization_id",
+    "capabilities",
+    "valid_from",
+    "valid_until",
+    "authorizing_decision_reference",
+    "revoked_at"
+  ],
+  "properties": {
+    "grant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "granting_organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "grantee_organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "read_case",
+          "manage_case",
+          "manage_deadline",
+          "read_processing_registry",
+          "authorize_destruction"
+        ]
+      }
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "authorizing_decision_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "revoked_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

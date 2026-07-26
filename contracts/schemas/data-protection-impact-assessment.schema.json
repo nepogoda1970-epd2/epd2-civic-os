@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/data-protection-impact-assessment.schema.json",
+  "title": "DataProtectionImpactAssessment",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.dataprotection.DataProtectionImpactAssessment). An approved assessment past its `valid_until` activates nothing, which is the practical meaning of 'expired' even before anyone transitions it. The reviewer must be independent of the controller and the process owner: an assessment signed off by the party that wants the processing is not a review. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dpia_id",
+    "activity_id",
+    "organization_id",
+    "status",
+    "risk_class",
+    "reviewer_party_reference",
+    "created_at",
+    "updated_at",
+    "approval_reference",
+    "approved_at",
+    "valid_until",
+    "outcome_reason_code",
+    "dpia_version"
+  ],
+  "properties": {
+    "dpia_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "draft",
+        "under_review",
+        "approved",
+        "rejected",
+        "expired"
+      ]
+    },
+    "risk_class": {
+      "type": "string",
+      "enum": [
+        "low",
+        "standard",
+        "high",
+        "special_category"
+      ]
+    },
+    "reviewer_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approval_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approved_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "outcome_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dpia_version": {
+      "type": "integer"
+    }
+  }
+}

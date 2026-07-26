@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/transfer-assessment.schema.json",
+  "title": "TransferAssessment",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.dataprotection.TransferAssessment). The recorded transfer mechanism and its assessment reference for a processing activity's recipient category. PACK-09 records that an assessment exists and under which mechanism; it does not store the assessment document. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assessment_id",
+    "activity_id",
+    "organization_id",
+    "mechanism",
+    "recipient_category",
+    "assessed_at",
+    "assessed_by_party_reference",
+    "assessment_reference"
+  ],
+  "properties": {
+    "assessment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mechanism": {
+      "type": "string",
+      "enum": [
+        "no_transfer",
+        "adequacy_decision",
+        "standard_contractual_clauses",
+        "binding_corporate_rules",
+        "derogation",
+        "other_documented"
+      ]
+    },
+    "recipient_category": {
+      "type": "string"
+    },
+    "assessed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "assessed_by_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assessment_reference": {
+      "type": "string"
+    }
+  }
+}

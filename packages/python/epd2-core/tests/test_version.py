@@ -153,5 +153,6 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # against the already-accepted canon 0.7.0 text and ADR-032 through
     # ADR-037 - no further canon edit was made (no canon-owned file was
     # touched this round), so CANON_VERSION is unchanged at 0.7.0.
+    # REPOSITORY_VERSION moved 0.8.0 -> 0.9.0 for PACK-09 compliance-service; canon unchanged.
     assert CANON_VERSION == "0.7.0"
-    assert REPOSITORY_VERSION == "0.8.0"
+    assert REPOSITORY_VERSION == "0.9.0"

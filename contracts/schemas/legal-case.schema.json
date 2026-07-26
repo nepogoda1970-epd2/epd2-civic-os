@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/legal-case.schema.json",
+  "title": "LegalCase",
+  "description": "PACK-09, Architecture & Domain Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.LegalCase). The common legal-case substrate every governed proceeding shares. `status` is NOT a stored field: it is derived from the last entry of the append-only `transition_history`, so a status that the history does not support is not expressible. A case cannot enter substantive_review, hearing or decided without `jurisdiction_id` set (Framework hard invariant 52). Closure is preserved: reopening produces a NEW case that carries `reopened_from_case_id`, and never rewrites the closed one. `subject_reference` and `governing_policy_reference` are opaque references, never narrative text. No field carries an identity attribute, a document or its bytes, a message body, an authentication secret, or any ballot/vote/tally/delegation reference. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "legal_case_id",
+    "organization_id",
+    "case_kind",
+    "opened_at",
+    "subject_reference",
+    "confidentiality_class",
+    "access_profile",
+    "transition_history",
+    "governing_policy_reference",
+    "jurisdiction_id",
+    "parent_case_id",
+    "prior_case_id",
+    "closed_at",
+    "closure_reason_code",
+    "reopened_at",
+    "reopened_from_case_id",
+    "case_version"
+  ],
+  "properties": {
+    "legal_case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_kind": {
+      "type": "string",
+      "enum": [
+        "disciplinary",
+        "arbitration",
+        "internal_dispute",
+        "appeal",
+        "complaint",
+        "petition",
+        "data_subject_request",
+        "legal_request",
+        "compliance_review",
+        "protected_report"
+      ]
+    },
+    "opened_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject_reference": {
+      "type": "string"
+    },
+    "confidentiality_class": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "confidential",
+        "highly_confidential"
+      ]
+    },
+    "access_profile": {
+      "type": "string",
+      "enum": [
+        "scope_wide",
+        "case_team_only",
+        "named_parties_only",
+        "restricted_reporting"
+      ]
+    },
+    "transition_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "status_after",
+          "occurred_at",
+          "reason_code",
+          "actor_authority_reference"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer"
+          },
+          "status_after": {
+            "type": "string",
+            "enum": [
+              "intake",
+              "jurisdiction_review",
+              "admissibility_review",
+              "substantive_review",
+              "hearing",
+              "decided",
+              "closed",
+              "reopened"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason_code": {
+            "type": "string"
+          },
+          "actor_authority_reference": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "governing_policy_reference": {
+      "type": "string"
+    },
+    "jurisdiction_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "parent_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "prior_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "closed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "closure_reason_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reopened_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "reopened_from_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "case_version": {
+      "type": "integer"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/legal-hold.schema.json",
+  "title": "LegalHold",
+  "description": "PACK-09, ADR-039. Owned by compliance-service (epd2_compliance_service.domain.LegalHold). A Legal Hold over governed records in ONE organization - scope matching never crosses organizations, so a hold issued by one organization can never reach another's record even if the record id were guessed (PACK-09 required invariant 2). status 'indeterminate' is a real, storable state: every covered record then fails closed with LEGAL_HOLD_STATE_UNKNOWN rather than being treated as unheld (PACK-09 required invariant 15). history is append-only - release appends an entry, it never rewrites the issue entry. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hold_id",
+    "organization_id",
+    "matter_reference",
+    "scope",
+    "issued_at",
+    "issued_by_authority_reference",
+    "status",
+    "released_at",
+    "released_by_authority_reference",
+    "history"
+  ],
+  "properties": {
+    "hold_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "matter_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_ids", "record_classes", "case_ids"],
+      "properties": {
+        "record_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "record_classes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "case_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "issued_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "released", "indeterminate"]
+    },
+    "released_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "released_by_authority_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "occurred_at",
+          "action",
+          "reason_code",
+          "actor_authority_reference",
+          "status_after"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["issued", "released", "marked_indeterminate"]
+          },
+          "reason_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor_authority_reference": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status_after": {
+            "type": "string",
+            "enum": ["active", "released", "indeterminate"]
+          }
+        }
+      }
+    }
+  }
+}

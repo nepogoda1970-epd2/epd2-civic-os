@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/procedural-case.schema.json",
+  "title": "ProceduralCase",
+  "description": "PACK-09, ADR-041/ADR-042. Owned by compliance-service (epd2_compliance_service.domain.ProceduralCase). A legally governed case. procedural_authority_reference, case_handler_reference and assigned_decision_maker_reference are three DISTINCT references and may never coincide (PACK-09 required invariant 8); the decision-maker is assigned only through a command that also enforces no-self-appointment and conflict-of-interest handling (invariants 9 and 10). evidence_references are references, never content - document storage is deferred to PACK-11. A closed case is not modifiable by ordinary commands; an appeal is a separate case linked by an AppealReference. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "organization_id",
+    "case_type",
+    "status",
+    "opened_at",
+    "subject_reference",
+    "procedural_authority_reference",
+    "workflow_type",
+    "required_steps",
+    "evidence_references",
+    "case_handler_reference",
+    "assigned_decision_maker_reference",
+    "decision_id",
+    "closure_reason_code",
+    "closed_at",
+    "case_version"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_type": {
+      "type": "string",
+      "enum": [
+        "data_subject_request",
+        "compliance_review",
+        "party_arbitration",
+        "internal_dispute",
+        "legal_request"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "admissibility_review",
+        "active",
+        "stayed",
+        "decided",
+        "closed"
+      ]
+    },
+    "opened_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "procedural_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "workflow_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step_code", "required", "completed_at"],
+        "properties": {
+          "step_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "completed_at": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "case_handler_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "assigned_decision_maker_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "decision_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "closure_reason_code": {
+      "type": ["string", "null"]
+    },
+    "closed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "case_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

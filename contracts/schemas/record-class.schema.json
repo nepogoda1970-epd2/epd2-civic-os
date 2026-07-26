@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/record-class.schema.json",
+  "title": "RecordClass",
+  "description": "PACK-09, Framework 0.8.1 sections 11 and 13.1. Owned by compliance-service (epd2_compliance_service.domain.RecordClass). Binds a class of records to its retention schedule, custodian, disposition authority, data classification and search/export eligibility as ONE versioned object. The record owner may not also be the disposition authority - separating who owns a record from who may authorize destroying it is the whole point of the class. `search_export_eligibility` is what lets a downstream pack decide whether it may index or export the class at all. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_class_id",
+    "organization_id",
+    "record_class_code",
+    "record_category",
+    "sensitivity",
+    "data_classification",
+    "record_owner_authority_reference",
+    "custodian_reference",
+    "disposition_authority_reference",
+    "retention_policy_reference",
+    "search_export_eligibility",
+    "legal_hold_applicable",
+    "valid_from",
+    "valid_until",
+    "record_class_version"
+  ],
+  "properties": {
+    "record_class_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_class_code": {
+      "type": "string"
+    },
+    "record_category": {
+      "type": "string"
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "data_classification": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "highly_confidential",
+        "audit_evidence",
+        "personal_communication"
+      ]
+    },
+    "record_owner_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "custodian_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "disposition_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "retention_policy_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "search_export_eligibility": {
+      "type": "string",
+      "enum": [
+        "general_search_and_export",
+        "scoped_search_governed_export",
+        "dedicated_index_only",
+        "no_index"
+      ]
+    },
+    "legal_hold_applicable": {
+      "type": "boolean"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "record_class_version": {
+      "type": "integer"
+    }
+  }
+}

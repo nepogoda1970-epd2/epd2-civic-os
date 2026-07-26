@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/interim-measure.schema.json",
+  "title": "InterimMeasure",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.InterimMeasure). A measure in status 'granted' is constructible ONLY with decided_by_actor_class = human_authority (Framework hard invariant 69: AI decides no consequential legal outcomes), and only with an end date or a review date plus a reasons reference - an indefinite unreasoned measure is not expressible. `scope_description_code` is a code, never free-text narrative. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "measure_id",
+    "case_id",
+    "organization_id",
+    "measure_kind",
+    "requested_by_party_reference",
+    "decided_by_authority_reference",
+    "decided_by_actor_class",
+    "legal_basis_reference",
+    "scope_description_code",
+    "status",
+    "decided_at",
+    "starts_at",
+    "ends_at",
+    "review_due_at",
+    "reasons_reference",
+    "evidence_references",
+    "remedy_id",
+    "lapsed_at",
+    "revoked_at"
+  ],
+  "properties": {
+    "measure_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "measure_kind": {
+      "type": "string"
+    },
+    "requested_by_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_by_actor_class": {
+      "type": "string",
+      "enum": [
+        "human_authority",
+        "human_case_handler",
+        "service",
+        "automated"
+      ]
+    },
+    "legal_basis_reference": {
+      "type": "string"
+    },
+    "scope_description_code": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "granted",
+        "refused",
+        "lapsed",
+        "revoked"
+      ]
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "review_due_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "reasons_reference": {
+      "type": "string"
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "kind",
+          "external_reference",
+          "organization_id"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "pack-10-finance",
+              "pack-11-documents",
+              "pack-19-candidacy",
+              "pack-21-assemblies",
+              "pack-22-communications"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "external_reference": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "remedy_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "lapsed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

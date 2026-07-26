@@ -144,3 +144,87 @@ final `make verify` output and the two lock files), send them back so the
 handover report can be closed out with a genuine `PACK-01 PASS` or, if
 something legitimately fails, a `PACK-01 FAIL` with the real failure
 recorded.
+
+## PACK-09 note (2026-07-26)
+
+The PACK-09 review round was carried out in a sandbox with **no egress to
+package registries** — `pypi.org`, `files.pythonhosted.org` and
+`registry.npmjs.org` all return `403 Host not in allowlist`. Neither
+`uv sync --all-groups --frozen` nor `npm ci` could therefore be executed
+there, and the artifact is labelled **CANDIDATE**, not PASS.
+
+What _was_ executed offline, and what it substitutes for, is listed in
+`docs/handover/PACK-09-IMPLEMENTATION-REPORT.md` section 3. Two results
+from that round matter for anyone re-running this procedure:
+
+1. **`uv.lock` was corrected by hand.** The PACK-09 submission added
+   `epd2-compliance-service` to `pyproject.toml` (root dependency,
+   workspace member and `tool.uv.sources` entry) without regenerating the
+   lock, so `uv sync --frozen` would have installed an environment
+   _without_ the package. The four missing lock entries were added
+   manually; no registry package version changed. `uv lock --check` and
+   `uv lock --locked` both pass, and `uv export --frozen` now emits
+   `-e ./services/compliance-service`. A networked run should confirm that
+   `uv lock` regenerates a byte-identical file — if it does not, prefer
+   the regenerated one and re-run the pipeline.
+
+2. **`docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` was reformatted with
+   Prettier.** `npm run format:check` already failed on the PACK-08
+   baseline archive for that one file. The fix was applied with Prettier
+   3.8.1 (the version available offline) while `package-lock.json` pins
+   3.9.6; a networked run should confirm the locked version agrees.
+
+Everything else in this document is unchanged and still applies.
+
+## PACK-09 CANDIDATE-2 note (Architecture & Domain Framework 0.8.1)
+
+The CANDIDATE-2 round — which continues the CANDIDATE above rather than
+replacing it — ran in the same sandbox, under the same egress
+restriction. Nothing in the note above is withdrawn, and the same two
+corrections still stand.
+
+**Commands that could NOT be run, and are therefore not claimed:**
+
+| Command                          | Why                                              |
+| -------------------------------- | ------------------------------------------------ |
+| `uv sync --all-groups --frozen`  | needs `pypi.org` / `files.pythonhosted.org`      |
+| `uv run <anything>`              | needs the synced environment                     |
+| `npm ci`                         | needs `registry.npmjs.org`                       |
+| `npm run lint`                   | needs `node_modules`                             |
+| `npm run build`                  | needs `node_modules`                             |
+| `npm run format:check`           | needs `node_modules`                             |
+| `npm run typecheck`              | needs `node_modules`                             |
+
+**No TypeScript, frontend or npm-workspace file was modified in the
+CANDIDATE-2 round**, so the npm half of the pipeline has the same status
+it had after CANDIDATE: unverified in this sandbox, verified content
+unchanged.
+
+**Commands that WERE run, and with what:**
+
+| Command                | Substitute used                                              |
+| ---------------------- | ------------------------------------------------------------ |
+| `ruff check .`         | standalone `ruff` (uv tool install), not the locked version   |
+| `ruff format --check .`| same                                                          |
+| `mypy <all packages>`  | standalone `mypy`, Python 3.11 host interpreter               |
+| `pytest`               | standalone `pytest`, Python 3.11 host interpreter             |
+| `scripts/check_repository.py` | system `python3`                                       |
+| `scripts/verify_versions.py`  | system `python3`                                       |
+
+Two deltas against `uv.lock` matter and are stated rather than glossed:
+
+1. **Python 3.11, not 3.12.** `pyproject.toml` targets 3.12; the sandbox
+   interpreter is 3.11. No PEP 695 generic syntax or other 3.12-only
+   construct is used anywhere in this repository (round 1 removed the one
+   occurrence), so the suite runs identically — but "runs on 3.11" is not
+   the same claim as "runs on the pinned 3.12", and only CI can make the
+   second.
+2. **Tool versions are whatever was installable offline**, not the
+   versions `uv.lock` pins. A locked `ruff` could in principle report a
+   rule this one does not.
+
+`uv.lock` was **not modified** in the CANDIDATE-2 round: no dependency
+was added, removed or bumped. The four new source modules
+(`casework.py`, `notices.py`, `dataprotection.py`, `references.py`) live
+inside the already-locked `epd2-compliance-service` package and import
+only the standard library and `epd2_core`/`epd2_audit_core`.

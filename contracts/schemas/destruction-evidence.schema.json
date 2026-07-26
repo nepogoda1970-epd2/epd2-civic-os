@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/destruction-evidence.schema.json",
+  "title": "DestructionEvidence",
+  "description": "PACK-09, ADR-039. Owned by compliance-service (epd2_compliance_service.domain.DestructionEvidence). Immutable proof that a destruction actually happened, created exactly once per governed record and never updated or deleted - it outlives the record whose destruction it evidences. evidence_digest is an opaque, caller-computed digest of whatever the executing system considers its proof (a tombstone id, a storage receipt); no document bytes and no personal payload are stored here (PACK-09 required invariant 13). Real evidence CONTENT and cryptographic version chains are deferred to PACK-11. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "record_id",
+    "organization_id",
+    "authorization_id",
+    "disposition_action",
+    "executed_at",
+    "executed_by_authority_reference",
+    "evidence_digest",
+    "retention_policy_id",
+    "retention_policy_version"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "authorization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "disposition_action": {
+      "type": "string",
+      "enum": ["delete", "anonymize", "archive", "review"]
+    },
+    "executed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "executed_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "evidence_digest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retention_policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "retention_policy_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

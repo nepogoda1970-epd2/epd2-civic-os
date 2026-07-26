@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governed-record-retention-started-payload.v1.schema.json",
+  "title": "governed_record.retention_started event payload (v1)",
+  "description": "PACK-09, ADR-039. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). Signals that an explicit retention start was recorded for a governed record; until one exists, disposal eligibility fails closed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "organization_id",
+    "record_class",
+    "trigger",
+    "retention_started_at",
+    "retention_policy_id",
+    "retention_policy_version",
+    "recorded_at"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "created_at",
+        "case_closed_at",
+        "membership_ended_at",
+        "contract_ended_at",
+        "processing_ended_at"
+      ]
+    },
+    "retention_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "retention_policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "retention_policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -12,6 +12,7 @@ members = [
     "epd2-ai-processing-service",
     "epd2-audit-core",
     "epd2-civic-os",
+    "epd2-compliance-service",
     "epd2-core",
     "epd2-credential-service",
     "epd2-delegation-service",
@@ -195,6 +196,7 @@ dependencies = [
     { name = "epd2-account-service" },
     { name = "epd2-ai-processing-service" },
     { name = "epd2-audit-core" },
+    { name = "epd2-compliance-service" },
     { name = "epd2-core" },
     { name = "epd2-credential-service" },
     { name = "epd2-delegation-service" },
@@ -229,6 +231,7 @@ requires-dist = [
     { name = "epd2-account-service", editable = "services/account-service" },
     { name = "epd2-ai-processing-service", editable = "services/ai-processing-service" },
     { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-compliance-service", editable = "services/compliance-service" },
     { name = "epd2-core", editable = "packages/python/epd2-core" },
     { name = "epd2-credential-service", editable = "services/credential-service" },
     { name = "epd2-delegation-service", editable = "services/delegation-service" },
@@ -256,6 +259,21 @@ dev = [
     { name = "pytest-cov", specifier = ">=5.0,<6" },
     { name = "ruff", specifier = ">=0.6,<1" },
     { name = "types-pyyaml", specifier = ">=6.0,<7" },
+]
+
+[[package]]
+name = "epd2-compliance-service"
+version = "0.1.0"
+source = { editable = "services/compliance-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
 ]
 
 [[package]]

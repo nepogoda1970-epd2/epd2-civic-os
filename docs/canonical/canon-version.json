@@ -2,5 +2,5 @@
   "canon_name": "EPD2 Canonical Domain and Event Model",
   "canon_version": "0.7.0",
   "status": "working-canon",
-  "repository_compatibility": ">=0.1.0 <0.9.0"
+  "repository_compatibility": ">=0.1.0 <0.10.0"
 }

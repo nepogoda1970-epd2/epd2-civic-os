@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/procedural-decision.schema.json",
+  "title": "ProceduralDecision",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.ProceduralDecision). Effect, finality and enforceability are THREE SEPARATE derived facts, each read from the last entry of the append-only `state_history` and none derived from another: a decision may be in effect while still appealable, and final while not enforceable. Suspending effect also stays enforceability. Becoming enforceable is refused unless the decision is actually in effect. `reasons_reference` is required for any consequential decision (Framework hard invariant 52) and is an opaque reference, never the reasons text. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "case_id",
+    "organization_id",
+    "decision_type",
+    "deciding_authority_reference",
+    "decided_by_party_reference",
+    "operative_result",
+    "issued_at",
+    "state_history",
+    "reason_code",
+    "effective_at",
+    "reasons_reference",
+    "evidence_references",
+    "remedy_id",
+    "appeal_case_id",
+    "reopening_case_id",
+    "enforcement_action_reference",
+    "supersedes_decision_id",
+    "decision_version"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "admissibility",
+        "interim",
+        "substantive",
+        "sanction",
+        "dismissal",
+        "procedural_order",
+        "appeal_outcome"
+      ]
+    },
+    "deciding_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_by_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operative_result": {
+      "type": "string",
+      "enum": [
+        "upheld",
+        "partially_upheld",
+        "dismissed",
+        "inadmissible",
+        "settled",
+        "withdrawn",
+        "referred"
+      ]
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "occurred_at",
+          "effect_status",
+          "finality_status",
+          "enforceability_status",
+          "reason_code",
+          "actor_authority_reference"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effect_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_effect",
+              "suspended",
+              "terminated"
+            ]
+          },
+          "finality_status": {
+            "type": "string",
+            "enum": [
+              "open_to_remedy",
+              "final",
+              "superseded_on_appeal"
+            ]
+          },
+          "enforceability_status": {
+            "type": "string",
+            "enum": [
+              "not_enforceable",
+              "enforceable",
+              "stayed"
+            ]
+          },
+          "reason_code": {
+            "type": "string"
+          },
+          "actor_authority_reference": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "reason_code": {
+      "type": "string"
+    },
+    "effective_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "reasons_reference": {
+      "type": "string"
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "kind",
+          "external_reference",
+          "organization_id"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "enum": [
+              "pack-10-finance",
+              "pack-11-documents",
+              "pack-19-candidacy",
+              "pack-21-assemblies",
+              "pack-22-communications"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "external_reference": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "remedy_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "appeal_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "reopening_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "enforcement_action_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "supersedes_decision_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "decision_version": {
+      "type": "integer"
+    }
+  }
+}

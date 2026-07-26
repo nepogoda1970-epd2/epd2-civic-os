@@ -677,3 +677,100 @@ def test_process_eligibility_claims_carries_no_vote_or_ballot_linkable_field() -
         field_names = {f.name for f in dataclasses.fields(cls)}
         leaked = field_names & forbidden_field_names
         assert not leaked, f"{cls.__name__} has forbidden field(s): {leaked}"
+
+
+# =============================================================================
+# PACK-09 (compliance-service) — ADR-038, PACK-09 required invariant 12
+# ("no voting linkage"): a compliance case, processing record, deadline or
+# dispute must never become a path from a person to a ballot. PACK-09
+# achieves this the strongest way available — by having no reference to
+# any voting concept anywhere, and no import edge to the three services
+# that own them.
+# =============================================================================
+
+
+def test_compliance_service_never_imports_voting_tally_or_delegation() -> None:
+    """AST-based import-boundary check, mirroring the PACK-06 and PACK-07
+    checks above. `compliance-service` depends only on `epd2_core` and
+    `epd2_audit_core`; it has no edge — not even an `.application`-only
+    read edge — into any vote-linked service."""
+    import epd2_compliance_service
+
+    forbidden_modules = {
+        "epd2_voting_service",
+        "epd2_tally_service",
+        "epd2_delegation_service",
+        "epd2_identity_service",
+        "epd2_account_service",
+        "epd2_credential_service",
+    }
+    package_dir = Path(inspect.getfile(epd2_compliance_service)).parent
+    for py_file in package_dir.rglob("*.py"):
+        tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names = {alias.name.split(".")[0] for alias in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                names = {node.module.split(".")[0]} if node.module else set()
+            else:
+                continue
+            leaked = names & forbidden_modules
+            assert not leaked, f"{py_file} imports forbidden module(s): {leaked}"
+
+
+def test_no_compliance_entity_declares_a_ballot_vote_tally_or_delegation_field() -> None:
+    """Every dataclass in the PACK-09 domain is checked. A compliance case
+    that gained a `ballot_id`, or a governed record that gained a
+    `vote_envelope_id`, would create exactly the linkage invariant 12
+    forbids."""
+    from epd2_compliance_service import domain as compliance_domain
+
+    forbidden_field_names = {
+        "ballot_id",
+        "ballot_reference",
+        "delegation_id",
+        "delegation_reference",
+        "result_publication_id",
+        "tally_id",
+        "tally_reference",
+        "vote_envelope_id",
+        "vote_id",
+        "vote_receipt_id",
+        "vote_reference",
+    }
+    checked = 0
+    for name in dir(compliance_domain):
+        candidate = getattr(compliance_domain, name)
+        if not dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+            continue
+        checked += 1
+        field_names = {field.name for field in dataclasses.fields(candidate)}
+        leaked = field_names & forbidden_field_names
+        assert not leaked, f"{name} has vote-linkable field(s): {sorted(leaked)}"
+    assert checked >= 15
+
+
+def test_no_compliance_event_payload_key_names_a_voting_concept() -> None:
+    """Checked against the contract documents themselves, so a payload
+    schema that drifted from the code would still be caught."""
+    events_dir = Path(__file__).resolve().parent.parent.parent / "contracts" / "events"
+    forbidden_substrings = ("ballot", "vote", "tally", "delegation", "result_publication")
+    for schema_path in sorted(events_dir.glob("*payload.v1.schema.json")):
+        document = json.loads(schema_path.read_text(encoding="utf-8"))
+        title = str(document.get("title", ""))
+        if not title.startswith(
+            (
+                "governed_record.",
+                "legal_hold.",
+                "processing_activity.",
+                "procedural_",
+                "data_subject_request.",
+            )
+        ):
+            continue
+        for property_name in document.get("properties", {}):
+            lowered = property_name.lower()
+            for fragment in forbidden_substrings:
+                assert fragment not in lowered, (
+                    f"{schema_path.name} declares vote-linkable property {property_name!r}"
+                )

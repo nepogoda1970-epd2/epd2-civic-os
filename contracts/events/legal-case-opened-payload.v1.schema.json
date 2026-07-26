@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/legal-case-opened-payload.v1.schema.json",
+  "title": "legal_case.opened payload (v1)",
+  "description": "Wire payload of `legal_case.opened`. A case exists. `jurisdiction_id: null` is published deliberately - a subscriber must be able to see that no competent authority has been established yet. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "access_profile",
+    "case_kind",
+    "case_version",
+    "confidentiality_class",
+    "governing_policy_reference",
+    "jurisdiction_id",
+    "legal_case_id",
+    "opened_at",
+    "organization_id",
+    "parent_case_id",
+    "recorded_at",
+    "status"
+  ],
+  "properties": {
+    "access_profile": {
+      "type": "string"
+    },
+    "case_kind": {
+      "type": "string"
+    },
+    "case_version": {
+      "type": "integer"
+    },
+    "confidentiality_class": {
+      "type": "string"
+    },
+    "governing_policy_reference": {
+      "type": "string"
+    },
+    "jurisdiction_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "legal_case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "opened_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "parent_case_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string"
+    }
+  }
+}

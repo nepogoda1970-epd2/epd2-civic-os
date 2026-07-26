@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/deadline-trigger.schema.json",
+  "title": "DeadlineTrigger",
+  "description": "PACK-09, Framework 0.8.1 hard invariants 39 and 59. Owned by compliance-service (epd2_compliance_service.notices.DeadlineTrigger). The recorded fact that ONE governed source started ONE deadline, exactly once. `source` deliberately CANNOT be delivery_telemetry or read_telemetry: those members exist in the TriggerSource enum so the refusal is explicit and testable by name rather than an omission. When `source` is notice_effect_decision, `notice_effect_id` is non-null. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trigger_id",
+    "deadline_id",
+    "case_id",
+    "organization_id",
+    "source",
+    "triggered_at",
+    "notice_effect_id",
+    "source_reference"
+  ],
+  "properties": {
+    "trigger_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deadline_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "notice_effect_decision",
+        "governed_decision",
+        "filing_receipt",
+        "statutory_date",
+        "delivery_telemetry",
+        "read_telemetry"
+      ]
+    },
+    "triggered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notice_effect_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "source_reference": {
+      "type": "string"
+    }
+  }
+}

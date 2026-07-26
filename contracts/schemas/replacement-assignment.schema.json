@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/replacement-assignment.schema.json",
+  "title": "ReplacementAssignment",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.ReplacementAssignment). Closes the capability gap a blocking recusal opens. The replacement is itself checked against the case's recusal records, so a matter cannot be 'resolved' by handing it to somebody equally conflicted. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assignment_id",
+    "case_id",
+    "organization_id",
+    "recusal_id",
+    "replacement_party_reference",
+    "assigned_by_authority_reference",
+    "assigned_at"
+  ],
+  "properties": {
+    "assignment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recusal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "replacement_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assigned_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "assigned_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -106,7 +106,23 @@ PACK08_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (all eight packs).
+# package import name -> its src/ directory, for the one PACK-09 service
+# (ADR-038's single-service decomposition, PACK-09 IMPLEMENTATION ROUND).
+# `compliance-service` deliberately depends on NO other service: it
+# references organization-service scopes by opaque UUID only, never by
+# import, and it has no edge - not even an `.application`-only read edge -
+# into any identity- or vote-linked service. That absence is what makes
+# PACK-09 required invariants 11 ("no identity expansion") and 12 ("no
+# voting linkage") structural rather than merely documented, and it is
+# asserted from the opposite direction in
+# `tests/contract/test_ct00_09_vote_linkability.py`.
+PACK09_SERVICE_PACKAGES = {
+    "epd2_compliance_service": (
+        REPO_ROOT / "services/compliance-service/src/epd2_compliance_service"
+    ),
+}
+
+# Every service in the repository (all nine packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
@@ -115,6 +131,7 @@ SERVICE_PACKAGES = {
     **PACK06_SERVICE_PACKAGES,
     **PACK07_SERVICE_PACKAGES,
     **PACK08_SERVICE_PACKAGES,
+    **PACK09_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -1104,4 +1121,87 @@ def test_audit_core_depends_on_no_other_service() -> None:
             violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
     assert violations == [], "epd2_audit_core must not import any service:\n" + "\n".join(
         violations
+    )
+
+
+# =============================================================================
+# PACK-09 (ADR-038) — compliance-service imports nothing but the shared
+# primitives, and nothing imports it back.
+# =============================================================================
+
+
+def test_compliance_service_imports_only_core_and_audit_core() -> None:
+    """ADR-038's boundary, checked exhaustively rather than by sampling:
+    `compliance-service` may import `epd2_core`, `epd2_audit_core` and
+    itself — nothing else. In particular it never reaches into
+    organization-service (it holds organizational scopes as opaque UUIDs),
+    never into identity/account/credential (PACK-09 required invariant 11),
+    and never into voting/tally/delegation (invariant 12)."""
+    allowed = ALWAYS_ALLOWED | {"epd2_compliance_service"}
+    violations: list[str] = []
+    for src_dir in PACK09_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = (roots & set(SERVICE_PACKAGES)) - allowed
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "compliance-service may only import epd2_core and epd2_audit_core:\n"
+        + "\n".join(violations)
+    )
+
+
+def test_no_other_service_imports_compliance_service() -> None:
+    """PACK-09 is a leaf this round: no PACK-02 through PACK-08 service
+    may depend on it. A future pack that needs a compliance read must add
+    that edge under its own ADR, the same way every earlier cross-pack
+    edge in this file was introduced."""
+    violations: list[str] = []
+    other_packages = {
+        name: path for name, path in SERVICE_PACKAGES.items() if name != "epd2_compliance_service"
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK09_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import compliance-service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_compliance_service_storage_exposes_no_delete_operation() -> None:
+    """PACK-09 required invariant 4 ("no silent deletion"), enforced at the
+    repository level rather than only inside the service's own tests: no
+    storage protocol or in-memory adapter in `compliance-service` defines a
+    delete-shaped method at all, so there is no ordinary CRUD path a caller
+    could reach for. Removing a governed record is only ever the outcome of
+    the controlled disposal workflow, which leaves the metadata row in
+    place with its destruction evidence attached."""
+    import ast as _ast
+
+    src_dir = PACK09_SERVICE_PACKAGES["epd2_compliance_service"]
+    forbidden_method_names = {
+        "delete",
+        "remove",
+        "purge",
+        "drop",
+        "destroy",
+        "erase",
+        "clear",
+        "truncate",
+    }
+    storage_module = src_dir / "storage.py"
+    tree = _ast.parse(storage_module.read_text(encoding="utf-8"), filename=str(storage_module))
+    offenders: list[str] = []
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.ClassDef):
+            for statement in node.body:
+                if not isinstance(statement, _ast.FunctionDef | _ast.AsyncFunctionDef):
+                    continue
+                if statement.name.lstrip("_") in forbidden_method_names:
+                    offenders.append(f"{node.name}.{statement.name}")
+    assert offenders == [], (
+        "compliance-service storage must expose no delete-shaped method: " + ", ".join(offenders)
     )

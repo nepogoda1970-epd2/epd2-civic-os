@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/dpia-requirement-determined-payload.v1.schema.json",
+  "title": "dpia.requirement_determined payload (v1)",
+  "description": "Wire payload of `dpia.requirement_determined`. Published even when `dpia_required` is false: a consumer that never sees this event for an activity knows the gate has not been evaluated, not that it passed. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity_id",
+    "basis_reference",
+    "determination_id",
+    "determined_at",
+    "dpia_required",
+    "organization_id",
+    "recorded_at",
+    "risk_class"
+  ],
+  "properties": {
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "basis_reference": {
+      "type": "string"
+    },
+    "determination_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "determined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dpia_required": {
+      "type": "boolean"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_class": {
+      "type": "string"
+    }
+  }
+}

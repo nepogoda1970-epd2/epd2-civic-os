@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/deadline-definition.schema.json",
+  "title": "DeadlineDefinition",
+  "description": "PACK-09, ADR-041. Owned by compliance-service (epd2_compliance_service.domain.DeadlineDefinition). A reusable deadline template owned by one organization. timezone is an explicit IANA name (e.g. 'Europe/Berlin') and is REQUIRED: due-date arithmetic is performed on that civil clock and never silently assumes UTC. An empty or unknown zone is a fail-closed refusal (DEADLINE_TIMEZONE_UNDETERMINED). No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "definition_id",
+    "organization_id",
+    "deadline_code",
+    "duration_days",
+    "timezone",
+    "escalation_after_days",
+    "description"
+  ],
+  "properties": {
+    "definition_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deadline_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_days": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timezone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "escalation_after_days": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "description": {
+      "type": "string"
+    }
+  }
+}
