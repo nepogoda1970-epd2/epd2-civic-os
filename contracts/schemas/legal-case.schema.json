@@ -57,11 +57,7 @@
     },
     "confidentiality_class": {
       "type": "string",
-      "enum": [
-        "internal",
-        "confidential",
-        "highly_confidential"
-      ]
+      "enum": ["internal", "confidential", "highly_confidential"]
     },
     "access_profile": {
       "type": "string",
@@ -119,51 +115,30 @@
       "type": "string"
     },
     "jurisdiction_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "parent_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "prior_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "closed_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "closure_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "reopened_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "reopened_from_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "case_version": {

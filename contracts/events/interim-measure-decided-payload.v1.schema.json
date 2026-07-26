@@ -28,20 +28,14 @@
       "format": "uuid"
     },
     "decided_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "decided_by_actor_class": {
       "type": "string"
     },
     "ends_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "has_reasons_reference": {
@@ -66,17 +60,11 @@
       "format": "date-time"
     },
     "remedy_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "review_due_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "scope_description_code": {

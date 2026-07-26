@@ -48,10 +48,7 @@
       "format": "date-time"
     },
     "notice_effect_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "source_reference": {

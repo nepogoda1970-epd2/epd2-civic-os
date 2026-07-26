@@ -45,16 +45,10 @@
       "format": "date-time"
     },
     "revocation_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "revoked_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "status": {
@@ -65,10 +59,7 @@
       "format": "date-time"
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     }
   }

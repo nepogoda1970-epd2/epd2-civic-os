@@ -66,29 +66,18 @@
           },
           "status_after": {
             "type": "string",
-            "enum": [
-              "scheduled",
-              "rescheduled",
-              "cancelled",
-              "completed"
-            ]
+            "enum": ["scheduled", "rescheduled", "cancelled", "completed"]
           },
           "occurred_at": {
             "type": "string",
             "format": "date-time"
           },
           "scheduled_at_before": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "scheduled_at_after": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "reason_code": {
@@ -106,11 +95,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "party_reference",
-          "state",
-          "recorded_at"
-        ],
+        "required": ["party_reference", "state", "recorded_at"],
         "properties": {
           "party_reference": {
             "type": "string",
@@ -118,12 +103,7 @@
           },
           "state": {
             "type": "string",
-            "enum": [
-              "present",
-              "absent",
-              "excused",
-              "represented"
-            ]
+            "enum": ["present", "absent", "excused", "represented"]
           },
           "recorded_at": {
             "type": "string",
@@ -133,24 +113,13 @@
       }
     },
     "submissions_deadline_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "minutes_reference": {
-      "type": [
-        "object",
-        "null"
-      ],
+      "type": ["object", "null"],
       "additionalProperties": false,
-      "required": [
-        "owner",
-        "kind",
-        "external_reference",
-        "organization_id"
-      ],
+      "required": ["owner", "kind", "external_reference", "organization_id"],
       "properties": {
         "owner": {
           "type": "string",
@@ -179,12 +148,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "owner",
-          "kind",
-          "external_reference",
-          "organization_id"
-        ],
+        "required": ["owner", "kind", "external_reference", "organization_id"],
         "properties": {
           "owner": {
             "type": "string",

@@ -64,18 +64,10 @@
     },
     "intake_state": {
       "type": "string",
-      "enum": [
-        "received",
-        "admitted",
-        "rejected",
-        "superseded"
-      ]
+      "enum": ["received", "admitted", "rejected", "superseded"]
     },
     "filed_by_representative_reference": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "document_references": {
@@ -83,12 +75,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "owner",
-          "kind",
-          "external_reference",
-          "organization_id"
-        ],
+        "required": ["owner", "kind", "external_reference", "organization_id"],
         "properties": {
           "owner": {
             "type": "string",
@@ -118,12 +105,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "owner",
-          "kind",
-          "external_reference",
-          "organization_id"
-        ],
+        "required": ["owner", "kind", "external_reference", "organization_id"],
         "properties": {
           "owner": {
             "type": "string",
@@ -149,24 +131,15 @@
       }
     },
     "supersedes_filing_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "superseded_by_filing_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "rejection_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     }
   }
 }

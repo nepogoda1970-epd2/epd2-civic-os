@@ -39,11 +39,7 @@
     },
     "outcome": {
       "type": "string",
-      "enum": [
-        "effective",
-        "not_effective",
-        "undetermined"
-      ]
+      "enum": ["effective", "not_effective", "undetermined"]
     },
     "decided_at": {
       "type": "string",
@@ -74,28 +70,16 @@
       "type": "string"
     },
     "effective_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "proof_package_reference": {
-      "type": [
-        "object",
-        "null"
-      ],
+      "type": ["object", "null"],
       "additionalProperties": false,
-      "required": [
-        "id",
-        "organization_id"
-      ],
+      "required": ["id", "organization_id"],
       "properties": {
         "id": {
           "type": "string",

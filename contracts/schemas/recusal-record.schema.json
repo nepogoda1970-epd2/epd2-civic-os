@@ -41,11 +41,7 @@
     },
     "assessment_outcome": {
       "type": "string",
-      "enum": [
-        "no_conflict",
-        "conflict_mitigated",
-        "recusal_required"
-      ]
+      "enum": ["no_conflict", "conflict_mitigated", "recusal_required"]
     },
     "effective_at": {
       "type": "string",
@@ -62,17 +58,11 @@
       }
     },
     "replacement_assignment_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "supersedes_recusal_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

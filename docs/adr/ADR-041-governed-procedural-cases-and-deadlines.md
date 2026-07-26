@@ -246,7 +246,6 @@ Canon `0.7.0`, no bump. `ProceduralCase`, `ProceduralDeadline` and
 `DataSubjectRequest` are compliance-side workflow state owned by one
 service; the three new events use canon section 21's envelope unchanged.
 
-
 ## Amendment (Architecture & Domain Framework 0.8.1, same 0.9.0 round)
 
 Framework section 13.1 requires a **common legal-case substrate** that

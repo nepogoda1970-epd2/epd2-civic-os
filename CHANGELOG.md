@@ -171,7 +171,7 @@ the same dependency rule, with `CANON_VERSION` still `0.7.0`.
   (enumerated authorities, not a role name), `Filing` (immutable docket:
   store-assigned sequence, rejection preserved in place, correction by
   supersession, `submitted_at` and `received_at` distinct), `Hearing`,
-  `InterimMeasure` (a *granted* measure is constructible only by a human
+  `InterimMeasure` (a _granted_ measure is constructible only by a human
   authority, and only with an end or review date plus reasons),
   `ProceduralDecision` (effect, finality and enforceability as three
   independent derived facts), `Remedy`, `RecusalRecord` and
@@ -185,7 +185,7 @@ the same dependency rule, with `CANON_VERSION` still `0.7.0`.
   `NoticeEffectDecision` (the only object that can start a procedural
   deadline) and `DeadlineTrigger` (create-once per deadline).
   `TriggerSource` names `delivery_telemetry` and `read_telemetry`
-  precisely so both can be refused *by name* rather than by omission.
+  precisely so both can be refused _by name_ rather than by omission.
 - `services/compliance-service/src/epd2_compliance_service/dataprotection.py`
   — **data-protection governance and the DPIA gate**:
   `DPIARequirementDetermination` (recorded even when the answer is "no",

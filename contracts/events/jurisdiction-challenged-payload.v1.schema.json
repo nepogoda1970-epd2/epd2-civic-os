@@ -35,10 +35,7 @@
       "format": "date-time"
     },
     "jurisdiction_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "jurisdiction_type": {
@@ -49,10 +46,7 @@
       "format": "uuid"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "recorded_at": {
       "type": "string",
@@ -66,10 +60,7 @@
       "format": "date-time"
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     }
   }

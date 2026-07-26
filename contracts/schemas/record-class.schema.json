@@ -39,12 +39,7 @@
     },
     "sensitivity": {
       "type": "string",
-      "enum": [
-        "public",
-        "internal",
-        "confidential",
-        "restricted"
-      ]
+      "enum": ["public", "internal", "confidential", "restricted"]
     },
     "data_classification": {
       "type": "string",
@@ -90,10 +85,7 @@
       "format": "date-time"
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "record_class_version": {

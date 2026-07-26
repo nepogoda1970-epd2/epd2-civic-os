@@ -201,7 +201,7 @@ architectural fork. ADR-038 through ADR-042 do not cover this one:
 - **ADR-040** decides the processing registry. Different subject.
 - **ADR-041** decides that deadlines are derived from an append-only
   history rather than stored — the closest neighbour, and the reason this
-  ADR does not need to revisit deadline *representation*. But ADR-041
+  ADR does not need to revisit deadline _representation_. But ADR-041
   answers "how is a deadline's state computed?"; it does not answer "what
   is permitted to be its origin", and the two have different failure
   modes: ADR-041 prevents an inconsistent deadline, ADR-043 prevents a

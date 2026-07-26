@@ -185,15 +185,15 @@ corrections still stand.
 
 **Commands that could NOT be run, and are therefore not claimed:**
 
-| Command                          | Why                                              |
-| -------------------------------- | ------------------------------------------------ |
-| `uv sync --all-groups --frozen`  | needs `pypi.org` / `files.pythonhosted.org`      |
-| `uv run <anything>`              | needs the synced environment                     |
-| `npm ci`                         | needs `registry.npmjs.org`                       |
-| `npm run lint`                   | needs `node_modules`                             |
-| `npm run build`                  | needs `node_modules`                             |
-| `npm run format:check`           | needs `node_modules`                             |
-| `npm run typecheck`              | needs `node_modules`                             |
+| Command                         | Why                                         |
+| ------------------------------- | ------------------------------------------- |
+| `uv sync --all-groups --frozen` | needs `pypi.org` / `files.pythonhosted.org` |
+| `uv run <anything>`             | needs the synced environment                |
+| `npm ci`                        | needs `registry.npmjs.org`                  |
+| `npm run lint`                  | needs `node_modules`                        |
+| `npm run build`                 | needs `node_modules`                        |
+| `npm run format:check`          | needs `node_modules`                        |
+| `npm run typecheck`             | needs `node_modules`                        |
 
 **No TypeScript, frontend or npm-workspace file was modified in the
 CANDIDATE-2 round**, so the npm half of the pipeline has the same status
@@ -202,14 +202,14 @@ unchanged.
 
 **Commands that WERE run, and with what:**
 
-| Command                | Substitute used                                              |
-| ---------------------- | ------------------------------------------------------------ |
-| `ruff check .`         | standalone `ruff` (uv tool install), not the locked version   |
-| `ruff format --check .`| same                                                          |
-| `mypy <all packages>`  | standalone `mypy`, Python 3.11 host interpreter               |
-| `pytest`               | standalone `pytest`, Python 3.11 host interpreter             |
-| `scripts/check_repository.py` | system `python3`                                       |
-| `scripts/verify_versions.py`  | system `python3`                                       |
+| Command                       | Substitute used                                             |
+| ----------------------------- | ----------------------------------------------------------- |
+| `ruff check .`                | standalone `ruff` (uv tool install), not the locked version |
+| `ruff format --check .`       | same                                                        |
+| `mypy <all packages>`         | standalone `mypy`, Python 3.11 host interpreter             |
+| `pytest`                      | standalone `pytest`, Python 3.11 host interpreter           |
+| `scripts/check_repository.py` | system `python3`                                            |
+| `scripts/verify_versions.py`  | system `python3`                                            |
 
 Two deltas against `uv.lock` matter and are stated rather than glossed:
 

@@ -38,31 +38,18 @@
     },
     "remedy_kind": {
       "type": "string",
-      "enum": [
-        "appeal",
-        "review",
-        "objection",
-        "reconsideration"
-      ]
+      "enum": ["appeal", "review", "objection", "reconsideration"]
     },
     "status": {
       "type": "string",
-      "enum": [
-        "available",
-        "exercised",
-        "expired",
-        "unavailable"
-      ]
+      "enum": ["available", "exercised", "expired", "unavailable"]
     },
     "available_from": {
       "type": "string",
       "format": "date-time"
     },
     "available_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "competent_authority_reference": {
@@ -70,24 +57,15 @@
       "format": "uuid"
     },
     "deadline_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "exercised_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "resulting_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

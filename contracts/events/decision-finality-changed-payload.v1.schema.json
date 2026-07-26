@@ -27,10 +27,7 @@
   ],
   "properties": {
     "appeal_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "case_id": {
@@ -38,10 +35,7 @@
       "format": "uuid"
     },
     "decision_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "decision_type": {
@@ -54,10 +48,7 @@
       "type": "string"
     },
     "effective_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "enforceability_status": {
@@ -81,30 +72,21 @@
       "format": "uuid"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "recorded_at": {
       "type": "string",
       "format": "date-time"
     },
     "remedy_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "sequence": {
       "type": "integer"
     },
     "supersedes_decision_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

@@ -45,10 +45,7 @@
       "format": "uuid"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "recorded_at": {
       "type": "string",
@@ -59,16 +56,10 @@
       "format": "date-time"
     },
     "scheduled_at_after": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "scheduled_at_before": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "sequence": {
       "type": "integer"
@@ -77,10 +68,7 @@
       "type": "string"
     },
     "submissions_deadline_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "timezone": {

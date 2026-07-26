@@ -52,12 +52,7 @@
     },
     "decided_by_actor_class": {
       "type": "string",
-      "enum": [
-        "human_authority",
-        "human_case_handler",
-        "service",
-        "automated"
-      ]
+      "enum": ["human_authority", "human_case_handler", "service", "automated"]
     },
     "legal_basis_reference": {
       "type": "string"
@@ -67,13 +62,7 @@
     },
     "status": {
       "type": "string",
-      "enum": [
-        "requested",
-        "granted",
-        "refused",
-        "lapsed",
-        "revoked"
-      ]
+      "enum": ["requested", "granted", "refused", "lapsed", "revoked"]
     },
     "decided_at": {
       "type": "string",
@@ -84,17 +73,11 @@
       "format": "date-time"
     },
     "ends_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "review_due_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "reasons_reference": {
@@ -105,12 +88,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "owner",
-          "kind",
-          "external_reference",
-          "organization_id"
-        ],
+        "required": ["owner", "kind", "external_reference", "organization_id"],
         "properties": {
           "owner": {
             "type": "string",
@@ -136,24 +114,15 @@
       }
     },
     "remedy_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "lapsed_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "revoked_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     }
   }

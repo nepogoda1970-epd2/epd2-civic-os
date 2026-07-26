@@ -27,10 +27,7 @@
       "format": "uuid"
     },
     "decided_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "deemed_service_rule": {
@@ -41,10 +38,7 @@
       "format": "uuid"
     },
     "effective_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "establishes_legal_effect": {
@@ -65,10 +59,7 @@
       "type": "string"
     },
     "reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "recorded_at": {
       "type": "string",

@@ -34,10 +34,7 @@
       "format": "uuid"
     },
     "effective_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "organization_id": {
@@ -56,17 +53,11 @@
       "format": "uuid"
     },
     "replacement_assignment_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "supersedes_recusal_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

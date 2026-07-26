@@ -41,10 +41,7 @@
       "type": "boolean"
     },
     "failure_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "has_proof_package": {
       "type": "boolean"
@@ -71,10 +68,7 @@
       "format": "date-time"
     },
     "supersedes_attempt_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

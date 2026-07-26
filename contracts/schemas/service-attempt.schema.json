@@ -79,15 +79,9 @@
       "type": "boolean"
     },
     "proof_package_reference": {
-      "type": [
-        "object",
-        "null"
-      ],
+      "type": ["object", "null"],
       "additionalProperties": false,
-      "required": [
-        "id",
-        "organization_id"
-      ],
+      "required": ["id", "organization_id"],
       "properties": {
         "id": {
           "type": "string",
@@ -100,16 +94,10 @@
       }
     },
     "failure_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "supersedes_attempt_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     }
   }

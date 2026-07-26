@@ -44,13 +44,7 @@
     },
     "state": {
       "type": "string",
-      "enum": [
-        "unknown",
-        "pending",
-        "confirmed",
-        "failed",
-        "not_applicable"
-      ]
+      "enum": ["unknown", "pending", "confirmed", "failed", "not_applicable"]
     },
     "recorded_at": {
       "type": "string",
@@ -60,10 +54,7 @@
       "type": "string"
     },
     "failure_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     }
   }
 }

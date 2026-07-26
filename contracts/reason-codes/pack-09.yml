@@ -930,7 +930,6 @@
   introduced_in_version: 0.9.0
   source: pack-09-service
 
-
 # --- Additive audit classifications for the Framework 0.8.1 actions -------
 
 - code: COMPLIANCE_LEGAL_CASE_STATUS_CHANGED

@@ -210,7 +210,6 @@ compliance-side control metadata owned by one service, and the four new
 events use canon section 21's envelope unchanged. Elevating them to canon
 entities would require its own amendment ADR.
 
-
 ## Amendment (Architecture & Domain Framework 0.8.1, same 0.9.0 round)
 
 Framework section 11 adds two obligations this ADR did not carry.
@@ -250,6 +249,6 @@ assertion rather than a new required argument on `authorize_destruction`.
 Widening a command shipped earlier in this round would have broken its
 callers for no gain; a deployment that participates in propagation calls
 the assertion first, and one with no registered derivatives has nothing
-to call it with. It checks every hold whose *scope* covers the record,
+to call it with. It checks every hold whose _scope_ covers the record,
 including released ones — a hold released before its export copy was
 purged still leaves an unresolved derivative.

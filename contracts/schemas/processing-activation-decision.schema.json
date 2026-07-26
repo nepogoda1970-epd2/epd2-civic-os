@@ -32,12 +32,7 @@
     },
     "state": {
       "type": "string",
-      "enum": [
-        "not_activated",
-        "activated",
-        "suspended",
-        "deactivated"
-      ]
+      "enum": ["not_activated", "activated", "suspended", "deactivated"]
     },
     "decided_at": {
       "type": "string",
@@ -51,24 +46,15 @@
       "type": "string"
     },
     "dpia_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "effective_from": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "revoked_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     }
   }

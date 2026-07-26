@@ -46,12 +46,7 @@
     },
     "risk_class": {
       "type": "string",
-      "enum": [
-        "low",
-        "standard",
-        "high",
-        "special_category"
-      ]
+      "enum": ["low", "standard", "high", "special_category"]
     },
     "reviewer_party_reference": {
       "type": "string",
@@ -66,30 +61,18 @@
       "format": "date-time"
     },
     "approval_reference": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "approved_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "outcome_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "dpia_version": {
       "type": "integer"

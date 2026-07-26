@@ -150,16 +150,16 @@ withdrawn.
 
 ### 7.1 Module layout after the additions
 
-| Module              | Owns                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
+| Module              | Owns                                                                                               |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
 | `domain.py`         | records governance, Legal Hold (+ `RecordClass`, `HoldPropagationRecord`), registry, round-1 cases |
-| `casework.py`       | the common legal-case substrate and its gates                                                     |
-| `notices.py`        | the official-notice trust boundary and deadline triggers                                          |
-| `dataprotection.py` | DPIA gate, activation decisions, transfers, consent withdrawal                                    |
-| `references.py`     | the stable typed references PACK-09 publishes outward                                             |
-| `events.py`         | 41 event builders and the audit-snapshot helpers                                                  |
-| `application.py`    | 34 new commands alongside the round-1 set                                                         |
-| `storage.py`        | 18 new Protocol/in-memory pairs alongside the round-1 set                                         |
+| `casework.py`       | the common legal-case substrate and its gates                                                      |
+| `notices.py`        | the official-notice trust boundary and deadline triggers                                           |
+| `dataprotection.py` | DPIA gate, activation decisions, transfers, consent withdrawal                                     |
+| `references.py`     | the stable typed references PACK-09 publishes outward                                              |
+| `events.py`         | 41 event builders and the audit-snapshot helpers                                                   |
+| `application.py`    | 34 new commands alongside the round-1 set                                                          |
+| `storage.py`        | 18 new Protocol/in-memory pairs alongside the round-1 set                                          |
 
 ### 7.2 The three-layer notice boundary, in one place
 

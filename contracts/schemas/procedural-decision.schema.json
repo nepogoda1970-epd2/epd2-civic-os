@@ -99,28 +99,15 @@
           },
           "effect_status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "in_effect",
-              "suspended",
-              "terminated"
-            ]
+            "enum": ["pending", "in_effect", "suspended", "terminated"]
           },
           "finality_status": {
             "type": "string",
-            "enum": [
-              "open_to_remedy",
-              "final",
-              "superseded_on_appeal"
-            ]
+            "enum": ["open_to_remedy", "final", "superseded_on_appeal"]
           },
           "enforceability_status": {
             "type": "string",
-            "enum": [
-              "not_enforceable",
-              "enforceable",
-              "stayed"
-            ]
+            "enum": ["not_enforceable", "enforceable", "stayed"]
           },
           "reason_code": {
             "type": "string"
@@ -136,10 +123,7 @@
       "type": "string"
     },
     "effective_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "reasons_reference": {
@@ -150,12 +134,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "owner",
-          "kind",
-          "external_reference",
-          "organization_id"
-        ],
+        "required": ["owner", "kind", "external_reference", "organization_id"],
         "properties": {
           "owner": {
             "type": "string",
@@ -181,37 +160,22 @@
       }
     },
     "remedy_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "appeal_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "reopening_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "enforcement_action_reference": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "supersedes_decision_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "decision_version": {

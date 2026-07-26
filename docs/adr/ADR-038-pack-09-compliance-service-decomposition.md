@@ -197,7 +197,6 @@ round need canon to name `GovernedRecord` or `LegalHold` as first-class
 canonical entities, that requires its own canon amendment ADR in the shape
 of ADR-013/ADR-018/ADR-023/ADR-028/ADR-037.
 
-
 ## Amendment (Architecture & Domain Framework 0.8.1, same 0.9.0 round)
 
 The Framework 0.8.1 Roadmap Amendment supersedes this ADR's entity table
@@ -205,12 +204,12 @@ as the authoritative statement of PACK-09 scope. Nothing above is
 withdrawn; four families are **added** to the same service, under the
 same dependency rule:
 
-| Family                        | Entities                                                                                                                                                                    |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Legal-case substrate          | `LegalCase`, `JurisdictionDetermination`, `CaseParty`, `RepresentationMandate`, `Filing`, `Hearing`, `InterimMeasure`, `ProceduralDecision`, `Remedy`                       |
-| Recusal and conflict hooks    | `RecusalRecord`, `ReplacementAssignment`                                                                                                                                    |
-| Official notice trust boundary | `OfficialNotice`, `ServiceAttempt`, `NoticeEffectDecision`, `DeadlineTrigger` (see **ADR-043**)                                                                             |
-| Records and data protection   | `RecordClass`, `HoldPropagationRecord`, `DPIARequirementDetermination`, `DataProtectionImpactAssessment`, `ProcessingActivationDecision`, `TransferAssessment`, `ConsentWithdrawalRecord` |
+| Family                         | Entities                                                                                                                                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Legal-case substrate           | `LegalCase`, `JurisdictionDetermination`, `CaseParty`, `RepresentationMandate`, `Filing`, `Hearing`, `InterimMeasure`, `ProceduralDecision`, `Remedy`                                     |
+| Recusal and conflict hooks     | `RecusalRecord`, `ReplacementAssignment`                                                                                                                                                  |
+| Official notice trust boundary | `OfficialNotice`, `ServiceAttempt`, `NoticeEffectDecision`, `DeadlineTrigger` (see **ADR-043**)                                                                                           |
+| Records and data protection    | `RecordClass`, `HoldPropagationRecord`, `DPIARequirementDetermination`, `DataProtectionImpactAssessment`, `ProcessingActivationDecision`, `TransferAssessment`, `ConsentWithdrawalRecord` |
 
 The dependency rule is unchanged and now covers four more modules:
 `casework.py`, `notices.py`, `dataprotection.py` and `references.py`

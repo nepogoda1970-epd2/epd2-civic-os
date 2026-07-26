@@ -24,10 +24,7 @@
       "type": "string"
     },
     "failure_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "hold_id": {
       "type": "string",

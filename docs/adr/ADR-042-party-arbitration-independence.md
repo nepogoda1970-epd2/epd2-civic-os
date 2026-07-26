@@ -227,7 +227,6 @@ Canon `0.7.0`, no bump. Arbitration is expressed entirely as case types
 and role assignments on compliance-service's own `ProceduralCase`; canon
 names no arbitration entity, and no new event type is added.
 
-
 ## Amendment (Architecture & Domain Framework 0.8.1, same 0.9.0 round)
 
 Framework hard invariants 52, 53, 54 and 69 extend this ADR's
@@ -237,7 +236,7 @@ consequential decision requires at all".
 **`assert_due_process_complete`** encodes hard invariant 52 as six named
 prerequisites — jurisdiction, legally effective notice, an opportunity to
 respond, a human deciding actor, reasons, and an available remedy — and
-names in its message the *one* that is missing. A refusal that said only
+names in its message the _one_ that is missing. A refusal that said only
 "due process incomplete" would be unactionable for the party told to fix
 it.
 
@@ -246,7 +245,7 @@ it.
 actor already did, and nothing removes those acts: they may themselves be
 the subject of the appeal. `assert_actor_not_recused` compares against
 `effective_at`, so a recusal recorded for a future date does not
-retroactively invalidate earlier acts. It is applied to *every*
+retroactively invalidate earlier acts. It is applied to _every_
 consequential command — scheduling a hearing and deciding filing
 admissibility are exercises of authority too, not only final decisions.
 A replacement who is themselves recused is refused, because otherwise a
@@ -259,7 +258,7 @@ it.
 
 **AI decides no consequential legal outcomes** (invariant 69). This is
 enforced in two independent places, on purpose:
-`InterimMeasure.__post_init__` refuses to construct a *granted* measure
+`InterimMeasure.__post_init__` refuses to construct a _granted_ measure
 unless `decided_by_actor_class is ActorClass.HUMAN_AUTHORITY`, and
 `assert_due_process_complete` refuses any decision made by a `service` or
 `automated` actor. `human_case_handler` is a human but is deliberately

@@ -1868,10 +1868,24 @@ paths:
               additionalProperties: false
               required: [target, reason_code, acting_authority_reference]
               properties:
-                target: { type: string, enum: [intake, jurisdiction_review, admissibility_review, substantive_review, hearing, decided, closed, reopened] }
+                target:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        intake,
+                        jurisdiction_review,
+                        admissibility_review,
+                        substantive_review,
+                        hearing,
+                        decided,
+                        closed,
+                        reopened,
+                      ],
+                  }
                 reason_code: { type: string, minLength: 1 }
                 acting_authority_reference: { type: string, format: uuid }
-                closure_reason_code: { type: [string, 'null'] }
+                closure_reason_code: { type: [string, "null"] }
                 expected_case_version: { type: integer, minimum: 1 }
       responses:
         "200":
@@ -2051,7 +2065,8 @@ paths:
               additionalProperties: false
               required: [successor, reason_code]
               properties:
-                successor: { $ref: "../schemas/jurisdiction-determination.schema.json" }
+                successor:
+                  { $ref: "../schemas/jurisdiction-determination.schema.json" }
                 reason_code: { type: string, minLength: 1 }
       responses:
         "200":
@@ -2410,7 +2425,8 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [new_scheduled_at, reason_code, acting_authority_reference]
+              required:
+                [new_scheduled_at, reason_code, acting_authority_reference]
               properties:
                 new_scheduled_at: { type: string, format: date-time }
                 reason_code: { type: string, minLength: 1 }
@@ -2506,7 +2522,20 @@ paths:
               properties:
                 reason_code: { type: string, minLength: 1 }
                 acting_authority_reference: { type: string, format: uuid }
-                minutes_reference: { type: [object, 'null'], additionalProperties: false, required: [owner, kind, external_reference, organization_id], properties: { owner: { type: string }, kind: { type: string }, external_reference: { type: string }, organization_id: { type: string, format: uuid } } }
+                minutes_reference:
+                  {
+                    type: [object, "null"],
+                    additionalProperties: false,
+                    required:
+                      [owner, kind, external_reference, organization_id],
+                    properties:
+                      {
+                        owner: { type: string },
+                        kind: { type: string },
+                        external_reference: { type: string },
+                        organization_id: { type: string, format: uuid },
+                      },
+                  }
       responses:
         "200":
           description: Hearing transition recorded
@@ -2597,13 +2626,25 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [decision, notice_effect_id, response_opportunity_given, remedy_available, decided_by_actor_class]
+              required:
+                [
+                  decision,
+                  notice_effect_id,
+                  response_opportunity_given,
+                  remedy_available,
+                  decided_by_actor_class,
+                ]
               properties:
                 decision: { $ref: "../schemas/procedural-decision.schema.json" }
-                notice_effect_id: { type: [string, 'null'], format: uuid }
+                notice_effect_id: { type: [string, "null"], format: uuid }
                 response_opportunity_given: { type: boolean }
                 remedy_available: { type: boolean }
-                decided_by_actor_class: { type: string, enum: [human_authority, human_case_handler, service, automated] }
+                decided_by_actor_class:
+                  {
+                    type: string,
+                    enum:
+                      [human_authority, human_case_handler, service, automated],
+                  }
       responses:
         "201":
           description: Procedural decision issued
@@ -3009,7 +3050,17 @@ paths:
               additionalProperties: false
               required: [proof_package_reference]
               properties:
-                proof_package_reference: { type: object, additionalProperties: false, required: [id, organization_id], properties: { id: { type: string, format: uuid }, organization_id: { type: string, format: uuid } } }
+                proof_package_reference:
+                  {
+                    type: object,
+                    additionalProperties: false,
+                    required: [id, organization_id],
+                    properties:
+                      {
+                        id: { type: string, format: uuid },
+                        organization_id: { type: string, format: uuid },
+                      },
+                  }
       responses:
         "200":
           description: Attempt reconciled
@@ -3054,9 +3105,26 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [deemed_service_rule, rule_reference, decided_by_authority_reference, effective_at]
+              required:
+                [
+                  deemed_service_rule,
+                  rule_reference,
+                  decided_by_authority_reference,
+                  effective_at,
+                ]
               properties:
-                deemed_service_rule: { type: string, enum: [actual_receipt_proven, registered_post_presumption, portal_availability_presumption, public_posting_period, recipient_acknowledgement] }
+                deemed_service_rule:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        actual_receipt_proven,
+                        registered_post_presumption,
+                        portal_availability_presumption,
+                        public_posting_period,
+                        recipient_acknowledgement,
+                      ],
+                  }
                 rule_reference: { type: string, minLength: 1 }
                 decided_by_authority_reference: { type: string, format: uuid }
                 effective_at: { type: string, format: date-time }
@@ -3112,8 +3180,18 @@ paths:
               additionalProperties: false
               required: [source, notice_effect_id, source_reference]
               properties:
-                source: { type: string, enum: [notice_effect_decision, governed_decision, filing_receipt, statutory_date] }
-                notice_effect_id: { type: [string, 'null'], format: uuid }
+                source:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        notice_effect_decision,
+                        governed_decision,
+                        filing_receipt,
+                        statutory_date,
+                      ],
+                  }
+                notice_effect_id: { type: [string, "null"], format: uuid }
                 source_reference: { type: string }
       responses:
         "201":
@@ -3284,12 +3362,25 @@ paths:
               additionalProperties: false
               required: [target]
               properties:
-                target: { type: string, enum: [not_required, draft, under_review, approved, rejected, expired] }
-                approval_reference: { type: [string, 'null'] }
-                outcome_reason_code: { type: [string, 'null'] }
-                valid_until: { type: [string, 'null'], format: date-time }
-                controller_reference: { type: [string, 'null'], format: uuid }
-                process_owner_authority_reference: { type: [string, 'null'], format: uuid }
+                target:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        not_required,
+                        draft,
+                        under_review,
+                        approved,
+                        rejected,
+                        expired,
+                      ],
+                  }
+                approval_reference: { type: [string, "null"] }
+                outcome_reason_code: { type: [string, "null"] }
+                valid_until: { type: [string, "null"], format: date-time }
+                controller_reference: { type: [string, "null"], format: uuid }
+                process_owner_authority_reference:
+                  { type: [string, "null"], format: uuid }
                 expected_dpia_version: { type: integer, minimum: 1 }
       responses:
         "200":
@@ -3335,12 +3426,17 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [risk_class, decided_by_authority_reference, reason_code]
+              required:
+                [risk_class, decided_by_authority_reference, reason_code]
               properties:
-                risk_class: { type: string, enum: [low, standard, high, special_category] }
+                risk_class:
+                  {
+                    type: string,
+                    enum: [low, standard, high, special_category],
+                  }
                 decided_by_authority_reference: { type: string, format: uuid }
                 reason_code: { type: string, minLength: 1 }
-                effective_from: { type: [string, 'null'], format: date-time }
+                effective_from: { type: [string, "null"], format: date-time }
       responses:
         "201":
           description: Activation decision recorded

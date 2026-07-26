@@ -28,7 +28,7 @@ workflows, evidence references, reason-coded refusals and auditability.
 Whether a given retention period, deemed-service rule, notice method or
 processing basis satisfies the GDPR, the BDSG or the Parteiengesetz is a
 legal determination made by humans outside this system. The code refuses
-to *presume* those answers; it does not supply them.
+to _presume_ those answers; it does not supply them.
 
 ---
 
@@ -50,7 +50,7 @@ deployment that creates a search index over held records and never calls
 index still holds the data. Nothing in this repository can detect that,
 because nothing in this repository knows the index exists.
 
-`assert_destruction_propagation_resolved` is a *separate* assertion, not a
+`assert_destruction_propagation_resolved` is a _separate_ assertion, not a
 required argument on `authorize_destruction`. A caller that participates
 in propagation must invoke it; one that does not, does not.
 
@@ -78,7 +78,7 @@ service refuses to determine, and the matter waits for a human.
 
 `DeemedServiceRule` names five presumption shapes and
 `notices._supports` decides which telemetry can support each. What it
-encodes is the *structure* of a presumption — reconciled evidence of a
+encodes is the _structure_ of a presumption — reconciled evidence of a
 particular kind is required for a particular rule — not any specific
 jurisdiction's law.
 
@@ -115,7 +115,7 @@ decision and an ADR, not a query.
 
 `references.py` publishes `EvidenceRef`, `DocumentRef`, `MinutesRef`,
 `FinanceEvidenceRef`, `NoticeProofPackageRef` and `AdmissionDecisionRef`
-as *forward declarations*. PACK-09 records that a filing cites evidence,
+as _forward declarations_. PACK-09 records that a filing cites evidence,
 that a hearing produced minutes, that a service attempt has a proof
 package — never their content, and never any assertion about them.
 
@@ -132,7 +132,7 @@ exists, and nothing more.
 
 There is no hierarchy-derived inheritance anywhere: a Bund-level
 organization holds nothing over a Landesverband's records without a
-`CrossScopeAuthorityGrant` issued by that Landesverband and *presented*
+`CrossScopeAuthorityGrant` issued by that Landesverband and _presented_
 by the caller for that operation.
 
 A resource in another organization returns the same
@@ -150,20 +150,20 @@ there.
 
 Implemented nowhere in this pack, and not stubbed:
 
-| Assigned to     | Not implemented here                                                                    |
-| --------------- | --------------------------------------------------------------------------------------- |
-| PACK-10         | Party finance accounting, Rechenschaftsbericht, sponsorship and lobbying registry        |
-| PACK-11         | Document storage, evidence content, document version chains, evidence admission          |
-| PACK-12         | Privileged JIT/break-glass administration, DLP                                           |
-| PACK-13         | Production database, event bus, schema registry                                          |
-| PACK-14         | Real IAM/eID, credential issuance                                                        |
-| PACK-15/16      | Voting threat model, cryptographic voting                                                |
-| PACK-17         | Production incident response                                                             |
-| PACK-18         | User-facing applications                                                                 |
-| PACK-19         | Candidacy, nomination, ballot admission — `AdmissionDecisionRef` is interface-only        |
-| PACK-21         | Assemblies, motions, minutes as a domain                                                 |
-| PACK-22         | Communication channels, templates, message delivery                                      |
-| PACK-23/24      | Complaints intake, investigations                                                        |
+| Assigned to | Not implemented here                                                               |
+| ----------- | ---------------------------------------------------------------------------------- |
+| PACK-10     | Party finance accounting, Rechenschaftsbericht, sponsorship and lobbying registry  |
+| PACK-11     | Document storage, evidence content, document version chains, evidence admission    |
+| PACK-12     | Privileged JIT/break-glass administration, DLP                                     |
+| PACK-13     | Production database, event bus, schema registry                                    |
+| PACK-14     | Real IAM/eID, credential issuance                                                  |
+| PACK-15/16  | Voting threat model, cryptographic voting                                          |
+| PACK-17     | Production incident response                                                       |
+| PACK-18     | User-facing applications                                                           |
+| PACK-19     | Candidacy, nomination, ballot admission — `AdmissionDecisionRef` is interface-only |
+| PACK-21     | Assemblies, motions, minutes as a domain                                           |
+| PACK-22     | Communication channels, templates, message delivery                                |
+| PACK-23/24  | Complaints intake, investigations                                                  |
 
 For each of these PACK-09 publishes **only** a typed reference or a
 domain-neutral primitive. No candidacy entity, no channel entity, no

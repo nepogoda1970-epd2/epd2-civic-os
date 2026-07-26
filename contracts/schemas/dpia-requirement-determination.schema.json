@@ -30,12 +30,7 @@
     },
     "risk_class": {
       "type": "string",
-      "enum": [
-        "low",
-        "standard",
-        "high",
-        "special_category"
-      ]
+      "enum": ["low", "standard", "high", "special_category"]
     },
     "dpia_required": {
       "type": "boolean"

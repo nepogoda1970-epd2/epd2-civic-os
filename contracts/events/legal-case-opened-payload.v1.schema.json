@@ -36,10 +36,7 @@
       "type": "string"
     },
     "jurisdiction_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "legal_case_id": {
@@ -55,10 +52,7 @@
       "format": "uuid"
     },
     "parent_case_id": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "recorded_at": {

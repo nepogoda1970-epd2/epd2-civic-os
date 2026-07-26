@@ -191,7 +191,6 @@ Canon `0.7.0`, no bump. `DataAsset` and `ProcessingActivity` are
 compliance-side inventory owned by one service; canon does not name them,
 and the one new event uses canon section 21's envelope unchanged.
 
-
 ## Amendment (Architecture & Domain Framework 0.8.1, same 0.9.0 round)
 
 Framework section 13.1 requires a **DPIA gate** in front of processing
@@ -199,7 +198,7 @@ activation. This ADR's registry recorded what is processed and on what
 basis; it did not decide whether an activity may run.
 
 `dataprotection.assert_activation_permitted` is that gate, and its most
-important property is what it does with *absence*:
+important property is what it does with _absence_:
 
 1. an activity with **no recorded requirement determination at all** is
    refused with `DPIA_REQUIRED`, whatever its risk class;

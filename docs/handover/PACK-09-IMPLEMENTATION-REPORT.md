@@ -1,14 +1,14 @@
 # PACK-09 Implementation Report
 
-|                    |                                                                         |
-| ------------------ | ----------------------------------------------------------------------- |
-| Date               | 2026-07-26                                                              |
-| Status             | **CANDIDATE-2 — NEEDS CI** — see section 5 and section 8               |
-| Repository version | `0.8.0` → `0.9.0`                                                       |
-| Canon version      | `0.7.0` (unchanged; no canon-owned file touched)                        |
-| New service        | `services/compliance-service`                                           |
-| ADRs               | ADR-038 … ADR-043, all `accepted`                                       |
-| Authoritative spec | EPD² Architecture & Domain Framework **0.8.1** (Roadmap Amendment)      |
+|                    |                                                                    |
+| ------------------ | ------------------------------------------------------------------ |
+| Date               | 2026-07-26                                                         |
+| Status             | **CANDIDATE-2 — NEEDS CI** — see section 5 and section 8           |
+| Repository version | `0.8.0` → `0.9.0`                                                  |
+| Canon version      | `0.7.0` (unchanged; no canon-owned file touched)                   |
+| New service        | `services/compliance-service`                                      |
+| ADRs               | ADR-038 … ADR-043, all `accepted`                                  |
+| Authoritative spec | EPD² Architecture & Domain Framework **0.8.1** (Roadmap Amendment) |
 
 This report replaces the pre-review draft of the same name. That draft
 claimed `LOCAL PASS`; this round's review established that several
@@ -347,18 +347,18 @@ extends it. Nothing from the CANDIDATE round was rewritten.
 
 ## 8.1 What the Framework required, and where it landed
 
-| Framework section | Requirement                                | Where                                                                   |
-| ----------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
-| 13.1              | common legal-case substrate                 | `casework.py` (1 582 lines)                                             |
-| 13.1              | official notice as a separate trust boundary | `notices.py` (+ **ADR-043**)                                            |
-| 13.2              | procedural deadlines: basis, trigger, outage | `notices.DeadlineTrigger`, round-1 suspend/resume kept unchanged         |
+| Framework section | Requirement                                  | Where                                                                         |
+| ----------------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| 13.1              | common legal-case substrate                  | `casework.py` (1 582 lines)                                                   |
+| 13.1              | official notice as a separate trust boundary | `notices.py` (+ **ADR-043**)                                                  |
+| 13.2              | procedural deadlines: basis, trigger, outage | `notices.DeadlineTrigger`, round-1 suspend/resume kept unchanged              |
 | 13.1              | recusal / conflict hooks                     | `casework.RecusalRecord`, `ReplacementAssignment`, `assert_actor_not_recused` |
-| 11                | records governance, hold propagation         | `domain.RecordClass`, `HoldPropagationRecord`                           |
-| 13.1              | data-protection governance, DPIA gate        | `dataprotection.py`                                                     |
-| 13.1 / 7          | stable typed interfaces for later packs      | `references.py`                                                         |
-| 13.3              | named reason codes                           | 32 new refusal codes in `contracts/reason-codes/pack-09.yml`            |
-| 13.3              | contracts, schemas, events, OpenAPI          | 22 entity schemas, 33 payload schemas, 34 OpenAPI operations            |
-| 13.4              | mandatory test matrix                        | 4 new service test modules + 1 new contract module (see 8.4)            |
+| 11                | records governance, hold propagation         | `domain.RecordClass`, `HoldPropagationRecord`                                 |
+| 13.1              | data-protection governance, DPIA gate        | `dataprotection.py`                                                           |
+| 13.1 / 7          | stable typed interfaces for later packs      | `references.py`                                                               |
+| 13.3              | named reason codes                           | 32 new refusal codes in `contracts/reason-codes/pack-09.yml`                  |
+| 13.3              | contracts, schemas, events, OpenAPI          | 22 entity schemas, 33 payload schemas, 34 OpenAPI operations                  |
+| 13.4              | mandatory test matrix                        | 4 new service test modules + 1 new contract module (see 8.4)                  |
 
 ## 8.2 The four Framework invariants that shaped the design most
 
@@ -375,20 +375,20 @@ name** — an omission cannot be tested; a named refusal can, and
 
 **#52 — no sanction without due process.**
 `assert_due_process_complete` takes six named prerequisites and reports
-the *one* that is missing. A refusal reading only "due process
+the _one_ that is missing. A refusal reading only "due process
 incomplete" would be unactionable for the party told to fix it.
 `issue_procedural_decision` resolves `notice_effect_id` against the
 store rather than accepting a caller's flag.
 
 **#53 / #54 — recusal blocks capability without erasing history.**
 `prior_participation_codes` survives; `assert_actor_not_recused` is
-applied to *every* consequential command, not only to final decisions,
+applied to _every_ consequential command, not only to final decisions,
 because scheduling a hearing is an exercise of authority too; a
 replacement who is themselves recused is refused.
 
 **#69 — AI decides no consequential legal outcomes.** Enforced in two
 independent places: `InterimMeasure.__post_init__` refuses to construct a
-*granted* measure without `ActorClass.HUMAN_AUTHORITY`, and
+_granted_ measure without `ActorClass.HUMAN_AUTHORITY`, and
 `assert_due_process_complete` refuses any decision by a `service` or
 `automated` actor. `human_case_handler` is a human and is deliberately
 still insufficient.
@@ -412,7 +412,7 @@ successes is not a review.
    failed**, which meant `NoticeEffectOutcome.NOT_EFFECTIVE` — a value in
    the enum, in the schema, and in the event payload — was unreachable
    through the governed path. A finding that every attempt failed is a
-   *determination* the parties are entitled to see and challenge; an
+   _determination_ the parties are entitled to see and challenge; an
    exception leaves no record. It now returns a recorded `NOT_EFFECTIVE`
    decision carrying `SERVICE_NOT_PROVEN`, establishing no legal effect
    and starting nothing.
@@ -427,41 +427,41 @@ records the reasoning.
 
 ## 8.4 Test totals after CANDIDATE-2
 
-|                   |                                               |
-| ----------------- | --------------------------------------------- |
-| passed            | **2652**                                      |
-| failed            | **0**                                         |
+|                   |                                                |
+| ----------------- | ---------------------------------------------- |
+| passed            | **2652**                                       |
+| failed            | **0**                                          |
 | skipped           | **5** (all pre-existing; this round adds none) |
-| xfailed / xpassed | **0**                                         |
+| xfailed / xpassed | **0**                                          |
 
 The CANDIDATE round ended at 2315. The 337 added here:
 
-| Where                                                                    | Count |
-| ------------------------------------------------------------------------ | ----- |
-| `services/compliance-service/tests/test_casework.py`                     | 46    |
-| `services/compliance-service/tests/test_notices.py`                      | 23    |
-| `services/compliance-service/tests/test_dataprotection.py`               | 24    |
-| `services/compliance-service/tests/test_framework_application.py`        | 32    |
-| `tests/contract/test_ct00_01_pack09_framework_schema_validation.py`      | 201   |
-| `tests/contract/test_openapi_contract.py` (new PACK-09 section)          | 7     |
-| `tests/contract/test_ct00_08_identity_leakage.py` (new PACK-09 section)  | 4     |
+| Where                                                                   | Count |
+| ----------------------------------------------------------------------- | ----- |
+| `services/compliance-service/tests/test_casework.py`                    | 46    |
+| `services/compliance-service/tests/test_notices.py`                     | 23    |
+| `services/compliance-service/tests/test_dataprotection.py`              | 24    |
+| `services/compliance-service/tests/test_framework_application.py`       | 32    |
+| `tests/contract/test_ct00_01_pack09_framework_schema_validation.py`     | 201   |
+| `tests/contract/test_openapi_contract.py` (new PACK-09 section)         | 7     |
+| `tests/contract/test_ct00_08_identity_leakage.py` (new PACK-09 section) | 4     |
 
 `compliance`-matching tests total **260**; `pack09`-matching **245**.
 
 No pre-existing test was deleted, weakened, converted to a mock, or had
-an assertion relaxed. Three round-1 test expectations were *corrected*
+an assertion relaxed. Three round-1 test expectations were _corrected_
 where the test, not the code, had been wrong — each is noted in 8.3.
 
 ## 8.5 Verification executed in this round
 
-| Command                          | Result                                          |
-| -------------------------------- | ----------------------------------------------- |
-| `ruff check .`                   | **pass** — all checks passed                     |
-| `ruff format --check .`          | **pass** — 216 files already formatted           |
-| `mypy` (13 Makefile groups)      | **pass** — 0 issues across all groups            |
-| `pytest`                         | **pass** — 2652 passed, 5 skipped                |
-| `scripts/check_repository.py`    | **pass** — all 554 required paths present        |
-| `scripts/verify_versions.py`     | **pass** — all version sources consistent        |
+| Command                       | Result                                    |
+| ----------------------------- | ----------------------------------------- |
+| `ruff check .`                | **pass** — all checks passed              |
+| `ruff format --check .`       | **pass** — 216 files already formatted    |
+| `mypy` (13 Makefile groups)   | **pass** — 0 issues across all groups     |
+| `pytest`                      | **pass** — 2652 passed, 5 skipped         |
+| `scripts/check_repository.py` | **pass** — all 554 required paths present |
+| `scripts/verify_versions.py`  | **pass** — all version sources consistent |
 
 `mypy` was run per Makefile group rather than as one whole-repo
 invocation, for the reason the Makefile itself documents (identically

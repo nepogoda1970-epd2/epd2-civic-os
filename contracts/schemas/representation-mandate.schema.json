@@ -60,32 +60,18 @@
     },
     "status": {
       "type": "string",
-      "enum": [
-        "active",
-        "revoked",
-        "withdrawn",
-        "expired"
-      ]
+      "enum": ["active", "revoked", "withdrawn", "expired"]
     },
     "valid_until": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "revoked_at": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "date-time"
     },
     "revocation_reason_code": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": ["string", "null"]
     },
     "mandate_basis_reference": {
       "type": "string"
