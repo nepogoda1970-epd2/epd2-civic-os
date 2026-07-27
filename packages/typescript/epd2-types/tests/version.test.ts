@@ -133,6 +133,19 @@ test("current versions match the expected skeleton version", () => {
   // against the already-accepted canon 0.7.0 text and ADR-032 through
   // ADR-037 - no further canon edit was made (no canon-owned file was
   // touched this round), so CANON_VERSION is unchanged at 0.7.0.
-  assert.equal(CANON_VERSION, "0.7.0");
+  // CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-050 (proposed, the
+  // PACK-10 canon-amendment round): new canon section 19f (Party Finance
+  // & Financial Accountability Context) with twenty-one new canonical
+  // entities owned by Finance Service, a forty-five-rule finance-invariant
+  // register, four new institutional role codes, the purpose-scoped
+  // FinancePartyHandle, the twelve-state Rechenschaftsbericht lifecycle,
+  // governed effective-dated finance policies and safe public financial
+  // projections; a new section 20.17 with seventy-two finance events;
+  // twenty-one new section 22 ownership-matrix rows; new section 23
+  // forbidden-link entries; forty-five new section 24 reason codes - a
+  // backward-compatible (minor) canon addition per canon section 25. No
+  // finance-service code exists, so REPOSITORY_VERSION is unchanged at
+  // 0.9.0.
+  assert.equal(CANON_VERSION, "0.8.0");
   assert.equal(REPOSITORY_VERSION, "0.9.0");
 });

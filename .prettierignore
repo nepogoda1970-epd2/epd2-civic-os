@@ -5,7 +5,6 @@ coverage
 .venv
 uv.lock
 package-lock.json
-*.csv
 
 # Canonical document is frozen and must not be reformatted outside an
 # accepted ADR (see docs/canonical/README.md).

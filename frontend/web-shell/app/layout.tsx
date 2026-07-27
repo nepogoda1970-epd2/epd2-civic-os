@@ -3,9 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EPD² — politische Beteiligung nachvollziehbar aufgebaut",
-  description:
-    "Öffentliche Website des EPD² Projekts mit sichtbaren Reifegraden und Aktivierungsgrenzen.",
+  title: "EPD² Civic OS",
+  description: "EPD² Civic OS — infrastructure skeleton",
 };
 
 export default function RootLayout({
@@ -14,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
