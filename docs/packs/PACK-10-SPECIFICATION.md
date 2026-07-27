@@ -1323,8 +1323,8 @@ Two conventions apply to all of them and are not repeated in each entry:
 - **PACK-09 references:** `RecordClassRef` (the handle registry is a
   governed record with its own retention), `HoldRef`, `LegalCaseRef`.
 - **PACK-11 reserved:** `FinanceEvidenceReference` for the legal-identity
-  evidence PACK-11 will hold — PACK-10 stores the *reference and the
-  verification status*, never identity documents (section 9).
+  evidence PACK-11 will hold — PACK-10 stores the _reference and the
+  verification status_, never identity documents (section 9).
 - **Events:** `finance_party_handle.minted`,
   `finance_party_handle.resolved` (access audit),
   `finance_party_handle.merged`.
@@ -1440,7 +1440,7 @@ this section exists to prevent:
   person, other governed category) as a policy-governed value — a
   category, not a name.
 - An `identity_verification_status` (verified / unverified /
-  unverifiable / not_required) plus the _authority_ that recorded it.
+  unverifiable / `not_required`) plus the _authority_ that recorded it.
 - A `FinanceEvidenceReference` to the PACK-11 material that evidences the
   identity, valuation or declaration.
 - Where an intermediary or related-party group is declared, a

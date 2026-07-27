@@ -17,11 +17,11 @@ not a PASS release: ADR-050 and ADR-044 through ADR-049 all remain
 ### Changed
 
 - `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.7.0 →
-  0.8.0` (ADR-050, `proposed`) — the seventh edit to this document's own
+0.8.0` (ADR-050, `proposed`) — the seventh edit to this document's own
   text since its original acceptance (after ADR-010's `0.1.0 → 0.2.0`,
   ADR-013's `0.2.0 → 0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`,
   ADR-023/ADR-025's `0.4.0 → 0.5.0`, ADR-026 through ADR-031's `0.5.0 →
-  0.6.0`, and ADR-037's `0.6.0 → 0.7.0`). Adds a new section 19f
+0.6.0`, and ADR-037's `0.6.0 → 0.7.0`). Adds a new section 19f
   ("Партийные финансы и финансовая отчётность / Party Finance &
   Financial Accountability Context"), inserted between sections 19e and
   20 — the same non-renumbering technique used for 19a–19e. The section
@@ -119,8 +119,7 @@ not a PASS release: ADR-050 and ADR-044 through ADR-049 all remain
   evidence and the `ФИН` ↔ `HI` coverage map.
 - `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md` — compatibility
   statement and the reason-code registry diff (45 new, 32 reused,
-  rejected collisions), the event-canon diff (72 vs the specification's
-  69) and the report-state naming diff.
+  rejected collisions), the event-canon diff (72 vs the specification's 69) and the report-state naming diff.
 
 ### Unchanged, deliberately
 

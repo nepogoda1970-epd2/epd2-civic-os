@@ -193,8 +193,8 @@ replacement now**, with three specified changes, none implemented in
 this round.
 
 1. **Documentation-level semantic correction.** The name says
-   "evidence," but the object it points at is a PACK-10 *finance
-   record* — a transaction, contribution, sponsorship agreement, report
+   "evidence," but the object it points at is a PACK-10 _finance
+   record_ — a transaction, contribution, sponsorship agreement, report
    version or snapshot — not evidence content, which is PACK-11's
    (HI-22, ownership table above). This ADR and PACK-10's own
    `references.py` must both state this so no reader infers that

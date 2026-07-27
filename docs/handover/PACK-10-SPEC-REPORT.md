@@ -241,7 +241,7 @@ unverified, and none of them may be seeded as law.
    (`FINANCE_EVIDENCE_ASSERTION_UNAVAILABLE`).
 5. **A canon defect must be closed in the amendment round:** canon
    19e.16 rule 3 forbids combining `finance auditor` with `finance
-   administrator`, but `finance_administrator` is not among the
+administrator`, but `finance_administrator` is not among the
    `role_code` values canon 19e.15 enumerates. The proposal closes it;
    until then the incompatibility references a role the canon never
    defines.

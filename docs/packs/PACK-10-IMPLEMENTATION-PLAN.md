@@ -327,7 +327,7 @@ the same pattern with no deviation:
 - **Injected `Clock`.** No command in `application.py` reads system
   time; every command receives `epd2_core.clock.Clock` and a test
   named in the shape of `test_a_fixed_clock_is_all_a_command_ever_
-  reads` proves it (`HI-49`).
+reads` proves it (`HI-49`).
 - **Caller-supplied `event_id` idempotency.** Replay detection goes
   through Audit Core's own `get_by_event_id`, exactly as
   `compliance-service` and every earlier service do. A retried
@@ -340,7 +340,7 @@ the same pattern with no deviation:
   `test_the_audit_chain_stays_verifiable_across_a_full_workflow`.
 - **Reason-coded refusal, one exception class per code.** Every
   denial carries a code registered in `contracts/reason-codes/
-  pack-10.yml`; `exceptions.py` holds exactly one class per code, no
+pack-10.yml`; `exceptions.py` holds exactly one class per code, no
   free-text refusal anywhere (`HI-43`).
 - **Optimistic concurrency via `expected_*_version`.** Every mutable
   aggregate carries a monotonically increasing version, and every
@@ -395,7 +395,7 @@ ordering is not arbitrary.
    Mitigation: `ReportSnapshot` and `FinanceReport` are built together
    in Phase 6, and `HI-25`'s test
    (`test_a_report_snapshot_is_write_once_and_survives_every_later_
-   version`) is part of that phase's exit criterion, not a follow-up.
+version`) is part of that phase's exit criterion, not a follow-up.
 
 4. **Storing an `actual_amount` on a budget line.** The single most
    tempting shortcut in Phase 5: it would make `BudgetVersusActualView`
@@ -403,7 +403,7 @@ ordering is not arbitrary.
    correction lands after the budget line was last touched.
    Mitigation: `HI-12` forbids it structurally;
    `test_service_boundaries.py::test_budget_module_has_no_ledger_
-   write_import` checks the import graph, not just the field list.
+write_import` checks the import graph, not just the field list.
 
 5. **Adding a `membership_id` "just for dues."** Section 9.4 already
    closes this door by requiring a purpose-scoped dues reference
@@ -422,7 +422,7 @@ ordering is not arbitrary.
    violating `HI-27` and `HI-28`. Mitigation: `accepted_by_authority`
    is reachable only from an explicit `NoticeEffectRef` or equivalent
    governed decision; `test_submission_alone_never_reaches_accepted_
-   by_authority` is part of Phase 6's exit criterion.
+by_authority` is part of Phase 6's exit criterion.
 
 7. **Hard-coding a threshold "temporarily."** Every threshold is
    legally unverified until `OD-5` and related decisions are resolved
@@ -443,7 +443,7 @@ ordering is not arbitrary.
    `PerimeterSnapshot` freezes into the report version (`HI-54`);
    Phase 6's exit criterion includes
    `test_a_reorganization_leaves_a_submitted_periods_perimeter_
-   untouched`.
+untouched`.
 
 ## 6. Repository-integration decisions
 
