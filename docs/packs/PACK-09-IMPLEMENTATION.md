@@ -145,7 +145,7 @@ GDPR, the BDSG, the Parteiengesetz or any other law.
 ## 7. Architecture & Domain Framework 0.8.1 additions
 
 The Framework 0.8.1 Roadmap Amendment is authoritative for PACK-09 scope
-from the CANDIDATE-2 round onward. It extends the pack; nothing above is
+for PACK-09. It extends the pack; nothing above is
 withdrawn.
 
 ### 7.1 Module layout after the additions

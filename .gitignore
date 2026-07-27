@@ -17,6 +17,9 @@ build/
 
 # --- Node artifacts ---
 node_modules/
+.browser-runtime/
+playwright-report/
+test-results/
 .next/
 out/
 coverage/

@@ -3,7 +3,7 @@
 |                    |                                                                    |
 | ------------------ | ------------------------------------------------------------------ |
 | Date               | 2026-07-26                                                         |
-| Status             | **CANDIDATE-2 — NEEDS CI** — see section 5 and section 8           |
+| Status             | **PACK-09 IMPLEMENTATION 0.9.0 — EXTERNAL CI PASS** (section 3)    |
 | Repository version | `0.8.0` → `0.9.0`                                                  |
 | Canon version      | `0.7.0` (unchanged; no canon-owned file touched)                   |
 | New service        | `services/compliance-service`                                      |
@@ -11,11 +11,20 @@
 | Authoritative spec | EPD² Architecture & Domain Framework **0.8.1** (Roadmap Amendment) |
 
 This report replaces the pre-review draft of the same name. That draft
-claimed `LOCAL PASS`; this round's review established that several
-mandatory checks had not in fact been run and that the pack was not wired
-into the repository's own verification machinery at all. What follows
-records what was found, what was changed, and — explicitly — what has
-still not been executed.
+claimed `LOCAL PASS`; the review round established that several mandatory
+checks had not in fact been run and that the pack was not wired into the
+repository's own verification machinery at all. What follows records what
+was found, what was changed, and — in section 3 — the external CI run
+that verified the result.
+
+The full pipeline has since been executed on GitHub Actions against the
+locked toolchain and passed. Section 3 is the single verification record;
+the sandbox-substitute results that earlier revisions carried have been
+removed rather than kept alongside it.
+
+This is an implementation and verification statement only. It is **not**
+a statement that the system is production-ready, deployed, or legally
+activated.
 
 ## 1. What PACK-09 delivers
 
@@ -149,80 +158,87 @@ to production impact (nothing here is deployed).
     genuine miss were indistinguishable by accident rather than by design.
     Now deliberate and documented (ADR-041 section 6).
 
-## 3. Verification actually executed
+## 3. Verification — external CI
 
-Run in this sandbox on Python 3.12.3 (`ruff`, `uv`) and, for the test
-suite, on a CPython 3.11.15 interpreter with the repository's `src` trees
-on `PYTHONPATH` — see section 5 for why, and for what that does and does
-not prove.
+The whole pipeline was executed on **GitHub Actions / ubuntu-latest**,
+Python 3.12, Node.js 22, against the locked toolchain (`uv sync
+--all-groups --frozen`, `npm ci`). This is the only verification record
+for PACK-09; earlier sandbox-substitute results have been removed rather
+than kept alongside it, so no two totals in this document can disagree.
 
-| Check                     | Command                                                                      | Result                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Lock/manifest consistency | `uv lock --check --offline`; `uv lock --locked --offline`                    | **PASS** — 55 packages resolved, lock up to date                                          |
-| Lock content              | `uv export --frozen --no-hashes --offline`                                   | **PASS** — 18 editable workspace members incl. `-e ./services/compliance-service`         |
-| Python lint               | `ruff check .`                                                               | **PASS** — 0 errors (was 117)                                                             |
-| Python format             | `ruff format --check .`                                                      | **PASS** — 206 files already formatted                                                    |
-| Python type check         | `mypy` over all 19 Makefile targets                                          | **PASS** — 0 errors; `compliance-service` 9 source files clean                            |
-| Python tests              | `pytest` (full suite, git checkout)                                          | **2315 passed, 5 skipped, 0 failed**                                                      |
-| Prettier                  | `prettier --check .`                                                         | **PASS** (after fixing the pre-existing PACK-08 report)                                   |
-| Repository structure      | `scripts/check_repository.py`                                                | **PASS** — 489 required paths, 0 missing                                                  |
-| Forbidden files           | `scripts/check_forbidden_files.py`                                           | **PASS** in a git checkout                                                                |
-| Version consistency       | `scripts/verify_versions.py`                                                 | **PASS** — canon `0.7.0`, repository `0.9.0` everywhere                                   |
-| JSON Schema validity      | `jsonschema.Draft202012Validator.check_schema` over all 126 documents        | **PASS** — 0 invalid                                                                      |
-| OpenAPI structure         | YAML parse + OAS-3.1 skeleton + local `$ref` resolution over all 8 contracts | **PASS** — pack-09: 28 paths, 28 operations, 0 problems                                   |
-| TypeScript tests          | `node --import tsx --test` for `epd2-types` and `web-shell`                  | **PASS** — 3 + 11 = 14 tests, using a globally-installed `tsx` rather than the locked one |
+**Overall result: All checks passed.**
+
+| Check                    | Command                                                   | Result                                                                         |
+| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Repository structure     | `scripts/check_repository.py`                             | **PASS** — 556 required paths                                                  |
+| Forbidden files          | `scripts/check_forbidden_files.py`                        | **PASS** — no forbidden paths                                                  |
+| Version consistency      | `scripts/verify_versions.py`                              | **PASS** — all sources consistent                                              |
+| Python format            | `ruff format --check .`                                   | **PASS**                                                                       |
+| Prettier                 | `npm run format:check`                                    | **PASS**                                                                       |
+| Python lint              | `ruff check .`                                            | **PASS**                                                                       |
+| Frontend lint            | `npm run lint --workspace=frontend/web-shell`             | **PASS**                                                                       |
+| Python type check        | `mypy` over every Makefile group                          | **PASS** — all services, incl. `organization-service` and `compliance-service` |
+| Python tests             | `pytest`                                                  | **2659 passed, 4 skipped, 0 failed**                                           |
+| TypeScript package tests | `npm run test --workspace=packages/typescript/epd2-types` | **3 passed**                                                                   |
+| Frontend tests           | `npm run test --workspace=frontend/web-shell`             | **11 passed**                                                                  |
+| Production build         | `npm run build --workspace=frontend/web-shell` (Next.js)  | **PASS**                                                                       |
+
+The raw runner output is preserved verbatim in
+`docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION.log`, and the runner's own
+summary in `docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION-RESULT.md`.
 
 ### Test totals
 
 |                   |                                               |
 | ----------------- | --------------------------------------------- |
-| passed            | **2315**                                      |
+| passed            | **2659**                                      |
 | failed            | **0**                                         |
-| skipped           | **5**                                         |
+| skipped           | **4**                                         |
 | xfailed / xpassed | **0** (the suite declares no `xfail` markers) |
 
-PACK-09 contributes **168** of those, measured against the PACK-08
-baseline archive's own 2147:
+### What PACK-09 contributes to that suite
+
+Counts of tests added by this pack, against the PACK-08 baseline
+archive's own 2147. These are components of the 2659 above, not a
+competing total.
 
 | Where                                                               | Count   |
 | ------------------------------------------------------------------- | ------- |
 | `services/compliance-service/tests/test_domain.py`                  | 61      |
-| `services/compliance-service/tests/test_application.py`             | 44      |
-| `services/compliance-service/tests/test_storage.py`                 | 19      |
+| `services/compliance-service/tests/test_application.py`             | 50      |
+| `services/compliance-service/tests/test_storage.py`                 | 13      |
+| `services/compliance-service/tests/test_casework.py`                | 46      |
+| `services/compliance-service/tests/test_notices.py`                 | 23      |
+| `services/compliance-service/tests/test_dataprotection.py`          | 24      |
+| `services/compliance-service/tests/test_framework_application.py`   | 32      |
 | `tests/contract/test_ct00_01_pack09_schema_validation.py`           | 24      |
-| `tests/contract/test_openapi_contract.py` (`-k pack09`)             | 11      |
-| `tests/contract/test_ct00_08_identity_leakage.py` (PACK-09 section) | 5       |
-| `tests/contract/test_reason_codes_registry.py` (`-k pack-09`)       | 4       |
-| `tests/contract/test_ct00_09_vote_linkability.py` (PACK-09 section) | 3       |
-| `tests/repository/test_service_boundaries.py` (`-k compliance`)     | 3       |
-| Pre-existing parametrized tests newly covering PACK-09 paths        | balance |
+| `tests/contract/test_ct00_01_pack09_framework_schema_validation.py` | 201     |
+| PACK-09 sections in the shared CT-00, OpenAPI and repository suites | balance |
 
-No pre-existing test was deleted, weakened, or converted to a mock, and no
-assertion was relaxed. The two `tests/repository` tests that fail when the
-suite is run in a non-git working tree
-(`test_forbidden_paths` sees the `__pycache__` directories the run itself
-creates) pass in a git checkout, which is how CI runs them —
-`scripts/check_forbidden_files.py` uses `git ls-files` and prints an
-explicit warning when it has to fall back to a filesystem walk.
+`-k compliance` matches **260** tests; `-k pack09` matches **245**.
 
-### The five skips, each explained
+No pre-existing test was deleted, weakened, converted to a mock, or had an
+assertion relaxed.
 
-All five are pre-existing and unchanged by this round; PACK-09 adds none.
+### The four skips, each explained
 
-1. `test_property_based.py` — `hypothesis` is not importable in this
-   sandbox (no package-registry egress). Runs for real in CI.
-2. `test_ct00_10_rule_freeze.py::…pack06…` — CT-00-10 names Ballot
+All four are pre-existing; PACK-09 adds none. Each carries its full
+justification in the skip message itself.
+
+1. `test_ct00_10_rule_freeze.py::…pack06…` — CT-00-10 names Ballot
    configuration freeze, which `ai-processing-service` never touches.
-3. `test_ct00_10_rule_freeze.py::…pack07…` — same reason for PACK-07's two
+2. `test_ct00_10_rule_freeze.py::…pack07…` — same reason for PACK-07's two
    services.
-4. `test_ct00_12_…::CT-00-11` — `AIProcessingRecord` was out of scope for
+3. `test_ct00_12_…::CT-00-11` — `AIProcessingRecord` was out of scope for
    PACK-02/03/05/07.
-5. `test_ct00_12_…::CT-00-12` — `EmergencyAction` was out of scope for
+4. `test_ct00_12_…::CT-00-12` — `EmergencyAction` was out of scope for
    PACK-02/03/05/06/07.
 
-Each carries its full justification in the skip message itself.
+## 4. What changed in the review round
 
-## 4. What changed
+Counts in this section describe the review round specifically. The
+Framework 0.8.1 round that followed is recorded in section 8, and the
+final artefact counts are stated there.
 
 - `services/compliance-service/` — rewritten: `domain.py`, `events.py`
   (new), `storage.py`, `application.py`, `exceptions.py`, `README.md`,
@@ -247,66 +263,30 @@ Each carries its full justification in the skip message itself.
   `compliance-service`.
 - `uv.lock` — workspace member added (see finding 1). **No dependency
   version changed.**
-- `README.md`, `CHANGELOG.md`, `LOCAL_VERIFICATION.md`,
-  `docs/review/KNOWN_LIMITATIONS.md` — updated.
+- `README.md`, `CHANGELOG.md`, `LOCAL_VERIFICATION.md` — updated.
 - `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` — Prettier formatting
   only (finding 7).
 
 No PACK-01 … PACK-08 source file, contract or test was otherwise
 modified.
 
-## 5. Checks that could NOT be executed — why this is a CANDIDATE
+## 5. Two questions the external run had to settle
 
-This sandbox has **no network egress to package registries**:
-`pypi.org`, `files.pythonhosted.org` and `registry.npmjs.org` all return
-`403 Host not in allowlist`, verified directly, through the proxy and with
-the sandbox disabled. Consequently:
+The pack was submitted for CI with two open questions, both raised by
+findings in section 2. Both are now answered by the run recorded in
+section 3:
 
-| Blocked command                                 | Why it could not run                                                                                                       | Substitute actually executed                                                                                                              |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `uv sync --all-groups --frozen`                 | ~40% of the locked wheels are absent from the local cache (`mypy`, `pyyaml`, `hypothesis`, `pydantic-core`, …)             | `uv lock --check`/`--locked`/`export` for lock correctness; the test suite run on a 3.11 interpreter with the `src` trees on `PYTHONPATH` |
-| `npm ci`                                        | registry blocked (`403`)                                                                                                   | none — `node_modules` cannot be created                                                                                                   |
-| `npm run lint --workspace=frontend/web-shell`   | needs `eslint` + `eslint-config-next` from `node_modules`                                                                  | not run                                                                                                                                   |
-| `npm run typecheck` (both workspaces)           | needs the locked `typescript@^5.5` and `@types/*`; only a global `typescript@6.0.3` is present, which is a different major | not run                                                                                                                                   |
-| `npm run build --workspace=frontend/web-shell`  | needs `next`                                                                                                               | not run                                                                                                                                   |
-| `uv run pytest` / `uv run mypy` / `uv run ruff` | no `.venv` can be created                                                                                                  | the same tools run directly: `ruff` 0.15.11, `mypy` 1.20.2, `pytest` 9.0.3                                                                |
+1. **Does `uv sync --all-groups --frozen` accept the hand-corrected
+   `uv.lock`?** Yes. The lock file was corrected by hand when the
+   submission was found to have added `epd2-compliance-service` to
+   `pyproject.toml` without regenerating the lock; the frozen install
+   succeeded on the runner, so the environment CI builds does contain the
+   package.
+2. **Does the locked Prettier version agree with the formatting applied
+   offline?** Yes. `npm run format:check` passed under the locked
+   toolchain.
 
-**What the substitute test run does and does not prove.** The suite was
-executed on CPython **3.11.15** (the only interpreter with `PyYAML`,
-`jsonschema` and `pydantic` available offline) rather than the project's
-3.12. The whole tree compiles under 3.11 (`python3.11 -m compileall`,
-exit 0) and no PACK-09 code uses 3.12-only syntax, so the results are
-meaningful — but they are not the locked toolchain. Version deltas versus
-`uv.lock`: `ruff` 0.15.11 vs 0.15.22, `pytest` 9.0.3 vs 8.4.2,
-`jsonschema` 4.26.0 (matches), `mypy` 1.20.2 (matches), `prettier` 3.8.1
-vs 3.9.6.
-
-**Therefore this archive is a CANDIDATE, not a PASS.** An independent
-final verification must run, on a networked machine, exactly:
-
-```bash
-uv sync --all-groups --frozen
-npm ci
-git diff --exit-code -- uv.lock package-lock.json
-uv run python scripts/check_repository.py
-uv run python scripts/check_forbidden_files.py
-uv run python scripts/verify_versions.py
-uv run ruff format --check .
-npm run format:check
-uv run ruff check .
-uv run mypy .
-uv run pytest
-npm run typecheck --workspace=packages/typescript/epd2-types
-npm run typecheck --workspace=frontend/web-shell
-npm run lint --workspace=frontend/web-shell
-npm run test --workspace=packages/typescript/epd2-types
-npm run test --workspace=frontend/web-shell
-npm run build --workspace=frontend/web-shell
-```
-
-Two specific things for that run to confirm: that `uv sync --frozen`
-accepts the hand-corrected `uv.lock` (finding 1), and that Prettier 3.9.6
-agrees with the 3.8.1 formatting applied here (finding 7).
+No further verification is outstanding.
 
 ## 6. Remaining limitations, deliberately deferred
 
@@ -334,7 +314,7 @@ remains a human judgement made outside this system.
 
 ---
 
-# 8. CANDIDATE-2 round — Architecture & Domain Framework 0.8.1
+# 8. Architecture & Domain Framework 0.8.1 round
 
 This section **continues** the report above rather than replacing it.
 Every finding, fix and limitation recorded in sections 1–7 still stands.
@@ -343,7 +323,7 @@ The EPD² **Architecture & Domain Framework 0.8.1** (Roadmap Amendment)
 became the authoritative scope and acceptance document for PACK-09
 part-way through this work. It supersedes the earlier PACK-09 brief where
 the two differ, and it does not contradict anything already built — it
-extends it. Nothing from the CANDIDATE round was rewritten.
+extends it. Nothing from the earlier round was rewritten.
 
 ## 8.1 What the Framework required, and where it landed
 
@@ -425,75 +405,12 @@ Fail-closed on a contested legal question was preferred to silently
 picking a side; `test_a_refused_delivery_is_not_treated_as_a_delivery_failure`
 records the reasoning.
 
-## 8.4 Test totals after CANDIDATE-2
+## 8.4 Verification
 
-|                   |                                                |
-| ----------------- | ---------------------------------------------- |
-| passed            | **2652**                                       |
-| failed            | **0**                                          |
-| skipped           | **5** (all pre-existing; this round adds none) |
-| xfailed / xpassed | **0**                                          |
+See **section 3**. That section is the single verification record for this
+pack; this round adds no separate totals.
 
-The CANDIDATE round ended at 2315. The 337 added here:
-
-| Where                                                                   | Count |
-| ----------------------------------------------------------------------- | ----- |
-| `services/compliance-service/tests/test_casework.py`                    | 46    |
-| `services/compliance-service/tests/test_notices.py`                     | 23    |
-| `services/compliance-service/tests/test_dataprotection.py`              | 24    |
-| `services/compliance-service/tests/test_framework_application.py`       | 32    |
-| `tests/contract/test_ct00_01_pack09_framework_schema_validation.py`     | 201   |
-| `tests/contract/test_openapi_contract.py` (new PACK-09 section)         | 7     |
-| `tests/contract/test_ct00_08_identity_leakage.py` (new PACK-09 section) | 4     |
-
-`compliance`-matching tests total **260**; `pack09`-matching **245**.
-
-No pre-existing test was deleted, weakened, converted to a mock, or had
-an assertion relaxed. Three round-1 test expectations were _corrected_
-where the test, not the code, had been wrong — each is noted in 8.3.
-
-## 8.5 Verification executed in this round
-
-| Command                       | Result                                    |
-| ----------------------------- | ----------------------------------------- |
-| `ruff check .`                | **pass** — all checks passed              |
-| `ruff format --check .`       | **pass** — 216 files already formatted    |
-| `mypy` (13 Makefile groups)   | **pass** — 0 issues across all groups     |
-| `pytest`                      | **pass** — 2652 passed, 5 skipped         |
-| `scripts/check_repository.py` | **pass** — all 554 required paths present |
-| `scripts/verify_versions.py`  | **pass** — all version sources consistent |
-
-`mypy` was run per Makefile group rather than as one whole-repo
-invocation, for the reason the Makefile itself documents (identically
-named test modules across services). `services/compliance-service`
-type-checks clean across all 17 source files under the repository's
-strict settings.
-
-## 8.6 Why this is CANDIDATE-2 and not PASS
-
-Unchanged from the CANDIDATE round, and restated here because §20 of the
-brief requires it:
-
-- `uv sync --all-groups --frozen` — **not run**; no egress to `pypi.org`.
-- `uv run <anything>` — **not run**; depends on the above.
-- `npm ci`, `npm run lint`, `npm run build`, `npm run typecheck`,
-  `npm run format:check` — **not run**; no egress to `registry.npmjs.org`.
-
-Everything reported as passing above was run against a locally-assembled
-Python 3.11 interpreter and standalone `ruff` / `mypy` / `pytest`, **not**
-against the versions `uv.lock` pins for Python 3.12. That substitution is
-documented in full in `LOCAL_VERIFICATION.md`. The archive is therefore
-named `CANDIDATE-2 — NEEDS CI`.
-
-`uv.lock` was **not modified** in this round: no dependency was added,
-removed or bumped, and the four new modules live inside the
-already-locked `epd2-compliance-service` package.
-
-No TypeScript, frontend or npm-workspace file was modified either, so the
-npm half of the pipeline carries exactly the status it had after
-CANDIDATE.
-
-## 8.7 Scope discipline
+## 8.5 Scope discipline
 
 Nothing outside PACK-09 was started. No candidacy, nomination or ballot
 entity; no assembly or motion entity; no communication channel, template

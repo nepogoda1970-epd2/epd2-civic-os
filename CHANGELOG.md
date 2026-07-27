@@ -1,5 +1,24 @@
 # Changelog
 
+## FRONT-00 foundation candidate correction 0.1.1
+
+- Replaced five simplified examples with faithful non-production migrations of
+  the exact `EPD_Front.zip` source compositions.
+- Added the missing component/native-pattern catalogue, 13 rendered behavior
+  tests, Playwright visual/browser coverage, axe and keyboard accessibility
+  coverage, and CI commands.
+- Corrected source/migration/showcase terminology and the collision-safe mypy
+  command without changing repository 0.9.0 or canon 0.7.0.
+
+## FRONT-00 Implementation Candidate - 2026-07-27
+
+- Extracted EPD_Front visual tokens into the existing Next.js web shell.
+- Added shared shell/components, 19 presentation states, five representative
+  fixtures and declarative route/workspace/storage/telemetry policies.
+- Added architecture/component tests and FRONT-00 documentation.
+- Added Proposed ADR-044 through ADR-047.
+- No dependency, backend, canon-version or repository-version change.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -250,6 +269,21 @@ the same dependency rule, with `CANON_VERSION` still `0.7.0`.
   (`INTERIM_MEASURE_AUTHORITY_DENIED`) and `DeadlineTrigger` from a
   telemetry source (`DEADLINE_TRIGGER_INVALID`).
 - `scripts/check_repository.py`: 489 → 554 required paths.
+
+### Verified
+
+- **PACK-09 IMPLEMENTATION 0.9.0 — EXTERNAL CI PASS.** The full pipeline
+  ran on GitHub Actions (ubuntu-latest, Python 3.12, Node.js 22) against
+  the locked toolchain and passed: 556 required paths, no forbidden
+  paths, Prettier PASS, `ruff format` PASS, `ruff check` PASS, `mypy`
+  PASS for every service including `organization-service` and
+  `compliance-service`, Python tests 2659 passed / 4 skipped / 0 failed,
+  TypeScript package tests 3 passed, frontend tests 11 passed, Next.js
+  production build PASS. Overall: all checks passed. The runner output is
+  archived at `docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION.log`.
+  `REPOSITORY_VERSION` stays `0.9.0` and `CANON_VERSION` stays `0.7.0`;
+  the canon document is byte-identical. This records verification only —
+  not production readiness, deployment or legal activation.
 
 ## [0.8.0] - organization & regional scope context (implementation)
 

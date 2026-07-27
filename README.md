@@ -1,5 +1,10 @@
 # EPD² Civic OS
 
+> FRONT-00 adds a frontend foundation **implementation candidate** to the existing
+> Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
+> not activate a production or legally effective workflow. Documentation starts
+> at `docs/frontend/FRONT-00-SPECIFICATION.md`.
+
 ## Назначение репозитория
 
 EPD² Civic OS — открытая цифровая инфраструктура для гражданского и партийного
@@ -277,6 +282,16 @@ eID-интеграция, географическая/избирательна�
   для PACK-10/11/19/21-24 опубликованы в `references.py`; глобального
   идентификатора лица там нет и быть не должно. Ограничения — в
   `docs/handover/PACK-09-KNOWN-LIMITATIONS.md`.
+
+  **Статус: PACK-09 IMPLEMENTATION 0.9.0 — EXTERNAL CI PASS.** Полный
+  конвейер (frozen install, lint, format, type check, Python-тесты,
+  TypeScript- и frontend-тесты, production build Next.js) выполнен на
+  GitHub Actions и пройден: 2659 passed, 4 skipped, 0 failed; 556
+  required paths; no forbidden paths. Запись — раздел 3
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`, вывод раннера —
+  `docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION.log`. Это утверждение
+  о верификации, а **не** о production-готовности, развёртывании или
+  юридической активации.
 
   **Служба не заявляет автоматического юридического соответствия** GDPR,
   BDSG или партийному законодательству: она предоставляет управляемый

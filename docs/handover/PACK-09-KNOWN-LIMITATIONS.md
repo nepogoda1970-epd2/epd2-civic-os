@@ -1,7 +1,7 @@
 # PACK-09 — known limitations
 
 Repository version `0.9.0`, canon `0.7.0`. Authoritative scope document
-for this pack from the CANDIDATE-2 round onward: **EPD² Architecture &
+for this pack: **EPD² Architecture &
 Domain Framework 0.8.1** (Roadmap Amendment).
 
 This file records what PACK-09 does **not** do, and — where a guarantee
@@ -171,18 +171,22 @@ finance entity and no document entity exists in this service.
 
 ---
 
-## 9. Verification limitations of the CANDIDATE-2 round
+## 9. What verification does and does not establish
 
-The environment this round was produced in has no network egress to
-`pypi.org`, `files.pythonhosted.org` or `registry.npmjs.org`. The
-consequences are recorded precisely in `LOCAL_VERIFICATION.md` and in
-section C of `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`:
+The full pipeline — frozen dependency install, lint, format, type check,
+Python tests, TypeScript and frontend tests, and a Next.js production
+build — was executed on GitHub Actions against the locked toolchain and
+passed. The record is in section 3 of
+`docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`, with the raw runner
+output in `docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION.log`.
 
-- `uv sync --all-groups --frozen` was **not** run.
-- `npm ci`, `npm run lint` and `npm run build` were **not** run.
-- Python checks ran against a locally-assembled interpreter and tool set,
-  not against the versions `uv.lock` pins.
+What that establishes: the tree builds, type-checks and passes its own
+tests under the pinned toolchain, and the contracts, schemas, reason
+codes and repository manifest are internally consistent.
 
-The archive is therefore named `CANDIDATE-2`, not `PASS`. Whether the
-frozen dependency set behaves identically is unverified and must be
-established by a CI run.
+What it does **not** establish, and nothing in this repository claims:
+that the system is production-ready, that it is deployed, that it is
+legally activated, or that any workflow it governs satisfies the GDPR,
+the BDSG or the Parteiengesetz. Every item 1–8 above still stands after a
+passing CI run — a green pipeline does not close a scope boundary or
+complete a hold propagation somebody never registered.

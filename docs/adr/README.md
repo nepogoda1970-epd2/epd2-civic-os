@@ -1,5 +1,8 @@
 # Architecture Decision Records (ADR)
 
+FRONT-00 adds Proposed ADR-044 through ADR-047. They are not accepted and do not
+change canon 0.7.0.
+
 Любое отклонение от канона (`docs/canonical/TZ-00-domain-event-canon.md`)
 или от утверждённой архитектуры оформляется как ADR.
 

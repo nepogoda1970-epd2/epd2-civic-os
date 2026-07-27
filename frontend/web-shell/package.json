@@ -9,7 +9,12 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test": "node --import tsx --test tests/**/*.test.ts && vitest run",
+    "test:components": "vitest run",
+    "test:browser": "playwright test",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:visual": "playwright test --grep @visual",
+    "test:browser:update": "playwright test --grep @visual --update-snapshots",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
   },
@@ -19,14 +24,23 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/eslintrc": "^3.1.0",
+    "@playwright/test": "^1.62.0",
+    "@sparticuz/chromium": "^149.0.0",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.5.0",
-    "tsx": "^4.15.0",
+    "@vitejs/plugin-react": "^6.0.4",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.0.0",
-    "prettier": "^3.3.0"
+    "jsdom": "^29.1.1",
+    "prettier": "^3.3.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10"
   }
 }
