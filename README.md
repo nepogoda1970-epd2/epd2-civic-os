@@ -148,7 +148,13 @@ eID-интеграция, географическая/избирательна�
   и `identity-service` (`AuthenticationContext`, восемь новых полей
   `IdentityRecord`); ADR-026–031, канон раздел 19d. См.
   `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` для полного описания.
-- Canon version: `0.7.0` (`docs/canonical/TZ-00-domain-event-canon.md`).
+- Canon version: `0.8.0` (`docs/canonical/TZ-00-domain-event-canon.md`),
+  с 2026-07-27 — CLAUDE-PACK-10 canon-amendment round под ADR-054
+  (**`proposed`**, канон-кандидат): новый раздел 19f (Party Finance &
+  Financial Accountability Context), новый подраздел 20.17 (72 события),
+  21 новая строка раздела 22, 25 новых записей раздела 23, 45 новых
+  reason codes раздела 24. `REPOSITORY_VERSION` остаётся `0.9.0`;
+  `finance-service` не создан.
   Изменения текста канона: PACK-03 под ADR-010 (`0.1.0 → 0.2.0`,
   добавление `Ballot.challenge_window_hours` /
   `ResultPublication.challenge_deadline_at`); CLAUDE-PACK-04 под ADR-013
@@ -298,14 +304,58 @@ eID-интеграция, географическая/избирательна�
   workflow, ссылки на доказательства и auditability. Любое юридическое
   решение остаётся за человеком вне системы.
 
+- CLAUDE-PACK-10 (Party Finance, Rechenschaftsbericht & Financial
+  External Influence) — **только спецификация, не реализовано.** Раунд
+  добавил нормативную спецификацию
+  (`docs/packs/PACK-10-SPECIFICATION.md`: одиннадцать групп
+  возможностей, 55 жёстких инвариантов, 21 авторитетный агрегат,
+  purpose-scoped финансовая ссылка на сторону без глобального
+  идентификатора лица, жизненный цикл `Rechenschaftsbericht`, где
+  подача не равна принятию, независимый финансовый аудит и производные
+  публичные представления), шесть ADR в статусе `proposed`
+  (ADR-048 – ADR-053), модель угроз, матрицу приёмки, план реализации,
+  межпакетные границы, открытые решения и **заключение о необходимости
+  поправки канона** (`0.7.0 → 0.8.0`, новый раздел 19f) —
+  `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md`,
+  `docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md`. **Код не написан,
+  служба `finance-service` не создана, runtime-контракты не изменены,
+  `REPOSITORY_VERSION` и `CANON_VERSION` не изменены.** Результат
+  раунда — **PACK-10 SPECIFICATION CANDIDATE** для архитектурного
+  ревью, а не PASS-релиз. См. `docs/handover/PACK-10-SPEC-REPORT.md`.
+
+- CLAUDE-PACK-10 Canon Amendment (`0.7.0 → 0.8.0`) — **канон изменён,
+  реализация не авторизована.** Раунд внёс в сам канон новый раздел 19f
+  ("Партийные финансы и финансовая отчётность"): 21 каноническая
+  сущность с владельцем `Finance Service`, регистр из 45 финансовых
+  инвариантов (`ФИН-01`–`ФИН-45`), четыре новых институциональных
+  `role_code` (`finance_administrator`, `payment_authorizer`,
+  `payment_executor`, `report_signatory`) и расширенная матрица
+  несовместимости, `FinancePartyHandle` (целевая ссылка на сторону без
+  глобального идентификатора лица), двенадцатистатусный жизненный цикл
+  `Rechenschaftsbericht` (подача ≠ подтверждение получения ≠ принятие ≠
+  публикация), управляемые датированные финансовые политики и безопасные
+  публичные финансовые представления; подраздел 20.17 (72 события);
+  21 строку раздела 22; 25 записей раздела 23; 45 reason codes раздела 24. `CANON_VERSION` `0.7.0 → 0.8.0`, **`REPOSITORY_VERSION` остаётся
+  `0.9.0`**, `canon-version.json` фиксирует
+  `finance_context_implementation_status = "not_implemented"`. **Ни один
+  файл реализации не добавлен:** нет `services/finance-service`, нет
+  миграций, OpenAPI-операций, runtime-схем, frontend-страниц и
+  бизнес-тестов. ADR-054 и ADR-048 – ADR-053 остаются `proposed`.
+  Результат — **PACK-10 CANON 0.8.0 CANDIDATE**, не PASS. См.
+  `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`,
+  `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`,
+  `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`.
+
 - Repository version: `0.9.0` (CLAUDE-PACK-09 implementation:
   `compliance-service` — `RetentionPolicy`, `GovernedRecord`,
   `LegalHold`, `DestructionAuthorization`, `DestructionEvidence`,
   `DataAsset`, `ProcessingActivity`, `ProceduralCase`,
   `ProceduralDeadline`, `DataSubjectRequest`,
   `ConflictOfInterestDeclaration`, `CrossScopeAuthorityGrant`; см.
-  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`. `CANON_VERSION`
-  остаётся `0.7.0` — PACK-09 не вносит изменений в канон. Предыдущая
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`. PACK-09 не вносил
+  изменений в канон; `CANON_VERSION` оставался `0.7.0` до
+  канон-раунда PACK-10 (ADR-054, `0.7.0 → 0.8.0`), который не меняет
+  `REPOSITORY_VERSION`. Предыдущая
   версия `0.8.0` соответствовала CLAUDE-PACK-08 implementation:
   `organization-service` — `Organization`, `CivicSpace`,
   `OrganizationalUnit`, `OrganizationalRelation`,

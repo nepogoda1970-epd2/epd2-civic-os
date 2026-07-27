@@ -24,6 +24,237 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - canon minor version 0.8.0 (Party Finance & Financial Accountability Context)
+
+CLAUDE-PACK-10 canon-amendment round. **Canon-only: no runtime
+implementation, no service, no contract, no migration, no frontend page
+and no business test was added, and `REPOSITORY_VERSION` is unchanged at
+`0.9.0`.** The result is a **PACK-10 CANON 0.8.0 CANDIDATE** for review,
+not a PASS release: ADR-054 and ADR-048 through ADR-053 all remain
+`proposed`.
+
+### Changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.7.0 →
+0.8.0` (ADR-054, `proposed`) — the seventh edit to this document's own
+  text since its original acceptance (after ADR-010's `0.1.0 → 0.2.0`,
+  ADR-013's `0.2.0 → 0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`,
+  ADR-023/ADR-025's `0.4.0 → 0.5.0`, ADR-026 through ADR-031's `0.5.0 →
+0.6.0`, and ADR-037's `0.6.0 → 0.7.0`). Adds a new section 19f
+  ("Партийные финансы и финансовая отчётность / Party Finance &
+  Financial Accountability Context"), inserted between sections 19e and
+  20 — the same non-renumbering technique used for 19a–19e. The section
+  defines twenty-one authoritative finance entities (`FinanceAccount`,
+  `AccountingPeriod`, `JournalEntry`, `FinancialTransaction`,
+  `ImportBatch`, `ReconciliationRecord`, `FinanceContribution`,
+  `SponsorshipAgreement`, `ExternalFinancialBenefit`, `ExpenseClaim`,
+  `PaymentAuthorization`, `Budget`, `FinancialAsset`,
+  `FinancialObligation`, `ReportingObligation`,
+  `ReportingPerimeterDefinition`, `FinanceReport`, `ReportSnapshot`,
+  `AuditEngagement`, `FinancePolicy`, `FinancePartyHandle`), all owned by
+  `Finance Service`; the terminology separations that keep
+  `FinanceContribution` apart from canon 13.2's `Contribution`,
+  `FinanceAccount` from canon 7.2's `Account` and the accounting ledger
+  from canon 19a.1's public ledger; deterministic money semantics
+  (integer minor units, explicit currency, no floating point); the
+  immutable balanced double-entry ledger and correction by reversal or
+  correcting entry; accounting-period closure and dual-control reopening;
+  the transaction register, provenance, import batches and duplicate/
+  replay detection; the contribution lifecycle with its governed
+  exceptional states, the anti-splitting aggregation rule and
+  related-party/intermediary aggregation; sponsorship and financially
+  measurable external benefit with the PACK-35 boundary; expense and
+  reimbursement with authorization separated from execution; assets,
+  obligations and the rule that budgets never overwrite ledger facts; a
+  forty-five-rule finance-invariant register (`ФИН-01` – `ФИН-45`); four
+  new institutional `role_code` values (`finance_administrator`,
+  `payment_authorizer`, `payment_executor`, `report_signatory`)
+  extending 19e.15's open list, the extended 19e.16 incompatibility
+  baseline including the adopted owner decision that
+  `finance_administrator` is incompatible with
+  `organizational_administrator` in the same legally relevant scope, and
+  four action-level authorities that deliberately do not become
+  institutional roles; the purpose-scoped `FinancePartyHandle` with its
+  authorized, audited resolution boundary and the explicit statement
+  that pseudonymization is not anonymity; reporting obligation,
+  perimeter and immutable report snapshot; the twelve-state
+  `Rechenschaftsbericht` lifecycle (`draft`, `internally_reviewed`,
+  `auditor_reviewed`, `approved`, `signed`, `submitted`,
+  `externally_acknowledged`, `externally_accepted`, `published`,
+  `amended`, `restated`, `superseded`) in which submission is neither
+  acknowledgement nor acceptance and telemetry never creates legal
+  effect; independent finance audit with a create-once `AuditConclusion`;
+  organizationally scoped consolidation that grants no lower-scope write
+  authority; governed effective-dated finance policies with historical
+  version binding and no statutory threshold as a canon constant; safe,
+  derived, non-authoritative public financial projections under
+  statistical disclosure control; the cross-pack boundaries toward
+  PACK-09, PACK-11, PACK-12, PACK-13, PACK-14 and PACK-35; and an
+  implementation gate (19f.25). Section 20.17 adds seventy-two finance
+  events with owner, aggregate, event version, required safe metadata,
+  prohibited payload, cross-pack consumers and public-projection rules;
+  section 22 gains twenty-one ownership rows; section 23 gains
+  twenty-five forbidden-link entries; section 24 gains forty-five
+  `FINANCE_*` reason codes — no existing entity, status, event, owner or
+  reason code was renamed, redefined or repurposed, and no naming
+  conflict was found.
+- `docs/canonical/canon-version.json`: `canon_version` `0.7.0 → 0.8.0`,
+  plus explicit compatibility metadata — `minimum_repository_version`
+  `0.9.0`, `amended_at_repository_version` `0.9.0`, and
+  `finance_context_implementation_status` `not_implemented`.
+  `repository_compatibility` deliberately stays `>=0.1.0 <0.10.0`: a
+  repository at `0.9.0` consumes canon `0.8.0`, and widening the range
+  would pre-authorize an implementation round that has not happened
+  (OD-20).
+- `packages/python/epd2-core/src/epd2_core/version.py` and
+  `packages/typescript/epd2-types/src/version.ts`: `CANON_VERSION`
+  `0.7.0 → 0.8.0`; `REPOSITORY_VERSION` unchanged at `0.9.0`.
+- `packages/python/epd2-core/tests/test_version.py` and
+  `packages/typescript/epd2-types/tests/version.test.ts`: expected canon
+  version updated to `0.8.0` with the round's narrative comment. No test
+  was weakened or removed.
+- `docs/canonical/README.md`, `docs/adr/README.md`, `README.md`,
+  `docs/architecture/data-ownership.md`,
+  `docs/architecture/service-boundaries.md`: canon `0.8.0`, the ADR-054
+  index row and narrative, the twenty-one finance ownership rows (all
+  marked not implemented) and the finance trust boundaries.
+
+### Added
+
+- `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md` —
+  `proposed`. The canon-amendment ADR.
+- `scripts/check_canon_0_8_0.py` — sixteen standalone canon-level checks
+  (canon version, repository version, compatibility metadata, absence of
+  any finance runtime implementation, bounded-context registration, the
+  twenty-one ownership rows, `FinancePartyHandle` not being a global
+  identity, the finance-to-voting prohibitions, ledger immutability and
+  balancing, the auditor incompatibility, submission versus acceptance,
+  PACK-11 and PACK-35 ownership, event owners and payload restrictions,
+  reason-code uniqueness, and ADR status integrity).
+- `tests/repository/test_canon_0_8_0_amendment.py` — the pytest wrapper
+  over those checks, in the established `tests/repository` style.
+- `docs/handover/PACK-10-CANON-0.8.0-REPORT.md` — the round's report.
+- `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md` — acceptance
+  evidence and the `ФИН` ↔ `HI` coverage map.
+- `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md` — compatibility
+  statement and the reason-code registry diff (45 new, 32 reused,
+  rejected collisions), the event-canon diff (72 vs the specification's 69) and the report-state naming diff.
+
+### Unchanged, deliberately
+
+- `REPOSITORY_VERSION` stays `0.9.0`; the latest released CHANGELOG
+  heading stays `## [0.9.0]`.
+- No `services/finance-service`; no file anywhere under `services/`,
+  `packages/`, `frontend/` or `contracts/` whose name contains
+  `finance`; no migration, OpenAPI operation, runtime JSON Schema,
+  frontend page or business test.
+- `contracts/reason-codes/pack-10.yml` was **not** created: canon
+  section 24 is the registry of record for a canon round, and a pack
+  registry file whose codes no service uses would either fail
+  `tests/contract/test_reason_codes_registry.py` or require weakening it
+  (`PACK-10-CANON-0.8.0-COMPATIBILITY.md` section 3.4).
+- PACK-01 through PACK-09 implementation, existing backend behaviour,
+  accepted ADR content and existing domain ownership: untouched.
+
+## [Unreleased] - PACK-10 specification candidate (documentation only)
+
+CLAUDE-PACK-10 (Party Finance, Rechenschaftsbericht & Financial External
+Influence) specification and ADR phase. **Documentation only: no
+production code, no new service, no runtime contract, no version
+change.** The result is a **PACK-10 SPECIFICATION CANDIDATE** for
+architectural review, not a PASS release.
+
+### Added
+
+- `docs/packs/PACK-10-SPECIFICATION.md` — the normative PACK-10
+  specification: eleven capability groups (ledger and accounting
+  periods, income, expenditure, donations and contributions, sponsorship
+  and financial external influence, expense and reimbursement, assets
+  and obligations, budgets, `Rechenschaftsbericht` lifecycle, finance
+  audit, public transparency); fifty-five numbered hard invariants with
+  planned enforcement point, mechanism, test, reason code and cross-pack
+  dependency; the classification of all thirty-nine candidate concepts
+  into twenty-one authoritative aggregates, entities, create-once
+  records, value objects and derived read models; the
+  identity-minimization model (purpose-scoped `FinancePartyHandle`, no
+  global user ID, restricted resolution surface, audited access); the
+  PACK-08 organizational and consolidation model; PACK-09 and PACK-11
+  integration boundaries; governed effective-dated finance policies; a
+  proposed event taxonomy; and a proposed reason-code catalogue.
+- `docs/adr/ADR-048-pack-10-finance-service-decomposition.md` —
+  `proposed`. One bounded context `services/finance-service` with
+  explicitly separated internal modules.
+- `docs/adr/ADR-049-authoritative-finance-ledger-and-correction-model.md`
+  — `proposed`. Layered model: the double-entry general ledger is
+  authoritative for monetary effect, the transaction register for the
+  business fact and its provenance; integer minor units only; posted
+  entries immutable; corrections by governed reversal; period lock and
+  controlled reopening.
+- `docs/adr/ADR-050-purpose-scoped-financial-party-references-and-aggregation.md`
+  — `proposed`. Purpose-scoped opaque party handles with a governed
+  matching act, lawful aggregation without a platform-wide identifier,
+  and an explicit statement that pseudonymization is not anonymity.
+- `docs/adr/ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
+  — `proposed`. Ten-state report lifecycle, create-once source
+  snapshot, submission ≠ acceptance (only a PACK-09
+  `NoticeEffectDecision` reaches `accepted_by_authority`), publication ≠
+  approval, append-only version chain, frozen historical perimeter.
+- `docs/adr/ADR-052-finance-authority-separation-and-independent-audit.md`
+  — `proposed`. Four new institutional roles and five action-level
+  separations, the extended non-combinable-role matrix that fills
+  PACK-08 section 9.3's explicit reservation, and independent finance
+  audit with a create-once `AuditConclusion`.
+- `docs/adr/ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md` —
+  `proposed`. Ownership matrix across PACK-08/09/10/11/12/13/14/35, the
+  decidable financial-value versus influence-relationship test, and the
+  determination that PACK-09's `FinanceEvidenceRef` remains sufficient
+  with a documentation-level semantic correction and additive PACK-10
+  reference exports.
+- `docs/packs/PACK-10-OPEN-DECISIONS.md` — twenty-two unresolved
+  owner/legal/security questions (OD-1 through OD-22), each with a
+  recommended default where one is defensible, explicitly marked where
+  that default is legally unverified.
+- `docs/packs/PACK-10-IMPLEMENTATION-PLAN.md` — gates, eight-phase plan,
+  file inventory, carried-over conventions, sequencing risks.
+- `docs/packs/PACK-10-ACCEPTANCE-MATRIX.md` — the planned domain,
+  application, storage, contract, architecture and repository tests,
+  with a coverage map from every hard invariant to at least one named
+  test.
+- `docs/packs/PACK-10-THREAT-MODEL.md` — thirty-five threats with
+  protected asset, attacker or failure mode, trust boundary, mitigation,
+  detection, audit evidence, residual risk and future-pack dependency.
+- `docs/packs/PACK-10-CROSS-PACK-BOUNDARIES.md` — ownership matrix,
+  reads, consumed and exported references, PACK-11 requirements, PACK-35
+  integration points, forbidden edges.
+- `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md` — the explicit
+  determination that a canon amendment is **required** (option 2), concept
+  by concept.
+- `docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md` — the proposed canon
+  minor-version addition (`0.7.0 → 0.8.0`): new section 19f, new section
+  20.17 event catalogue, new section 22 ownership rows, new section 23
+  forbidden links, new section 24 reason codes, with compatibility and
+  migration impact. **Not applied.**
+- `docs/handover/PACK-10-SPEC-REPORT.md` — the round's handover report.
+
+### Changed
+
+- `docs/adr/README.md` — six new index rows (ADR-048 through ADR-053,
+  all `proposed`) and a narrative entry for this round.
+- `README.md` — a PACK-10 status entry identifying the pack as
+  specification-only and not implemented.
+
+### Unchanged, deliberately
+
+- `REPOSITORY_VERSION` stays `0.9.0`; `CANON_VERSION` stays `0.7.0`;
+  package versions unchanged.
+- `docs/canonical/TZ-00-domain-event-canon.md`,
+  `docs/canonical/canon-version.json`, `contracts/**`, `services/**`,
+  `packages/**`, `frontend/**`, `tests/**`, CI configuration and
+  `scripts/check_repository.py`'s required-path list — none touched. New
+  documentation paths were deliberately not added to the checker's
+  required-path list, the same precedent ADR-026 through ADR-037 already
+  set (recorded in that file's own comment).
+
 ## [Unreleased] - canon minor version 0.7.0 (Organization & Regional Scope Context)
 
 ### Changed

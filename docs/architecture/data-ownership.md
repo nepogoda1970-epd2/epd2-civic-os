@@ -34,6 +34,13 @@ production-базы данных). Подробности — в
 не было предпринято здесь, чтобы не путать факты реализации PACK-08 с
 ретроактивной правкой более старых записей.
 
+**CLAUDE-PACK-10 (canon-amendment round, канон `0.7.0 → 0.8.0`)** добавил
+двадцать одну каноническую сущность финансового контура (canon 19f, раздел 22) с владельцем `Finance Service`. Ни одна из них **не реализована**:
+`services/finance-service` не создан и настоящей поправкой не авторизуется
+(19f.25, ворота реализации). Строки ниже отражают каноническое владение, а
+не факт реализации. Подробности — `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md`,
+`docs/handover/PACK-10-CANON-0.8.0-REPORT.md`.
+
 | Domain                               | Future owner                  | Current implementation                                  |
 | ------------------------------------ | ----------------------------- | ------------------------------------------------------- |
 | Account                              | Account Service               | Implemented (PACK-02) — `services/account-service`      |
@@ -71,3 +78,24 @@ production-базы данных). Подробности — в
 | AIProcessingRecord                   | AI Accountability Service     | Not implemented                                         |
 | AuditEvent                           | Audit Core                    | Implemented (PACK-02) — `services/audit-core`           |
 | EmergencyAction                      | Governance / Crisis Service   | Not implemented                                         |
+| FinanceAccount                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| AccountingPeriod                     | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| JournalEntry                         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinancialTransaction                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ImportBatch                          | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ReconciliationRecord                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinanceContribution                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| SponsorshipAgreement                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ExternalFinancialBenefit             | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ExpenseClaim                         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| PaymentAuthorization                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| Budget                               | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinancialAsset                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinancialObligation                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ReportingObligation                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ReportingPerimeterDefinition         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinanceReport                        | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| ReportSnapshot                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| AuditEngagement                      | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinancePolicy                        | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| FinancePartyHandle                   | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |

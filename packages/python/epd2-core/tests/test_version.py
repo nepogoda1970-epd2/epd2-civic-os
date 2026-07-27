@@ -154,5 +154,24 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # ADR-037 - no further canon edit was made (no canon-owned file was
     # touched this round), so CANON_VERSION is unchanged at 0.7.0.
     # REPOSITORY_VERSION moved 0.8.0 -> 0.9.0 for PACK-09 compliance-service; canon unchanged.
-    assert CANON_VERSION == "0.7.0"
+    # CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-054 (proposed, the
+    # PACK-10 canon-amendment round): new canon section 19f (Party
+    # Finance & Financial Accountability Context) with twenty-one new
+    # canonical entities owned by Finance Service, a forty-five-rule
+    # finance-invariant register (FIN-01..FIN-45), four new institutional
+    # role codes (finance_administrator, payment_authorizer,
+    # payment_executor, report_signatory) extending 19e.15's open list and
+    # the 19e.16 incompatibility baseline, the purpose-scoped
+    # FinancePartyHandle, the twelve-state Rechenschaftsbericht lifecycle
+    # (submission != acknowledgement != acceptance != publication),
+    # governed effective-dated finance policies and safe public financial
+    # projections; a new section 20.17 with seventy-two finance events;
+    # twenty-one new section 22 ownership-matrix rows; new section 23
+    # forbidden-link entries; forty-five new section 24 reason codes - a
+    # backward-compatible (minor) canon addition per canon section 25.
+    # This round is a canon-only change for CLAUDE-PACK-10 governance; no
+    # finance-service code exists, so REPOSITORY_VERSION is unchanged at
+    # 0.9.0 and canon-version.json records
+    # finance_context_implementation_status = "not_implemented".
+    assert CANON_VERSION == "0.8.0"
     assert REPOSITORY_VERSION == "0.9.0"
