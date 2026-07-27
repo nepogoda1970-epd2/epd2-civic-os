@@ -13,7 +13,7 @@
 | WS-03 isolation             | storage/telemetry denial tests                      | implemented                        |
 | Mobile App client channel   | typed profile; workspace/origin count tests         | declared; inactive                 |
 | Mobile capability boundary  | WS-02 + limited WS-05; privileged deny tests        | declared; inactive                 |
-| Citizen-office dependency   | WS-05 request status → direct owner PACK-33 test     | corrected; inactive                |
+| Citizen-office dependency   | WS-05 request status → direct owner PACK-33 test    | corrected; inactive                |
 | Mobile voting handoff       | system-browser/isolation/return-status tests        | policy only; no API                |
 | Mobile push/security        | neutral payload/offline/activation tests            | policy only; no provider           |
 | Mobile accessibility        | responsive foundation + documented native gates     | partial foundation; not certified  |
