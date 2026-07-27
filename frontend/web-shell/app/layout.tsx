@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EPD² Civic OS",
-  description: "EPD² Civic OS — FRONT-00 frontend foundation candidate",
+  title: "EPD² — politische Beteiligung nachvollziehbar aufgebaut",
+  description:
+    "Öffentliche Website des EPD² Projekts mit sichtbaren Reifegraden und Aktivierungsgrenzen.",
 };
 
 export default function RootLayout({

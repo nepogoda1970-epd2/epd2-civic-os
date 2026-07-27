@@ -1,0 +1,62 @@
+legacy_source,target_route,target_page_id,decision,maturity,dependent_pack,audit_correction,reason
+EPD/aktiv-werden.html,/mitmachen,FRONT01-PAGE-008,MERGE,informational,PACK-18,WC-18,Unified participation information
+EPD/aktuelle-wahlen.html,/abstimmungen,FRONT01-PAGE-021,PUBLIC_EXPLANATION_ONLY,not_activated,PACK-15–17,WC-03;WC-16;FEC-001,No active election UI
+EPD/aktuelles.html,/status,FRONT01-PAGE-031,MERGE,informational,FRONT-01,WC-18,Current maturity replaces ambiguous news
+EPD/buerger-login.html,/mitgliedschaft,FRONT01-PAGE-009,MOVE_TO_FUTURE_WORKSPACE,planned,WS-02,FEC-006,Login is a future handoff
+EPD/buerger-login/index.html,/mitgliedschaft,FRONT01-PAGE-009,REDIRECT,planned,WS-02,FEC-006,Duplicate login entry
+EPD/buergerannahme.html,/buergerbuero,FRONT01-PAGE-023,PUBLIC_EXPLANATION_ONLY,planned,PACK-33,WC-09;FEC-007,Future WS-05 caseflow
+EPD/buergerbereich.html,/mitgliedschaft,FRONT01-PAGE-009,MOVE_TO_FUTURE_WORKSPACE,planned,WS-02,FEC-010,Authenticated area excluded
+EPD/cockpit.html,/status,FRONT01-PAGE-031,REMOVE,not_activated,WS-02,WC-20,Fixture not public capability
+EPD/crisis-protocol.html,/rechtsgovernance,FRONT01-PAGE-029,PUBLIC_EXPLANATION_ONLY,planned,PACK-30,WC-02;FEC-003,Automatic legal effects removed
+EPD/datenschutz.html,/datenschutz,FRONT01-PAGE-015,REWRITE,informational,PACK-09 / PACK-18,WC-17,Purpose-specific model
+EPD/delegation-reputation.html,/grundsaetze,FRONT01-PAGE-004,REMOVE,not_activated,PACK-34,WC-06;FEC-005,No public individual scoring
+EPD/ethics.html,/rechtsgovernance,FRONT01-PAGE-029,MERGE,planned,PACK-31,WC-14,Proposed institutional model
+EPD/faq.html,/technologie,FRONT01-PAGE-013,MERGE,implemented_reference,FRONT-00,FEC-002,Claims qualified by scope
+EPD/impressum.html,/impressum,FRONT01-PAGE-018,REWRITE,informational,PACK-09,C8,Requires legal editorial review
+EPD/index.html,/,FRONT01-PAGE-001,REWRITE,foundation_available,FRONT-00 / FRONT-01,WC-01;WC-03,Remove SYSTEM LIVE overclaims
+EPD/intern-dashboard.html,/status,FRONT01-PAGE-031,REMOVE,not_activated,WS-02,WC-20,Internal fixture excluded
+EPD/intern/abstimmungen.html,/abstimmungen,FRONT01-PAGE-021,MOVE_TO_FUTURE_WORKSPACE,not_activated,WS-03,FEC-001,Separate voting origin
+EPD/intern/dashboard.html,/status,FRONT01-PAGE-031,REMOVE,not_activated,WS-02,WC-20,No authenticated simulation
+EPD/intern/delegation.html,/grundsaetze,FRONT01-PAGE-004,MOVE_TO_FUTURE_WORKSPACE,planned,PACK-03,FEC-010,Operational flow excluded
+EPD/intern/kommunikation.html,/kontakt,FRONT01-PAGE-017,MOVE_TO_FUTURE_WORKSPACE,planned,PACK-22,WC-10;FEC-012,Message and notice separated
+EPD/intern/meine-vorschlaege.html,/beratung,FRONT01-PAGE-020,MOVE_TO_FUTURE_WORKSPACE,specified,PACK-03,WC-07,Snapshot AI explanation only
+EPD/intern/organisation.html,/organisation,FRONT01-PAGE-010,MOVE_TO_FUTURE_WORKSPACE,planned,WS-06,FEC-010,Institutional admin excluded
+EPD/intern/profil.html,/mitgliedschaft,FRONT01-PAGE-009,MOVE_TO_FUTURE_WORKSPACE,planned,WS-02,FEC-010,Profile excluded
+EPD/intern/programmwerkstatt.html,/programm,FRONT01-PAGE-005,MOVE_TO_FUTURE_WORKSPACE,not_activated,PACK-32,WC-22,No program mutation
+EPD/intern/reputation.html,/grundsaetze,FRONT01-PAGE-004,REMOVE,not_activated,PACK-34,WC-06,Political profiling blocked
+EPD/intern/versammlungen.html,/versammlungen,FRONT01-PAGE-026,MOVE_TO_FUTURE_WORKSPACE,legally_blocked,PACK-21,WC-11;FEC-013,Explanation only
+EPD/intern/vertrauensarchitektur.html,/sicherheit,FRONT01-PAGE-014,MERGE,production_blocked,PACK-15–17,C8,No readiness guarantee
+EPD/kandidieren.html,/kandidatur,FRONT01-PAGE-027,REWRITE,planned,PACK-20,WC-12;FEC-011,Stages separated
+EPD/kontakt.html,/kontakt,FRONT01-PAGE-017,KEEP_AND_MIGRATE,informational,PACK-18,WC-17,General contact only
+EPD/login.html,/mitgliedschaft,FRONT01-PAGE-009,MOVE_TO_FUTURE_WORKSPACE,planned,WS-02,FEC-006,No global login
+EPD/mitmachen.html,/mitmachen,FRONT01-PAGE-008,KEEP_AND_MIGRATE,informational,PACK-18,WC-18,Public participation
+EPD/nutzungsbedingungen.html,/datenschutz,FRONT01-PAGE-015,MERGE,informational,PACK-09,C8,No active service terms claim
+EPD/programm.html,/programm,FRONT01-PAGE-005,REWRITE,prototype,PACK-32,WC-08;WC-22,Open program model
+EPD/programm/digitale-verfassung.html,/grundsaetze,FRONT01-PAGE-004,MERGE,informational,PACK-32,C3,Concept not adopted program
+EPD/programmwerkstatt.html,/programm,FRONT01-PAGE-005,PUBLIC_EXPLANATION_ONLY,not_activated,PACK-32,WC-07;WC-08;WC-22,No operational workshop
+EPD/roadmap.html,/status,FRONT01-PAGE-031,REWRITE,informational,FRONT-01,FEC-020,Correct PACK maturity
+EPD/satzung.html,/grundsaetze,FRONT01-PAGE-004,MERGE,informational,PACK-09,C8,No unverified legal claim
+EPD/schiedsgericht.html,/rechtsgovernance,FRONT01-PAGE-029,PUBLIC_EXPLANATION_ONLY,planned,PACK-09,WC-14,Institutional status qualified
+EPD/spenden.html,/finanzen,FRONT01-PAGE-025,REMOVE,not_activated,PACK-10,C6,No payment flow
+EPD/struktur.html,/struktur,FRONT01-PAGE-011,REWRITE,specified,PACK-08 / PACK-28,WC-18,Governed organization projection
+EPD/struktur/abstimmungen.html,/abstimmungen,FRONT01-PAGE-021,PUBLIC_EXPLANATION_ONLY,not_activated,PACK-15–17,FEC-001,No shared voting UI
+EPD/struktur/digitales-buero.html,/buergerbuero,FRONT01-PAGE-023,PUBLIC_EXPLANATION_ONLY,planned,PACK-33,FEC-007,Future WS-05
+EPD/struktur/kandidaten-abgeordnete.html,/kandidatur,FRONT01-PAGE-027,MERGE,planned,PACK-20,FEC-011,No authoritative roster
+EPD/struktur/landesverbaende.html,/struktur,FRONT01-PAGE-011,MERGE,specified,PACK-08 / PACK-28,FEC-011,Approved rendition required
+EPD/struktur/regionalverbaende.html,/struktur,FRONT01-PAGE-011,MERGE,specified,PACK-08 / PACK-28,FEC-011,Approved rendition required
+EPD/struktur/vorstand.html,/organisation,FRONT01-PAGE-010,REWRITE,informational,PACK-28,FEC-011,No unverified office record
+EPD/system.html,/technologie,FRONT01-PAGE-013,MERGE,implemented_reference,FRONT-00,WC-03;FEC-002,Remove live and binding claims
+EPD/technology.html,/technologie,FRONT01-PAGE-013,MERGE,implemented_reference,FRONT-00,WC-03;FEC-002,Conditional architecture language
+EPD/transparenz.html,/transparenz,FRONT01-PAGE-012,REWRITE,specified,PACK-28 / WS-10,WC-15;FEC-009,Governed projections only
+EPD/transparenz/abgeordnetentisch.html,/abgeordnetentisch,FRONT01-PAGE-024,PUBLIC_EXPLANATION_ONLY,planned,PACK-29,WC-04;WC-05;WC-21,Free mandate and protected WS-04
+EPD/transparenz/beteiligung.html,/transparenz,FRONT01-PAGE-012,MERGE,specified,PACK-28,WC-15,Approved aggregate rendition
+EPD/transparenz/finanzen.html,/finanzen,FRONT01-PAGE-025,PUBLIC_EXPLANATION_ONLY,specified,PACK-10,C6,No live ledger
+EPD/transparenz/ki-log.html,/ki-assistenz,FRONT01-PAGE-022,PUBLIC_EXPLANATION_ONLY,specified,PACK-18,WC-15,No direct operational log
+EPD/transparenz/ledger.html,/transparenz,FRONT01-PAGE-012,REMOVE,not_activated,PACK-28,FEC-009,Direct log model rejected
+EPD/transparenz/lobbying-log.html,/transparenz,FRONT01-PAGE-012,PUBLIC_EXPLANATION_ONLY,planned,PACK-35,WC-13;WC-23;FEC-014,Governed disclosure lifecycle
+EPD/transparenz/protokolle.html,/transparenz,FRONT01-PAGE-012,PUBLIC_EXPLANATION_ONLY,specified,PACK-28,WC-15,Approved renditions only
+EPD/ueber-uns.html,/ueber-uns,FRONT01-PAGE-002,KEEP_AND_MIGRATE,informational,PACK-08 / PACK-18,WC-18,Party platform software distinction
+EPD/verfassungsbeirat.html,/rechtsgovernance,FRONT01-PAGE-029,MERGE,planned,PACK-31,WC-14,Proposed status
+EPD/verifizierung.html,/abstimmungen,FRONT01-PAGE-021,PUBLIC_EXPLANATION_ONLY,not_activated,PACK-15–17,WC-16,eID not legal validity
+EPD/warteliste.html,/mitmachen,FRONT01-PAGE-008,MERGE,informational,PACK-18,WC-17,No personal data form
+EPD/werkstatt.html,/beratung,FRONT01-PAGE-020,PUBLIC_EXPLANATION_ONLY,specified,PACK-03,WC-08,No automatic program effect

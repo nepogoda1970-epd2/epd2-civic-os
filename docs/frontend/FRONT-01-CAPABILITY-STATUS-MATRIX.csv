@@ -1,0 +1,21 @@
+capability,route,status,responsible_pack,implemented_runtime,activation_prerequisites
+public_information,/,foundation_available,FRONT-00 / FRONT-01,yes,publication review
+organization_information,/organisation,informational,PACK-08 / PACK-28,no,approved public rendition
+open_program_explanation,/programm,prototype,PACK-32,no,PACK-32 and FRONT-04/FRONT-10
+program_formation_runtime,/programm/status,not_activated,PACK-32,no,legal expert voting and publication gates
+initiative_lifecycle,/initiativen,specified,PACK-03 / PACK-32,no,workspace implementation and activation
+deliberation,/beratung,specified,PACK-03,no,moderation and protection gates
+ai_assistance,/ki-assistenz,specified,PACK-18 / PACK-32,no,snapshot citations disclosure contestability
+voting,/abstimmungen,not_activated,PACK-15 / PACK-16 / PACK-17,no,legal security infrastructure authority
+citizen_office,/buergerbuero,planned,PACK-33,no,WS-05 and PACK-33 chain
+representative_desk,/abgeordnetentisch,planned,PACK-29,no,WS-04 WS-05 WS-10 projections
+finance_transparency,/finanzen,specified,PACK-10,no,runtime finance audit and publication
+assemblies,/versammlungen,legally_blocked,PACK-21,no,legal security and statute gates
+candidacy,/kandidatur,planned,PACK-20,no,governed process and legal review
+compliance_backend,/compliance,foundation_available,PACK-09,yes,WS-07 still missing
+compliance_ui,/compliance,not_activated,WS-07,no,workspace roles and legal activation
+legal_governance,/rechtsgovernance,planned,PACK-31,no,formal institutional establishment
+transparency_publication,/transparenz,specified,PACK-28 / WS-10,no,review redaction approval projection
+accepted_initiatives_board,/fortschritt,planned,PACK-33,no,authoritative source and publication
+program_progress_board,/fortschritt,planned,PACK-32,no,authoritative source and publication
+security_activation,/sicherheit,production_blocked,PACK-15–17,no,implementation verification operations
