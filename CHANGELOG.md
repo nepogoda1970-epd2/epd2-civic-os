@@ -1,5 +1,24 @@
 # Changelog
 
+## FRONT-00 foundation candidate correction 0.1.1
+
+- Replaced five simplified examples with faithful non-production migrations of
+  the exact `EPD_Front.zip` source compositions.
+- Added the missing component/native-pattern catalogue, 13 rendered behavior
+  tests, Playwright visual/browser coverage, axe and keyboard accessibility
+  coverage, and CI commands.
+- Corrected source/migration/showcase terminology and the collision-safe mypy
+  command without changing repository 0.9.0 or canon 0.7.0.
+
+## FRONT-00 Implementation Candidate - 2026-07-27
+
+- Extracted EPD_Front visual tokens into the existing Next.js web shell.
+- Added shared shell/components, 19 presentation states, five representative
+  fixtures and declarative route/workspace/storage/telemetry policies.
+- Added architecture/component tests and FRONT-00 documentation.
+- Added Proposed ADR-044 through ADR-047.
+- No dependency, backend, canon-version or repository-version change.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -11,13 +30,13 @@ CLAUDE-PACK-10 canon-amendment round. **Canon-only: no runtime
 implementation, no service, no contract, no migration, no frontend page
 and no business test was added, and `REPOSITORY_VERSION` is unchanged at
 `0.9.0`.** The result is a **PACK-10 CANON 0.8.0 CANDIDATE** for review,
-not a PASS release: ADR-050 and ADR-044 through ADR-049 all remain
+not a PASS release: ADR-054 and ADR-048 through ADR-053 all remain
 `proposed`.
 
 ### Changed
 
 - `docs/canonical/TZ-00-domain-event-canon.md`: canon version `0.7.0 →
-0.8.0` (ADR-050, `proposed`) — the seventh edit to this document's own
+0.8.0` (ADR-054, `proposed`) — the seventh edit to this document's own
   text since its original acceptance (after ADR-010's `0.1.0 → 0.2.0`,
   ADR-013's `0.2.0 → 0.3.0`, ADR-018/ADR-020's `0.3.0 → 0.4.0`,
   ADR-023/ADR-025's `0.4.0 → 0.5.0`, ADR-026 through ADR-031's `0.5.0 →
@@ -96,13 +115,13 @@ not a PASS release: ADR-050 and ADR-044 through ADR-049 all remain
   was weakened or removed.
 - `docs/canonical/README.md`, `docs/adr/README.md`, `README.md`,
   `docs/architecture/data-ownership.md`,
-  `docs/architecture/service-boundaries.md`: canon `0.8.0`, the ADR-050
+  `docs/architecture/service-boundaries.md`: canon `0.8.0`, the ADR-054
   index row and narrative, the twenty-one finance ownership rows (all
   marked not implemented) and the finance trust boundaries.
 
 ### Added
 
-- `docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md` —
+- `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md` —
   `proposed`. The canon-amendment ADR.
 - `scripts/check_canon_0_8_0.py` — sixteen standalone canon-level checks
   (canon version, repository version, compatibility metadata, absence of
@@ -162,30 +181,30 @@ architectural review, not a PASS release.
   PACK-08 organizational and consolidation model; PACK-09 and PACK-11
   integration boundaries; governed effective-dated finance policies; a
   proposed event taxonomy; and a proposed reason-code catalogue.
-- `docs/adr/ADR-044-pack-10-finance-service-decomposition.md` —
+- `docs/adr/ADR-048-pack-10-finance-service-decomposition.md` —
   `proposed`. One bounded context `services/finance-service` with
   explicitly separated internal modules.
-- `docs/adr/ADR-045-authoritative-finance-ledger-and-correction-model.md`
+- `docs/adr/ADR-049-authoritative-finance-ledger-and-correction-model.md`
   — `proposed`. Layered model: the double-entry general ledger is
   authoritative for monetary effect, the transaction register for the
   business fact and its provenance; integer minor units only; posted
   entries immutable; corrections by governed reversal; period lock and
   controlled reopening.
-- `docs/adr/ADR-046-purpose-scoped-financial-party-references-and-aggregation.md`
+- `docs/adr/ADR-050-purpose-scoped-financial-party-references-and-aggregation.md`
   — `proposed`. Purpose-scoped opaque party handles with a governed
   matching act, lawful aggregation without a platform-wide identifier,
   and an explicit statement that pseudonymization is not anonymity.
-- `docs/adr/ADR-047-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
+- `docs/adr/ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
   — `proposed`. Ten-state report lifecycle, create-once source
   snapshot, submission ≠ acceptance (only a PACK-09
   `NoticeEffectDecision` reaches `accepted_by_authority`), publication ≠
   approval, append-only version chain, frozen historical perimeter.
-- `docs/adr/ADR-048-finance-authority-separation-and-independent-audit.md`
+- `docs/adr/ADR-052-finance-authority-separation-and-independent-audit.md`
   — `proposed`. Four new institutional roles and five action-level
   separations, the extended non-combinable-role matrix that fills
   PACK-08 section 9.3's explicit reservation, and independent finance
   audit with a create-once `AuditConclusion`.
-- `docs/adr/ADR-049-pack-10-pack-09-pack-11-pack-35-boundaries.md` —
+- `docs/adr/ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md` —
   `proposed`. Ownership matrix across PACK-08/09/10/11/12/13/14/35, the
   decidable financial-value versus influence-relationship test, and the
   determination that PACK-09's `FinanceEvidenceRef` remains sufficient
@@ -219,7 +238,7 @@ architectural review, not a PASS release.
 
 ### Changed
 
-- `docs/adr/README.md` — six new index rows (ADR-044 through ADR-049,
+- `docs/adr/README.md` — six new index rows (ADR-048 through ADR-053,
   all `proposed`) and a narrative entry for this round.
 - `README.md` — a PACK-10 status entry identifying the pack as
   specification-only and not implemented.

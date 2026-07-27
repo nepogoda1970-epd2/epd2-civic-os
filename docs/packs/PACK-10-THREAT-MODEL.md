@@ -311,7 +311,7 @@ lobbying disclosure (PACK-35) are named only as future-pack dependencies.
 - **Attacker or failure mode**: two or more authorized actors coordinate,
   each within their own authority, to push fraud through.
 - **Trust boundary**: `application.py` authority separation, across actors.
-- **Planned mitigation**: role separation of section 4.10 and ADR-048
+- **Planned mitigation**: role separation of section 4.10 and ADR-052
   (`HI-30`, `HI-31`, `HI-32`, `HI-53`). Module `application.py`,
   `audit_engagement.py`. Reason codes `AUTHORITY_ROLE_INCOMPATIBLE`,
   `FINANCE_AUTHORITY_MISSING`.

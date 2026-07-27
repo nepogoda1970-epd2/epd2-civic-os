@@ -11,16 +11,16 @@
 состояние канона как `0.5.0`, `0.6.0` или `0.7.0`.
 
 Последняя поправка — CLAUDE-PACK-10, каноническая версия `0.7.0 →
-0.8.0` (ADR-050, **`proposed`**, 2026-07-27): новый раздел 19f
+0.8.0` (ADR-054, **`proposed`**, 2026-07-27): новый раздел 19f
 ("Партийные финансы и финансовая отчётность / Party Finance & Financial
 Accountability Context"), новый подраздел 20.17 (72 события), двадцать
 одна новая строка раздела 22 (владелец Finance Service), двадцать пять
 новых записей раздела 23 и сорок пять новых reason codes раздела 24.
-**Статус результата — CANON CANDIDATE, не PASS:** ADR-050 и ADR-044 —
-ADR-049 остаются `proposed` до завершения ревью, `REPOSITORY_VERSION`
+**Статус результата — CANON CANDIDATE, не PASS:** ADR-054 и ADR-048 —
+ADR-053 остаются `proposed` до завершения ревью, `REPOSITORY_VERSION`
 остаётся `0.9.0`, сервис `finance-service` не создан и настоящей
 поправкой не авторизуется (19f.25, ворота реализации). См.
-`docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md`,
+`docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md`,
 `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`,
 `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md` и
 `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`.

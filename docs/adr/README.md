@@ -1,5 +1,8 @@
 # Architecture Decision Records (ADR)
 
+FRONT-00 adds Proposed ADR-044 through ADR-047. They are not accepted and do not
+change canon 0.7.0.
+
 Любое отклонение от канона (`docs/canonical/TZ-00-domain-event-canon.md`)
 или от утверждённой архитектуры оформляется как ADR.
 
@@ -8,7 +11,7 @@
 - До статуса `accepted` предложенное изменение **не** включается в рабочий
   код.
 - Действующая версия канона: **`0.8.0`**
-  (`docs/canonical/canon-version.json`), с 2026-07-27 (ADR-050,
+  (`docs/canonical/canon-version.json`), с 2026-07-27 (ADR-054,
   **`proposed`** — канон-кандидат PACK-10, раздел 19f). Предыдущая
   действующая версия — `0.7.0`, с 2026-07-25 (ADR-037, `accepted`).
 
@@ -68,15 +71,15 @@
 | [ADR-041](./ADR-041-governed-procedural-cases-and-deadlines.md)                          | PACK-09 governed procedural cases and deadlines — deadline state derived from an append-only history, never stored (amended: common legal-case substrate, immutable docket, three decision statuses)                                                                                                                                                                                         | accepted                                                                                                                              |
 | [ADR-042](./ADR-042-party-arbitration-independence.md)                                   | PACK-09 party arbitration independence — the decision-maker may not be a party, a handler or conflicted (amended: due-process prerequisites, recusal hooks, no AI decision)                                                                                                                                                                                                                  | accepted                                                                                                                              |
 | [ADR-043](./ADR-043-official-notice-legal-effect-trust-boundary.md)                      | Official notice, service telemetry and legal effect as three separate objects — only a governed `NoticeEffectDecision` may start a procedural deadline (Framework 0.8.1 hard invariants 39/40/57/59/60)                                                                                                                                                                                      | accepted                                                                                                                              |
-| [ADR-044](./ADR-044-pack-10-finance-service-decomposition.md)                            | PACK-10 finance domain service decomposition — one bounded context `services/finance-service` with explicitly separated internal modules, importing only `epd2_core` and `epd2_audit_core`                                                                                                                                                                                                   | proposed                                                                                                                              |
-| [ADR-045](./ADR-045-authoritative-finance-ledger-and-correction-model.md)                | Authoritative finance ledger, balanced posting and correction model — layered: the double-entry ledger is authoritative for monetary effect, the transaction register for the business fact and its provenance; integer minor units; posted entries immutable; period lock and controlled reopening                                                                                          | proposed                                                                                                                              |
-| [ADR-046](./ADR-046-purpose-scoped-financial-party-references-and-aggregation.md)        | Purpose-scoped financial party references and lawful aggregation without a global user ID — opaque handles per (perimeter, purpose, policy version), a governed matching act, restricted resolution, and no claim that pseudonymization creates anonymity                                                                                                                                    | proposed                                                                                                                              |
-| [ADR-047](./ADR-047-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md)  | `Rechenschaftsbericht` lifecycle, source snapshot and authority semantics — ten states, create-once snapshot, submission ≠ acceptance (only a PACK-09 `NoticeEffectDecision` reaches `accepted_by_authority`), publication ≠ approval, append-only versions                                                                                                                                  | proposed                                                                                                                              |
-| [ADR-048](./ADR-048-finance-authority-separation-and-independent-audit.md)               | Finance authority separation, incompatible roles and independent finance audit — four new institutional roles, five action-level separations, the extended non-combinable-role matrix PACK-08 section 9.3 explicitly reserved, create-once `AuditConclusion`                                                                                                                                 | proposed                                                                                                                              |
-| [ADR-049](./ADR-049-pack-10-pack-09-pack-11-pack-35-boundaries.md)                       | PACK-10 / PACK-09 / PACK-11 / PACK-35 ownership boundaries — the decidable financial-value versus influence-relationship test, reference-only PACK-09 integration, placeholder-only PACK-11 integration, and the `FinanceEvidenceRef` determination                                                                                                                                          | proposed                                                                                                                              |
-| [ADR-050](./ADR-050-canon-0.8.0-party-finance-context-additions.md)                      | Canon minor-version addition: Party Finance & Financial Accountability Context (`0.7.0 → 0.8.0`) — new section 19f, the `ФИН-01`–`ФИН-45` invariant register, four new institutional role codes, `FinancePartyHandle`, the twelve-state `Rechenschaftsbericht` lifecycle, section 20.17 (72 events), 21 section-22 ownership rows, 25 section-23 forbidden links, 45 section-24 reason codes | proposed                                                                                                                              |
+| [ADR-048](./ADR-048-pack-10-finance-service-decomposition.md)                            | PACK-10 finance domain service decomposition — one bounded context `services/finance-service` with explicitly separated internal modules, importing only `epd2_core` and `epd2_audit_core`                                                                                                                                                                                                   | proposed                                                                                                                              |
+| [ADR-049](./ADR-049-authoritative-finance-ledger-and-correction-model.md)                | Authoritative finance ledger, balanced posting and correction model — layered: the double-entry ledger is authoritative for monetary effect, the transaction register for the business fact and its provenance; integer minor units; posted entries immutable; period lock and controlled reopening                                                                                          | proposed                                                                                                                              |
+| [ADR-050](./ADR-050-purpose-scoped-financial-party-references-and-aggregation.md)        | Purpose-scoped financial party references and lawful aggregation without a global user ID — opaque handles per (perimeter, purpose, policy version), a governed matching act, restricted resolution, and no claim that pseudonymization creates anonymity                                                                                                                                    | proposed                                                                                                                              |
+| [ADR-051](./ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md)  | `Rechenschaftsbericht` lifecycle, source snapshot and authority semantics — ten states, create-once snapshot, submission ≠ acceptance (only a PACK-09 `NoticeEffectDecision` reaches `accepted_by_authority`), publication ≠ approval, append-only versions                                                                                                                                  | proposed                                                                                                                              |
+| [ADR-052](./ADR-052-finance-authority-separation-and-independent-audit.md)               | Finance authority separation, incompatible roles and independent finance audit — four new institutional roles, five action-level separations, the extended non-combinable-role matrix PACK-08 section 9.3 explicitly reserved, create-once `AuditConclusion`                                                                                                                                 | proposed                                                                                                                              |
+| [ADR-053](./ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md)                       | PACK-10 / PACK-09 / PACK-11 / PACK-35 ownership boundaries — the decidable financial-value versus influence-relationship test, reference-only PACK-09 integration, placeholder-only PACK-11 integration, and the `FinanceEvidenceRef` determination                                                                                                                                          | proposed                                                                                                                              |
+| [ADR-054](./ADR-054-canon-0.8.0-party-finance-context-additions.md)                      | Canon minor-version addition: Party Finance & Financial Accountability Context (`0.7.0 → 0.8.0`) — new section 19f, the `ФИН-01`–`ФИН-45` invariant register, four new institutional role codes, `FinancePartyHandle`, the twelve-state `Rechenschaftsbericht` lifecycle, section 20.17 (72 events), 21 section-22 ownership rows, 25 section-23 forbidden links, 45 section-24 reason codes | proposed                                                                                                                              |
 
-ADR-050 is this project's tenth governance round, the canon-amendment
+ADR-054 is this project's tenth governance round, the canon-amendment
 round for CLAUDE-PACK-10. `CANON_VERSION` moves `0.7.0 → 0.8.0`: a new
 canon section 19f ("Партийные финансы и финансовая отчётность / Party
 Finance & Financial Accountability Context"), inserted between sections
@@ -97,21 +100,21 @@ acknowledgement nor acceptance, governed effective-dated finance
 policies, and safe public financial projections.
 
 **Status: canon candidate, not accepted.** Unlike ADR-037, which was
-`accepted` in the round that performed PACK-08's canon edit, ADR-050 is
+`accepted` in the round that performed PACK-08's canon edit, ADR-054 is
 `proposed`: the amended canon in this archive is submitted for review.
 `REPOSITORY_VERSION` stays `0.9.0`, `canon-version.json` records
 `finance_context_implementation_status = "not_implemented"`, and **no
 `services/finance-service` directory, source file, schema, OpenAPI
 operation, migration, frontend page or reason-code registry file was
 created** — canon 19f.25 is the implementation gate, and implementation
-requires ADR-044 – ADR-049 **and** this canon content, with neither
+requires ADR-048 – ADR-053 **and** this canon content, with neither
 sufficient alone. Verification, exact commands and results:
 `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`; compatibility and the
 registry diff: `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`;
 acceptance evidence:
 `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`.
 
-ADR-044 through ADR-049 are this project's ninth governance round, the
+ADR-048 through ADR-053 are this project's ninth governance round, the
 specification/ADR round for CLAUDE-PACK-10 (Party Finance,
 Rechenschaftsbericht & Financial External Influence,
 `docs/packs/PACK-10-SPECIFICATION.md`), authored against the

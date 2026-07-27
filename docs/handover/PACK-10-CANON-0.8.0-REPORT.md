@@ -2,7 +2,7 @@
 
 Status: **PACK-10 CANON 0.8.0 CANDIDATE.** The canon amendment is applied
 in this archive and submitted for review. It is **not** a PASS release,
-and ADR-050 — the ADR that governs it — is `proposed`, not `accepted`.
+and ADR-054 — the ADR that governs it — is `proposed`, not `accepted`.
 This round is canon-only: no runtime implementation was added, and
 `REPOSITORY_VERSION` is unchanged.
 
@@ -11,17 +11,17 @@ This round is canon-only: no runtime implementation was added, and
 | Item                        | Value                                                                                                                            |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | Baseline archive            | `EPD2_PACK-10_SPECIFICATION_0.10.0_CANDIDATE.zip`                                                                                |
-| Baseline state              | PACK-01 – PACK-09 FINAL PASS; PACK-10 specification architecturally accepted by the owner, ADR-044 – ADR-049 formally `proposed` |
+| Baseline state              | PACK-01 – PACK-09 FINAL PASS; PACK-10 specification architecturally accepted by the owner, ADR-048 – ADR-053 formally `proposed` |
 | `CANON_VERSION` before      | `0.7.0`                                                                                                                          |
 | `CANON_VERSION` after       | `0.8.0`                                                                                                                          |
 | `REPOSITORY_VERSION` before | `0.9.0`                                                                                                                          |
 | `REPOSITORY_VERSION` after  | `0.9.0` — **unchanged**                                                                                                          |
-| Latest ADR before           | ADR-049                                                                                                                          |
-| ADR added                   | ADR-050 (`proposed`)                                                                                                             |
+| Latest ADR before           | ADR-053                                                                                                                          |
+| ADR added                   | ADR-054 (`proposed`)                                                                                                             |
 
 Normative inputs used: `docs/packs/PACK-10-SPECIFICATION.md`,
 `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md`,
-`docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md`, ADR-044 – ADR-049, the
+`docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md`, ADR-048 – ADR-053, the
 existing canonical document, the existing reason-code registries, the
 existing domain-event canon, and the existing ownership and
 forbidden-link conventions.
@@ -32,7 +32,7 @@ forbidden-link conventions.
 | ----------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
 | `scripts/check_canon_0_8_0.py`                                    | 1014  | Sixteen standalone canon-level checks                                            |
 | `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`                 | 478   | Compatibility statement, reason-code registry diff, event and report-state diffs |
-| `docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md` | 379   | The canon-amendment ADR (`proposed`)                                             |
+| `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md` | 379   | The canon-amendment ADR (`proposed`)                                             |
 | `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`             | 334   | Acceptance evidence and the `ФИН` ↔ `HI` coverage map                            |
 | `tests/repository/test_canon_0_8_0_amendment.py`                  | 121   | Pytest wrapper over the sixteen checks                                           |
 | `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`                     | 443   | This report                                                                      |
@@ -48,7 +48,7 @@ forbidden-link conventions.
 | `packages/python/epd2-core/tests/test_version.py`      | Expected canon version updated with the round's narrative comment                                                                                                                 |
 | `packages/typescript/epd2-types/tests/version.test.ts` | Same, on the TypeScript side                                                                                                                                                      |
 | `docs/canonical/README.md`                             | Current canon version, latest-amendment narrative, candidate status                                                                                                               |
-| `docs/adr/README.md`                                   | Canon-version line, ADR-050 index row, round narrative                                                                                                                            |
+| `docs/adr/README.md`                                   | Canon-version line, ADR-054 index row, round narrative                                                                                                                            |
 | `docs/architecture/data-ownership.md`                  | Twenty-one finance ownership rows, all marked not implemented                                                                                                                     |
 | `docs/architecture/service-boundaries.md`              | New finance trust-boundary section                                                                                                                                                |
 | `README.md`                                            | Canon `0.8.0`; the canon-round status entry                                                                                                                                       |
@@ -381,7 +381,7 @@ round added or changed:
 | ----------------------------------------------------------------- | ------------------ |
 | `docs/canonical/TZ-00-domain-event-canon.md`                      | `7c9f05ce7e686fa3` |
 | `docs/canonical/canon-version.json`                               | `6ffdd7089d269679` |
-| `docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md` | `ece021d75ae23556` |
+| `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md` | `ece021d75ae23556` |
 | `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`             | `a21dccf5f8e39d6b` |
 | `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`                 | `a2eb18937b27c04d` |
 | `scripts/check_canon_0_8_0.py`                                    | `31aae85752969ca9` |
@@ -421,7 +421,7 @@ contents to be verified independently of its packaging.)
   untouched.** No service source file, contract or existing test was
   modified.
 - **No accepted ADR was rewritten.** ADR-001 – ADR-043 are unchanged;
-  ADR-044 – ADR-049 remain `proposed`; ADR-050 is `proposed`. Check 16
+  ADR-048 – ADR-053 remain `proposed`; ADR-054 is `proposed`. Check 16
   enforces this and passes.
 - **Existing domain ownership is unchanged** except for the twenty-one
   additive finance rows the amendment explicitly introduces.
@@ -436,7 +436,7 @@ contents to be verified independently of its packaging.)
   statutory audit opinion; pseudonymization is not anonymity; and canon
   19f.25 states that implementation is authorized by neither this canon
   content nor the ADRs alone.
-- **This is a canon candidate.** ADR-050 is `proposed`. Until it is
+- **This is a canon candidate.** ADR-054 is `proposed`. Until it is
   accepted, the amended canon in this archive is a proposal that has been
   written into the document for review, not an accepted canon edit —
   `docs/canonical/README.md` and `docs/adr/README.md` say so in the same

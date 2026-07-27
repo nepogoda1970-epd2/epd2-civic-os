@@ -154,7 +154,7 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # ADR-037 - no further canon edit was made (no canon-owned file was
     # touched this round), so CANON_VERSION is unchanged at 0.7.0.
     # REPOSITORY_VERSION moved 0.8.0 -> 0.9.0 for PACK-09 compliance-service; canon unchanged.
-    # CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-050 (proposed, the
+    # CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-054 (proposed, the
     # PACK-10 canon-amendment round): new canon section 19f (Party
     # Finance & Financial Accountability Context) with twenty-one new
     # canonical entities owned by Finance Service, a forty-five-rule

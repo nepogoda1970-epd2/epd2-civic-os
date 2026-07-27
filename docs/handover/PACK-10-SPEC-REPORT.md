@@ -18,7 +18,7 @@ round's own results from PACK-09's separately confirmed external result.
 | `CANON_VERSION` before       | `0.7.0`                                               |
 | `CANON_VERSION` after        | `0.7.0` — unchanged                                   |
 | Latest accepted ADR at start | ADR-043                                               |
-| First ADR number used here   | ADR-044                                               |
+| First ADR number used here   | ADR-048                                               |
 | Baseline state               | PACK-01 through PACK-09 FINAL PASS; PACK-09 closed    |
 
 The baseline's own external verification result (556 required paths;
@@ -40,19 +40,19 @@ Documentation only. Line counts are as delivered.
 | `docs/packs/PACK-10-CROSS-PACK-BOUNDARIES.md`                                         | 390   | Ownership matrix, reads, references, forbidden edges     |
 | `docs/packs/PACK-10-OPEN-DECISIONS.md`                                                | 335   | OD-1 through OD-22                                       |
 | `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md`                                    | 297   | The explicit determination that an amendment is required |
-| `docs/adr/ADR-048-finance-authority-separation-and-independent-audit.md`              | 418   | ADR-E equivalent                                         |
-| `docs/adr/ADR-049-pack-10-pack-09-pack-11-pack-35-boundaries.md`                      | 380   | ADR-F equivalent                                         |
-| `docs/adr/ADR-045-authoritative-finance-ledger-and-correction-model.md`               | 353   | ADR-B equivalent                                         |
-| `docs/adr/ADR-047-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md` | 355   | ADR-D equivalent                                         |
-| `docs/adr/ADR-044-pack-10-finance-service-decomposition.md`                           | 340   | ADR-A equivalent                                         |
-| `docs/adr/ADR-046-purpose-scoped-financial-party-references-and-aggregation.md`       | 329   | ADR-C equivalent                                         |
+| `docs/adr/ADR-052-finance-authority-separation-and-independent-audit.md`              | 418   | ADR-E equivalent                                         |
+| `docs/adr/ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md`                      | 380   | ADR-F equivalent                                         |
+| `docs/adr/ADR-049-authoritative-finance-ledger-and-correction-model.md`               | 353   | ADR-B equivalent                                         |
+| `docs/adr/ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md` | 355   | ADR-D equivalent                                         |
+| `docs/adr/ADR-048-pack-10-finance-service-decomposition.md`                           | 340   | ADR-A equivalent                                         |
+| `docs/adr/ADR-050-purpose-scoped-financial-party-references-and-aggregation.md`       | 329   | ADR-C equivalent                                         |
 | `docs/handover/PACK-10-SPEC-REPORT.md`                                                | 308   | This report                                              |
 
 ## 3. Files changed — three
 
 | Path                 | Change                                                                                                                            |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/adr/README.md` | Six new index rows (ADR-044 – ADR-049, all `proposed`) and a narrative entry for this round. The canon-version line is untouched. |
+| `docs/adr/README.md` | Six new index rows (ADR-048 – ADR-053, all `proposed`) and a narrative entry for this round. The canon-version line is untouched. |
 | `README.md`          | One PACK-10 status entry identifying the pack as specification-only and not implemented.                                          |
 | `CHANGELOG.md`       | One new `## [Unreleased] - PACK-10 specification candidate (documentation only)` section, above the existing canon-0.7.0 entry.   |
 
@@ -66,12 +66,12 @@ fifteen are new, none is deleted or moved.
 
 | ADR     | Decision                                                                                                                                                                      |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ADR-044 | One bounded context `services/finance-service` with explicitly separated internal modules (option 3 of four analysed)                                                         |
-| ADR-045 | Layered ledger: the double-entry general ledger is authoritative for monetary effect, the transaction register for the business fact and provenance; posted entries immutable |
-| ADR-046 | Purpose-scoped opaque `FinancePartyHandle` with a governed matching act; lawful aggregation without a platform-wide identifier; restricted, audited resolution                |
-| ADR-047 | Ten-state `Rechenschaftsbericht` lifecycle; create-once source snapshot; submission ≠ acceptance ≠ publication; append-only version chain; frozen historical perimeter        |
-| ADR-048 | Four new institutional roles plus five action-level separations; the extended non-combinable-role matrix PACK-08 section 9.3 reserved; create-once `AuditConclusion`          |
-| ADR-049 | Ownership boundaries across PACK-08/09/10/11/12/13/14/35; reference-only PACK-09 integration; placeholder-only PACK-11 integration; `FinanceEvidenceRef` remains sufficient   |
+| ADR-048 | One bounded context `services/finance-service` with explicitly separated internal modules (option 3 of four analysed)                                                         |
+| ADR-049 | Layered ledger: the double-entry general ledger is authoritative for monetary effect, the transaction register for the business fact and provenance; posted entries immutable |
+| ADR-050 | Purpose-scoped opaque `FinancePartyHandle` with a governed matching act; lawful aggregation without a platform-wide identifier; restricted, audited resolution                |
+| ADR-051 | Ten-state `Rechenschaftsbericht` lifecycle; create-once source snapshot; submission ≠ acceptance ≠ publication; append-only version chain; frozen historical perimeter        |
+| ADR-052 | Four new institutional roles plus five action-level separations; the extended non-combinable-role matrix PACK-08 section 9.3 reserved; create-once `AuditConclusion`          |
+| ADR-053 | Ownership boundaries across PACK-08/09/10/11/12/13/14/35; reference-only PACK-09 integration; placeholder-only PACK-11 integration; `FinanceEvidenceRef` remains sufficient   |
 
 No separate reason-code ADR was created. ADR-004 already fixes the
 registry model and additive-code convention, the proposed catalogue lives
@@ -227,7 +227,7 @@ unverified, and none of them may be seeded as law.
 ## 8. Implementation blockers
 
 1. **The canon amendment has not been performed.** Implementation is
-   gated on ADR-044 – ADR-049 being accepted **and** the amendment
+   gated on ADR-048 – ADR-053 being accepted **and** the amendment
    landing. Neither authorizes implementation alone.
 2. **Nine legal open decisions** must be resolved before any policy
    content is seeded (section 7).

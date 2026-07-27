@@ -13,8 +13,8 @@ it has been built.
 | Repository version         | `0.9.0` — **unchanged by this round**                                                                                  |
 | Canon version              | `0.7.0` — **unchanged by this round**                                                                                  |
 | Confirmed baseline         | PACK-01 through PACK-09 FINAL PASS; PACK-09 closed                                                                     |
-| New services               | none created this round; one proposed (`services/finance-service`, ADR-044)                                            |
-| ADRs                       | ADR-044 through ADR-049, all `proposed`                                                                                |
+| New services               | none created this round; one proposed (`services/finance-service`, ADR-048)                                            |
+| ADRs                       | ADR-048 through ADR-053, all `proposed`                                                                                |
 | Canon amendment            | **required** — see `PACK-10-CANON-AMENDMENT-ASSESSMENT.md` and `PACK-10-CANON-AMENDMENT-PROPOSAL.md` (`0.7.0 → 0.8.0`) |
 | Builds on                  | PACK-08 organizational substrate; PACK-09 records, cases, deadlines, notices, holds — by typed reference only          |
 | Production code this round | none                                                                                                                   |
@@ -62,7 +62,7 @@ This round produces exactly five things:
 
 1. PACK-10 architecture analysis of the baseline repository.
 2. This normative specification.
-3. Six proposed ADRs (ADR-044 through ADR-049).
+3. Six proposed ADRs (ADR-048 through ADR-053).
 4. An explicit canon-amendment determination, with a proposal document.
 5. An implementation plan and acceptance matrix.
 
@@ -152,7 +152,7 @@ reopening; provenance of imported and manually entered transactions
 (`ImportBatch`); reconciliation status and evidence references
 (`ReconciliationRecord`).
 
-**Authoritative-model decision (ADR-045): layered, with a single
+**Authoritative-model decision (ADR-049): layered, with a single
 authoritative money layer.** The double-entry general ledger
 (`JournalEntry` + `PostingLine`) is the authoritative record of monetary
 effect. The transaction register (`FinancialTransaction`) is the
@@ -165,7 +165,7 @@ budget-versus-actual views and public views are all derived read models.
 A `FinancialTransaction` that has monetary effect and no balanced,
 posted `JournalEntry` is an incomplete state that fails closed on
 reporting, not a silently accepted record. Full option analysis:
-ADR-045.
+ADR-049.
 
 ### 4.2 B — Income
 
@@ -273,7 +273,7 @@ Specified: `ExpenseClaim` with claimant reference (purpose-scoped),
 organizational scope, purpose, amount, evidence references; submission;
 review; approval or rejection; payment authorization; settlement;
 correction; conflict checks; and segregation of requester, approver and
-payment executor where required (HI-32, HI-48; ADR-048).
+payment executor where required (HI-32, HI-48; ADR-052).
 
 ### 4.7 G — Assets, liabilities and obligations
 
@@ -350,7 +350,7 @@ relevant scope (PACK-08 section 9.3 rule 3, canon 19e.16; HI-31).
 Separation is analysed and specified among: transaction creator;
 transaction reviewer; finance administrator; payment authorizer; payment
 executor; report preparer; report approver; legally responsible
-signatory; finance auditor (ADR-048). Of these, four are proposed as new
+signatory; finance auditor (ADR-052). Of these, four are proposed as new
 **institutional** roles extending PACK-08's `OrganizationalAuthority`
 `role_code` set (`finance_administrator`, `payment_authorizer`,
 `payment_executor`, `report_signatory`); the remaining five are
@@ -362,7 +362,7 @@ No globally privileged role is introduced. Every proposed institutional
 role is justified, scoped to a single `OrganizationalScope`,
 effective-dated, revocable with a reason reference, and carries an
 explicit incompatibility set aligned with PACK-08 section 9.3 (HI-53,
-ADR-048).
+ADR-052).
 
 One pre-existing canon gap surfaced during this analysis and is recorded
 rather than quietly patched: canon 19e.16 rule 3 forbids combining
@@ -517,10 +517,10 @@ balancing, organizational scope, report consolidation, audit
 independence, transaction boundaries, cross-service coupling, later
 production data-plane migration, repository conventions, testability, the
 risk of a finance monolith and the risk of premature microservice
-fragmentation. The analysis is ADR-044; the decision is summarized here
+fragmentation. The analysis is ADR-048; the decision is summarized here
 because everything else in this document depends on it.
 
-**Decision (ADR-044): option 3 — one bounded context,
+**Decision (ADR-048): option 3 — one bounded context,
 `services/finance-service`, with explicitly separated internal
 modules.**
 
@@ -544,7 +544,7 @@ modules.**
 | `references.py`       | The typed references PACK-10 exports to later packs                                                                              |
 | `exceptions.py`       | One class per registered reason code                                                                                             |
 
-Why not the alternatives, in one line each (full reasoning in ADR-044):
+Why not the alternatives, in one line each (full reasoning in ADR-048):
 one undifferentiated `finance-service` (option 1) loses the audit and
 public-projection separation that HI-30/HI-35 need at module level;
 three services (option 2) puts a balanced double-entry write and its
@@ -590,7 +590,7 @@ folded into another concept; **RENAMED** = kept with a different name.
 | `AccountingPeriod`                 | AA       | `AccountingPeriod`                                                           | Owns the lock that every posting checks                                                                                                                                       |
 | `JournalEntry`                     | AA       | `JournalEntry`                                                               | The authoritative money record; balancing is its constructor invariant                                                                                                        |
 | `PostingLine`                      | VO       | inside `JournalEntry`                                                        | Has no identity or lifecycle apart from its entry                                                                                                                             |
-| `FinancialTransaction`             | AA       | `FinancialTransaction`                                                       | The authoritative business fact and provenance record (ADR-045)                                                                                                               |
+| `FinancialTransaction`             | AA       | `FinancialTransaction`                                                       | The authoritative business fact and provenance record (ADR-049)                                                                                                               |
 | `ReconciliationRecord`             | AA (CO)  | `ReconciliationRecord`                                                       | Create-once statement of a reconciliation act, with its own evidence references                                                                                               |
 | `ImportBatch`                      | AA       | `ImportBatch`                                                                | Provenance and replay detection anchor (HI-40, HI-41)                                                                                                                         |
 | `Contribution`                     | AA       | `Contribution`                                                               | Root of the receipt → assessment → decision → return history                                                                                                                  |
@@ -703,7 +703,7 @@ Two conventions apply to all of them and are not repeated in each entry:
   explicit correction/restatement decision.
 - **Authority:** `finance_administrator` to open/close;
   `finance_administrator` **plus** a distinct approving authority to
-  reopen — reopening is a dual-control action (HI-32, ADR-048).
+  reopen — reopening is a dual-control action (HI-32, ADR-052).
 - **Conflict checks:** the reopening approver may not be the actor who
   requested it.
 - **Append-only history:** every open/close/reopen is a history entry;
@@ -732,7 +732,7 @@ Two conventions apply to all of them and are not repeated in each entry:
   deleting a draft that has already been referenced by a submitted
   report snapshot.
 - **Authority:** creation by an actor with finance posting authority;
-  posting subject to the segregation rules of ADR-048 where the entry
+  posting subject to the segregation rules of ADR-052 where the entry
   settles a payment the same actor authorized (HI-32).
 - **Conflict checks:** self-approval prohibition where the entry
   implements a payment to the posting actor.
@@ -951,7 +951,7 @@ Two conventions apply to all of them and are not repeated in each entry:
   authorization; editing a settled claim.
 - **Authority:** reviewer (action-level), `finance_administrator` for
   approval, `payment_authorizer` for authorization, `payment_executor`
-  for settlement — four distinct authority references (ADR-048).
+  for settlement — four distinct authority references (ADR-052).
 - **Conflict checks:** mandatory declaration for reviewer, approver and
   authorizer; unknown fails closed (HI-33).
 - **Append-only history:** every review, decision and correction is
@@ -980,7 +980,7 @@ Two conventions apply to all of them and are not repeated in each entry:
   authority, producing the settling transaction; revocation before
   execution with reason.
 - **Forbidden transitions:** authorizer and executor being the same
-  authority (HI-32, HI-48 of ADR-048's role matrix); executing a revoked
+  authority (HI-32, HI-48 of ADR-052's role matrix); executing a revoked
   authorization; editing an executed authorization.
 - **Authority:** `payment_authorizer` to authorize, `payment_executor` to
   execute — both resolved as active PACK-08 authorities in scope (HI-53).
@@ -2117,12 +2117,12 @@ Honestly and exactly, so no reader over-reads it:
 ## 21. Deliverables of this round
 
 1. `docs/packs/PACK-10-SPECIFICATION.md` — this document.
-2. `docs/adr/ADR-044-pack-10-finance-service-decomposition.md`
-3. `docs/adr/ADR-045-authoritative-finance-ledger-and-correction-model.md`
-4. `docs/adr/ADR-046-purpose-scoped-financial-party-references-and-aggregation.md`
-5. `docs/adr/ADR-047-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
-6. `docs/adr/ADR-048-finance-authority-separation-and-independent-audit.md`
-7. `docs/adr/ADR-049-pack-10-pack-09-pack-11-pack-35-boundaries.md`
+2. `docs/adr/ADR-048-pack-10-finance-service-decomposition.md`
+3. `docs/adr/ADR-049-authoritative-finance-ledger-and-correction-model.md`
+4. `docs/adr/ADR-050-purpose-scoped-financial-party-references-and-aggregation.md`
+5. `docs/adr/ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
+6. `docs/adr/ADR-052-finance-authority-separation-and-independent-audit.md`
+7. `docs/adr/ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md`
 8. `docs/adr/README.md` — six new index rows and a round narrative.
 9. `docs/packs/PACK-10-OPEN-DECISIONS.md`
 10. `docs/packs/PACK-10-IMPLEMENTATION-PLAN.md`

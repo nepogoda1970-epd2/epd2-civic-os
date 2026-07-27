@@ -41,7 +41,7 @@ governing ADR, per ADR-037's precedent.
 
 ### 19f. Партийные финансы и финансовая отчётность (Party Finance & Financial Accountability Context)
 
-Предлагается версией канона 0.8.0 (ADR-044 через ADR-049, `proposed`,
+Предлагается версией канона 0.8.0 (ADR-048 через ADR-053, `proposed`,
 2026-07-27) и определяет каноническую модель управляемого домена партийных
 финансов: учёт, доходы и расходы, взносы, спонсорство и финансово измеримое
 внешнее влияние, возмещения, активы и обязательства, бюджеты и учётные
@@ -50,7 +50,7 @@ governing ADR, per ADR-037's precedent.
 19f, между разделами 19e и 20, чтобы не переносить нумерацию существующих
 разделов 20–30 — тот же приём, что при добавлении 19a–19e. Все новые
 сущности закреплены за новым `finance-service` (владелец: Finance Service,
-ADR-044), код которого настоящим разделом **не создаётся** (19f.20); модель
+ADR-048), код которого настоящим разделом **не создаётся** (19f.20); модель
 19e используется без изменений, и ни одно поле, статус или владелец разделов
 7–19e не изменяется.
 
@@ -342,13 +342,13 @@ Membership (19d) и Emergency/Crisis Override (19) не изменяются. Д
 каноническую модель. Ни код `finance-service`, ни база данных, ни миграция,
 ни event bus, ни OpenAPI, ни JSON Schema, ни реестр reason codes, ни
 frontend, ни production-интеграция не авторизуются одним лишь этим разделом
-(раздел 26; ADR-044 через ADR-049).
+(раздел 26; ADR-048 через ADR-053).
 
 ## 4. Proposed normative text — new section 20.17
 
 ### 20.17. Партийные финансы
 
-Добавлено версией канона 0.8.0 (ADR-044 через ADR-049, раздел 19f). События
+Добавлено версией канона 0.8.0 (ADR-048 через ADR-053, раздел 19f). События
 создаются исключительно `finance-service`; имена взяты дословно из
 спецификации PACK-10, раздел 14.
 
@@ -480,7 +480,7 @@ Twenty-one new rows — every PACK-10 authoritative aggregate — all owned by
 
 Accompanying note, in the style section 22 uses for the `0.3.0`–`0.7.0`
 additions: all twenty-one rows are physically realized by one new service,
-`finance-service` (ADR-044, not yet created — this is a canon round,
+`finance-service` (ADR-048, not yet created — this is a canon round,
 19f.20), the same "one physical service, several canonically named modules"
 principle already applied to `transparency-service`, `governance-service`
 and `organization-service`. No existing row changes. Children and
@@ -687,7 +687,7 @@ owner and payload semantics only.
   `docs/canonical/canon-version.json`; `CANON_VERSION` stays `0.7.0` in
   `epd2_core.version` and `epd2_types.version`; `REPOSITORY_VERSION` stays
   `0.9.0`. Section 1's decision is a recommendation for a later round.
-- **It writes no code, schema or contract**, accepts no ADR (ADR-044–ADR-049
+- **It writes no code, schema or contract**, accepts no ADR (ADR-048–ADR-053
   remain `proposed`, even accepted they authorize no canon edit — ADR-037
   requires a governing ADR for the round itself), authorizes no
   implementation, and claims no legal compliance, authority acceptance or

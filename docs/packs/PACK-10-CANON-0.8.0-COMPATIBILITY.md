@@ -62,7 +62,7 @@ The amendment is purely additive. Item by item:
   `docs/adr/README.md`, `docs/architecture/data-ownership.md`,
   `docs/architecture/service-boundaries.md`, `README.md` and
   `CHANGELOG.md` — and six new files: one ADR
-  (`docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md`),
+  (`docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md`),
   this document,
   `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`,
   `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`, one new script
@@ -327,7 +327,7 @@ map onto the canon's twelve (`19f.17`) as follows:
 | `amended_or_restated`                        | `amended`, `restated`, `superseded` | split into three; `superseded` is new and terminal |
 
 The canon names are now authoritative. `PACK-10-SPECIFICATION.md`
-section `4.9` and `docs/adr/ADR-047-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
+section `4.9` and `docs/adr/ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md`
 still use the earlier, ten-state names, because they are
 architecturally accepted (the ADRs themselves remain `proposed`)
 specification and ADR text and are not rewritten after the fact. An
@@ -462,9 +462,9 @@ those require their own separate, later, governed round (`19f.25`).
   (section 1), and resolve `OD-20` as part of authorizing that round,
   not before.
 - **Report-state naming divergence (section 5).** The specification
-  and ADR-047 use the ten-state names; the canon uses twelve. Recommended
+  and ADR-051 use the ten-state names; the canon uses twelve. Recommended
   handling: treat the canon names as authoritative for all future
-  work and leave the specification and ADR-047 text as historical
+  work and leave the specification and ADR-051 text as historical
   record of the state at proposal time, rather than editing the
   architecturally accepted
   documents to match later canon text.

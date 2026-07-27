@@ -243,7 +243,7 @@ sections in those files already establish; the remaining eight extend
 ## 5. Architecture tests
 
 These tests exercise the repository's structural rules: the import
-graph, the module-boundary rules ADR-044 fixes, and the absence of
+graph, the module-boundary rules ADR-048 fixes, and the absence of
 modules PACK-10 must not contain, following specification section 18's
 list — forbidden imports, direct storage access prohibition,
 identity-service isolation, voting-service isolation, PACK-09
@@ -304,7 +304,7 @@ ones the new `pack-10.yml` registry requires.
 | `AT-126` | `tests/contract/test_reason_codes_registry.py::test_pack10_reason_codes_registry_loads_and_validates`                           | `contracts/reason-codes/pack-10.yml` parses and validates against the registry schema                       | `HI-43`          |
 | `AT-127` | `tests/contract/test_reason_codes_registry.py::test_every_pack10_reason_code_has_all_seven_mandatory_fields`                    | Every entry has `code`, `meaning`, `severity`, `description`, `retryable`, `owner`, `introduced_in_version` | `HI-43`          |
 | `AT-128` | `tests/contract/test_reason_codes_registry.py::test_no_pack10_reason_code_duplicates_an_existing_code_with_different_semantics` | No new `FINANCE_*` code duplicates the meaning of an existing code from another pack                        | `HI-43`          |
-| `AT-129` | `tests/repository/test_version_consistency.py::test_the_adr_index_lists_every_accepted_and_proposed_adr_without_gaps`           | `docs/adr/README.md` lists ADR-044 through ADR-049 with no numbering gap                                    | `HI-43`          |
+| `AT-129` | `tests/repository/test_version_consistency.py::test_the_adr_index_lists_every_accepted_and_proposed_adr_without_gaps`           | `docs/adr/README.md` lists ADR-048 through ADR-053 with no numbering gap                                    | `HI-43`          |
 | `AT-130` | `tests/repository/test_version_consistency.py::test_repository_version_and_canon_version_agree_across_every_declared_file`      | `REPOSITORY_VERSION` and `CANON_VERSION` agree across every file that declares them                         | `HI-44`          |
 | `AT-131` | `tests/repository/test_version_consistency.py::test_readme_and_changelog_agree_on_the_current_repository_version`               | `README.md` and `CHANGELOG.md` state the same `REPOSITORY_VERSION`                                          | `HI-43`          |
 | `AT-132` | `tests/repository/test_forbidden_paths.py::test_no_generated_or_cache_artifact_exists_under_services_finance_service`           | No `__pycache__`, `.pyc` or build artifact exists under `services/finance-service`                          | `HI-47`          |

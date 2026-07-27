@@ -14,7 +14,7 @@ Two gates are hard, and neither one alone is sufficient — this
 mirrors canon 19e.23's implementation-gate wording for
 `organization-service`, applied here to `finance-service`:
 
-1. **ADR-044 through ADR-049 accepted.** All six are currently
+1. **ADR-048 through ADR-053 accepted.** All six are currently
    `proposed` (specification section 0, section 21). An implementation
    round may not begin against a proposed ADR.
 2. **The canon amendment lands as its own dedicated round.** Section 17

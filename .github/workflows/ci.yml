@@ -56,8 +56,8 @@ jobs:
       - name: Lint (Python)
         run: uv run ruff check .
 
-      - name: Type check (Python)
-        run: uv run mypy .
+      - name: Type check (collision-safe repository command)
+        run: make typecheck
 
       - name: Python tests
         run: uv run pytest
@@ -79,6 +79,9 @@ jobs:
 
       - name: Frontend build
         run: npm run build --workspace=frontend/web-shell
+
+      - name: Browser, accessibility, and visual regression tests
+        run: npm run test:browser --workspace=frontend/web-shell
 
 # This workflow does not use any repository secrets, does not deploy
 # anything, and does not publish any package. It only verifies the

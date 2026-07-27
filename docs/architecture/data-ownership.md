@@ -38,7 +38,7 @@ production-базы данных). Подробности — в
 двадцать одну каноническую сущность финансового контура (canon 19f, раздел 22) с владельцем `Finance Service`. Ни одна из них **не реализована**:
 `services/finance-service` не создан и настоящей поправкой не авторизуется
 (19f.25, ворота реализации). Строки ниже отражают каноническое владение, а
-не факт реализации. Подробности — `docs/adr/ADR-050-canon-0.8.0-party-finance-context-additions.md`,
+не факт реализации. Подробности — `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md`,
 `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`.
 
 | Domain                               | Future owner                  | Current implementation                                  |

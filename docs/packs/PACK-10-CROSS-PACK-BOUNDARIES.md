@@ -1,6 +1,6 @@
 # CLAUDE-PACK-10 — Cross-pack boundaries and dependency matrix
 
-PACK-10 is not implemented. `PACK-10-SPECIFICATION.md` and ADR-049 have
+PACK-10 is not implemented. `PACK-10-SPECIFICATION.md` and ADR-053 have
 already decided, concept by concept, who owns what across PACK-08,
 PACK-09, PACK-10, PACK-11 and PACK-35; this document does not
 re-decide anything. It restates that decision as one operational
@@ -14,7 +14,7 @@ prose each time.
 
 Nothing here authorizes implementation, creates a canonical entity, or
 amends canon. Where this document restates a hard invariant (`HI-_n_`)
-or an open decision (`OD-_n_`), the specification and ADR-049 remain
+or an open decision (`OD-_n_`), the specification and ADR-053 remain
 the authoritative source; this document only indexes them for a
 finance-service implementation round to check itself against.
 
@@ -117,7 +117,7 @@ could accidentally cross either one while wiring a read:
 
 PACK-10 consumes PACK-09 exclusively through the reference types
 PACK-09's own `references.py` exports, matching the table
-`PACK-10-SPECIFICATION.md` section 11 and ADR-049 both already fix:
+`PACK-10-SPECIFICATION.md` section 11 and ADR-053 both already fix:
 
 | PACK-09 reference type | Used for                                                                                 | Must never be inferred from holding it                                                                                                 |
 | ---------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -168,7 +168,7 @@ carries its scope, carries no content, and is never a person:
 `FinanceEvidenceRef`, a `PlaceholderRef` subclass with
 `owner = PlaceholderOwner.PACK_10_FINANCE`, so a PACK-09 case, filing,
 hearing or notice can point at finance material without PACK-09
-owning it. Both the specification (section 11.1) and ADR-049 reach
+owning it. Both the specification (section 11.1) and ADR-053 reach
 the same disposition: **it remains sufficient and needs no
 replacement**, with one documentation-level semantic correction —
 the name says "evidence", but the object it points at is a PACK-10
@@ -192,7 +192,7 @@ breaking any reference already minted.
 is a change to PACK-09's own module, and therefore a PACK-09-side
 ADR in a separate round, with its own review — recorded as **OD-15**,
 specified but not required, and not implemented by this document, the
-specification, or ADR-049.
+specification, or ADR-053.
 
 ## 4. PACK-11 integration requirements
 
@@ -287,7 +287,7 @@ uncertain — a subsidized venue whose market-value gap is disputed, or
 an access arrangement whose benefit is real but not yet valued — the
 uncertainty is recorded as **OD-19**, not silently resolved. A record
 in that state stays wherever it was first created until OD-19 is
-resolved by the project owner; neither this document nor ADR-049
+resolved by the project owner; neither this document nor ADR-053
 picks a default owner for the uncertain case.
 
 ## 6. Forbidden edges
@@ -384,7 +384,7 @@ PACK-10 itself depends only on PACK-08's and PACK-09's published
 interfaces rather than their internals.
 
 This document itself follows the same discipline it describes: it is
-additive-only alongside `PACK-10-SPECIFICATION.md` and ADR-049, not a
+additive-only alongside `PACK-10-SPECIFICATION.md` and ADR-053, not a
 replacement for either. Where a later round finds that this document
-and the specification disagree, the specification and ADR-049 govern,
+and the specification disagree, the specification and ADR-053 govern,
 and this document is corrected to match — never the reverse.

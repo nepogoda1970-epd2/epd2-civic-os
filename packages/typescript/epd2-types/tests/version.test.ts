@@ -133,7 +133,7 @@ test("current versions match the expected skeleton version", () => {
   // against the already-accepted canon 0.7.0 text and ADR-032 through
   // ADR-037 - no further canon edit was made (no canon-owned file was
   // touched this round), so CANON_VERSION is unchanged at 0.7.0.
-  // CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-050 (proposed, the
+  // CANON_VERSION moved 0.7.0 -> 0.8.0 per ADR-054 (proposed, the
   // PACK-10 canon-amendment round): new canon section 19f (Party Finance
   // & Financial Accountability Context) with twenty-one new canonical
   // entities owned by Finance Service, a forty-five-rule finance-invariant

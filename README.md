@@ -1,5 +1,10 @@
 # EPD² Civic OS
 
+> FRONT-00 adds a frontend foundation **implementation candidate** to the existing
+> Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
+> not activate a production or legally effective workflow. Documentation starts
+> at `docs/frontend/FRONT-00-SPECIFICATION.md`.
+
 ## Назначение репозитория
 
 EPD² Civic OS — открытая цифровая инфраструктура для гражданского и партийного
@@ -144,7 +149,7 @@ eID-интеграция, географическая/избирательна�
   `IdentityRecord`); ADR-026–031, канон раздел 19d. См.
   `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` для полного описания.
 - Canon version: `0.8.0` (`docs/canonical/TZ-00-domain-event-canon.md`),
-  с 2026-07-27 — CLAUDE-PACK-10 canon-amendment round под ADR-050
+  с 2026-07-27 — CLAUDE-PACK-10 canon-amendment round под ADR-054
   (**`proposed`**, канон-кандидат): новый раздел 19f (Party Finance &
   Financial Accountability Context), новый подраздел 20.17 (72 события),
   21 новая строка раздела 22, 25 новых записей раздела 23, 45 новых
@@ -308,7 +313,7 @@ eID-интеграция, географическая/избирательна�
   идентификатора лица, жизненный цикл `Rechenschaftsbericht`, где
   подача не равна принятию, независимый финансовый аудит и производные
   публичные представления), шесть ADR в статусе `proposed`
-  (ADR-044 – ADR-049), модель угроз, матрицу приёмки, план реализации,
+  (ADR-048 – ADR-053), модель угроз, матрицу приёмки, план реализации,
   межпакетные границы, открытые решения и **заключение о необходимости
   поправки канона** (`0.7.0 → 0.8.0`, новый раздел 19f) —
   `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md`,
@@ -335,7 +340,7 @@ eID-интеграция, географическая/избирательна�
   `finance_context_implementation_status = "not_implemented"`. **Ни один
   файл реализации не добавлен:** нет `services/finance-service`, нет
   миграций, OpenAPI-операций, runtime-схем, frontend-страниц и
-  бизнес-тестов. ADR-050 и ADR-044 – ADR-049 остаются `proposed`.
+  бизнес-тестов. ADR-054 и ADR-048 – ADR-053 остаются `proposed`.
   Результат — **PACK-10 CANON 0.8.0 CANDIDATE**, не PASS. См.
   `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`,
   `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`,
@@ -349,7 +354,7 @@ eID-интеграция, географическая/избирательна�
   `ConflictOfInterestDeclaration`, `CrossScopeAuthorityGrant`; см.
   `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`. PACK-09 не вносил
   изменений в канон; `CANON_VERSION` оставался `0.7.0` до
-  канон-раунда PACK-10 (ADR-050, `0.7.0 → 0.8.0`), который не меняет
+  канон-раунда PACK-10 (ADR-054, `0.7.0 → 0.8.0`), который не меняет
   `REPOSITORY_VERSION`. Предыдущая
   версия `0.8.0` соответствовала CLAUDE-PACK-08 implementation:
   `organization-service` — `Organization`, `CivicSpace`,

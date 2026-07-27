@@ -16,6 +16,7 @@ Must be run from the repository root (see docs/development/local-development.md)
 
 from scripts.check_canon_0_8_0 import (
     REPO_ROOT,
+    check_adr_registry_integrity,
     check_adr_set_unchanged,
     check_canon_version_declared,
     check_cross_pack_ownership_unchanged,
@@ -119,3 +120,8 @@ def test_no_accepted_adr_was_rewritten() -> None:
 def test_canon_0_8_0_amendment_has_no_problems() -> None:
     problems = find_problems(REPO_ROOT)
     assert problems == [], f"Canon 0.8.0 amendment problems: {problems}"
+
+
+def test_adr_registry_ids_are_unique_and_match_their_titles() -> None:
+    problems = check_adr_registry_integrity(REPO_ROOT)
+    assert problems == [], f"ADR registry integrity problems: {problems}"

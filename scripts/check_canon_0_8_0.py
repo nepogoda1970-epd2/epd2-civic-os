@@ -26,6 +26,7 @@ location.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -136,10 +137,41 @@ IGNORED_DIRECTORY_NAMES: frozenset[str] = frozenset(
 # ADR expectations
 # ---------------------------------------------------------------------------
 
-# ADR-001 .. ADR-043 predate this round and must be untouched by it.
-ADR_PRE_EXISTING_RANGE: tuple[int, int] = (1, 43)
-# ADR-044 .. ADR-050 are this round's own ADRs and must all be `proposed`.
-ADR_THIS_ROUND_RANGE: tuple[int, int] = (44, 50)
+# This round's ADRs are declared as an explicit manifest of (id, filename)
+# pairs. PACK-10 ownership is never inferred from a numeric range: ADR
+# numbering is shared with the FRONT-00/FRONT-01 rounds, and a range would
+# silently capture whichever file a glob happened to sort first - the exact
+# defect that produced the ADR-044..047 collision resolved in CANDIDATE-5
+# (docs/handover/PACK-10-CANON-0.8.0-CUMULATIVE-REBASE-REPORT.md section 6).
+PACK10_ADRS: tuple[tuple[int, str], ...] = (
+    (48, "ADR-048-pack-10-finance-service-decomposition.md"),
+    (49, "ADR-049-authoritative-finance-ledger-and-correction-model.md"),
+    (50, "ADR-050-purpose-scoped-financial-party-references-and-aggregation.md"),
+    (51, "ADR-051-rechenschaftsbericht-lifecycle-snapshot-and-authority-semantics.md"),
+    (52, "ADR-052-finance-authority-separation-and-independent-audit.md"),
+    (53, "ADR-053-pack-10-pack-09-pack-11-pack-35-boundaries.md"),
+    (54, "ADR-054-canon-0.8.0-party-finance-context-additions.md"),
+)
+PACK10_ADR_FILENAMES: dict[int, str] = dict(PACK10_ADRS)
+
+# The four FRONT-00/FRONT-01 ADRs, pinned by SHA-256 exactly as delivered by
+# EPD2_FRONT-01_PUBLIC_WEBSITE_0.2.0_CANDIDATE-2.zip. A canon round must not
+# touch frontend decisions; a later frontend round that legitimately edits
+# one of these files updates its digest here in the same change.
+FRONTEND_ADR_DIGESTS: dict[str, str] = {
+    "ADR-044-shared-frontend-source-runtime-isolation.md": (
+        "8aee6fbd31d9208b7a48da9b056294571358d00cf7cf88a11b7b397bd3fd2344"
+    ),
+    "ADR-045-existing-visual-baseline-preservation.md": (
+        "23daab47ee25bd2de30d3e3e687d5277d503bc072d9ccbda078cd8036a9e67e0"
+    ),
+    "ADR-046-voting-client-origin-and-build-isolation.md": (
+        "01e55d3013e25908d33b6a8b3b7c412796f06fb561f992775960c4fbb2d0043b"
+    ),
+    "ADR-047-frontend-browser-storage-policy.md": (
+        "8fe3933c8d4947207174d0de25af6bcbe6232f7c1092dc31f50825645d186e9b"
+    ),
+}
 
 # ADR-007 is documented as "reserved - not used by this governance round"
 # in docs/adr/README.md and has never existed. The ADR list in
@@ -148,7 +180,16 @@ ADR_THIS_ROUND_RANGE: tuple[int, int] = (44, 50)
 # weakening of this check.
 ADR_NUMBERS_KNOWN_ABSENT: frozenset[int] = frozenset({7})
 
+# Every ADR number that predates this round: ADR-001..ADR-047 (PACK-01
+# through PACK-09 plus the FRONT-00/FRONT-01 set), minus the recorded gap.
+PRE_EXISTING_ADR_NUMBERS: tuple[int, ...] = tuple(
+    number for number in range(1, 48) if number not in ADR_NUMBERS_KNOWN_ABSENT
+)
+
 EXPECTED_THIS_ROUND_ADR_STATUS = "proposed"
+
+_ADR_FILENAME_RE = re.compile(r"^ADR-(\d{3})-[a-z0-9.\-]+\.md$")
+_ADR_HEADING_RE = re.compile(r"^#\s*ADR-(\d{3})\b")
 
 _BULLET_RE = re.compile(r"^\s*(?:[-*+]\s|\d+\.\s)")
 _EVENT_NAME_RE = re.compile(r"^\s*-\s+`([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)`")
@@ -273,9 +314,41 @@ def _load_canon_metadata(root: Path) -> tuple[dict[str, object] | None, str | No
 
 
 def _adr_path(root: Path, number: int) -> Path | None:
-    """Return the single docs/adr/ADR-NNN-*.md file, or None if absent."""
+    """Return the first docs/adr/ADR-NNN-*.md file, or None if absent.
+
+    Used for pre-existing ADRs, where exactly one file carries each
+    number - a property check 17 verifies for the whole registry. This
+    round's own ADRs are resolved through the explicit manifest instead
+    (`_adr_path_this_round`)."""
     matches = sorted((root / "docs/adr").glob(f"ADR-{number:03d}-*.md"))
     return matches[0] if matches else None
+
+
+def _adr_path_this_round(root: Path, number: int) -> Path | None:
+    """Return this round's ADR file for `number`, resolved by exact name."""
+    filename = PACK10_ADR_FILENAMES.get(number)
+    if filename is None:
+        return None
+    path = root / "docs/adr" / filename
+    return path if path.is_file() else None
+
+
+def _adr_heading_number(text: str) -> int | None:
+    """Return the ADR id declared by the document's own `# ADR-NNN` title."""
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        match = _ADR_HEADING_RE.match(stripped)
+        return int(match.group(1)) if match else None
+    return None
+
+
+def _adr_files(root: Path) -> list[Path]:
+    """Every ADR document, excluding the template."""
+    return sorted(
+        path for path in (root / "docs/adr").glob("ADR-*.md") if path.name != "ADR-000-template.md"
+    )
 
 
 def _adr_status(text: str) -> str:
@@ -898,20 +971,19 @@ def check_reason_code_registry(root: Path) -> list[str]:
 
 
 def check_adr_set_unchanged(root: Path) -> list[str]:
-    """ADR-001..043 survive untouched by 0.8.0; ADR-044..050 are `proposed`.
+    """Pre-existing ADRs survive untouched; this round's ADRs are `proposed`.
 
     The strong form of this check would compare accepted ADRs byte for
     byte against their pre-round content, which a self-contained checker
-    cannot do. The weaker, self-contained form used here: every
-    pre-existing ADR must still be present, and none of them may carry
-    `0.8.0` in its Status or Date block - i.e. this round re-statused
-    none of them.
+    cannot do for the whole registry. The weaker, self-contained form used
+    here: every pre-existing ADR must still be present, none of them may
+    carry `0.8.0` in its Status or Date block - i.e. this round re-statused
+    none of them - and every ADR of this round, resolved through the
+    explicit manifest, must be `proposed`.
     """
     problems: list[str] = []
 
-    for number in range(ADR_PRE_EXISTING_RANGE[0], ADR_PRE_EXISTING_RANGE[1] + 1):
-        if number in ADR_NUMBERS_KNOWN_ABSENT:
-            continue
+    for number in PRE_EXISTING_ADR_NUMBERS:
         path = _adr_path(root, number)
         if path is None:
             problems.append(f"docs/adr/ADR-{number:03d}-*.md is missing.")
@@ -930,12 +1002,10 @@ def check_adr_set_unchanged(root: Path) -> list[str]:
                     f"re-status or re-date a pre-existing ADR."
                 )
 
-    for number in range(ADR_THIS_ROUND_RANGE[0], ADR_THIS_ROUND_RANGE[1] + 1):
-        if number in ADR_NUMBERS_KNOWN_ABSENT:
-            continue
-        path = _adr_path(root, number)
+    for number, filename in PACK10_ADRS:
+        path = _adr_path_this_round(root, number)
         if path is None:
-            problems.append(f"docs/adr/ADR-{number:03d}-*.md is missing.")
+            problems.append(f"docs/adr/{filename} is missing.")
             continue
         try:
             text = path.read_text(encoding="utf-8")
@@ -947,6 +1017,96 @@ def check_adr_set_unchanged(root: Path) -> list[str]:
             problems.append(
                 f"{path.relative_to(root).as_posix()}: Status is {status!r}, expected "
                 f"{EXPECTED_THIS_ROUND_ADR_STATUS!r} - the 0.8.0 round accepts no ADR."
+            )
+
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# Check 17 - ADR registry integrity
+# ---------------------------------------------------------------------------
+
+
+def check_adr_registry_integrity(root: Path) -> list[str]:
+    """Repository-wide ADR identity rules.
+
+    Four assertions, all evaluated over the real contents of docs/adr:
+
+    1. every ADR number is globally unique - no two documents may claim
+       the same id (the CANDIDATE-4 defect this check exists to prevent);
+    2. every filename id matches the id the document declares in its own
+       `# ADR-NNN` title;
+    3. every ADR of this round exists, at the manifest filename and id;
+    4. the FRONT-00/FRONT-01 ADRs are byte-identical to the pinned
+       digests - a canon round does not touch frontend decisions.
+    """
+    problems: list[str] = []
+
+    adr_dir = root / "docs/adr"
+    if not adr_dir.is_dir():
+        return [f"{adr_dir.relative_to(root).as_posix()} is missing."]
+
+    seen: dict[int, list[str]] = {}
+    for path in _adr_files(root):
+        name = path.name
+        match = _ADR_FILENAME_RE.match(name)
+        if match is None:
+            problems.append(
+                f"docs/adr/{name}: filename does not follow the "
+                f"ADR-NNN-lower-case-slug.md convention."
+            )
+            continue
+        number = int(match.group(1))
+        seen.setdefault(number, []).append(name)
+
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            problems.append(f"docs/adr/{name}: unreadable.")
+            continue
+        declared = _adr_heading_number(text)
+        if declared is None:
+            problems.append(
+                f"docs/adr/{name}: no `# ADR-NNN` title - the document does not declare its own id."
+            )
+        elif declared != number:
+            problems.append(
+                f"docs/adr/{name}: filename id ADR-{number:03d} does not match the "
+                f"title id ADR-{declared:03d}."
+            )
+
+    for number, names in sorted(seen.items()):
+        if len(names) > 1:
+            listed = ", ".join(sorted(names))
+            problems.append(
+                f"ADR-{number:03d} is claimed by {len(names)} documents ({listed}) - "
+                f"ADR ids must be globally unique."
+            )
+
+    for number, filename in PACK10_ADRS:
+        path = adr_dir / filename
+        if not path.is_file():
+            problems.append(f"docs/adr/{filename} is missing - this round declares it.")
+            continue
+        match = _ADR_FILENAME_RE.match(filename)
+        if match is not None and int(match.group(1)) != number:
+            problems.append(
+                f"docs/adr/{filename}: manifest id ADR-{number:03d} does not match the filename."
+            )
+
+    for filename, expected_digest in sorted(FRONTEND_ADR_DIGESTS.items()):
+        path = adr_dir / filename
+        if not path.is_file():
+            problems.append(
+                f"docs/adr/{filename} is missing - a pre-existing frontend ADR must not be removed."
+            )
+            continue
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != expected_digest:
+            problems.append(
+                f"docs/adr/{filename}: SHA-256 {actual[:16]}... does not match the "
+                f"pinned {expected_digest[:16]}... - this round must not modify a "
+                f"frontend ADR."
             )
 
     return problems
@@ -973,6 +1133,7 @@ CHECKS: tuple[tuple[str, str], ...] = (
     ("check_finance_event_catalogue", "20.17 event catalogue governed"),
     ("check_reason_code_registry", "reason codes unique and complete"),
     ("check_adr_set_unchanged", "no accepted ADR rewritten"),
+    ("check_adr_registry_integrity", "ADR ids unique, titles match, pins hold"),
 )
 
 
@@ -996,6 +1157,7 @@ def find_problems(root: Path) -> list[str]:
     problems.extend(check_finance_event_catalogue(root))
     problems.extend(check_reason_code_registry(root))
     problems.extend(check_adr_set_unchanged(root))
+    problems.extend(check_adr_registry_integrity(root))
     return problems
 
 

@@ -37,7 +37,7 @@ determination decidable.
 
 **Option 2. A canon amendment is required — not optional, not
 conditional.** This matches `docs/packs/PACK-10-SPECIFICATION.md`
-section 17 and ADR-044 through ADR-049. PACK-10 fails the option-1 test
+section 17 and ADR-048 through ADR-053. PACK-10 fails the option-1 test
 on all four exclusions at once:
 
 - **New cross-system invariants** — balanced posting, correction-only
@@ -175,7 +175,7 @@ their count. PACK-10 separates nine acts — transaction creator, transaction
 reviewer, finance administrator, payment authorizer, payment executor,
 report preparer, report approver, legally responsible signatory, finance
 auditor — of which four become institutional `role_code` values and five
-stay action-level separations recorded on the act (ADR-048). Keeping five of
+stay action-level separations recorded on the act (ADR-052). Keeping five of
 nine _out_ of the role vocabulary is itself canon-relevant: it is how the
 platform declines to expand its privilege surface, and 19e.16's baseline is
 where that limit belongs. Period reopening as a dual-control action, and the
@@ -230,7 +230,7 @@ owns. It cannot, and the reasons are structural, not stylistic:
 | Add forbidden links        | Canon section 23 is the only canonical list of prohibited edges                                                                  | Ten edge-prohibition invariants (HI-2, HI-12, HI-21, HI-22, HI-28, HI-35, HI-37, HI-38, HI-48, HI-53) bind no other service |
 | Add canonical events       | Canon section 20 is the event catalogue; section 21's envelope is reused unchanged                                               | Sixty-nine names outside section 20 form a second, competing catalogue                                                      |
 | Add entity vocabulary      | Only canon can state that the finance `Contribution` is not canon 13.2's, or that a finance account is not canon 7.2's `Account` | Two entities share one canonical name by convention only                                                                    |
-| Amend canon by ADR alone   | ADR-010, ADR-013, ADR-018, ADR-023, ADR-028 and ADR-037 each fixed acceptance and canon edit as two authorized steps             | ADR-044 through ADR-049 are the first step and each says so                                                                 |
+| Amend canon by ADR alone   | ADR-010, ADR-013, ADR-018, ADR-023, ADR-028 and ADR-037 each fixed acceptance and canon edit as two authorized steps             | ADR-048 through ADR-053 are the first step and each says so                                                                 |
 
 ## 5. What would have to be true for option 1, and is not
 
@@ -268,7 +268,7 @@ before any PACK-10 implementation round begins.** The pattern is
 PACK-08's, exactly:
 
 1. Specification and decision ADRs accepted (there ADR-032–ADR-036, here
-   ADR-044–ADR-049), each declining to authorize implementation.
+   ADR-048–ADR-053), each declining to authorize implementation.
 2. A dedicated canon round whose governing ADR authorizes and performs
    the edit (there ADR-037, `CANON_VERSION` `0.6.0 → 0.7.0`, reported in
    `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`). Here it would move
@@ -292,6 +292,6 @@ prevent.
   `packages/typescript/epd2-types/src/version.ts`.
 - It does not perform the amendment; the text in
   `docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md` is a proposal.
-- It accepts no ADR (ADR-044–ADR-049 remain `proposed`), authorizes no
+- It accepts no ADR (ADR-048–ADR-053 remain `proposed`), authorizes no
   implementation, and claims no legal compliance, tax compliance,
   authority acceptance or production readiness.
