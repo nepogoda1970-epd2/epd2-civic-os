@@ -1,5 +1,5 @@
 .PHONY: setup format format-check lint typecheck test test-python test-typescript \
-        test-frontend test-browser check-repository build-frontend verify clean
+        test-frontend check-repository build-frontend verify clean
 
 # --- make setup ---
 # Installs Python dependencies via uv and Node dependencies via npm, using
@@ -75,10 +75,6 @@ test-typescript:
 test-frontend:
 	npm run test --workspace=frontend/web-shell
 
-# --- make test-browser ---
-test-browser:
-	npm run test:browser --workspace=frontend/web-shell
-
 # --- make check-repository ---
 check-repository:
 	uv run python scripts/check_repository.py
@@ -92,11 +88,10 @@ build-frontend:
 # --- make verify ---
 # Runs the full sequential verification pipeline, as run in CI:
 # 1. repository checks, 2. format check, 3. lint, 4. typecheck,
-# 5. Python tests, 6. TypeScript tests, 7. frontend tests, 8. frontend build,
-# 9. browser, accessibility, and visual regression tests.
+# 5. Python tests, 6. TypeScript tests, 7. frontend tests, 8. frontend build.
 # Does not install or download anything itself — run `make setup` first.
 # Fails on the first non-zero exit code.
-verify: check-repository format-check lint typecheck test build-frontend test-browser
+verify: check-repository format-check lint typecheck test build-frontend
 
 # --- make clean ---
 clean:

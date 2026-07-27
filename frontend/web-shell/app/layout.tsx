@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "EPD² Civic OS",
-  description: "EPD² Civic OS — FRONT-00 frontend foundation candidate",
+  description: "EPD² Civic OS — infrastructure skeleton",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );
