@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from _builders import Fixture, at, governed_document, provenance, reason, scope, version
 
+from epd2_document_service.documents import GovernedDocument
 from epd2_document_service.domain import content_digest_of
 from epd2_document_service.evidence import (
     BundleState,
@@ -28,10 +29,10 @@ from epd2_document_service.exceptions import (
     EvidenceCustodyBrokenError,
     OrganizationScopeMismatchError,
 )
-from epd2_document_service.versions import VersionState
+from epd2_document_service.versions import DocumentVersion, VersionState
 
 
-def _cited(fixture: Fixture, document: object) -> object:
+def _cited(fixture: Fixture, document: GovernedDocument) -> DocumentVersion:
     """A version in a state evidence may actually cite."""
     draft = version(document, fixture.author)
     in_review = draft.with_state(
@@ -67,7 +68,7 @@ def _acquired(fixture: Fixture, holder: str = "registry-a") -> CustodyEvent:
 
 
 def _record(
-    fixture: Fixture, document: object, cited: object, **overrides: object
+    fixture: Fixture, document: GovernedDocument, cited: DocumentVersion, **overrides: object
 ) -> EvidenceRecord:
     base = {
         "evidence_id": uuid4(),
@@ -360,7 +361,9 @@ def test_the_bundle_digest_covers_order() -> None:
     ev_a, ev_b = uuid4(), uuid4()
     hash_a, hash_b = content_digest_of(b"a"), content_digest_of(b"b")
 
-    def item(ordinal: int, evidence_id, document_id, version_hash) -> EvidenceBundleItem:
+    def item(
+        ordinal: int, evidence_id: UUID, document_id: UUID, version_hash: str
+    ) -> EvidenceBundleItem:
         return EvidenceBundleItem(
             ordinal=ordinal,
             evidence_id=evidence_id,

@@ -133,7 +133,9 @@ def test_reference_types_are_not_interchangeable() -> None:
     identifier, organization = uuid4(), uuid4()
     document = DocumentRef(id=identifier, organization_id=organization)
     evidence = EvidenceRef(id=identifier, organization_id=organization)
-    assert type(document) is not type(evidence)
+    document_type: type[object] = type(document)
+    evidence_type: type[object] = type(evidence)
+    assert document_type is not evidence_type
     assert isinstance(document, ScopedRef) and isinstance(evidence, ScopedRef)
 
 

@@ -30,6 +30,7 @@ from epd2_document_service.determinations import (
     require_admissibility_determination,
     require_signature_determination,
 )
+from epd2_document_service.documents import GovernedDocument
 from epd2_document_service.domain import DocumentKind
 from epd2_document_service.exceptions import (
     DocumentDeterminationMissingError,
@@ -37,9 +38,10 @@ from epd2_document_service.exceptions import (
     DocumentDeterminationStaleError,
     DocumentFieldInvalidError,
 )
+from epd2_document_service.versions import DocumentVersion
 
 
-def _setup() -> tuple[Fixture, object, object]:
+def _setup() -> tuple[Fixture, GovernedDocument, DocumentVersion]:
     fixture = Fixture()
     document = governed_document(fixture.scope, fixture.custodian)
     recorded = version(document, fixture.author)
@@ -47,7 +49,10 @@ def _setup() -> tuple[Fixture, object, object]:
 
 
 def _signature(
-    fixture: Fixture, document: object, recorded: object, **overrides: object
+    fixture: Fixture,
+    document: GovernedDocument,
+    recorded: DocumentVersion,
+    **overrides: object,
 ) -> SignatureDetermination:
     base = {
         "determination_id": uuid4(),
@@ -67,7 +72,10 @@ def _signature(
 
 
 def _admissibility(
-    fixture: Fixture, document: object, recorded: object, **overrides: object
+    fixture: Fixture,
+    document: GovernedDocument,
+    recorded: DocumentVersion,
+    **overrides: object,
 ) -> AdmissibilityDetermination:
     base = {
         "determination_id": uuid4(),

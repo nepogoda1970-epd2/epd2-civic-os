@@ -19,6 +19,7 @@ import ast
 import re
 from dataclasses import fields, is_dataclass
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -42,6 +43,7 @@ from epd2_document_service.domain import (
     assert_emission_safe,
 )
 from epd2_document_service.exceptions import RestrictedAccessDeniedError
+from epd2_document_service.storage import InMemoryContentStore
 
 SRC = Path(epd2_document_service.__file__).resolve().parent
 
@@ -392,7 +394,9 @@ def test_a_read_verifies_the_bytes_against_the_recorded_digest() -> None:
     flow = Flow()
     flow.to_approved()
     version_record = flow.f.stores.versions.get_by_number(flow.document_id, 1)
-    flow.f.stores.content._blobs[version_record.content.digest] = b"swapped"
+    assert version_record is not None
+    content = cast(InMemoryContentStore, flow.f.stores.content)
+    content._blobs[version_record.content.digest] = b"swapped"
     profile = AccessProfile(
         max_sensitivity=SensitivityClass.CONFIDENTIAL,
         scope=flow.f.scope,

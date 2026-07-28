@@ -4,6 +4,7 @@ the emission boundary (CT-00-05, CT-00-08).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from uuid import uuid4
 
 import pytest
@@ -16,8 +17,9 @@ from _builders import (
     version,
 )
 
-from epd2_core.event_envelope import ActorRef, compute_payload_hash
+from epd2_core.event_envelope import ActorRef, EventEnvelope, compute_payload_hash
 from epd2_document_service import events as document_events
+from epd2_document_service.documents import GovernedDocument
 from epd2_document_service.domain import (
     FORBIDDEN_CONTENT_KEYS,
     PROHIBITED_IDENTITY_KEYS,
@@ -45,10 +47,22 @@ from epd2_document_service.exceptions import (
     UnsupportedEventVersionError,
     VotingLinkageForbiddenError,
 )
+from epd2_document_service.versions import DocumentVersion
 
 
 def _actor() -> ActorRef:
     return ActorRef(actor_id=uuid4(), actor_type="organizational_authority")
+
+
+def _nested(payload: Mapping[str, object], key: str) -> Mapping[str, object]:
+    """Narrow one nested payload object to a mapping.
+
+    The builders return `dict[str, object]`, which is correct - a payload
+    value genuinely may be anything JSON-shaped. Reading a nested field
+    therefore needs an explicit narrowing step rather than an assumption."""
+    value = payload[key]
+    assert isinstance(value, Mapping)
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +135,9 @@ def test_an_unknown_major_version_is_not_processed() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _build(payload: dict[str, object], event_type: str = "governed_document.registered"):
+def _build(
+    payload: dict[str, object], event_type: str = "governed_document.registered"
+) -> EventEnvelope:
     fixture = Fixture()
     return build_document_event(
         event_id=uuid4(),
@@ -199,7 +215,7 @@ def test_a_nested_leak_is_caught() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _fixture_document() -> tuple[Fixture, object, object]:
+def _fixture_document() -> tuple[Fixture, GovernedDocument, DocumentVersion]:
     fixture = Fixture()
     document = governed_document(fixture.scope, fixture.custodian)
     recorded = version(document, fixture.author)
@@ -213,7 +229,7 @@ def test_a_version_payload_carries_the_digest_and_the_chain_linkage() -> None:
     payload = document_events.version_recorded_payload(recorded)
     assert payload["version_hash"] == recorded.version_hash
     assert payload["previous_version_hash"] == recorded.previous_version_hash
-    assert payload["content_descriptor"]["content_digest"] == recorded.content.digest
+    assert _nested(payload, "content_descriptor")["content_digest"] == recorded.content.digest
     assert "content" not in payload
 
 
@@ -233,7 +249,7 @@ def test_the_wire_authority_drops_the_actor_reference() -> None:
     correlatable per-actor handle on every governed act in the stream."""
     _fixture, _document, recorded = _fixture_document()
     payload = document_events.version_recorded_payload(recorded)
-    authority = payload["recorded_by"]
+    authority = _nested(payload, "recorded_by")
     assert set(authority) == {"authority_id", "role_code"}
     assert recorded.recorded_by.actor_reference not in str(payload)
 
@@ -248,14 +264,14 @@ def test_a_legal_hold_payload_carries_no_matter_substance_beyond_a_reference() -
         matter_reference="pack-09:matter:5",
     )
     payload = document_events.legal_hold_observed_payload(document, binding)
-    hold = payload["legal_hold"]
+    hold = _nested(payload, "legal_hold")
     assert set(hold) == {"hold_reference", "hold_state", "observed_at", "matter_reference"}
 
 
 def test_a_retention_payload_carries_the_pack_09_references_only() -> None:
     _fixture, document, _recorded = _fixture_document()
     payload = document_events.retention_bound_payload(document, retention_binding())
-    assert payload["retention"]["record_class_reference"].startswith("pack-09:")
+    assert str(_nested(payload, "retention")["record_class_reference"]).startswith("pack-09:")
 
 
 def test_a_disposition_payload_carries_the_authorization_reference() -> None:
@@ -268,7 +284,9 @@ def test_a_disposition_payload_carries_the_authorization_reference() -> None:
         disposition_action="delete",
     )
     payload = document_events.disposition_authorized_payload(document, authorization)
-    assert payload["disposition_authorization"]["authorization_reference"] == "pack-09:auth:1"
+    assert (
+        _nested(payload, "disposition_authorization")["authorization_reference"] == "pack-09:auth:1"
+    )
 
 
 def test_an_integrity_payload_reports_a_failure_rather_than_swallowing_it() -> None:

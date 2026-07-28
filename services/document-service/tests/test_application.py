@@ -5,6 +5,7 @@ precondition.
 
 from __future__ import annotations
 
+from typing import Any, cast
 from uuid import uuid4
 
 import pytest
@@ -20,6 +21,7 @@ from _builders import (
     tamper,
 )
 
+from epd2_core.clock import FixedClock
 from epd2_document_service import application as app
 from epd2_document_service.authorization import DocumentRole
 from epd2_document_service.determinations import (
@@ -62,6 +64,10 @@ from epd2_document_service.exceptions import (
     RecordUnderLegalHoldError,
     SelfApprovalProhibitedError,
 )
+from epd2_document_service.storage import (
+    InMemoryContentStore,
+    InMemoryDocumentVersionStore,
+)
 from epd2_document_service.versions import VersionState
 
 # ---------------------------------------------------------------------------
@@ -84,11 +90,11 @@ class Flow:
         self.document_id = uuid4()
         self.minute = 0
 
-    def _clock(self):
+    def _clock(self) -> FixedClock:
         self.minute += 1
         return clock_at(self.minute)
 
-    def register(self, **overrides):
+    def register(self, **overrides: Any) -> app.DocumentResult:
         return app.register_document(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.custodian)),
@@ -103,7 +109,7 @@ class Flow:
             **overrides,
         )
 
-    def record(self, content: bytes = b"minutes v1", **overrides):
+    def record(self, content: bytes = b"minutes v1", **overrides: Any) -> app.VersionResult:
         return app.record_version(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.author)),
@@ -119,7 +125,7 @@ class Flow:
             **overrides,
         )
 
-    def submit(self, number: int = 1, **overrides):
+    def submit(self, number: int = 1, **overrides: Any) -> app.VersionResult:
         return app.submit_for_review(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.author)),
@@ -130,7 +136,7 @@ class Flow:
             reason=reason("DOCUMENT_SUBMITTED_FOR_REVIEW"),
         )
 
-    def review(self, kind: ReviewKind, number: int = 1, **overrides):
+    def review(self, kind: ReviewKind, number: int = 1, **overrides: Any) -> app.ReviewResult:
         reviewer = overrides.pop(
             "reviewer", self.f.legal_reviewer if kind is ReviewKind.LEGAL else self.f.reviewer
         )
@@ -149,11 +155,13 @@ class Flow:
         )
 
     def review_all(self, number: int = 1) -> None:
-        requirement = self.f.stores.documents.get(self.document_id).review_requirement
+        document = self.f.stores.documents.get(self.document_id)
+        assert document is not None
+        requirement = document.review_requirement
         for kind in sorted(requirement.required_kinds, key=str):
             self.review(kind, number)
 
-    def approve(self, number: int = 1, **overrides):
+    def approve(self, number: int = 1, **overrides: Any) -> app.ApprovalResult:
         return app.approve_version(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.approver)),
@@ -165,7 +173,9 @@ class Flow:
             reason=reason("DOCUMENT_VERSION_APPROVED"),
         )
 
-    def authorize_publication(self, number: int = 1, **overrides):
+    def authorize_publication(
+        self, number: int = 1, **overrides: Any
+    ) -> app.PublicationAuthorizationResult:
         return app.authorize_publication(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.publisher)),
@@ -179,7 +189,7 @@ class Flow:
             reason=reason("DOCUMENT_PUBLICATION_AUTHORIZED"),
         )
 
-    def publish(self, number: int = 1, **overrides):
+    def publish(self, number: int = 1, **overrides: Any) -> app.PublicationResult:
         return app.publish_version(
             self.f.stores,
             context=overrides.pop("context", self.f.context(self.f.publisher)),
@@ -190,14 +200,14 @@ class Flow:
             reason=reason("DOCUMENT_PUBLISHED"),
         )
 
-    def to_approved(self):
+    def to_approved(self) -> app.ApprovalResult:
         self.register()
         self.record()
         self.submit()
         self.review_all()
         return self.approve()
 
-    def to_published(self):
+    def to_published(self) -> app.PublicationResult:
         self.to_approved()
         self.authorize_publication()
         return self.publish()
@@ -367,6 +377,7 @@ def test_the_full_lifecycle_reaches_published() -> None:
     result = flow.to_published()
     assert result.version.state is VersionState.PUBLISHED
     document = flow.f.stores.documents.get(flow.document_id)
+    assert document is not None
     assert document.current_version_number == 1
     assert document.version_count == 1
 
@@ -464,6 +475,7 @@ def test_a_rendition_citation_resolves_the_version_it_renders() -> None:
         reason=reason("DOCUMENT_RENDITION_ISSUED"),
     )
     version_record = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert version_record is not None
     assert result.rendition.source_version_hash == version_record.version_hash
     assert str(flow.document_id) in result.rendition.citation_reference
 
@@ -485,6 +497,7 @@ def test_a_returned_version_is_revised_as_a_new_version() -> None:
     second = flow.record(content=b"minutes v2")
     assert second.version.version_number == 2
     first = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert first is not None
     assert first.state is VersionState.RETURNED_FOR_REVISION
 
 
@@ -619,7 +632,9 @@ def test_a_command_refuses_to_act_on_a_document_whose_history_is_broken() -> Non
     flow.register()
     flow.record()
     stored = flow.f.stores.versions.get_by_number(flow.document_id, 1)
-    flow.f.stores.versions._by_id[stored.version_id] = tamper(
+    assert stored is not None
+    versions = cast(InMemoryDocumentVersionStore, flow.f.stores.versions)
+    versions._by_id[stored.version_id] = tamper(
         stored, title_reference="rewritten-behind-the-service"
     )
     with pytest.raises(DocumentVersionChainBrokenError):
@@ -632,7 +647,8 @@ def test_verify_document_integrity_reports_a_swapped_content_blob() -> None:
     flow = Flow()
     flow.register()
     result = flow.record(content=b"original minutes")
-    flow.f.stores.content._blobs[result.version.content.digest] = b"swapped"
+    content = cast(InMemoryContentStore, flow.f.stores.content)
+    content._blobs[result.version.content.digest] = b"swapped"
     outcome = app.verify_document_integrity(
         flow.f.stores, document_id=flow.document_id, scope=flow.f.scope
     )
@@ -644,7 +660,8 @@ def test_verify_document_integrity_reports_missing_content() -> None:
     flow = Flow()
     flow.register()
     result = flow.record()
-    del flow.f.stores.content._blobs[result.version.content.digest]
+    content = cast(InMemoryContentStore, flow.f.stores.content)
+    del content._blobs[result.version.content.digest]
     outcome = app.verify_document_integrity(
         flow.f.stores, document_id=flow.document_id, scope=flow.f.scope
     )
@@ -678,12 +695,14 @@ def test_a_correction_leaves_the_corrected_version_untouched() -> None:
     flow = Flow()
     flow.to_approved()
     before = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert before is not None
     result = flow.record(
         content=b"corrected minutes",
         corrects_version_number=1,
         correction_reason=reason("DOCUMENT_VERSION_CORRECTED"),
     )
     after = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert after is not None
     assert after.version_hash == before.version_hash
     assert after.state is before.state
     assert result.version.corrects_version_number == 1
@@ -721,8 +740,10 @@ def test_supersession_moves_the_current_version_pointer() -> None:
         reason=reason("DOCUMENT_VERSION_SUPERSEDED"),
     )
     document = flow.f.stores.documents.get(flow.document_id)
+    assert document is not None
     assert document.current_version_number == 2
     first = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert first is not None
     assert first.state is VersionState.SUPERSEDED
 
 
@@ -750,6 +771,7 @@ def test_revocation_removes_effect_and_keeps_the_record() -> None:
     flow = Flow()
     flow.to_published()
     before = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert before is not None
     app.revoke_version(
         flow.f.stores,
         context=flow.f.context(flow.f.approver),
@@ -761,6 +783,7 @@ def test_revocation_removes_effect_and_keeps_the_record() -> None:
         reason=reason("DOCUMENT_VERSION_REVOKED"),
     )
     after = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert after is not None
     assert after.state is VersionState.REVOKED
     assert after.version_hash == before.version_hash
     assert flow.f.stores.content.has(after.content.digest) is True
@@ -794,6 +817,7 @@ def test_a_signature_determination_is_recorded_and_bound_to_the_version() -> Non
         reason=reason("DOCUMENT_SIGNATURE_DETERMINED"),
     )
     version_record = flow.f.stores.versions.get_by_number(flow.document_id, 1)
+    assert version_record is not None
     assert result.determination.determined_version_hash == version_record.version_hash
     assert (
         app.get_signature_status(

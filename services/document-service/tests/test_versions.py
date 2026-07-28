@@ -28,6 +28,7 @@ from _builders import (
 )
 
 from epd2_document_service.authorization import DocumentRole
+from epd2_document_service.documents import GovernedDocument
 from epd2_document_service.domain import ContentDescriptor, content_digest_of
 from epd2_document_service.exceptions import (
     DocumentContentDigestMismatchError,
@@ -51,7 +52,7 @@ from epd2_document_service.versions import (
 )
 
 
-def _document() -> tuple[Fixture, object]:
+def _document() -> tuple[Fixture, GovernedDocument]:
     fixture = Fixture()
     document = governed_document(fixture.scope, fixture.custodian)
     return fixture, document

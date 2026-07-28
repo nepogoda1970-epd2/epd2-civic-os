@@ -16,6 +16,7 @@ from epd2_document_service.determinations import (
     SignatureStatus,
 )
 from epd2_document_service.documents import (
+    GovernedDocument,
     PublicationAudience,
     PublicationRendition,
     ReviewKind,
@@ -45,10 +46,10 @@ from epd2_document_service.projections import (
     build_restricted_projection,
     currency_for,
 )
-from epd2_document_service.versions import VersionState
+from epd2_document_service.versions import DocumentVersion, VersionState
 
 
-def _published(fixture: Fixture, document: object) -> object:
+def _published(fixture: Fixture, document: GovernedDocument) -> DocumentVersion:
     draft = version(document, fixture.author)
     return (
         draft.with_state(
@@ -67,7 +68,9 @@ def _published(fixture: Fixture, document: object) -> object:
     )
 
 
-def _rendition(fixture: Fixture, document: object, published: object) -> PublicationRendition:
+def _rendition(
+    fixture: Fixture, document: GovernedDocument, published: DocumentVersion
+) -> PublicationRendition:
     return PublicationRendition(
         rendition_id=uuid4(),
         document_id=document.document_id,
@@ -82,7 +85,7 @@ def _rendition(fixture: Fixture, document: object, published: object) -> Publica
     )
 
 
-def _revocation(fixture: Fixture, document: object, number: int = 1) -> RevocationRecord:
+def _revocation(fixture: Fixture, document: GovernedDocument, number: int = 1) -> RevocationRecord:
     return RevocationRecord(
         revocation_id=uuid4(),
         document_id=document.document_id,
@@ -116,7 +119,7 @@ def test_no_projection_can_be_constructed_claiming_authority() -> None:
     assert "is_authoritative" not in {f.name for f in dataclass_fields(restricted)}
     assert isinstance(type(restricted).is_authoritative, property)
     with pytest.raises(TypeError):
-        replace(restricted, is_authoritative=True)  # type: ignore[misc]
+        replace(restricted, is_authoritative=True)  # type: ignore[call-arg]
 
 
 def test_every_projection_declares_its_schema_version() -> None:
@@ -439,7 +442,9 @@ def test_the_public_projection_is_a_separate_type_not_a_filtered_variant() -> No
         disclosure_obligation_reference="satzung-12-3",
     )
     restricted = build_restricted_projection(document, published, generated_at=T0)
-    assert type(public) is not type(restricted)
+    public_type: type[object] = type(public)
+    restricted_type: type[object] = type(restricted)
+    assert public_type is not restricted_type
     assert set(public.to_payload()) & {"sensitivity", "review_count", "document_state"} == set()
 
 
@@ -448,7 +453,7 @@ def test_the_public_projection_is_a_separate_type_not_a_filtered_variant() -> No
 # ---------------------------------------------------------------------------
 
 
-def _sealed_bundle(fixture: Fixture, document: object) -> EvidenceBundle:
+def _sealed_bundle(fixture: Fixture, document: GovernedDocument) -> EvidenceBundle:
     from _builders import provenance
 
     from epd2_document_service.evidence import EvidenceRecord
@@ -485,7 +490,9 @@ def test_a_bundle_projection_cites_versions_without_provenance_or_custody() -> N
         _sealed_bundle(fixture, document), generated_at=T0
     ).to_payload()
     assert payload["item_count"] == 1
-    assert payload["item_references"][0].startswith("epd2-doc:")
+    references = payload["item_references"]
+    assert isinstance(references, tuple | list)
+    assert str(references[0]).startswith("epd2-doc:")
     for forbidden in ("provenance", "custody", "matter_reference", "purpose_reference"):
         assert forbidden not in payload
 

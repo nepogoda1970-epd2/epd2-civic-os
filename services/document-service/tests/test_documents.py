@@ -21,6 +21,7 @@ from _builders import (
 from epd2_document_service.documents import (
     ApprovalRecord,
     DocumentState,
+    GovernedDocument,
     PublicationAudience,
     PublicationAuthorization,
     PublicationRendition,
@@ -62,10 +63,10 @@ from epd2_document_service.exceptions import (
     RecordUnderLegalHoldError,
     RetentionBindingMissingError,
 )
-from epd2_document_service.versions import VersionState
+from epd2_document_service.versions import DocumentVersion, VersionState
 
 
-def _doc(**overrides: object) -> tuple[Fixture, object]:
+def _doc(**overrides: object) -> tuple[Fixture, GovernedDocument]:
     fixture = Fixture()
     return fixture, governed_document(fixture.scope, fixture.custodian, **overrides)
 
@@ -232,15 +233,17 @@ def test_a_complete_review_set_passes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _approval(fixture: Fixture, document: object, recorded: object) -> ApprovalRecord:
+def _approval(
+    fixture: Fixture, document: GovernedDocument, recorded: DocumentVersion
+) -> ApprovalRecord:
     return ApprovalRecord(
         approval_id=uuid4(),
-        document_id=document.document_id,  # type: ignore[attr-defined]
-        version_number=recorded.version_number,  # type: ignore[attr-defined]
+        document_id=document.document_id,
+        version_number=recorded.version_number,
         scope=fixture.scope,
         approved_at=at(4),
         approver=fixture.approver,
-        approved_version_hash=recorded.version_hash,  # type: ignore[attr-defined]
+        approved_version_hash=recorded.version_hash,
         reason=reason("DOCUMENT_VERSION_APPROVED"),
     )
 
@@ -273,13 +276,13 @@ def test_an_approval_for_another_version_number_is_refused() -> None:
 
 def _authorization(
     fixture: Fixture,
-    document: object,
+    document: GovernedDocument,
     version_number: int = 1,
     audience: PublicationAudience = PublicationAudience.PUBLIC,
 ) -> PublicationAuthorization:
     return PublicationAuthorization(
         authorization_id=uuid4(),
-        document_id=document.document_id,  # type: ignore[attr-defined]
+        document_id=document.document_id,
         version_number=version_number,
         scope=fixture.scope,
         audience=audience,
