@@ -413,8 +413,8 @@ eID-интеграция, географическая/избирательна�
 Три гарантии, на которых стоит всё остальное:
 
 1. **Сохранённая версия никогда не изменяется, и любое изменение
-   обнаруживается.** `version_hash = sha256(canonical_dumps(hashable_fields(v))
-   + previous_version_hash)` — то же правило, что у `audit-core`, поэтому
+   обнаруживается.** `version_hash = sha256(canonical_dumps(hashable_fields(v)) + previous_version_hash)`
+   — то же правило, что у `audit-core`, поэтому
    одна процедура проверки покрывает обе цепочки. Три независимые защиты:
    обнаружение, отказ выполнить и отказ строить поверх. Это tamper
    **evidence**, а не tamper resistance — см.
