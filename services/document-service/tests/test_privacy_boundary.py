@@ -24,8 +24,6 @@ from uuid import uuid4
 import pytest
 from _builders import (
     Fixture,
-    T0,
-    at,
     clock_at,
     provenance,
     reason,
@@ -40,7 +38,6 @@ from epd2_document_service.domain import (
     PROHIBITED_IDENTITY_KEYS,
     PROHIBITED_VOTING_KEYS,
     AccessProfile,
-    DocumentKind,
     SensitivityClass,
     assert_emission_safe,
 )
@@ -199,7 +196,7 @@ def test_the_only_content_named_field_is_a_descriptor() -> None:
 
 def _run_full_lifecycle() -> Fixture:
     """Exercise every command that emits an event, once."""
-    from test_application import Flow  # noqa: PLC0415 - reuses the lifecycle driver
+    from test_application import Flow
 
     flow = Flow()
     flow.to_published()
@@ -330,7 +327,7 @@ def test_no_audit_row_carries_content_or_identity() -> None:
 def test_content_leaves_only_through_the_authority_checked_read() -> None:
     """The one path by which content leaves this service - which is what
     lets every projection be content-free."""
-    from test_application import Flow  # noqa: PLC0415
+    from test_application import Flow
 
     flow = Flow()
     flow.to_approved()
@@ -350,7 +347,7 @@ def test_content_leaves_only_through_the_authority_checked_read() -> None:
 
 
 def test_a_read_without_an_access_profile_denies() -> None:
-    from test_application import Flow  # noqa: PLC0415
+    from test_application import Flow
 
     flow = Flow()
     flow.to_approved()
@@ -365,7 +362,7 @@ def test_a_read_without_an_access_profile_denies() -> None:
 
 
 def test_a_read_beyond_the_profile_ceiling_denies() -> None:
-    from test_application import Flow  # noqa: PLC0415
+    from test_application import Flow
 
     flow = Flow()
     flow.register(sensitivity=SensitivityClass.RESTRICTED)
@@ -388,14 +385,14 @@ def test_a_read_beyond_the_profile_ceiling_denies() -> None:
 def test_a_read_verifies_the_bytes_against_the_recorded_digest() -> None:
     """A caller never receives content this service cannot show is the
     content that was recorded."""
-    from test_application import Flow  # noqa: PLC0415
+    from test_application import Flow
 
     from epd2_document_service.exceptions import DocumentContentDigestMismatchError
 
     flow = Flow()
     flow.to_approved()
     version_record = flow.f.stores.versions.get_by_number(flow.document_id, 1)
-    flow.f.stores.content._blobs[version_record.content.digest] = b"swapped"  # noqa: SLF001
+    flow.f.stores.content._blobs[version_record.content.digest] = b"swapped"
     profile = AccessProfile(
         max_sensitivity=SensitivityClass.CONFIDENTIAL,
         scope=flow.f.scope,
@@ -412,7 +409,7 @@ def test_a_read_verifies_the_bytes_against_the_recorded_digest() -> None:
 
 
 def test_the_restricted_projection_path_is_authority_checked_too() -> None:
-    from test_application import Flow  # noqa: PLC0415
+    from test_application import Flow
 
     flow = Flow()
     flow.to_approved()
@@ -428,9 +425,9 @@ def test_the_restricted_projection_path_is_authority_checked_too() -> None:
 
 
 def test_an_independent_reader_may_read_and_is_re_verified_at_read_time() -> None:
-    from test_application import Flow  # noqa: PLC0415
-
     from _builders import authority
+    from test_application import Flow
+
     from epd2_document_service.authorization import DocumentRole
     from epd2_document_service.exceptions import AuditorIndependenceViolationError
 

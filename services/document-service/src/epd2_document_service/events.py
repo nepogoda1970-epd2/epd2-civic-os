@@ -175,7 +175,7 @@ def assert_supported_version(event_version: str) -> None:
     """Reject an unsupported major version, fail-closed (CT-00-05)."""
     try:
         assert_supported_major_version(event_version, SUPPORTED_MAJOR_VERSIONS)
-    except Exception as exc:  # noqa: BLE001 - re-raised as this service's own code
+    except Exception as exc:
         raise UnsupportedEventVersionError(str(exc)) from exc
 
 

@@ -619,7 +619,7 @@ def test_a_command_refuses_to_act_on_a_document_whose_history_is_broken() -> Non
     flow.register()
     flow.record()
     stored = flow.f.stores.versions.get_by_number(flow.document_id, 1)
-    flow.f.stores.versions._by_id[stored.version_id] = tamper(  # noqa: SLF001
+    flow.f.stores.versions._by_id[stored.version_id] = tamper(
         stored, title_reference="rewritten-behind-the-service"
     )
     with pytest.raises(DocumentVersionChainBrokenError):
@@ -632,7 +632,7 @@ def test_verify_document_integrity_reports_a_swapped_content_blob() -> None:
     flow = Flow()
     flow.register()
     result = flow.record(content=b"original minutes")
-    flow.f.stores.content._blobs[result.version.content.digest] = b"swapped"  # noqa: SLF001
+    flow.f.stores.content._blobs[result.version.content.digest] = b"swapped"
     outcome = app.verify_document_integrity(
         flow.f.stores, document_id=flow.document_id, scope=flow.f.scope
     )
@@ -644,7 +644,7 @@ def test_verify_document_integrity_reports_missing_content() -> None:
     flow = Flow()
     flow.register()
     result = flow.record()
-    del flow.f.stores.content._blobs[result.version.content.digest]  # noqa: SLF001
+    del flow.f.stores.content._blobs[result.version.content.digest]
     outcome = app.verify_document_integrity(
         flow.f.stores, document_id=flow.document_id, scope=flow.f.scope
     )

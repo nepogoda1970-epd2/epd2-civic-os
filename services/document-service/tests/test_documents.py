@@ -8,8 +8,8 @@ from uuid import uuid4
 
 import pytest
 from _builders import (
-    Fixture,
     T0,
+    Fixture,
     at,
     governed_document,
     reason,
@@ -44,7 +44,6 @@ from epd2_document_service.domain import (
     DocumentKind,
     HoldState,
     LegalHoldBinding,
-    SensitivityClass,
 )
 from epd2_document_service.exceptions import (
     DispositionNotAuthorizedError,
@@ -59,6 +58,7 @@ from epd2_document_service.exceptions import (
     DocumentSupersessionInvalidError,
     DocumentTransitionInvalidError,
     LegalHoldStateUnknownError,
+    OrganizationScopeMismatchError,
     RecordUnderLegalHoldError,
     RetentionBindingMissingError,
 )
@@ -513,7 +513,7 @@ def test_a_hold_from_another_scope_cannot_be_attached() -> None:
     foreign = LegalHoldBinding(
         hold_reference="h-1", scope=scope(), state=HoldState.ACTIVE, observed_at=T0
     )
-    with pytest.raises(Exception):
+    with pytest.raises(OrganizationScopeMismatchError):
         document.with_legal_hold(foreign, at=at(1), reason=reason(), authority=fixture.custodian)
 
 
@@ -525,7 +525,7 @@ def test_an_unknown_document_state_is_refused() -> None:
 def test_a_document_state_payload_covers_every_field() -> None:
     """A snapshot that is only nearly complete leaves the omitted fields
     outside the tamper-evidence hash and signals nothing about the gap."""
-    fixture, document = _doc()
+    _fixture, document = _doc()
     payload = document.to_state_payload()
     for expected in (
         "document_id",
@@ -594,7 +594,7 @@ def test_an_unheld_document_passes_the_destruction_guard() -> None:
 
 
 def test_disposition_requires_a_retention_binding() -> None:
-    fixture, document = _doc()
+    _fixture, document = _doc()
     with pytest.raises(RetentionBindingMissingError):
         assert_disposition_authorized(document, None)
 

@@ -8,11 +8,9 @@ from uuid import uuid4
 
 import pytest
 from _builders import (
-    Fixture,
     T0,
-    at,
+    Fixture,
     governed_document,
-    provenance,
     reason,
     retention_binding,
     version,
@@ -295,7 +293,7 @@ def test_every_payload_builder_output_passes_the_emission_boundary() -> None:
     """A blanket sweep: each builder's own output goes through the same
     check `build_document_event` applies, so a builder that grew a
     forbidden key is caught here rather than in production."""
-    fixture, document, recorded = _fixture_document()
+    _fixture, document, recorded = _fixture_document()
     payloads = [
         document_events.document_registered_payload(document),
         document_events.document_state_changed_payload(document, reason()),

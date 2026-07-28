@@ -4,11 +4,12 @@ this context through.
 
 from __future__ import annotations
 
-from dataclasses import fields as dataclass_fields, replace
+from dataclasses import fields as dataclass_fields
+from dataclasses import replace
 from uuid import uuid4
 
 import pytest
-from _builders import Fixture, T0, at, governed_document, reason, version
+from _builders import T0, Fixture, at, governed_document, reason, version
 
 from epd2_document_service.determinations import (
     AdmissibilityStatus,
@@ -448,8 +449,9 @@ def test_the_public_projection_is_a_separate_type_not_a_filtered_variant() -> No
 
 
 def _sealed_bundle(fixture: Fixture, document: object) -> EvidenceBundle:
-    from epd2_document_service.evidence import EvidenceRecord
     from _builders import provenance
+
+    from epd2_document_service.evidence import EvidenceRecord
 
     published = _published(fixture, document)
     record = EvidenceRecord(
@@ -490,7 +492,6 @@ def test_a_bundle_projection_cites_versions_without_provenance_or_custody() -> N
 
 def test_an_unsealed_bundle_has_no_projection() -> None:
     fixture = Fixture()
-    document = governed_document(fixture.scope, fixture.custodian)
     bundle = EvidenceBundle(
         bundle_id=uuid4(),
         scope=fixture.scope,

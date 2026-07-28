@@ -17,6 +17,7 @@ from _builders import (
     version,
 )
 
+import epd2_document_service.storage as storage_module
 from epd2_document_service.domain import content_digest_of
 from epd2_document_service.exceptions import (
     DocumentContentMissingError,
@@ -38,8 +39,6 @@ from epd2_document_service.storage import (
     delete_document_record,
 )
 from epd2_document_service.versions import GENESIS_PREVIOUS_HASH, VersionState
-
-import epd2_document_service.storage as storage_module
 
 # ---------------------------------------------------------------------------
 # Rule 1 — no delete exists anywhere

@@ -158,7 +158,6 @@ from epd2_document_service.exceptions import (
     DocumentTransitionInvalidError,
     IdempotencyConflictError,
     OptimisticConcurrencyConflictError,
-    OrganizationScopeMismatchError,
 )
 from epd2_document_service.projections import (
     RestrictedDocumentProjection,
@@ -469,11 +468,14 @@ def _guard(
             "the previous execution did not complete and is not safely replayable"
         )
 
-    if current_version is not None and expected_version is not None:
-        if current_version != expected_version:
-            raise OptimisticConcurrencyConflictError(
-                f"{version_label} version is {current_version}, caller expected {expected_version}"
-            )
+    if (
+        current_version is not None
+        and expected_version is not None
+        and current_version != expected_version
+    ):
+        raise OptimisticConcurrencyConflictError(
+            f"{version_label} version is {current_version}, caller expected {expected_version}"
+        )
 
     return _CommandGuard(
         command=command,
@@ -2485,7 +2487,7 @@ def get_signature_status(
         return absent_signature_status()
     try:
         require_signature_determination(determination, version)
-    except Exception:  # noqa: BLE001 - a stale determination is reported as absent
+    except Exception:
         # A determination made against a different state of this version is
         # not "no" and not "yes": it does not apply. Reporting it as absent
         # is the honest answer and makes the consumer fail closed.
@@ -2516,7 +2518,7 @@ def get_admissibility_status(
         require_admissibility_determination(
             determination, version, procedure_reference=procedure_reference
         )
-    except Exception:  # noqa: BLE001 - a stale determination is reported as absent
+    except Exception:
         return absent_admissibility_status()
     return determination.status
 
@@ -2580,7 +2582,7 @@ def verify_document_integrity(
             )
         try:
             verify_version_content(version, stores.content.get(version.content.digest))
-        except Exception as exc:  # noqa: BLE001 - reported, not raised, for sweep runs
+        except Exception as exc:
             return ChainVerificationResult(
                 document_id=document_id,
                 valid=False,
