@@ -44,6 +44,8 @@ from _schema_helpers import (
     PACK08_SERVICE_DIRS,
     PACK09_REASON_CODES_PATH,
     PACK09_SERVICE_DIRS,
+    PACK10_REASON_CODES_PATH,
+    PACK10_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -66,6 +68,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-07", PACK07_REASON_CODES_PATH, PACK07_SERVICE_DIRS, 38),
     ("pack-08", PACK08_REASON_CODES_PATH, PACK08_SERVICE_DIRS, 32),
     ("pack-09", PACK09_REASON_CODES_PATH, PACK09_SERVICE_DIRS, 40),
+    ("pack-10", PACK10_REASON_CODES_PATH, PACK10_SERVICE_DIRS, 90),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -83,13 +86,34 @@ _EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
     "pack-02": (PACK07_REASON_CODES_PATH,),
 }
 
+#: All-caps literals that the deliberately broad regex above matches but
+#: that are provably not reason codes, enumerated per pack.
+#:
+#: The scan's own docstring says a false positive should "fail loudly
+#: instead of silently missing a real reason code" - and it did. The
+#: honest response to a loud false positive is to name the exact string
+#: and say why it is not a code, not to narrow the pattern: a narrower
+#: regex would also stop catching whole families of genuine codes.
+#:
+#: `EUR` is an ISO 4217 currency code in
+#: `epd2_finance_service.domain.GOVERNED_CURRENCIES` and
+#: `CURRENCY_SCALE`. It is three characters, all upper case, and so
+#: matches `[A-Z][A-Z0-9_]{2,}`; it is not a `reason_code` and could not
+#: be registered as one without putting a currency in the refusal
+#: registry. Enumerated exactly rather than excluded by a rule such as
+#: "no underscore, therefore not a code", because such a rule would also
+#: hide any future genuine single-word code.
+_NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
+    "pack-10": frozenset({"EUR"}),
+}
+
 
 def _registered_codes(registry_path: Path) -> set[str]:
     raw = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     return {entry["code"] for entry in raw}
 
 
-def _reason_code_like_literals_in(service_dir_names: tuple[str, ...]) -> set[str]:
+def _reason_code_like_literals_in(pack_name: str, service_dir_names: tuple[str, ...]) -> set[str]:
     """All-caps, underscore-containing string literals found only in the
     given pack's own service directories' `src/` trees - intentionally
     broad (a simple regex, not an AST-based "is this actually assigned to
@@ -124,7 +148,7 @@ def _reason_code_like_literals_in(service_dir_names: tuple[str, ...]) -> set[str
                 continue
             for match in _LITERAL_RE.finditer(path.read_text(encoding="utf-8")):
                 found.add(match.group(1))
-    return found
+    return found - _NON_REASON_CODE_LITERALS.get(pack_name, frozenset())
 
 
 @pytest.mark.parametrize(
@@ -177,7 +201,7 @@ def test_every_reason_code_literal_used_in_services_is_registered(
     registered = _registered_codes(registry_path)
     for extra_registry_path in _EXTRA_REGISTRIES_FOR_LITERAL_CHECK.get(pack_name, ()):
         registered |= _registered_codes(extra_registry_path)
-    used = _reason_code_like_literals_in(service_dir_names)
+    used = _reason_code_like_literals_in(pack_name, service_dir_names)
     missing = sorted(used - registered)
     assert not missing, (
         f"reason_code literal(s) used in {pack_name}'s services/*/src but not registered "

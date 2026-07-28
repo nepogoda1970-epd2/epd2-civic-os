@@ -8,11 +8,18 @@ This is a canon-amendment checker, not a business-behaviour checker. It
 verifies what the 0.8.0 round is allowed to have changed and, just as
 importantly, what it must not have changed:
 
-    - the canon version is 0.8.0 in all three declaration sites;
-    - REPOSITORY_VERSION is still 0.9.0 (19f.25 - this round ships no code);
-    - canon-version.json still accepts a repository at 0.9.0;
-    - PACK-10 is declared `not_implemented`;
-    - no finance runtime implementation exists anywhere in the tree;
+    - the canon version is still 0.8.0 in all three declaration sites -
+      the PACK-10 implementation round amends no canon;
+    - REPOSITORY_VERSION is 0.10.0 (the implementation round ships code);
+    - canon-version.json accepts a repository at 0.10.0 while still
+      recording 0.9.0 as the version the amendment was made at;
+    - PACK-10 is declared `reference_implementation` - not
+      `not_implemented`, which stopped being true the moment
+      `services/finance-service` shipped, and not `implemented`, which
+      would claim a production data plane this round does not have;
+    - the finance runtime that does exist stays inside its authorized
+      boundary: one service, no shared finance package, no finance
+      frontend;
     - the finance bounded context (section 19f, 20.17, 22, 23, 24) is
       present, complete and internally consistent;
     - `FinancePartyHandle` is not a global identity;
@@ -39,14 +46,31 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------------------------------
 
 EXPECTED_CANON_VERSION = "0.8.0"
-EXPECTED_REPOSITORY_VERSION = "0.9.0"
+EXPECTED_REPOSITORY_VERSION = "0.10.0"
+
+#: The repository version the canon 0.8.0 amendment itself was made at.
+#: `minimum_repository_version` records that fact and must not drift with
+#: each later implementation round: canon 0.8.0 is readable by any
+#: repository from 0.9.0 onward, and rewriting this to 0.10.0 would
+#: falsely claim the amendment postdates its own release.
+CANON_AMENDED_AT_REPOSITORY_VERSION = "0.9.0"
 
 CANON_FILE = "docs/canonical/TZ-00-domain-event-canon.md"
 CANON_VERSION_FILE = "docs/canonical/canon-version.json"
 PY_VERSION_FILE = "packages/python/epd2-core/src/epd2_core/version.py"
 TS_VERSION_FILE = "packages/typescript/epd2-types/src/version.ts"
 
-EXPECTED_FINANCE_IMPLEMENTATION_STATUS = "not_implemented"
+#: What `finance_context_implementation_status` must say after the
+#: PACK-10 implementation round.
+#:
+#: `reference_implementation`, deliberately, and neither of the two
+#: adjacent lies: `not_implemented` was true for the canon round and is
+#: now false, while `implemented` would assert a production data plane,
+#: a durable store, an event bus and a bank integration that this round
+#: explicitly does not ship (`ФИН-43`). The value names exactly what
+#: exists - a complete, tested, in-memory reference implementation of
+#: section 19f whose production persistence is PACK-13's work.
+EXPECTED_FINANCE_IMPLEMENTATION_STATUS = "reference_implementation"
 
 # ---------------------------------------------------------------------------
 # Finance context (section 19f) expectations
@@ -106,16 +130,60 @@ PROHIBITED_PAYLOAD_TOKENS: tuple[str, ...] = (
     "информация о голосовании",  # noqa: RUF001
 )
 
-# Roots under which a finance runtime implementation would live if the
-# 0.8.0 round had (wrongly) shipped one. 19f.25 forbids all of it.
-FINANCE_SCAN_ROOTS: tuple[str, ...] = (
-    "services",
+# Roots under which a finance-named path must NOT appear even now that the
+# implementation round has shipped.
+#
+# `services` and `contracts` are deliberately absent from this tuple: the
+# implementation round is entitled to `services/finance-service` and to
+# `contracts/reason-codes/pack-10.yml`, and listing them would make the
+# check assert the opposite of what the round was authorized to do.
+# `packages` and `frontend` stay: canon 19f.23 keeps finance structurally
+# separate, PACK-02's own charter forbids domain business logic in a shared
+# package, and this round ships no operational finance frontend - so a
+# finance-named path under either is a boundary breach, not progress.
+FORBIDDEN_FINANCE_SCAN_ROOTS: tuple[str, ...] = (
     "packages",
     "frontend",
-    "contracts",
 )
 
-FORBIDDEN_FINANCE_SERVICE_DIR = "services/finance-service"
+REQUIRED_FINANCE_SERVICE_DIR = "services/finance-service"
+
+#: The module set `services/finance-service` must ship, relative to its
+#: package directory. Enumerated rather than merely counted so that
+#: deleting a module - the storage ports, say, or the projections - is a
+#: failure rather than an unnoticed regression to a smaller service.
+REQUIRED_FINANCE_MODULES: tuple[str, ...] = (
+    "__init__.py",
+    "application.py",
+    "authorization.py",
+    "domain.py",
+    "events.py",
+    "exceptions.py",
+    "ledger.py",
+    "projections.py",
+    "records.py",
+    "references.py",
+    "reporting.py",
+    "storage.py",
+)
+
+#: Method-name fragments that must not appear as a definition anywhere in
+#: the finance service. `ФИН-05` makes a posted register entry immutable
+#: and PACK-09's legal hold outranks destruction, so a delete-shaped
+#: method on any finance store or aggregate offers an act the domain
+#: forbids. The one permitted use of the word is a function that raises.
+FORBIDDEN_FINANCE_METHOD_PREFIXES: tuple[str, ...] = (
+    "def delete_",
+    "def remove_",
+    "def purge_",
+    "def destroy_",
+)
+
+#: The two deletion-refusal functions that are allowed to carry a
+#: delete-shaped name, precisely because each one only ever raises.
+PERMITTED_DELETION_REFUSALS: frozenset[str] = frozenset(
+    {"def delete_report_version(", "def delete_finance_record("}
+)
 
 IGNORED_DIRECTORY_NAMES: frozenset[str] = frozenset(
     {
@@ -415,7 +483,15 @@ def check_canon_version_declared(root: Path) -> list[str]:
 
 
 def check_repository_version_unchanged(root: Path) -> list[str]:
-    """19f.25: a canon-only round must leave REPOSITORY_VERSION at 0.9.0."""
+    """REPOSITORY_VERSION must be 0.10.0 in both declaration sites.
+
+    The check kept its name across the round deliberately: what it
+    enforces is still "the repository version is exactly the one this
+    round is entitled to", and only the entitled value moved. Canon 19f.25
+    forbade a bump for the canon-only round; the implementation round is
+    the round the gate was waiting for, and shipping a new bounded context
+    without a minor bump would understate what changed (canon section 25).
+    """
     problems: list[str] = []
 
     py_text = _read_text(root, PY_VERSION_FILE)
@@ -428,8 +504,9 @@ def check_repository_version_unchanged(root: Path) -> list[str]:
         elif value != EXPECTED_REPOSITORY_VERSION:
             problems.append(
                 f"{PY_VERSION_FILE}: REPOSITORY_VERSION is {value!r}, expected "
-                f"{EXPECTED_REPOSITORY_VERSION!r} - a canon-only round must not "
-                f"bump the repository version (19f.25)."
+                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-10 implementation "
+                f"round ships a new bounded context and must carry the matching "
+                f"minor bump (canon section 25)."
             )
 
     ts_text = _read_text(root, TS_VERSION_FILE)
@@ -444,8 +521,9 @@ def check_repository_version_unchanged(root: Path) -> list[str]:
         elif value != EXPECTED_REPOSITORY_VERSION:
             problems.append(
                 f"{TS_VERSION_FILE}: REPOSITORY_VERSION is {value!r}, expected "
-                f"{EXPECTED_REPOSITORY_VERSION!r} - a canon-only round must not "
-                f"bump the repository version (19f.25)."
+                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-10 implementation "
+                f"round ships a new bounded context and must carry the matching "
+                f"minor bump (canon section 25)."
             )
 
     return problems
@@ -457,7 +535,12 @@ def check_repository_version_unchanged(root: Path) -> list[str]:
 
 
 def check_repository_compatibility(root: Path) -> list[str]:
-    """canon-version.json must still accept a repository at 0.9.0."""
+    """canon-version.json must accept a repository at the current version.
+
+    The declared range is checked against `EXPECTED_REPOSITORY_VERSION`,
+    so a round that bumps the repository past the canon's stated upper
+    bound without widening the bound fails here rather than at a
+    consumer."""
     problems: list[str] = []
 
     metadata, error = _load_canon_metadata(root)
@@ -496,22 +579,25 @@ def check_repository_compatibility(root: Path) -> list[str]:
                 )
 
     minimum = metadata.get("minimum_repository_version")
-    if minimum != EXPECTED_REPOSITORY_VERSION:
+    if minimum != CANON_AMENDED_AT_REPOSITORY_VERSION:
         problems.append(
             f"{CANON_VERSION_FILE}: minimum_repository_version is {minimum!r}, "
-            f"expected {EXPECTED_REPOSITORY_VERSION!r}."
+            f"expected {CANON_AMENDED_AT_REPOSITORY_VERSION!r} - the version the "
+            f"amendment was made at, which does not move when a later round "
+            f"implements it."
         )
 
     return problems
 
 
 # ---------------------------------------------------------------------------
-# Check 4 - PACK-10 is not declared implemented
+# Check 4 - PACK-10 is declared a reference implementation
 # ---------------------------------------------------------------------------
 
 
 def check_finance_implementation_status(root: Path) -> list[str]:
-    """canon-version.json must declare the finance context `not_implemented`."""
+    """canon-version.json must declare the finance context
+    `reference_implementation`."""
     metadata, error = _load_canon_metadata(root)
     if error is not None:
         return [error]
@@ -523,13 +609,15 @@ def check_finance_implementation_status(root: Path) -> list[str]:
         return [
             f"{CANON_VERSION_FILE}: finance_context_implementation_status is "
             f"{status!r}, expected {EXPECTED_FINANCE_IMPLEMENTATION_STATUS!r} "
-            f"(19f.25 - this round authorizes no implementation)."
+            f"- the PACK-10 implementation round shipped a reference "
+            f"implementation of section 19f, and neither 'not_implemented' "
+            f"nor 'implemented' states that truthfully."
         ]
     return []
 
 
 # ---------------------------------------------------------------------------
-# Check 5 - no finance runtime implementation exists
+# Check 5 - the finance runtime exists and stays inside its boundary
 # ---------------------------------------------------------------------------
 
 
@@ -558,23 +646,77 @@ def _iter_scanned_paths(root: Path, scan_root: str) -> list[Path]:
     return found
 
 
-def check_no_finance_runtime_implementation(root: Path) -> list[str]:
-    """19f.25: `services/finance-service` must not exist, and no path under
-    services/, packages/, frontend/ or contracts/ may be named for finance."""
+def check_finance_runtime_within_boundary(root: Path) -> list[str]:
+    """The finance runtime exists, is complete, and stays inside its
+    authorized boundary.
+
+    This check was inverted by the PACK-10 implementation round. In the
+    canon round it asserted that `services/finance-service` did **not**
+    exist, because canon 19f.25's implementation gate had not opened. The
+    gate is what this round walks through, so continuing to assert the
+    absence would have made the checker enforce the previous round's state
+    forever - and quietly, since a checker that passes says nothing about
+    whether it is still asking the right question.
+
+    What it asserts now is the part of 19f.25 that did not change: exactly
+    one service owns the finance context, no shared package holds finance
+    domain logic, no operational finance frontend exists, and nothing in
+    the service offers a deletion method (`ФИН-05`)."""
     problems: list[str] = []
 
-    if (root / FORBIDDEN_FINANCE_SERVICE_DIR).exists():
+    service_dir = root / REQUIRED_FINANCE_SERVICE_DIR
+    if not service_dir.is_dir():
         problems.append(
-            f"{FORBIDDEN_FINANCE_SERVICE_DIR} exists - 19f.25 states it must not "
-            f"be created by the canon round."
+            f"{REQUIRED_FINANCE_SERVICE_DIR} does not exist - the PACK-10 "
+            f"implementation round is required to ship it."
         )
+        return problems
 
-    for scan_root in FINANCE_SCAN_ROOTS:
+    package_dir = service_dir / "src" / "epd2_finance_service"
+    if not package_dir.is_dir():
+        problems.append(f"{REQUIRED_FINANCE_SERVICE_DIR}/src/epd2_finance_service does not exist.")
+        return problems
+
+    for module_name in REQUIRED_FINANCE_MODULES:
+        if not (package_dir / module_name).is_file():
+            problems.append(
+                f"{REQUIRED_FINANCE_SERVICE_DIR}/src/epd2_finance_service/{module_name} is missing."
+            )
+
+    for scan_root in FORBIDDEN_FINANCE_SCAN_ROOTS:
         for path in _iter_scanned_paths(root, scan_root):
             if "finance" in path.name.lower():
                 problems.append(
                     f"{path.relative_to(root).as_posix()}: a finance-named path exists "
-                    f"under {scan_root}/ - 19f.25 authorizes no finance implementation."
+                    f"under {scan_root}/ - canon 19f.23 keeps the finance context "
+                    f"structurally separate, and this round ships no shared finance "
+                    f"package and no operational finance frontend."
+                )
+
+    for service_path in sorted(root.glob("services/*")):
+        if not service_path.is_dir():
+            continue
+        if service_path.name == "finance-service":
+            continue
+        if "finance" in service_path.name.lower():
+            problems.append(
+                f"services/{service_path.name}: a second finance-named service exists - "
+                f"canon 19f.1 gives the finance context exactly one owner."
+            )
+
+    for path in sorted(package_dir.rglob("*.py")):
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            stripped = line.strip()
+            for prefix in FORBIDDEN_FINANCE_METHOD_PREFIXES:
+                if not stripped.startswith(prefix):
+                    continue
+                if any(stripped.startswith(allowed) for allowed in PERMITTED_DELETION_REFUSALS):
+                    continue
+                problems.append(
+                    f"{path.relative_to(root).as_posix()}:{line_number}: defines "
+                    f"{stripped.split('(')[0].removeprefix('def ')!r} - no finance store, "
+                    f"adapter or aggregate may offer a deletion method (`ФИН-05`)."
                 )
 
     return sorted(problems)
@@ -1118,10 +1260,10 @@ def check_adr_registry_integrity(root: Path) -> list[str]:
 
 CHECKS: tuple[tuple[str, str], ...] = (
     ("check_canon_version_declared", "canon version is 0.8.0 everywhere"),
-    ("check_repository_version_unchanged", "REPOSITORY_VERSION is still 0.9.0"),
-    ("check_repository_compatibility", "compatibility metadata accepts 0.9.0"),
-    ("check_finance_implementation_status", "PACK-10 declared not_implemented"),
-    ("check_no_finance_runtime_implementation", "no finance runtime implementation"),
+    ("check_repository_version_unchanged", "REPOSITORY_VERSION is 0.10.0"),
+    ("check_repository_compatibility", "compatibility metadata accepts 0.10.0"),
+    ("check_finance_implementation_status", "PACK-10 declared reference_implementation"),
+    ("check_finance_runtime_within_boundary", "finance runtime within boundary"),
     ("check_finance_context_present", "finance bounded context present"),
     ("check_finance_entity_ownership", "all 21 finance aggregates owned"),
     ("check_finance_party_handle_not_global_identity", "no global identity in 19f"),
@@ -1145,7 +1287,7 @@ def find_problems(root: Path) -> list[str]:
     problems.extend(check_repository_version_unchanged(root))
     problems.extend(check_repository_compatibility(root))
     problems.extend(check_finance_implementation_status(root))
-    problems.extend(check_no_finance_runtime_implementation(root))
+    problems.extend(check_finance_runtime_within_boundary(root))
     problems.extend(check_finance_context_present(root))
     problems.extend(check_finance_entity_ownership(root))
     problems.extend(check_finance_party_handle_not_global_identity(root))

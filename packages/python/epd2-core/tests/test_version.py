@@ -169,9 +169,23 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # twenty-one new section 22 ownership-matrix rows; new section 23
     # forbidden-link entries; forty-five new section 24 reason codes - a
     # backward-compatible (minor) canon addition per canon section 25.
-    # This round is a canon-only change for CLAUDE-PACK-10 governance; no
-    # finance-service code exists, so REPOSITORY_VERSION is unchanged at
-    # 0.9.0 and canon-version.json records
-    # finance_context_implementation_status = "not_implemented".
+    # REPOSITORY_VERSION moved 0.9.0 -> 0.10.0 for the PACK-10
+    # implementation round: services/finance-service ships the first
+    # executable slice of section 19f (twelve modules - the authoritative
+    # accounting register, accounting periods, contributions, sponsorship
+    # and external financial benefit, expenses and payments, assets and
+    # obligations, the reporting perimeter and frozen snapshot, the
+    # twelve-state Rechenschaftsbericht lifecycle, the independent audit
+    # engagement, all seventy-two canon 20.17 event builders, storage
+    # ports with in-memory adapters, publication-safe projections and the
+    # command layer), plus contracts/reason-codes/pack-10.yml. A new
+    # bounded context is a minor bump per canon section 25. CANON_VERSION
+    # is unchanged at 0.8.0: the implementation round amends no canon, and
+    # docs/canonical/TZ-00-domain-event-canon.md is untouched.
+    # canon-version.json now records
+    # finance_context_implementation_status = "reference_implementation" -
+    # not "implemented", because the production data plane (durable
+    # storage, event bus, bank integration) is PACK-13's, not this
+    # round's.
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.9.0"
+    assert REPOSITORY_VERSION == "0.10.0"

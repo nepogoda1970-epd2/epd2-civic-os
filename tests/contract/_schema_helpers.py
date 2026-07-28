@@ -62,6 +62,15 @@ PACK08_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-08.yaml"
 PACK09_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-09.yml"
 PACK09_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-09.yaml"
 
+#: PACK-10's own reason-code registry (Party Finance, Accounting &
+#: Rechenschaftsbericht; canon 0.8.0 section 19f, ADR-048 through
+#: ADR-054) - added alongside (never replacing) the PACK-02 through
+#: PACK-09 constants above. There is deliberately no
+#: `PACK10_OPENAPI_PATH`: this round exposes no HTTP surface, so no
+#: OpenAPI contract exists to point at, and inventing one would make the
+#: contract suite assert against a file that describes nothing runnable.
+PACK10_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-10.yml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -105,6 +114,12 @@ PACK08_SERVICE_DIRS: tuple[str, ...] = ("organization-service",)
 #: fully disjoint service directory - no existing service is extended in
 #: place this round, so no "shared with an earlier pack" union is needed.
 PACK09_SERVICE_DIRS: tuple[str, ...] = ("compliance-service",)
+#: PACK-10's one wholly new service (finance-service). Like PACK-02
+#: through PACK-06, PACK-08 and PACK-09 (and unlike PACK-07), PACK-10
+#: introduces a fully disjoint service directory - no existing service is
+#: extended in place this round, so no "shared with an earlier pack" union
+#: is needed.
+PACK10_SERVICE_DIRS: tuple[str, ...] = ("finance-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code

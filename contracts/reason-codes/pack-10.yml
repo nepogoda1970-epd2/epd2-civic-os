@@ -1,0 +1,1147 @@
+# Centralized PACK-10 reason-code registry (Party Finance, Accounting &
+# Rechenschaftsbericht; canon 0.8.0 section 19f, ADR-048 through ADR-054).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced or used by the PACK-10 implementation round: the
+# codes `finance-service` raises for the authoritative accounting
+# register, accounting periods, contributions, sponsorship and external
+# financial benefit, expenses and payments, assets and obligations, the
+# reporting perimeter and snapshot, the twelve-state
+# `Rechenschaftsbericht` lifecycle, the independent finance audit, the
+# purpose-scoped party reference and public disclosure control - plus the
+# additive codes it uses for its own audit bookkeeping, following the same
+# pattern ADR-004/ADR-014/ADR-019/ADR-024 and PACK-07's, PACK-08's and
+# PACK-09's own registries already established. No PACK-10 code path may
+# use a free-text string in place of a registered code (canon section 24;
+# `ФИН-40`, "reason-coded refusal").
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-09.yml (ADR-006 Option B precedent): codes several packs
+# need (PERMISSION_DENIED, VALIDATION_RECORD_NOT_FOUND) are independently
+# redeclared here rather than imported from an earlier pack's file, so
+# this file stays a complete, standalone source of truth for
+# `finance-service`'s own scan
+# (`tests/contract/test_reason_codes_registry.py`'s PACK10_SERVICE_DIRS).
+# `finance-service` is a single, wholly new service - no existing
+# PACK-02-through-PACK-09 service is extended in place this round - so,
+# like PACK-08's and PACK-09's files and unlike PACK-07's, there is no
+# "shared with an earlier pack's service directory" union needed for the
+# literal-usage check.
+#
+# `source: canon-0.8.0` entries are the forty-five FINANCE_* codes canon
+# section 24 introduced with the 0.8.0 amendment. Their meaning is fixed
+# by canon and can only change through a canon ADR and a canon version
+# bump; this file restates them, it does not define them.
+#
+# `source: pack-10-service` entries are the nineteen additive codes this
+# implementation round introduced. Four are refusals canon section 24 has
+# no code for, and each says in its own `meaning` why the nearest canon
+# code would have been wrong. Fifteen are `AuditEvent.reason_code`
+# classifications for successfully-audited acts - canon's section-24 list
+# is refusal-only and contains no code that means "this succeeded", which
+# is the same gap ADR-004 recorded for PACK-02.
+#
+# `source: pack-0X-reused` entries are pre-existing generic codes reused
+# verbatim (already registered in that pack's own file; independently
+# redeclared here so this file stays complete). PACK-10 deliberately
+# reuses rather than shadowing: retention and legal hold remain PACK-09's
+# domain, organizational scope and authority remain PACK-08's, and a
+# FINANCE_-prefixed duplicate of either would create two codes for one
+# fact. Conversely, four existing code families that *look* applicable are
+# NOT reused - pack-03's CONTRIBUTION_* (a deliberation utterance),
+# pack-04's LEDGER_ENTRY_* (a public transparency ledger entry), pack-02's
+# ACCOUNT_* (a platform user account) and pack-02/04's AUDIT_* (audit-log
+# integrity) - because each names a different entity in a different
+# context; see docs/packs/PACK-10-SPECIFICATION.md section 15.3.
+#
+# Every entry carries the seven fields
+# `epd2_core.reason_codes.ReasonCodeRegistry.load_from_yaml` requires
+# (code, meaning, severity, description, retryable, owner,
+# introduced_in_version); a missing field makes the whole registry fail to
+# load.
+
+# --- Canon 0.8.0 section 24 finance codes (forty-five) ---------------
+
+- code: FINANCE_AUTHORITY_MISSING
+  meaning: >-
+    No active, scope-matching finance authority exists for this action.
+    A role name is never itself proof of a financial authority: it
+    resolves to an effective, scope-matching OrganizationalAuthority or
+    RoleAssignment record, or the action is refused.
+  severity: error
+  description: No finance authority for this action in this scope.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_AUDITOR_INDEPENDENCE_VIOLATION
+  meaning: >-
+    The candidate finance auditor fails the independence check for this
+    scope and period. Independence is mandatory and is re-verified at
+    the moment of the act, never assumed from a prior grant.
+  severity: error
+  description: The auditor is not independent of what is being audited.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_ACCOUNTING_PERIOD_CLOSED
+  meaning: >-
+    The target accounting period is closed, so ordinary posting is
+    refused. The lock is re-checked inside every posting command, not
+    only when the period is loaded.
+  severity: error
+  description: The accounting period is closed.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_ACCOUNTING_PERIOD_UNDETERMINED
+  meaning: >-
+    No accounting period, or no period with an explicit timezone, could
+    be determined for the instant supplied. A naive datetime is refused
+    rather than assumed to be UTC.
+  severity: error
+  description: The accounting period or its timezone cannot be determined.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_PERIOD_REOPENING_NOT_AUTHORIZED
+  meaning: >-
+    Reopening a closed accounting period lacks the explicit authority,
+    the recorded reason, the policy version, the preserved prior state
+    or the dual control that canon 19f.5 requires.
+  severity: error
+  description: Period reopening is not authorized.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_JOURNAL_ENTRY_UNBALANCED
+  meaning: >-
+    The sum of debit minor units does not equal the sum of credit minor
+    units for at least one currency in this entry. Balance is checked
+    per currency, never across currencies.
+  severity: error
+  description: The journal entry does not balance.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_IMMUTABLE_RECORD_MODIFICATION_ATTEMPTED
+  meaning: >-
+    An attempt was made to modify a posted register entry, a frozen
+    report snapshot, a submitted or published report version, or another
+    create-once record. Correction is a reversal or a new record, never
+    an in-place edit.
+  severity: error
+  description: This record is immutable and cannot be modified.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CURRENCY_UNSUPPORTED
+  meaning: >-
+    The currency is not governed by the active policy, or cross-currency
+    arithmetic was attempted without a recorded conversion. Currency is
+    always explicit and never implied.
+  severity: error
+  description: The currency is unsupported, or currencies were mixed.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_MONETARY_AMOUNT_INVALID
+  meaning: >-
+    The amount is not expressible as integer minor units with a recorded
+    scale and rounding rule. Floating-point money is refused outright.
+  severity: error
+  description: The monetary amount is invalid.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_DUPLICATE_TRANSACTION
+  meaning: >-
+    A transaction with the same fingerprint already exists in this
+    scope. Duplicate and replay detection is a property of the register,
+    not of the caller.
+  severity: error
+  description: A transaction with this fingerprint already exists.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_DUPLICATE_IMPORT
+  meaning: >-
+    The import batch fingerprint matches a batch that has already been
+    applied. Re-applying it would double every fact it carries.
+  severity: error
+  description: This import batch has already been applied.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_IMPORT_PROVENANCE_MISSING
+  meaning: >-
+    An imported transaction carries no import batch or no source
+    provenance. Imported data keeps its source provenance and batch
+    identity so replay and duplication remain detectable.
+  severity: error
+  description: The imported record has no provenance.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_TRANSFER_PAIR_UNRESOLVED
+  meaning: >-
+    An inter-unit transfer has no matching counterpart leg, so the same
+    money would be counted twice in consolidation.
+  severity: error
+  description: The transfer has no resolvable counterpart.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_RECLASSIFICATION_BYPASS_DENIED
+  meaning: >-
+    The requested reclassification would drop a verification,
+    disclosure, aggregation or reporting obligation that the record
+    currently carries. Reclassification may not be used to escape an
+    obligation.
+  severity: error
+  description: This reclassification would bypass an obligation.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_SOURCE_UNDETERMINED
+  meaning: >-
+    The contributor source is anonymous or cannot be established, so the
+    contribution fails closed into a governed exceptional state rather
+    than being accepted.
+  severity: error
+  description: The contribution source cannot be established.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_VERIFICATION_INCOMPLETE
+  meaning: >-
+    A verification or declaration the policy requires for this
+    contribution is missing.
+  severity: error
+  description: Required contribution verification is incomplete.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_CLASSIFICATION_UNDETERMINED
+  meaning: >-
+    No policy-bound classification could be determined for this
+    contribution, so it cannot be accepted or refused on a stated basis.
+  severity: error
+  description: The contribution classification cannot be determined.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_PROHIBITED
+  meaning: >-
+    The active policy classifies this contribution as prohibited or
+    restricted.
+  severity: error
+  description: This contribution is prohibited by the active policy.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_AGGREGATION_UNRESOLVED
+  meaning: >-
+    The aggregate over the policy-relevant period and perimeter could
+    not be resolved, so splitting could not be ruled out. Known related
+    or intermediated contributions are never treated as unrelated merely
+    because they arrived separately.
+  severity: error
+  description: The contribution aggregate cannot be resolved.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CONTRIBUTION_RETURN_REQUIRED
+  meaning: >-
+    A return obligation exists for this contribution and blocks the
+    requested action. The original receipt stays unchanged throughout.
+  severity: error
+  description: A return obligation blocks this action.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_IN_KIND_VALUATION_MISSING
+  meaning: >-
+    A non-monetary contribution or external benefit carries no valuation
+    basis, so no financial magnitude can be stated for it.
+  severity: error
+  description: The in-kind valuation is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_VALUATION_METHOD_MISSING
+  meaning: >-
+    A valuation or revaluation carries no method reference, so the
+    figure cannot be reproduced or challenged.
+  severity: error
+  description: The valuation method reference is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_COUNTER_PERFORMANCE_MISSING
+  meaning: >-
+    A sponsorship agreement was approved without a recorded counter-
+    performance and without the explicit policy classification that its
+    absence requires.
+  severity: error
+  description: Sponsorship counter-performance is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_SPONSORSHIP_DISCLOSURE_INCOMPLETE
+  meaning: >-
+    The disclosure classification or declaration this sponsorship
+    requires is missing.
+  severity: error
+  description: The sponsorship disclosure is incomplete.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_PAYMENT_AUTHORIZATION_MISSING
+  meaning: >-
+    Settlement was attempted with no valid, scope-matching payment
+    authorization. Authorizing and executing a payment are two acts
+    precisely so that neither alone completes it.
+  severity: error
+  description: No valid payment authorization exists.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_WRITE_OFF_NOT_AUTHORIZED
+  meaning: >-
+    A write-off lacks the authority or the dual control that the policy
+    requires. Recording a position and erasing it are never the same
+    privilege.
+  severity: error
+  description: The write-off is not authorized.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_BUDGET_ACTUAL_WRITE_FORBIDDEN
+  meaning: >-
+    An attempt was made to store an actual amount on a budget line. A
+    budget never overwrites register facts and never becomes a second
+    source of truth about actual transactions.
+  severity: error
+  description: Actual amounts may not be written onto a budget.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_CROSS_SCOPE_CONSOLIDATION_DENIED
+  meaning: >-
+    Consolidation lacks explicit cross-scope authority, or would write
+    into a lower scope. Reading a lower scope for consolidation never
+    grants the right to write into it.
+  severity: error
+  description: Cross-scope consolidation is denied.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORTING_PERIMETER_UNDETERMINED
+  meaning: >-
+    No effective reporting perimeter definition covers this period, so
+    what the report is meant to include cannot be stated.
+  severity: error
+  description: The reporting perimeter cannot be determined.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORT_SNAPSHOT_MISSING
+  meaning: >-
+    Preparation, validation or submission was attempted without the
+    frozen source snapshot the report version must be computed from.
+  severity: error
+  description: The frozen report snapshot is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORT_VALIDATION_INCOMPLETE
+  meaning: >-
+    Required validations have not completed, or blocking findings are
+    still open, so the requested report act cannot proceed.
+  severity: error
+  description: Report validation is incomplete.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORT_APPROVAL_MISSING
+  meaning: >-
+    The requested act requires a recorded approval of this report
+    version, and none exists.
+  severity: error
+  description: The report approval is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORT_SIGN_OFF_MISSING
+  meaning: >-
+    The requested act requires the legally responsible signature of this
+    report version, and none exists.
+  severity: error
+  description: The report sign-off is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_REPORT_STATUS_UNKNOWN
+  meaning: >-
+    The report status cannot be determined, so the act fails closed
+    rather than assuming a status.
+  severity: error
+  description: The report status cannot be determined.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_AUDIT_INCOMPLETE
+  meaning: >-
+    The act requires a concluded independent audit engagement for this
+    scope and period, and none exists.
+  severity: error
+  description: No concluded audit engagement exists.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_EXTERNAL_ACKNOWLEDGEMENT_NOT_AUTHORITATIVE
+  meaning: >-
+    An acknowledgement, receipt, delivery record or read status was
+    offered as an acceptance decision. All four are legitimate, storable
+    facts and none is a legal act.
+  severity: error
+  description: Delivery or receipt telemetry is not acceptance.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_EXTERNAL_ACCEPTANCE_MISSING
+  meaning: >-
+    The transition to externally_accepted was attempted without the
+    explicit authoritative reference it requires. Acceptance is never
+    inferred from elapsed time, silence, delivery or publication.
+  severity: error
+  description: No authoritative external acceptance decision was recorded.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_STATISTICAL_DISCLOSURE_RISK
+  meaning: >-
+    The requested public view would breach the small-cell or combination
+    rules and could re-identify a protected person.
+  severity: error
+  description: The view carries a statistical disclosure risk.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_EVIDENCE_REFERENCE_MISSING
+  meaning: >-
+    A required evidence or document reference is absent for this record.
+  severity: error
+  description: The required evidence reference is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_EVIDENCE_ASSERTION_UNAVAILABLE
+  meaning: >-
+    An assertion about a document - authentic, signed, admitted - is
+    required, but only the document contour may make it. Holding a
+    reference never makes the finance contour the owner of the content.
+  severity: error
+  description: Only the document contour can assert this.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_PARTY_HANDLE_PURPOSE_MISMATCH
+  meaning: >-
+    A party handle was presented for a purpose or a perimeter it was not
+    minted for. There is no cross-purpose lookup in this contour.
+  severity: error
+  description: The party handle was presented for the wrong purpose.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_PARTY_HANDLE_RESOLUTION_DENIED
+  meaning: >-
+    Handle resolution was attempted without the separate, explicitly
+    granted resolution authority. Resolution is an audited act in its
+    own right and no finance role carries it.
+  severity: error
+  description: Party handle resolution is denied.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_RETENTION_BINDING_MISSING
+  meaning: >-
+    A governed finance record carries no record-class binding, so no
+    retention obligation or legal hold can attach to it.
+  severity: error
+  description: The retention binding is missing.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_POLICY_MISSING
+  meaning: >-
+    No applicable policy of the required kind exists for this scope and
+    date.
+  severity: error
+  description: No applicable finance policy exists.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+- code: FINANCE_POLICY_VERSION_UNKNOWN
+  meaning: >-
+    The referenced policy version does not exist or is not readable.
+    Historical policy versions stay bound to historical decisions and
+    remain readable forever.
+  severity: error
+  description: The referenced policy version is unknown.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: canon-0.8.0
+
+# --- Additive PACK-10 codes (nineteen) -------------------------------
+
+- code: FINANCE_CORRECTION_TARGET_INVALID
+  meaning: >-
+    The record named as the correction or reversal target does not
+    exist, is not in a correctable state, or would close a cycle in the
+    correction chain. Canon section 24 has no code for a malformed
+    correction target, only for the immutability it protects.
+  severity: error
+  description: The correction target is invalid.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_REPORT_SNAPSHOT_MISMATCH
+  meaning: >-
+    A snapshot other than the one this report version is bound to was
+    presented. Distinct from FINANCE_REPORT_SNAPSHOT_MISSING: a
+    different snapshot is an attempt to move a version onto figures it
+    was not computed from, not an absent one.
+  severity: error
+  description: The presented snapshot is not the one this version is bound to.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_FORBIDDEN_IDENTITY_LINKAGE
+  meaning: >-
+    A payload, projection or inbound reference carried a prohibited
+    identity key or a reference kind that would bridge finance to
+    identity, membership, credential or voting. Canon 24 states the
+    prohibition; it registers no code for the moment of detection.
+  severity: error
+  description: A prohibited identity linkage was rejected.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_IDEMPOTENCY_CONFLICT
+  meaning: >-
+    A command was replayed with the same caller-supplied event id but
+    different content. The generic OPTIMISTIC_CONCURRENCY_CONFLICT means
+    a stale expected version, which is a different failure with a
+    different remedy.
+  severity: error
+  description: This event id was already used with different content.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_ACCOUNT_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded change to a chart-
+    of-accounts node.
+  severity: error
+  description: A finance account was created or changed status.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_ACCOUNTING_PERIOD_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded accounting-period
+    opening, closing, reopening request or reopening.
+  severity: error
+  description: An accounting period changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_JOURNAL_ENTRY_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded journal-entry
+    draft, posting, reversal or correction.
+  severity: error
+  description: A journal entry changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_TRANSACTION_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded transaction or
+    reclassification.
+  severity: error
+  description: A financial transaction changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_IMPORT_BATCH_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully registered, completed or
+    rejected import batch.
+  severity: error
+  description: An import batch changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_CONTRIBUTION_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded contribution
+    receipt, assessment, decision or return.
+  severity: error
+  description: A contribution changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_SPONSORSHIP_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded sponsorship
+    registration, approval or disclosure classification.
+  severity: error
+  description: A sponsorship agreement changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_EXTERNAL_BENEFIT_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded external financial
+    benefit.
+  severity: error
+  description: An external financial benefit changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_EXPENSE_CLAIM_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded expense-claim
+    submission, review, approval or correction.
+  severity: error
+  description: An expense claim changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_PAYMENT_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded payment
+    authorization or settlement.
+  severity: error
+  description: A payment changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_OBLIGATION_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded obligation,
+    revaluation, settlement or write-off.
+  severity: error
+  description: A financial obligation changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_REPORT_SNAPSHOT_FROZEN
+  meaning: >-
+    Audit classification for the create-once freezing of a report source
+    snapshot.
+  severity: error
+  description: A report snapshot was frozen.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_REPORT_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded report-version
+    preparation, review, approval, signing, submission, acknowledgement,
+    acceptance, publication, correction or supersession.
+  severity: error
+  description: A report version changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_AUDIT_ENGAGEMENT_STATE_CHANGED
+  meaning: >-
+    Audit classification for a successfully recorded audit-engagement
+    opening, finding or conclusion.
+  severity: error
+  description: An audit engagement changed state.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+- code: FINANCE_PARTY_HANDLE_ACCESS_RECORDED
+  meaning: >-
+    Audit classification for a party-handle minting or an authorized
+    resolution. The resolution act is audited even when it succeeds, and
+    the resolved value never enters the audit record.
+  severity: error
+  description: A party handle was minted or resolved.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-10-service
+
+# --- Reused verbatim from earlier packs (thirty-two) -----------------
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The caller holds no authority for the requested operation.
+  severity: error
+  description: Permission denied.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    The record does not exist, or exists in another organizational
+    scope. The two answers are deliberately indistinguishable so a
+    foreign identifier discloses nothing.
+  severity: error
+  description: The record was not found.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: >-
+    The requested lifecycle transition is not in the allowed set for the
+    record's current state.
+  severity: error
+  description: Forbidden state transition.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: >-
+    An unknown status value was supplied.
+  severity: error
+  description: Unknown status value.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: OPTIMISTIC_CONCURRENCY_CONFLICT
+  meaning: >-
+    The supplied expected version does not match the record's current
+    version.
+  severity: error
+  description: Optimistic concurrency conflict.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: AUDIT_CHAIN_BROKEN
+  meaning: >-
+    The audit hash chain failed verification.
+  severity: error
+  description: The audit chain is broken.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: EVENT_VERSION_UNSUPPORTED
+  meaning: >-
+    The event's major version is not one this consumer supports.
+  severity: error
+  description: Unsupported event version.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: INTEGRITY_CHECK_FAILED
+  meaning: >-
+    A snapshot digest or an import fingerprint did not match.
+  severity: error
+  description: Integrity check failed.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: SERVICE_STATE_READ_ONLY
+  meaning: >-
+    The service is in a read-only state and refuses the write.
+  severity: error
+  description: The service is read-only.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: EMERGENCY_FREEZE_ACTIVE
+  meaning: >-
+    An emergency freeze blocks the write.
+  severity: error
+  description: An emergency freeze is active.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-02-reused
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The asserted organizational scope does not match the target record's
+    scope.
+  severity: error
+  description: Organizational scope mismatch.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: ORGANIZATION_SCOPE_UNDETERMINED
+  meaning: >-
+    The organizational scope cannot be determined, so the operation is
+    refused before any other check, read or write.
+  severity: error
+  description: The organizational scope is undetermined.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: CROSS_SCOPE_ACCESS_DENIED
+  meaning: >-
+    None of the governed cross-scope access modes grants access to this
+    record.
+  severity: error
+  description: Cross-scope access denied.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: CROSS_SCOPE_AUTHORITY_INVALID
+  meaning: >-
+    The presented cross-scope authority is not valid for this scope.
+  severity: error
+  description: The cross-scope authority is invalid.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-09-reused
+
+- code: AUTHORITY_ROLE_INCOMPATIBLE
+  meaning: >-
+    Two roles the actor holds, or the role being accepted, are hard-
+    incompatible in the same legally relevant scope.
+  severity: error
+  description: Incompatible roles.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: AUTHORITY_ASSIGNMENT_INVALID
+  meaning: >-
+    The authority record fails the assignment lifecycle rule.
+  severity: error
+  description: The authority assignment is invalid.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: AUTHORITY_SCOPE_INVALID
+  meaning: >-
+    The authority's scope is structurally invalid.
+  severity: error
+  description: The authority scope is invalid.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: ORGANIZATIONAL_AUTHORITY_NOT_USABLE
+  meaning: >-
+    The authority record exists but is not currently usable - not yet
+    effective, expired or revoked.
+  severity: error
+  description: The organizational authority is not usable.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: ORGANIZATION_DUAL_CONTROL_VIOLATION
+  meaning: >-
+    One actor stands on both sides of an action that requires dual
+    control.
+  severity: error
+  description: Dual control violation.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: CONFLICT_OF_INTEREST_UNDECLARED
+  meaning: >-
+    The conflict-of-interest state is undeclared for a protected action,
+    so the action fails closed.
+  severity: error
+  description: The conflict of interest is undeclared.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-07-reused
+
+- code: CONFLICT_OF_INTEREST_BLOCKING
+  meaning: >-
+    A declared conflict of interest blocks this action.
+  severity: error
+  description: A blocking conflict of interest was declared.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-07-reused
+
+- code: CONFLICT_REVIEW_SELF_APPROVAL_PROHIBITED
+  meaning: >-
+    The actor would approve, review, authorize or execute an act they
+    themselves created or personally benefit from.
+  severity: error
+  description: Self-approval is prohibited.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-07-reused
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    A legal hold blocks the disposal-relevant action. A hold outranks
+    destruction and ordinary retention expiry.
+  severity: error
+  description: The record is under legal hold.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-09-reused
+
+- code: LEGAL_HOLD_STATE_UNKNOWN
+  meaning: >-
+    The legal-hold state is indeterminate, so the action fails closed.
+  severity: error
+  description: The legal hold state is unknown.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-09-reused
+
+- code: RETENTION_POLICY_REBIND_REQUIRES_REEVALUATION
+  meaning: >-
+    Rebinding a retention class cannot shorten an existing obligation
+    without re-evaluation.
+  severity: error
+  description: Retention rebinding requires re-evaluation.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-09-reused
+
+- code: GOVERNED_RECORD_DELETION_FORBIDDEN
+  meaning: >-
+    Deletion was attempted on a governed record. Disposal, where it
+    applies at all, runs through the governed disposition workflow by
+    reference, never through a local delete.
+  severity: error
+  description: Deletion of a governed record is forbidden.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-09-reused
+
+- code: HISTORICAL_SCOPE_NOT_EFFECTIVE
+  meaning: >-
+    The scope or authority was queried outside its effective window.
+  severity: error
+  description: The scope is not effective at that time.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: SUCCESSOR_TRANSFER_REQUIRES_DECISION
+  meaning: >-
+    A reorganization relation was used as if it transferred finance
+    authority. It does not; a governed decision is required.
+  severity: error
+  description: A successor transfer requires a decision.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-08-reused
+
+- code: PUBLICATION_NOT_ALLOWED
+  meaning: >-
+    Publication was attempted without the separate publication
+    authorization it requires. Publication is not approval and approval
+    is not publication.
+  severity: error
+  description: Publication is not allowed.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-04-reused
+
+- code: DISCLOSURE_POLICY_VIOLATION
+  meaning: >-
+    The emission would violate the applicable disclosure policy.
+  severity: error
+  description: Disclosure policy violation.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-04-reused
+
+- code: CRITICAL_POLICY_ACTIVATION_NOT_AUTHORIZED
+  meaning: >-
+    A critical policy version was activated without the required
+    approval.
+  severity: error
+  description: Critical policy activation is not authorized.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-07-reused
+
+- code: CRITICAL_POLICY_VERSION_FROZEN
+  meaning: >-
+    An edit was attempted on a frozen policy version.
+  severity: error
+  description: The policy version is frozen.
+  retryable: false
+  owner: finance-service
+  introduced_in_version: 0.10.0
+  source: pack-07-reused

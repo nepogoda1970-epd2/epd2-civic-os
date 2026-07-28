@@ -1,12 +1,21 @@
-"""Repository-level test: the PACK-10 canon 0.8.0 amendment.
+"""Repository-level test: the PACK-10 canon 0.8.0 amendment, and the
+state the PACK-10 implementation round left it in.
 
 This is a documentation-and-version check, not a business-behaviour
-check. The 0.8.0 round amends `docs/canonical/TZ-00-domain-event-canon.md`
-with the party-finance bounded context (section 19f, event subsection
-20.17, and the new entries in sections 22, 23 and 24) and ships no
-runtime code: `REPOSITORY_VERSION` stays at 0.9.0, PACK-10 stays
-`not_implemented`, `services/finance-service` does not exist, and every
-ADR of the round stays `proposed` (19f.25).
+check. The 0.8.0 canon round amended
+`docs/canonical/TZ-00-domain-event-canon.md` with the party-finance
+bounded context (section 19f, event subsection 20.17, and the new entries
+in sections 22, 23 and 24) and shipped no runtime code.
+
+The PACK-10 implementation round is the round canon 19f.25's
+implementation gate was waiting for, so three of these assertions were
+inverted with it rather than left asserting the previous round's state:
+`REPOSITORY_VERSION` is now 0.10.0, the finance context is declared
+`reference_implementation`, and `services/finance-service` must exist,
+carry its twelve modules and offer no deletion method. What did **not**
+change is the canon itself - `CANON_VERSION` stays 0.8.0 and the canon
+text is untouched - and the boundary: no shared finance package, no
+finance frontend, no second finance-named service.
 
 Each test below asserts that the corresponding check in
 `scripts/check_canon_0_8_0.py` reports no problem.
@@ -26,9 +35,9 @@ from scripts.check_canon_0_8_0 import (
     check_finance_event_catalogue,
     check_finance_implementation_status,
     check_finance_party_handle_not_global_identity,
+    check_finance_runtime_within_boundary,
     check_finance_voting_links_forbidden,
     check_ledger_immutability_and_balancing,
-    check_no_finance_runtime_implementation,
     check_reason_code_registry,
     check_report_submission_distinct_from_acceptance,
     check_repository_compatibility,
@@ -42,7 +51,7 @@ def test_canon_version_is_declared_as_0_8_0() -> None:
     assert problems == [], f"Canon version problems: {problems}"
 
 
-def test_repository_version_is_unchanged() -> None:
+def test_repository_version_is_the_one_this_round_is_entitled_to() -> None:
     problems = check_repository_version_unchanged(REPO_ROOT)
     assert problems == [], f"Repository version problems: {problems}"
 
@@ -52,13 +61,13 @@ def test_repository_compatibility_accepts_current_repository() -> None:
     assert problems == [], f"Compatibility metadata problems: {problems}"
 
 
-def test_finance_context_is_declared_not_implemented() -> None:
+def test_finance_context_is_declared_a_reference_implementation() -> None:
     problems = check_finance_implementation_status(REPO_ROOT)
     assert problems == [], f"Implementation status problems: {problems}"
 
 
-def test_no_finance_runtime_implementation_exists() -> None:
-    problems = check_no_finance_runtime_implementation(REPO_ROOT)
+def test_the_finance_runtime_exists_and_stays_inside_its_boundary() -> None:
+    problems = check_finance_runtime_within_boundary(REPO_ROOT)
     assert problems == [], f"Finance implementation problems: {problems}"
 
 

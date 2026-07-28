@@ -22,6 +22,7 @@ dependencies = [
     "epd2-membership-service",
     "epd2-organization-service",
     "epd2-compliance-service",
+    "epd2-finance-service",
 ]
 
 # Lower bounds are the versions this repository's checks (Ruff ruleset,
@@ -68,6 +69,7 @@ members = [
     "services/membership-service",
     "services/organization-service",
     "services/compliance-service",
+    "services/finance-service",
 ]
 
 [tool.uv.sources]
@@ -89,6 +91,7 @@ epd2-ai-processing-service = { workspace = true }
 epd2-membership-service = { workspace = true }
 epd2-organization-service = { workspace = true }
 epd2-compliance-service = { workspace = true }
+epd2-finance-service = { workspace = true }
 
 # --- Ruff ---
 [tool.ruff]
@@ -113,6 +116,7 @@ src = [
     "services/membership-service/src",
     "services/organization-service/src",
     "services/compliance-service/src",
+    "services/finance-service/src",
     "scripts",
     "tests",
 ]
@@ -140,6 +144,7 @@ known-first-party = [
     "epd2_membership_service",
     "epd2_organization_service",
     "epd2_compliance_service",
+    "epd2_finance_service",
 ]
 
 # --- mypy ---
@@ -164,6 +169,7 @@ mypy_path = [
     "services/membership-service/src",
     "services/organization-service/src",
     "services/compliance-service/src",
+    "services/finance-service/src",
 ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -234,6 +240,7 @@ testpaths = [
     "services/membership-service/tests",
     "services/organization-service/tests",
     "services/compliance-service/tests",
+    "services/finance-service/tests",
 ]
 # --import-mode=importlib: several services intentionally use the same
 # test file basenames (test_domain.py, test_application.py, ...) - this

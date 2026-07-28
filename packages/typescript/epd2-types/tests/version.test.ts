@@ -143,9 +143,13 @@ test("current versions match the expected skeleton version", () => {
   // projections; a new section 20.17 with seventy-two finance events;
   // twenty-one new section 22 ownership-matrix rows; new section 23
   // forbidden-link entries; forty-five new section 24 reason codes - a
-  // backward-compatible (minor) canon addition per canon section 25. No
-  // finance-service code exists, so REPOSITORY_VERSION is unchanged at
-  // 0.9.0.
+  // backward-compatible (minor) canon addition per canon section 25.
+  // REPOSITORY_VERSION then moved 0.9.0 -> 0.10.0 for the PACK-10
+  // implementation round, which ships services/finance-service - the
+  // first executable slice of section 19f - and
+  // contracts/reason-codes/pack-10.yml. A new bounded context is a minor
+  // bump per canon section 25; CANON_VERSION stays 0.8.0 because the
+  // implementation round amends no canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.9.0");
+  assert.equal(REPOSITORY_VERSION, "0.10.0");
 });

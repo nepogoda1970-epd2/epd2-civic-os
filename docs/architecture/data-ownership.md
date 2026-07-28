@@ -41,61 +41,61 @@ production-базы данных). Подробности — в
 не факт реализации. Подробности — `docs/adr/ADR-054-canon-0.8.0-party-finance-context-additions.md`,
 `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`.
 
-| Domain                               | Future owner                  | Current implementation                                  |
-| ------------------------------------ | ----------------------------- | ------------------------------------------------------- |
-| Account                              | Account Service               | Implemented (PACK-02) — `services/account-service`      |
-| IdentityRecord                       | Identity Verification Service | Implemented (PACK-02) — `services/identity-service`     |
-| EligibilityRule                      | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
-| EligibilityDecision                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
-| EligibilitySnapshot                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`  |
-| ParticipationCredential              | Credential Issuer             | Implemented (PACK-02) — `services/credential-service`   |
-| Organization                         | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| CivicSpace                           | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalUnit                   | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalRelation               | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalHierarchyOverlapPolicy | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalInheritancePolicy      | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| OrganizationalAuthority              | Organization Service          | Implemented (PACK-08) — `services/organization-service` |
-| Membership                           | Membership Service            | Not implemented                                         |
-| RoleAssignment                       | Permission / Role Service     | Not implemented                                         |
-| Initiative                           | Initiative Service            | Not implemented                                         |
-| InitiativeVersion                    | Initiative Service            | Not implemented                                         |
-| Amendment                            | Amendment Service             | Not implemented                                         |
-| SourceRecord                         | Evidence Service              | Not implemented                                         |
-| Discussion                           | Discussion Service            | Not implemented                                         |
-| Contribution                         | Discussion Service            | Not implemented                                         |
-| ModerationCase                       | Moderation Service            | Not implemented                                         |
-| ModerationDecision                   | Moderation Service            | Not implemented                                         |
-| Appeal                               | Appeal Service                | Not implemented                                         |
-| Ballot                               | Ballot Definition Service     | Not implemented                                         |
-| BallotOption                         | Ballot Definition Service     | Not implemented                                         |
-| VoteEnvelope                         | Vote Casting Service          | Not implemented                                         |
-| VoteReceipt                          | Receipt Service               | Not implemented                                         |
-| Tally                                | Tally Service                 | Not implemented                                         |
-| ResultPublication                    | Result Publication Service    | Not implemented                                         |
-| Delegation                           | Delegation Service            | Not implemented                                         |
-| DelegationSnapshot                   | Delegation Resolution Engine  | Not implemented                                         |
-| AIProcessingRecord                   | AI Accountability Service     | Not implemented                                         |
-| AuditEvent                           | Audit Core                    | Implemented (PACK-02) — `services/audit-core`           |
-| EmergencyAction                      | Governance / Crisis Service   | Not implemented                                         |
-| FinanceAccount                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| AccountingPeriod                     | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| JournalEntry                         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinancialTransaction                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ImportBatch                          | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ReconciliationRecord                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinanceContribution                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| SponsorshipAgreement                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ExternalFinancialBenefit             | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ExpenseClaim                         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| PaymentAuthorization                 | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| Budget                               | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinancialAsset                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinancialObligation                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ReportingObligation                  | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ReportingPerimeterDefinition         | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinanceReport                        | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| ReportSnapshot                       | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| AuditEngagement                      | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinancePolicy                        | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
-| FinancePartyHandle                   | Finance Service               | Not implemented — canon `0.8.0`, 19f (PACK-10)          |
+| Domain                               | Future owner                  | Current implementation                                                 |
+| ------------------------------------ | ----------------------------- | ---------------------------------------------------------------------- |
+| Account                              | Account Service               | Implemented (PACK-02) — `services/account-service`                     |
+| IdentityRecord                       | Identity Verification Service | Implemented (PACK-02) — `services/identity-service`                    |
+| EligibilityRule                      | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`                 |
+| EligibilityDecision                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`                 |
+| EligibilitySnapshot                  | Eligibility Engine            | Implemented (PACK-02) — `services/eligibility-service`                 |
+| ParticipationCredential              | Credential Issuer             | Implemented (PACK-02) — `services/credential-service`                  |
+| Organization                         | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| CivicSpace                           | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| OrganizationalUnit                   | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| OrganizationalRelation               | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| OrganizationalHierarchyOverlapPolicy | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| OrganizationalInheritancePolicy      | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| OrganizationalAuthority              | Organization Service          | Implemented (PACK-08) — `services/organization-service`                |
+| Membership                           | Membership Service            | Not implemented                                                        |
+| RoleAssignment                       | Permission / Role Service     | Not implemented                                                        |
+| Initiative                           | Initiative Service            | Not implemented                                                        |
+| InitiativeVersion                    | Initiative Service            | Not implemented                                                        |
+| Amendment                            | Amendment Service             | Not implemented                                                        |
+| SourceRecord                         | Evidence Service              | Not implemented                                                        |
+| Discussion                           | Discussion Service            | Not implemented                                                        |
+| Contribution                         | Discussion Service            | Not implemented                                                        |
+| ModerationCase                       | Moderation Service            | Not implemented                                                        |
+| ModerationDecision                   | Moderation Service            | Not implemented                                                        |
+| Appeal                               | Appeal Service                | Not implemented                                                        |
+| Ballot                               | Ballot Definition Service     | Not implemented                                                        |
+| BallotOption                         | Ballot Definition Service     | Not implemented                                                        |
+| VoteEnvelope                         | Vote Casting Service          | Not implemented                                                        |
+| VoteReceipt                          | Receipt Service               | Not implemented                                                        |
+| Tally                                | Tally Service                 | Not implemented                                                        |
+| ResultPublication                    | Result Publication Service    | Not implemented                                                        |
+| Delegation                           | Delegation Service            | Not implemented                                                        |
+| DelegationSnapshot                   | Delegation Resolution Engine  | Not implemented                                                        |
+| AIProcessingRecord                   | AI Accountability Service     | Not implemented                                                        |
+| AuditEvent                           | Audit Core                    | Implemented (PACK-02) — `services/audit-core`                          |
+| EmergencyAction                      | Governance / Crisis Service   | Not implemented                                                        |
+| FinanceAccount                       | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| AccountingPeriod                     | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| JournalEntry                         | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| FinancialTransaction                 | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ImportBatch                          | Finance Service               | Deferred (PACK-10) — canon `0.8.0`, 19f; see PACK-10-IMPLEMENTATION.md |
+| ReconciliationRecord                 | Finance Service               | Deferred (PACK-10) — canon `0.8.0`, 19f; see PACK-10-IMPLEMENTATION.md |
+| FinanceContribution                  | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| SponsorshipAgreement                 | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ExternalFinancialBenefit             | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ExpenseClaim                         | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| PaymentAuthorization                 | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| Budget                               | Finance Service               | Deferred (PACK-10) — canon `0.8.0`, 19f; see PACK-10-IMPLEMENTATION.md |
+| FinancialAsset                       | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| FinancialObligation                  | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ReportingObligation                  | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ReportingPerimeterDefinition         | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| FinanceReport                        | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| ReportSnapshot                       | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| AuditEngagement                      | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| FinancePolicy                        | Finance Service               | Deferred (PACK-10) — canon `0.8.0`, 19f; see PACK-10-IMPLEMENTATION.md |
+| FinancePartyHandle                   | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |

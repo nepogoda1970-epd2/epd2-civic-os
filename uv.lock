@@ -18,6 +18,7 @@ members = [
     "epd2-delegation-service",
     "epd2-deliberation-service",
     "epd2-eligibility-service",
+    "epd2-finance-service",
     "epd2-governance-service",
     "epd2-identity-service",
     "epd2-initiative-service",
@@ -202,6 +203,7 @@ dependencies = [
     { name = "epd2-delegation-service" },
     { name = "epd2-deliberation-service" },
     { name = "epd2-eligibility-service" },
+    { name = "epd2-finance-service" },
     { name = "epd2-governance-service" },
     { name = "epd2-identity-service" },
     { name = "epd2-initiative-service" },
@@ -237,6 +239,7 @@ requires-dist = [
     { name = "epd2-delegation-service", editable = "services/delegation-service" },
     { name = "epd2-deliberation-service", editable = "services/deliberation-service" },
     { name = "epd2-eligibility-service", editable = "services/eligibility-service" },
+    { name = "epd2-finance-service", editable = "services/finance-service" },
     { name = "epd2-governance-service", editable = "services/governance-service" },
     { name = "epd2-identity-service", editable = "services/identity-service" },
     { name = "epd2-initiative-service", editable = "services/initiative-service" },
@@ -336,6 +339,21 @@ requires-dist = [
 name = "epd2-eligibility-service"
 version = "0.1.0"
 source = { editable = "services/eligibility-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-finance-service"
+version = "0.1.0"
+source = { editable = "services/finance-service" }
 dependencies = [
     { name = "epd2-audit-core" },
     { name = "epd2-core" },

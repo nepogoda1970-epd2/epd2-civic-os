@@ -122,7 +122,23 @@ PACK09_SERVICE_PACKAGES = {
     ),
 }
 
-# Every service in the repository (all nine packs).
+# package import name -> its src/ directory, for the one PACK-10 service
+# (canon 0.8.0 section 19f, PACK-10 IMPLEMENTATION ROUND).
+# `finance-service` deliberately depends on NO other service, for the same
+# reason `compliance-service` does not: canon `ФИН-44` requires every
+# cross-service fact to arrive through a published interface, and `ФИН-01`
+# and `ФИН-36` forbid any edge that could bridge a finance record to an
+# identity, a membership, a credential or a vote. It holds PACK-08
+# organizational scopes, PACK-09 legal-case, hold and notice-effect
+# references, PACK-11 document references and PACK-35 lobbying
+# cross-references as opaque typed values in its own `references` module -
+# never as imports. That absence is what makes the boundary structural
+# rather than documented.
+PACK10_SERVICE_PACKAGES = {
+    "epd2_finance_service": (REPO_ROOT / "services/finance-service/src/epd2_finance_service"),
+}
+
+# Every service in the repository (all ten packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
@@ -132,6 +148,7 @@ SERVICE_PACKAGES = {
     **PACK07_SERVICE_PACKAGES,
     **PACK08_SERVICE_PACKAGES,
     **PACK09_SERVICE_PACKAGES,
+    **PACK10_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -1204,4 +1221,100 @@ def test_compliance_service_storage_exposes_no_delete_operation() -> None:
                     offenders.append(f"{node.name}.{statement.name}")
     assert offenders == [], (
         "compliance-service storage must expose no delete-shaped method: " + ", ".join(offenders)
+    )
+
+
+# =============================================================================
+# PACK-10 (canon 0.8.0 section 19f) - finance-service imports nothing but
+# the shared primitives, nothing imports it back, and it offers no
+# deletion path.
+# =============================================================================
+
+
+def test_finance_service_imports_only_core_and_audit_core() -> None:
+    """Canon `ФИН-44`, checked exhaustively rather than by sampling:
+    `finance-service` may import `epd2_core`, `epd2_audit_core` and
+    itself - nothing else. In particular it never reaches into
+    organization-service (it holds organizational scopes as opaque UUIDs),
+    never into compliance-service (legal hold, retention and notice
+    effects arrive as typed opaque references in its own `references`
+    module), never into identity/account/credential/membership
+    (`ФИН-01`: no user, person or member identifier exists anywhere in the
+    package), and never into voting/tally/delegation (`ФИН-36`: finance
+    records, identifiers and audit metadata form no correlation bridge
+    into voting)."""
+    allowed = ALWAYS_ALLOWED | {"epd2_finance_service"}
+    violations: list[str] = []
+    for src_dir in PACK10_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = (roots & set(SERVICE_PACKAGES)) - allowed
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "finance-service may only import epd2_core and epd2_audit_core:\n" + "\n".join(violations)
+    )
+
+
+def test_no_other_service_imports_finance_service() -> None:
+    """PACK-10 is a leaf this round: no PACK-02 through PACK-09 service
+    may depend on it. Canon 20.17 states the direction explicitly - a
+    service that needs a finance fact reads the event stream, it does not
+    reach into the finance context. A future pack that needs a finance
+    read must add that edge under its own ADR, the same way every earlier
+    cross-pack edge in this file was introduced."""
+    violations: list[str] = []
+    other_packages = {
+        name: path for name, path in SERVICE_PACKAGES.items() if name != "epd2_finance_service"
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK10_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import finance-service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_finance_service_storage_exposes_no_delete_operation() -> None:
+    """Canon `ФИН-05` (a posted register entry is immutable; in-place edit
+    and deletion are forbidden) and `ФИН-22` (a legal hold outranks
+    destruction), enforced at the repository level rather than only inside
+    the service's own tests: no storage protocol or in-memory adapter in
+    `finance-service` defines a delete-shaped method at all, so there is no
+    ordinary CRUD path a caller could reach for.
+
+    The module-level `delete_finance_record` is deliberately not caught by
+    this scan: it is a module-level function, not a class member, and it
+    exists only to raise `GovernedRecordDeletionForbiddenError`. The honest
+    API for an act the domain forbids is a reason-coded refusal, not a
+    missing function - and the service's own
+    `tests/test_storage.py` asserts that it raises."""
+    import ast as _ast
+
+    src_dir = PACK10_SERVICE_PACKAGES["epd2_finance_service"]
+    forbidden_method_names = {
+        "delete",
+        "remove",
+        "purge",
+        "drop",
+        "destroy",
+        "erase",
+        "clear",
+        "truncate",
+    }
+    storage_module = src_dir / "storage.py"
+    tree = _ast.parse(storage_module.read_text(encoding="utf-8"), filename=str(storage_module))
+    offenders: list[str] = []
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.ClassDef):
+            for statement in node.body:
+                if not isinstance(statement, _ast.FunctionDef | _ast.AsyncFunctionDef):
+                    continue
+                if statement.name.lstrip("_") in forbidden_method_names:
+                    offenders.append(f"{node.name}.{statement.name}")
+    assert offenders == [], (
+        "finance-service storage must expose no delete-shaped method: " + ", ".join(offenders)
     )

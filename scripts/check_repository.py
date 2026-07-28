@@ -688,6 +688,46 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "tests/contract/test_reason_codes_registry.py",
     "tests/contract/test_openapi_contract.py",
     "tests/contract/test_property_based.py",
+    # Services: finance-service (PACK-10's one wholly new service, canon
+    # 0.8.0 section 19f). Every module is listed by name rather than the
+    # directory alone, so removing one - the storage ports, say, or the
+    # publication-safe projections - fails here instead of silently
+    # shrinking the service.
+    "services/finance-service/README.md",
+    "services/finance-service/pyproject.toml",
+    "services/finance-service/src/epd2_finance_service/__init__.py",
+    "services/finance-service/src/epd2_finance_service/exceptions.py",
+    "services/finance-service/src/epd2_finance_service/domain.py",
+    "services/finance-service/src/epd2_finance_service/authorization.py",
+    "services/finance-service/src/epd2_finance_service/ledger.py",
+    "services/finance-service/src/epd2_finance_service/records.py",
+    "services/finance-service/src/epd2_finance_service/reporting.py",
+    "services/finance-service/src/epd2_finance_service/events.py",
+    "services/finance-service/src/epd2_finance_service/references.py",
+    "services/finance-service/src/epd2_finance_service/storage.py",
+    "services/finance-service/src/epd2_finance_service/projections.py",
+    "services/finance-service/src/epd2_finance_service/application.py",
+    "services/finance-service/tests/test_domain.py",
+    "services/finance-service/tests/test_authorization.py",
+    "services/finance-service/tests/test_ledger.py",
+    "services/finance-service/tests/test_records.py",
+    "services/finance-service/tests/test_reporting.py",
+    "services/finance-service/tests/test_events.py",
+    "services/finance-service/tests/test_references.py",
+    "services/finance-service/tests/test_storage.py",
+    "services/finance-service/tests/test_projections.py",
+    "services/finance-service/tests/test_application.py",
+    "services/finance-service/tests/test_privacy_boundary.py",
+    # PACK-10 contracts and documentation
+    "contracts/reason-codes/pack-10.yml",
+    "docs/packs/PACK-10-IMPLEMENTATION.md",
+    "docs/architecture/finance-service.md",
+    "docs/architecture/finance-ledger-model.md",
+    "docs/architecture/finance-reporting-lifecycle.md",
+    "docs/architecture/finance-separation-of-duties.md",
+    "docs/architecture/finance-publication-projection.md",
+    "docs/contracts/finance-command-query-contracts.md",
+    "docs/handover/PACK-10-IMPLEMENTATION-REPORT.md",
 )
 
 

@@ -24,6 +24,99 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - party finance, accounting & Rechenschaftsbericht (implementation)
+
+CLAUDE-PACK-10 implementation round. The first executable slice of the
+party-finance bounded context canon 0.8.0 section 19f defines, shipped as
+`services/finance-service`. **This is a `PACK-10 PARTY FINANCE 0.10.0
+CANDIDATE`, not a PASS release, and not a claim of production, legal,
+banking or external-authority readiness (`ФИН-43`).** `CANON_VERSION`
+stays at `0.8.0`: this round amends no canon, it implements one.
+
+### Added
+
+- `services/finance-service` — twelve modules, the sole authoritative
+  owner of the section-19f context: `exceptions` (one class per
+  registered reason code), `domain` (`Money` in integer minor units with
+  an explicit currency and scale and no floating point anywhere,
+  `FinancePartyHandle`, `OrganizationalScopeRef`, the
+  identity-minimisation rejection list), `authorization` (the six finance
+  roles, the action-authority table, the canon 19f.14 incompatibility
+  matrix, separation-of-duties assertions), `ledger` (chart of accounts,
+  accounting periods with explicit timezones, balanced double-entry
+  postings, correction by reversal or correcting entry), `records`
+  (contributions and their governed exceptional states, sponsorship,
+  external financial benefit, expense claims, payment authorisation and
+  settlement, assets, obligations, inter-unit transfers), `reporting`
+  (reporting obligation, perimeter, frozen snapshot, the twelve-state
+  `Rechenschaftsbericht` lifecycle, the independent audit engagement),
+  `events` (all seventy-two canonical section-20.17 event builders plus
+  full-state payloads for Audit Core hashing), `references` (typed,
+  content-free references to PACK-09, PACK-11 and PACK-35 records),
+  `storage` (a `Protocol` port and an in-memory reference adapter per
+  aggregate, an idempotency store and an event sink — and no delete
+  method anywhere), `projections` (derived, versioned,
+  never-authoritative read models with statistical disclosure control),
+  and `application` (forty-two commands and five queries, each routed
+  through one guard frame: scope, authority, role compatibility, conflict
+  declaration, idempotency, optimistic concurrency, then domain
+  transition, audit append and event publication).
+- `services/finance-service/tests` — the committed test suite for the
+  above.
+- `contracts/reason-codes/pack-10.yml` — 96 entries: the forty-five
+  `FINANCE_*` codes canon section 24 introduced with the 0.8.0
+  amendment, nineteen additive PACK-10 codes (four refusals canon has no
+  code for, fifteen `AuditEvent.reason_code` classifications for
+  successfully-audited acts), and thirty-two pre-existing codes reused
+  verbatim rather than shadowed by `FINANCE_`-prefixed duplicates.
+- `docs/packs/PACK-10-IMPLEMENTATION.md`, `docs/architecture/
+finance-service.md`, `finance-ledger-model.md`,
+  `finance-reporting-lifecycle.md`, `finance-separation-of-duties.md`,
+  `finance-publication-projection.md`, `docs/contracts/
+finance-command-query-contracts.md` and
+  `docs/handover/PACK-10-IMPLEMENTATION-REPORT.md`.
+
+### Changed
+
+- `REPOSITORY_VERSION` `0.9.0 → 0.10.0` in
+  `packages/python/epd2-core/src/epd2_core/version.py` and
+  `packages/typescript/epd2-types/src/version.ts`. A new bounded context
+  is a minor bump under canon section 25.
+- `docs/canonical/canon-version.json`:
+  `finance_context_implementation_status` `not_implemented →
+reference_implementation`, and `repository_compatibility` widened from
+  `>=0.1.0 <0.10.0` to `>=0.1.0 <0.11.0` so canon 0.8.0 still admits the
+  repository that implements it. `minimum_repository_version` and
+  `amended_at_repository_version` stay at `0.9.0`: the amendment does not
+  postdate itself.
+- `scripts/check_canon_0_8_0.py`: check 5 inverted. It asserted that
+  `services/finance-service` did **not** exist, which was correct for the
+  canon round and false the moment the implementation round shipped; it
+  now asserts that the runtime exists, carries its twelve modules, offers
+  no deletion method, and that no finance-named path appears under
+  `packages/` or `frontend/`. Checks 2, 3 and 4 follow the new version and
+  status.
+- `docs/architecture/data-ownership.md`: the twenty-one finance rows move
+  from "Not implemented" to `finance-service`.
+- `pyproject.toml`, `uv.lock`, `Makefile`, `scripts/check_repository.py`
+  and `tests/contract/_schema_helpers.py`: the new workspace member, its
+  required paths, its typecheck line and its reason-code registry.
+
+### Not in this round
+
+- No production persistence, no event bus, no bank or payment-provider
+  integration, no external-authority submission channel: every storage
+  adapter is in-memory and PACK-13 owns the production data plane.
+- No operational finance frontend. FRONT-00 and FRONT-01 are untouched,
+  including all 45 committed visual snapshots and both lockfiles.
+- No canon amendment. `CANON_VERSION` stays `0.8.0` and
+  `docs/canonical/TZ-00-domain-event-canon.md` is byte-identical to the
+  0.8.0 text.
+- No `Budget` or `ReconciliationRecord` aggregate: canon 19f.1 names
+  both, and this round ships their events and projections but not their
+  aggregates. See `docs/packs/PACK-10-IMPLEMENTATION.md` for the full
+  deferral list.
+
 ## [Unreleased] - canon minor version 0.8.0 (Party Finance & Financial Accountability Context)
 
 CLAUDE-PACK-10 canon-amendment round. **Canon-only: no runtime
