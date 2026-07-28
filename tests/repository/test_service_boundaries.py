@@ -138,7 +138,21 @@ PACK10_SERVICE_PACKAGES = {
     "epd2_finance_service": (REPO_ROOT / "services/finance-service/src/epd2_finance_service"),
 }
 
-# Every service in the repository (all ten packs).
+# package import name -> its src/ directory, for the one PACK-11 service
+# (Governed Documents & Evidence, PACK-11 IMPLEMENTATION ROUND).
+# `document-service` deliberately depends on NO other service, for the
+# same reason `finance-service` and `compliance-service` do not: canon
+# 19f.22 requires every cross-service fact to arrive through a typed
+# reference and a published interface. In particular it re-declares
+# PACK-09's reference shapes in its own `references` module rather than
+# importing `epd2_compliance_service`, which would turn a documented
+# boundary into a runtime code edge. That absence is what makes the
+# boundary structural rather than documented.
+PACK11_SERVICE_PACKAGES = {
+    "epd2_document_service": (REPO_ROOT / "services/document-service/src/epd2_document_service"),
+}
+
+# Every service in the repository (all eleven packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
@@ -149,6 +163,7 @@ SERVICE_PACKAGES = {
     **PACK08_SERVICE_PACKAGES,
     **PACK09_SERVICE_PACKAGES,
     **PACK10_SERVICE_PACKAGES,
+    **PACK11_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -1318,3 +1333,113 @@ def test_finance_service_storage_exposes_no_delete_operation() -> None:
     assert offenders == [], (
         "finance-service storage must expose no delete-shaped method: " + ", ".join(offenders)
     )
+
+
+# =============================================================================
+# PACK-11 (Governed Documents & Evidence) - document-service imports
+# nothing but the shared primitives, nothing imports it back, and it
+# offers no deletion path.
+# =============================================================================
+
+
+def test_document_service_imports_only_core_and_audit_core() -> None:
+    """Canon 19f.22's "typed references and published interfaces only",
+    checked exhaustively rather than by sampling.
+
+    `document-service` may import `epd2_core`, `epd2_audit_core` and
+    itself - nothing else. In particular it never reaches into
+    compliance-service: PACK-09 owns retention, legal hold and destruction
+    authorization, and this service holds all three as opaque typed
+    references in its own `references` module. Importing PACK-09's
+    `references` would be more convenient and would also convert the one
+    boundary this pack most needs to keep - who decides a hold - into a
+    runtime dependency that a refactor could quietly widen."""
+    allowed = ALWAYS_ALLOWED | {"epd2_document_service"}
+    violations: list[str] = []
+    for src_dir in PACK11_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = (roots & set(SERVICE_PACKAGES)) - allowed
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "document-service may only import epd2_core and epd2_audit_core:\n" + "\n".join(violations)
+    )
+
+
+def test_no_other_service_imports_document_service() -> None:
+    """PACK-11 is a leaf this round: no PACK-02 through PACK-10 service may
+    depend on it.
+
+    Note what this does *not* forbid. PACK-09's and PACK-10's placeholder
+    reference types (`DocumentRef`, `EvidenceRef`, `DocumentReference`,
+    `EvidenceReference`) stay exactly as they are and are not rewritten to
+    import PACK-11's real ones. A service that needs a document fact reads
+    the event stream or asks through the published interface; it does not
+    acquire an import edge into the document context. A future pack that
+    needs such a read must add that edge under its own ADR."""
+    violations: list[str] = []
+    other_packages = {
+        name: path for name, path in SERVICE_PACKAGES.items() if name != "epd2_document_service"
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK11_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import document-service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_document_service_storage_exposes_no_delete_operation() -> None:
+    """FIR-INV-010 ("historical versions must never be rewritten") and
+    PACK-09's legal hold, enforced at the repository level rather than only
+    inside the service's own tests: no storage protocol or in-memory
+    adapter in `document-service` defines a delete-shaped method at all.
+
+    The module-level `delete_document_record` is deliberately not caught by
+    this scan - it is a module-level function, not a class member, and it
+    exists only to raise `GovernedRecordDeletionForbiddenError`. The honest
+    API for an act the domain forbids is a reason-coded refusal a reader
+    can find, not a missing function they conclude was an oversight."""
+    import ast as _ast
+
+    src_dir = PACK11_SERVICE_PACKAGES["epd2_document_service"]
+    forbidden_method_names = {
+        "delete",
+        "remove",
+        "purge",
+        "drop",
+        "destroy",
+        "erase",
+        "clear",
+        "truncate",
+    }
+    storage_module = src_dir / "storage.py"
+    tree = _ast.parse(storage_module.read_text(encoding="utf-8"), filename=str(storage_module))
+    offenders: list[str] = []
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.ClassDef):
+            for statement in node.body:
+                if not isinstance(statement, _ast.FunctionDef | _ast.AsyncFunctionDef):
+                    continue
+                if statement.name.lstrip("_") in forbidden_method_names:
+                    offenders.append(f"{node.name}.{statement.name}")
+    assert offenders == [], (
+        "document-service storage must expose no delete-shaped method: " + ", ".join(offenders)
+    )
+
+
+def test_document_service_declares_no_dependency_on_another_service_package() -> None:
+    """The same boundary at the packaging layer.
+
+    `services/document-service/pyproject.toml` declares `epd2-core` and
+    `epd2-audit-core` and nothing else. A dependency declared there but
+    unused today is a dependency a later round would use without anybody
+    revisiting the decision - which is how a documented boundary becomes a
+    real edge one commit at a time."""
+    manifest = (REPO_ROOT / "services/document-service/pyproject.toml").read_text(encoding="utf-8")
+    declared = [line for line in manifest.splitlines() if line.startswith("dependencies")]
+    assert declared == ['dependencies = ["epd2-core", "epd2-audit-core"]'], declared

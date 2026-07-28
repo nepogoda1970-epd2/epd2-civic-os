@@ -187,5 +187,25 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # not "implemented", because the production data plane (durable
     # storage, event bus, bank integration) is PACK-13's, not this
     # round's.
+    # REPOSITORY_VERSION moved 0.10.0 -> 0.11.0 for the PACK-11
+    # implementation round: services/document-service implements Governed
+    # Documents & Evidence - organization-scoped document ownership,
+    # immutable cryptographically linked document versions, typed document
+    # and evidence references, controlled review and approval, the
+    # publication lifecycle with restricted and public projections,
+    # correction, supersession and revocation, legal hold, retention
+    # metadata, evidence bundles, provenance, complete audit history and
+    # scoped authorization with separation of duties - plus
+    # contracts/reason-codes/pack-11.yml. A new bounded context is a minor
+    # bump per canon section 25.
+    # CANON_VERSION remains 0.8.0: PACK-11 made NO canon amendment. No
+    # canon-owned file was touched by that round -
+    # docs/canonical/TZ-00-domain-event-canon.md is byte-identical to its
+    # 0.8.0 text, and canon-version.json changed only its non-canonical
+    # bookkeeping fields (repository_compatibility widened to <0.12.0 and
+    # the new document_context_implementation_status =
+    # "reference_implementation", which is - like finance's - deliberately
+    # not "implemented": the production data plane and the real content
+    # store remain PACK-13's, not PACK-11's).
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.10.0"
+    assert REPOSITORY_VERSION == "0.11.0"

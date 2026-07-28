@@ -24,6 +24,96 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - governed documents & evidence (implementation)
+
+CLAUDE-PACK-11 implementation round. The first executable slice of the
+governed-document and evidence bounded context canon 19f.22 assigns to
+PACK-11, shipped as `services/document-service`. **This is a `PACK-11
+GOVERNED DOCUMENTS & EVIDENCE 0.11.0 CANDIDATE`, not a PASS release, and
+not a claim of legal validity, evidential admissibility, signature
+verification or production readiness.** `CANON_VERSION` stays at `0.8.0`:
+this round amends no canon, it implements a context canon already
+assigned.
+
+Implements `FIR-ROADMAP-001` (PACK-11 Governed Documents & Evidence) and
+`FIR-INV-010` (document version integrity) in full. Provides foundation
+only - explicitly not full implementation - for `FIR-DEC-001`,
+`FIR-DEC-002`, `FIR-CAND-001`, `FIR-COMM-001`, `FIR-PROG-002`,
+`FIR-INIT-021`, `FIR-PAY-003` and `FIR-DATA-003`. See
+`docs/packs/PACK-11-FIR-TRACEABILITY.md`.
+
+### Added
+
+- `services/document-service` - thirteen modules, the sole authoritative
+  owner of the governed-document and evidence context: `exceptions` (one
+  class per registered reason code), `domain` (value objects, identity
+  minimisation, the content boundary, the governed taxonomies),
+  `versions` (immutable versions and the SHA-256 hash-linked chain that
+  implements `FIR-INV-010`), `authorization` (eight roles, twenty-one
+  governed actions, the symmetric incompatibility matrix, per-act
+  separation of duties, access profiles and independence),
+  `documents` (the `GovernedDocument` aggregate, review requirements,
+  approval, publication authorization, renditions, supersession,
+  revocation), `evidence` (evidence records, chains of custody, sealed
+  bundles), `determinations` (the governed signature and admissibility
+  determinations and reference resolution - ADR-053's four PACK-11
+  consumer requirements), `references` (the typed references this context
+  exports and consumes), `events` (twenty-five canonical event builders),
+  `storage` (ports and in-memory adapters, including a content-addressed
+  `ContentStore`; no delete method exists on any port), `projections`
+  (restricted and public read models, neither authoritative, neither
+  carrying content) and `application` (the command and query layer).
+- `contracts/reason-codes/pack-11.yml` - seventy-one entries: thirty-three
+  `DOCUMENT_*` refusals, twenty `AuditEvent.reason_code` classifications
+  for successfully-audited acts, and eighteen codes reused verbatim from
+  PACK-02, PACK-04 and PACK-07 through PACK-09. There are deliberately no
+  `source: canon-0.8.0` entries: canon section 24 registers no document or
+  evidence code at all, so every `DOCUMENT_*` code is additive and
+  justified in ADR-055.
+- `contracts/schemas/` - four PACK-11 JSON Schemas (governed document,
+  document version, evidence bundle, publication rendition).
+- `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` - the
+  master future-implementation register, placed at its canonical
+  repository path and updated with exact PACK-11 status, evidence paths
+  and remaining work per entry.
+- Proposed ADR-055 through ADR-060.
+- `docs/packs/PACK-11-*` (specification, implementation, FIR
+  traceability, acceptance matrix, cross-pack boundaries, threat model,
+  open decisions), `docs/architecture/document-service.md`,
+  `docs/architecture/document-version-integrity.md`,
+  `docs/contracts/document-command-query-contracts.md` and
+  `docs/handover/PACK-11-*`.
+- Repository-level boundary tests: `document-service` imports only
+  `epd2_core` and `epd2_audit_core`, no service imports it back, its
+  storage exposes no delete-shaped method, and its manifest declares no
+  other service package.
+
+### Changed
+
+- `REPOSITORY_VERSION` `0.10.0` -> `0.11.0` (Python and TypeScript). A new
+  bounded context is a minor bump per canon section 25.
+- `docs/canonical/canon-version.json`: added
+  `document_context_implementation_status = "reference_implementation"`,
+  and widened `repository_compatibility` from `<0.11.0` to `<0.12.0`.
+- `scripts/check_canon_0_8_0.py`: `EXPECTED_REPOSITORY_VERSION`
+  `0.10.0` -> `0.11.0`, plus a new eighteenth check that the
+  document/evidence context is declared and has a runtime behind it.
+  `CANON_AMENDED_AT_REPOSITORY_VERSION` is deliberately left at `0.9.0`.
+
+### Not changed
+
+- `docs/canonical/TZ-00-domain-event-canon.md` is untouched. `CANON_VERSION`
+  stays `0.8.0`.
+- PACK-09's and PACK-10's placeholder reference types (`DocumentRef`,
+  `EvidenceRef`, `MinutesRef`, `DocumentReference`, `EvidenceReference`)
+  are left exactly as they are and are **not** rewritten to import
+  PACK-11's real ones. The boundary those placeholders exist to hold is
+  the boundary this round keeps.
+- No production database, event bus, external anchor for the version-chain
+  head, HTTP surface or frontend. No signature verification and no legal
+  or admissibility judgement: this service records determinations made by
+  an authority and reports their absence as absence.
+
 ## [0.10.0] - party finance, accounting & Rechenschaftsbericht (implementation)
 
 CLAUDE-PACK-10 implementation round. The first executable slice of the

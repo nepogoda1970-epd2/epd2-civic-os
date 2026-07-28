@@ -46,7 +46,17 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------------------------------
 
 EXPECTED_CANON_VERSION = "0.8.0"
-EXPECTED_REPOSITORY_VERSION = "0.10.0"
+#: The repository version this checker expects to find.
+#:
+#: Moved 0.10.0 -> 0.11.0 by the PACK-11 implementation round. This
+#: checker verifies the *canon 0.8.0 amendment's* state, not that the
+#: repository is frozen at the version the amendment shipped with: canon
+#: stays 0.8.0 while the repository moves on, and pinning this at 0.10.0
+#: forever would make every later round fail a check about a canon it did
+#: not touch. `CANON_AMENDED_AT_REPOSITORY_VERSION` (0.9.0) is the
+#: constant that must *not* drift - it records when the amendment
+#: happened - and it is deliberately left alone here.
+EXPECTED_REPOSITORY_VERSION = "0.11.0"
 
 #: The repository version the canon 0.8.0 amendment itself was made at.
 #: `minimum_repository_version` records that fact and must not drift with
@@ -71,6 +81,19 @@ TS_VERSION_FILE = "packages/typescript/epd2-types/src/version.ts"
 #: exists - a complete, tested, in-memory reference implementation of
 #: section 19f whose production persistence is PACK-13's work.
 EXPECTED_FINANCE_IMPLEMENTATION_STATUS = "reference_implementation"
+
+#: What `document_context_implementation_status` must say after the
+#: PACK-11 implementation round.
+#:
+#: The same value for the same reason, and the same two adjacent lies
+#: refused. `implemented` would assert a production data plane, durable
+#: content storage, an external anchor for the version-chain head and a
+#: legal determination this round explicitly does not make;
+#: `not_implemented` was true before this round and is now false. The
+#: value names exactly what exists - a complete, tested, in-memory
+#: reference implementation of the governed-document and evidence
+#: context, whose production persistence is PACK-13's work.
+EXPECTED_DOCUMENT_IMPLEMENTATION_STATUS = "reference_implementation"
 
 # ---------------------------------------------------------------------------
 # Finance context (section 19f) expectations
@@ -504,7 +527,7 @@ def check_repository_version_unchanged(root: Path) -> list[str]:
         elif value != EXPECTED_REPOSITORY_VERSION:
             problems.append(
                 f"{PY_VERSION_FILE}: REPOSITORY_VERSION is {value!r}, expected "
-                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-10 implementation "
+                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-11 implementation "
                 f"round ships a new bounded context and must carry the matching "
                 f"minor bump (canon section 25)."
             )
@@ -521,7 +544,7 @@ def check_repository_version_unchanged(root: Path) -> list[str]:
         elif value != EXPECTED_REPOSITORY_VERSION:
             problems.append(
                 f"{TS_VERSION_FILE}: REPOSITORY_VERSION is {value!r}, expected "
-                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-10 implementation "
+                f"{EXPECTED_REPOSITORY_VERSION!r} - the PACK-11 implementation "
                 f"round ships a new bounded context and must carry the matching "
                 f"minor bump (canon section 25)."
             )
@@ -1255,13 +1278,82 @@ def check_adr_registry_integrity(root: Path) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Check 18 - the PACK-11 document/evidence context is declared and present
+# ---------------------------------------------------------------------------
+
+
+def check_document_implementation_status(root: Path) -> list[str]:
+    """canon-version.json must declare the document/evidence context
+    `reference_implementation`, and the runtime it names must exist.
+
+    Two assertions in one check on purpose: a status field claiming a
+    reference implementation with no service behind it is a false
+    production claim of exactly the kind FIR-INV-015 forbids, and a
+    service with no declared status is one nobody can query the maturity
+    of. Neither half is meaningful without the other."""
+    metadata, error = _load_canon_metadata(root)
+    if error is not None:
+        return [error]
+    if metadata is None:  # pragma: no cover - defensive
+        return [f"{CANON_VERSION_FILE}: could not be read."]
+
+    problems: list[str] = []
+
+    status = metadata.get("document_context_implementation_status")
+    if status != EXPECTED_DOCUMENT_IMPLEMENTATION_STATUS:
+        problems.append(
+            f"{CANON_VERSION_FILE}: document_context_implementation_status is "
+            f"{status!r}, expected {EXPECTED_DOCUMENT_IMPLEMENTATION_STATUS!r} "
+            f"- the PACK-11 implementation round shipped a reference "
+            f"implementation of the governed-document and evidence context, and "
+            f"neither 'not_implemented' nor 'implemented' states that truthfully."
+        )
+
+    service_root = root / "services/document-service"
+    if not service_root.is_dir():
+        problems.append(
+            "services/document-service is missing - the declared "
+            "reference implementation has no runtime behind it."
+        )
+        return problems
+
+    package_root = service_root / "src/epd2_document_service"
+    required_modules = (
+        "__init__.py",
+        "exceptions.py",
+        "domain.py",
+        "versions.py",
+        "authorization.py",
+        "documents.py",
+        "evidence.py",
+        "determinations.py",
+        "references.py",
+        "events.py",
+        "storage.py",
+        "projections.py",
+        "application.py",
+    )
+    for module in required_modules:
+        if not (package_root / module).is_file():
+            problems.append(f"services/document-service: {module} is missing.")
+
+    if not (root / "contracts/reason-codes/pack-11.yml").is_file():
+        problems.append(
+            "contracts/reason-codes/pack-11.yml is missing - PACK-11's refusals "
+            "would then be unregistered strings."
+        )
+
+    return problems
+
+
+# ---------------------------------------------------------------------------
 # Aggregate
 # ---------------------------------------------------------------------------
 
 CHECKS: tuple[tuple[str, str], ...] = (
     ("check_canon_version_declared", "canon version is 0.8.0 everywhere"),
-    ("check_repository_version_unchanged", "REPOSITORY_VERSION is 0.10.0"),
-    ("check_repository_compatibility", "compatibility metadata accepts 0.10.0"),
+    ("check_repository_version_unchanged", "REPOSITORY_VERSION is 0.11.0"),
+    ("check_repository_compatibility", "compatibility metadata accepts 0.11.0"),
     ("check_finance_implementation_status", "PACK-10 declared reference_implementation"),
     ("check_finance_runtime_within_boundary", "finance runtime within boundary"),
     ("check_finance_context_present", "finance bounded context present"),
@@ -1276,6 +1368,7 @@ CHECKS: tuple[tuple[str, str], ...] = (
     ("check_reason_code_registry", "reason codes unique and complete"),
     ("check_adr_set_unchanged", "no accepted ADR rewritten"),
     ("check_adr_registry_integrity", "ADR ids unique, titles match, pins hold"),
+    ("check_document_implementation_status", "PACK-11 declared reference_implementation"),
 )
 
 
@@ -1298,6 +1391,7 @@ def find_problems(root: Path) -> list[str]:
     problems.extend(check_cross_pack_ownership_unchanged(root))
     problems.extend(check_finance_event_catalogue(root))
     problems.extend(check_reason_code_registry(root))
+    problems.extend(check_document_implementation_status(root))
     problems.extend(check_adr_set_unchanged(root))
     problems.extend(check_adr_registry_integrity(root))
     return problems

@@ -99,3 +99,15 @@ production-базы данных). Подробности — в
 | AuditEngagement                      | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
 | FinancePolicy                        | Finance Service               | Deferred (PACK-10) — canon `0.8.0`, 19f; see PACK-10-IMPLEMENTATION.md |
 | FinancePartyHandle                   | Finance Service               | Implemented (PACK-10) — `services/finance-service`                     |
+| GovernedDocument                     | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| DocumentVersion                      | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| ReviewRecord                         | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| ApprovalRecord                       | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| PublicationAuthorization             | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| PublicationRendition                 | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| SupersessionRecord                   | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| RevocationRecord                     | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| SignatureDetermination               | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| AdmissibilityDetermination           | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| EvidenceRecord                       | Document Service              | Implemented (PACK-11) — `services/document-service`                    |
+| EvidenceBundle                       | Document Service              | Implemented (PACK-11) — `services/document-service`                    |

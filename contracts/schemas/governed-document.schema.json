@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/governed-document.schema.json",
+  "title": "GovernedDocument",
+  "description": "PACK-11, FIR-ROADMAP-001. Owned by document-service (epd2_document_service.documents.GovernedDocument). The register entry for one governed document in one organization. It holds pointers and governance, never versions and never content: the versions live in their own store and the bytes in a content-addressed content store. `title_reference` is an opaque pointer, never the title string - a document's title is content and can name a person as reliably as a full_name field would. `head_version_hash` is the chain head, carried here so a rewritten history is detectable without loading every version. No field in this payload carries document content, extracted text, a rendition, a signature value, an identity attribute, a global person identifier, or any ballot/vote/tally/delegation reference (FIR-INV-001, FIR-INV-002, FIR-INV-003).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_id",
+    "organization_id",
+    "kind",
+    "sensitivity",
+    "title_reference",
+    "created_at",
+    "custodian",
+    "review_requirement",
+    "state",
+    "document_version",
+    "version_count",
+    "head_version_hash"
+  ],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "meeting_minutes",
+        "decision_record",
+        "agenda",
+        "motion_text",
+        "candidacy_document",
+        "nomination_package",
+        "initiative_attachment",
+        "programme_provision",
+        "legal_opinion",
+        "expert_opinion",
+        "ai_analysis_record",
+        "finance_evidence",
+        "official_correspondence",
+        "official_notice_proof",
+        "appeal_record",
+        "hearing_record",
+        "sepa_mandate_evidence",
+        "public_transparency_document",
+        "policy_document",
+        "statute_document",
+        "audit_working_paper",
+        "other_governed_document"
+      ]
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "title_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject_reference": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "custodian": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority_id",
+        "role_code"
+      ],
+      "properties": {
+        "authority_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role_code": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "description": "The acting authority, never the actor behind it: `actor_reference` is deliberately absent from every wire form."
+    },
+    "review_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_review_kinds",
+        "review_policy_reference",
+        "review_policy_version"
+      ],
+      "properties": {
+        "required_review_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "editorial",
+              "substantive",
+              "legal",
+              "data_protection",
+              "security",
+              "financial",
+              "accessibility"
+            ]
+          }
+        },
+        "review_policy_reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "review_policy_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closed",
+        "disposed"
+      ]
+    },
+    "document_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optimistic-concurrency version of the aggregate, not a document version number."
+    },
+    "current_version_number": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Explicitly stored, never inferred from the highest version number: a version can be recorded and never approved."
+    },
+    "version_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "head_version_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "retention": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "record_class_reference",
+            "retention_policy_reference",
+            "retention_policy_version",
+            "bound_at"
+          ],
+          "properties": {
+            "record_class_reference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "retention_policy_reference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "retention_policy_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "bound_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "description": "The PACK-09 binding. PACK-11 stores it and never computes a retention period, decides a disposition or releases a hold."
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "legal_holds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hold_reference",
+          "hold_state",
+          "observed_at"
+        ],
+        "properties": {
+          "hold_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hold_state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "released",
+              "indeterminate"
+            ]
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "matter_reference": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "PACK-09's answer as observed, with the moment it was observed. `indeterminate` is a real state and fails closed."
+      }
+    }
+  }
+}

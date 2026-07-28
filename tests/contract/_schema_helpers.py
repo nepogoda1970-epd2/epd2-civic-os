@@ -71,6 +71,21 @@ PACK09_OPENAPI_PATH = REPO_ROOT / "contracts" / "openapi" / "pack-09.yaml"
 #: contract suite assert against a file that describes nothing runnable.
 PACK10_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-10.yml"
 
+#: PACK-11's own reason-code registry (Governed Documents & Evidence;
+#: FIR-ROADMAP-001, FIR-INV-010, ADR-055 through ADR-060) - added
+#: alongside (never replacing) the PACK-02 through PACK-10 constants
+#: above. There is deliberately no `PACK11_OPENAPI_PATH`, for the same
+#: reason PACK-10 has none: this round exposes no HTTP surface, so no
+#: OpenAPI contract exists to point at, and inventing one would make the
+#: contract suite assert against a file that describes nothing runnable.
+#:
+#: There is also no PACK-11 canon constant. Canon stays at 0.8.0: this
+#: round amends no canon, and every DOCUMENT_* code in the registry is an
+#: additive `source: pack-11-service` code (ADR-055) rather than a
+#: canon-owned one, because canon section 24 registers no document or
+#: evidence code at all.
+PACK11_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-11.yml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -120,6 +135,12 @@ PACK09_SERVICE_DIRS: tuple[str, ...] = ("compliance-service",)
 #: extended in place this round, so no "shared with an earlier pack" union
 #: is needed.
 PACK10_SERVICE_DIRS: tuple[str, ...] = ("finance-service",)
+#: PACK-11's one wholly new service (document-service). Like PACK-02
+#: through PACK-06 and PACK-08 through PACK-10 (and unlike PACK-07),
+#: PACK-11 introduces a fully disjoint service directory - no existing
+#: service is extended in place this round, so no "shared with an earlier
+#: pack" union is needed.
+PACK11_SERVICE_DIRS: tuple[str, ...] = ("document-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code

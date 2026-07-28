@@ -46,6 +46,8 @@ from _schema_helpers import (
     PACK09_SERVICE_DIRS,
     PACK10_REASON_CODES_PATH,
     PACK10_SERVICE_DIRS,
+    PACK11_REASON_CODES_PATH,
+    PACK11_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -69,6 +71,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-08", PACK08_REASON_CODES_PATH, PACK08_SERVICE_DIRS, 32),
     ("pack-09", PACK09_REASON_CODES_PATH, PACK09_SERVICE_DIRS, 40),
     ("pack-10", PACK10_REASON_CODES_PATH, PACK10_SERVICE_DIRS, 90),
+    ("pack-11", PACK11_REASON_CODES_PATH, PACK11_SERVICE_DIRS, 71),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -103,8 +106,27 @@ _EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
 #: registry. Enumerated exactly rather than excluded by a rule such as
 #: "no underscore, therefore not a code", because such a rule would also
 #: hide any future genuine single-word code.
+#: PACK-11's five are `__all__` entries and module-level constant names -
+#: `epd2_document_service.application.__all__` re-exports
+#: `AUDIT_POLICY_VERSION`, and `epd2_document_service.__init__.__all__`
+#: re-exports `CANON_VERSION`, `REPOSITORY_VERSION`,
+#: `DOCUMENT_CONTEXT_IMPLEMENTATION_STATUS` and
+#: `IMPLEMENTED_FIR_ENTRIES`. Each is an upper-case *name in a string*,
+#: which is exactly the shape the broad regex is designed to catch, and
+#: none is a reason code. Enumerated exactly, per this file's own rule:
+#: excluding them by a heuristic such as "appears inside `__all__`" would
+#: also hide a genuine code that a future `__all__` happened to mention.
 _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
     "pack-10": frozenset({"EUR"}),
+    "pack-11": frozenset(
+        {
+            "AUDIT_POLICY_VERSION",
+            "CANON_VERSION",
+            "DOCUMENT_CONTEXT_IMPLEMENTATION_STATUS",
+            "IMPLEMENTED_FIR_ENTRIES",
+            "REPOSITORY_VERSION",
+        }
+    ),
 }
 
 
