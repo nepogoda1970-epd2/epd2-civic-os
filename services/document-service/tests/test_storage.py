@@ -223,7 +223,7 @@ def test_storing_identical_content_twice_is_a_no_op() -> None:
 
 
 def test_different_content_gets_a_different_address() -> None:
-    """"Overwrite with different content" describes a hash collision, not
+    """ "Overwrite with different content" describes a hash collision, not
     an API call - which is how write-once is enforced by construction
     rather than by a flag."""
     store = InMemoryContentStore()

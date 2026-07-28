@@ -258,9 +258,7 @@ class EvidenceRecord:
         verify_custody_chain(chain)
         return replace(self, custody=chain, record_version=self.record_version + 1)
 
-    def with_integrity(
-        self, state: EvidenceIntegrityState, *, at: datetime
-    ) -> EvidenceRecord:
+    def with_integrity(self, state: EvidenceIntegrityState, *, at: datetime) -> EvidenceRecord:
         require_timezone(at, context="EvidenceRecord.with_integrity.at")
         return replace(
             self,
@@ -298,9 +296,7 @@ class EvidenceRecord:
         return payload
 
 
-def assert_evidence_admissible_shape(
-    record: EvidenceRecord, version: DocumentVersion
-) -> None:
+def assert_evidence_admissible_shape(record: EvidenceRecord, version: DocumentVersion) -> None:
     """Raise unless `record` still describes a citable, unaltered version.
 
     Called before an evidence item is added to a bundle or cited in a
@@ -435,9 +431,7 @@ class EvidenceBundle:
             version_number=record.version_number,
             version_hash=record.version_hash,
         )
-        return replace(
-            self, items=(*self.items, item), bundle_version=self.bundle_version + 1
-        )
+        return replace(self, items=(*self.items, item), bundle_version=self.bundle_version + 1)
 
     def seal(self, *, at: datetime, sealed_by: AuthorityReference) -> EvidenceBundle:
         """Freeze the bundle and compute its digest.

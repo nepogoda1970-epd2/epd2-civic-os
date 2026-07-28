@@ -266,9 +266,7 @@ def build_restricted_projection(
         head_version_hash=document.head_version_hash,
         review_count=len(for_version),
         open_blocking_review_count=len(unresolved_blocking_reviews(for_version)),
-        signature_status=(
-            absent_signature_status() if signature is None else signature.status
-        ),
+        signature_status=(absent_signature_status() if signature is None else signature.status),
         admissibility_status=(
             absent_admissibility_status() if admissibility is None else admissibility.status
         ),
@@ -429,16 +427,12 @@ def build_public_projection(
         citation_reference=(
             None if is_revoked or rendition is None else rendition.citation_reference
         ),
-        rendition_media_type=(
-            None if is_revoked or rendition is None else rendition.media_type
-        ),
+        rendition_media_type=(None if is_revoked or rendition is None else rendition.media_type),
         superseded_by_version_number=(
             None if supersession is None else supersession.superseding_version_number
         ),
         revoked_at=None if revocation is None else revocation.revoked_at,
-        revocation_reason_code=(
-            None if revocation is None else revocation.reason.reason_code
-        ),
+        revocation_reason_code=(None if revocation is None else revocation.reason.reason_code),
     )
     assert_emission_safe(projection.to_payload(), context="public document projection")
     return projection

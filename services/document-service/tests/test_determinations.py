@@ -231,9 +231,7 @@ def test_a_determination_for_another_version_number_is_stale() -> None:
 def test_a_determination_for_another_document_is_stale() -> None:
     fixture, document, recorded = _setup()
     other_document = governed_document(fixture.scope, fixture.custodian)
-    determination = _signature(
-        fixture, document, recorded, document_id=other_document.document_id
-    )
+    determination = _signature(fixture, document, recorded, document_id=other_document.document_id)
     with pytest.raises(DocumentDeterminationStaleError):
         assert_determination_current(determination, recorded)
 

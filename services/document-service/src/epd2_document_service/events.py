@@ -167,9 +167,7 @@ PUBLIC_PROJECTION_ALLOWED: frozenset[str] = frozenset(
 
 def assert_known_event_type(event_type: str) -> str:
     if event_type not in _DOCUMENT_EVENT_TYPE_SET:
-        raise UnknownDocumentEventTypeError(
-            f"{event_type!r} is not a document-service event type"
-        )
+        raise UnknownDocumentEventTypeError(f"{event_type!r} is not a document-service event type")
     return event_type
 
 
@@ -443,9 +441,7 @@ def evidence_registered_payload(record: EvidenceRecord) -> dict[str, object]:
     return record.to_payload()
 
 
-def custody_transferred_payload(
-    record: EvidenceRecord, event: CustodyEvent
-) -> dict[str, object]:
+def custody_transferred_payload(record: EvidenceRecord, event: CustodyEvent) -> dict[str, object]:
     return {
         "evidence_id": str(record.evidence_id),
         "document_id": str(record.document_id),

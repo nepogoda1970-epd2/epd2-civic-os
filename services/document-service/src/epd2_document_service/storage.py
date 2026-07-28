@@ -349,9 +349,7 @@ class InMemoryDocumentVersionStore:
                 f"expected version number {expected_number} for document "
                 f"{version.document_id}, got {version.version_number}"
             )
-        expected_previous = (
-            GENESIS_PREVIOUS_HASH if not existing else existing[-1].version_hash
-        )
+        expected_previous = GENESIS_PREVIOUS_HASH if not existing else existing[-1].version_hash
         if version.previous_version_hash != expected_previous:
             raise DocumentVersionChainBrokenError(
                 "previous_version_hash does not link to the stored head - this append would "
@@ -433,9 +431,7 @@ class InMemoryReviewRecordStore:
             )
         self._reviews[review.review_id] = review
 
-    def list_for_version(
-        self, document_id: UUID, version_number: int
-    ) -> tuple[ReviewRecord, ...]:
+    def list_for_version(self, document_id: UUID, version_number: int) -> tuple[ReviewRecord, ...]:
         return tuple(
             sorted(
                 (
@@ -451,9 +447,7 @@ class InMemoryReviewRecordStore:
 class ApprovalRecordStore(Protocol):
     def create_once(self, approval: ApprovalRecord) -> ApprovalRecord: ...
 
-    def get_for_version(
-        self, document_id: UUID, version_number: int
-    ) -> ApprovalRecord | None: ...
+    def get_for_version(self, document_id: UUID, version_number: int) -> ApprovalRecord | None: ...
 
 
 class InMemoryApprovalRecordStore:
@@ -480,16 +474,12 @@ class InMemoryApprovalRecordStore:
         self._approvals[key] = approval
         return approval
 
-    def get_for_version(
-        self, document_id: UUID, version_number: int
-    ) -> ApprovalRecord | None:
+    def get_for_version(self, document_id: UUID, version_number: int) -> ApprovalRecord | None:
         return self._approvals.get((document_id, version_number))
 
 
 class PublicationAuthorizationStore(Protocol):
-    def create_once(
-        self, authorization: PublicationAuthorization
-    ) -> PublicationAuthorization: ...
+    def create_once(self, authorization: PublicationAuthorization) -> PublicationAuthorization: ...
 
     def get_for_version(
         self, document_id: UUID, version_number: int
@@ -500,9 +490,7 @@ class InMemoryPublicationAuthorizationStore:
     def __init__(self) -> None:
         self._authorizations: dict[tuple[UUID, int], PublicationAuthorization] = {}
 
-    def create_once(
-        self, authorization: PublicationAuthorization
-    ) -> PublicationAuthorization:
+    def create_once(self, authorization: PublicationAuthorization) -> PublicationAuthorization:
         key = (authorization.document_id, authorization.version_number)
         existing = self._authorizations.get(key)
         if existing is not None:
@@ -626,9 +614,7 @@ class InMemoryRevocationStore:
             )
         self._records[key] = record
 
-    def get_for_version(
-        self, document_id: UUID, version_number: int
-    ) -> RevocationRecord | None:
+    def get_for_version(self, document_id: UUID, version_number: int) -> RevocationRecord | None:
         return self._records.get((document_id, version_number))
 
 
@@ -657,9 +643,7 @@ class InMemorySignatureDeterminationStore:
 
     def append(self, determination: SignatureDetermination) -> None:
         if determination.determination_id in self._determinations:
-            raise DocumentVersionImmutableError(
-                "this signature determination is already recorded"
-            )
+            raise DocumentVersionImmutableError("this signature determination is already recorded")
         self._determinations[determination.determination_id] = determination
 
     def latest_for_version(

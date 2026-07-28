@@ -472,8 +472,7 @@ def _guard(
     if current_version is not None and expected_version is not None:
         if current_version != expected_version:
             raise OptimisticConcurrencyConflictError(
-                f"{version_label} version is {current_version}, caller expected "
-                f"{expected_version}"
+                f"{version_label} version is {current_version}, caller expected {expected_version}"
             )
 
     return _CommandGuard(
@@ -582,9 +581,7 @@ def _load_document(
     return document
 
 
-def _load_chain(
-    stores: DocumentStores, document: GovernedDocument
-) -> tuple[DocumentVersion, ...]:
+def _load_chain(stores: DocumentStores, document: GovernedDocument) -> tuple[DocumentVersion, ...]:
     """Load and verify a document's version chain before acting on it.
 
     Verified on *every* command, not only on reads. A governed act
@@ -695,9 +692,7 @@ def register_document(
     return DocumentResult(document=document, event=event, audit_event=audit_event)
 
 
-def _rebuilt_registration_event(
-    document: GovernedDocument, guard: _CommandGuard
-) -> EventEnvelope:
+def _rebuilt_registration_event(document: GovernedDocument, guard: _CommandGuard) -> EventEnvelope:
     """Rebuild the envelope a replayed registration originally emitted.
 
     Deterministic: same event id, same payload, same hash. Returning a
@@ -840,9 +835,7 @@ def record_version(
         after_hash=_state_hash(document.to_state_payload()),
         clock=clock,
     )
-    return VersionResult(
-        document=document, version=version, event=event, audit_event=audit_event
-    )
+    return VersionResult(document=document, version=version, event=event, audit_event=audit_event)
 
 
 def _rebuilt_version_event(version: DocumentVersion, guard: _CommandGuard) -> EventEnvelope:
@@ -951,9 +944,7 @@ def submit_for_review(
         event_type="document_version.submitted_for_review",
         clock=clock,
     )
-    return VersionResult(
-        document=document, version=updated, event=event, audit_event=audit_event
-    )
+    return VersionResult(document=document, version=updated, event=event, audit_event=audit_event)
 
 
 def record_review(
@@ -1054,9 +1045,7 @@ def record_review(
         after_hash=_state_hash(review.to_payload()),
         clock=clock,
     )
-    return ReviewResult(
-        review=review, version=version, event=event, audit_event=audit_event
-    )
+    return ReviewResult(review=review, version=version, event=event, audit_event=audit_event)
 
 
 def _rebuilt_review_event(review: ReviewRecord, guard: _CommandGuard) -> EventEnvelope:
@@ -1117,9 +1106,7 @@ def approve_version(
                 audit_event=_replayed_audit(stores, guard),
             )
 
-    assert_review_complete(
-        document.review_requirement, reviews, version_number=version_number
-    )
+    assert_review_complete(document.review_requirement, reviews, version_number=version_number)
     approval = ApprovalRecord(
         approval_id=approval_id,
         document_id=document_id,
@@ -1166,9 +1153,7 @@ def approve_version(
         after_hash=_state_hash(approval.to_payload()),
         clock=clock,
     )
-    return ApprovalResult(
-        approval=approval, version=updated, event=event, audit_event=audit_event
-    )
+    return ApprovalResult(approval=approval, version=updated, event=event, audit_event=audit_event)
 
 
 def _rebuilt_approval_event(
@@ -1233,9 +1218,7 @@ def return_for_revision(
         event_type="document_version.returned_for_revision",
         clock=clock,
     )
-    return VersionResult(
-        document=document, version=updated, event=event, audit_event=audit_event
-    )
+    return VersionResult(document=document, version=updated, event=event, audit_event=audit_event)
 
 
 # ---------------------------------------------------------------------------
@@ -1373,9 +1356,7 @@ def publish_version(
         request_parts=(str(document_id), str(version_number)),
         target_scope=document.scope,
     )
-    authorization = stores.publication_authorizations.get_for_version(
-        document_id, version_number
-    )
+    authorization = stores.publication_authorizations.get_for_version(document_id, version_number)
     if guard.replay is not None and authorization is not None:
         return PublicationResult(
             version=version,
@@ -1466,9 +1447,7 @@ def issue_publication_rendition(
                 audit_event=_replayed_audit(stores, guard),
             )
 
-    authorization = stores.publication_authorizations.get_for_version(
-        document_id, version_number
-    )
+    authorization = stores.publication_authorizations.get_for_version(document_id, version_number)
     if authorization is None or version.state is not VersionState.PUBLISHED:
         raise DocumentApprovalMissingError(
             "a rendition may only be issued for a published, publication-authorized version"
@@ -1732,9 +1711,7 @@ def revoke_version(
         after_hash=_state_hash(record.to_payload()),
         clock=clock,
     )
-    return RevocationResult(
-        record=record, version=updated, event=event, audit_event=audit_event
-    )
+    return RevocationResult(record=record, version=updated, event=event, audit_event=audit_event)
 
 
 def _rebuilt_revocation_event(
@@ -2473,9 +2450,7 @@ def resolve_document_reference(
     would be a cross-organization existence oracle."""
     document = stores.documents.get(reference_document_id)
     if document is None or document.scope.organization_id != scope.organization_id:
-        return DocumentResolution(
-            reference=str(reference_document_id), scope=scope, exists=False
-        )
+        return DocumentResolution(reference=str(reference_document_id), scope=scope, exists=False)
     current = document.current_version_number
     revoked = False
     if current is not None:

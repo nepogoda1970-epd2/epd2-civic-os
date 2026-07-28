@@ -291,9 +291,7 @@ class FinanceRecordReference(ForeignRecordReference):
 # ---------------------------------------------------------------------------
 
 
-def assert_reference_kind(
-    reference_kind: str, expected: DocumentKind, *, context: str
-) -> None:
+def assert_reference_kind(reference_kind: str, expected: DocumentKind, *, context: str) -> None:
     """Raise unless a consumer-supplied kind string names `expected`.
 
     Consumers hold `kind` as an open string (PACK-09's and PACK-10's
@@ -303,8 +301,7 @@ def assert_reference_kind(
     here rather than three services later."""
     if reference_kind != str(expected):
         raise DocumentReferenceKindMismatchError(
-            f"{context}: expected a reference of kind {str(expected)!r}, got "
-            f"{reference_kind!r}"
+            f"{context}: expected a reference of kind {str(expected)!r}, got {reference_kind!r}"
         )
 
 

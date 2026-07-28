@@ -137,9 +137,7 @@ def test_an_author_may_not_also_publish() -> None:
     """An author who can publish needs neither review nor approval to
     reach the public."""
     with pytest.raises(AuthorityRoleIncompatibleError):
-        assert_roles_compatible(
-            (DocumentRole.DOCUMENT_AUTHOR, DocumentRole.PUBLICATION_OFFICER)
-        )
+        assert_roles_compatible((DocumentRole.DOCUMENT_AUTHOR, DocumentRole.PUBLICATION_OFFICER))
 
 
 def test_an_independent_reader_may_hold_no_operational_role() -> None:
@@ -158,9 +156,7 @@ def test_a_custodian_may_also_author() -> None:
 
 
 def test_a_compatible_set_passes() -> None:
-    assert_roles_compatible(
-        (DocumentRole.DOCUMENT_APPROVER, DocumentRole.DOCUMENT_CUSTODIAN)
-    )
+    assert_roles_compatible((DocumentRole.DOCUMENT_APPROVER, DocumentRole.DOCUMENT_CUSTODIAN))
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +247,7 @@ def test_different_actors_pass() -> None:
 
 
 def test_an_unrecorded_prior_actor_is_refused_not_assumed() -> None:
-    """"Cannot be shown to be a different person" must not be read as
+    """ "Cannot be shown to be a different person" must not be read as
     "is". An act whose prior actor was not recorded fails closed."""
     for acting, prior in (("actor-a", ""), ("", "actor-b"), ("", "")):
         with pytest.raises(SelfApprovalProhibitedError):

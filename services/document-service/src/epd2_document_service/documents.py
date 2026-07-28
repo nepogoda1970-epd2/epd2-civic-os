@@ -341,9 +341,7 @@ class PublicationAuthorization:
 
     def __post_init__(self) -> None:
         require_timezone(self.authorized_at, context="PublicationAuthorization.authorized_at")
-        require_text(
-            self.disclosure_obligation_reference, "disclosure_obligation_reference"
-        )
+        require_text(self.disclosure_obligation_reference, "disclosure_obligation_reference")
         if self.version_number < 1:
             raise DocumentFieldInvalidError("version_number must be a positive integer")
 
@@ -425,7 +423,7 @@ class PublicationRendition:
 
 @dataclass(frozen=True, slots=True)
 class SupersessionRecord:
-    """"Version N is no longer the current statement; version M is."
+    """ "Version N is no longer the current statement; version M is."
 
     Explicit and stored, rather than inferred from "M has the highest
     number". Inference would be wrong exactly when it matters: a version
@@ -464,7 +462,7 @@ class SupersessionRecord:
 
 @dataclass(frozen=True, slots=True)
 class RevocationRecord:
-    """"This version no longer has effect."
+    """ "This version no longer has effect."
 
     Note what is absent: any field that could mean "and it is gone".
     Revocation is a statement about effect, and the material it concerns
@@ -835,8 +833,7 @@ def assert_publishable(
     assert_approval_current(approval, version)
     if authorization is None:
         raise DocumentPublicationNotAuthorizedError(
-            "publication requires its own publication authorization - approval is not "
-            "publication"
+            "publication requires its own publication authorization - approval is not publication"
         )
     if authorization.version_number != version.version_number:
         raise DocumentPublicationNotAuthorizedError(

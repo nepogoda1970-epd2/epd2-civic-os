@@ -202,9 +202,7 @@ def test_appending_a_custody_event_re_verifies_the_whole_chain() -> None:
     assert updated.record_version == record.record_version + 1
 
     with pytest.raises(EvidenceCustodyBrokenError):
-        updated.with_custody_event(
-            _custody(fixture, 3, "registry-c", received_from="registry-a")
-        )
+        updated.with_custody_event(_custody(fixture, 3, "registry-c", received_from="registry-a"))
 
 
 def test_an_unverified_integrity_state_is_not_the_same_as_intact() -> None:
@@ -309,7 +307,7 @@ def _bundle(fixture: Fixture) -> EvidenceBundle:
 
 
 def test_an_empty_bundle_cannot_be_sealed() -> None:
-    """"The empty set of evidence, sealed" is a citable object that says
+    """ "The empty set of evidence, sealed" is a citable object that says
     nothing while looking authoritative."""
     fixture = Fixture()
     with pytest.raises(EvidenceBundleIncompleteError):
@@ -361,7 +359,6 @@ def test_the_bundle_digest_covers_order() -> None:
     doc_a, doc_b = uuid4(), uuid4()
     ev_a, ev_b = uuid4(), uuid4()
     hash_a, hash_b = content_digest_of(b"a"), content_digest_of(b"b")
-
 
     def item(ordinal: int, evidence_id, document_id, version_hash) -> EvidenceBundleItem:
         return EvidenceBundleItem(

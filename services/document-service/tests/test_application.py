@@ -666,9 +666,7 @@ def test_verify_document_integrity_refuses_a_foreign_document() -> None:
     flow = Flow()
     flow.register()
     with pytest.raises(DocumentRecordNotFoundError):
-        app.verify_document_integrity(
-            flow.f.stores, document_id=flow.document_id, scope=scope()
-        )
+        app.verify_document_integrity(flow.f.stores, document_id=flow.document_id, scope=scope())
 
 
 # ---------------------------------------------------------------------------
@@ -729,7 +727,7 @@ def test_supersession_moves_the_current_version_pointer() -> None:
 
 
 def test_an_unapproved_version_cannot_supersede_anything() -> None:
-    """"Superseded by a draft" would make a governed record non-current on
+    """ "Superseded by a draft" would make a governed record non-current on
     the strength of something nobody has approved."""
     flow = Flow()
     flow.to_approved()

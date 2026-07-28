@@ -468,9 +468,7 @@ def test_a_version_from_another_document_is_refused() -> None:
     fixture, document = _doc()
     other = governed_document(fixture.scope, fixture.custodian)
     with pytest.raises(DocumentFieldInvalidError):
-        document.with_recorded_version(
-            version(other, fixture.author), at=at(1), reason=reason()
-        )
+        document.with_recorded_version(version(other, fixture.author), at=at(1), reason=reason())
 
 
 def test_no_version_may_be_recorded_on_a_closed_document() -> None:
@@ -485,9 +483,7 @@ def test_no_version_may_be_recorded_on_a_closed_document() -> None:
 def test_the_current_version_pointer_must_name_an_existing_version() -> None:
     fixture, document = _doc()
     with pytest.raises(DocumentCorrectionTargetInvalidError):
-        document.with_current_version(
-            1, at=at(1), reason=reason(), authority=fixture.approver
-        )
+        document.with_current_version(1, at=at(1), reason=reason(), authority=fixture.approver)
 
 
 def test_observing_the_same_hold_twice_replaces_rather_than_duplicates() -> None:

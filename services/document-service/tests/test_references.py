@@ -158,9 +158,7 @@ def test_a_version_reference_refuses_a_missing_number_or_hash() -> None:
     with pytest.raises(DocumentReferenceKindMismatchError):
         DocumentVersionRef(id=uuid4(), organization_id=uuid4(), version_hash="h")
     with pytest.raises(DocumentReferenceInvalidError):
-        DocumentVersionRef(
-            id=uuid4(), organization_id=uuid4(), version_number=1, version_hash="  "
-        )
+        DocumentVersionRef(id=uuid4(), organization_id=uuid4(), version_number=1, version_hash="  ")
 
 
 def test_a_bundle_reference_carries_the_digest_so_a_citation_is_checkable() -> None:
@@ -239,9 +237,7 @@ def test_a_consumer_kind_mismatch_is_caught_here_rather_than_downstream() -> Non
     asks for the legal opinion and is handed a SEPA mandate finds out now."""
     assert_reference_kind("legal_opinion", DocumentKind.LEGAL_OPINION, context="test")
     with pytest.raises(DocumentReferenceKindMismatchError):
-        assert_reference_kind(
-            "sepa_mandate_evidence", DocumentKind.LEGAL_OPINION, context="test"
-        )
+        assert_reference_kind("sepa_mandate_evidence", DocumentKind.LEGAL_OPINION, context="test")
 
 
 def test_the_citation_format_is_produced_in_one_place() -> None:

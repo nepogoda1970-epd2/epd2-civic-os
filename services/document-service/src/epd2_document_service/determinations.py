@@ -350,9 +350,7 @@ def assert_determination_current(
     happens to hash the same, which cannot occur but costs nothing to
     exclude."""
     if determination.document_id != version.document_id:
-        raise DocumentDeterminationStaleError(
-            "the determination concerns a different document"
-        )
+        raise DocumentDeterminationStaleError("the determination concerns a different document")
     if determination.version_number != version.version_number:
         raise DocumentDeterminationStaleError(
             f"the determination was made against version {determination.version_number}, but "

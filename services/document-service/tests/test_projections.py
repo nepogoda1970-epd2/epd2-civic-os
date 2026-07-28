@@ -166,8 +166,7 @@ def test_an_unapproved_version_is_not_yet_effective() -> None:
     document = governed_document(fixture.scope, fixture.custodian)
     draft = version(document, fixture.author)
     assert (
-        currency_for(draft, supersession=None, revocation=None)
-        is CurrencyStatus.NOT_YET_EFFECTIVE
+        currency_for(draft, supersession=None, revocation=None) is CurrencyStatus.NOT_YET_EFFECTIVE
     )
 
 
@@ -218,7 +217,7 @@ def test_a_restricted_projection_reports_review_counts_not_finding_text() -> Non
 
 
 def test_absent_determinations_are_reported_as_not_determined() -> None:
-    """"Nobody has decided" and "somebody decided no" are different facts
+    """ "Nobody has decided" and "somebody decided no" are different facts
     and a reader must be able to tell them apart."""
     fixture = Fixture()
     document = governed_document(fixture.scope, fixture.custodian)
@@ -267,7 +266,7 @@ def test_an_unpublished_version_may_not_be_projected_publicly() -> None:
 
 
 def test_a_member_only_publication_does_not_reach_the_public_surface() -> None:
-    """"Published to members" is a real publication and is not this
+    """ "Published to members" is a real publication and is not this
     surface."""
     fixture = Fixture()
     document = governed_document(fixture.scope, fixture.custodian)
