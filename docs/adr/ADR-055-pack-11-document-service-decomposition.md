@@ -38,7 +38,7 @@ interface requirements, and the hard invariants the register states
    implemented as a module inside `compliance-service` - which already
    holds retention, legal hold and case records and would look like a
    natural home. That would make PACK-09 both the decider of retention
-   *and* the holder of the material retention governs, collapsing a
+   _and_ the holder of the material retention governs, collapsing a
    separation the whole records-governance model depends on.
 2. Without a reason-code decision, this round would either invent
    unregistered strings (which canon section 24's standard forbids) or
@@ -78,7 +78,7 @@ PACK-02, PACK-04, PACK-07, PACK-08 and PACK-09.
 and let an operator's filter miss half the events.
 
 **5. One deliberate near-collision is resolved by naming.**
-`DOCUMENT_EVIDENCE_BUNDLE_SEALED` classifies a *successful* seal;
+`DOCUMENT_EVIDENCE_BUNDLE_SEALED` classifies a _successful_ seal;
 the refusal for "this bundle is already sealed" is
 `DOCUMENT_EVIDENCE_BUNDLE_ALREADY_SEALED`. One string meaning both "this
 worked" and "this was refused" would make every audit query over it

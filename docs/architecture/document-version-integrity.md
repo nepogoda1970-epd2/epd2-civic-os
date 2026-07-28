@@ -17,15 +17,15 @@ other.
 
 ## What the hash covers
 
-| In                                          | Out                        |
-| ------------------------------------------- | -------------------------- |
-| `version_id`, `document_id`, `version_number` | `state`                    |
-| organizational scope                        | `history`                  |
-| `kind`, `sensitivity`, `title_reference`    | `version_hash` itself      |
-| the complete content descriptor             |                            |
-| the complete provenance                     |                            |
-| `recorded_at`, `recorded_by` **in full**    |                            |
-| `corrects_version_number`, `correction_reason` |                         |
+| In                                             | Out                   |
+| ---------------------------------------------- | --------------------- |
+| `version_id`, `document_id`, `version_number`  | `state`               |
+| organizational scope                           | `history`             |
+| `kind`, `sensitivity`, `title_reference`       | `version_hash` itself |
+| the complete content descriptor                |                       |
+| the complete provenance                        |                       |
+| `recorded_at`, `recorded_by` **in full**       |                       |
+| `corrects_version_number`, `correction_reason` |                       |
 
 `recorded_by` includes `actor_reference`, so "who recorded this" is as
 protected as what was recorded — the attribution half of `FIR-INV-010`.
@@ -37,14 +37,14 @@ real break would go unnoticed.
 
 ## The two attacks, and why both checks are needed
 
-| Attack                                   | Chain check | Content check |
-| ---------------------------------------- | ----------- | ------------- |
-| Rewrite a version record                 | **fails**   | passes        |
-| Remove a version                         | **fails**   | passes        |
-| Re-parent a version (graft a fork)       | **fails**   | passes        |
-| Swap the bytes behind an untouched record| passes      | **fails**     |
-| Swap the bytes *and* the recorded digest | **fails**   | passes        |
-| Rewrite a version and reseal it          | **fails at the next version** | passes |
+| Attack                                    | Chain check                   | Content check |
+| ----------------------------------------- | ----------------------------- | ------------- |
+| Rewrite a version record                  | **fails**                     | passes        |
+| Remove a version                          | **fails**                     | passes        |
+| Re-parent a version (graft a fork)        | **fails**                     | passes        |
+| Swap the bytes behind an untouched record | passes                        | **fails**     |
+| Swap the bytes _and_ the recorded digest  | **fails**                     | passes        |
+| Rewrite a version and reseal it           | **fails at the next version** | passes        |
 
 `application.verify_document_integrity` runs both, which is why it catches
 every row.

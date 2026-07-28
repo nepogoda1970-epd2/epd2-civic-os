@@ -32,10 +32,7 @@
     },
     "state": {
       "type": "string",
-      "enum": [
-        "open",
-        "sealed"
-      ]
+      "enum": ["open", "sealed"]
     },
     "item_count": {
       "type": "integer",

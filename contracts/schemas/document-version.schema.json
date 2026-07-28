@@ -68,12 +68,7 @@
     },
     "sensitivity": {
       "type": "string",
-      "enum": [
-        "public",
-        "internal",
-        "confidential",
-        "restricted"
-      ]
+      "enum": ["public", "internal", "confidential", "restricted"]
     },
     "title_reference": {
       "type": "string",
@@ -82,11 +77,7 @@
     "content_descriptor": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "content_digest",
-        "media_type",
-        "byte_length"
-      ],
+      "required": ["content_digest", "media_type", "byte_length"],
       "properties": {
         "content_digest": {
           "type": "string",
@@ -181,10 +172,7 @@
     "recorded_by": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "authority_id",
-        "role_code"
-      ],
+      "required": ["authority_id", "role_code"],
       "properties": {
         "authority_id": {
           "type": "string",

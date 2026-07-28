@@ -6,7 +6,7 @@ finds the question rather than an accidental answer.
 
 ## OD-20 — External anchoring of the version-chain head
 
-`FIR-INV-010` is satisfied as tamper *evidence*. Tamper *resistance* needs
+`FIR-INV-010` is satisfied as tamper _evidence_. Tamper _resistance_ needs
 the chain head anchored somewhere this repository does not control, or
 countersigned by a party that is not the store operator.
 
@@ -21,7 +21,7 @@ party is acceptable.
 
 ## OD-21 — Whether PACK-09 and PACK-10 should consume PACK-11's real references
 
-ADR-053's four requirements are now closed, so PACK-10 *could* stop
+ADR-053's four requirements are now closed, so PACK-10 _could_ stop
 recording "the reference and the absence of the assertion". This round does
 not change PACK-10.
 
@@ -69,7 +69,7 @@ with no record of the interval unless the transition is itself governed.
 
 **Waiting on:** operational experience.
 
-## OD-25 — Retention of the *content* after disposition
+## OD-25 — Retention of the _content_ after disposition
 
 `authorize_disposition` records the PACK-09 authorization and closes the
 document. It destroys nothing: PACK-13 owns the data plane, and executing a

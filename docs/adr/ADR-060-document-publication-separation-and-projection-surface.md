@@ -33,7 +33,7 @@ PACK-12 will own controlled export and DLP.
 **1. Approval and publication are two acts, two authorities, two records
 and two transitions.** `ApprovalRecord` is issued by `document_approver`;
 `PublicationAuthorization` by `publication_officer`; `publish_version`
-requires both, and `assert_publishable` checks approval *before*
+requires both, and `assert_publishable` checks approval _before_
 authorization because "authorized to publish something never approved" is
 the error worth naming first.
 
@@ -62,12 +62,12 @@ for it.
 
 **6. Emission is one chokepoint.** Every projection and every event
 payload runs `domain.assert_emission_safe` - content, identity and voting
-linkage, in that order - over its own output *before* being returned, so a
+linkage, in that order - over its own output _before_ being returned, so a
 leaking payload never comes into existence. PACK-12 can attach DLP at one
 place rather than auditing every call site (Problem 4).
 
 **7. No projection carries content, at any sensitivity.** The restricted
-projection is richer than the public one in *metadata* and identical to it
+projection is richer than the public one in _metadata_ and identical to it
 in carrying nothing of what the document says. Reading content is
 `application.read_document_content`: authority-checked, access-profile-checked,
 integrity-checked, and audited.

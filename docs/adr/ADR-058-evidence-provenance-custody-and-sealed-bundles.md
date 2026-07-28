@@ -32,7 +32,7 @@ the matter.
 
 ## Decision
 
-**1. An `EvidenceRecord` is a governed *use* of an exact
+**1. An `EvidenceRecord` is a governed _use_ of an exact
 `DocumentVersion`**, not a second object. It stores `document_id`,
 `version_number` **and** `version_hash`, and adds only what makes that
 version usable as evidence: matter, provenance, custody, integrity state.
@@ -46,7 +46,7 @@ equal to the previous event's `holder_reference`. The third is the one
 that catches Problem 3.
 
 **3. Holders are opaque per-matter references.** The chain needs
-*continuity* - was somebody always accountable? - not *identity*. Asking
+_continuity_ - was somebody always accountable? - not _identity_. Asking
 for identity would put a cross-domain correlation key on every piece of
 evidence (`FIR-INV-001`).
 
@@ -67,7 +67,7 @@ cannot be sealed: "the empty set of evidence, sealed" is a citable object
 that says nothing while looking authoritative.
 
 **7. Assembly and sealing are one command**, unlike approval and
-publication which are deliberately two. An *unsealed* bundle is not a
+publication which are deliberately two. An _unsealed_ bundle is not a
 governed object at all - it is a working set - and letting one exist
 between two commands would create a window in which a bundle is citable
 but still mutable.
@@ -82,7 +82,7 @@ A PACK-09 case, a PACK-19 candidacy appeal or a PACK-10 audit engagement
 can cite `epd2-bundle:<id>:<digest-prefix>` and mean exactly one set of
 material. `EvidenceBundleProjection` carries the digest, the item count
 and the per-item version references - and no provenance, no custody and no
-matter substance, because a consumer needs to know *which* material, not
+matter substance, because a consumer needs to know _which_ material, not
 who held it.
 
 ## Alternatives considered

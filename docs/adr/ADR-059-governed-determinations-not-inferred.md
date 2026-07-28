@@ -23,7 +23,7 @@ the action is refused closed."
 
 1. A signature check is cryptographic, PKI-dependent and
    jurisdiction-dependent; an admissibility determination is legal. A
-   service that guessed either would produce an answer that *looks*
+   service that guessed either would produce an answer that _looks_
    authoritative to every consumer downstream - and consumers do not
    re-derive what an authoritative source already told them. The wrong
    answer would propagate exactly as far as the right one.
@@ -43,7 +43,7 @@ registered reason code.
 `AdmissibilityStatus.NOT_DETERMINED` are what a consumer receives when
 nothing has been determined, produced through the named functions
 `absent_signature_status()` and `absent_admissibility_status()` so every
-consumer-facing absence goes through one greppable place. A *recorded*
+consumer-facing absence goes through one greppable place. A _recorded_
 determination may not carry either value.
 
 **3. Staleness is structural.** `determined_version_hash` is compared
@@ -63,7 +63,7 @@ said it could not perform. `is_signed_original` is the single boolean a
 consumer may read off the record and it is `True` only for
 `SIGNED_VERIFIED`.
 
-**5. Signature *form* is recorded and never ranked.** Legal weight differs
+**5. Signature _form_ is recorded and never ranked.** Legal weight differs
 sharply between a scanned handwritten signature and a qualified electronic
 one, and ranking them is jurisdiction-dependent law.
 
@@ -71,11 +71,11 @@ one, and ranking them is jurisdiction-dependent law.
 says nothing about another; silently reusing it would extend a body's
 decision beyond what that body decided. `ADMITTED_WITH_LIMITATION` exists
 because the realistic outcome of a contested evidence question is rarely a
-clean yes, and it *does* permit reliance - returning `False` would be
+clean yes, and it _does_ permit reliance - returning `False` would be
 safer-looking and would suppress material a competent body admitted.
 
 **7. Determinations live on their own records, never on a reference.**
-PACK-11 *may* make these determinations - it is the pack canon names as
+PACK-11 _may_ make these determinations - it is the pack canon names as
 their owner - and it still does not put them on a pointer. A status on a
 reference would be a cached answer that outlives the version, and for
 admissibility also the procedure, it was true of.

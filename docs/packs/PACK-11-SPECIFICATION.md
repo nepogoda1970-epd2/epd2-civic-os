@@ -106,7 +106,7 @@ requirement: `epd2-doc:<document>:v<n>:r<rendition>`.
 - **Supersession** — an explicit record, never inferred from "highest
   number". A version can be recorded and never approved, so the highest
   number is not always the current statement.
-- **Revocation** — removes *effect*. The version, its content and its place
+- **Revocation** — removes _effect_. The version, its content and its place
   in the chain are untouched, and a previously published version remains
   publicly representable as a tombstone.
 
@@ -120,7 +120,7 @@ read later as "there was a hold".
 
 ## 9. Evidence
 
-See ADR-058. An `EvidenceRecord` is a governed *use* of an exact version,
+See ADR-058. An `EvidenceRecord` is a governed _use_ of an exact version,
 preserving `version_hash`. Custody is verified as a continuous chain. A
 bundle is sealed, order-sensitive and citable; an unsealed bundle is not a
 governed object.

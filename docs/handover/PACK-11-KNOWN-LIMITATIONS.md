@@ -3,7 +3,7 @@
 Named gaps, not footnotes. Each is a thing this round could have been read
 as providing and does not.
 
-## 1. The version chain is tamper *evidence*, not tamper *resistance*
+## 1. The version chain is tamper _evidence_, not tamper _resistance_
 
 `FIR-INV-010` asks for cryptographically linked history, and this round
 provides it: any alteration or removal of a version in a retained sequence
@@ -17,7 +17,7 @@ one.
 **What would close it:** anchoring `head_version_hash` outside this
 repository, or countersigning by a party that is not the store operator.
 Neither is in this round — see OD-20. `verify_version_chain` is therefore a
-detection mechanism *to be run*, not a property to be assumed, and an
+detection mechanism _to be run_, not a property to be assumed, and an
 operator who never runs it gets no benefit from it.
 
 ## 2. No production persistence
@@ -26,7 +26,7 @@ Every adapter in `storage.py` is in-memory: not concurrency-safe, not
 durable, holding live object references rather than serialised rows. The
 `ContentStore` holds bytes in a dict. PACK-13 owns the durable data plane.
 
-## 3. Nothing is verified about content as a *file*
+## 3. Nothing is verified about content as a _file_
 
 This service hashes bytes and compares digests. It does not parse, sniff,
 validate or scan them. `media_type` records what a submitter declared, not
@@ -55,7 +55,7 @@ Parteiengesetz, the Grundgesetz or any party statute.
 `LegalHoldBinding` records PACK-09's answer with the moment it was
 observed. This service deliberately does not cache the state across acts —
 the application layer is expected to re-read before every
-destruction-relevant act — but it also cannot *force* a caller to have done
+destruction-relevant act — but it also cannot _force_ a caller to have done
 so. A caller that records a stale observation and immediately acts on it
 gets a stale answer. The `indeterminate` state and its fail-closed refusal
 are the mitigation, not a guarantee.
@@ -80,11 +80,11 @@ OD-23.
 
 ## 10. Event-stream metadata is visible to stream consumers
 
-Event *types* and organizational scope travel on every event. A consumer
+Event _types_ and organizational scope travel on every event. A consumer
 able to read the stream learns that, for example, a legal opinion exists in
 an organization — though not what it says, whom it concerns, or its title.
 The publicly-projectable allow-list is four event types precisely to limit
-this, but it limits the *public* surface, not the internal stream. PACK-12
+this, but it limits the _public_ surface, not the internal stream. PACK-12
 owns controlled search and export.
 
 ## 11. One person can still hold several roles

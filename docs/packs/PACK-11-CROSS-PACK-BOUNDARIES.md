@@ -5,35 +5,35 @@
 
 ## Ownership
 
-| Concern | Owner |
-| ------- | ----- |
-| Document bytes, authoritative versions, version chains, evidence content, chain of custody | **PACK-11** |
-| Signature and admissibility *determinations* | **PACK-11** (recorded, never computed) |
-| Publication renditions and their citations | **PACK-11** |
-| Organizational scope, units, relations, authority assignment | PACK-08 |
-| Legal cases, procedural deadlines, official notices, notice legal effect, legal hold, retention schedules, destruction authorization | PACK-09 |
-| Party finance, the accounting register, the Rechenschaftsbericht | PACK-10 |
-| Privileged/JIT/break-glass access, controlled search, DLP, governed export | PACK-12 |
-| Production database, event bus, schema registry | PACK-13 |
-| Identity, authentication, keys, external trust providers | PACK-14 |
-| Ballots, votes, tallies, delegation | PACK-15/16 |
-| Minutes *content model*, assemblies | future assemblies package |
-| Decision register workflow | future decision-register package |
-| Candidacy, nomination, admission | PACK-19 |
-| Communication channels and delivery | PACK-22 |
+| Concern                                                                                                                              | Owner                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| Document bytes, authoritative versions, version chains, evidence content, chain of custody                                           | **PACK-11**                            |
+| Signature and admissibility _determinations_                                                                                         | **PACK-11** (recorded, never computed) |
+| Publication renditions and their citations                                                                                           | **PACK-11**                            |
+| Organizational scope, units, relations, authority assignment                                                                         | PACK-08                                |
+| Legal cases, procedural deadlines, official notices, notice legal effect, legal hold, retention schedules, destruction authorization | PACK-09                                |
+| Party finance, the accounting register, the Rechenschaftsbericht                                                                     | PACK-10                                |
+| Privileged/JIT/break-glass access, controlled search, DLP, governed export                                                           | PACK-12                                |
+| Production database, event bus, schema registry                                                                                      | PACK-13                                |
+| Identity, authentication, keys, external trust providers                                                                             | PACK-14                                |
+| Ballots, votes, tallies, delegation                                                                                                  | PACK-15/16                             |
+| Minutes _content model_, assemblies                                                                                                  | future assemblies package              |
+| Decision register workflow                                                                                                           | future decision-register package       |
+| Candidacy, nomination, admission                                                                                                     | PACK-19                                |
+| Communication channels and delivery                                                                                                  | PACK-22                                |
 
 ## What PACK-11 consumes, and how
 
 Only typed references, declared in `references.py`. **No imports.**
 
-| From | Reference type | What PACK-11 does with it |
-| ---- | -------------- | ------------------------- |
-| PACK-08 | `OrganizationScopeReference` | Carries it on every record. Never interprets the hierarchy, inheritance or the six access modes. |
-| PACK-09 | `RecordClassReference` | Stores the binding. Never computes a retention period. |
+| From    | Reference type                            | What PACK-11 does with it                                                                                                              |
+| ------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| PACK-08 | `OrganizationScopeReference`              | Carries it on every record. Never interprets the hierarchy, inheritance or the six access modes.                                       |
+| PACK-09 | `RecordClassReference`                    | Stores the binding. Never computes a retention period.                                                                                 |
 | PACK-09 | `LegalHoldReference` / `LegalHoldBinding` | Records PACK-09's answer with the moment observed. Re-read before every destruction-relevant act, deliberately not cached across acts. |
-| PACK-09 | `DestructionAuthorizationReference` | The only thing that can permit a disposition. Stale if issued against a smaller version count. |
-| PACK-09 | `LegalCaseReference` | Makes a document *about* a case. Asserts no procedural fact. |
-| PACK-10 | `FinanceRecordReference` | The mirror of PACK-10's `EvidenceReference`. Both directions exist because different services ask the question from different sides. |
+| PACK-09 | `DestructionAuthorizationReference`       | The only thing that can permit a disposition. Stale if issued against a smaller version count.                                         |
+| PACK-09 | `LegalCaseReference`                      | Makes a document _about_ a case. Asserts no procedural fact.                                                                           |
+| PACK-10 | `FinanceRecordReference`                  | The mirror of PACK-10's `EvidenceReference`. Both directions exist because different services ask the question from different sides.   |
 
 ## What PACK-11 exports
 
@@ -48,7 +48,7 @@ be a cached answer that outlives the version — and, for admissibility, the
 procedure — it was true of. A consumer that wants the answer resolves the
 determination and gets the staleness check with it.
 
-## What deliberately did *not* change
+## What deliberately did _not_ change
 
 PACK-09's `references.DocumentRef`, `EvidenceRef`, `MinutesRef` and
 `NoticeProofPackageRef`, and PACK-10's `references.DocumentReference` and
@@ -87,5 +87,5 @@ at every emission boundary, and
 `test_privacy_boundary.py::test_the_package_declares_no_voting_field_anywhere`
 makes it enforceable at the declaration level.
 
-A minutes document may *record* that a vote happened. It may never carry a
+A minutes document may _record_ that a vote happened. It may never carry a
 reference that could join a ballot to a person.

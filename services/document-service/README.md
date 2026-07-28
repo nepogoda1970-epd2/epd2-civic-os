@@ -14,16 +14,16 @@ only for `FIR-DEC-001`, `FIR-DEC-002`, `FIR-CAND-001`, `FIR-COMM-001`,
 
 Strict dependency order; each imports only from those above it.
 
-| Module           | What it owns                                                                                                     |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `exceptions`     | One class per registered reason code. No domain knowledge.                                                        |
+| Module           | What it owns                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `exceptions`     | One class per registered reason code. No domain knowledge.                                                         |
 | `domain`         | Value objects, identity minimisation, the content boundary, the governed taxonomies. No I/O, no clock, no storage. |
-| `versions`       | Immutable `DocumentVersion` and the SHA-256 hash-linked chain (`FIR-INV-010`).                                    |
+| `versions`       | Immutable `DocumentVersion` and the SHA-256 hash-linked chain (`FIR-INV-010`).                                     |
 | `authorization`  | Eight roles, twenty-one actions, the symmetric incompatibility matrix, per-act separation of duties, access.       |
-| `documents`      | The `GovernedDocument` aggregate, review requirements, approval, publication, supersession, revocation.           |
-| `evidence`       | Evidence records, chains of custody, sealed bundles.                                                              |
+| `documents`      | The `GovernedDocument` aggregate, review requirements, approval, publication, supersession, revocation.            |
+| `evidence`       | Evidence records, chains of custody, sealed bundles.                                                               |
 | `determinations` | The governed signature and admissibility determinations, and reference resolution (ADR-053's four requirements).   |
-| `references`     | The typed references this context exports and consumes.                                                           |
+| `references`     | The typed references this context exports and consumes.                                                            |
 | `events`         | Twenty-five canonical event builders and the emission boundary.                                                    |
 | `storage`        | Storage ports and in-memory adapters, including a content-addressed `ContentStore`. No delete method on any port.  |
 | `projections`    | Restricted and public read models. Neither authoritative, neither carrying content.                                |
@@ -45,7 +45,7 @@ projection may carry them. `domain.assert_emission_safe` runs at one
 chokepoint over content, identity and voting-linkage keys.
 
 **3. Nothing is asserted that no authority decided.** Signature status and
-admissibility are *recorded* determinations bound to an exact version hash.
+admissibility are _recorded_ determinations bound to an exact version hash.
 Absence is reported as an explicit `not_determined`, never inferred.
 
 ## Boundaries

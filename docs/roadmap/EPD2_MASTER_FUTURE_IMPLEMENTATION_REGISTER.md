@@ -152,17 +152,17 @@ Added by the PACK-11 CANDIDATE (not yet PASS):
 
 Scope, with delivery state per item:
 
-| Scope item | State | Evidence |
-| ---------- | ----- | -------- |
-| governed documents | implemented | `document-service/documents.py` (`GovernedDocument`) |
-| document lifecycle | implemented | `documents.py` (`DocumentState`), `versions.py` (`VersionState`, `_ALLOWED_VERSION_TRANSITIONS`) |
-| immutable versions | implemented | `versions.py`, `storage.py` (`append`, `record_state_change`) |
-| typed evidence references | implemented | `references.py` (7 outward, 6 inward types) |
-| cryptographically linked version history | implemented | `versions.py` (`compute_version_hash`, `verify_version_chain`), ADR-057 |
-| access and publication profiles | implemented | `domain.AccessProfile`, `authorization.assert_access_permitted`, `documents.PublicationAudience`, `documents.PublicationAuthorization` |
-| correction and supersession | implemented | `versions.DocumentVersion.corrects_version_number`, `documents.SupersessionRecord`, `documents.RevocationRecord` |
-| retention integration | implemented as a binding | `domain.RetentionBinding`, `domain.LegalHoldBinding`, `documents.assert_disposition_authorized`. PACK-09 remains owner of the schedule and the decision. |
-| evidence integrity | implemented | `evidence.py` (custody chain verification, sealed bundles), `application.verify_document_integrity` |
+| Scope item                               | State                    | Evidence                                                                                                                                                 |
+| ---------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| governed documents                       | implemented              | `document-service/documents.py` (`GovernedDocument`)                                                                                                     |
+| document lifecycle                       | implemented              | `documents.py` (`DocumentState`), `versions.py` (`VersionState`, `_ALLOWED_VERSION_TRANSITIONS`)                                                         |
+| immutable versions                       | implemented              | `versions.py`, `storage.py` (`append`, `record_state_change`)                                                                                            |
+| typed evidence references                | implemented              | `references.py` (7 outward, 6 inward types)                                                                                                              |
+| cryptographically linked version history | implemented              | `versions.py` (`compute_version_hash`, `verify_version_chain`), ADR-057                                                                                  |
+| access and publication profiles          | implemented              | `domain.AccessProfile`, `authorization.assert_access_permitted`, `documents.PublicationAudience`, `documents.PublicationAuthorization`                   |
+| correction and supersession              | implemented              | `versions.DocumentVersion.corrects_version_number`, `documents.SupersessionRecord`, `documents.RevocationRecord`                                         |
+| retention integration                    | implemented as a binding | `domain.RetentionBinding`, `domain.LegalHoldBinding`, `documents.assert_disposition_authorized`. PACK-09 remains owner of the schedule and the decision. |
+| evidence integrity                       | implemented              | `evidence.py` (custody chain verification, sealed bundles), `application.verify_document_integrity`                                                      |
 
 **Evidence paths:**
 
@@ -181,7 +181,7 @@ Scope, with delivery state per item:
    `uv lock`, `npm`) — not executable in the build sandbox;
 2. production persistence and the event bus (PACK-13);
 3. an external anchor or countersignature for `head_version_hash` (OD-20)
-   — without it, `FIR-INV-010` is satisfied as tamper *evidence* only;
+   — without it, `FIR-INV-010` is satisfied as tamper _evidence_ only;
 4. a PACK-11 PASS round.
 
 ## FIR-ROADMAP-002 — PACK-12 Privileged Admin, Search & Data Export Security
@@ -406,8 +406,8 @@ Historical versions must never be rewritten. Documents must preserve cryptograph
 **How it is enforced.** `version_hash = sha256(canonical_dumps(hashable_fields(v)) + previous_version_hash)`,
 the same rule `audit-core` uses for the audit log (ADR-003), so one
 verification procedure covers both chains. Three independent defences:
-`versions.verify_version_chain` *detects* a rewrite;
-`storage.InMemoryDocumentVersionStore` *refuses to perform* one (no
+`versions.verify_version_chain` _detects_ a rewrite;
+`storage.InMemoryDocumentVersionStore` _refuses to perform_ one (no
 replacement, no version number that is not head+1, no re-parenting, and
 `record_state_change` compares `hashable_fields` rather than only the
 stored hash); and `application._load_chain` re-verifies before every
@@ -757,7 +757,7 @@ obligation; immutable hash-linked versions; controlled review and approval
 with three-actor separation; publication and citable renditions;
 correction, supersession and revocation.
 
-PACK-11 does **not** provide the minutes *content model*: leadership,
+PACK-11 does **not** provide the minutes _content model_: leadership,
 secretary, attendance, quorum, agenda version, motions, amendments,
 results, decisions, objections, role changes, start and end. PACK-11 stores
 a minutes document and does not know what is inside one.
@@ -807,7 +807,7 @@ over decisions, not a store of documents about them.
 `versions.DocumentVersion`.
 
 **Remaining work:** the register entity, its status model and its execution
-tracking, in a later package. Note that a decision's *vote result* must
+tracking, in a later package. Note that a decision's _vote result_ must
 arrive as an aggregate: PACK-11 forbids any ballot, vote or tally reference
 (`PROHIBITED_VOTING_KEYS`), so the register may not carry one either.
 
@@ -903,7 +903,7 @@ PACK-11 deliberately **cannot** hold the mandate record itself. `iban`,
 `bank_account`, `national_id` and `full_name` are all in
 `domain.PROHIBITED_IDENTITY_KEYS`, so a creditor ID, an account holder or
 an IBAN cannot be stored, emitted or projected by this service at all.
-PACK-11 holds the *evidence document*; the mandate record — creditor,
+PACK-11 holds the _evidence document_; the mandate record — creditor,
 creditor ID, mandate reference, scope, account holder, IBAN, consent
 version, revocation, replacement reference — belongs to the payments
 package.
@@ -1514,7 +1514,7 @@ Retention must support legal hold without silent deletion.
 
 **PACK-11 foundation provided — this entry is NOT implemented.**
 
-PACK-11 provides the *document-side* half: `domain.LegalHoldBinding` with a
+PACK-11 provides the _document-side_ half: `domain.LegalHoldBinding` with a
 three-valued state (`active` / `released` / `indeterminate`);
 `documents.assert_no_destruction_under_hold`, which refuses under an active
 hold with `RECORD_UNDER_LEGAL_HOLD` and fails closed under an
@@ -1684,7 +1684,6 @@ Must cover:
 - approval;
 - publication;
 - version history.
-
 
 ## FIR-PROG-002 — Mandatory Pre-Adoption AI, Expert and Legal Review
 
@@ -2026,7 +2025,6 @@ Acceptance criteria:
 - privileged workspaces are absent from the ordinary app;
 - workspace isolation remains enforceable;
 - offline mode cannot create consequential state changes.
-
 
 ## FIR-FRONT-004 — Mobile Voting System-Browser Handoff
 
@@ -2417,7 +2415,7 @@ Required gate families:
 - assemblies;
 - decision register (PACK-11 provides the document foundation only);
 - member payments;
-- SEPA mandate record (PACK-11 provides the mandate *evidence* foundation only);
+- SEPA mandate record (PACK-11 provides the mandate _evidence_ foundation only);
 - full voting implementation;
 - privileged admin;
 - production data plane;

@@ -46,7 +46,7 @@ updates one direction and forgets the other - a bug that would otherwise
 only appear when the roles were granted in the other order.
 
 **3. The matrix is re-checked at the moment of the act**, over the roles
-the acting actor *actually* holds in that scope, obtained through
+the acting actor _actually_ holds in that scope, obtained through
 `AuthorizationPort.held_roles`. This is the check PACK-08 structurally
 cannot perform on PACK-11's behalf.
 
@@ -79,7 +79,7 @@ the grant does not know that.
 quotable module constant. No `force=`, no `skip_checks`, no environment
 switch, no privileged-caller shortcut, and none may be added. PACK-12 will
 own privileged access, and a PACK-12 grant can make a caller able to
-*reach* a document command, never able to *pass* one.
+_reach_ a document command, never able to _pass_ one.
 
 ## Consequences
 
@@ -90,7 +90,7 @@ does not care how many hats one person wears.
 
 `tests/test_privacy_boundary.py` enforces the no-break-glass rule over the
 parsed AST rather than the raw text, so `NO_BREAK_GLASS_NOTE` - which
-*names* those switches in order to forbid them - does not trip its own
+_names_ those switches in order to forbid them - does not trip its own
 test.
 
 ## Alternatives considered

@@ -16,7 +16,7 @@
 
 ### T1 — Rewrite history
 
-*An actor edits an approved version to say something else.*
+_An actor edits an approved version to say something else._
 
 Controls: the version hash covers every substantive field; the store
 refuses to replace a stored version at all; `record_state_change` compares
@@ -29,7 +29,7 @@ every version and recompute every hash. See "Not defended" below.
 ### T2 — Remove an inconvenient version
 
 Controls: gap-free numbering is part of chain verification, so a removed
-version is detected by the *sequence* rule even though every remaining
+version is detected by the _sequence_ rule even though every remaining
 hash is individually correct. An empty version list is explicitly **not**
 a valid chain — reporting "valid, length zero" would mean deleting
 everything passes the check that exists to detect exactly that.
@@ -45,7 +45,7 @@ recorded.
 ### T4 — Graft a forged tail onto a real history
 
 Controls: `previous_version_hash` linkage; the store refuses an append that
-would re-parent. Rewriting a version *and* resealing it does not escape —
+would re-parent. Rewriting a version _and_ resealing it does not escape —
 the next version still links to the old hash, so the break moves one step
 later.
 
@@ -60,23 +60,23 @@ refused, not passed.
 ### T6 — Escalate through a stale or newly-conflicting role grant
 
 Control: the matrix is re-checked at the moment of the act over the roles
-the actor *actually* holds now, via `AuthorizationPort.held_roles`. PACK-08's
+the actor _actually_ holds now, via `AuthorizationPort.held_roles`. PACK-08's
 assignment-time check cannot see a role granted afterwards.
 
 ### T7 — Bypass the workflow with a flag or an emergency path
 
 Control: nothing in `authorization` is conditional. `NO_BREAK_GLASS_NOTE`
 states the rule; the AST-level test in `test_privacy_boundary.py` enforces
-it. A PACK-12 privileged grant can make a caller able to *reach* a command,
-never able to *pass* one.
+it. A PACK-12 privileged grant can make a caller able to _reach_ a command,
+never able to _pass_ one.
 
 ### T8 — Exfiltrate content through an event, an audit field or a projection
 
 Controls: one emission chokepoint (`assert_emission_safe`) run by every
-event builder and every projection builder over its own output *before*
+event builder and every projection builder over its own output _before_
 returning; forbidden content-key names plus a value-level refusal of any
 raw byte string whatever its key; `title_reference` instead of `title`;
-review *counts* instead of finding text; a public projection that is a
+review _counts_ instead of finding text; a public projection that is a
 separate type rather than a filtered variant.
 
 ### T9 — Confirm the existence of another organization's documents
@@ -119,7 +119,7 @@ and no citation.
   `ADMITTED` wrongly, this service records it faithfully. The control is
   the authority model and the audit trail, not a second opinion this
   service is not competent to form.
-- **Traffic analysis of the event stream.** Event *types* and organizational
+- **Traffic analysis of the event stream.** Event _types_ and organizational
   scope are visible to any consumer of the stream. A consumer able to read
   it learns that a legal opinion exists in an organization, though not what
   it says or whom it concerns.

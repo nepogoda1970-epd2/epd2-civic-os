@@ -57,12 +57,7 @@
     },
     "sensitivity": {
       "type": "string",
-      "enum": [
-        "public",
-        "internal",
-        "confidential",
-        "restricted"
-      ]
+      "enum": ["public", "internal", "confidential", "restricted"]
     },
     "title_reference": {
       "type": "string",
@@ -86,10 +81,7 @@
     "custodian": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "authority_id",
-        "role_code"
-      ],
+      "required": ["authority_id", "role_code"],
       "properties": {
         "authority_id": {
           "type": "string",
@@ -138,11 +130,7 @@
     },
     "state": {
       "type": "string",
-      "enum": [
-        "active",
-        "closed",
-        "disposed"
-      ]
+      "enum": ["active", "closed", "disposed"]
     },
     "document_version": {
       "type": "integer",
@@ -210,11 +198,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "hold_reference",
-          "hold_state",
-          "observed_at"
-        ],
+        "required": ["hold_reference", "hold_state", "observed_at"],
         "properties": {
           "hold_reference": {
             "type": "string",
@@ -222,11 +206,7 @@
           },
           "hold_state": {
             "type": "string",
-            "enum": [
-              "active",
-              "released",
-              "indeterminate"
-            ]
+            "enum": ["active", "released", "indeterminate"]
           },
           "observed_at": {
             "type": "string",

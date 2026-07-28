@@ -27,20 +27,20 @@ ask through the published interface and get a reason-coded answer.
 
 ## The aggregates
 
-| Aggregate               | Owns                                                                    |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `GovernedDocument`      | The register entry: kind, sensitivity, custodian, review requirement, current version pointer, chain head, retention and hold bindings. |
-| `DocumentVersion`       | One immutable statement of content at a moment, plus its place in the chain. |
-| `ReviewRecord`          | One recorded review of one version. Append-only.                        |
-| `ApprovalRecord`        | The act that turns a proposal into a record. One per version.           |
-| `PublicationAuthorization` | The separate authority to publish. One per version.                  |
-| `PublicationRendition`  | A citable published form. Several per version are legitimate.           |
-| `SupersessionRecord`    | "Version N is no longer current; version M is."                         |
-| `RevocationRecord`      | "This version no longer has effect." Never "this version is gone."      |
-| `SignatureDetermination` | A recorded, version-bound signature determination.                     |
-| `AdmissibilityDetermination` | A recorded, version- and procedure-bound admissibility determination. |
-| `EvidenceRecord`        | A governed *use* of an exact version, with provenance and custody.      |
-| `EvidenceBundle`        | An ordered, sealable, citable set of evidence.                          |
+| Aggregate                    | Owns                                                                                                                                    |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `GovernedDocument`           | The register entry: kind, sensitivity, custodian, review requirement, current version pointer, chain head, retention and hold bindings. |
+| `DocumentVersion`            | One immutable statement of content at a moment, plus its place in the chain.                                                            |
+| `ReviewRecord`               | One recorded review of one version. Append-only.                                                                                        |
+| `ApprovalRecord`             | The act that turns a proposal into a record. One per version.                                                                           |
+| `PublicationAuthorization`   | The separate authority to publish. One per version.                                                                                     |
+| `PublicationRendition`       | A citable published form. Several per version are legitimate.                                                                           |
+| `SupersessionRecord`         | "Version N is no longer current; version M is."                                                                                         |
+| `RevocationRecord`           | "This version no longer has effect." Never "this version is gone."                                                                      |
+| `SignatureDetermination`     | A recorded, version-bound signature determination.                                                                                      |
+| `AdmissibilityDetermination` | A recorded, version- and procedure-bound admissibility determination.                                                                   |
+| `EvidenceRecord`             | A governed _use_ of an exact version, with provenance and custody.                                                                      |
+| `EvidenceBundle`             | An ordered, sealable, citable set of evidence.                                                                                          |
 
 ## The command frame
 
@@ -82,11 +82,11 @@ adapters that are explicitly not a data plane.
 
 There are exactly three, and content leaves through only one.
 
-| Path                          | Carries                                                   |
-| ----------------------------- | --------------------------------------------------------- |
-| `read_document_content`       | The bytes. Authority-, profile-, independence- and integrity-checked. |
-| `restricted_projection`       | Governance metadata. No content, no title, no finding text. |
-| `build_public_projection`     | Publication facts. No content, no title, no sensitivity.   |
+| Path                      | Carries                                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| `read_document_content`   | The bytes. Authority-, profile-, independence- and integrity-checked. |
+| `restricted_projection`   | Governance metadata. No content, no title, no finding text.           |
+| `build_public_projection` | Publication facts. No content, no title, no sensitivity.              |
 
 ## Deferred to other packs
 

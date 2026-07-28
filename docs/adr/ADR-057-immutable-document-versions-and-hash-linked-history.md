@@ -21,7 +21,7 @@ SHA-256 hash chain over audit events.
 1. Immutability enforced only by convention is immutability that a
    migration script removes.
 2. A per-record hash with no linkage detects a rewritten record and not a
-   *removed* one - and deleting an inconvenient version is the more likely
+   _removed_ one - and deleting an inconvenient version is the more likely
    attack.
 3. A chain over records alone does not notice content swapped behind an
    untouched record; a digest check over content alone does not notice a
@@ -51,7 +51,7 @@ hash because "who recorded this" is the half of FIR-INV-010 a
 content-only hash would leave rewritable.
 
 **3. `state` and `history` are deliberately excluded** - see Problem 4.
-A governed transition is a fact *about* a version, not a change *to* it,
+A governed transition is a fact _about_ a version, not a change _to_ it,
 and `with_state` therefore does not recompute the hash.
 
 **4. The content digest is inside the hashed fields, and content is
@@ -59,13 +59,14 @@ verified separately.** `verify_document_integrity` runs both, because
 neither catches both attacks (Problem 3).
 
 **5. Three independent defences, not one.**
-   - `versions.verify_version_chain` *detects* a rewrite after the fact;
-   - `storage.InMemoryDocumentVersionStore.append` *refuses to perform*
-     one: no replacement of a stored version, no version number that is
-     not head+1, no `previous_version_hash` that is not the head's hash;
-   - `storage.record_state_change` compares `hashable_fields` rather than
-     only the stored hash, so a caller that altered a covered field
-     without resealing cannot slip past a hash-only comparison.
+
+- `versions.verify_version_chain` _detects_ a rewrite after the fact;
+- `storage.InMemoryDocumentVersionStore.append` _refuses to perform_
+  one: no replacement of a stored version, no version number that is
+  not head+1, no `previous_version_hash` that is not the head's hash;
+- `storage.record_state_change` compares `hashable_fields` rather than
+  only the stored hash, so a caller that altered a covered field
+  without resealing cannot slip past a hash-only comparison.
 
 **6. Every command re-verifies the chain before acting.** More expensive
 than checking at read time, and the point: a governed act recorded against
@@ -92,7 +93,7 @@ controls that would close that gap; neither is in this round, and
 `docs/handover/PACK-11-KNOWN-LIMITATIONS.md` records it as a named gap
 rather than a footnote.
 
-Rewriting version 2 *and* resealing it does not escape detection: version
+Rewriting version 2 _and_ resealing it does not escape detection: version
 3 still links to the old hash, so the break moves one step later. Only
 rewriting the entire tail escapes, which is exactly the property claimed
 above.

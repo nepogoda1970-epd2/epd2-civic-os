@@ -7,13 +7,13 @@
 
 ## Version state
 
-| Constant | Value | Source of truth |
-| -------- | ----- | --------------- |
-| `REPOSITORY_VERSION` | `0.11.0` | `packages/python/epd2-core/src/epd2_core/version.py`, `packages/typescript/epd2-types/src/version.ts`, `CHANGELOG.md` |
-| `CANON_VERSION` | `0.8.0` (unchanged) | `docs/canonical/canon-version.json` and both version files |
-| `document_context_implementation_status` | `reference_implementation` | `docs/canonical/canon-version.json` |
-| `finance_context_implementation_status` | `reference_implementation` (unchanged) | `docs/canonical/canon-version.json` |
-| `repository_compatibility` | `>=0.1.0 <0.12.0` (widened from `<0.11.0`) | `docs/canonical/canon-version.json` |
+| Constant                                 | Value                                      | Source of truth                                                                                                       |
+| ---------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `REPOSITORY_VERSION`                     | `0.11.0`                                   | `packages/python/epd2-core/src/epd2_core/version.py`, `packages/typescript/epd2-types/src/version.ts`, `CHANGELOG.md` |
+| `CANON_VERSION`                          | `0.8.0` (unchanged)                        | `docs/canonical/canon-version.json` and both version files                                                            |
+| `document_context_implementation_status` | `reference_implementation`                 | `docs/canonical/canon-version.json`                                                                                   |
+| `finance_context_implementation_status`  | `reference_implementation` (unchanged)     | `docs/canonical/canon-version.json`                                                                                   |
+| `repository_compatibility`               | `>=0.1.0 <0.12.0` (widened from `<0.11.0`) | `docs/canonical/canon-version.json`                                                                                   |
 
 `docs/canonical/TZ-00-domain-event-canon.md` is **byte-for-byte untouched**.
 This round amends no canon; it implements a context canon 19f.22 already
@@ -65,16 +65,16 @@ in `docs/packs/PACK-11-FIR-TRACEABILITY.md`.
 
 ## Verification performed
 
-| Check | Result |
-| ----- | ------ |
-| `services/document-service/tests` (13 modules) | **358 passed, 0 failed** |
-| `scripts/check_canon_0_8_0.py` | **18/18 checks pass** (17 pre-existing + 1 new) |
-| `scripts/verify_versions.py` | **consistent** |
-| `scripts/check_repository.py` | **all required paths present** |
-| `scripts/check_forbidden_files.py` | **clean** (git-trackable paths) |
-| Reason-code registry | 71 unique entries; every literal in `services/document-service/src` registered |
-| Line length ≤ 100, trailing whitespace, EOF newline, unused imports | clean across `services/document-service` |
-| Full end-to-end lifecycle smoke run | register → version → review → approve → authorize → publish → rendition → determinations → evidence → bundle → retention → hold → integrity → read → projections → resolution, with an intact audit chain |
+| Check                                                               | Result                                                                                                                                                                                                    |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/document-service/tests` (13 modules)                      | **358 passed, 0 failed**                                                                                                                                                                                  |
+| `scripts/check_canon_0_8_0.py`                                      | **18/18 checks pass** (17 pre-existing + 1 new)                                                                                                                                                           |
+| `scripts/verify_versions.py`                                        | **consistent**                                                                                                                                                                                            |
+| `scripts/check_repository.py`                                       | **all required paths present**                                                                                                                                                                            |
+| `scripts/check_forbidden_files.py`                                  | **clean** (git-trackable paths)                                                                                                                                                                           |
+| Reason-code registry                                                | 71 unique entries; every literal in `services/document-service/src` registered                                                                                                                            |
+| Line length ≤ 100, trailing whitespace, EOF newline, unused imports | clean across `services/document-service`                                                                                                                                                                  |
+| Full end-to-end lifecycle smoke run                                 | register → version → review → approve → authorize → publish → rendition → determinations → evidence → bundle → retention → hold → integrity → read → projections → resolution, with an intact audit chain |
 
 ## Verification **not** performed, and why
 
@@ -102,7 +102,7 @@ Four repository-level boundary tests enforce this in
 ## What this round does not claim
 
 No legal validity. No evidential admissibility. No signature verification.
-No qualified-electronic-signature conformance. No tamper *resistance* —
+No qualified-electronic-signature conformance. No tamper _resistance_ —
 the chain is tamper evidence and the limitations document says so. No
 production readiness. No assertion about German party law.
 

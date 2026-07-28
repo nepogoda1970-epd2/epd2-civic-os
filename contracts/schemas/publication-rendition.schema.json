@@ -36,12 +36,7 @@
     },
     "audience": {
       "type": "string",
-      "enum": [
-        "public",
-        "members",
-        "body_internal",
-        "addressee_only"
-      ],
+      "enum": ["public", "members", "body_internal", "addressee_only"],
       "description": "Only `public` reaches the public transparency projection. 'Published to members' is a real publication and is not that surface."
     },
     "media_type": {

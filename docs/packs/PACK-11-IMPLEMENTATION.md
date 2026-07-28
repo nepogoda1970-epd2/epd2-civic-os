@@ -62,7 +62,7 @@ and closed by widening the check.
 `DOCUMENT_EVIDENCE_BUNDLE_SEALED`.** One string meaning both "this worked"
 and "this was refused" would make every audit query over it ambiguous.
 
-**The no-break-glass test parses the AST.** `NO_BREAK_GLASS_NOTE` *names*
+**The no-break-glass test parses the AST.** `NO_BREAK_GLASS_NOTE` _names_
 `force`, `skip_checks` and `bypass` in order to forbid them; a
 text-matching check cannot tell a prohibition from a bypass.
 
@@ -74,7 +74,7 @@ window in which a bundle is citable but still mutable would be the defect.
 ## Test coverage
 
 358 tests across thirteen modules. The version-integrity suite is written
-against the *attacks* rather than the happy path: a rewritten field, a
+against the _attacks_ rather than the happy path: a rewritten field, a
 removed version, a re-parented chain, a swapped content blob, a resealed
 forgery. `test_privacy_boundary.py` sweeps the real source, the real
 dataclass fields and the real payloads of a full lifecycle, so a field or
