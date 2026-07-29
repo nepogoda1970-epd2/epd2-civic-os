@@ -24,7 +24,7 @@ external arbiter.
 
 ---
 
-## 2. Integrity is tamper *evidence*, not tamper resistance
+## 2. Integrity is tamper _evidence_, not tamper resistance
 
 `sessions.SealedPrivilegedSession` chains each sealed session to the
 previous head with `sha256(canonical_dumps(payload) + previous_hash)` —
@@ -35,7 +35,7 @@ What this buys: any alteration of a sealed payload, and any reordering or
 removal in the chain, becomes **detectable**.
 
 What it does not buy: prevention. An actor with write access to the store
-can rewrite the whole chain consistently. Detecting *that* requires an
+can rewrite the whole chain consistently. Detecting _that_ requires an
 anchor outside the system — a countersignature, a published head, an
 independent witness — and PACK-12 has none. This is the same boundary
 `OD-20` records for PACK-11's document chain, and it is why nothing in
@@ -47,7 +47,7 @@ this package uses the phrase "tamper-resistant".
 
 ## 3. Every adapter is in-memory
 
-`storage.py` ships storage *ports* and in-memory reference adapters.
+`storage.py` ships storage _ports_ and in-memory reference adapters.
 There is no production database, no durable event bus, and no persistence
 of any kind that survives a process.
 
@@ -61,13 +61,13 @@ guarantees and its delivery semantics are PACK-13's.
 ## 4. No identity, no authentication, no MFA, no HSM
 
 `roles.AuthorizationPort` is how this service learns about authority, and
-it is a *port*. PACK-12 mints no identity, issues no session token,
+it is a _port_. PACK-12 mints no identity, issues no session token,
 verifies no credential and holds no secret. `AuthorityReference` carries
 an assignment id and a role code; who the human behind it is, is
 deliberately not knowable from anywhere in this package (`FIR-INV-001`).
 
 Multi-factor authentication, an external IdP and hardware-backed key
-custody are all named in the PACK-12 specification as *out of scope* and
+custody are all named in the PACK-12 specification as _out of scope_ and
 are not partially implemented here — a partial MFA is worse than none,
 because it looks like a control.
 
@@ -80,7 +80,7 @@ operations).
 
 `breakglass.NotificationPort` is the seam through which a break-glass
 activation notifies oversight. `storage.ReferenceNotificationAdapter`
-implements it well enough to test the *governed* behaviour — that a
+implements it well enough to test the _governed_ behaviour — that a
 suppressed notification is refused, and that an undelivered one escalates
 and still raises — and it sends nothing anywhere.
 
@@ -112,7 +112,7 @@ can read the index files directly.
 `dlp.py` defines eighteen controls, a named fail-closed subset, the volume
 and frequency rules, and the transform functions. It performs **no
 content inspection**: `DlpControl.FORBIDDEN_DATA_DETECTION` is a control
-whose *outcome* is recorded, not a classifier that finds forbidden data.
+whose _outcome_ is recorded, not a classifier that finds forbidden data.
 A `DlpFinding` carries a `detail_reference`, never the matched value —
 quoting the match would put the very data the control exists to protect
 into the assessment record.
@@ -143,7 +143,7 @@ model becomes tractable.
 ## 9. Pseudonymisation is call-scoped
 
 `dlp.apply_transforms` gives a stable pseudonym per distinct value
-*within one call*. It is not a cryptographic pseudonymisation scheme,
+_within one call_. It is not a cryptographic pseudonymisation scheme,
 carries no key, and does not produce a pseudonym that is stable across
 exports. Linking two exports of the same population by pseudonym is
 therefore not possible — which is usually what you want — but neither is
@@ -192,6 +192,6 @@ own authority and reason code — and records its absence as absence.
 
 `contracts/reason-codes/pack-12.yml` guarantees that every refusal this
 service raises carries a registered code with a stated meaning. It does
-not guarantee that the code is the *right* one for a given situation in
+not guarantee that the code is the _right_ one for a given situation in
 any legal or regulatory sense, and the registry is not a mapping to any
 external taxonomy.

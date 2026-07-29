@@ -6,7 +6,7 @@ round must demonstrate.
 
 > **Status note added by the PACK-12 implementation candidate round
 > (2026-07-29).** The "specification-only / not implemented" statement
-> above describes the *specification round* that produced this document
+> above describes the _specification round_ that produced this document
 > and is preserved as the historical record. It is no longer the state of
 > the repository: `services/privileged-access-service` now implements this
 > specification as an **implementation candidate** at repository version
@@ -15,7 +15,6 @@ round must demonstrate.
 > **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS.**
 > Nothing here is claimed as verified, passed, or production-ready. See
 > `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` section 5.
-
 
 Columns: **ID**; **Normative requirement**; **Rationale**; **Responsible
 component**; **Required evidence**; **Testability approach**; **PASS

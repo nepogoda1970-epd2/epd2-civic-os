@@ -113,7 +113,7 @@ deliberately does not, and what remains.
 
 **FIR IDs intentionally left unchanged:** every other entry. In
 particular `FIR-INV-002`, `FIR-INV-003` and `FIR-INV-005` are untouched —
-PACK-12 establishes the *structural absence* of any voting reference type
+PACK-12 establishes the _structural absence_ of any voting reference type
 and adds no voting semantics, because a restated voting contract can
 disagree with the original. `FIR-INV-010` is untouched: PACK-12 reuses
 PACK-11's evidence bundles rather than reimplementing them. All
@@ -124,7 +124,7 @@ untouched by the implementation.
 round established are the known boundary of existing requirements rather
 than new ones, and are recorded in
 `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`: session evidence is tamper
-*evidence* without an external anchor (the same boundary `OD-20` records
+_evidence_ without an external anchor (the same boundary `OD-20` records
 for PACK-11), and the cumulative-release model is bounded by a policy
 window rather than being an all-releases-ever model (`OD-P12-08`).
 
@@ -261,17 +261,17 @@ each stage individually.
 
 Scope, with delivery state per item:
 
-| Scope item                                | State                     | Evidence                                                                                                          |
-| ----------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| privileged access                         | reference implementation  | `privileged-access-service/access.py` (`PrivilegedAccessGrant`), `application.py` (request → approve → activate)  |
-| JIT access                                | reference implementation  | `EffectiveWindow` has no unbounded option; `policy.MAX_ALLOWED_GRANT_DURATION`; no `renew` method exists           |
-| break-glass                               | reference implementation  | `breakglass.py` — dual control, notification obligation, escalation on failure, independent review                |
-| Security Admin / System Admin separation  | reference implementation  | `roles.PRESERVED_INSTITUTIONAL_PAIRS` + 14 added pairs; re-checked at the act inside `application._guard`          |
-| controlled search                         | reference implementation  | `search.py` — two modes only, purpose admission, result-time source re-resolution, suppression bands, cache keying |
-| data export control                       | reference implementation  | `export.py` — five distinct permissions, closed recipient taxonomy, field selection before generation             |
-| DLP guardrails                            | reference implementation  | `dlp.py` — 18 controls, fail-closed subset, volume/frequency/repetition rules, transforms                          |
-| reason-coded privileged actions           | implemented               | `contracts/reason-codes/pack-12.yml`; no free-text refusal anywhere in the service                                 |
-| out-of-band notification for break-glass  | contract only             | `breakglass.NotificationPort` is the seam; the transport itself is PACK-17's                                       |
+| Scope item                               | State                    | Evidence                                                                                                           |
+| ---------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| privileged access                        | reference implementation | `privileged-access-service/access.py` (`PrivilegedAccessGrant`), `application.py` (request → approve → activate)   |
+| JIT access                               | reference implementation | `EffectiveWindow` has no unbounded option; `policy.MAX_ALLOWED_GRANT_DURATION`; no `renew` method exists           |
+| break-glass                              | reference implementation | `breakglass.py` — dual control, notification obligation, escalation on failure, independent review                 |
+| Security Admin / System Admin separation | reference implementation | `roles.PRESERVED_INSTITUTIONAL_PAIRS` + 14 added pairs; re-checked at the act inside `application._guard`          |
+| controlled search                        | reference implementation | `search.py` — two modes only, purpose admission, result-time source re-resolution, suppression bands, cache keying |
+| data export control                      | reference implementation | `export.py` — five distinct permissions, closed recipient taxonomy, field selection before generation              |
+| DLP guardrails                           | reference implementation | `dlp.py` — 18 controls, fail-closed subset, volume/frequency/repetition rules, transforms                          |
+| reason-coded privileged actions          | implemented              | `contracts/reason-codes/pack-12.yml`; no free-text refusal anywhere in the service                                 |
+| out-of-band notification for break-glass | contract only            | `breakglass.NotificationPort` is the seam; the transport itself is PACK-17's                                       |
 
 **Evidence paths:**
 
@@ -2730,7 +2730,6 @@ purpose, one target domain and one organizational scope, and it seals
 into tamper-evident evidence. It supplies no authentication, no session
 issuance and no identity of any kind — all of that remains PACK-14's.
 
-
 Authentication must not create a universal session spanning all workspaces.
 
 The identity architecture must support at least:
@@ -2763,11 +2762,10 @@ Final provider and credential choices remain PACK-14 decisions.
 **PACK-12 foundation provided — this entry is NOT implemented.**
 
 PACK-12 supplies only the negative half: its records carry opaque actor
-*references* and never a person identifier, and `ActorRef` on every event
+_references_ and never a person identifier, and `ActorRef` on every event
 names the acting authority rather than the human behind it
 (`FIR-INV-001`). The communication persona, the scoped directory and the
 messaging surfaces remain the Communications package's and FRONT-02's.
-
 
 Communication between members must use a separate scoped communication persona, not a membership number, IAM account ID or global person ID.
 
@@ -2818,7 +2816,7 @@ core: exactly two governed modes with no third, the mode→purpose
 admission table, the absolutely-excluded domain set, result-time
 re-resolution of source authorization through `SourceAuthorizationPort`
 (so nothing is trusted from the index but the pointer), snippet
-suppression at restricted tiers, suppression *bands* rather than counts,
+suppression at restricted tiers, suppression _bands_ rather than counts,
 and an authorization-context-keyed result cache. `Purpose.INVESTIGATION`
 is the resolution of `OD-P12-02`: investigation is a purpose that narrows
 the ordinary scoped search and requires an explicit grant, not an
@@ -2827,7 +2825,6 @@ unrestricted investigative mode.
 It deliberately does not supply the production search engine, the index
 pipeline, or any frontend search surface, and its adapters are in-memory.
 Remaining: PACK-13's production index and PACK-14/FRONT's search UI.
-
 
 EPD² must not provide one unrestricted global search across all domains.
 
@@ -2884,7 +2881,6 @@ scope check that stops it crossing a boundary. It supplies no person
 model, no directory and no membership data: identity remains PACK-14's
 and the member workspace remains FRONT-02's.
 
-
 Person search must be purpose-specific.
 
 Ordinary members may search only communication personas visible in their permitted scope.
@@ -2916,7 +2912,6 @@ all, the classification→tier mapping that decides what a query may
 surface, and `PublicationRenditionRef` as the only path by which a
 certified result reaches a reader. The governed document records and
 publication renditions themselves remain PACK-11's and PACK-04's.
-
 
 Document search must use governed search projections linked to authoritative document records or approved publication renditions.
 
@@ -3119,14 +3114,13 @@ refuses fewer than two active rule families, and four evaluators — cohort
 threshold, complement protection, differencing across a requester's
 recent query digests, and a bounded cumulative-release check. The
 cumulative model is the resolution of `OD-P12-08`: a policy window, a
-policy limit, and a release history that must be *available*, failing
+policy limit, and a release history that must be _available_, failing
 closed when it is not. A per-release-class cohort policy may make the
 threshold stricter and never weaker than the repository-wide floor.
 
 It supplies no analytics engine, no dashboard and no production release
 history store. Remaining: PACK-13's release-history persistence and the
 publication surfaces that would consume these decisions.
-
 
 Counts, facets, dashboards and published aggregates must be generated only from the already authorized and releasable data subset.
 

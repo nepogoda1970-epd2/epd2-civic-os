@@ -36,11 +36,11 @@ fact are two records that can disagree.
 So: one package boundary, one command frame, one audit path — and three
 contexts separated by module, by aggregate and by role.
 
-| Context                    | Aggregates                                                        | Roles that act in it                                                        |
-| -------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Context                    | Aggregates                                                           | Roles that act in it                                                                         |
+| -------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Privileged administration  | `PrivilegedAccessGrant`, `BreakGlassActivation`, `PrivilegedSession` | security/system administrator, IAM administrator, break-glass approver, independent reviewer |
-| Authorization-aware search | `QueryAudit`, `IndexPolicy`                                       | security administrator (policy), any grant holder (queries)                 |
-| Governed export            | `ExportRequest`, `ExportArtifact`, `DisclosureRiskAssessment`      | data owner, export approver, DLP officer, disclosure-control reviewer       |
+| Authorization-aware search | `QueryAudit`, `IndexPolicy`                                          | security administrator (policy), any grant holder (queries)                                  |
+| Governed export            | `ExportRequest`, `ExportArtifact`, `DisclosureRiskAssessment`        | data owner, export approver, DLP officer, disclosure-control reviewer                        |
 
 ---
 
@@ -85,7 +85,7 @@ force.
    assignment. A `role_code` string is never proof. A command absent from
    `ACTION_REQUIREMENTS` denies rather than defaulting open.
 3. **Role incompatibility and institutional escalation** — re-checked at
-   the moment of the act against the roles the actor *really* holds.
+   the moment of the act against the roles the actor _really_ holds.
 4. **Self-approval and separation of duties** — every prior actor the
    command names is compared with the acting one.
 5. **Purpose** — where declared, it must be one the resolved role serves.
@@ -113,7 +113,7 @@ derived from it, so a replay produces byte-identical audit rows that
 **No bypass exists.** There is no feature flag, environment switch,
 deployment mode, privileged grant or emergency path that disables any
 invariant, audit append or separation check. `roles.NO_BYPASS_NOTE` says
-so and no code path contradicts it. Emergency access is a *separate*
+so and no code path contradicts it. Emergency access is a _separate_
 workflow that only ever adds obligations — a second approver, a
 notification, a shorter ceiling, an independent review.
 
@@ -142,7 +142,7 @@ cannot reach for a type that was never defined.
 ## Honest limits
 
 - **Tamper-evident, not tamper-resistant.** The session hash chain makes
-  alteration *detectable*; nothing here prevents it, and without an
+  alteration _detectable_; nothing here prevents it, and without an
   external anchor that is the whole of what `FIR-INV-010`-style integrity
   buys.
 - **A watermark marks a copy; it does not stop one being made.**
