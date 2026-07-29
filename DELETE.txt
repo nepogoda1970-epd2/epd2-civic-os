@@ -1,0 +1,3 @@
+# PACK-12 CI FORMAT CORRECTION 2 — action list
+# Delete this path from the repository. Do not format it.
+docs/handover/PACK-12-FIR-COVERAGE-MATRIX.md
