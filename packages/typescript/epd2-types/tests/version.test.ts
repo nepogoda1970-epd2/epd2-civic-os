@@ -151,5 +151,5 @@ test("current versions match the expected skeleton version", () => {
   // bump per canon section 25; CANON_VERSION stays 0.8.0 because the
   // implementation round amends no canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.10.0");
+  assert.equal(REPOSITORY_VERSION, "0.11.0");
 });
