@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.12.0] - privileged administration, authorization-aware search & governed export (implementation candidate)
+
+- Added `services/privileged-access-service` (17 source modules, 16 test
+  modules, 327 tests): the privileged-access grant lifecycle, the governed break-glass
+  workflow, tamper-evident privileged sessions, authorization-aware search,
+  governed data export, DLP assessment and transforms, and statistical
+  disclosure control - three logical bounded contexts sharing one package
+  boundary, one command frame and one audit path.
+- Added `contracts/reason-codes/pack-12.yml` (141 entries: 98 refusals, 43
+  audit classifications; 13 reused verbatim from earlier packs).
+- Added proposed ADR-061 through ADR-068 and the nine PACK-12 specification
+  documents under `docs/packs/PACK-12/`.
+- Merged sections 24 and 25 into
+  `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`, adding
+  thirteen entries (`FIR-UX-*`, `FIR-ID-*`, `FIR-COMM-004`, `FIR-SEARCH-*`,
+  `FIR-SUPPORT-*`, `FIR-METRIC-*`). The existing repository file was the
+  merge base; no entry was deleted, no status downgraded, and no second
+  register was created.
+- Repository version `0.11.0` -> `0.12.0`. Canon version unchanged at
+  `0.8.0`: this round amends no canon.
+- **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS.**
+  The build environment cannot reach the package registries, so
+  `uv sync --frozen`, `uv lock` and `npm ci` fail and `make verify` was never
+  run end to end. Ruff, mypy and the repository-wide `pytest` suite passed;
+  every frontend stage, Prettier and the lockfile resolution did not run. See
+  `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` section 5 for
+  exactly which stages ran and which did not.
+- `uv.lock`'s new workspace-member entry was added **by hand** because `uv`
+  cannot run offline. It is verified structurally only; `uv` has never
+  accepted it. CI must run `uv lock` and commit its output.
+
 ## FRONT-00 foundation candidate correction 0.1.1
 
 - Replaced five simplified examples with faithful non-production migrations of
@@ -28,12 +59,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 CLAUDE-PACK-11 implementation round. The first executable slice of the
 governed-document and evidence bounded context canon 19f.22 assigns to
-PACK-11, shipped as `services/document-service`. **This is a `PACK-11
-GOVERNED DOCUMENTS & EVIDENCE 0.11.0 CANDIDATE`, not a PASS release, and
-not a claim of legal validity, evidential admissibility, signature
-verification or production readiness.** `CANON_VERSION` stays at `0.8.0`:
-this round amends no canon, it implements a context canon already
-assigned.
+PACK-11, shipped as `services/document-service`. **This is `PACK-11
+GOVERNED DOCUMENTS & EVIDENCE 0.11.0 — FINAL PASS`, verified by an
+external GitHub Actions run (see
+`docs/handover/PACK-11-GOVERNED-DOCUMENTS-EVIDENCE-0.11.0-FINAL-PASS-REPORT.md`).
+A green pipeline is not a claim of legal validity, evidential
+admissibility, signature verification, tamper resistance or production
+readiness — each of those needs its own gate and none has been passed.**
+`CANON_VERSION` stays at `0.8.0`: this round amends no canon, it
+implements a context canon already assigned.
 
 Implements `FIR-ROADMAP-001` (PACK-11 Governed Documents & Evidence) and
 `FIR-INV-010` (document version integrity) in full. Provides foundation

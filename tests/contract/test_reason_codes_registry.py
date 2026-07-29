@@ -48,6 +48,8 @@ from _schema_helpers import (
     PACK10_SERVICE_DIRS,
     PACK11_REASON_CODES_PATH,
     PACK11_SERVICE_DIRS,
+    PACK12_REASON_CODES_PATH,
+    PACK12_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -72,6 +74,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-09", PACK09_REASON_CODES_PATH, PACK09_SERVICE_DIRS, 40),
     ("pack-10", PACK10_REASON_CODES_PATH, PACK10_SERVICE_DIRS, 90),
     ("pack-11", PACK11_REASON_CODES_PATH, PACK11_SERVICE_DIRS, 71),
+    ("pack-12", PACK12_REASON_CODES_PATH, PACK12_SERVICE_DIRS, 141),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -124,6 +127,19 @@ _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
             "CANON_VERSION",
             "DOCUMENT_CONTEXT_IMPLEMENTATION_STATUS",
             "IMPLEMENTED_FIR_ENTRIES",
+            "REPOSITORY_VERSION",
+        }
+    ),
+    #: PACK-12's are the same shape as PACK-11's - `__all__` entries and
+    #: module-level constant names, each an upper-case *name in a string*,
+    #: none a reason code. Enumerated exactly for the same reason: a
+    #: heuristic such as "appears inside `__all__`" would also hide a
+    #: genuine code that a future `__all__` happened to mention.
+    "pack-12": frozenset(
+        {
+            "CANON_VERSION",
+            "IMPLEMENTED_FIR_ENTRIES",
+            "PRIVILEGED_ACCESS_CONTEXT_IMPLEMENTATION_STATUS",
             "REPOSITORY_VERSION",
         }
     ),

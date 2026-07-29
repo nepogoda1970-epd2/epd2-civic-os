@@ -152,7 +152,24 @@ PACK11_SERVICE_PACKAGES = {
     "epd2_document_service": (REPO_ROOT / "services/document-service/src/epd2_document_service"),
 }
 
-# Every service in the repository (all eleven packs).
+# PACK-12's one wholly new service. Its three logical bounded contexts -
+# privileged administration, authorization-aware search, and governed
+# export with DLP and disclosure control - share this one package
+# boundary by design (`OD-P12-04`): they are separated by module,
+# aggregate and role rather than by deployable, because a second
+# deployable would have bought nothing and would have cost a second audit
+# path, which is exactly what `OD-P12-06` forbids. Like PACK-11's, this
+# package imports no other service; in particular it never reaches into
+# compliance-service (PACK-09 still owns retention and legal hold) or
+# document-service (PACK-11 still owns evidence bundles), and holds both
+# as opaque typed references in its own `references` module.
+PACK12_SERVICE_PACKAGES = {
+    "epd2_privileged_access_service": (
+        REPO_ROOT / "services/privileged-access-service/src/epd2_privileged_access_service"
+    ),
+}
+
+# Every service in the repository (all twelve packs).
 SERVICE_PACKAGES = {
     **PACK02_SERVICE_PACKAGES,
     **PACK03_SERVICE_PACKAGES,
@@ -164,6 +181,7 @@ SERVICE_PACKAGES = {
     **PACK09_SERVICE_PACKAGES,
     **PACK10_SERVICE_PACKAGES,
     **PACK11_SERVICE_PACKAGES,
+    **PACK12_SERVICE_PACKAGES,
 }
 
 # Every service may depend on epd2_core (shared, non-domain primitives - see
@@ -1443,3 +1461,147 @@ def test_document_service_declares_no_dependency_on_another_service_package() ->
     manifest = (REPO_ROOT / "services/document-service/pyproject.toml").read_text(encoding="utf-8")
     declared = [line for line in manifest.splitlines() if line.startswith("dependencies")]
     assert declared == ['dependencies = ["epd2-core", "epd2-audit-core"]'], declared
+
+
+# =============================================================================
+# PACK-12 (Privileged Administration, Search & Export) - privileged-access-service
+# imports nothing but the shared primitives, nothing imports it back, it
+# offers no deletion path, and it reaches no voting material.
+# =============================================================================
+
+
+def test_privileged_access_service_imports_only_core_and_audit_core() -> None:
+    """The boundary that matters most for this pack, checked structurally.
+
+    `privileged-access-service` may import `epd2_core`, `epd2_audit_core`
+    and itself - nothing else. Two absences are load-bearing. It never
+    imports `epd2_document_service`, so PACK-11 stays the owner of
+    evidence bundles and this service holds them as opaque references. It
+    never imports `epd2_compliance_service`, so PACK-09 stays the owner of
+    retention and legal hold and this service only *observes* their
+    answers. Either import would be more convenient and would convert the
+    boundaries this pack most needs to keep into runtime dependencies a
+    refactor could quietly widen."""
+    allowed = ALWAYS_ALLOWED | {"epd2_privileged_access_service"}
+    violations: list[str] = []
+    for src_dir in PACK12_SERVICE_PACKAGES.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = (roots & set(SERVICE_PACKAGES)) - allowed
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], (
+        "privileged-access-service may only import epd2_core and epd2_audit_core:\n"
+        + "\n".join(violations)
+    )
+
+
+def test_no_other_service_imports_privileged_access_service() -> None:
+    """PACK-12 is a leaf this round: no PACK-02 through PACK-11 service may
+    depend on it.
+
+    A service that needs to know whether an act was privileged reads the
+    event stream; it does not acquire an import edge into the privileged
+    context. That direction matters more here than elsewhere: an import
+    edge into this package would let another service construct a grant
+    object directly and bypass the command frame that is the whole
+    control."""
+    violations: list[str] = []
+    other_packages = {
+        name: path
+        for name, path in SERVICE_PACKAGES.items()
+        if name != "epd2_privileged_access_service"
+    }
+    for src_dir in other_packages.values():
+        for py_file in sorted(src_dir.rglob("*.py")):
+            roots = _imported_roots(py_file)
+            bad = roots & set(PACK12_SERVICE_PACKAGES)
+            if bad:
+                violations.append(f"{py_file.relative_to(REPO_ROOT)} imports {sorted(bad)}")
+    assert violations == [], "No other service may import privileged-access-service:\n" + "\n".join(
+        violations
+    )
+
+
+def test_privileged_access_service_storage_exposes_no_delete_operation() -> None:
+    """ "Revocation is not deletion", enforced at the repository level.
+
+    No storage protocol or in-memory adapter in
+    `privileged-access-service` defines a delete-shaped method at all. A
+    port with one is a port through which a governed record can leave the
+    system, whatever the policy above it says - and a grant, a session or
+    an audit-linked query record that can leave is a record whose absence
+    nobody can distinguish from its never having existed."""
+    forbidden = {"delete", "remove", "purge", "drop", "erase", "destroy"}
+    #: The one exemption, named exactly rather than excluded by a rule.
+    #:
+    #: Removing a record from the *search index* is not deleting the
+    #: record: the authoritative record stays where it lives, and the
+    #: erasure decision behind the removal belongs to PACK-09 (retention)
+    #: or PACK-11 (document disposition). `P12-SRCH-015` requires exactly
+    #: this operation to exist so that an index removal leaves evidence
+    #: naming the decision it followed. The exemption is bounded by the
+    #: second assertion below, which requires the method to take that
+    #: evidence - so it cannot become a quiet deletion path.
+    index_removal_exemption = {"SearchIndexStore.remove", "InMemorySearchIndexStore.remove"}
+    violations: list[str] = []
+    evidence_taking: list[str] = []
+    for src_dir in PACK12_SERVICE_PACKAGES.values():
+        storage_module = src_dir / "storage.py"
+        tree = ast.parse(storage_module.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for item in node.body:
+                if not isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
+                    continue
+                if not any(
+                    item.name == name or item.name.startswith(f"{name}_") for name in forbidden
+                ):
+                    continue
+                qualified = f"{node.name}.{item.name}"
+                if qualified in index_removal_exemption:
+                    annotations = {
+                        ast.unparse(arg.annotation)
+                        for arg in item.args.args
+                        if arg.annotation is not None
+                    }
+                    if "IndexRemovalEvidence" in annotations:
+                        evidence_taking.append(qualified)
+                    else:
+                        violations.append(
+                            f"{qualified} is exempted as an index removal but takes no "
+                            "IndexRemovalEvidence"
+                        )
+                    continue
+                violations.append(qualified)
+    assert violations == [], (
+        "privileged-access-service storage must expose no delete-shaped method "
+        "other than the evidenced index removal:\n" + "\n".join(violations)
+    )
+    assert sorted(evidence_taking) == sorted(index_removal_exemption), (
+        "the evidenced index-removal exemption must still be present and still take "
+        f"IndexRemovalEvidence; found {sorted(evidence_taking)}"
+    )
+
+
+def test_privileged_access_service_declares_no_voting_reference_type() -> None:
+    """FIR-INV-002/003/005, as a structural absence rather than a rule.
+
+    `P12-VOTE-001` says PACK-12 reaches no ballot, no vote envelope, no
+    voting credential and no intermediate tally. The way to make that
+    true rather than merely stated is for no such reference type to
+    exist: `references.py` declares typed references for documents,
+    evidence bundles, publication renditions, legal holds and retention
+    bindings, and nothing for voting. A caller cannot reach for a type
+    that was never defined."""
+    src_dir = next(iter(PACK12_SERVICE_PACKAGES.values()))
+    tree = ast.parse((src_dir / "references.py").read_text(encoding="utf-8"))
+    declared = {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+    forbidden_fragments = ("Ballot", "Vote", "Tally", "Voting")
+    offending = sorted(
+        name for name in declared if any(fragment in name for fragment in forbidden_fragments)
+    )
+    assert offending == [], (
+        "privileged-access-service must declare no voting reference type: " + str(offending)
+    )

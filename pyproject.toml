@@ -24,6 +24,7 @@ dependencies = [
     "epd2-compliance-service",
     "epd2-finance-service",
     "epd2-document-service",
+    "epd2-privileged-access-service",
 ]
 
 # Lower bounds are the versions this repository's checks (Ruff ruleset,
@@ -72,6 +73,7 @@ members = [
     "services/compliance-service",
     "services/finance-service",
     "services/document-service",
+    "services/privileged-access-service",
 ]
 
 [tool.uv.sources]
@@ -95,6 +97,7 @@ epd2-organization-service = { workspace = true }
 epd2-compliance-service = { workspace = true }
 epd2-finance-service = { workspace = true }
 epd2-document-service = { workspace = true }
+epd2-privileged-access-service = { workspace = true }
 
 # --- Ruff ---
 [tool.ruff]
@@ -121,6 +124,7 @@ src = [
     "services/compliance-service/src",
     "services/finance-service/src",
     "services/document-service/src",
+    "services/privileged-access-service/src",
     "scripts",
     "tests",
 ]
@@ -150,6 +154,7 @@ known-first-party = [
     "epd2_compliance_service",
     "epd2_finance_service",
     "epd2_document_service",
+    "epd2_privileged_access_service",
 ]
 
 # --- mypy ---
@@ -176,6 +181,7 @@ mypy_path = [
     "services/compliance-service/src",
     "services/finance-service/src",
     "services/document-service/src",
+    "services/privileged-access-service/src",
 ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -248,6 +254,7 @@ testpaths = [
     "services/compliance-service/tests",
     "services/finance-service/tests",
     "services/document-service/tests",
+    "services/privileged-access-service/tests",
 ]
 # --import-mode=importlib: several services intentionally use the same
 # test file basenames (test_domain.py, test_application.py, ...) - this

@@ -17,6 +17,7 @@ members = [
     "epd2-credential-service",
     "epd2-delegation-service",
     "epd2-deliberation-service",
+    "epd2-document-service",
     "epd2-eligibility-service",
     "epd2-finance-service",
     "epd2-governance-service",
@@ -202,6 +203,7 @@ dependencies = [
     { name = "epd2-credential-service" },
     { name = "epd2-delegation-service" },
     { name = "epd2-deliberation-service" },
+    { name = "epd2-document-service" },
     { name = "epd2-eligibility-service" },
     { name = "epd2-finance-service" },
     { name = "epd2-governance-service" },
@@ -210,6 +212,7 @@ dependencies = [
     { name = "epd2-membership-service" },
     { name = "epd2-moderation-service" },
     { name = "epd2-organization-service" },
+    { name = "epd2-privileged-access-service" },
     { name = "epd2-tally-service" },
     { name = "epd2-transparency-service" },
     { name = "epd2-voting-service" },
@@ -238,6 +241,7 @@ requires-dist = [
     { name = "epd2-credential-service", editable = "services/credential-service" },
     { name = "epd2-delegation-service", editable = "services/delegation-service" },
     { name = "epd2-deliberation-service", editable = "services/deliberation-service" },
+    { name = "epd2-document-service", editable = "services/document-service" },
     { name = "epd2-eligibility-service", editable = "services/eligibility-service" },
     { name = "epd2-finance-service", editable = "services/finance-service" },
     { name = "epd2-governance-service", editable = "services/governance-service" },
@@ -246,6 +250,7 @@ requires-dist = [
     { name = "epd2-membership-service", editable = "services/membership-service" },
     { name = "epd2-moderation-service", editable = "services/moderation-service" },
     { name = "epd2-organization-service", editable = "services/organization-service" },
+    { name = "epd2-privileged-access-service", editable = "services/privileged-access-service" },
     { name = "epd2-tally-service", editable = "services/tally-service" },
     { name = "epd2-transparency-service", editable = "services/transparency-service" },
     { name = "epd2-voting-service", editable = "services/voting-service" },
@@ -324,6 +329,21 @@ requires-dist = [
 name = "epd2-deliberation-service"
 version = "0.1.0"
 source = { editable = "services/deliberation-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-document-service"
+version = "0.1.0"
+source = { editable = "services/document-service" }
 dependencies = [
     { name = "epd2-audit-core" },
     { name = "epd2-core" },
@@ -452,6 +472,21 @@ requires-dist = [
 name = "epd2-organization-service"
 version = "0.1.0"
 source = { editable = "services/organization-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-privileged-access-service"
+version = "0.1.0"
+source = { editable = "services/privileged-access-service" }
 dependencies = [
     { name = "epd2-audit-core" },
     { name = "epd2-core" },

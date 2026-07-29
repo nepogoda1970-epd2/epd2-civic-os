@@ -208,4 +208,4 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # not "implemented": the production data plane and the real content
     # store remain PACK-13's, not PACK-11's).
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.11.0"
+    assert REPOSITORY_VERSION == "0.12.0"

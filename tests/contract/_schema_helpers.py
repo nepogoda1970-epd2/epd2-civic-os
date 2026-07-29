@@ -86,6 +86,23 @@ PACK10_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-10.y
 #: evidence code at all.
 PACK11_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-11.yml"
 
+#: PACK-12's own reason-code registry (Privileged Administration,
+#: Authorization-Aware Search & Governed Data Export; FIR-ROADMAP-002,
+#: ADR-061 through ADR-068) - added alongside (never replacing) the
+#: PACK-02 through PACK-11 constants above. There is deliberately no
+#: `PACK12_OPENAPI_PATH`, for the same reason PACK-10 and PACK-11 have
+#: none: this round exposes no HTTP surface, so no OpenAPI contract exists
+#: to point at, and inventing one would make the contract suite assert
+#: against a file that describes nothing runnable.
+#:
+#: There is also no PACK-12 canon constant. Canon stays at 0.8.0: this
+#: round amends no canon, and every PRIVILEGE_*, SEARCH_*, EXPORT_* and
+#: DISCLOSURE_* code in the registry is an additive `source:
+#: pack-12-service` code (ADR-061) rather than a canon-owned one, because
+#: canon section 24 registers no privileged-administration, search or
+#: export code at all.
+PACK12_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-12.yml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -141,6 +158,14 @@ PACK10_SERVICE_DIRS: tuple[str, ...] = ("finance-service",)
 #: service is extended in place this round, so no "shared with an earlier
 #: pack" union is needed.
 PACK11_SERVICE_DIRS: tuple[str, ...] = ("document-service",)
+#: PACK-12's one wholly new service (privileged-access-service). Like
+#: PACK-02 through PACK-06 and PACK-08 through PACK-11 (and unlike
+#: PACK-07), PACK-12 introduces a fully disjoint service directory - no
+#: existing service is extended in place this round, so no "shared with an
+#: earlier pack" union is needed. The three logical bounded contexts
+#: PACK-12 defines share this one directory by design (`OD-P12-04`); they
+#: are separated by module, aggregate and role rather than by deployable.
+PACK12_SERVICE_DIRS: tuple[str, ...] = ("privileged-access-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code
