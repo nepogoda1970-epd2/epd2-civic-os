@@ -1,0 +1,1474 @@
+# Centralized PACK-12 reason-code registry (Privileged Administration,
+# Authorization-Aware Search & Governed Data Export; FIR-ROADMAP-002;
+# ADR-061 through ADR-068).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced or used by the PACK-12 implementation candidate: the
+# codes `privileged-access-service` raises for the privileged-access grant
+# lifecycle, the governed break-glass workflow, tamper-evident privileged
+# sessions, authorization-aware search, index policy, governed data export,
+# DLP assessment and transforms, and statistical disclosure control - plus
+# the additive codes it uses for its own audit bookkeeping, following the
+# same pattern ADR-004/ADR-014/ADR-019/ADR-024/ADR-055 and PACK-07's
+# through PACK-11's own registries already established. No PACK-12 code
+# path may use a free-text string in place of a registered code, and no
+# PACK-12 code path uses a generic `FORBIDDEN`.
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-11.yml (ADR-006 Option B precedent): codes several packs
+# need (PERMISSION_DENIED, VALIDATION_RECORD_NOT_FOUND,
+# ORGANIZATION_SCOPE_MISMATCH) are independently redeclared here rather
+# than imported from an earlier pack's file, so this file stays a
+# complete, standalone source of truth for `privileged-access-service`'s
+# own scan (`tests/contract/test_reason_codes_registry.py`'s
+# PACK12_SERVICE_DIRS). `privileged-access-service` is a single, wholly new
+# service - no existing PACK-02-through-PACK-11 service is extended in
+# place this round - so, like PACK-08's through PACK-11's files, there is
+# no "shared with an earlier pack's service directory" union needed.
+#
+# **There are no `source: canon-0.8.0` entries in this file.** Canon
+# section 24 registers no privileged-administration, search or export code
+# at all: canon 19e assigns the privileged-access context but the canon
+# round that would give it its own section never happened. `CANON_VERSION`
+# stays `0.8.0` here - this round amends no canon, it implements a context
+# canon already assigned - so every PRIVILEGE_*, SEARCH_*, EXPORT_* and
+# DISCLOSURE_* code below is an additive `source: pack-12-service` code
+# justified in ADR-061, and each one says in its own `meaning` what it
+# refuses and why no existing code expresses it.
+#
+# The 141 entries fall into three groups. Ninety-eight are refusals raised
+# by `epd2_privileged_access_service.exceptions`. Forty-three are
+# `AuditEvent.reason_code` classifications for successfully-audited acts -
+# canon's section-24 list is refusal-only and contains no code that means
+# "this succeeded", which is the same gap ADR-004 recorded for PACK-02.
+# Thirteen of the ninety-eight are pre-existing generic codes reused
+# verbatim from an earlier pack (marked in their `owner`), because PACK-12
+# deliberately reuses rather than shadowing: retention and legal hold
+# remain PACK-09's, organizational scope and authority remain PACK-08's,
+# and publication and disclosure control remain PACK-04's. A
+# PRIVILEGE_-prefixed duplicate of any of them would create two codes for
+# one fact and let the two drift apart.
+#
+# Every entry carries the seven fields
+# `epd2_core.reason_codes.ReasonCodeRegistry.load_from_yaml` requires
+# (code, meaning, severity, description, retryable, owner,
+# introduced_in_version); a missing field makes the whole registry fail to
+# load.
+
+- code: AUTHORITY_ROLE_INCOMPATIBLE
+  meaning: >-
+    The candidate role_code conflicts with an existing active role_code
+    already held by the same assigned_subject_reference in the same
+    OrganizationalScope, per the role incompatibility baseline (canon
+    19e.16, PAIRWISE_INCOMPATIBLE_ROLES).
+  severity: error
+  description: This role cannot be combined with a role you already hold in this scope.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+
+- code: CROSS_SCOPE_ACCESS_DENIED
+  meaning: >-
+    A regional-scope-authorization check (canon 19e.12) evaluated all
+    six access modes (exact/ancestor/descendant/delegated-cross-scope/
+    temporary-supervision/institutional-oversight-without-data-access)
+    and found no grant covering the requested (actor_scope,
+    target_scope, action_code) triple - the engine's default is deny.
+  severity: error
+  description: You are not authorized to access this organizational scope.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+
+- code: DISCLOSURE_ASSESSMENT_MISSING
+  meaning: >-
+    No disclosure-risk assessment where one is required (`P12-SDC-001`).
+  severity: error
+  description: No disclosure-risk assessment where one is required (`P12-SDC-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_CLASSIFICATION_DOWNGRADE_PROHIBITED
+  meaning: >-
+    An enforcement tier was used to lower an authoritative source
+    classification (`P12-CLS-001`).
+  severity: error
+  description: An enforcement tier was used to lower an authoritative source classification (`P12-CLS-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_CLASSIFICATION_UNMAPPED
+  meaning: >-
+    The source classification has no enforcement-tier mapping; fail
+    closed (`P12-CLS-005`).
+  severity: error
+  description: The source classification has no enforcement-tier mapping; fail closed (`P12-CLS-005`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_COMPLEMENT_RECOVERABLE
+  meaning: >-
+    A suppressed value is recoverable from totals or neighbours
+    (`P12-SDC-007`).
+  severity: error
+  description: A suppressed value is recoverable from totals or neighbours (`P12-SDC-007`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_CUMULATIVE_RELEASE_RISK
+  meaning: >-
+    Individually permissible releases are jointly re-identifying
+    (`P12-SDC-004`).
+  severity: error
+  description: Individually permissible releases are jointly re-identifying (`P12-SDC-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_CUMULATIVE_RISK_RECORDED
+  meaning: >-
+    The bounded cumulative-release rule failed for a proposed release,
+    within the policy window and against an available release history.
+  severity: info
+  description: Cumulative disclosure risk was flagged.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_EXCEPTION_DECISION_RECORDED
+  meaning: >-
+    A disclosure exception was decided by someone other than its
+    requester, with an expiry it cannot be constructed without. An
+    exception without an expiry would be a permanent hole in the control
+    it excepts.
+  severity: info
+  description: A disclosure exception was decided.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_EXCEPTION_EXPIRED
+  meaning: >-
+    The approved exception's conditions no longer hold.
+  severity: error
+  description: "The approved exception's conditions no longer hold."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_EXCEPTION_NOT_APPROVED
+  meaning: >-
+    An override was applied without an approved exception
+    (`P12-SDC-006`).
+  severity: error
+  description: An override was applied without an approved exception (`P12-SDC-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_EXCEPTION_REQUEST_RECORDED
+  meaning: >-
+    A bounded exception to a disclosure rule was requested.
+  severity: info
+  description: A disclosure exception was requested.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_GOVERNED_PUBLICATION_OBSERVED
+  meaning: >-
+    A governed publication that happened elsewhere was observed and
+    counted toward the cumulative-release model. PACK-12 does not
+    certify, does not decide closure and does not publish; a record of
+    this kind is never evidence that PACK-12 released anything.
+  severity: info
+  description: A governed publication elsewhere was observed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_POLICY_VIOLATION
+  meaning: >-
+    Applying a DisclosurePolicy to candidate content would still leave a
+    structurally forbidden field present (defense-in-depth; should be
+    unreachable given unconditional structural filtering).
+  severity: error
+  description: This content violates the applicable disclosure policy.
+  retryable: false
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+
+- code: DISCLOSURE_PUBLICATION_AUTHORITY_MISSING
+  meaning: >-
+    Raw-data access was presented as authority to publish
+    (`P12-SDC-002`).
+  severity: error
+  description: Raw-data access was presented as authority to publish (`P12-SDC-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_RELEASE_HISTORY_UNAVAILABLE
+  meaning: >-
+    Required release history could not be read, so cumulative risk
+    cannot be evaluated; fail closed (`P12-SDC-004`).
+  severity: error
+  description: Required release history could not be read, so cumulative risk cannot be evaluated; fail closed (`P12-SDC-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_REPEATED_QUERY_RISK
+  meaning: >-
+    Successive queries permit differencing (`P12-SDC-003`).
+  severity: error
+  description: Successive queries permit differencing (`P12-SDC-003`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_RISK_ASSESSMENT_RECORDED
+  meaning: >-
+    A proposed release was assessed against at least two independent
+    rule families — cohort threshold, complement protection,
+    differencing and bounded cumulative release.
+  severity: info
+  description: A disclosure risk assessment was recorded.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_SUPPRESSION_RECORDED
+  meaning: >-
+    Suppression was applied to a release, recorded as a count of
+    suppressed cohorts and a rule reference rather than as the identity
+    of what was withheld.
+  severity: info
+  description: Disclosure suppression was applied.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_SUPPRESSION_REQUIRED
+  meaning: >-
+    Release requires suppression that was not applied.
+  severity: error
+  description: Release requires suppression that was not applied.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: DISCLOSURE_THRESHOLD_FAILED
+  meaning: >-
+    A cohort is below the applicable threshold.
+  severity: error
+  description: A cohort is below the applicable threshold.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ADMIN_PRIVILEGE_INSUFFICIENT
+  meaning: >-
+    Administrative privilege was presented as export authority
+    (`P12-EXP-006`).
+  severity: error
+  description: Administrative privilege was presented as export authority (`P12-EXP-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_APPROVAL_MISSING
+  meaning: >-
+    No approval, or approval by an ineligible subject.
+  severity: error
+  description: No approval, or approval by an ineligible subject.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_APPROVAL_RECORDED
+  meaning: >-
+    An export was approved and the field set it may ever carry was fixed
+    and digested, so a later artifact can be checked against what was
+    actually approved rather than against what someone remembers
+    approving.
+  severity: info
+  description: A data export was approved.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_ACCESS_RECORDED
+  meaning: >-
+    One access to a generated artifact was recorded, after revocation,
+    expiry and the policy access ceiling were checked.
+  severity: info
+  description: An export artifact was accessed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_DELIVERY_RECORDED
+  meaning: >-
+    Delivery to the approved recipient was recorded. Delivery is
+    recorded, not performed: the transfer channel and the external
+    gateway are PACK-14's.
+  severity: info
+  description: An export artifact was delivered.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_EXPIRED
+  meaning: >-
+    The artifact's expiry has passed (`P12-EXP-010`).
+  severity: error
+  description: "The artifact's expiry has passed (`P12-EXP-010`)."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_EXPIRY_RECORDED
+  meaning: >-
+    An artifact reached the end of its access window.
+  severity: info
+  description: An export artifact expired.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_GENERATION_RECORDED
+  meaning: >-
+    The artifact an approved export authorises was built by *selecting*
+    the permitted fields rather than assembling a row and stripping it:
+    a row that has existed whole can leak whole.
+  severity: info
+  description: An export artifact was generated.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ARTIFACT_REVOKED
+  meaning: >-
+    Authorization for the artifact was withdrawn (`P12-EXP-012`).
+  severity: error
+  description: Authorization for the artifact was withdrawn (`P12-EXP-012`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_AUTHORITY_MISSING
+  meaning: >-
+    No export authority for this record class in this scope.
+  severity: error
+  description: No export authority for this record class in this scope.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_BALLOT_CONTENT_PROHIBITED
+  meaning: >-
+    Ballot-level material may never be exported (`P12-VOTE-001`).
+  severity: error
+  description: Ballot-level material may never be exported (`P12-VOTE-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_BULK_EXTRACTION_NOT_AUTHORIZED
+  meaning: >-
+    Read permission was presented as bulk-export authority
+    (`P12-EXP-005`).
+  severity: error
+  description: Read permission was presented as bulk-export authority (`P12-EXP-005`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DATA_OWNER_MISSING
+  meaning: >-
+    No authoritative data owner could be resolved (`P12-ORG-007`).
+  severity: error
+  description: No authoritative data owner could be resolved (`P12-ORG-007`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DENIAL_RECORDED
+  meaning: >-
+    An export was refused as a governed, recorded decision.
+  severity: info
+  description: A data export was denied.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DESTRUCTION_ATTESTATION_RECORDED
+  meaning: >-
+    A recipient's attestation that a delivered copy was destroyed was
+    recorded. An attestation, not a verified fact: this platform cannot
+    observe a third party's storage.
+  severity: info
+  description: A destruction attestation was recorded.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DISCLOSURE_ASSESSMENT_RECORDED
+  meaning: >-
+    A completed disclosure-risk assessment was attached to an export
+    request.
+  severity: info
+  description: A disclosure assessment was recorded against an export.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_ACCESS_LIMIT_EXCEEDED
+  meaning: >-
+    The artifact's access or download limit has been reached.
+  severity: error
+  description: "The artifact's access or download limit has been reached."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_ASSESSMENT_INCOMPLETE
+  meaning: >-
+    Detection could not complete; fail closed (`P12-DLP-005`).
+  severity: error
+  description: Detection could not complete; fail closed (`P12-DLP-005`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_ASSESSMENT_MISSING
+  meaning: >-
+    No completed DLP assessment (`P12-DLP-002`).
+  severity: error
+  description: No completed DLP assessment (`P12-DLP-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_ASSESSMENT_RECORDED
+  meaning: >-
+    The DLP assessment that must precede any export approval was
+    recorded, together with the assessor, so that the assessor can later
+    be refused as the approver.
+  severity: info
+  description: A DLP assessment was completed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_FORBIDDEN_DATA_DETECTED
+  meaning: >-
+    Forbidden data was found in the candidate set.
+  severity: error
+  description: Forbidden data was found in the candidate set.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_FREQUENCY_LIMIT_EXCEEDED
+  meaning: >-
+    Export frequency exceeds the permitted rate.
+  severity: error
+  description: Export frequency exceeds the permitted rate.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_REPEATED_REQUEST_RISK
+  meaning: >-
+    Repeated similar requests indicate an extraction pattern.
+  severity: error
+  description: Repeated similar requests indicate an extraction pattern.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_REVIEW_REQUIRED
+  meaning: >-
+    Manual DLP review is required before a decision.
+  severity: error
+  description: Manual DLP review is required before a decision.
+  retryable: true
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_SIZE_LIMIT_EXCEEDED
+  meaning: >-
+    Export exceeds the permitted size.
+  severity: error
+  description: Export exceeds the permitted size.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_DLP_UNUSUAL_VOLUME_REVIEW
+  meaning: >-
+    Volume anomaly requires review.
+  severity: error
+  description: Volume anomaly requires review.
+  retryable: true
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_FIELD_NOT_EXPORTABLE
+  meaning: >-
+    A requested field is denied by field policy (`P12-EXP-008`).
+  severity: error
+  description: A requested field is denied by field policy (`P12-EXP-008`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_LEGAL_BASIS_MISSING
+  meaning: >-
+    A basis reference is required for this class or recipient and is
+    absent.
+  severity: error
+  description: A basis reference is required for this class or recipient and is absent.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_LEGAL_HOLD_NOT_AUTHORIZATION
+  meaning: >-
+    A legal hold was presented as permission to export (`P12-EXP-017`).
+  severity: error
+  description: A legal hold was presented as permission to export (`P12-EXP-017`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_MANIFEST_MISMATCH
+  meaning: >-
+    The artifact does not match its manifest digest.
+  severity: error
+  description: The artifact does not match its manifest digest.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_MANIFEST_MISSING
+  meaning: >-
+    No immutable manifest is bound to the artifact (`P12-EXP-021`).
+  severity: error
+  description: No immutable manifest is bound to the artifact (`P12-EXP-021`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_ORGANIZATION_MISMATCH
+  meaning: >-
+    Cross-organizational export without its own scope and basis
+    (`P12-ORG-006`).
+  severity: error
+  description: Cross-organizational export without its own scope and basis (`P12-ORG-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_PURPOSE_MISMATCH
+  meaning: >-
+    The requested data does not serve the declared purpose.
+  severity: error
+  description: The requested data does not serve the declared purpose.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_PURPOSE_MISSING
+  meaning: >-
+    No declared purpose (`P12-EXP-002`).
+  severity: error
+  description: No declared purpose (`P12-EXP-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_RECIPIENT_NOT_AUTHORIZED
+  meaning: >-
+    The recipient or recipient category may not receive this class.
+  severity: error
+  description: The recipient or recipient category may not receive this class.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_RECIPIENT_OBLIGATION_MISSING
+  meaning: >-
+    Required downstream obligations were not recorded (`P12-EXP-014`).
+  severity: error
+  description: Required downstream obligations were not recorded (`P12-EXP-014`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_REQUEST_RECORDED
+  meaning: >-
+    A governed export request was opened after five distinct permissions
+    were checked separately, the recipient's eligibility for the
+    material's classification was confirmed, and any cross-scope basis
+    was recorded.
+  severity: info
+  description: A data export was requested.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_RESULT_PUBLICATION_NOT_OWNED
+  meaning: >-
+    A certified result may be released only by the authoritative voting
+    and result-certification domain, never through a PACK-12 export path
+    (`P12-VOTE-004`, `P12-VOTE-005`).
+  severity: error
+  description: A certified result may be released only by the authoritative voting and result-certification domain, never through a PACK-12 export path (`P12-VOTE-004`, `P12-VOTE-005`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_REVOCATION_RECORDED
+  meaning: >-
+    An export authorization was withdrawn, blocking further platform-
+    mediated access to the artifact. It does not delete a copy already
+    delivered, and nothing in this record says otherwise.
+  severity: info
+  description: A data export was revoked.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_SEARCH_PERMISSION_INSUFFICIENT
+  meaning: >-
+    Search permission was presented as export authority (`P12-EXP-004`).
+  severity: error
+  description: Search permission was presented as export authority (`P12-EXP-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_SELF_APPROVAL_PROHIBITED
+  meaning: >-
+    The requester approved their own export (`P12-EXP-006`).
+  severity: error
+  description: The requester approved their own export (`P12-EXP-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_SOURCE_RECORD_REVOKED
+  meaning: >-
+    A source record is revoked or deleted and may not enter a new export
+    (`P12-EXP-018`).
+  severity: error
+  description: A source record is revoked or deleted and may not enter a new export (`P12-EXP-018`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_TRANSFER_CHANNEL_PROHIBITED
+  meaning: >-
+    The requested channel is not permitted for this class or recipient.
+  severity: error
+  description: The requested channel is not permitted for this class or recipient.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: EXPORT_UNCERTIFIED_RESULT_PROHIBITED
+  meaning: >-
+    Intermediate, partial or non-certified tally material may never be
+    exported (`P12-VOTE-001`, `P12-VOTE-006`).
+  severity: error
+  description: Intermediate, partial or non-certified tally material may never be exported (`P12-VOTE-001`, `P12-VOTE-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: LEGAL_HOLD_STATE_UNKNOWN
+  meaning: >-
+    The hold state relevant to this record could not be established. The
+    operation is refused rather than assumed unheld (required invariant
+    15).
+  severity: error
+  description: Legal Hold state could not be determined; the operation was refused.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+
+- code: OPTIMISTIC_CONCURRENCY_CONFLICT
+  meaning: >-
+    The caller-supplied expected_version does not match the stored
+    record's current version; the record changed since it was read.
+  severity: error
+  description: This record changed since you read it; re-read and retry.
+  retryable: true
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The supplied OrganizationalScope does not match the scope actually
+    required for the requested operation (scope_type and/or
+    scope_reference differ).
+  severity: error
+  description: The organizational scope provided does not match what is required for this action.
+  retryable: false
+  owner: organization-service
+  introduced_in_version: 0.8.0
+
+- code: ORGANIZATION_SCOPE_UNDETERMINED
+  meaning: >-
+    The requesting context carried no resolvable organizational scope,
+    or an entity was submitted without one. The operation is refused
+    rather than defaulted to any organization (required invariant 15).
+  severity: error
+  description: The organizational scope of this request could not be determined.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The requesting actor is not authorized to perform the requested
+    command, in any bounded context.
+  severity: error
+  description: You do not have permission to perform this action.
+  retryable: false
+  owner: shared (all bounded contexts)
+  introduced_in_version: 0.1.0
+
+- code: PRIVILEGE_ACCESS_ACTIVATION_RECORDED
+  meaning: >-
+    An approved grant was activated after re-checking every dimension
+    approval established: separation of duties, effective authority,
+    organization scope, purpose, requested operation, validity period,
+    revocation state and policy version.
+  severity: info
+  description: A privileged access grant was activated.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_APPROVAL_RECORDED
+  meaning: >-
+    A privileged access request was approved and the grant it authorises
+    was minted. The approver set excludes the requester, the acting
+    approver is not the requester, and the approver's real role set was
+    re-checked against the incompatibility matrix at the moment of the
+    act.
+  severity: info
+  description: A privileged access request was approved.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_DENIAL_RECORDED
+  meaning: >-
+    A privileged access request was refused as a governed decision. The
+    grant aggregate is created in the denied state so the refusal has a
+    durable, reviewable subject: a request refused with no record is a
+    request nobody can show was considered.
+  severity: info
+  description: A privileged access request was denied.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_EXPIRY_RECORDED
+  meaning: >-
+    A grant was expired as a recorded act rather than by the mere
+    absence of a renewal. A grant that simply stops working leaves
+    nothing to review.
+  severity: info
+  description: A privileged access grant expired.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_REQUEST_RECORDED
+  meaning: >-
+    A request for privileged access was recorded with its nine mandatory
+    attributes. A request is not access: it is the governed act of
+    asking, and it is audited so that a request nobody granted is still
+    a request somebody made.
+  severity: info
+  description: A privileged access request was recorded.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_REVIEW_RECORDED
+  meaning: >-
+    The outcome of a grant review was recorded by a reviewer who is
+    neither the grant's subject nor one of its approvers. A review by a
+    party to the decision under review is not a review.
+  severity: info
+  description: A privileged access review was completed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_REVIEW_REQUEST_RECORDED
+  meaning: >-
+    A periodic or post-access review of a grant was opened. A post-
+    access review moves the grant under review; a periodic review does
+    not, because a grant under periodic review is still a live grant.
+  severity: info
+  description: A privileged access review was requested.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ACCESS_REVOCATION_RECORDED
+  meaning: >-
+    A grant was revoked with immediate effect. Revocation is not
+    deletion: the grant, its history and every session it authorised
+    remain, and what stops is the authority to act.
+  severity: info
+  description: A privileged access grant was revoked.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_APPROVER_COUNT_INSUFFICIENT
+  meaning: >-
+    Fewer approvers than the risk class requires.
+  severity: error
+  description: Fewer approvers than the risk class requires.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ASSIGNMENT_NOT_EFFECTIVE_DATED
+  meaning: >-
+    An operational assignment lacks scope, purpose or effective dating
+    (`P12-ROLE-018`).
+  severity: error
+  description: An operational assignment lacks scope, purpose or effective dating (`P12-ROLE-018`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ASSIGNMENT_NOT_GOVERNED
+  meaning: >-
+    An operational assignment was asserted without governed authority
+    (`P12-ROLE-017`).
+  severity: error
+  description: An operational assignment was asserted without governed authority (`P12-ROLE-017`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_AUDIT_MUTATION_PROHIBITED
+  meaning: >-
+    An attempt to modify or delete an audit record under custody
+    (`P12-ROLE-006`).
+  severity: error
+  description: An attempt to modify or delete an audit record under custody (`P12-ROLE-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_AUTHORITY_MISSING
+  meaning: >-
+    No active, scope-matching privileged authority exists for this
+    operation (`P12-PAM-002`).
+  severity: error
+  description: No active, scope-matching privileged authority exists for this operation (`P12-PAM-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_ACTIVATION_RECORDED
+  meaning: >-
+    Approved emergency access was activated. Activation and notification
+    are one act: an activation whose notification failed is escalated
+    rather than completed.
+  severity: info
+  description: Break-glass access was activated.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_APPROVAL_RECORDED
+  meaning: >-
+    The second control on emergency access was exercised by an approver
+    who is not the activator, and who holds a role structurally
+    incompatible with the most likely activator's.
+  severity: info
+  description: Break-glass access was approved.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_CONDITION_ABSENT
+  meaning: >-
+    No documented emergency condition (`P12-BG-002`).
+  severity: error
+  description: No documented emergency condition (`P12-BG-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_DUAL_CONTROL_MISSING
+  meaning: >-
+    Activator and approver are the same, or the approver is absent
+    (`P12-BG-003`).
+  severity: error
+  description: Activator and approver are the same, or the approver is absent (`P12-BG-003`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_EXPIRY_RECORDED
+  meaning: >-
+    Emergency access expired. There is no renewal path from here: a
+    continued emergency needs a new activation, a new approval and a new
+    notification.
+  severity: info
+  description: Break-glass access expired.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_NOTIFICATION_RECORDED
+  meaning: >-
+    An out-of-band notification of a break-glass activation was
+    dispatched. The event is emitted whether the dispatch succeeded or
+    failed, and carries the failure reason when it failed, because a
+    failed notification is a governed fact rather than an absence.
+  severity: info
+  description: A break-glass notification was dispatched.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_NOTIFICATION_UNDELIVERED
+  meaning: >-
+    Out-of-band notification could not be dispatched. The activation
+    escalates and never silently completes (`P12-BG-008`).
+  severity: error
+  description: Out-of-band notification could not be dispatched.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_RENEWAL_REQUIRES_DECISION
+  meaning: >-
+    Extension was attempted in place of a new dual-controlled decision
+    (`P12-BG-013`).
+  severity: error
+  description: Extension was attempted in place of a new dual-controlled decision (`P12-BG-013`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_REQUEST_RECORDED
+  meaning: >-
+    Emergency access was requested against a documented emergency
+    condition. Without a condition reference there is nothing to review
+    afterwards, which is why the condition is mandatory.
+  severity: info
+  description: Break-glass access was requested.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_REVIEW_RECORDED
+  meaning: >-
+    The independent post-hoc review of an emergency activation was
+    completed by a reviewer who is neither the activator nor the
+    approver.
+  severity: info
+  description: A break-glass independent review was completed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_REVOCATION_RECORDED
+  meaning: >-
+    Emergency access was withdrawn before its window closed.
+  severity: info
+  description: Break-glass access was revoked.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_BREAK_GLASS_SCOPE_TOO_BROAD
+  meaning: >-
+    The requested emergency scope exceeds the narrow-scope requirement
+    (`P12-BG-004`).
+  severity: error
+  description: The requested emergency scope exceeds the narrow-scope requirement (`P12-BG-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_GRANT_DORMANT
+  meaning: >-
+    The grant is unused past the dormancy interval and requires review
+    before further use (`P12-PAM-009`).
+  severity: error
+  description: The grant is unused past the dormancy interval and requires review before further use (`P12-PAM-009`).
+  retryable: true
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_GRANT_EXPIRED
+  meaning: >-
+    The grant's end instant has passed (`P12-PAM-006`).
+  severity: error
+  description: "The grant's end instant has passed (`P12-PAM-006`)."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_GRANT_NOT_ACTIVATED
+  meaning: >-
+    The grant is approved but not yet activated.
+  severity: error
+  description: The grant is approved but not yet activated.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_GRANT_REVOKED
+  meaning: >-
+    The grant was withdrawn before expiry (`P12-PAM-007`).
+  severity: error
+  description: The grant was withdrawn before expiry (`P12-PAM-007`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_IDEMPOTENCY_CONFLICT
+  meaning: >-
+    The same `event_id` was presented for a different request.
+  severity: error
+  description: The same `event_id` was presented for a different request.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_INSTITUTIONAL_AUTHORITY_NOT_EXTENDABLE
+  meaning: >-
+    An operational assignment was used to claim institutional authority
+    (`P12-ROLE-019`).
+  severity: error
+  description: An operational assignment was used to claim institutional authority (`P12-ROLE-019`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_INSUFFICIENT_APPROVER
+  meaning: >-
+    The presented approver lacks the role the risk class requires.
+  severity: error
+  description: The presented approver lacks the role the risk class requires.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_JUSTIFICATION_MISSING
+  meaning: >-
+    No written justification was supplied (`P12-PAM-001`).
+  severity: error
+  description: No written justification was supplied (`P12-PAM-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_OPERATION_NOT_GRANTED
+  meaning: >-
+    The operation is outside the grant's operation set.
+  severity: error
+  description: "The operation is outside the grant's operation set."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ORGANIZATION_MISMATCH
+  meaning: >-
+    The grant belongs to a different organization (`P12-ORG-004`).
+  severity: error
+  description: The grant belongs to a different organization (`P12-ORG-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_PURPOSE_MISMATCH
+  meaning: >-
+    The operation does not serve the grant's declared purpose.
+  severity: error
+  description: "The operation does not serve the grant's declared purpose."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_RISK_CLASSIFICATION_UNDETERMINED
+  meaning: >-
+    The risk class could not be determined; fail closed.
+  severity: error
+  description: The risk class could not be determined; fail closed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_ROLE_COMBINATION_PROHIBITED
+  meaning: >-
+    The subject holds a pair the incompatibility matrix forbids, or a
+    composition of assignments would yield an institutional authority
+    the subject does not hold (`P12-ROLE-012`, `P12-ROLE-021`).
+  severity: error
+  description: The subject holds a pair the incompatibility matrix forbids, or a composition of assignments would yield an institutional authority the subject does not hold (`P12-ROLE-012`, `P12-ROLE-021`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SCOPE_MISMATCH
+  meaning: >-
+    The requested resource lies outside the grant's resource scope.
+  severity: error
+  description: "The requested resource lies outside the grant's resource scope."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SELF_APPROVAL_PROHIBITED
+  meaning: >-
+    Requester and approver are the same subject (`P12-PAM-004`).
+  severity: error
+  description: Requester and approver are the same subject (`P12-PAM-004`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SEPARATION_OF_DUTIES_CONFLICT
+  meaning: >-
+    The act would place two separated duties with one subject.
+  severity: error
+  description: The act would place two separated duties with one subject.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SESSION_END_RECORDED
+  meaning: >-
+    A privileged session was closed. The record stops accumulating;
+    nothing is removed.
+  severity: info
+  description: A privileged session ended.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SESSION_EVIDENCE_INCOMPLETE
+  meaning: >-
+    A session cannot be sealed because required evidence fields are
+    missing (`P12-SES-001`).
+  severity: error
+  description: A session cannot be sealed because required evidence fields are missing (`P12-SES-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SESSION_EVIDENCE_SEALED_RECORDED
+  meaning: >-
+    An ended session was sealed into the tamper-evident chain and linked
+    to a PACK-11 evidence bundle. Tamper *evident*, precisely: the hash
+    chain makes alteration detectable and nothing here prevents it.
+  severity: info
+  description: Privileged session evidence was sealed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SESSION_SECRET_FORBIDDEN
+  meaning: >-
+    Session evidence, or an event payload, carried a secret, a
+    credential or a full sensitive payload (`P12-SES-002`).
+  severity: error
+  description: Session evidence, or an event payload, carried a secret, a credential or a full sensitive payload (`P12-SES-002`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_SESSION_START_RECORDED
+  meaning: >-
+    A privileged session was opened under an activated grant, after the
+    grant was re-checked in full at the moment of the act. A grant
+    activated an hour ago is not a grant that is usable now.
+  severity: info
+  description: A privileged session was started.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PRIVILEGE_STANDING_ACCESS_PROHIBITED
+  meaning: >-
+    A permanent, unbounded grant was requested (`P12-PAM-003`).
+  severity: error
+  description: A permanent, unbounded grant was requested (`P12-PAM-003`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: PUBLICATION_NOT_ALLOWED
+  meaning: >-
+    No active DisclosurePolicy exists for the relevant subject type at
+    the moment a publish command is attempted (fail-closed, INV-10).
+  severity: error
+  description: Publication is not currently allowed for this content.
+  retryable: true
+  owner: Transparency Context (transparency-service)
+  introduced_in_version: 0.3.0
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    At least one active Legal Hold applies to this record, so every
+    destructive disposition is refused regardless of retention state
+    (required invariant 3).
+  severity: error
+  description: An active Legal Hold protects this record.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+
+- code: SEARCH_BALLOT_CONTENT_PROHIBITED
+  meaning: >-
+    Ballot-level material may never be indexed or searched
+    (`P12-VOTE-001`, `P12-HCD-003`). An occurrence is an incident, not a
+    routine denial.
+  severity: error
+  description: Ballot-level material may never be indexed or searched (`P12-VOTE-001`, `P12-HCD-003`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_CACHE_CONTEXT_MISMATCH
+  meaning: >-
+    A cache entry did not match the effective authorization context
+    (`P12-SRCH-009`).
+  severity: error
+  description: A cache entry did not match the effective authorization context (`P12-SRCH-009`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_HIGHLY_CONFIDENTIAL_DOMAIN_EXCLUDED
+  meaning: >-
+    The target domain is excluded from the index by policy
+    (`P12-HCD-001`).
+  severity: error
+  description: The target domain is excluded from the index by policy (`P12-HCD-001`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_INDEX_AUTHORIZATION_STALE
+  meaning: >-
+    The index view could not be reconciled with current source
+    authorization (`P12-SRCH-005`).
+  severity: error
+  description: The index view could not be reconciled with current source authorization (`P12-SRCH-005`).
+  retryable: true
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_INDEX_POLICY_CHANGE_RECORDED
+  meaning: >-
+    The index policy changed. Index policy is security policy: what
+    enters the index decides what a query can ever reach, so the
+    previous version is recorded and a widening is visible as a diff
+    rather than as a state.
+  severity: info
+  description: The search index policy was changed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_INDEX_POLICY_VIOLATION
+  meaning: >-
+    An indexing attempt violates `IndexPolicy` or `IndexFieldPolicy`.
+  severity: error
+  description: An indexing attempt violates `IndexPolicy` or `IndexFieldPolicy`.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_INDEX_REINDEX_REQUEST_RECORDED
+  meaning: >-
+    An index rebuild under the current policy was requested. A reindex
+    can only narrow what a stale index exposes; the widening decision
+    belongs to the policy change and is audited there.
+  severity: info
+  description: A search index rebuild was requested.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_INDEX_REMOVAL_RECORDED
+  meaning: >-
+    A record left the index, with evidence naming the source decision it
+    followed. Removal from the index is not deletion of the record:
+    retention and erasure remain PACK-09's and document disposition
+    remains PACK-11's.
+  severity: info
+  description: "A record's removal from the index was evidenced."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_MODE_NOT_PERMITTED
+  meaning: >-
+    The requested search mode is not available to this subject.
+  severity: error
+  description: The requested search mode is not available to this subject.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_ORGANIZATION_MISMATCH
+  meaning: >-
+    The query reaches outside the requester's organizational scope.
+  severity: error
+  description: "The query reaches outside the requester's organizational scope."
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_PURPOSE_MISMATCH
+  meaning: >-
+    The declared purpose does not admit this query (`P12-SRCH-011`).
+  severity: error
+  description: The declared purpose does not admit this query (`P12-SRCH-011`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_QUERY_AUTHORIZATION_RECORDED
+  meaning: >-
+    A query passed admission: scope, mode, purpose, the grant its
+    purpose required where one is required, and the excluded-domain
+    check.
+  severity: info
+  description: A search query was authorized.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_QUERY_DENIAL_RECORDED
+  meaning: >-
+    A query was refused at admission and the refusal was recorded before
+    being re-raised. The command does not swallow a refusal to keep the
+    audit tidy.
+  severity: info
+  description: A search query was denied.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_QUERY_EXECUTION_RECORDED
+  meaning: >-
+    A query was executed and its result set recorded as an authorized
+    count plus a suppression band. A band rather than an exact count,
+    because an exact suppression count is itself a disclosure of how
+    many restricted records matched.
+  severity: info
+  description: A search query was executed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_QUERY_SUBMISSION_RECORDED
+  meaning: >-
+    A query was submitted. The record carries a digest of the query,
+    never the query string: a query can itself contain personal data.
+  severity: info
+  description: A search query was submitted.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_RESULT_SUPPRESSED
+  meaning: >-
+    A query returned fewer results than it matched. Recorded as a band
+    with no reference to what was withheld: the identity of a suppressed
+    result is the thing suppression exists to protect.
+  severity: info
+  description: A search result was suppressed.
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_SCOPE_UNDETERMINED
+  meaning: >-
+    No organization scope was resolvable; default deny (`P12-SRCH-010`).
+  severity: error
+  description: No organization scope was resolvable; default deny (`P12-SRCH-010`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_SOURCE_AUTHORIZATION_DENIED
+  meaning: >-
+    The requester could not open the source record directly, so search
+    must not surface it (`P12-SRCH-003`).
+  severity: error
+  description: The requester could not open the source record directly, so search must not surface it (`P12-SRCH-003`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: SEARCH_UNCERTIFIED_RESULT_PROHIBITED
+  meaning: >-
+    Intermediate, partial or non-certified tally material may never be
+    searched (`P12-VOTE-001`, `P12-VOTE-006`).
+  severity: error
+  description: Intermediate, partial or non-certified tally material may never be searched (`P12-VOTE-001`, `P12-VOTE-006`).
+  retryable: false
+  owner: privileged-access-service
+  introduced_in_version: 0.12.0
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: >-
+    The requested status transition is not present in the entity's
+    allowed-transition table (CT-00-03).
+  severity: error
+  description: "This status change is not allowed from the entity's current status."
+  retryable: false
+  owner: shared (account-service, identity-service, credential-service)
+  introduced_in_version: pack-02-0.1.0
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    No entity exists for the given identifier (a plain lookup miss),
+    distinct from any business-rule refusal on a record that does exist.
+    Introduced by ADR-004 to replace three exceptions that had
+    mistakenly reused IDENTITY_NOT_VERIFIED, ELIGIBILITY_NOT_MET, and
+    the non-existent CREDENTIAL_UNKNOWN_STATUS for this same lookup-miss
+    case.
+  severity: error
+  description: No record was found for the given identifier.
+  retryable: false
+  owner: shared (identity-service, eligibility-service, credential-service)
+  introduced_in_version: pack-02-0.1.0
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: >-
+    A status/verification-status/decision-value string outside the
+    entity's defined enum was supplied (CT-00-02).
+  severity: error
+  description: The status value provided is not recognized.
+  retryable: false
+  owner: shared (account-service, identity-service, eligibility-service, credential-service)
+  introduced_in_version: pack-02-0.1.0

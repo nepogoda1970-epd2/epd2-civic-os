@@ -2,7 +2,15 @@
 
 **Round:** CLAUDE-PACK-11 — Governed Documents & Evidence
 **Artifact:** `EPD2_PACK-11_GOVERNED_DOCUMENTS_EVIDENCE_0.11.0_CANDIDATE.zip`
-**Status:** CANDIDATE. **Not** a FINAL PASS. **Not** a PACK-11 PASS.
+**Status when written:** CANDIDATE. **Not** a FINAL PASS. **Not** a PACK-11 PASS.
+**Status now:** superseded by
+`docs/handover/PACK-11-GOVERNED-DOCUMENTS-EVIDENCE-0.11.0-FINAL-PASS-REPORT.md`.
+An external GitHub Actions run has since verified the candidate tree and
+the round closed as **PACK-11 GOVERNED DOCUMENTS & EVIDENCE 0.11.0 —
+FINAL PASS**. This report is kept unedited below as the implementation
+record of the round; where it says "awaiting verification", read the
+final-pass report for what that verification returned. Nothing it says
+about scope, boundaries or non-claims changed.
 **Baseline:** `EPD2_PACK-10_PARTY_FINANCE_0.10.0_FINAL_PASS.zip`
 
 ## Version state

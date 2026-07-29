@@ -92,6 +92,53 @@ in `docs/handover/PACK-11-KNOWN-LIMITATIONS.md`.
 **Register updates only.** No entry was deleted, no identifier reused, and
 no status downgraded.
 
+## 1.6 Round record — PACK-12 (2026-07-29)
+
+Per section 1.3, every PACK task lists what it did to this register.
+
+**FIR IDs implemented:** none. `FIR-ROADMAP-002` moves from `approved` to
+`scheduled` and no further. PACK-12 is an **implementation candidate that
+has not passed external CI**, and a status of `implemented` claimed on the
+strength of a locally-run pipeline would be a claim the evidence does not
+support.
+
+**FIR IDs given a foundation but explicitly NOT implemented:**
+`FIR-SEARCH-001`, `FIR-SEARCH-002`, `FIR-SEARCH-003`, `FIR-METRIC-002`,
+`FIR-ID-002`, `FIR-COMM-004`, `FIR-SEC-001`, `FIR-SEC-003`,
+`FIR-ROLE-001`, `FIR-ROLE-003`, `FIR-DATA-001`, `FIR-DATA-003`,
+`FIR-FRONT-001`, `FIR-FRONT-002`, `FIR-FRONT-003`, `FIR-INV-011`. Each
+carries "**PACK-12 foundation provided — this entry is NOT implemented.**"
+where PACK-12 touches it, together with what PACK-12 supplies, what it
+deliberately does not, and what remains.
+
+**FIR IDs intentionally left unchanged:** every other entry. In
+particular `FIR-INV-002`, `FIR-INV-003` and `FIR-INV-005` are untouched —
+PACK-12 establishes the *structural absence* of any voting reference type
+and adds no voting semantics, because a restated voting contract can
+disagree with the original. `FIR-INV-010` is untouched: PACK-12 reuses
+PACK-11's evidence bundles rather than reimplementing them. All
+`FIR-UX-*` and `FIR-SUPPORT-*` entries added by section 24 this round are
+untouched by the implementation.
+
+**New FIR IDs created by implementation discovery:** none. Two facts this
+round established are the known boundary of existing requirements rather
+than new ones, and are recorded in
+`docs/handover/PACK-12-KNOWN-LIMITATIONS.md`: session evidence is tamper
+*evidence* without an external anchor (the same boundary `OD-20` records
+for PACK-11), and the cumulative-release model is bounded by a policy
+window rather than being an all-releases-ever model (`OD-P12-08`).
+
+**Register updates this round.** Sections 24 and 25 were merged in from
+the user-supplied updated register, adding thirteen new entries
+(`FIR-UX-001`, `FIR-UX-002`, `FIR-ID-001`, `FIR-ID-002`, `FIR-COMM-004`,
+`FIR-SEARCH-001`..`003`, `FIR-SUPPORT-001`..`003`, `FIR-METRIC-001`,
+`FIR-METRIC-002`). The merge took **this repository file as the base** and
+appended only the genuinely new sections: the supplied file was derived
+from a pre-PACK-11 baseline, so adopting it wholesale would have silently
+reverted the PACK-11 round record, the PACK-11 status changes and the
+current baseline pointer. No entry was deleted, no identifier reused, no
+status downgraded, and no second register was created.
+
 ---
 
 # 2. Current confirmed baseline
@@ -104,16 +151,16 @@ no status downgraded.
 **Current authoritative cumulative baseline (PASS):**
 
 ```text
+EPD2_PACK-11_GOVERNED_DOCUMENTS_EVIDENCE_0.11.0_FINAL_PASS.zip
+```
+
+**Previous PASS baseline, superseded by the line above:**
+
+```text
 EPD2_PACK-10_PARTY_FINANCE_0.10.0_FINAL_PASS.zip
 ```
 
-**Current candidate awaiting external CI verification:**
-
-```text
-EPD2_PACK-11_GOVERNED_DOCUMENTS_EVIDENCE_0.11.0_CANDIDATE.zip
-```
-
-Confirmed at the PASS baseline:
+Confirmed at the previous PASS baseline:
 
 - Repository version: `0.10.0`
 - Canon version: `0.8.0`
@@ -127,7 +174,10 @@ Confirmed at the PASS baseline:
 - no banking/payment-provider integration
 - no operational finance UI
 
-Added by the PACK-11 CANDIDATE (not yet PASS):
+Added by PACK-11, now confirmed at the current PASS baseline by an
+external GitHub Actions run
+(`docs/handover/PACK-11-GOVERNED-DOCUMENTS-EVIDENCE-0.11.0-FINAL-PASS-REPORT.md`,
+`docs/handover/PACK-11-EXTERNAL-CI-VERIFICATION.log`):
 
 - Repository version: `0.11.0`
 - Canon version: `0.8.0` (unchanged — this round amends no canon)
@@ -147,7 +197,7 @@ Added by the PACK-11 CANDIDATE (not yet PASS):
 ## FIR-ROADMAP-001 — PACK-11 Governed Documents & Evidence
 
 **Status:** implemented in reference form  
-**Target version:** `0.11.0` — delivered by the PACK-11 CANDIDATE  
+**Target version:** `0.11.0` — delivered by PACK-11, FINAL PASS  
 **Implementing round:** PACK-11 implementation round (2026-07-28)
 
 Scope, with delivery state per item:
@@ -186,20 +236,63 @@ Scope, with delivery state per item:
 
 ## FIR-ROADMAP-002 — PACK-12 Privileged Admin, Search & Data Export Security
 
-**Status:** approved  
-**Target version:** `0.12.0`
+**Status:** scheduled  
+**Target version:** `0.12.0` — implementation candidate produced, external
+CI not yet passed  
+**Implementing round:** PACK-12 implementation candidate (2026-07-29)
 
-Scope:
+**This entry is NOT `implemented`, and may not be marked so on the
+strength of this round.** The specification round produced requirements;
+this round produced a reference implementation of them as an
+**implementation candidate**.
 
-- privileged access;
-- JIT access;
-- break-glass;
-- Security Admin / System Admin separation;
-- controlled search;
-- data export control;
-- DLP guardrails;
-- reason-coded privileged actions;
-- out-of-band notification for break-glass.
+**Full local verification is incomplete and external CI is pending.** The
+sandbox this round was built in cannot reach the package registries, so
+`uv sync --frozen`, `uv lock` and `npm ci` all fail and `make verify` was
+never run end to end. The stages that did run — Ruff, mypy, and the
+repository-wide `pytest` suite — passed; every frontend stage, Prettier,
+and the lockfile resolution did not run at all. Calling that "locally
+verified" would overstate it, so this round does not.
+
+A status change to `implemented in reference form` requires a green
+`make verify` on a networked CI runner and nothing less. Section 5 of
+`docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` enumerates
+each stage individually.
+
+Scope, with delivery state per item:
+
+| Scope item                                | State                     | Evidence                                                                                                          |
+| ----------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| privileged access                         | reference implementation  | `privileged-access-service/access.py` (`PrivilegedAccessGrant`), `application.py` (request → approve → activate)  |
+| JIT access                                | reference implementation  | `EffectiveWindow` has no unbounded option; `policy.MAX_ALLOWED_GRANT_DURATION`; no `renew` method exists           |
+| break-glass                               | reference implementation  | `breakglass.py` — dual control, notification obligation, escalation on failure, independent review                |
+| Security Admin / System Admin separation  | reference implementation  | `roles.PRESERVED_INSTITUTIONAL_PAIRS` + 14 added pairs; re-checked at the act inside `application._guard`          |
+| controlled search                         | reference implementation  | `search.py` — two modes only, purpose admission, result-time source re-resolution, suppression bands, cache keying |
+| data export control                       | reference implementation  | `export.py` — five distinct permissions, closed recipient taxonomy, field selection before generation             |
+| DLP guardrails                            | reference implementation  | `dlp.py` — 18 controls, fail-closed subset, volume/frequency/repetition rules, transforms                          |
+| reason-coded privileged actions           | implemented               | `contracts/reason-codes/pack-12.yml`; no free-text refusal anywhere in the service                                 |
+| out-of-band notification for break-glass  | contract only             | `breakglass.NotificationPort` is the seam; the transport itself is PACK-17's                                       |
+
+**Evidence paths:**
+
+- `services/privileged-access-service/` (17 source modules, 16 test modules, 327 tests)
+- `contracts/reason-codes/pack-12.yml`
+- `docs/adr/ADR-061` … `ADR-068`
+- `docs/packs/PACK-12/` (nine specification documents)
+- `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md`,
+  `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`
+
+**Remaining work before this entry may be marked implemented in reference
+form:**
+
+1. `make verify` green on a networked CI runner (`uv sync`, `pytest`,
+   `ruff`, `mypy`, `npm`, `tsc`, `vitest`, Playwright) — not executable in
+   the build sandbox, which is why this round ships as a candidate;
+2. production persistence and the event bus (PACK-13);
+3. an external IAM/IdP, MFA and HSM/PKI (PACK-14 and PACK-17);
+4. a production search engine and a production DLP provider;
+5. the administrative frontend surfaces (FRONT-PACK);
+6. a PACK-12 PASS round.
 
 ## FIR-ROADMAP-003 — PACK-13 Production Data Plane & Contract Evolution
 
@@ -2400,13 +2493,17 @@ Required gate families:
 ## Implemented
 
 - PACK-01 through PACK-10 (PASS);
-- PACK-11 (CANDIDATE — awaiting external CI verification and a PASS round);
+- PACK-11 (PASS — external GitHub Actions verification complete);
 - FRONT-00;
 - FRONT-01;
 - finance reference implementation;
 - **governed documents and evidence reference implementation** (PACK-11);
 - cumulative architecture baseline;
 - 45 visual snapshots.
+
+PACK-12 is deliberately absent from this list. It exists as an
+implementation candidate at `0.12.0` whose external verification has not
+run; see `FIR-ROADMAP-002`.
 
 ## Specified but not implemented
 
@@ -2417,7 +2514,9 @@ Required gate families:
 - member payments;
 - SEPA mandate record (PACK-11 provides the mandate _evidence_ foundation only);
 - full voting implementation;
-- privileged admin;
+- privileged admin (PACK-12 provides a reference implementation as an
+  **implementation candidate**; external CI has not yet passed, so this
+  entry stays here rather than moving to "Implemented");
 - production data plane;
 - identity/auth;
 - communications (PACK-11 provides the correspondence-document foundation only);
@@ -2485,3 +2584,580 @@ Do not create additional standalone files for:
 - duplicate normative intake notes.
 
 Implementation-specific artifacts may still be created inside the relevant PACK when needed, but the master capture and status remain here.
+
+---
+
+# 24. User accounts, identity, communication, search and support
+
+## FIR-UX-001 — Applicant Account Scope
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** membership / frontend / identity  
+**Target:** FRONT-02 Member Core + membership backend + PACK-14
+
+An applicant must receive a restricted personal account for their own membership procedure.
+
+The applicant-facing account must show at least:
+
+- application ID;
+- submission timestamp;
+- current status;
+- competent organizational unit;
+- current procedural stage;
+- applicable deadlines;
+- requested supplementary information;
+- submitted documents and their verification state;
+- applicant-visible timeline;
+- official messages and notices;
+- final decision;
+- reasons and reason codes where applicable;
+- correction, remedy and appeal path;
+- security/session information.
+
+The applicant must not automatically receive access to member-only functions.
+
+The applicant must not see:
+
+- internal reviewer deliberation;
+- privileged notes;
+- protected evidence;
+- unrelated conflict declarations;
+- legal strategy;
+- other applicants' data;
+- member directory;
+- internal initiatives, assemblies or voting.
+
+A membership decision must be a governed state transition. Account creation alone must not establish membership.
+
+### Acceptance criteria
+
+- the applicant can track the complete applicant-visible procedure;
+- every request for additional information shows a deadline and response path;
+- rejection is never shown without an explanation and available remedy where applicable;
+- applicant access remains restricted until an authoritative membership decision activates member status.
+
+## FIR-UX-002 — Member Core Personal Workspace
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** membership / frontend  
+**Target:** FRONT-02 Member Core and dependent domain packages
+
+A member must receive a personal Member Core workspace showing only functions available through the member's current status, organizational scope, authority and procedure participation.
+
+The workspace should provide governed access to:
+
+- membership record and status;
+- Bund/Land/Kreis affiliation;
+- personal tasks and deadlines;
+- messages and official notices;
+- initiatives and deliberation;
+- assemblies and documents;
+- eligibility status and voting handoff;
+- candidacy and nomination procedures;
+- delegation where implemented;
+- contributions, payments, donations and receipts where activated;
+- personal governed documents;
+- decisions relevant to the member;
+- account, device and session security.
+
+The ordinary member workspace must not expose:
+
+- other members' protected data;
+- administrative workspaces;
+- legal/compliance investigations;
+- whistleblower submissions;
+- raw finance operations;
+- privileged audit evidence;
+- ballot content;
+- intermediate tally;
+- closed materials outside the member's authority or participation scope.
+
+The Voting Client remains a separate workspace and origin. Member Core may show only permitted voting availability and terminal handoff status.
+
+## FIR-ID-001 — No Universal User Identifier
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** identity / privacy / all domains  
+**Target:** PACK-14 + all domain implementations
+
+No single identifier may represent a person across all EPD² domains, workspaces and procedures.
+
+The architecture must distinguish at least:
+
+- protected identity/person record;
+- IAM account identifier;
+- domain-specific subject identifier;
+- membership identifier;
+- visible membership number where used;
+- case/procedure identifier;
+- scoped actor reference;
+- one-time voting credential.
+
+A visible membership number:
+
+- belongs only to the membership record;
+- is not a login credential;
+- is not a global user ID;
+- must not be used by the Voting Client;
+- must not be a system-wide lookup key;
+- must not be exposed to ordinary members as a directory identifier.
+
+Cross-domain mappings must be explicit, purpose-bound, access-controlled, auditable and limited to the minimum necessary relationship.
+
+### Acceptance criteria
+
+- no API, event, index or UI introduces a global person key;
+- domain identifiers are not interchangeable;
+- voting receives no persistent member or account identifier;
+- account identifiers are not exposed as public or user-facing identifiers;
+- cross-domain correlation requires a governed mapping boundary.
+
+## FIR-ID-002 — Workspace-Specific Account and Session Model
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** identity / sessions / frontend architecture  
+**Target:** PACK-14
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12 supplies the privileged-session model that a workspace-scoped
+session would have to satisfy: a session is bound to one grant, one
+purpose, one target domain and one organizational scope, and it seals
+into tamper-evident evidence. It supplies no authentication, no session
+issuance and no identity of any kind — all of that remains PACK-14's.
+
+
+Authentication must not create a universal session spanning all workspaces.
+
+The identity architecture must support at least:
+
+- restricted applicant account;
+- Member Core account/session;
+- Citizen Office case-scoped account or secure case token;
+- separate privileged/admin assurance context;
+- separate Voting Client session created through one-time purpose-scoped handoff.
+
+Target authentication options may include:
+
+- passkeys/WebAuthn;
+- controlled fallback credential;
+- MFA and step-up authentication;
+- email magic link for limited activation or recovery purposes;
+- external identity/eID verification only where needed;
+- governed account recovery;
+- device and session management.
+
+Final provider and credential choices remain PACK-14 decisions.
+
+## FIR-COMM-004 — Member Communication Persona and Scoped Directory
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** communications / membership / privacy  
+**Target:** Communications package + FRONT-02
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12 supplies only the negative half: its records carry opaque actor
+*references* and never a person identifier, and `ActorRef` on every event
+names the acting authority rather than the human behind it
+(`FIR-INV-001`). The communication persona, the scoped directory and the
+messaging surfaces remain the Communications package's and FRONT-02's.
+
+
+Communication between members must use a separate scoped communication persona, not a membership number, IAM account ID or global person ID.
+
+The communication persona may contain only policy-permitted fields such as:
+
+- `communication_persona_id`;
+- display name;
+- permitted organizational affiliation;
+- visible role or working-group function;
+- contact permissions;
+- visibility policy;
+- relevant shared context.
+
+Ordinary member discovery must not expose:
+
+- membership ID;
+- membership number;
+- IAM identifier;
+- private email;
+- telephone number;
+- home address;
+- date of birth;
+- identity evidence;
+- hidden administrative attributes.
+
+Member-to-member discovery and messaging must be restricted by:
+
+- organization scope;
+- shared group, initiative, assembly or procedure context;
+- contact permissions;
+- privacy settings;
+- sender authority;
+- anti-bulk-extraction controls.
+
+Official communication from a competent party body may use a governed official channel even when ordinary direct messaging is restricted.
+
+## FIR-SEARCH-001 — Authorization-Aware Domain-Scoped Search
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** search / security / all workspaces  
+**Target:** PACK-12 + PACK-13 + frontend packages
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12's `privileged-access-service/search.py` supplies the enforcement
+core: exactly two governed modes with no third, the mode→purpose
+admission table, the absolutely-excluded domain set, result-time
+re-resolution of source authorization through `SourceAuthorizationPort`
+(so nothing is trusted from the index but the pointer), snippet
+suppression at restricted tiers, suppression *bands* rather than counts,
+and an authorization-context-keyed result cache. `Purpose.INVESTIGATION`
+is the resolution of `OD-P12-02`: investigation is a purpose that narrows
+the ordinary scoped search and requires an explicit grant, not an
+unrestricted investigative mode.
+
+It deliberately does not supply the production search engine, the index
+pipeline, or any frontend search surface, and its adapters are in-memory.
+Remaining: PACK-13's production index and PACK-14/FRONT's search UI.
+
+
+EPD² must not provide one unrestricted global search across all domains.
+
+Supported search patterns must include:
+
+- public search over approved publication renditions;
+- general authorized search within a workspace;
+- domain-scoped search;
+- privileged scoped search with explicit grant, purpose, scope, reason code and audit.
+
+Core rule:
+
+```text
+findable subset of openable
+```
+
+Search must never expand source authorization.
+
+Authorization must be checked at least at:
+
+- index eligibility;
+- query authorization;
+- per-result source authorization;
+- result rendering;
+- snippet/highlight generation;
+- count/facet/autocomplete generation;
+- cache retrieval.
+
+The index is not authoritative and must not create legal effect.
+
+### Required protections
+
+- stale index ACL must not preserve access;
+- unauthorized matches must not affect visible counts;
+- facets and suggestions must not reveal restricted values;
+- cache must be partitioned by security context, organization, purpose and policy version;
+- unknown classification must fail closed;
+- deleted, expired or access-revoked records must become non-retrievable;
+- legal hold must not expand search access;
+- small cohorts must use disclosure controls.
+
+## FIR-SEARCH-002 — Search for Persons
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** search / membership / communications / case management  
+**Target:** PACK-12 + FRONT-02 + Communications package
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12 supplies the purpose-binding and grant requirement that make
+person search purpose-specific rather than open, and the organizational
+scope check that stops it crossing a boundary. It supplies no person
+model, no directory and no membership data: identity remains PACK-14's
+and the member workspace remains FRONT-02's.
+
+
+Person search must be purpose-specific.
+
+Ordinary members may search only communication personas visible in their permitted scope.
+
+Staff may search applicants, case parties or procedure participants only within an authorized case, queue or organizational scope.
+
+Permitted search keys may include, depending on role and purpose:
+
+- display name;
+- application ID;
+- case ID;
+- procedure status;
+- organizational scope;
+- authorized role or group context.
+
+A person search result must not become a universal profile joining membership, finance, Citizen Office, legal, communication and voting identities.
+
+## FIR-SEARCH-003 — Search for Documents and Information
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** documents / search / publication  
+**Target:** PACK-11 + PACK-12 + PACK-13 + frontend packages
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12 supplies the index policy that decides what may be indexed at
+all, the classification→tier mapping that decides what a query may
+surface, and `PublicationRenditionRef` as the only path by which a
+certified result reaches a reader. The governed document records and
+publication renditions themselves remain PACK-11's and PACK-04's.
+
+
+Document search must use governed search projections linked to authoritative document records or approved publication renditions.
+
+Searchable fields must be explicitly allowed by:
+
+- canonical classification;
+- record class;
+- document access profile;
+- publication state;
+- organization scope;
+- retention and deletion state;
+- domain-specific index policy.
+
+Historical versions, correction records and supersession history may be shown only where the user has corresponding access.
+
+Highly confidential and absolute-exclusion data must not enter general indexes, including:
+
+- ballot content and voting linkage data;
+- whistleblower identity and protected submissions;
+- credentials, tokens and keys;
+- sealed evidence;
+- protected identity evidence;
+- raw privileged-session secrets;
+- records excluded by authoritative domain policy.
+
+A final certified voting result may be discoverable only as an approved authoritative publication, never as raw tally material or administrative search data.
+
+## FIR-SUPPORT-001 — Layered User Assistance Model
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** frontend / communications / support / AI accountability  
+**Target:** FRONT-02 + Communications package + PACK-18
+
+User assistance must be layered and must not depend on a single chatbot.
+
+Required assistance levels:
+
+1. contextual help on the current screen;
+2. versioned help center and instructions;
+3. case-specific secure question linked to the relevant procedure;
+4. human support through secure message, callback, video or appointment;
+5. technical support with minimum necessary access;
+6. AI assistance with explicit advisory status;
+7. complaint, review and appeal paths.
+
+Contextual assistance must explain:
+
+- current status;
+- required action;
+- missing information;
+- deadline;
+- consequence of inaction;
+- next procedural step;
+- available human contact or remedy.
+
+Material outcomes of calls or appointments must be recorded in the governed case history without allowing support personnel to impersonate the user or silently alter submissions.
+
+## FIR-SUPPORT-002 — AI Assistance Boundary
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** AI accountability / user assistance  
+**Target:** PACK-18 and relevant frontend packages
+
+AI may:
+
+- explain interface elements;
+- locate the correct section;
+- summarize rules in plain language;
+- check form completeness;
+- identify missing fields;
+- propose draft structure;
+- explain status and next steps;
+- locate permitted public or internal materials;
+- prepare a draft message for user approval.
+
+AI must not:
+
+- make final membership, legal, political or eligibility decisions;
+- vote for a user;
+- alter or submit user content without explicit confirmation;
+- hide or delete initiatives;
+- impersonate staff;
+- guarantee legal correctness;
+- access data outside the current authorized context;
+- trap the user in an automated support path without access to a human remedy.
+
+Every legally or procedurally consequential action must remain explicitly confirmed by the user or decided by the competent human authority.
+
+## FIR-SUPPORT-003 — Accessible Form Assistance
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** accessibility / frontend  
+**Target:** all frontend packages
+
+Forms must provide a transparent sequence:
+
+```text
+draft
+→ completeness check
+→ understandable findings
+→ user correction
+→ preview
+→ explicit confirmation
+→ submission
+```
+
+The interface must distinguish:
+
+- mandatory field;
+- recommendation;
+- warning;
+- blocking error;
+- legally significant confirmation.
+
+AI recommendations must never be presented as mandatory legal requirements unless the requirement is independently defined by authoritative policy.
+
+Assistance must support keyboard navigation, screen readers, clear focus, zoom, sufficient contrast, text explanations, plain language and an alternative channel where a digital-only path would exclude the user.
+
+## FIR-METRIC-001 — Membership and User Counts
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** membership / analytics / transparency / disclosure control  
+**Target:** FRONT-02 + transparency/publication + PACK-12/13
+
+The system must distinguish membership counts from account and user counts.
+
+Separate metrics may include:
+
+- applicants;
+- active memberships;
+- suspended memberships;
+- former memberships;
+- registered accounts;
+- active member accounts;
+- Citizen Office users;
+- privileged users;
+- eligible participants;
+- group or assembly participants.
+
+A generic metric labelled only `users` must not be shown without an explicit definition.
+
+### Member-facing visibility
+
+An ordinary member may see policy-approved aggregates such as:
+
+- total members in their organization;
+- participants in an accessible working group;
+- registrations for an accessible assembly;
+- published support counts for an initiative;
+- published membership development.
+
+Member-facing counts must not provide a hidden full membership directory.
+
+### Public visibility
+
+Public membership statistics may include:
+
+- total party membership;
+- approved Land/Kreis aggregates;
+- time-series development;
+- aggregated entries and departures.
+
+Public values require:
+
+- approved publication workflow;
+- authoritative metric definition;
+- version and reporting period;
+- statistical disclosure control;
+- suppression or aggregation of small cohorts.
+
+### Administrative visibility
+
+Administrative users may see only metrics required by their function and organizational scope.
+
+Examples:
+
+- membership administration: active, pending and suspended records;
+- finance: contribution and arrears aggregates;
+- election administration: eligible participant counts;
+- system administration: technical account/service metrics without automatic access to membership content;
+- security administration: security metrics without automatic access to the member registry.
+
+No count may reveal ballot status, intermediate tally, whistleblower cases, protected legal matters or other sensitive small cohorts.
+
+## FIR-METRIC-002 — Count, Facet and Small-Cohort Disclosure Controls
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** statistical disclosure control / search / publication  
+**Target:** PACK-12 + PACK-13
+
+**PACK-12 foundation provided — this entry is NOT implemented.**
+
+PACK-12's `disclosure.py` supplies the rule engine: a cohort policy that
+refuses fewer than two active rule families, and four evaluators — cohort
+threshold, complement protection, differencing across a requester's
+recent query digests, and a bounded cumulative-release check. The
+cumulative model is the resolution of `OD-P12-08`: a policy window, a
+policy limit, and a release history that must be *available*, failing
+closed when it is not. A per-release-class cohort policy may make the
+threshold stricter and never weaker than the repository-wide floor.
+
+It supplies no analytics engine, no dashboard and no production release
+history store. Remaining: PACK-13's release-history persistence and the
+publication surfaces that would consume these decisions.
+
+
+Counts, facets, dashboards and published aggregates must be generated only from the already authorized and releasable data subset.
+
+The system must prevent inference through:
+
+- small groups;
+- neighbouring cohorts;
+- totals and subtraction;
+- repeated queries;
+- differential queries;
+- overlapping releases;
+- time-series changes;
+- cross-scope comparison.
+
+Thresholds must not be the only protection. Release history and cumulative disclosure risk must be considered.
+
+---
+
+# 25. Implementation placement summary for Section 24
+
+The entries in Section 24 are cross-package requirements.
+
+Primary placement:
+
+- applicant/member workspace: FRONT-02 and membership domain;
+- identity, sessions and credentials: PACK-14;
+- Voting Client handoff and unlinkability: PACK-15/16;
+- search, count protection and disclosure control: PACK-12 with production persistence in PACK-13;
+- governed documents and versions: PACK-11;
+- communications and official correspondence: future communications package;
+- AI assistance and accountability: PACK-18;
+- public aggregates and transparency: future publication/transparency packages.
+
+No entry in this section is considered implemented merely by inclusion in this register.
