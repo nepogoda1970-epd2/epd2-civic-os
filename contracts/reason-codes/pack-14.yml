@@ -58,7 +58,6 @@
 # `pack-14-service` code justified in ADR-079 through ADR-088, or an
 # earlier pack's code redeclared unchanged.
 
-
 # --- Additive PACK-14 codes (133) ---------------------------------------------
 
 - code: CREDENTIAL_INVALID
@@ -73,7 +72,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_REVOKED
   meaning: >-
     The credential exists and has been revoked. It can never verify
@@ -85,7 +83,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_EXPIRED
   meaning: >-
     The credential exists and is past its validity window.
@@ -94,7 +91,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_ALREADY_ENROLLED
   meaning: >-
@@ -107,7 +103,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_LAST_REMAINING
   meaning: >-
     Removal refused: it is the only credential on the account and no
@@ -118,7 +113,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PASSKEY_VERIFICATION_FAILED
   meaning: >-
@@ -132,7 +126,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PASSKEY_ORIGIN_MISMATCH
   meaning: >-
     The assertion was produced for a different origin than the one the
@@ -144,7 +137,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PASSKEY_CHALLENGE_EXPIRED
   meaning: >-
     The registration or authentication challenge was presented after its
@@ -154,7 +146,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PASSKEY_SIGN_COUNTER_REGRESSION
   meaning: >-
@@ -168,7 +159,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PASSKEY_MALFORMED_RESPONSE
   meaning: >-
     The authenticator response could not be parsed into the fields the
@@ -179,7 +169,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PASSWORD_LOGIN_DISABLED
   meaning: >-
@@ -193,7 +182,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PASSWORD_ONLY_ACCOUNT_REFUSED
   meaning: >-
     Creating a new password-only account is refused. A password is a
@@ -205,7 +193,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PASSWORD_POLICY_NOT_MET
   meaning: >-
     The proposed password does not satisfy the governed policy. Never
@@ -215,7 +202,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PASSWORD_BREACHED
   meaning: >-
@@ -228,7 +214,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SECURITY_QUESTION_REFUSED
   meaning: >-
     A security question was offered as a credential or as recovery
@@ -239,7 +224,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: MFA_REQUIRED
   meaning: >-
@@ -252,7 +236,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: MFA_FAILED
   meaning: >-
     The second factor was presented and did not verify.
@@ -261,7 +244,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: MFA_FACTOR_NOT_ENROLLED
   meaning: >-
@@ -272,7 +254,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: MFA_FACTOR_REVOKED
   meaning: >-
     The factor exists and has been revoked.
@@ -281,7 +262,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: MFA_FACTOR_ALREADY_ENROLLED
   meaning: >-
@@ -293,7 +273,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: MFA_FACTOR_NOT_CONFIRMED
   meaning: >-
     The factor was enrolled but never confirmed, so it cannot be used to
@@ -303,7 +282,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_CODE_INVALID
   meaning: >-
@@ -315,7 +293,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_CODE_ALREADY_USED
   meaning: >-
     The recovery code belongs to the set and has already been consumed.
@@ -326,7 +303,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_CODE_SET_EXHAUSTED
   meaning: >-
     Every code in the set has been consumed. The next step is reissuing
@@ -336,7 +312,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SMS_OTP_NOT_AN_AUTHENTICATION_FACTOR
   meaning: >-
@@ -351,7 +326,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ASSURANCE_INSUFFICIENT
   meaning: >-
     The session's authentication assurance is below what the action
@@ -362,7 +336,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ASSURANCE_STALE
   meaning: >-
@@ -375,7 +348,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_REQUIRED
   meaning: >-
     A step-up is required for this action and has not been performed.
@@ -385,7 +357,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_EXPIRED
   meaning: >-
     The step-up was performed and its window has elapsed.
@@ -394,7 +365,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: STEP_UP_OBJECT_CHANGED
   meaning: >-
@@ -408,7 +378,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_BINDING_MISMATCH
   meaning: >-
     The step-up presented was bound to a different actor, session,
@@ -421,7 +390,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_CANCELLED
   meaning: >-
     The user cancelled the step-up. Recorded distinctly so a cancelled
@@ -432,7 +400,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_ALREADY_CONSUMED
   meaning: >-
     The step-up confirmation was already spent on an action. A
@@ -442,7 +409,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: STEP_UP_METHOD_NOT_ELIGIBLE
   meaning: >-
@@ -455,7 +421,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_EXPIRED
   meaning: >-
     The idle or the absolute deadline was reached. Both are mandatory;
@@ -466,7 +431,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_REVOKED
   meaning: >-
     The session was revoked and cannot refresh. A revoked session that
@@ -476,7 +440,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_REPLAY_DETECTED
   meaning: >-
@@ -489,7 +452,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_SCOPE_MISMATCH
   meaning: >-
     The session is not scoped to this workspace. Sessions are minted per
@@ -500,7 +462,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_ORIGIN_MISMATCH
   meaning: >-
     The session was presented from an origin it is not bound to.
@@ -509,7 +470,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_QUARANTINED
   meaning: >-
@@ -522,7 +482,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CSRF_TOKEN_INVALID
   meaning: >-
     A state-changing request arrived without a valid CSRF token.
@@ -531,7 +490,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_IDENTIFIER_IN_URL
   meaning: >-
@@ -544,7 +502,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_LOCKED
   meaning: >-
     An AccountLock is in force. A lock is temporary, automatic and self-
@@ -556,7 +513,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_RESTRICTED
   meaning: >-
     An AccountRestriction with a named authority is in force.
@@ -565,7 +521,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_QUARANTINED
   meaning: >-
@@ -578,7 +533,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_CLOSED
   meaning: >-
     The account is closed. Closure is terminal.
@@ -587,7 +541,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_NOT_ACTIVATED
   meaning: >-
@@ -599,7 +552,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_CLOSURE_ALREADY_REQUESTED
   meaning: >-
     An AccountClosureRequest is already open for this account.
@@ -609,7 +561,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_CLOSURE_NOT_REQUESTED
   meaning: >-
     No open AccountClosureRequest exists to cancel or complete.
@@ -618,7 +569,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_ANONYMIZATION_IN_PROGRESS
   meaning: >-
@@ -630,7 +580,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_ANONYMIZATION_NOT_STARTED
   meaning: >-
     Completion was requested for an anonymization that was never begun.
@@ -639,7 +588,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_REQUIRED
   meaning: >-
@@ -651,7 +599,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_RISK_TOO_HIGH
   meaning: >-
     The risk assessment refused the recovery on named, explainable
@@ -661,7 +608,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_COOLING_OFF_ACTIVE
   meaning: >-
@@ -673,7 +619,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ALTERNATE_VERIFICATION_FAILED
   meaning: >-
     The independent verification method - independent of the credential
@@ -684,7 +629,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_CONTACT_RECENTLY_CHANGED
   meaning: >-
     The channel offered for recovery was changed too recently to rely
@@ -694,7 +638,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_SELF_APPROVAL_REFUSED
   meaning: >-
@@ -707,7 +650,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_DUAL_CONTROL_REQUIRED
   meaning: >-
     High-assurance recovery requires a second approver, and this
@@ -717,7 +659,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_EVIDENCE_MISSING
   meaning: >-
@@ -729,7 +670,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_ALREADY_COMPLETED
   meaning: >-
     The recovery case has already reached completion; it is not a
@@ -739,7 +679,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_RISK_ACCEPTANCE_REQUIRED
   meaning: >-
@@ -753,7 +692,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_ELEVATION_REFUSED
   meaning: >-
     Emergency recovery restored access and a high-risk action was
@@ -764,7 +702,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_CREDENTIALS_NOT_REVOKED
   meaning: >-
@@ -777,7 +714,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_NOT_VERIFIED
   meaning: >-
     The channel has not completed verification.
@@ -786,7 +722,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CONTACT_RECENTLY_CHANGED
   meaning: >-
@@ -797,7 +732,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CONTACT_ALREADY_IN_USE
   meaning: >-
@@ -810,7 +744,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_REUSE_BLOCKED
   meaning: >-
     The governed reuse policy refuses this channel - typically a handle
@@ -822,7 +755,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_NOT_NORMALIZABLE
   meaning: >-
     The value could not be normalized into the canonical form the
@@ -833,7 +765,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CONTACT_AUTO_MERGE_REFUSED
   meaning: >-
@@ -847,7 +778,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_LAST_VERIFIED_CHANNEL
   meaning: >-
     Removal refused: it is the only verified channel and out-of-band
@@ -857,7 +787,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: NOTIFICATION_DELIVERY_FAILED
   meaning: >-
@@ -870,7 +799,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: DUPLICATE_ACCOUNT_SUSPECTED
   meaning: >-
     Routed to review. Never an automatic merge, and never a response
@@ -881,7 +809,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_LINKING_DENIED
   meaning: >-
     Linking refused by policy or by the governed review.
@@ -890,7 +817,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_LINKING_PROOF_MISSING
   meaning: >-
@@ -902,7 +828,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_LINKING_CONFLICT
   meaning: >-
     The target is already linked to a different account, or the link
@@ -912,7 +837,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_PROOFING_INSUFFICIENT
   meaning: >-
@@ -925,7 +849,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_ASSERTION_EXPIRED
   meaning: >-
     The identity assertion is outside its freshness window.
@@ -934,7 +857,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_PROOFING_INCONCLUSIVE
   meaning: >-
@@ -945,7 +867,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PROOFING_DOES_NOT_APPROVE_MEMBERSHIP
   meaning: >-
@@ -958,7 +879,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: EXTERNAL_PROVIDER_UNAVAILABLE
   meaning: >-
     The adapter could not reach the provider. The account has a local
@@ -969,7 +889,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: EXTERNAL_ASSERTION_INVALID
   meaning: >-
     Issuer, audience, signature, nonce or issued-at validation failed on
@@ -979,7 +898,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: EXTERNAL_ASSERTION_REPLAYED
   meaning: >-
@@ -992,7 +910,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: EXTERNAL_SUBJECT_NOT_LINKED
   meaning: >-
     The provider subject is not linked to any account, and no account is
@@ -1003,7 +920,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BOOTSTRAP_INVALID
   meaning: >-
@@ -1016,7 +932,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: BOOTSTRAP_AUDIENCE_MISMATCH
   meaning: >-
     The authorization response was presented to an audience other than
@@ -1026,7 +941,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BOOTSTRAP_ALREADY_USED
   meaning: >-
@@ -1039,7 +953,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: BOOTSTRAP_EXPIRED
   meaning: >-
     The authorization response was presented after its short expiry.
@@ -1048,7 +961,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BOOTSTRAP_NONCE_MISMATCH
   meaning: >-
@@ -1059,7 +971,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BOOTSTRAP_REDIRECT_URI_INVALID
   meaning: >-
@@ -1072,7 +983,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: BOOTSTRAP_PROOF_VERIFICATION_FAILED
   meaning: >-
     The PKCE-equivalent proof did not verify against the challenge
@@ -1082,7 +992,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BOOTSTRAP_REPLAY_DETECTED
   meaning: >-
@@ -1096,7 +1005,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CROSS_WORKSPACE_HANDOFF_INVALID
   meaning: >-
     The handoff artifact is expired, addressed to the wrong audience, or
@@ -1106,7 +1014,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VOTING_HANDOFF_INVALID
   meaning: >-
@@ -1119,7 +1026,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VOTING_HANDOFF_ALREADY_USED
   meaning: >-
     A single-use artifact was presented a second time.
@@ -1128,7 +1034,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VOTING_HANDOFF_EXPIRED
   meaning: >-
@@ -1140,7 +1045,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VOTING_HANDOFF_AUDIENCE_MISMATCH
   meaning: >-
     The artifact was presented to an audience other than the WS-03
@@ -1151,7 +1055,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VOTING_HANDOFF_PURPOSE_MISMATCH
   meaning: >-
     The artifact was presented for a voting context other than the one
@@ -1161,7 +1064,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VOTING_HANDOFF_REVERSE_RESOLUTION_REFUSED
   meaning: >-
@@ -1175,7 +1077,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_MAPPING_PURPOSE_MISMATCH
   meaning: >-
     The mapping was resolved for a purpose other than the one it was
@@ -1188,7 +1089,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_MAPPING_SCOPE_MISMATCH
   meaning: >-
     The mapping was resolved outside its organizational scope. FIR-
@@ -1198,7 +1098,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_MAPPING_EXPIRED
   meaning: >-
@@ -1210,7 +1109,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_MAPPING_NOT_PERMITTED
   meaning: >-
     The caller's access policy does not permit resolving this mapping. A
@@ -1221,7 +1119,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: UNRESTRICTED_MAPPING_LOOKUP_REFUSED
   meaning: >-
@@ -1235,7 +1132,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: GLOBAL_IDENTIFIER_REFUSED
   meaning: >-
     A raw account, person, membership or provider-subject identifier was
@@ -1248,7 +1144,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PRIVILEGED_APPROVAL_MISSING
   meaning: >-
     The required PACK-12 grant or approval is absent, expired or scoped
@@ -1258,7 +1153,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: MANUAL_REVIEW_REQUIRED
   meaning: >-
@@ -1270,7 +1164,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SEPARATION_OF_DUTIES_VIOLATED
   meaning: >-
     The actor may not perform this act given another role they hold on
@@ -1280,7 +1173,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SUPPORT_ACTION_NOT_PERMITTED
   meaning: >-
@@ -1293,7 +1185,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: BREAK_GLASS_JUSTIFICATION_MISSING
   meaning: >-
     Break-glass was invoked without the justification and second actor
@@ -1305,7 +1196,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SYSTEM_ADMIN_IDENTITY_ACCESS_REFUSED
   meaning: >-
     A System Admin role attempted to read identity content. Operating
@@ -1316,7 +1206,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RATE_LIMIT_EXCEEDED
   meaning: >-
     The governed rate limit for this operation and subject was exceeded.
@@ -1325,7 +1214,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_THROTTLED
   meaning: >-
@@ -1338,7 +1226,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CHALLENGE_EXPIRED
   meaning: >-
     The challenge was presented after its expiry.
@@ -1347,7 +1234,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: NONCE_ALREADY_USED
   meaning: >-
@@ -1359,7 +1245,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ORIGIN_NOT_ALLOWED
   meaning: >-
     The request origin is not one of the ten declared workspace origins.
@@ -1368,7 +1253,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SECRET_IN_PAYLOAD_REFUSED
   meaning: >-
@@ -1383,7 +1267,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUDIT_UNAVAILABLE
   meaning: >-
     The audit path is unavailable, so a consequential operation refuses.
@@ -1394,7 +1277,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RESOURCE_VERSION_STALE
   meaning: >-
     The expected resource version does not match the stored one.
@@ -1404,7 +1286,6 @@
   retryable: true
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST
   meaning: >-
@@ -1417,7 +1298,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONFIGURATION_RELAXATION_NOT_GOVERNED
   meaning: >-
     A timeout or freshness value was relaxed without an authority, a
@@ -1429,7 +1309,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONFIGURATION_DEADLINE_REMOVAL_REFUSED
   meaning: >-
     A configuration attempted to remove a deadline. No configuration
@@ -1440,7 +1319,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PERSISTENCE_MIGRATION_NOT_APPLIED
   meaning: >-
@@ -1454,7 +1332,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PERSISTENCE_MIGRATION_CHECKSUM_MISMATCH
   meaning: >-
     An applied migration's artefact changed after it was applied. An
@@ -1466,7 +1343,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PERSISTENCE_MIGRATION_OUT_OF_ORDER
   meaning: >-
     The migration sequence is not contiguous from 1, or the database
@@ -1476,7 +1352,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PERSISTENCE_TYPE_UNSUPPORTED
   meaning: >-
@@ -1491,7 +1366,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PERSISTENCE_RECORD_NOT_FOUND
   meaning: >-
     A write was attempted against a row that does not exist, where the
@@ -1503,7 +1377,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: BREACH_CHECK_UNAVAILABLE
   meaning: >-
@@ -1518,7 +1391,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: API_REQUEST_MALFORMED
   meaning: >-
     The request could not be parsed into the operation's declared
@@ -1529,7 +1401,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: API_OPERATION_UNKNOWN
   meaning: >-
@@ -1542,7 +1413,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: API_IDEMPOTENCY_KEY_REQUIRED
   meaning: >-
     A consequential operation was called without an idempotency key.
@@ -1553,7 +1423,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: API_RESOURCE_VERSION_REQUIRED
   meaning: >-
@@ -1566,7 +1435,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: API_SESSION_CONTEXT_REQUIRED
   meaning: >-
     The operation requires an authenticated session context and none was
@@ -1577,7 +1445,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RETENTION_SCHEDULE_UNCONFIRMED
   meaning: >-
@@ -1590,8 +1457,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
-
 
 # --- Redeclared from earlier packs (21) ----------------------------------------
 #
@@ -1611,7 +1476,6 @@
   owner: account-service, identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VALIDATION_RECORD_NOT_FOUND
   meaning: >-
     A plain lookup miss: no record exists for the given identifier.
@@ -1621,7 +1485,6 @@
   retryable: false
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VALIDATION_UNKNOWN_STATUS
   meaning: >-
@@ -1633,7 +1496,6 @@
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VALIDATION_FORBIDDEN_TRANSITION
   meaning: >-
     The requested state transition is not in the allowed set (CT-00-03).
@@ -1643,7 +1505,6 @@
   retryable: false
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_NOT_VERIFIED
   meaning: >-
@@ -1655,7 +1516,6 @@
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_VERIFICATION_EXPIRED
   meaning: >-
     The identity verification is past its validity. PACK-02's own code,
@@ -1665,7 +1525,6 @@
   retryable: false
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_VERIFICATION_REVOKED
   meaning: >-
@@ -1677,7 +1536,6 @@
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_VERIFICATION_STARTED
   meaning: >-
     Audit classification for the start of a verification. PACK-02's own
@@ -1687,7 +1545,6 @@
   retryable: false
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_VERIFIED
   meaning: >-
@@ -1699,7 +1556,6 @@
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_DUPLICATE_SUSPECTED
   meaning: >-
     Audit classification for a suspected duplicate identity. PACK-02's
@@ -1709,7 +1565,6 @@
   retryable: false
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_MANUAL_REVIEW_REQUIRED
   meaning: >-
@@ -1721,7 +1576,6 @@
   owner: identity-service (PACK-02)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_ATTRIBUTES_RECORDED
   meaning: >-
     Audit classification for recording canon 19d.2's additive identity
@@ -1732,7 +1586,6 @@
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_AGE_REQUIREMENT_NOT_MET
   meaning: >-
     The derived age claim does not satisfy the requirement. PACK-07's
@@ -1742,7 +1595,6 @@
   retryable: false
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_CITIZENSHIP_REQUIREMENT_NOT_MET
   meaning: >-
@@ -1755,7 +1607,6 @@
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_RESIDENCE_REQUIREMENT_NOT_MET
   meaning: >-
     The derived residence claim does not satisfy the requirement.
@@ -1765,7 +1616,6 @@
   retryable: false
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: IDENTITY_TERRITORIAL_SCOPE_REQUIREMENT_NOT_MET
   meaning: >-
@@ -1777,7 +1627,6 @@
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: IDENTITY_ASSURANCE_REQUIREMENT_NOT_MET
   meaning: >-
     The identity assurance level does not satisfy the requirement.
@@ -1787,7 +1636,6 @@
   retryable: false
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_CONTEXT_ESTABLISHED
   meaning: >-
@@ -1799,7 +1647,6 @@
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: STEP_UP_AUTHENTICATION_COMPLETED
   meaning: >-
     Audit classification for a completed step-up. PACK-07's own code,
@@ -1809,7 +1656,6 @@
   retryable: false
   owner: identity-service (PACK-07)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ORGANIZATION_SCOPE_MISMATCH
   meaning: >-
@@ -1822,7 +1668,6 @@
   owner: organization-service (PACK-08)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECORD_UNDER_LEGAL_HOLD
   meaning: >-
     The record is under a legal hold, so a destructive disposition is
@@ -1833,8 +1678,6 @@
   retryable: false
   owner: compliance-service (PACK-09)
   introduced_in_version: pack-14-0.14.0
-
-
 
 # --- `*_RECORDED` audit classifications (59) --------------------------------
 #
@@ -1857,7 +1700,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_ACTIVATED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `account.activated`
@@ -1868,7 +1710,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_RESTRICTED_RECORDED
   meaning: >-
@@ -1881,7 +1722,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_RESTRICTION_REMOVED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -1892,7 +1732,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_LOCKED_RECORDED
   meaning: >-
@@ -1905,7 +1744,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_UNLOCKED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `account.unlocked`
@@ -1916,7 +1754,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_CLOSURE_REQUESTED_RECORDED
   meaning: >-
@@ -1929,7 +1766,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_CLOSURE_CANCELLED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -1940,7 +1776,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_CLOSED_RECORDED
   meaning: >-
@@ -1953,7 +1788,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: ACCOUNT_ANONYMIZATION_STARTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -1964,7 +1798,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: ACCOUNT_ANONYMIZATION_COMPLETED_RECORDED
   meaning: >-
@@ -1977,7 +1810,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_ADDED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `contact.added`
@@ -1988,7 +1820,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CONTACT_VERIFICATION_REQUESTED_RECORDED
   meaning: >-
@@ -2001,7 +1832,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_VERIFIED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `contact.verified`
@@ -2012,7 +1842,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CONTACT_CHANGED_RECORDED
   meaning: >-
@@ -2025,7 +1854,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CONTACT_REMOVED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `contact.removed`
@@ -2036,7 +1864,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_ENROLLED_RECORDED
   meaning: >-
@@ -2049,7 +1876,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_VERIFIED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2060,7 +1886,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_REVOKED_RECORDED
   meaning: >-
@@ -2073,7 +1898,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_PASSKEY_ADDED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2084,7 +1908,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_PASSKEY_REMOVED_RECORDED
   meaning: >-
@@ -2097,7 +1920,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_MFA_ENROLLED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2108,7 +1930,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_MFA_REMOVED_RECORDED
   meaning: >-
@@ -2121,7 +1942,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_RECOVERY_CODES_ISSUED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2132,7 +1952,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: CREDENTIAL_RECOVERY_CODE_USED_RECORDED
   meaning: >-
@@ -2145,7 +1964,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: CREDENTIAL_RECOVERY_CODES_REVOKED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2156,7 +1974,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_STARTED_RECORDED
   meaning: >-
@@ -2169,7 +1986,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUTHENTICATION_SUCCEEDED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2180,7 +1996,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_FAILED_RECORDED
   meaning: >-
@@ -2193,7 +2008,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUTHENTICATION_STEP_UP_REQUESTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2204,7 +2018,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_STEP_UP_SUCCEEDED_RECORDED
   meaning: >-
@@ -2217,7 +2030,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUTHENTICATION_STEP_UP_FAILED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2228,7 +2040,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_SUSPICIOUS_DETECTED_RECORDED
   meaning: >-
@@ -2241,7 +2052,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_ISSUED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `session.issued`
@@ -2252,7 +2062,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_ROTATED_RECORDED
   meaning: >-
@@ -2265,7 +2074,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_REFRESHED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `session.refreshed`
@@ -2276,7 +2084,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_ASSURANCE_CHANGED_RECORDED
   meaning: >-
@@ -2289,7 +2096,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_REVOKED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `session.revoked`
@@ -2300,7 +2106,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: SESSION_ALL_REVOKED_RECORDED
   meaning: >-
@@ -2313,7 +2118,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: SESSION_REPLAY_DETECTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2324,7 +2128,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_REQUESTED_RECORDED
   meaning: >-
@@ -2337,7 +2140,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_ASSESSMENT_COMPLETED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2348,7 +2150,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_COOLING_OFF_STARTED_RECORDED
   meaning: >-
@@ -2361,7 +2162,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_APPROVED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `recovery.approved`
@@ -2372,7 +2172,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_REJECTED_RECORDED
   meaning: >-
@@ -2385,7 +2184,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_CREDENTIAL_REPLACEMENT_STARTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2396,7 +2194,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: RECOVERY_COMPLETED_RECORDED
   meaning: >-
@@ -2409,7 +2206,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: RECOVERY_DISPUTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `recovery.disputed`
@@ -2420,7 +2216,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PROOFING_STARTED_RECORDED
   meaning: >-
@@ -2433,7 +2228,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PROOFING_EVIDENCE_REFERENCED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2444,7 +2238,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PROOFING_VERIFIED_RECORDED
   meaning: >-
@@ -2457,7 +2250,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: PROOFING_REJECTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded `proofing.rejected`
@@ -2468,7 +2260,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: PROOFING_MANUAL_REVIEW_REQUIRED_RECORDED
   meaning: >-
@@ -2481,7 +2272,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUTHENTICATION_BOOTSTRAP_ISSUED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2492,7 +2282,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: AUTHENTICATION_BOOTSTRAP_REDEEMED_RECORDED
   meaning: >-
@@ -2505,7 +2294,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: AUTHENTICATION_BOOTSTRAP_REPLAY_REJECTED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2516,7 +2304,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VOTING_HANDOFF_ISSUED_RECORDED
   meaning: >-
@@ -2529,7 +2316,6 @@
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
 
-
 - code: VOTING_HANDOFF_REDEEMED_RECORDED
   meaning: >-
     Audit classification for a successfully recorded
@@ -2540,7 +2326,6 @@
   retryable: false
   owner: identity-service (PACK-14)
   introduced_in_version: pack-14-0.14.0
-
 
 - code: VOTING_HANDOFF_REPLAY_REJECTED_RECORDED
   meaning: >-

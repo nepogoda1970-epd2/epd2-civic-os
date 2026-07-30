@@ -70,7 +70,7 @@ of the specification round and are deliberately not rewritten to read as
 though they had always been an implementation — the discipline the
 PACK-13 FINAL PASS round applied to its own candidate report.
 
-## 5. SHA-256 — every file the correction round added or changed
+## 4. SHA-256 — every file the correction round added or changed
 
 Recalculated against the delivered tree. The comparison baseline is the
 superseded archive
@@ -79,7 +79,7 @@ superseded archive
 inventory of that archive is otherwise unchanged, so every file not
 listed below carries the digest it carried there.
 
-### 5.1 Added (18 files)
+### 4.1 Added (18 files)
 
 | Path                                                                      | SHA-256                                                            |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -102,12 +102,12 @@ listed below carries the digest it carried there.
 | `services/identity-service/tests/test_pack14_service_api.py`              | `d1c4fda8fe885c3d7d304c55aa5a7849d66834f3f1ca3ce217b720003f8e6240` |
 | `tests/repository/test_pack14_default_binding.py`                         | `56e51898d6b414b5b59ec16805cd7e8e3b558869492f584d88c2d5d580c0488a` |
 
-### 5.2 Changed (26 files)
+### 4.2 Changed (26 files)
 
 | Path                                                                                  | SHA-256                                                                                          |
 | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `CHANGELOG.md`                                                                        | `79218dcbade0044ce834182d3df1dadc9a99ba10e26efce9015c4c21dccd8015`                               |
-| `contracts/reason-codes/pack-14.yml`                                                  | `1e7e60e4c494af55efab2c4e22fb1e0508e1aac3cef50b488d6873e7e7d65b95`                               |
+| `contracts/reason-codes/pack-14.yml`                                                  | `8b67a912f9de0bdb612a33a1645cf318b3ba3af6b249214c7effd03b6fff2e33`                               |
 | `docs/handover/PACK-14-IMPLEMENTATION-CANDIDATE-REPORT.md`                            | _self-referential — a file cannot contain its own digest; compute it from the delivered archive_ |
 | `docs/packs/PACK-14/PACK-14-API-CATALOG.md`                                           | `e81fbe831c9f0dd5b17db75e1dbd695ec54bada792586bf6904ef7df3c3051a6`                               |
 | `docs/packs/PACK-14/PACK-14-DATA-MODEL.md`                                            | `373804ded749aa12ebbea8db6ef8ef5a9d6a6e64d5944b18ec1f411676435102`                               |
@@ -133,7 +133,20 @@ listed below carries the digest it carried there.
 | `tests/contract/test_reason_codes_registry.py`                                        | `e882702a827464c5b9283b9c18ea8ec3363e910d182f246268287ec73a2e98ef`                               |
 | `tests/repository/test_pack14_duplicated_logic_parity.py`                             | `a4f2368de1f3d66828e9008e46929e85e766abd3a4d9024f096900e882f6dd33`                               |
 
-## 6. Status
+### 4.3 Prettier formatting fix, after the first external CI run
+
+The external pipeline failed at `make format-check` on one file:
+`contracts/reason-codes/pack-14.yml` was not Prettier-formatted. It was
+reformatted with `prettier --write` and nothing else. The change is
+**whitespace only** — 215 blank lines between entries removed, no code,
+meaning, description, severity, owner, ordering or count altered; the
+registry still parses to the same 213 entries in the same order, and
+`tests/contract/test_reason_codes_registry.py` passes unchanged. The
+digest above is the reformatted file's. **No version, architecture, test,
+CI configuration, Master Register entry or PACK-14 behaviour changed, and
+this remains the same candidate — not a new one and not a PASS.**
+
+## 5. Status
 
 ```text
 PACK-14 IMPLEMENTATION CANDIDATE COMPLETE
