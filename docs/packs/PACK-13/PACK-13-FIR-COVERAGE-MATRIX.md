@@ -4,13 +4,29 @@
 and are unchanged.** The implementation-coverage appendix at the end is
 added by the PACK-13 Implementation Candidate (`0.13.0`).
 
+> **Status, as of the PACK-13 FINAL PASS round (2026-07-30):**
+> **PACK-13 EXTERNAL CI PASS · FINAL PASS ARCHIVE PREPARED ·
+> `REPOSITORY_VERSION` `0.13.0` · `CANON_VERSION` `0.8.0` ·
+> NOT PRODUCTION READY · NOT LEGALLY ACTIVATED.** See
+> `docs/handover/PACK-13-FINAL-PASS-REPORT.md`.
+>
+> The treatment columns below are **unchanged by the PASS**, and this
+> document still records **zero** `implemented` treatments — asserted
+> structurally by `tests/repository/test_pack13_fir_matrix.py`
+> (`AC-P13-155`), which the passing pipeline itself ran. Where a status
+> moved, it moved in the **Master Future Implementation Register**, which
+> is where FIR status lives: `FIR-ROADMAP-003` is now
+> `implemented in reference form` there. This matrix records what the
+> PACK-13 rounds _did with each entry_, and that record does not change
+> because a pipeline went green.
+
 **No FIR entry is marked `implemented` by this round, and none may be.**
 That was true of the specification round because a specification round
-produces requirements rather than implementations. It is true of the
-implementation round for a different and equally binding reason: this is a
-**candidate**, the external GitHub Actions pipeline has not run against it,
-and every storage adapter in it is in memory. A status of `implemented`
-claimed on either basis would be a claim the evidence does not support.
+produces requirements rather than implementations. It remains true after
+the external GitHub Actions PASS for a different and equally binding
+reason: **every storage adapter in this pack is in memory**. A green
+pipeline verifies the tree and deploys nothing, so `implemented` claimed
+on its strength would be a claim the evidence does not support.
 
 The `PACK-13 treatment` column records what the specification round did
 with each entry; the `Implementation-stage obligation` column records what
@@ -32,6 +48,16 @@ dependency owned by a later pack), **unchanged** (untouched by PACK-13).
 
 `FIR-ROADMAP-003` MUST NOT move past `scheduled` or `under_review` on the
 strength of this round.
+
+**Where that stands after the PASS (added 2026-07-30).** "This round" in
+the sentence above is the **specification** round, which produced
+requirements and no code — its restriction is satisfied and remains
+historically accurate. The implementation round then built the package and
+an external GitHub Actions run passed every stage, and on that strength the
+Master Register moved the entry to **`implemented in reference form`** —
+not to `implemented`, because every storage adapter is still in memory. The
+restriction this line records was never a bar on a verified implementation
+round; it was a bar on claiming one from a document.
 
 ---
 

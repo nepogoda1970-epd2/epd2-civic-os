@@ -1,10 +1,15 @@
 # PACK-13 — Known Limitations
 
-**Round:** PACK-13 Implementation Candidate
+**Round:** PACK-13 — candidate, then FINAL PASS after external CI
 **Repository version:** `0.13.0` · **Canon version:** `0.8.0`
 
-**PACK-13 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION READY. NOT
-LEGALLY ACTIVATED.**
+**PACK-13 FINAL PASS. EXTERNAL GITHUB ACTIONS PASS. NOT PRODUCTION READY.
+NOT LEGALLY ACTIVATED.**
+
+Every limitation below survived the PASS unchanged. A green pipeline
+closes none of them, because not one of them is a defect the pipeline
+could have found: they are boundaries of what a reference implementation
+is.
 
 This document exists because the honest description of what
 `services/data-plane-service` is differs from what its name suggests, and
@@ -170,27 +175,35 @@ nothing either (`P13-OWN-009`..`013`).
 PACK-13 contracts — cannot be satisfied by this round, because the owner
 does not exist. It is `blocked by PACK-14` and `blocked by PACK-15/16`.
 
-## 13. The local verification run is incomplete
+## 13. The local verification run is incomplete — the external one is not
 
-This environment has **no network access to PyPI or npm**. `make setup`,
-`uv sync --all-groups` and `npm install` cannot run, so every
+This build environment has **no network access to PyPI or npm**.
+`make setup`, `uv sync --all-groups` and `npm install` cannot run, so every
 Node-dependent stage of `make verify` — Prettier, ESLint, the TypeScript
 typecheck, the TypeScript and frontend tests, the frontend build and the
-browser, accessibility and visual-regression tests — did not run at all.
+browser, accessibility and visual-regression tests — cannot run here.
 
-Exactly what ran and what did not is stated in
-`docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`, section
-"Verification results". **No stage is reported as passing that did not
-run**, and the candidate is handed to the external GitHub Actions
-pipeline for the rest.
+**That gap is now closed by the external run, not by an assertion.** The
+GitHub Actions pipeline executed every stage and passed:
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` records the
+figures, and `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log` is the
+raw transcript, committed rather than summarised.
+
+What remains true of _this_ environment is that the documentation changes
+made after the green run were re-verified only by the deterministic checks
+that run offline. `docs/handover/PACK-13-FINAL-PASS-REPORT.md` §10 states
+which those were, and **no stage is reported as passing that did not
+run.**
 
 ## 14. What this round is not
 
-It is not a PASS. It is not production readiness. It is not legal
-activation, a compliance statement, a procurement decision or a
-provider commitment. "PostgreSQL-compatible" is an architectural
-direction recorded in ADR-069, not a vendor choice — and no engine
-dependency exists anywhere in the repository to make it one.
+It **is** a PASS — an external pipeline verified the tree. It is not
+production readiness. It is not legal activation, a compliance statement, a
+procurement decision or a provider commitment. "PostgreSQL-compatible" is
+an architectural direction recorded in ADR-069, not a vendor choice — and
+no engine dependency exists anywhere in the repository to make it one.
+
+The distance between those two sentences is the whole of this document.
 
 ---
 
@@ -202,5 +215,8 @@ dependency exists anywhere in the repository to make it one.
 - `docs/packs/PACK-13/PACK-13-ACCEPTANCE-MATRIX.md` — per-criterion
   status, including everything deferred to production infrastructure.
 - `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md` — what was
-  built and what was verified.
+  built and what was verified locally, retained unchanged as the candidate
+  round's own record.
+- `docs/handover/PACK-13-FINAL-PASS-REPORT.md` — the round's closing
+  report, including the external CI results.
 - `docs/review/KNOWN_LIMITATIONS.md` — the repository-wide list.

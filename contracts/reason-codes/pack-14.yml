@@ -1,0 +1,2554 @@
+# Centralized PACK-14 reason-code registry (Identity, Authentication &
+# Account Security; FIR-ROADMAP-004; ADR-079 through ADR-088).
+#
+# This is the single source of truth for every `reason_code` string
+# literal used by `services/identity-service/src` - the codes the account
+# registry, the credential registry, the authentication and session
+# layers, step-up, recovery, identity proofing, the external-provider
+# adapter, account linking, privileged identity administration, the
+# cross-origin bootstrap and the WS-03 voting handoff boundary raise -
+# plus the additive `*_RECORDED` classifications this service uses for
+# its own audit bookkeeping, following the same pattern
+# ADR-004/ADR-014/ADR-019/ADR-024/ADR-055 and PACK-07's through
+# PACK-13's own registries already established. No PACK-14 code path may
+# use a free-text string in place of a registered code.
+#
+# **There is no generic `AUTH_ERROR` in this registry, and none may be
+# added.** That is PACK-13's `P13-RSN-002` applied to a domain where it
+# matters more. "Authentication failed" tells a person nothing about what
+# to do next and an auditor less; in an account-takeover investigation
+# the difference between `CREDENTIAL_INVALID` and `CREDENTIAL_REVOKED` is
+# the whole investigation. Where two failures differ in what someone must
+# do next, they are two codes.
+#
+# A code's meaning never changes. A new meaning is a new code. Editing a
+# `meaning` field below to cover a further case is the silent semantic
+# change ADR-074 forbids.
+#
+# **On the names.** The PACK-14 implementation task's section 23 lists a
+# minimum set using an `AUTH_`-prefixed style (`AUTH_INVALID_CREDENTIAL`,
+# `AUTH_MFA_REQUIRED`, and so on). The accepted PACK-14 Reason Code
+# Catalog - which is the authoritative architecture for this round -
+# registers the same facts under unprefixed names grouped by subject
+# (`CREDENTIAL_INVALID`, `MFA_REQUIRED`). This file follows the accepted
+# catalog, and `docs/packs/PACK-14/PACK-14-REASON-CODE-CATALOG.md`
+# carries a row-by-row mapping from the task's list to the registered
+# name, so nothing in the task's minimum set is missing - only renamed to
+# the catalog's own convention. Where the task named a distinction the
+# catalog had folded together (`AUTH_STEP_UP_BINDING_MISMATCH` versus a
+# changed object), this file registers **both** codes, because they call
+# for different responses.
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-13.yml (ADR-006 Option B precedent). PACK-14 extends an
+# EXISTING service in place - `identity-service`, which already carries
+# PACK-02's and PACK-07's own literals - rather than adding a wholly new
+# one, so this file additionally redeclares every code that service
+# already uses. Each redeclared entry keeps its ORIGINAL owning pack's
+# meaning and names that owner in `owner`: one fact keeps one code, and
+# PACK-14 shadows none of them with a prefixed duplicate. That makes this
+# file a complete, standalone source of truth for the literal scan
+# `tests/contract/test_reason_codes_registry.py` runs over
+# `PACK14_SERVICE_DIRS`.
+#
+# **There are no `source: canon-0.8.0` entries in this file.** Canon
+# section 24 registers no authentication, session, credential, recovery
+# or proofing code at all, and this round amends no canon -
+# `CANON_VERSION` stays `0.8.0`. Every code below is either an additive
+# `pack-14-service` code justified in ADR-079 through ADR-088, or an
+# earlier pack's code redeclared unchanged.
+
+
+# --- Additive PACK-14 codes (133) ---------------------------------------------
+
+- code: CREDENTIAL_INVALID
+  meaning: >-
+    The presented credential did not verify. Deliberately distinct from
+    CREDENTIAL_REVOKED and CREDENTIAL_EXPIRED: in a takeover
+    investigation the difference between 'wrong secret' and 'revoked
+    credential' is the whole investigation.
+  severity: error
+  description: "The presented credential did not verify."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_REVOKED
+  meaning: >-
+    The credential exists and has been revoked. It can never verify
+    again; a retry is pointless and the correct next step is enrolling a
+    new one.
+  severity: error
+  description: "The credential exists and has been revoked."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_EXPIRED
+  meaning: >-
+    The credential exists and is past its validity window.
+  severity: error
+  description: "The credential is past its validity window."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_ALREADY_ENROLLED
+  meaning: >-
+    A credential with this reference is already enrolled for the
+    account. Re-enrolling would create two records for one authenticator
+    and make revocation ambiguous.
+  severity: error
+  description: "The credential is already enrolled for this account."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_LAST_REMAINING
+  meaning: >-
+    Removal refused: it is the only credential on the account and no
+    recovery path exists. Removing it would lock the holder out with no
+    governed way back in.
+  severity: error
+  description: "Removal refused: last credential and no recovery path exists."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSKEY_VERIFICATION_FAILED
+  meaning: >-
+    WebAuthn assertion verification failed in the verification adapter.
+    Distinct from PASSKEY_ORIGIN_MISMATCH and
+    PASSKEY_SIGN_COUNTER_REGRESSION, which name specific structural
+    failures an operator must respond to differently.
+  severity: error
+  description: "WebAuthn assertion verification failed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSKEY_ORIGIN_MISMATCH
+  meaning: >-
+    The assertion was produced for a different origin than the one the
+    ceremony was bound to. This is the phishing signature, not a generic
+    verification failure.
+  severity: error
+  description: "The assertion was produced for a different origin."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSKEY_CHALLENGE_EXPIRED
+  meaning: >-
+    The registration or authentication challenge was presented after its
+    expiry. Challenges are single-use and short-lived by construction.
+  severity: error
+  description: "The WebAuthn challenge has expired."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSKEY_SIGN_COUNTER_REGRESSION
+  meaning: >-
+    The authenticator reported a signature counter lower than or equal
+    to the stored one where the authenticator supports counters. This is
+    the cloned-authenticator signal and is treated as a security event,
+    not a retryable error.
+  severity: error
+  description: "The authenticator signature counter regressed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSKEY_MALFORMED_RESPONSE
+  meaning: >-
+    The authenticator response could not be parsed into the fields the
+    verification adapter requires. Refused before any verification is
+    attempted, so a malformed input never reaches the crypto boundary.
+  severity: error
+  description: "The authenticator response is malformed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSWORD_LOGIN_DISABLED
+  meaning: >-
+    Password login is disabled for this scope or this account by
+    governed configuration (ADR-081, specification section 5.2). The
+    account has another path; this one is closed by decision, not by
+    fault.
+  severity: error
+  description: "Password login is disabled by governed configuration."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSWORD_ONLY_ACCOUNT_REFUSED
+  meaning: >-
+    Creating a new password-only account is refused. A password is a
+    fallback for someone who already has one, never the default path for
+    a new account (specification section 5.2).
+  severity: error
+  description: "A new password-only account may not be created."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSWORD_POLICY_NOT_MET
+  meaning: >-
+    The proposed password does not satisfy the governed policy. Never
+    reveals which rule failed in a public response.
+  severity: error
+  description: "The proposed password does not satisfy the governed policy."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PASSWORD_BREACHED
+  meaning: >-
+    The breached-password checking boundary reported the proposed
+    password as known-compromised. Refused at enrollment, not at login,
+    so the refusal discloses nothing about an existing account.
+  severity: error
+  description: "The proposed password is known-compromised."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SECURITY_QUESTION_REFUSED
+  meaning: >-
+    A security question was offered as a credential or as recovery
+    evidence. Security questions are prohibited outright: for candidates
+    and office-holders the answers are campaign material.
+  severity: error
+  description: "Security questions are prohibited."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_REQUIRED
+  meaning: >-
+    The action requires a second factor that was not presented. Password
+    authentication always reaches this code when no factor accompanies
+    it.
+  severity: error
+  description: "A second factor is required and was not presented."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_FAILED
+  meaning: >-
+    The second factor was presented and did not verify.
+  severity: error
+  description: "The second factor did not verify."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_FACTOR_NOT_ENROLLED
+  meaning: >-
+    No factor of the required class is enrolled on the account.
+  severity: error
+  description: "No factor of the required class is enrolled."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_FACTOR_REVOKED
+  meaning: >-
+    The factor exists and has been revoked.
+  severity: error
+  description: "The factor exists and has been revoked."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_FACTOR_ALREADY_ENROLLED
+  meaning: >-
+    A factor of this class is already enrolled and confirmed; a second
+    enrollment of the same class would make removal ambiguous.
+  severity: error
+  description: "A factor of this class is already enrolled."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MFA_FACTOR_NOT_CONFIRMED
+  meaning: >-
+    The factor was enrolled but never confirmed, so it cannot be used to
+    authenticate. An unconfirmed factor is a claim, not a credential.
+  severity: error
+  description: "The factor has not been confirmed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CODE_INVALID
+  meaning: >-
+    The presented recovery code does not belong to the account's current
+    set.
+  severity: error
+  description: "The recovery code is not valid for this account."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CODE_ALREADY_USED
+  meaning: >-
+    The recovery code belongs to the set and has already been consumed.
+    Recovery codes are single-use; a second presentation is a replay.
+  severity: error
+  description: "The recovery code has already been used."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CODE_SET_EXHAUSTED
+  meaning: >-
+    Every code in the set has been consumed. The next step is reissuing
+    the set under step-up, not retrying.
+  severity: error
+  description: "The recovery code set is exhausted."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SMS_OTP_NOT_AN_AUTHENTICATION_FACTOR
+  meaning: >-
+    SMS OTP was offered as a login method or as a step-up factor. It is
+    neither, and it carries no assurance level at all (OD-P14-09). It
+    verifies a phone channel and contributes a low-weight recovery
+    signal; an attacker who takes over the number gains a verified
+    channel and no authentication.
+  severity: error
+  description: "SMS OTP is not an authentication or step-up factor."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ASSURANCE_INSUFFICIENT
+  meaning: >-
+    The session's authentication assurance is below what the action
+    requires. Evaluated fail-closed as a conjunction per canon 19d.8; no
+    'or' condition can rescue it.
+  severity: error
+  description: "The session's assurance is below what the action requires."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ASSURANCE_STALE
+  meaning: >-
+    Assurance was sufficient but is outside the freshness window for
+    this action class. The level is right and the age is wrong, which is
+    a different remedy from raising the level.
+  severity: error
+  description: "Assurance is outside the action's freshness window."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_REQUIRED
+  meaning: >-
+    A step-up is required for this action and has not been performed.
+  severity: error
+  description: "A step-up is required and has not been performed."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_EXPIRED
+  meaning: >-
+    The step-up was performed and its window has elapsed.
+  severity: error
+  description: "The step-up window has elapsed."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_OBJECT_CHANGED
+  meaning: >-
+    The object changed after confirmation, so the approval is void
+    (ADR-082). A step-up obtained against version n does not authorise
+    version n+1; this is the rule that stops an approval being harvested
+    for one thing and spent on another.
+  severity: error
+  description: "The object changed after confirmation; the approval is void."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_BINDING_MISMATCH
+  meaning: >-
+    The step-up presented was bound to a different actor, session,
+    action type or resource than the one being attempted. Distinct from
+    STEP_UP_OBJECT_CHANGED, which is the same resource at a later
+    version.
+  severity: error
+  description: "The step-up is bound to a different action or resource."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_CANCELLED
+  meaning: >-
+    The user cancelled the step-up. Recorded distinctly so a cancelled
+    confirmation is never read as a failed one.
+  severity: error
+  description: "The step-up was cancelled by the user."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_ALREADY_CONSUMED
+  meaning: >-
+    The step-up confirmation was already spent on an action. A
+    confirmation authorises one act, not a session of them.
+  severity: error
+  description: "The step-up confirmation was already consumed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_METHOD_NOT_ELIGIBLE
+  meaning: >-
+    The method offered is marked step-up ineligible in the
+    authentication method matrix and can never satisfy a step-up
+    requirement, whatever the session already holds.
+  severity: error
+  description: "The offered method is not eligible for step-up."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_EXPIRED
+  meaning: >-
+    The idle or the absolute deadline was reached. Both are mandatory;
+    no session exists without them.
+  severity: error
+  description: "The session's idle or absolute deadline was reached."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_REVOKED
+  meaning: >-
+    The session was revoked and cannot refresh. A revoked session that
+    could silently regenerate would make revocation cosmetic.
+  severity: error
+  description: "The session was revoked and cannot refresh."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_REPLAY_DETECTED
+  meaning: >-
+    A rotated refresh token was presented a second time. The whole token
+    family is revoked and a security event is raised: either the holder
+    or an attacker has a stale copy, and neither may continue.
+  severity: error
+  description: "A rotated token was presented again; the family is revoked."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_SCOPE_MISMATCH
+  meaning: >-
+    The session is not scoped to this workspace. Sessions are minted per
+    origin and never span a risk boundary.
+  severity: error
+  description: "The session is not scoped to this workspace."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_ORIGIN_MISMATCH
+  meaning: >-
+    The session was presented from an origin it is not bound to.
+  severity: error
+  description: "The session was presented from an origin it is not bound to."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_QUARANTINED
+  meaning: >-
+    The session is quarantined pending a security response. It is
+    neither active nor revoked, and the difference matters to the
+    holder.
+  severity: error
+  description: "The session is quarantined pending a security response."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CSRF_TOKEN_INVALID
+  meaning: >-
+    A state-changing request arrived without a valid CSRF token.
+  severity: error
+  description: "A state-changing request lacked a valid CSRF token."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_IDENTIFIER_IN_URL
+  meaning: >-
+    A session identifier was placed in a URL or a redirect target.
+    Refused structurally: URLs end up in logs, referrers and shoulder
+    views.
+  severity: error
+  description: "A session identifier may not appear in a URL."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_LOCKED
+  meaning: >-
+    An AccountLock is in force. A lock is temporary, automatic and self-
+    clearing, and it is deliberately not an AccountStatus (OD-P14-01) -
+    the account is still whatever status it was.
+  severity: error
+  description: "A technical lock is in force on the account."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_RESTRICTED
+  meaning: >-
+    An AccountRestriction with a named authority is in force.
+  severity: error
+  description: "A restriction with a named authority is in force."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_QUARANTINED
+  meaning: >-
+    A security-class AccountRestriction (security quarantine) is in
+    force. Represented as a restriction rather than a status because it
+    has an authority and a review obligation.
+  severity: error
+  description: "A security quarantine is in force."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSED
+  meaning: >-
+    The account is closed. Closure is terminal.
+  severity: error
+  description: "The account is closed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_NOT_ACTIVATED
+  meaning: >-
+    The account is still pending; contact verification has not
+    completed.
+  severity: error
+  description: "The account has not been activated."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSURE_ALREADY_REQUESTED
+  meaning: >-
+    An AccountClosureRequest is already open for this account.
+  severity: error
+  description: "A closure request is already open."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSURE_NOT_REQUESTED
+  meaning: >-
+    No open AccountClosureRequest exists to cancel or complete.
+  severity: error
+  description: "No open closure request exists."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_ANONYMIZATION_IN_PROGRESS
+  meaning: >-
+    An anonymization run is already in progress for this account; a
+    second run would race the first over the same records.
+  severity: error
+  description: "Anonymization is already in progress."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_ANONYMIZATION_NOT_STARTED
+  meaning: >-
+    Completion was requested for an anonymization that was never begun.
+  severity: error
+  description: "Anonymization was never begun."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_REQUIRED
+  meaning: >-
+    Authentication cannot proceed with what the account holds; the
+    governed recovery workflow is the path.
+  severity: error
+  description: "Authentication cannot proceed; recovery is the path."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_RISK_TOO_HIGH
+  meaning: >-
+    The risk assessment refused the recovery on named, explainable
+    signals. No opaque score is ever the sole basis.
+  severity: error
+  description: "The risk assessment refused the recovery."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_COOLING_OFF_ACTIVE
+  meaning: >-
+    The cooling-off window has not elapsed. The window exists so the
+    legitimate holder has time to stop a fraudulent recovery.
+  severity: error
+  description: "The cooling-off window has not elapsed."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ALTERNATE_VERIFICATION_FAILED
+  meaning: >-
+    The independent verification method - independent of the credential
+    that was lost - failed.
+  severity: error
+  description: "The independent verification method failed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CONTACT_RECENTLY_CHANGED
+  meaning: >-
+    The channel offered for recovery was changed too recently to rely
+    on. Contact-change takeover is a first-class threat.
+  severity: error
+  description: "The offered channel was changed too recently to rely on."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_SELF_APPROVAL_REFUSED
+  meaning: >-
+    The reviewer initiated the case or is its subject. Insider reset and
+    support impersonation are first-class threats and this is their
+    structural control.
+  severity: error
+  description: "The reviewer initiated the case or is its subject."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_DUAL_CONTROL_REQUIRED
+  meaning: >-
+    High-assurance recovery requires a second approver, and this
+    decision carried one approver only.
+  severity: error
+  description: "A second approver is required for this recovery."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_EVIDENCE_MISSING
+  meaning: >-
+    The case carries no evidence reference, so a disputed recovery could
+    not be answered from a record.
+  severity: error
+  description: "The recovery case carries no evidence reference."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_ALREADY_COMPLETED
+  meaning: >-
+    The recovery case has already reached completion; it is not a
+    reusable authorisation.
+  severity: error
+  description: "The recovery case is already complete."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_RISK_ACCEPTANCE_REQUIRED
+  meaning: >-
+    The resulting confidence is below the assurance the recovery
+    replaces, and no explicit reason-coded risk acceptance by a named
+    authority was recorded (specification section 12.1). Without it the
+    recovery path silently becomes the account's real assurance level.
+  severity: error
+  description: "An explicit reason-coded risk acceptance is required."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_ELEVATION_REFUSED
+  meaning: >-
+    Emergency recovery restored access and a high-risk action was
+    attempted immediately afterwards. Elevated capability returns only
+    once the normal assurance path is satisfied.
+  severity: error
+  description: "Emergency recovery does not immediately authorize high-risk actions."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CREDENTIALS_NOT_REVOKED
+  meaning: >-
+    Completion was attempted before the old credentials and sessions
+    were revoked. A recovery that leaves the attacker logged in has
+    recovered nothing, so the order is enforced rather than documented.
+  severity: error
+  description: "Old credentials and sessions must be revoked before completion."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_NOT_VERIFIED
+  meaning: >-
+    The channel has not completed verification.
+  severity: error
+  description: "The channel has not completed verification."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_RECENTLY_CHANGED
+  meaning: >-
+    The action falls within the protective window after a contact
+    change.
+  severity: error
+  description: "The action falls within the protective window after a change."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_ALREADY_IN_USE
+  meaning: >-
+    The channel is already attached within its uniqueness scope. Never
+    disclosed to an unauthenticated caller, because that would be an
+    account-existence oracle.
+  severity: error
+  description: "The channel is already in use within its uniqueness scope."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_REUSE_BLOCKED
+  meaning: >-
+    The governed reuse policy refuses this channel - typically a handle
+    released by a closed account within the protective window, where
+    reuse would let a later holder inherit another person's history.
+  severity: error
+  description: "The governed reuse policy refuses this channel."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_NOT_NORMALIZABLE
+  meaning: >-
+    The value could not be normalized into the canonical form the
+    uniqueness scope compares. Fail-closed: an unnormalizable value is
+    never stored raw and compared later.
+  severity: error
+  description: "The contact value could not be normalized."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_AUTO_MERGE_REFUSED
+  meaning: >-
+    Two accounts were about to be merged because they share a contact
+    value. Refused unconditionally (ADR-080): a shared family address is
+    not evidence of one person, and duplicate handling is a reviewed
+    decision.
+  severity: error
+  description: "Accounts are never merged by a matching contact value."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_LAST_VERIFIED_CHANNEL
+  meaning: >-
+    Removal refused: it is the only verified channel and out-of-band
+    notification would have nowhere to go.
+  severity: error
+  description: "Removal refused: it is the only verified channel."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: NOTIFICATION_DELIVERY_FAILED
+  meaning: >-
+    A required notification could not be handed to the delivery outbox.
+    A security-relevant operation that depends on notification does not
+    silently complete.
+  severity: error
+  description: "A required notification could not be dispatched."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: DUPLICATE_ACCOUNT_SUSPECTED
+  meaning: >-
+    Routed to review. Never an automatic merge, and never a response
+    that discloses to the caller that another account exists.
+  severity: error
+  description: "Routed to duplicate review."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_LINKING_DENIED
+  meaning: >-
+    Linking refused by policy or by the governed review.
+  severity: error
+  description: "Account linking was refused."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_LINKING_PROOF_MISSING
+  meaning: >-
+    Control of both sides was not proven. Linking is user-initiated and
+    proof-of-control-bound; never inferred from a shared attribute.
+  severity: error
+  description: "Control of both sides was not proven."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_LINKING_CONFLICT
+  meaning: >-
+    The target is already linked to a different account, or the link
+    would create a cycle. Resolved by review, never by reassignment.
+  severity: error
+  description: "The link conflicts with an existing link."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_PROOFING_INSUFFICIENT
+  meaning: >-
+    The identity assurance established by proofing is below what the
+    action requires. Distinct from ASSURANCE_INSUFFICIENT, which is
+    about the session: canon 19d.8 keeps the two concepts unmixed.
+  severity: error
+  description: "Proofing assurance is below what the action requires."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_ASSERTION_EXPIRED
+  meaning: >-
+    The identity assertion is outside its freshness window.
+  severity: error
+  description: "The identity assertion is outside its freshness window."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_PROOFING_INCONCLUSIVE
+  meaning: >-
+    Neither verified nor rejected. Manual review follows; there is no
+    default verdict.
+  severity: error
+  description: "The proofing outcome is inconclusive; manual review follows."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_DOES_NOT_APPROVE_MEMBERSHIP
+  meaning: >-
+    A membership approval was inferred from a proofing decision.
+    Refused: canon 19d.9 stage B is a separate human decision and no
+    path around it exists.
+  severity: error
+  description: "Identity proofing never approves membership."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: EXTERNAL_PROVIDER_UNAVAILABLE
+  meaning: >-
+    The adapter could not reach the provider. The account has a local
+    path; the outage is recorded rather than routed around.
+  severity: error
+  description: "The adapter could not reach the provider."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: EXTERNAL_ASSERTION_INVALID
+  meaning: >-
+    Issuer, audience, signature, nonce or issued-at validation failed on
+    the external assertion.
+  severity: error
+  description: "The external assertion failed validation."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: EXTERNAL_ASSERTION_REPLAYED
+  meaning: >-
+    The assertion's identifier or nonce has been seen before. Recorded
+    distinctly from a validation failure because a replay is an attack
+    and a malformed assertion is usually a bug.
+  severity: error
+  description: "The external assertion has already been consumed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: EXTERNAL_SUBJECT_NOT_LINKED
+  meaning: >-
+    The provider subject is not linked to any account, and no account is
+    created or matched implicitly. A provider subject is never a global
+    user ID (ADR-079).
+  severity: error
+  description: "The provider subject is not linked to an account."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_INVALID
+  meaning: >-
+    The workspace authorization response failed validation for a reason
+    other than audience, expiry, nonce, redirect URI or reuse - each of
+    which has its own code.
+  severity: error
+  description: "The workspace authorization response failed validation."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_AUDIENCE_MISMATCH
+  meaning: >-
+    The authorization response was presented to an audience other than
+    the workspace it names. No token is reusable across origins.
+  severity: error
+  description: "The authorization response was presented to the wrong audience."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_ALREADY_USED
+  meaning: >-
+    The authorization response is single-use and was already redeemed.
+    It is worthless the moment after it is used, and that is the
+    property that distinguishes this ceremony from SSO.
+  severity: error
+  description: "The authorization response was already redeemed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_EXPIRED
+  meaning: >-
+    The authorization response was presented after its short expiry.
+  severity: error
+  description: "The authorization response has expired."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_NONCE_MISMATCH
+  meaning: >-
+    The nonce in the response does not match the one the workspace
+    issued with its request.
+  severity: error
+  description: "The response nonce does not match the request."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_REDIRECT_URI_INVALID
+  meaning: >-
+    The redirect URI is not on the workspace's registered allowlist.
+    Open-redirect abuse is a first-class threat and the allowlist is
+    exact-match, never prefix-match.
+  severity: error
+  description: "The redirect URI is not allowlisted for this workspace."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_PROOF_VERIFICATION_FAILED
+  meaning: >-
+    The PKCE-equivalent proof did not verify against the challenge
+    recorded with the request.
+  severity: error
+  description: "The proof of possession did not verify."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BOOTSTRAP_REPLAY_DETECTED
+  meaning: >-
+    A redeemed authorization response was presented again. Distinct from
+    BOOTSTRAP_ALREADY_USED in that the second presentation came from a
+    different audience or after the first was already recorded as spent,
+    which is an attack signal rather than a client bug.
+  severity: error
+  description: "A redeemed authorization response was presented again."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CROSS_WORKSPACE_HANDOFF_INVALID
+  meaning: >-
+    The handoff artifact is expired, addressed to the wrong audience, or
+    scoped to a different purpose.
+  severity: error
+  description: "The handoff artifact is expired, misaddressed or mis-scoped."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_INVALID
+  meaning: >-
+    The voting handoff artifact did not verify. Deliberately uniform:
+    the refusal discloses nothing about which property failed to a
+    caller outside the issuing boundary.
+  severity: error
+  description: "The voting handoff artifact did not verify."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_ALREADY_USED
+  meaning: >-
+    A single-use artifact was presented a second time.
+  severity: error
+  description: "The voting handoff artifact was already redeemed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_EXPIRED
+  meaning: >-
+    The artifact was presented after its short expiry, checked at
+    redemption.
+  severity: error
+  description: "The voting handoff artifact has expired."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_AUDIENCE_MISMATCH
+  meaning: >-
+    The artifact was presented to an audience other than the WS-03
+    origin it was bound to.
+  severity: error
+  description: "The voting handoff artifact was presented to the wrong audience."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_PURPOSE_MISMATCH
+  meaning: >-
+    The artifact was presented for a voting context other than the one
+    it is bound to. One artifact, one voting context, no transfer.
+  severity: error
+  description: "The artifact is bound to a different voting context."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_REVERSE_RESOLUTION_REFUSED
+  meaning: >-
+    A caller asked which account obtained a redeemed artifact. Refused
+    structurally: neither the artifact nor the issuance and redemption
+    records, jointly or separately, permit that resolution (ADR-088).
+    The refusal exists as a code so the attempt is auditable.
+  severity: error
+  description: "A redeemed artifact is never resolved back to an account."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_MAPPING_PURPOSE_MISMATCH
+  meaning: >-
+    The mapping was resolved for a purpose other than the one it was
+    created for. A mapping without an enforced purpose is a general-
+    purpose mapping, which is the global identifier this architecture
+    exists to prevent.
+  severity: error
+  description: "The mapping was resolved for a different purpose."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_MAPPING_SCOPE_MISMATCH
+  meaning: >-
+    The mapping was resolved outside its organizational scope. FIR-
+    INV-013's Bund/Land/Kreis isolation applies to mappings too.
+  severity: error
+  description: "The mapping was resolved outside its organizational scope."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_MAPPING_EXPIRED
+  meaning: >-
+    The mapping is past its expiry. A mapping that never expires becomes
+    the global identifier by longevity.
+  severity: error
+  description: "The mapping has expired."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_MAPPING_NOT_PERMITTED
+  meaning: >-
+    The caller's access policy does not permit resolving this mapping. A
+    mapping boundary is a governed operation, not a table anyone may
+    join.
+  severity: error
+  description: "The caller may not resolve this mapping."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: UNRESTRICTED_MAPPING_LOOKUP_REFUSED
+  meaning: >-
+    An enumeration across mappings was attempted without a purpose and a
+    scope. There is no 'list all mappings' operation, because such an
+    operation would be the correlation surface the mapping boundary
+    exists to deny.
+  severity: error
+  description: "Unrestricted enumeration across mappings is refused."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: GLOBAL_IDENTIFIER_REFUSED
+  meaning: >-
+    A raw account, person, membership or provider-subject identifier was
+    about to cross a boundary that admits only a purpose-scoped actor
+    reference (FIR-INV-001, ADR-079). This is the code that makes the
+    absence of a global user ID structural rather than aspirational.
+  severity: error
+  description: "A global identifier may not cross this boundary."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PRIVILEGED_APPROVAL_MISSING
+  meaning: >-
+    The required PACK-12 grant or approval is absent, expired or scoped
+    to a different purpose.
+  severity: error
+  description: "The required privileged grant or approval is absent."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: MANUAL_REVIEW_REQUIRED
+  meaning: >-
+    The decision is routed to a human. A first-class outcome, never a
+    silent approval or a silent denial.
+  severity: error
+  description: "The decision is routed to manual review."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SEPARATION_OF_DUTIES_VIOLATED
+  meaning: >-
+    The actor may not perform this act given another role they hold on
+    the same case.
+  severity: error
+  description: "The actor's other role forbids this act."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SUPPORT_ACTION_NOT_PERMITTED
+  meaning: >-
+    A Support Agent attempted an act reserved to another role - changing
+    an account owner, completing a recovery alone, or reading identity
+    content. Support impersonation is a first-class threat.
+  severity: error
+  description: "A Support Agent may not perform this act."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BREAK_GLASS_JUSTIFICATION_MISSING
+  meaning: >-
+    Break-glass was invoked without the justification and second actor
+    PACK-12 requires. Emergencies are exactly where controls get
+    skipped, so this one is enforced rather than trusted.
+  severity: error
+  description: "Break-glass requires a justification and a second actor."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SYSTEM_ADMIN_IDENTITY_ACCESS_REFUSED
+  meaning: >-
+    A System Admin role attempted to read identity content. Operating
+    the system is not reading the people in it (ADR-087).
+  severity: error
+  description: "A System Admin has no automatic identity content access."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RATE_LIMIT_EXCEEDED
+  meaning: >-
+    The governed rate limit for this operation and subject was exceeded.
+  severity: error
+  description: "The rate limit for this operation was exceeded."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_THROTTLED
+  meaning: >-
+    Repeated authentication failures have throttled this subject.
+    Distinct from ACCOUNT_LOCKED: throttling is per attempt source and
+    clears with time; a lock is a record on the account.
+  severity: error
+  description: "Authentication is throttled after repeated failures."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CHALLENGE_EXPIRED
+  meaning: >-
+    The challenge was presented after its expiry.
+  severity: error
+  description: "The challenge has expired."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: NONCE_ALREADY_USED
+  meaning: >-
+    The nonce has already been consumed. Nonces are single-use across
+    the whole replay-prevention store, not per ceremony.
+  severity: error
+  description: "The nonce has already been consumed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ORIGIN_NOT_ALLOWED
+  meaning: >-
+    The request origin is not one of the ten declared workspace origins.
+  severity: error
+  description: "The request origin is not a declared workspace origin."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SECRET_IN_PAYLOAD_REFUSED
+  meaning: >-
+    A payload, audit record or metric label was about to carry secret
+    material - a password, an OTP, a recovery code, a private key, a
+    full WebAuthn assertion or a raw contact value. Refused at
+    construction, so the prohibition is a code path rather than a review
+    note.
+  severity: error
+  description: "Secret material may not appear in this payload."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUDIT_UNAVAILABLE
+  meaning: >-
+    The audit path is unavailable, so a consequential operation refuses.
+    There is no unlogged privileged act.
+  severity: error
+  description: "The audit path is unavailable; the operation refuses."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RESOURCE_VERSION_STALE
+  meaning: >-
+    The expected resource version does not match the stored one.
+    PACK-13's ADR-077 discipline applied to identity aggregates.
+  severity: error
+  description: "The expected resource version does not match."
+  retryable: true
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST
+  meaning: >-
+    The idempotency key was seen before with a different request body.
+    Returning the first result would answer a question that was not
+    asked; refusing is the only safe option.
+  severity: error
+  description: "The idempotency key was reused with a different request."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONFIGURATION_RELAXATION_NOT_GOVERNED
+  meaning: >-
+    A timeout or freshness value was relaxed without an authority, a
+    reason code and an audit record. Stricter is free; relaxing is a
+    governed change (specification section 8.1).
+  severity: error
+  description: "Relaxing a governed value requires an authority and a reason code."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONFIGURATION_DEADLINE_REMOVAL_REFUSED
+  meaning: >-
+    A configuration attempted to remove a deadline. No configuration
+    may; the schema admits no unlimited value and there is no infinite
+    session.
+  severity: error
+  description: "No configuration may remove a deadline."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PERSISTENCE_MIGRATION_NOT_APPLIED
+  meaning: >-
+    The database is missing a declared migration, or a declared
+    migration has no artefact on disk. Refused rather than applied
+    implicitly: a schema that drifts from the code written against it is
+    the failure ADR-075's discipline exists to make visible.
+  severity: error
+  description: "A declared migration has not been applied."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PERSISTENCE_MIGRATION_CHECKSUM_MISMATCH
+  meaning: >-
+    An applied migration's artefact changed after it was applied. An
+    applied migration is never edited in place; a new intent is a new
+    migration.
+  severity: error
+  description: "An applied migration's artefact changed after it was applied."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PERSISTENCE_MIGRATION_OUT_OF_ORDER
+  meaning: >-
+    The migration sequence is not contiguous from 1, or the database
+    records a migration this repository no longer declares.
+  severity: error
+  description: "The migration sequence is inconsistent."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PERSISTENCE_TYPE_UNSUPPORTED
+  meaning: >-
+    A field type has no defined encoding or decoding. Raised rather than
+    falling back to `str()`, because a silently stringified field is a
+    security control that stops being loaded correctly. Raw `bytes`
+    reach this code deliberately: no key, salt or seed is ever persisted
+    by this package.
+  severity: error
+  description: "No encoding is defined for this field type."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PERSISTENCE_RECORD_NOT_FOUND
+  meaning: >-
+    A write was attempted against a row that does not exist, where the
+    caller expected one. Distinct from a plain read miss, which is
+    VALIDATION_RECORD_NOT_FOUND: this code says the write path disagreed
+    with the read path about what exists.
+  severity: error
+  description: "The row this write targets does not exist."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: BREACH_CHECK_UNAVAILABLE
+  meaning: >-
+    No breached-password checker is bound, so no password may be
+    enrolled or replaced. Fail-closed by decision: a checker that
+    silently reports nothing as breached is not a check, and a
+    deployment that has not bound one must find out at enrollment rather
+    than after a credential-stuffing incident.
+  severity: error
+  description: "No breached-password checker is bound; password enrollment refuses."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: API_REQUEST_MALFORMED
+  meaning: >-
+    The request could not be parsed into the operation's declared
+    fields. Refused before any domain code runs, so a malformed input
+    never reaches a gate.
+  severity: error
+  description: "The request could not be parsed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: API_OPERATION_UNKNOWN
+  meaning: >-
+    No endpoint is registered for the requested operation. The catalogue
+    is closed: an unrouted operation is refused rather than dispatched
+    by name.
+  severity: error
+  description: "No endpoint is registered for this operation."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: API_IDEMPOTENCY_KEY_REQUIRED
+  meaning: >-
+    A consequential operation was called without an idempotency key.
+    Every endpoint that declares itself consequential requires one, and
+    the requirement is checked at the boundary rather than trusted.
+  severity: error
+  description: "This operation requires an idempotency key."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: API_RESOURCE_VERSION_REQUIRED
+  meaning: >-
+    A consequential operation was called without the expected resource
+    version. Without it there is no optimistic-concurrency check, and
+    without that a stale client silently overwrites a newer state.
+  severity: error
+  description: "This operation requires an expected resource version."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: API_SESSION_CONTEXT_REQUIRED
+  meaning: >-
+    The operation requires an authenticated session context and none was
+    presented. Distinct from ASSURANCE_INSUFFICIENT, which is a context
+    that exists and is not strong enough.
+  severity: error
+  description: "This operation requires an authenticated session context."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RETENTION_SCHEDULE_UNCONFIRMED
+  meaning: >-
+    A destructive disposition was requested against a record class whose
+    retention duration is still the provisional schedule pending
+    OD-P14-07's legal confirmation. The provisional schedule governs
+    storage; it does not authorise destruction.
+  severity: error
+  description: "The retention schedule for this class is not yet confirmed."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+
+# --- Redeclared from earlier packs (21) ----------------------------------------
+#
+# `identity-service` is extended in place this round, so its `src/`
+# tree mixes genuinely-PACK-02, genuinely-PACK-07 and genuinely-PACK-14
+# literals. Each entry below keeps its original owning pack's meaning
+# and names that owner, so this file stays standalone without any code
+# acquiring a second meaning.
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The actor lacks the permission the operation requires. PACK-02's own
+    code, unchanged.
+  severity: error
+  description: "The actor lacks the required permission."
+  retryable: false
+  owner: account-service, identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    A plain lookup miss: no record exists for the given identifier.
+    PACK-02's own code, unchanged.
+  severity: error
+  description: "No record exists for the given identifier."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: >-
+    A status or enum value outside the canonical set was presented;
+    parsing fails closed (CT-00-02). PACK-02's own code, unchanged.
+  severity: error
+  description: "The status value is outside the canonical set."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: >-
+    The requested state transition is not in the allowed set (CT-00-03).
+    PACK-02's own code, unchanged.
+  severity: error
+  description: "The requested state transition is not allowed."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_NOT_VERIFIED
+  meaning: >-
+    The identity record exists but has not passed verification.
+    PACK-02's own code, unchanged.
+  severity: error
+  description: "The identity record has not passed verification."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_VERIFICATION_EXPIRED
+  meaning: >-
+    The identity verification is past its validity. PACK-02's own code,
+    unchanged.
+  severity: error
+  description: "The identity verification has expired."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_VERIFICATION_REVOKED
+  meaning: >-
+    The identity verification was explicitly revoked (ADR-002 maps it
+    onto the canonical expiry event). PACK-02's own code, unchanged.
+  severity: error
+  description: "The identity verification was revoked."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_VERIFICATION_STARTED
+  meaning: >-
+    Audit classification for the start of a verification. PACK-02's own
+    code, unchanged.
+  severity: error
+  description: "A verification was started."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_VERIFIED
+  meaning: >-
+    Audit classification for a successful verification. PACK-02's own
+    code, unchanged.
+  severity: error
+  description: "A verification succeeded."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_DUPLICATE_SUSPECTED
+  meaning: >-
+    Audit classification for a suspected duplicate identity. PACK-02's
+    own code, unchanged.
+  severity: error
+  description: "A duplicate identity is suspected."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_MANUAL_REVIEW_REQUIRED
+  meaning: >-
+    Audit classification for a verification routed to manual review.
+    PACK-02's own code, unchanged.
+  severity: error
+  description: "A verification was routed to manual review."
+  retryable: false
+  owner: identity-service (PACK-02)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_ATTRIBUTES_RECORDED
+  meaning: >-
+    Audit classification for recording canon 19d.2's additive identity
+    attributes. PACK-07's own code, unchanged.
+  severity: error
+  description: "Identity attributes were recorded."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_AGE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The derived age claim does not satisfy the requirement. PACK-07's
+    own code, unchanged.
+  severity: error
+  description: "The age requirement is not met."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_CITIZENSHIP_REQUIREMENT_NOT_MET
+  meaning: >-
+    The derived citizenship claim does not satisfy the requirement.
+    PACK-07's own code, unchanged - and canon 19d.2's prohibition
+    stands: verification through a scheme never implies a citizenship.
+  severity: error
+  description: "The citizenship requirement is not met."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_RESIDENCE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The derived residence claim does not satisfy the requirement.
+    PACK-07's own code, unchanged.
+  severity: error
+  description: "The residence requirement is not met."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_TERRITORIAL_SCOPE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The derived territorial scope does not satisfy the requirement.
+    PACK-07's own code, unchanged.
+  severity: error
+  description: "The territorial scope requirement is not met."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: IDENTITY_ASSURANCE_REQUIREMENT_NOT_MET
+  meaning: >-
+    The identity assurance level does not satisfy the requirement.
+    PACK-07's own code, unchanged.
+  severity: error
+  description: "The identity assurance requirement is not met."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_CONTEXT_ESTABLISHED
+  meaning: >-
+    Audit classification for establishing a canon 19d.8
+    `AuthenticationContext`. PACK-07's own code, unchanged.
+  severity: error
+  description: "An authentication context was established."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: STEP_UP_AUTHENTICATION_COMPLETED
+  meaning: >-
+    Audit classification for a completed step-up. PACK-07's own code,
+    unchanged.
+  severity: error
+  description: "A step-up authentication was completed."
+  retryable: false
+  owner: identity-service (PACK-07)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The organizational scope of the request does not permit the act.
+    PACK-08's own code, unchanged; FIR-INV-013's Bund/Land/Kreis
+    isolation.
+  severity: error
+  description: "The organizational scope does not permit this act."
+  retryable: false
+  owner: organization-service (PACK-08)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    The record is under a legal hold, so a destructive disposition is
+    refused. PACK-09's own code, unchanged; an unknown hold state fails
+    closed.
+  severity: error
+  description: "The record is under a legal hold."
+  retryable: false
+  owner: compliance-service (PACK-09)
+  introduced_in_version: pack-14-0.14.0
+
+
+
+# --- `*_RECORDED` audit classifications (59) --------------------------------
+#
+# Canon section 24 is refusal-only, and an act that SUCCEEDS still needs
+# a registered classification for its audit row - the same gap ADR-004
+# recorded for PACK-02 and PACK-13's `P13-RSN-006` recorded again.
+# There is exactly one per event in the PACK-14 Event Catalog, derived
+# mechanically from the event name by
+# `epd2_identity_service.account_security_events.recorded_reason_code_for`,
+# so the two can never drift apart.
+
+- code: ACCOUNT_CREATED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `account.created`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `account.created` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_ACTIVATED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `account.activated`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `account.activated` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_RESTRICTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.restricted` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `account.restricted` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_RESTRICTION_REMOVED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.restriction_removed` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `account.restriction_removed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_LOCKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `account.locked`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `account.locked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_UNLOCKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `account.unlocked`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `account.unlocked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSURE_REQUESTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.closure_requested` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `account.closure_requested` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSURE_CANCELLED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.closure_cancelled` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `account.closure_cancelled` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_CLOSED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `account.closed`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `account.closed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_ANONYMIZATION_STARTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.anonymization_started` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `account.anonymization_started` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: ACCOUNT_ANONYMIZATION_COMPLETED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `account.anonymization_completed` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `account.anonymization_completed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_ADDED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `contact.added`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `contact.added` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_VERIFICATION_REQUESTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `contact.verification_requested` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `contact.verification_requested` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_VERIFIED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `contact.verified`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `contact.verified` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_CHANGED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `contact.changed`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `contact.changed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CONTACT_REMOVED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `contact.removed`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `contact.removed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_ENROLLED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.enrolled` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `credential.enrolled` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_VERIFIED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.verified` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `credential.verified` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_REVOKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.revoked` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `credential.revoked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_PASSKEY_ADDED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.passkey_added` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `credential.passkey_added` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_PASSKEY_REMOVED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.passkey_removed` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `credential.passkey_removed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_MFA_ENROLLED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.mfa_enrolled` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `credential.mfa_enrolled` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_MFA_REMOVED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.mfa_removed` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `credential.mfa_removed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_RECOVERY_CODES_ISSUED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.recovery_codes_issued` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `credential.recovery_codes_issued` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_RECOVERY_CODE_USED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.recovery_code_used` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `credential.recovery_code_used` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: CREDENTIAL_RECOVERY_CODES_REVOKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `credential.recovery_codes_revoked` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `credential.recovery_codes_revoked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_STARTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.started` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `authentication.started` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_SUCCEEDED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.succeeded` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `authentication.succeeded` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_FAILED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.failed` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `authentication.failed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_STEP_UP_REQUESTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.step_up_requested` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication.step_up_requested` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_STEP_UP_SUCCEEDED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.step_up_succeeded` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication.step_up_succeeded` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_STEP_UP_FAILED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.step_up_failed` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `authentication.step_up_failed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_SUSPICIOUS_DETECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication.suspicious_detected` event. Derived mechanically
+    from the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication.suspicious_detected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_ISSUED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `session.issued`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `session.issued` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_ROTATED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `session.rotated`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `session.rotated` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_REFRESHED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `session.refreshed`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `session.refreshed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_ASSURANCE_CHANGED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `session.assurance_changed` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `session.assurance_changed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_REVOKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `session.revoked`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `session.revoked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_ALL_REVOKED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `session.all_revoked` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `session.all_revoked` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: SESSION_REPLAY_DETECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `session.replay_detected` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `session.replay_detected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_REQUESTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `recovery.requested` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `recovery.requested` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_ASSESSMENT_COMPLETED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `recovery.assessment_completed` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `recovery.assessment_completed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_COOLING_OFF_STARTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `recovery.cooling_off_started` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `recovery.cooling_off_started` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_APPROVED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `recovery.approved`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `recovery.approved` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_REJECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `recovery.rejected`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `recovery.rejected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_CREDENTIAL_REPLACEMENT_STARTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `recovery.credential_replacement_started` event. Derived
+    mechanically from the event type; never used as a refusal.
+  severity: info
+  description: "The `recovery.credential_replacement_started` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_COMPLETED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `recovery.completed` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `recovery.completed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: RECOVERY_DISPUTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `recovery.disputed`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `recovery.disputed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_STARTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `proofing.started`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `proofing.started` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_EVIDENCE_REFERENCED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `proofing.evidence_referenced` event. Derived mechanically from the
+    event type; never used as a refusal.
+  severity: info
+  description: "The `proofing.evidence_referenced` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_VERIFIED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `proofing.verified`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `proofing.verified` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_REJECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded `proofing.rejected`
+    event. Derived mechanically from the event type; never used as a
+    refusal.
+  severity: info
+  description: "The `proofing.rejected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: PROOFING_MANUAL_REVIEW_REQUIRED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `proofing.manual_review_required` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `proofing.manual_review_required` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_BOOTSTRAP_ISSUED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication_bootstrap.issued` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication_bootstrap.issued` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_BOOTSTRAP_REDEEMED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication_bootstrap.redeemed` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication_bootstrap.redeemed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: AUTHENTICATION_BOOTSTRAP_REPLAY_REJECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `authentication_bootstrap.replay_rejected` event. Derived
+    mechanically from the event type; never used as a refusal.
+  severity: info
+  description: "The `authentication_bootstrap.replay_rejected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_ISSUED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `voting_handoff.issued` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `voting_handoff.issued` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_REDEEMED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `voting_handoff.redeemed` event. Derived mechanically from the event
+    type; never used as a refusal.
+  severity: info
+  description: "The `voting_handoff.redeemed` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0
+
+
+- code: VOTING_HANDOFF_REPLAY_REJECTED_RECORDED
+  meaning: >-
+    Audit classification for a successfully recorded
+    `voting_handoff.replay_rejected` event. Derived mechanically from
+    the event type; never used as a refusal.
+  severity: info
+  description: "The `voting_handoff.replay_rejected` act was recorded."
+  retryable: false
+  owner: identity-service (PACK-14)
+  introduced_in_version: pack-14-0.14.0

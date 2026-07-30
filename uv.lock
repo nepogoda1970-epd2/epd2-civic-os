@@ -15,6 +15,7 @@ members = [
     "epd2-compliance-service",
     "epd2-core",
     "epd2-credential-service",
+    "epd2-data-plane-service",
     "epd2-delegation-service",
     "epd2-deliberation-service",
     "epd2-document-service",
@@ -26,6 +27,7 @@ members = [
     "epd2-membership-service",
     "epd2-moderation-service",
     "epd2-organization-service",
+    "epd2-privileged-access-service",
     "epd2-tally-service",
     "epd2-transparency-service",
     "epd2-voting-service",
@@ -201,6 +203,7 @@ dependencies = [
     { name = "epd2-compliance-service" },
     { name = "epd2-core" },
     { name = "epd2-credential-service" },
+    { name = "epd2-data-plane-service" },
     { name = "epd2-delegation-service" },
     { name = "epd2-deliberation-service" },
     { name = "epd2-document-service" },
@@ -239,6 +242,7 @@ requires-dist = [
     { name = "epd2-compliance-service", editable = "services/compliance-service" },
     { name = "epd2-core", editable = "packages/python/epd2-core" },
     { name = "epd2-credential-service", editable = "services/credential-service" },
+    { name = "epd2-data-plane-service", editable = "services/data-plane-service" },
     { name = "epd2-delegation-service", editable = "services/delegation-service" },
     { name = "epd2-deliberation-service", editable = "services/deliberation-service" },
     { name = "epd2-document-service", editable = "services/document-service" },
@@ -299,6 +303,21 @@ requires-dist = [{ name = "pyyaml", specifier = ">=6.0,<7" }]
 name = "epd2-credential-service"
 version = "0.1.0"
 source = { editable = "services/credential-service" }
+dependencies = [
+    { name = "epd2-audit-core" },
+    { name = "epd2-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "epd2-audit-core", editable = "services/audit-core" },
+    { name = "epd2-core", editable = "packages/python/epd2-core" },
+]
+
+[[package]]
+name = "epd2-data-plane-service"
+version = "0.1.0"
+source = { editable = "services/data-plane-service" }
 dependencies = [
     { name = "epd2-audit-core" },
     { name = "epd2-core" },

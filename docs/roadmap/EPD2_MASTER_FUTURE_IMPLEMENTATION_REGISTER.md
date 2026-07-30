@@ -242,33 +242,319 @@ recovery (PACK-17) items remain future in exactly the state they were.
 **Register updates only.** No entry was deleted, no identifier reused, no
 status downgraded, and no second register was created.
 
+## 1.9 Documentation-only register update — Canonical Forms (2026-07-30)
+
+This is a documentation-only register update discovered after PACK-13's
+implementation candidate and external CI run. It does not extend PACK-13's
+implementation scope and it is not evidence that a forms framework exists.
+
+**New FIR IDs created:** `FIR-FORM-001` through `FIR-FORM-005`, all with
+status `approved`. Together they establish the future cross-cutting layer
+for canonical form definitions, domain form inventories, governed German
+content, submissions and official multi-channel renditions.
+
+**FIR IDs implemented:** none. The five entries remain approved future
+obligations. Their inclusion in this register does not make any form,
+submission workflow, official text, PDF rendition or frontend surface
+implemented.
+
+**FIR IDs intentionally left unchanged:** every pre-existing entry.
+No identifier was reused, no status was downgraded and no second register
+was created.
+
+The updated register contained in the next cumulative FINAL PASS archive
+becomes the authoritative register for PACK-14 and every subsequent PACK.
+Later PACKs must preserve these entries unless a governed change updates
+their status or scope.
+
 ---
+
+## 1.10 Documentation-only register update — Cross-cutting procedural layers (2026-07-30)
+
+This is a documentation-only register update identified before PACK-13 FINAL
+PASS. It does not extend PACK-13 implementation scope and it does not alter
+the external CI result for the PACK-13 implementation candidate.
+
+**New FIR IDs created:** `FIR-RULE-001`, `FIR-REF-001`,
+`FIR-DELIVERY-001`, `FIR-TRUST-001`, `FIR-REPRESENT-001`,
+`FIR-INCLUSION-001`, `FIR-QUALITY-001`, `FIR-CONFIG-001`,
+`FIR-IMPORT-001` and `FIR-SERVICE-001`, all with status `approved`.
+
+**FIR IDs implemented:** none. These entries remain future obligations.
+They establish cross-cutting requirements for governed procedural rules,
+reference data, official delivery evidence, signatures and trusted
+timestamps, representation, alternative-channel procedures, reconciliation,
+operational configuration, legacy import and a service-responsibility
+catalogue.
+
+This update must be preserved in the PACK-13 FINAL PASS archive and becomes
+part of the authoritative cumulative baseline for PACK-14 and subsequent
+PACKs. A later PACK may change an entry's status or scope only through a
+governed register update that preserves history.
+
+## 1.11 Documentation-only register update — Frontend design and interaction governance (2026-07-30)
+
+This documentation-only update preserves the established minimalist EPD²
+visual direction and adds cross-cutting frontend governance requirements
+before PACK-13 FINAL PASS.
+
+**New FIR IDs created:** `FIR-UX-003` through `FIR-UX-010`, all with status
+`approved`.
+
+**FIR IDs implemented:** none. Existing FRONT-00/FRONT-01 assets and pages
+provide the current visual baseline, but they do not make the future design
+system, navigation governance or workspace interaction patterns complete.
+
+The updated register must be preserved in the PACK-13 FINAL PASS archive and
+carried into PACK-14 and subsequent PACKs.
+
+## 1.12 Documentation-only register update — Exact frontend baseline continuity (2026-07-30)
+
+This update clarifies that the approved FRONT-00 and FRONT-01 implementation,
+including the existing public pages, shared components, actual design tokens,
+layouts and accepted reference screenshots, is the authoritative visual
+baseline for future frontend work.
+
+“Minimalist EPD² design” must not be interpreted as permission to create a
+new unrelated minimalist design from scratch.
+
+No FIR is implemented by this clarification. It remains a future frontend
+governance obligation and must be carried into PACK-14 and subsequent
+FRONT-PACKs.
+
+## 1.13 Round record — PACK-13 FINAL PASS (2026-07-30)
+
+**PACK-13 EXTERNAL CI PASS. PACK-13 FINAL PASS ARCHIVE PREPARED.**
+`REPOSITORY_VERSION` `0.13.0`; `CANON_VERSION` `0.8.0`.
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+
+A packaging round, not an implementation round. No service module, test,
+reason code, ADR, contract, frontend file, route or visual snapshot was
+changed, and neither the repository version nor the canon version moved.
+
+**FIR IDs implemented:** `FIR-ROADMAP-003`, moved from `scheduled` to
+**`implemented in reference form`** on the strength of an external GitHub
+Actions run that passed every stage — 800/800 repository paths, no
+forbidden paths, version consistency, Ruff format over 520 files, Prettier,
+Ruff lint, ESLint, mypy across all 23 groups, both TypeScript typechecks,
+4625 Python tests passed with 4 skipped, 34 Node tests, 16 frontend unit
+and render tests, a successful Next.js production build, and 108 browser,
+accessibility and visual tests. Evidence:
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md`,
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log` and
+`docs/handover/PACK-13-FINAL-PASS-REPORT.md`.
+
+**`implemented in reference form`, not `implemented` outright.** The
+distinction is the whole content of the status. The contracts, the gates
+and the refusals are real and externally verified; the production data
+plane is not deployed. Every storage adapter in
+`services/data-plane-service` is in memory, and the criteria whose evidence
+is a database grant inventory, a live catalog snapshot, a role inventory or
+an egress-control review remain `deferred to production infrastructure` in
+the acceptance matrix's implementation-status appendix. A green pipeline
+verifies the tree; it does not deploy a database.
+
+**FIR IDs whose foundation-only status is unchanged by this round:** all
+nine recorded in §1.8. A green pipeline does not implement a requirement
+the round never set out to implement, and none is promoted here.
+
+**FIR IDs intentionally left unchanged:** every other entry, including
+`FIR-INV-002` … `FIR-INV-005`, `FIR-PROG-003`, all five `FIR-FORM-*`, all
+ten cross-cutting entries of §1.10 and all eight `FIR-UX-003` … `FIR-UX-010`
+frontend-governance entries. Every one of them remains `approved` and
+**none is implemented by PACK-13**.
+
+**New FIR IDs created by implementation discovery:** none.
+
+**Order of events, stated plainly because it matters for what the PASS
+covers.** The external GitHub Actions run verified the **implementation
+candidate**. The register updates recorded in §1.9 through §1.12 —
+`FIR-FORM-001` … `FIR-FORM-005`, the ten cross-cutting procedural entries,
+`FIR-UX-003` … `FIR-UX-010` and the frontend-baseline-continuity
+clarification — were written **after** that run and are therefore **not
+covered by it**. They are documentation-only, they change no code, test, CI
+configuration, ADR, canon or version, and they were re-verified here only
+by the deterministic repository and formatting checks this environment can
+run. `docs/handover/PACK-13-FINAL-PASS-REPORT.md` §11 states that split in
+full.
+
+**Production infrastructure and later-pack items remain future.** No
+production PostgreSQL, cloud database, real broker, external
+schema-registry product, production search engine, production IAM,
+multi-region topology, backup or restore capability is deployed or claimed.
+Identity (PACK-14), eligibility/credential/voting/tally (PACK-15/16) and
+backup recovery (PACK-17) remain future in exactly the state they were.
+
+**Register updates only.** No entry was deleted, no identifier reused, no
+status downgraded, and no second register was created. This file is the
+consolidated register supplied for this round, adopted at its canonical
+path with only the four status changes this FINAL PASS round is itself
+required to make: this round record, the `FIR-BASE-001` baseline pointer,
+`FIR-ROADMAP-003`'s status, and section 21's implementation summary. The
+candidate round record in §1.8 is preserved unmodified — the round genuinely
+was a candidate at the time, and rewriting that history to read as though it
+had always been FINAL PASS would destroy the audit trail this register
+exists to keep.
+
+## 1.14 Documentation-only register update — Page specification and screen content governance (2026-07-30)
+
+This update adds `FIR-UX-011 — Page Specification and Screen Content
+Governance`.
+
+It establishes that every user-facing domain must define a complete page and
+screen catalogue before frontend implementation, including page order,
+navigation sequence, content blocks, actions, states, exact governed content
+references and acceptance evidence.
+
+No implementation status changes. No code, test, CI, repository version or
+canon version changes are implied.
+
+_Numbering note: supplied as §1.13 in the standalone V5 register. It is
+recorded here as §1.14 because §1.13 in this cumulative register is already
+the PACK-13 FINAL PASS round record, which predates it. No word of its
+content changed, and nothing existing was renumbered._
+
+## 1.15 Round record — PACK-14 implementation candidate (2026-07-30)
+
+**Round:** PACK-14 — Identity, Authentication & Account Security,
+implementation candidate. **NOT PASS.** External GitHub Actions has not
+run against this round.
+
+**Repository version:** `0.13.0` → `0.14.0`.
+**Canon version:** unchanged at `0.8.0` — the round amends no canon.
+
+**What was built.** `services/identity-service` gains, in place, the six
+bounded contexts specification §4.1 assigns to it: Account Registry,
+Credential Registry, Authentication, Session Security, Recovery
+coordination and Identity-Proofing references — as internally separated
+modules with separate storage boundaries. 34 new source modules, 8 new
+test modules, 288 service tests plus 28 repository-level tests.
+`contracts/reason-codes/pack-14.yml` registers 213 entries. 59 event
+types use PACK-13's canonical envelope unchanged.
+
+**Correction round, before external CI, same repository version.** The
+first candidate archive was reviewed and three findings were returned and
+fixed. (1) The persistence was metadata rather than persistence: ten real
+SQL migration artefacts, a transactional checksum-guarded migration
+runner, eleven durable adapters, a transaction boundary, an
+optimistic-concurrency guard and a safe serializer were added, and the
+in-memory adapters were demoted to explicit test adapters that are no
+longer any runtime's default binding. It is a **reference** persistence
+path on SQLite through the standard library: **no production database is
+deployed and no production durability is claimed.** (2) The
+breached-password default was permissive and now **refuses**: no password
+may be enrolled or replaced without a bound checker, and the one governed
+exception permits authentication against an already stored hash only.
+(3) `api.py` was an endpoint catalogue and a runnable, transport-agnostic
+reference boundary was added, routing 12 of the 42 catalogued
+operations. No functional scope was expanded, no frontend was built, no
+dependency was added, no CI gate was weakened, no existing test was
+removed, and neither the repository nor the canon version changed.
+
+**FIR IDs implemented:** none. `FIR-ROADMAP-004` moves from `approved` to
+`candidate` — not to `implemented` and not to `implemented in reference
+form`, because no external pipeline has verified this round.
+
+**FIR IDs whose status is otherwise unchanged:** every other entry in this
+register. In particular `FIR-UX-011` stays **future**: no FRONT-PACK was
+built, no page catalogue or screen-state matrix exists, and the identity
+journey is explicitly not claimed as designed. `FIR-TRUST-001`,
+`FIR-REPRESENT-001` and `FIR-INCLUSION-001` stay future.
+`FIR-CONFIG-001` gains a consumer — PACK-14's governed timeout and
+freshness defaults — but is not itself implemented by this round.
+
+**What remains deferred, unchanged.** Production IAM, real eID, real
+email and SMS delivery, production HSM or KMS, the Voting Client, voting
+credential issuance, ballots, tallies, a full legal electronic signature,
+and the complete Account & Security FRONT-PACK.
+
+**`OD-P14-07` remains open**, pending legal confirmation of retention
+durations. It does not block the reference implementation: provisional
+schedules exist, every destructive disposition refuses while the schedule
+is unconfirmed, deletion under a legal hold refuses, and an unknown hold
+state fails closed.
+
+**No PACK-13 record was reopened, reverted or rewritten by this round**,
+and no future obligation was removed. The four changes this round makes
+to this register are: this round record, the `FIR-BASE-001` candidate
+pointer, `FIR-ROADMAP-004`'s status, and section 21's implementation
+summary line. The correction round adds no fifth change of kind: it
+updates the text of those same four places and the candidate archive
+name, and it moves no entry's status.
 
 # 2. Current confirmed baseline
 
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
-**Last updated:** PACK-13 Implementation Candidate round (2026-07-30)
+**Last updated:** PACK-14 implementation candidate round (2026-07-30)
+
+**Current candidate (NOT a PASS baseline):**
+
+```text
+EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_CANDIDATE_CORRECTED.zip
+```
+
+Repository version `0.14.0`; canon version `0.8.0` (unchanged — this round
+amends no canon). **External GitHub Actions has not run against it**, so
+it is deliberately not recorded as a baseline: the authoritative PASS
+baseline below is unchanged until an external pipeline says otherwise.
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+
+Added at this candidate:
+
+- `services/identity-service`: 40 source modules (34 new), 12 test modules
+- Identity implementation status: `reference_implementation`
+- `contracts/reason-codes/pack-14.yml` (213 entries: 131 additive, 22
+  redeclared from earlier packs, 60 `*_RECORDED` audit classifications)
+- ADR-079 through ADR-088, accepted in the specification round
+- A **reference persistence path**: ten SQL migration artefacts applied in
+  order in a transaction with a recorded checksum, producing 29 tables and
+  35 indexes; eleven durable adapters; a transaction boundary and an
+  optimistic-concurrency guard. It runs on SQLite through the standard
+  library. **No production database is deployed and no production
+  durability is claimed.** The in-memory adapters are retained as test
+  adapters and are not the default runtime binding.
+- A **runnable reference service boundary** routing 12 of the 42
+  catalogued operations, transport-agnostic, with reason-coded responses
+  and no secret or raw identifier in any response body
+- All four security ports **refuse** when unbound; in particular no
+  password may be enrolled or replaced without a bound breached-password
+  checker
+- still no production IAM, no eID scheme, no email or SMS provider, no
+  HSM or KMS, no Voting Client, no HTTP surface or production gateway,
+  and no frontend
+
+**Correction round, 2026-07-30, before external CI.** The first candidate
+archive was reviewed and three findings were returned and fixed:
+persistence that was metadata rather than persistence, a permissive
+breached-password default, and an API module that was a catalogue rather
+than a boundary. No functional scope was expanded, no frontend was built,
+no dependency was added, no CI gate was weakened, no existing test was
+removed, and the repository and canon versions are unchanged. The
+superseded archive is
+`EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_CANDIDATE.zip`.
 
 **Current authoritative cumulative baseline (PASS):**
 
 ```text
-EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_FINAL_PASS.zip
+EPD2_PACK-13_PRODUCTION_DATA_PLANE_CONTRACT_EVOLUTION_0.13.0_FINAL_PASS.zip
 ```
 
-**Current working head — a CANDIDATE, not a baseline:**
+Repository version `0.13.0`; canon version `0.8.0` (unchanged — this round
+amends no canon). Verified by an external GitHub Actions run that passed
+every stage — see `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` and
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 
-```text
-EPD2_PACK-13_PRODUCTION_DATA_PLANE_CONTRACT_EVOLUTION_0.13.0_CANDIDATE.zip
-```
+Confirmed at this baseline:
 
-Repository version `0.13.0`; canon version `0.8.0` (unchanged — this
-round amends no canon). **NOT PASS. NOT PRODUCTION READY. NOT LEGALLY
-ACTIVATED.** The PASS baseline above is unchanged and remains the
-authoritative one until an external GitHub Actions run passes over the
-candidate. Added by the candidate:
-
+- Repository version: `0.13.0`
+- Canon version: `0.8.0`
+- PACK-01 through PACK-13: PASS
+- FRONT-00 Foundation: PASS
+- FRONT-01 Public Website: PASS
 - `services/data-plane-service`: 22 source modules, 20 test modules
 - Data-plane implementation status: `reference_implementation`
 - `contracts/reason-codes/pack-13.yml` (125 entries: 88 from the PACK-13
@@ -276,7 +562,17 @@ candidate. Added by the candidate:
 - ADR-069 through ADR-078, accepted
 - still no production database, no production event bus, no external
   schema-registry product, no production search engine, no production
-  IAM, no backup or restore capability
+  IAM, no backup or restore capability, no multi-region topology
+
+The last line is why `FIR-ROADMAP-003` is `implemented in reference form`
+rather than `implemented`. A green pipeline verifies the tree; it deploys
+nothing.
+
+**Previous PASS baseline, superseded by the line above:**
+
+```text
+EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_FINAL_PASS.zip
+```
 
 Repository version `0.12.0`; canon version `0.8.0`. Verified by an
 external GitHub Actions run — see
@@ -284,19 +580,14 @@ external GitHub Actions run — see
 `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
 **Not production ready. Not legally activated.**
 
-**Previous PASS baseline, superseded by the line above:**
+**Earlier PASS baselines, in order:**
 
 ```text
 EPD2_PACK-11_GOVERNED_DOCUMENTS_EVIDENCE_0.11.0_FINAL_PASS.zip
-```
-
-**Earlier PASS baseline:**
-
-```text
 EPD2_PACK-10_PARTY_FINANCE_0.10.0_FINAL_PASS.zip
 ```
 
-Confirmed at the previous PASS baseline:
+Confirmed at the `0.10.0` PASS baseline:
 
 - Repository version: `0.10.0`
 - Canon version: `0.8.0`
@@ -310,7 +601,7 @@ Confirmed at the previous PASS baseline:
 - no banking/payment-provider integration
 - no operational finance UI
 
-Added by PACK-11, now confirmed at the current PASS baseline by an
+Added by PACK-11 and confirmed at the `0.11.0` PASS baseline by an
 external GitHub Actions run
 (`docs/handover/PACK-11-GOVERNED-DOCUMENTS-EVIDENCE-0.11.0-FINAL-PASS-REPORT.md`,
 `docs/handover/PACK-11-EXTERNAL-CI-VERIFICATION.log`):
@@ -436,9 +727,10 @@ outright:**
 
 ## FIR-ROADMAP-003 — PACK-13 Production Data Plane & Contract Evolution
 
-**Status:** scheduled  
-**Target version:** `0.13.0`  
-**Repository version carrying the candidate:** `0.13.0`
+**Status:** implemented in reference form  
+**Target version:** `0.13.0` — delivered by PACK-13, FINAL PASS  
+**Implementing round:** PACK-13 implementation round (2026-07-30),
+candidate → documentation correction → external CI PASS → FINAL PASS
 
 Scope:
 
@@ -456,8 +748,8 @@ Scope:
 and ADR-069 through ADR-078 were accepted as the normative basis. That
 round set no version and implemented nothing.
 
-**PACK-13 implementation round: CANDIDATE. This entry is NOT
-implemented.** `services/data-plane-service` implements the specification
+**PACK-13 implementation round: EXTERNAL CI PASS, FINAL PASS archive
+prepared.** `services/data-plane-service` implements the specification
 in **reference form**: the transactional persistence contracts, the
 canonical schema registry, the deterministic compatibility checker, the
 API and event contract-evolution model, the migration framework and its
@@ -468,20 +760,32 @@ retention and legal-hold bindings, the PACK-12 privileged gates and the
 structural boundary guards — twenty-two source modules and twenty test
 modules, with `contracts/reason-codes/pack-13.yml` carrying 125 entries.
 
-**Why the status is `scheduled` and not `implemented`:**
+**External GitHub Actions passed every stage:** 800/800 repository paths,
+no forbidden paths, version consistency, Ruff format over 520 files,
+Prettier, Ruff lint, ESLint, mypy across all 23 groups, both TypeScript
+typechecks, 4625 Python tests passed with 4 skipped, 34 Node tests, 16
+frontend unit and render tests, a successful Next.js production build, and
+108 browser, accessibility and visual tests.
 
-1. this round produced an **implementation candidate**, not a PASS, and
-   the external GitHub Actions pipeline has not run against it;
-2. every storage adapter is **in memory**. No production PostgreSQL,
+**Why the status is `implemented in reference form` and not `implemented`
+outright:**
+
+1. every storage adapter is **in memory**. No production PostgreSQL,
    cloud database, real broker, external schema-registry product,
    production search engine or production IAM is deployed. The
    requirements a production data plane must satisfy are implemented as
    contracts and refusals, which is a different and lesser claim than
    satisfying them in production;
-3. the criteria whose evidence is a database grant inventory, a live
-   catalog snapshot or an egress-control review are recorded as
-   `deferred to production infrastructure` in the acceptance matrix's
-   implementation-status appendix, not as met.
+2. the criteria whose evidence is a database grant inventory, a live
+   catalog snapshot, a role inventory or an egress-control review are
+   recorded as `deferred to production infrastructure` in the acceptance
+   matrix's implementation-status appendix, not as met;
+3. the external pipeline verifies the repository. It builds, type-checks,
+   lints, formats and tests the tree — and it deploys no database, starts
+   no broker and grants no role, so it cannot close a criterion whose
+   evidence lives in an environment that does not exist yet.
+
+**Not production ready. Not legally activated.**
 
 **Evidence:**
 
@@ -493,12 +797,18 @@ modules, with `contracts/reason-codes/pack-13.yml` carrying 125 entries.
 - `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`;
 - `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`;
 - `docs/handover/PACK-13-SPEC-ADR-REPORT.md` (the specification round's
-  own report, retained unchanged).
+  own report, retained unchanged);
+- `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+  `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` and
+  `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
 
 **Remaining work before this entry could ever be marked `implemented`
 outright:**
 
-1. an external GitHub Actions PASS over this candidate;
+1. ~~an external GitHub Actions PASS over this candidate~~ — **done**
+   (2026-07-30), and it is what moved this entry to `implemented in
+reference form`. Retained rather than deleted, because the register
+   preserves history;
 2. a production PostgreSQL-compatible deployment with domain-owned
    schemas, per-domain grants and the immutable-history tables enforced at
    the privilege level;
@@ -512,8 +822,22 @@ outright:**
 
 ## FIR-ROADMAP-004 — PACK-14 Identity/Auth & External Gateway Security
 
-**Status:** approved  
+**Status:** candidate  
 **Target version:** `0.14.0`
+
+Moved from `approved` to `candidate` by the PACK-14 implementation
+candidate round (§1.15). Deliberately **not** `implemented` and not
+`implemented in reference form`: no external pipeline has verified this
+round, and until one has, "candidate" is the only status the evidence
+supports. The gateway-hardening and external-trust-provider halves of the
+scope below remain untouched — this round defines a provider **adapter
+boundary** and selects no provider.
+
+The correction round (§1.15) does not move this status. It added a
+reference persistence path and a runnable reference service boundary,
+both of which are repository artefacts on the standard library; neither
+is a deployment, neither is a gateway, and no external pipeline has yet
+verified either.
 
 Scope:
 
@@ -2807,20 +3131,57 @@ Required gate families:
 
 - PACK-01 through PACK-10 (PASS);
 - PACK-11 (PASS — external GitHub Actions verification complete);
-- **PACK-12 (PASS — external GitHub Actions verification complete);**
+- PACK-12 (PASS — external GitHub Actions verification complete);
+- **PACK-13 (PASS — external GitHub Actions verification complete);**
 - FRONT-00;
 - FRONT-01;
 - finance reference implementation;
-- **governed documents and evidence reference implementation** (PACK-11);
-- **privileged administration, authorization-aware search and governed
-  export reference implementation** (PACK-12);
+- governed documents and evidence reference implementation (PACK-11);
+- privileged administration, authorization-aware search and governed
+  export reference implementation (PACK-12);
+- **production data plane and contract evolution reference
+  implementation** (PACK-13);
 - cumulative architecture baseline;
 - 45 visual snapshots.
 
 "Reference implementation" is the operative qualifier for PACK-10,
-PACK-11 and PACK-12 alike: the governed workflows are real and externally
-verified; the production data plane is not. Nothing in this list is
-production ready or legally activated.
+PACK-11, PACK-12 and PACK-13 alike: the governed workflows are real and
+externally verified; the production data plane is not. PACK-13 is the
+sharpest case of the distinction, because it is the pack _named_ for the
+production data plane and every storage adapter in it is a Python
+dictionary. Nothing in this list is production ready or legally activated.
+
+## Candidate, not yet externally verified
+
+- **PACK-14 — Identity, Authentication & Account Security (implementation
+  candidate, repository `0.14.0`).** The six bounded contexts
+  specification §4.1 assigns to `identity-service` exist in reference
+  form: the account lifecycle that represents locks, restrictions and
+  closure requests without extending canon 7.2's six statuses,
+  passkey-first authentication behind a verification port, the fenced
+  password fallback, MFA with SMS OTP deliberately absent as a factor
+  class, the fail-closed assurance conjunction, the session aggregate
+  with two mandatory deadlines, action- and object-version-bound
+  step-up, the per-workspace authentication bootstrap that is explicitly
+  not SSO, the identity-free WS-03 voting handoff boundary, the governed
+  recovery workflow, the proofing boundary and the scoped identity
+  mappings.
+
+  It is listed **separately from the implemented list above** because no
+  external GitHub Actions run has verified it. It integrates no
+  production IAM, no eID scheme, no email or SMS provider and no HSM or
+  KMS; it implements no WebAuthn cryptography and no password-hashing
+  algorithm (all four security ports refuse when unbound); it deploys no
+  production database; it exposes no HTTP surface and no production
+  gateway; and it builds no frontend.
+
+  What it **does** now have, after the correction round, is a reference
+  persistence path that really runs — ten applied SQL migration
+  artefacts, durable adapters, transaction boundaries and an
+  optimistic-concurrency guard — and a runnable reference service
+  boundary for 12 of its 42 catalogued operations. Both are reference
+  artefacts on the standard library, not a deployment.
+  `FIR-ROADMAP-004` is `candidate`.
 
 ## Specified but not implemented
 
@@ -2831,8 +3192,21 @@ production ready or legally activated.
 - member payments;
 - SEPA mandate record (PACK-11 provides the mandate _evidence_ foundation only);
 - full voting implementation;
-- production data plane;
-- identity/auth;
+- the **production** data plane — PACK-13 delivers the contracts, gates and
+  refusals in reference form and deploys no database, broker, schema
+  registry or search engine;
+- canonical forms, submissions and official renditions (section 26);
+- the cross-cutting procedural, trust and operational foundations
+  (section 27);
+- the frontend design, visualization and interaction governance layer
+  (section 28), including `FIR-UX-011`'s page and screen catalogue —
+  FRONT-00 and FRONT-01 are the approved visual baseline, not a completed
+  design system, and no page sequence is yet specified;
+- identity/auth **beyond PACK-14's reference implementation** — no
+  production IAM, no eID scheme, no provider integration of any kind, no
+  production database or operational durability behind the reference
+  persistence path, no HTTP surface or production gateway in front of the
+  reference service boundary, and no Account & Security FRONT-PACK;
 - communications (PACK-11 provides the correspondence-document foundation only);
 - candidacy (PACK-11 provides the candidacy-document foundation only);
 - the FIR-PROG-002 pre-adoption gate (PACK-11 provides the opinion-document
@@ -3475,3 +3849,1292 @@ Primary placement:
 - public aggregates and transparency: future publication/transparency packages.
 
 No entry in this section is considered implemented merely by inclusion in this register.
+
+# 26. Canonical Forms, Submissions & Official Renditions
+
+This section establishes forms, applications, declarations, submissions,
+decisions and official documents as an independent mandatory layer of
+EPD². They are not a cosmetic frontend afterthought. A domain is not
+considered to cover its user journey merely because backend records and
+workflow states exist while the actual form, official wording and
+renditions remain undefined.
+
+## FIR-FORM-001 — Canonical Forms and Submissions Framework
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** cross-cutting forms / submissions / governed content / records / frontend  
+**Target:** dedicated future foundation PACK or the next suitable core and frontend PACK  
+**Dependencies:** PACK-09, PACK-11, PACK-12, PACK-13, PACK-14
+
+Create one governed mechanism for defining forms and submissions.
+
+The minimum normative model includes:
+
+- `FormDefinition`;
+- `FormVersion`;
+- `FormSection`;
+- `FormField`;
+- `FieldOption`;
+- `ConditionalVisibilityRule`;
+- `ValidationRule`;
+- `AttachmentRule`;
+- `RequiredDeclaration`;
+- `ConsentRequirement`;
+- `SignatureRequirement`;
+- `SubmissionDefinition`;
+- `SubmissionDraft`;
+- `SubmissionSnapshot`;
+- `SubmissionCorrection`;
+- `SubmissionWithdrawal`;
+- `SubmissionDecision`;
+- `SubmissionAppealReference`;
+- `RenditionDefinition`.
+
+Every form must define at least:
+
+- a stable form ID;
+- a domain owner;
+- a version and lifecycle state;
+- effective-from and retired-from dates;
+- the legal, statutory or procedural basis;
+- organization scope;
+- eligible submitter categories;
+- competent recipient or authority;
+- mandatory and optional fields;
+- conditional fields and visibility rules;
+- validation rules;
+- attachment requirements;
+- exact declaration and consent texts;
+- required confirmation, authentication or signature class;
+- draft, submission, correction and withdrawal rules;
+- submission and decision deadlines;
+- confidentiality classification;
+- retention schedule and legal-hold integration;
+- accessibility and localization requirements;
+- web, mobile, print and PDF renditions;
+- an immutable submitted snapshot;
+- audit and evidence references.
+
+Changing a form must never alter an already submitted application. Every
+submission keeps a durable reference to the exact form version, content
+version, declarations and attachment rules in force at submission time.
+
+Existing records, documents or workflow models do not by themselves
+satisfy this requirement.
+
+### Acceptance criteria
+
+- A versioned form definition can be approved, activated, superseded and
+  retired without changing prior submission snapshots.
+- Required declarations, attachment rules and validation rules are bound
+  to the same form version.
+- A submission can be rendered consistently for digital review, printing
+  and archival evidence.
+- Retention, confidentiality, organization scope and legal hold are
+  enforced without turning preservation into authorization.
+- No consequential submission is accepted without explicit confirmation
+  of the exact version presented to the submitter.
+
+## FIR-FORM-002 — Domain Forms and Official Documents Inventory
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** all business domains  
+**Target:** every relevant domain PACK  
+**Dependencies:** FIR-FORM-001
+
+Every domain PACK must publish the complete set of user-facing and
+administrative forms and official documents needed to complete the user
+journeys claimed by that PACK.
+
+Every relevant PACK must produce:
+
+1. `FORM-INVENTORY.md` — all forms and official documents;
+2. `FIELD-CATALOGUE.md` — fields, types, requiredness, dependencies and
+   validation;
+3. `CONTENT-CATALOGUE-DE.md` — exact German questions, explanations,
+   declarations, warnings and confirmations;
+4. `WORKFLOW-MATRIX.md` — submission, intake, review, correction,
+   withdrawal, decision and appeal;
+5. `ATTACHMENT-MATRIX.md` — permitted and required attachments;
+6. `RENDITION-SPECIFICATION.md` — web, mobile, accessible, print and PDF;
+7. `PRIVACY-RETENTION-MATRIX.md`;
+8. acceptance fixtures covering a valid submission, incomplete
+   submission, inadmissible submission, correction, withdrawal, approval,
+   rejection and appeal where applicable.
+
+A domain must not be described as fully covering its user process when it
+only defines backend entities and state transitions but omits the actual
+forms, fields, official wording and user-confirmed submission artifact.
+
+### Mandatory PACK reporting rule
+
+Starting with the next relevant domain PACK, its Specification, Acceptance
+Matrix and Final Report must contain a section titled:
+
+```text
+Forms and Official Documents Coverage
+```
+
+That section must state:
+
+- which forms are fully defined;
+- which exist only as system models;
+- which official texts are still missing;
+- which web, mobile, accessible, print and PDF renditions exist;
+- which forms are deferred;
+- which FIR entries are addressed;
+- whether a missing form blocks PASS and why.
+
+Absence of a form is a PASS blocker when the primary user journey claimed
+by the PACK cannot be completed without it.
+
+## FIR-FORM-003 — Initial EPD² Forms and Documents Catalogue
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** cross-domain inventory  
+**Target:** complete before the main PACK-19 through PACK-35 implementation sequence  
+**Dependencies:** FIR-FORM-001
+
+Prepare one preliminary catalogue of all anticipated EPD² forms,
+applications, declarations, notifications, confirmations, decisions and
+official records.
+
+The catalogue must cover at least the following groups.
+
+### Membership
+
+- membership application;
+- acknowledgement of receipt;
+- request for missing information;
+- correction of personal data;
+- change of address and contact details;
+- change of payment details;
+- membership confirmation;
+- suspension and termination notices;
+- resignation from membership;
+- rejection decision;
+- objection and appeal.
+
+### Candidacy and nomination
+
+- candidacy application;
+- nomination proposal;
+- candidate consent;
+- withdrawal;
+- eligibility declaration;
+- conflict-of-interest disclosure;
+- supporting-document confirmation;
+- admission or exclusion decision;
+- objection and appeal.
+
+### Party offices and mandates
+
+- application for party office;
+- consent to nomination;
+- duty declaration;
+- interest disclosure;
+- resignation from office or mandate;
+- office-holder report;
+- documents for the open representative's table.
+
+### Programme and initiatives
+
+- programme proposal;
+- initiative;
+- amendment;
+- withdrawal of proposal;
+- request for AI analysis;
+- expert opinion;
+- legal opinion;
+- readiness declaration;
+- decision on admission to voting.
+
+### Assemblies and meetings
+
+- request to convene;
+- participation registration;
+- request for online participation;
+- agenda-item proposal;
+- amendment;
+- procedural motion;
+- proxy where legally and procedurally permitted;
+- conflict-of-interest declaration;
+- objection to minutes;
+- request to correct minutes.
+
+### Complaints and oversight
+
+- complaint;
+- Ombuds submission;
+- ethics complaint;
+- confidentiality request;
+- protected disclosure;
+- whistleblowing submission;
+- recusal request;
+- objection;
+- appeal;
+- decision notice.
+
+### Finance
+
+- donation declaration;
+- donation receipt or confirmation;
+- expense reimbursement request;
+- advance request;
+- expense report;
+- financial disclosure;
+- source-of-funds confirmation;
+- suspicious-transaction notification;
+- receipt and review confirmation.
+
+### Data and documents
+
+- access request;
+- correction request;
+- deletion request;
+- objection to processing;
+- export request;
+- document request;
+- request for an official copy;
+- receipt confirmation;
+- confidentiality request;
+- access-restriction decision.
+
+### Citizen Office
+
+- citizen submission;
+- consultation request;
+- petition;
+- complaint;
+- problem report;
+- consent to referral to a competent authority;
+- status request;
+- case closure;
+- appeal or review request.
+
+### Personnel, procurement and contractors
+
+- candidate application;
+- onboarding declarations;
+- confidentiality declaration;
+- conflict-of-interest disclosure;
+- procurement request;
+- vendor declaration;
+- bid submission;
+- evaluation declaration;
+- reimbursement and invoice approval;
+- offboarding confirmation.
+
+### Lobbying and parliamentary transparency
+
+- lobbying-contact disclosure;
+- meeting disclosure;
+- gift or benefit disclosure;
+- external-interest declaration;
+- parliamentary initiative submission;
+- explanation of deviation from the member mandate;
+- public representative report.
+
+For every catalogue item, record at least:
+
+- provisional form ID;
+- domain owner;
+- intended submitter;
+- receiving authority;
+- legal, statutory or procedural basis;
+- confidentiality class;
+- expected attachments;
+- signature or authentication class;
+- workflow;
+- retention class;
+- responsible future PACK.
+
+## FIR-FORM-004 — Governed Form Content and Language Catalogue
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** governed content / documents / localization / accessibility  
+**Target:** Canonical Forms foundation and every later domain PACK  
+**Dependencies:** FIR-FORM-001, PACK-11
+
+The actual wording of a form must be governed, versioned content rather
+than text embedded only in frontend source code.
+
+Governed content includes:
+
+- German form names;
+- questions and instructions;
+- help text and tooltips;
+- declarations and consent wording;
+- legal and procedural notices;
+- warnings;
+- confirmation text;
+- correction and rejection messages;
+- accessibility labels;
+- print and PDF labels.
+
+Every content version must have:
+
+- an owner;
+- a version ID;
+- language;
+- effective date;
+- approval evidence;
+- a reference to the form version;
+- supersession history;
+- content digest;
+- immutable historical availability.
+
+A translation must not silently alter legal or procedural meaning. Where
+multiple languages are offered, the authoritative language and the
+relationship between versions must be explicit.
+
+## FIR-FORM-005 — Multi-Channel Official Renditions
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** frontend / governed documents / accessibility / evidence  
+**Target:** future Public Website, Member Core and administrative frontend PACKs  
+**Dependencies:** FIR-FORM-001, PACK-11
+
+One approved form version must produce consistent official renditions for:
+
+- desktop web;
+- mobile web;
+- an accessible representation;
+- printable form;
+- archival PDF;
+- immutable submission receipt;
+- administrative review view.
+
+All renditions must derive from the same governed `FormDefinition` and the
+same content-catalogue version. A print or PDF rendition must not differ
+from the digital form in mandatory questions, declarations, warnings or
+confirmation requirements.
+
+The immutable submission receipt must contain at least:
+
+- form ID and form version;
+- submission ID;
+- submission date and time;
+- submitting party in the permitted identity form;
+- organization scope;
+- attachment inventory;
+- declarations explicitly confirmed;
+- digest or equivalent integrity reference;
+- submission channel;
+- next procedural step and applicable deadlines.
+
+### Boundaries for FIR-FORM-001 through FIR-FORM-005
+
+These entries:
+
+- do not make the forms framework implemented;
+- do not change `CANON_VERSION`;
+- do not expand PACK-13 implementation scope;
+- are approved future obligations;
+- must be carried forward in the authoritative cumulative Master Future
+  Implementation Register;
+- may be marked implemented only by a later governed PACK with concrete
+  forms, content, workflows, renditions, tests and evidence.
+
+# 27. Cross-cutting procedural, trust and operational foundations
+
+The entries in this section complete the end-to-end path of an official
+party action:
+
+```text
+applicable rule
+→ form or request
+→ identity or representation
+→ submission
+→ signature or confirmation
+→ delivery
+→ review
+→ decision
+→ service of decision
+→ correction or appeal
+→ evidence and archive
+```
+
+These entries are approved future obligations. They do not expand PACK-13
+implementation scope and are not implemented merely because supporting
+records, documents, events or workflow primitives already exist.
+
+## FIR-RULE-001 — Governed Policy and Decision Rules Registry
+
+- **Status:** `approved`
+- **Scope:** cross-cutting governance and decision logic
+- **Target:** future governance/rules foundation and every consequential
+  domain PACK
+- **Dependencies:** PACK-09, PACK-11, PACK-13 and the relevant domain PACK
+
+EPD² must maintain a governed registry of the procedural and normative rules
+used to make consequential decisions. Important rules must not exist only in
+frontend code, service conditionals, configuration fragments or human
+instructions.
+
+The registry must cover, where applicable:
+
+- source rule, including Satzung, Geschäftsordnung, programme procedure,
+  finance rule, election rule or approved policy;
+- stable rule ID and version;
+- domain owner;
+- organizational scope, including Bund/Land/Kreis;
+- competent authority;
+- eligible actor;
+- permitted and prohibited actions;
+- quorum and majority requirements;
+- thresholds;
+- deadlines and time-computation rules;
+- delegation and substitution limits;
+- eligibility and admissibility rules;
+- mandatory review and separation-of-duties requirements;
+- effective date, expiry and supersession;
+- exception and waiver rules;
+- reason-code mapping;
+- evidence and approval references.
+
+Every consequential decision must preserve a reference to the exact rule
+version applied, the competent authority, organization scope, material input
+facts, result, reason codes, exceptions and evidence.
+
+A rule change must not silently reinterpret historical decisions. Historical
+rule versions remain immutable and available for audit.
+
+### Acceptance criteria
+
+- no consequential decision depends only on an unversioned code branch;
+- rule version and authority are recorded with the decision;
+- organizational competence is validated at execution time;
+- superseded rules remain historically retrievable;
+- rule exceptions are explicit, authorized and reason-coded.
+
+## FIR-REF-001 — Governed Reference Data and Taxonomy Registry
+
+- **Status:** `approved`
+- **Scope:** cross-cutting reference data
+- **Target:** future reference-data foundation and all domain PACKs
+- **Dependencies:** PACK-11, PACK-13
+
+Create a governed registry for controlled classifications and reusable codes,
+including organization types, body types, meeting types, document classes,
+procedure types, decision reasons, office types, attachment classes, expense
+categories, communication channels and other shared taxonomies.
+
+Each value must have:
+
+- stable code;
+- domain owner;
+- German display name;
+- description and intended meaning;
+- version and lifecycle state;
+- organizational or domain scope;
+- effective and deprecation dates;
+- replacement mapping;
+- translation rules where applicable;
+- evidence of approval.
+
+A deprecated code must never be reused with a new meaning. Display labels may
+change only through a governed version update, while stable codes preserve
+contract compatibility.
+
+### Acceptance criteria
+
+- duplicate or semantically conflicting codes are detected;
+- historical records retain the code meaning in force at the time;
+- unknown values fail safely or enter controlled review;
+- frontend labels are not the authoritative taxonomy source.
+
+## FIR-DELIVERY-001 — Official Delivery, Receipt and Service Evidence
+
+- **Status:** `approved`
+- **Scope:** communications, decisions, deadlines and remedies
+- **Target:** future communications/correspondence and domain PACKs
+- **Dependencies:** PACK-09, PACK-11, PACK-13, future communications PACK
+
+EPD² must distinguish ordinary communication from legally or procedurally
+significant delivery.
+
+The framework must support:
+
+- ordinary message;
+- notification;
+- official notice;
+- request for action;
+- decision;
+- deadline-triggering document;
+- repeated service attempt;
+- failed delivery;
+- fallback channel;
+- dispute about service.
+
+Required evidence includes:
+
+- recipient and capacity;
+- content and document version;
+- delivery channel;
+- dispatch time;
+- technical delivery result;
+- opening or acknowledgement where relevant;
+- explicit receipt confirmation where required;
+- failure reason;
+- fallback action;
+- service date and deadline-start date;
+- evidence bundle;
+- re-service and dispute history.
+
+A read/open status alone must not automatically be treated as legally or
+procedurally sufficient service.
+
+### Acceptance criteria
+
+- deadline-triggering service uses an approved service rule;
+- failed delivery cannot silently start a deadline;
+- the exact served content version is preserved;
+- fallback and re-service are reason-coded and auditable;
+- notification policy remains neutral and identity-minimizing.
+
+## FIR-TRUST-001 — Electronic Signature, Seal and Trusted Timestamp Framework
+
+- **Status:** `approved`
+- **Scope:** trust, submissions, decisions and official documents
+- **Target:** future trust foundation with PACK-14 integration
+- **Dependencies:** PACK-11, PACK-13, PACK-14
+
+Define assurance classes for electronic confirmation and signature rather
+than using a generic boolean such as `signed=true`.
+
+The framework must distinguish:
+
+- authenticated account confirmation;
+- step-up authentication;
+- typed electronic consent;
+- simple electronic signature;
+- advanced electronic signature where required;
+- qualified electronic signature where required;
+- organizational electronic seal;
+- trusted timestamp;
+- witness or dual approval;
+- handwritten/offline fallback.
+
+Each signed or sealed act must bind:
+
+- signer;
+- represented capacity;
+- exact object and version;
+- digest;
+- signing method and assurance class;
+- timestamp;
+- certificate/provider reference where applicable;
+- verification result;
+- revocation or invalidation state;
+- long-term validation evidence;
+- fallback evidence.
+
+PACK-14 may establish identity and authentication boundaries but must not
+silently redefine the procedural meaning of signatures, seals or timestamps.
+
+### Acceptance criteria
+
+- each procedure declares the required assurance class;
+- the signed object version is immutable;
+- verification failure blocks consequential use;
+- revocation and long-term evidence are preserved;
+- provider outage has a governed fallback rather than an unsafe downgrade.
+
+## FIR-REPRESENT-001 — Representation, Mandate and Assisted Action
+
+- **Status:** `approved`
+- **Scope:** representation and delegated action
+- **Target:** future representation foundation and all relevant domain PACKs
+- **Dependencies:** PACK-11, PACK-13, PACK-14
+
+EPD² must distinguish the person operating the system from the person or
+organization on whose behalf an action is taken.
+
+The model must preserve separately:
+
+```text
+actor
+principal
+beneficiary
+authorizing authority
+```
+
+It must support, where legally or procedurally permitted:
+
+- legal representative;
+- authorized representative;
+- organizational representative;
+- assistant without decision authority;
+- temporary substitute;
+- guardian or comparable protected representation;
+- submission on behalf of another person;
+- withdrawal or expiry of mandate.
+
+Each mandate must define:
+
+- basis and evidence;
+- scope;
+- permitted and prohibited actions;
+- organizational and domain scope;
+- start and end;
+- delegation/substitution rules;
+- notification of the principal;
+- revocation;
+- attribution in audit and receipts.
+
+Technical assistance must not silently become authority to make a
+consequential decision.
+
+### Acceptance criteria
+
+- every represented action records actor and principal separately;
+- an expired or revoked mandate blocks action;
+- the representative cannot exceed the mandate scope;
+- receipts and decisions clearly identify the represented capacity;
+- representation does not create a global person identifier.
+
+## FIR-INCLUSION-001 — Assisted, Offline and Alternative-Channel Procedure
+
+- **Status:** `approved`
+- **Scope:** accessibility, inclusion and procedural continuity
+- **Target:** future forms/frontend and every citizen/member-facing PACK
+- **Dependencies:** FIR-FORM-001, PACK-09, PACK-11, PACK-14
+
+Accessibility must cover the whole procedure, not only the web interface.
+
+Where the procedure permits, EPD² must support:
+
+- postal submission;
+- in-person submission;
+- assisted digital submission;
+- telephone assistance without hidden operator decision-making;
+- accessible documents and alternative formats;
+- plain-language explanation where procedurally permissible;
+- interpretation or communication assistance;
+- barrier-related accommodation;
+- governed deadline relief where authorized;
+- conversion of offline material into an immutable digital snapshot;
+- operator verification;
+- receipt to the submitting person;
+- preservation of the original source.
+
+A person must not lose procedural rights solely because of disability,
+temporary technical failure, lack of a device or inability to use the
+preferred digital channel.
+
+### Acceptance criteria
+
+- equivalent substantive requirements apply across channels;
+- channel choice does not silently reduce rights;
+- operator assistance is attributed and auditable;
+- the original offline submission remains linked to the digital snapshot;
+- inaccessible delivery or form design is a PASS blocker for the affected
+  user journey.
+
+## FIR-QUALITY-001 — Data Quality, Reconciliation and Discrepancy Management
+
+- **Status:** `approved`
+- **Scope:** cross-domain data quality and operational review
+- **Target:** future data-quality foundation and all domain PACKs
+- **Dependencies:** PACK-09, PACK-11, PACK-13
+
+Create a governed mechanism for detecting and resolving:
+
+- missing or incomplete data;
+- conflicting records;
+- stale references;
+- suspected duplicate entities without automatic merge;
+- source/projection divergence;
+- payment and ledger discrepancies;
+- organization-scope inconsistencies;
+- invalid references;
+- failed propagation;
+- unresolved import records;
+- backfill and migration discrepancies.
+
+The mechanism must support:
+
+- detection;
+- severity and domain ownership;
+- manual review queue;
+- correction proposal;
+- approval;
+- evidence;
+- affected-person notification where required;
+- reconciliation result;
+- residual-risk record.
+
+Silent overwrite is prohibited. Historical corrections use correction,
+supersession or reason-coded reconciliation rather than rewriting the past.
+
+Identity reconciliation must not create a universal person ID. Voting data
+must not participate in general identity reconciliation.
+
+### Acceptance criteria
+
+- source records are not silently changed from a projection;
+- duplicate candidates are reviewed before merge;
+- corrections preserve provenance and evidence;
+- unresolved discrepancies remain visible and owned;
+- financial and membership reconciliation remain separated by domain
+  ownership.
+
+## FIR-CONFIG-001 — Governed Operational Configuration
+
+- **Status:** `approved`
+- **Scope:** operational configuration and safe change
+- **Target:** future configuration foundation
+- **Dependencies:** PACK-11, PACK-12, PACK-13
+
+Operational parameters that affect rights, deadlines, notifications,
+thresholds, retention, workflow routing or safety must be governed,
+versioned and auditable rather than hidden in mutable environment settings.
+
+The framework must cover:
+
+- stable configuration ID;
+- owner;
+- scope;
+- type and validation;
+- effective date;
+- approval;
+- change reason;
+- rollback or supersession;
+- environment placement;
+- secret/non-secret classification;
+- evidence;
+- impact assessment.
+
+Feature flags must not disable hard invariants, bypass compatibility gates,
+change historical meaning or create a hidden legal rule.
+
+### Acceptance criteria
+
+- consequential configuration changes require approval and evidence;
+- configuration history is immutable;
+- invalid values fail closed;
+- secrets are not stored in public configuration records;
+- rollback does not rewrite history.
+
+## FIR-IMPORT-001 — Legacy Import and Controlled Data Onboarding
+
+- **Status:** `approved`
+- **Scope:** migration from legacy or offline sources
+- **Target:** future onboarding/import foundation and relevant domain PACKs
+- **Dependencies:** PACK-09, PACK-11, PACK-13, FIR-QUALITY-001
+
+Define governed import of members, documents, decisions, finance records,
+organizational structures and archives.
+
+Every import must specify:
+
+- source and provenance;
+- legal/procedural authority;
+- source format and schema;
+- mapping version;
+- organization scope;
+- validation;
+- duplicate detection;
+- rejection and review handling;
+- idempotency;
+- checkpoint and restart;
+- reconciliation;
+- evidence;
+- retention and legal hold;
+- final import report.
+
+Imports must not invent missing facts, silently coerce ambiguous values,
+create a global person identifier, or bypass domain invariants.
+
+### Acceptance criteria
+
+- every imported record retains provenance;
+- rejected and ambiguous records are reported, not silently dropped;
+- rerun is idempotent;
+- imported decisions preserve original effective dates and evidence;
+- voting secrets and identity-linked ballot data are excluded from general
+  import.
+
+## FIR-SERVICE-001 — Service Catalogue and Responsibility Directory
+
+- **Status:** `approved`
+- **Scope:** public/internal service discovery and routing
+- **Target:** future Help Center, Public Website, Member Core and admin
+  workspaces
+- **Dependencies:** FIR-FORM-001, FIR-RULE-001, FIR-DELIVERY-001,
+  FIR-INCLUSION-001
+
+Create a governed catalogue of available party procedures and services.
+
+For each service or procedure, publish or internally expose as appropriate:
+
+- stable service ID;
+- name and plain-language description;
+- competent organization and role;
+- eligible user;
+- required form;
+- required evidence;
+- channels;
+- expected processing time;
+- legal or procedural deadline;
+- delivery method;
+- available remedies;
+- accessibility and alternative-channel options;
+- privacy/classification;
+- escalation path;
+- current availability and version.
+
+The catalogue must be the shared source for Help Center routing, contextual
+assistance and responsibility discovery. It must not expose protected
+internal details or create an unauthorized directory of persons.
+
+### Acceptance criteria
+
+- users can identify the competent route without guessing;
+- every listed form links to the governing service version;
+- service ownership and escalation are explicit;
+- outdated procedures are deprecated rather than silently replaced;
+- public and internal views respect classification and organization scope.
+
+## Section 27 boundaries
+
+The entries in this section:
+
+- are approved future obligations;
+- do not change `CANON_VERSION`;
+- do not expand PACK-13 implementation scope;
+- are not covered by the external CI run for the PACK-13 implementation
+  candidate;
+- require their own future Specification/ADR, implementation candidate,
+  external CI and FINAL PASS treatment;
+- must be carried forward unchanged in cumulative archives until a governed
+  later PACK updates their status or scope.
+
+# 28. Frontend design, visualization and interaction governance
+
+EPD² must preserve the restrained minimalist design already established in
+the existing public pages and frontend foundation. Future workspaces must
+evolve from that baseline rather than replacing it with unrelated visual
+systems.
+
+The preserved direction includes:
+
+- clear, calm and institutional presentation;
+- Inter or the approved successor typeface;
+- restrained color usage;
+- generous spacing;
+- simple grids;
+- strong hierarchy;
+- limited decorative elements;
+- accessible contrast;
+- content-first layouts;
+- clear status and decision semantics;
+- no advertising-style visual noise;
+- no gamification of consequential civic procedures.
+
+This is a governed direction, not a freeze of every current pixel. Future
+FRONT-PACKs may refine components and layouts where usability, accessibility
+or domain risk requires it, while preserving the common visual character.
+
+## FIR-UX-003 — EPD² Design System and Component Governance
+
+- **Status:** `approved`
+- **Scope:** all public and authenticated frontend surfaces
+- **Target:** future frontend foundation and every FRONT-PACK
+- **Dependencies:** FRONT-00, FRONT-01, PACK-11, FIR-FORM-001
+
+Create and govern a shared EPD² design system based on the current minimalist
+frontend baseline.
+
+The approved FRONT-00 and FRONT-01 implementation is the authoritative visual
+reference baseline. This includes the current public pages, shared
+components, actual typography, spacing, color, border, radius and layout
+tokens, and the accepted FRONT-00/FRONT-01 reference screenshots.
+
+“Minimalist EPD² design” must not be interpreted as a generic new minimalist
+design created independently from the existing pages. Future work must reuse
+or evolve the established visual language rather than recreate it from
+scratch.
+
+It must cover:
+
+- typography;
+- spacing and grid;
+- layout widths;
+- buttons and links;
+- inputs and form sections;
+- cards;
+- tables and lists;
+- tabs and navigation;
+- status badges;
+- alerts and notifications;
+- dialogs;
+- document upload;
+- timelines;
+- decision and evidence presentation;
+- loading, empty and error states;
+- responsive behavior;
+- accessibility states;
+- focus, hover and disabled states;
+- component versioning;
+- visual regression fixtures.
+
+The design system must not hide domain differences behind overly generic
+components. Voting, finance, membership and protected reporting may share
+visual primitives but must preserve their distinct risk and interaction
+semantics.
+
+### Minimalist baseline requirements
+
+- content and task hierarchy dominate decoration;
+- no unnecessary gradients, animation, shadows or visual effects;
+- color is used sparingly and never as the sole status indicator;
+- whitespace and typography provide primary structure;
+- institutional trust must not be simulated through ornamental complexity;
+- public and internal surfaces remain visibly related without becoming
+  indistinguishable;
+- changes to the established visual direction require explicit design review
+  and accessibility evidence.
+
+## FIR-UX-004 — Information Architecture and Navigation Governance
+
+- **Status:** `approved`
+- **Scope:** public site and ten-workspace frontend architecture
+- **Target:** future Public Website and workspace FRONT-PACKs
+- **Dependencies:** Target Frontend Architecture 0.8.2 CORRECTED
+
+Define governed information architecture for:
+
+- public versus authenticated navigation;
+- the ten workspaces and ten origins;
+- personal, organizational and administrative contexts;
+- Bund/Land/Kreis scope;
+- breadcrumbs;
+- task entry points;
+- deep links;
+- mobile navigation;
+- return to unfinished work;
+- safe cross-workspace handoff;
+- isolated Voting Client navigation;
+- session and identity boundary visibility.
+
+Navigation must not imply a shared session or shared identity where the
+architecture prohibits it. Critical functions must not become inaccessible
+through hidden or inconsistent navigation.
+
+## FIR-UX-005 — Interaction Patterns for Consequential Actions
+
+- **Status:** `approved`
+- **Scope:** submissions, decisions, approvals and other consequential acts
+- **Target:** every relevant frontend and domain PACK
+- **Dependencies:** FIR-FORM-001, FIR-RULE-001, FIR-TRUST-001
+
+Establish common patterns for:
+
+- preview before submission;
+- explicit confirmation;
+- step-up authentication where required;
+- warning about consequences;
+- immutable receipt;
+- cancellation before final commit;
+- stale-version and conflict handling;
+- re-confirmation after object changes;
+- clear distinction between `Speichern`, `Einreichen`, `Bestätigen`,
+  `Freigeben` and `Abstimmen`;
+- prevention of double submission;
+- protection against misleading controls and dark patterns.
+
+A frontend action must not imply completion before the authoritative backend
+commit has succeeded.
+
+## FIR-UX-006 — System States and Recovery Experience
+
+- **Status:** `approved`
+- **Scope:** all frontend journeys
+- **Target:** every FRONT-PACK
+- **Dependencies:** PACK-13, FIR-INCLUSION-001
+
+Each user journey must explicitly design and test:
+
+- loading;
+- empty state;
+- validation error;
+- permission denied;
+- expired session;
+- stale data;
+- partial outage;
+- unavailable dependency;
+- failed upload;
+- interrupted submission;
+- duplicate action;
+- conflict;
+- maintenance;
+- retry;
+- safe degraded mode;
+- offline or alternative-channel fallback where applicable.
+
+The interface must clearly state whether data was saved, submitted, rejected
+or left unchanged, and what the user can do next.
+
+## FIR-UX-007 — Content Design and Terminology Governance
+
+- **Status:** `approved`
+- **Scope:** German interface language and official terminology
+- **Target:** content system, design system and all FRONT-PACKs
+- **Dependencies:** FIR-FORM-004, FIR-REF-001
+
+Maintain a governed terminology catalogue for recurring interface concepts,
+including distinctions such as:
+
+- Mitglied / Antragsteller / Nutzer;
+- Antrag / Entwurf / Einreichung;
+- Entscheidung / Beschluss;
+- Einspruch / Widerspruch / Beschwerde / Berufung;
+- Speichern / Absenden / Einreichen;
+- gültig / beschlossen / in Beratung;
+- Frist / Termin;
+- Vertretung / Delegation.
+
+Button labels, warnings, errors and status text must not contradict official
+forms, rule sources or decision semantics. Important wording must not exist
+only as hard-coded frontend copy.
+
+## FIR-UX-008 — Responsive and Multi-Device Experience
+
+- **Status:** `approved`
+- **Scope:** all supported frontend surfaces
+- **Target:** every FRONT-PACK
+- **Dependencies:** FRONT-00 accessibility and visual baseline
+
+Design and verify complete workflows for:
+
+- mobile;
+- tablet;
+- desktop;
+- wide desktop;
+- keyboard-only use;
+- screen readers;
+- zoom and reflow;
+- touch input;
+- print where required.
+
+Responsive implementation must preserve the whole task, not merely resize the
+desktop layout. No required action, evidence or status may disappear on a
+supported viewport.
+
+## FIR-UX-009 — Visual Status and Decision Semantics
+
+- **Status:** `approved`
+- **Scope:** all public and authenticated status presentation
+- **Target:** design system and all domain FRONT-PACKs
+- **Dependencies:** FIR-REF-001, FIR-UX-003
+
+Create common visual and textual semantics for:
+
+- adopted;
+- active;
+- draft;
+- in discussion;
+- awaiting action;
+- overdue;
+- rejected;
+- replaced;
+- archived;
+- confidential;
+- restricted;
+- under review;
+- failed;
+- unavailable.
+
+Status must never be communicated by color alone. Text, iconography, shape,
+placement and accessible description must work together.
+
+For public programme presentation specifically:
+
+- the adopted programme remains the dominant content;
+- decision, version, authority, adoption method and effective date are shown;
+- proposals are represented only through a secondary
+  `Projekte in Beratung` card per thematic section;
+- the card states `Noch nicht beschlossen`;
+- full proposals open on separate pages;
+- proposals must not visually resemble adopted programme text.
+
+## FIR-UX-010 — Design Evidence and Frontend Acceptance
+
+- **Status:** `approved`
+- **Scope:** frontend delivery governance
+- **Target:** every FRONT-PACK
+- **Dependencies:** FRONT-00 acceptance baseline
+
+Every FRONT-PACK must first assess the existing visual baseline and provide,
+as applicable:
+
+- inventory of existing FRONT-00/FRONT-01 components and page patterns;
+- extraction of actual typography, spacing, color, border, radius and layout
+  tokens;
+- `reuse`, `extend` or `replace` classification for each affected pattern;
+- justification for every replacement based on usability, accessibility,
+  security or a domain-specific requirement;
+- screenshot comparison against the approved FRONT-00/FRONT-01 baseline;
+- user-flow map;
+- information architecture;
+- screen inventory;
+- mobile, desktop and wide layouts;
+- consequential-action states;
+- loading, empty, failure and recovery states;
+- keyboard-flow review;
+- accessibility review;
+- content and terminology review;
+- visual regression fixtures;
+- browser tests;
+- acceptance screenshots;
+- confirmation that frontend is not the security boundary.
+
+A FRONT-PACK cannot claim full journey completion if it implements only the
+successful desktop state.
+
+### Visual continuity rule
+
+Existing pages are a reference baseline, not an immutable pixel freeze.
+Improvements are permitted where justified, but an unrelated redesign is not.
+
+A future FRONT-PACK must preserve recognizable continuity in:
+
+- typography hierarchy;
+- spacing rhythm;
+- page width and grid logic;
+- navigation character;
+- card and section treatment;
+- restrained use of color;
+- border and radius language;
+- density and whitespace;
+- status presentation;
+- interaction tone.
+
+Any material departure requires explicit documentation, accessibility and
+usability evidence, and approval in the relevant FRONT-PACK.
+
+## FIR-UX-011 — Page Specification and Screen Content Governance
+
+- **Status:** `approved`
+- **Scope:** every user-facing public and authenticated domain
+- **Target:** every relevant FRONT-PACK specification and UX/IA phase
+- **Dependencies:** FIR-UX-003—010, FIR-FORM-001—005, FIR-RULE-001,
+  FIR-REF-001
+
+No user-facing domain may be considered fully designed until an approved Page
+Specification Catalogue and Screen-State Matrix exist.
+
+Before frontend implementation, each relevant FRONT-PACK must define the full
+page sequence and navigation model, including:
+
+- first page or entry screen;
+- subsequent pages and decision points;
+- branch conditions;
+- return paths;
+- cancellation paths;
+- interrupted-process recovery;
+- completion page;
+- receipt or evidence page where applicable;
+- links to related documents and decisions.
+
+For every page or screen, the specification must include:
+
+- stable page ID;
+- route or route pattern;
+- workspace and origin;
+- purpose;
+- target audience;
+- source domain and authoritative data source;
+- required permissions;
+- authentication and assurance requirement;
+- page position in the user journey;
+- predecessor and successor pages;
+- content blocks in display order;
+- fields and source definitions;
+- primary action;
+- secondary actions;
+- destructive or consequential actions;
+- status and decision presentation;
+- warnings and confirmations;
+- evidence and receipt presentation;
+- related forms and official documents;
+- loading state;
+- empty state;
+- validation state;
+- permission-denied state;
+- stale-data state;
+- partial-failure state;
+- recovery state;
+- completed state;
+- mobile, tablet, desktop and wide-layout structure;
+- keyboard and screen-reader behavior;
+- governed terminology and exact content references;
+- telemetry prohibition or approved minimized telemetry;
+- acceptance screenshots and browser-test obligations.
+
+### Required frontend specification artefacts
+
+Each relevant FRONT-PACK must produce, as applicable:
+
+- `PAGE-CATALOGUE.md`;
+- `PAGE-SEQUENCE-MAP.md`;
+- `NAVIGATION-MAP.md`;
+- `CONTENT-MAP.md`;
+- `ACTION-MAP.md`;
+- `SCREEN-STATE-MATRIX.md`;
+- `PERMISSION-AND-ASSURANCE-MATRIX.md`;
+- `RESPONSIVE-LAYOUT-SPECIFICATION.md`;
+- `ACCESSIBILITY-FLOW.md`;
+- `ACCEPTANCE-SCREENSHOT-INVENTORY.md`.
+
+### Responsibility split
+
+- The domain PACK defines the process, authoritative data, permissions,
+  forms, decisions and mandatory content.
+- The corresponding FRONT-PACK defines the page order, screen structure,
+  navigation, content hierarchy, responsive layout and interaction states.
+- Governed content catalogues define exact wording for consequential labels,
+  warnings, confirmations, errors and official notices.
+- Frontend developers implement the approved specifications and must not
+  invent missing process logic or consequential content.
+
+### Timing rule
+
+The complete first-page-to-final-page structure becomes visible during the
+`FRONT-PACK Specification + UX/IA` stage, before frontend implementation.
+
+A FRONT-PACK implementation candidate must not start until the page catalogue,
+page sequence, wireframes, content map and state matrix are accepted.
+
+### PASS blocking rule
+
+A claimed complete user journey is a PASS blocker when:
+
+- the first page is undefined;
+- one or more subsequent pages are missing;
+- navigation or branching is ambiguous;
+- consequential content is invented in code;
+- failure and recovery pages are absent;
+- mobile or accessibility flows are incomplete;
+- screenshots do not cover the approved page sequence.
+
+## Section 28 boundaries
+
+These entries:
+
+- preserve the established minimalist EPD² design direction;
+- do not freeze every current component or pixel;
+- do not require implementation in PACK-13;
+- do not change `CANON_VERSION`;
+- are not covered by the external CI run for the PACK-13 implementation
+  candidate;
+- remain approved future obligations;
+- require explicit treatment in later FRONT-PACK specifications, acceptance
+  matrices, implementation candidates and FINAL PASS reports.

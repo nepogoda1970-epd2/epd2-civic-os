@@ -2,6 +2,17 @@
 
 **Round type:** specification and ADR only. **No code. Not implemented. Not a candidate. Not a PASS.**
 
+> **Superseding status note, added by the PACK-13 FINAL PASS round
+> (2026-07-30).** The line above describes the _specification_ round that
+> wrote this document and is retained unchanged as the historical record.
+> The implementation round has since happened: PACK-13 reached **FINAL
+> PASS** at repository version `0.13.0`, verified by an external GitHub
+> Actions run. The specification is implemented in **reference form** — the
+> contracts, gates and refusals are real and externally verified, and no
+> production database, broker, schema registry, search engine or IAM is
+> deployed. **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** See
+> `docs/handover/PACK-13-FINAL-PASS-REPORT.md`.
+
 **Target version:** `0.13.0` — a target, not a setting. This round changes
 no version. `REPOSITORY_VERSION` remains `0.12.0` and `CANON_VERSION`
 remains `0.8.0`.

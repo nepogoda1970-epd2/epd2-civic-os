@@ -898,6 +898,14 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-13-SPEC-ADR-REPORT.md",
     "docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md",
     "docs/handover/PACK-13-KNOWN-LIMITATIONS.md",
+    # The PACK-13 FINAL PASS round: the closing report, the external CI
+    # figures, and the raw transcript those figures were read out of. The
+    # log is required rather than optional for the same reason PACK-11's
+    # is — a report whose evidence file may silently go missing is a
+    # report that eventually cites nothing.
+    "docs/handover/PACK-13-FINAL-PASS-REPORT.md",
+    "docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md",
+    "docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log",
     "tests/repository/test_pack13_fir_matrix.py",
     "docs/adr/ADR-061-pack-12-privileged-role-separation.md",
     "docs/adr/ADR-062-pack-12-purpose-scoped-pam.md",
@@ -919,6 +927,82 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/handover/PACK-12-SPEC-ADR-REPORT.md",
     "docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md",
     "docs/handover/PACK-12-KNOWN-LIMITATIONS.md",
+    # PACK-14 — Identity, Authentication & Account Security. The ten ADRs
+    # and the twenty-two specification documents the accepted SPEC+ADR
+    # round produced, plus the twelve documents the implementation
+    # candidate round produced or updated. Listed here for the same
+    # reason PACK-12's and PACK-13's are: a report whose evidence file
+    # may silently go missing is a report that eventually cites nothing.
+    "docs/adr/ADR-079-NO-GLOBAL-USER-IDENTITY.md",
+    "docs/adr/ADR-080-ACCOUNT-PERSON-MEMBERSHIP-SEPARATION.md",
+    "docs/adr/ADR-081-PASSKEY-FIRST-AUTHENTICATION.md",
+    "docs/adr/ADR-082-AUTHENTICATION-ASSURANCE-AND-STEP-UP.md",
+    "docs/adr/ADR-083-SESSION-SECURITY-AND-CROSS-WORKSPACE-ISOLATION.md",
+    "docs/adr/ADR-084-ACCOUNT-LIFECYCLE-AND-CREDENTIAL-GOVERNANCE.md",
+    "docs/adr/ADR-085-ACCOUNT-RECOVERY-AND-TAKEOVER-PROTECTION.md",
+    "docs/adr/ADR-086-IDENTITY-PROOFING-BOUNDARY.md",
+    "docs/adr/ADR-087-PRIVILEGED-IDENTITY-ADMINISTRATION.md",
+    "docs/adr/ADR-088-VOTING-HANDOFF-IDENTITY-SEPARATION.md",
+    "docs/packs/PACK-14/PACK-14-SPECIFICATION.md",
+    "docs/packs/PACK-14/PACK-14-ACCEPTANCE-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-ASSURANCE-LEVEL-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-AUTHENTICATION-METHOD-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-CANON-ASSESSMENT.md",
+    "docs/packs/PACK-14/PACK-14-CONTENT-CATALOGUE-DE.md",
+    "docs/packs/PACK-14/PACK-14-CROSS-WORKSPACE-SESSION-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-EVENT-CATALOG.md",
+    "docs/packs/PACK-14/PACK-14-FIELD-CATALOGUE.md",
+    "docs/packs/PACK-14/PACK-14-FIR-COVERAGE-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-FORM-INVENTORY.md",
+    "docs/packs/PACK-14/PACK-14-IDENTITY-PROOFING-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-IDENTITY-SEPARATION-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-PRIVACY-RETENTION-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-REASON-CODE-CATALOG.md",
+    "docs/packs/PACK-14/PACK-14-RECOVERY-CONTROL-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-RENDITION-SPECIFICATION.md",
+    "docs/packs/PACK-14/PACK-14-SESSION-SECURITY-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-THREAT-MODEL.md",
+    "docs/packs/PACK-14/PACK-14-WORKFLOW-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-ATTACHMENT-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md",
+    "docs/packs/PACK-14/PACK-14-IMPLEMENTATION-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-TEST-MATRIX.md",
+    "docs/packs/PACK-14/PACK-14-API-CATALOG.md",
+    "docs/packs/PACK-14/PACK-14-DATA-MODEL.md",
+    "docs/packs/PACK-14/PACK-14-MIGRATION-REPORT.md",
+    "docs/packs/PACK-14/PACK-14-SECURITY-VERIFICATION.md",
+    "docs/packs/PACK-14/PACK-14-PRIVACY-VERIFICATION.md",
+    "docs/packs/PACK-14/PACK-14-DEPENDENCY-REPORT.md",
+    "docs/packs/PACK-14/PACK-14-OPEN-ITEMS.md",
+    "docs/handover/PACK-14-SPEC-ADR-REPORT.md",
+    "docs/handover/PACK-14-IMPLEMENTATION-CANDIDATE-REPORT.md",
+    "contracts/reason-codes/pack-14.yml",
+    "tests/repository/test_pack14_fir_matrix.py",
+    "tests/repository/test_pack14_duplicated_logic_parity.py",
+    "tests/repository/test_pack14_default_binding.py",
+    # The correction round's load-bearing artefacts. These are listed
+    # individually rather than left to a directory check because the
+    # correction's whole subject was the difference between describing
+    # persistence and having it: a missing migration artefact would turn
+    # the reference persistence path back into metadata, and a missing
+    # composition root would take the durable default binding with it.
+    "services/identity-service/migrations/0001_account_registry.sql",
+    "services/identity-service/migrations/0002_account_contacts.sql",
+    "services/identity-service/migrations/0003_credential_registry.sql",
+    "services/identity-service/migrations/0004_sessions.sql",
+    "services/identity-service/migrations/0005_step_up.sql",
+    "services/identity-service/migrations/0006_recovery.sql",
+    "services/identity-service/migrations/0007_proofing.sql",
+    "services/identity-service/migrations/0008_bootstrap_and_handoff.sql",
+    "services/identity-service/migrations/0009_identity_mappings.sql",
+    "services/identity-service/migrations/0010_replay_prevention.sql",
+    "services/identity-service/src/epd2_identity_service/codecs.py",
+    "services/identity-service/src/epd2_identity_service/migration_runner.py",
+    "services/identity-service/src/epd2_identity_service/sql_storage.py",
+    "services/identity-service/src/epd2_identity_service/service_api.py",
+    "services/identity-service/src/epd2_identity_service/runtime.py",
+    "services/identity-service/tests/test_pack14_persistence.py",
+    "services/identity-service/tests/test_pack14_service_api.py",
     # The master future-implementation register, at its canonical
     # repository path. It must be present in every cumulative archive
     # (register section 1.4), and PACK-11 is the round that first places

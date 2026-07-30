@@ -515,11 +515,17 @@ canon content but not authorized by it alone.
 
 **Status: accepted.** Proposed and accepted by the PACK-13 specification
 round, which set no version and implemented nothing; implemented in
-**reference form** by the PACK-13 Implementation Candidate (`0.13.0`) in
-`services/data-plane-service`. Reference form means the contracts, the
-governed workflows and the refusals are real and tested, and the
-production data plane is neither deployed nor claimed. **NOT PASS. NOT
-PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+**reference form** in `services/data-plane-service`. Reference form means
+the contracts, the governed workflows and the refusals are real and
+tested, and the production data plane is neither deployed nor claimed.
+
+PACK-13 reached **FINAL PASS** at repository version `0.13.0` on an
+external GitHub Actions run. The ten ADRs were `accepted` before that run
+and are unaffected by it, in the same way ADR-055—ADR-060 and
+ADR-061—ADR-068 kept their `proposed` status through PACK-11's and
+PACK-12's FINAL PASS rounds: a green pipeline verifies the implementation,
+not the governance status of a decision record. **NOT PRODUCTION READY.
+NOT LEGALLY ACTIVATED.**
 
 | ADR     | Decision                                                                                                                                                           | Where the reference implementation lives |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
@@ -537,4 +543,7 @@ PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 Specification and matrices: `docs/packs/PACK-13/`. Round reports:
 `docs/handover/PACK-13-SPEC-ADR-REPORT.md` (the specification round,
 retained unchanged), `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`
-and `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
+(the candidate round, likewise retained unchanged),
+`docs/handover/PACK-13-KNOWN-LIMITATIONS.md`,
+`docs/handover/PACK-13-FINAL-PASS-REPORT.md` and
+`docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md`.

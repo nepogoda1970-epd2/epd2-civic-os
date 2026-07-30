@@ -157,6 +157,17 @@ test("current versions match the expected skeleton version", () => {
   // contract evolution - and contracts/reason-codes/pack-13.yml. A new
   // bounded context is a minor bump per canon section 25; CANON_VERSION
   // stays 0.8.0 because the implementation round amends no canon.
+  // REPOSITORY_VERSION then moved 0.13.0 -> 0.14.0 for the PACK-14
+  // implementation candidate, which extends services/identity-service
+  // with the Account Registry, Credential Registry, Authentication,
+  // Session Security, Recovery-coordination and
+  // Identity-Proofing-reference contexts in reference form - and
+  // contracts/reason-codes/pack-14.yml. Six new bounded contexts inside
+  // an existing service is a minor bump per canon section 25;
+  // CANON_VERSION stays 0.8.0 because the round amends no canon: it
+  // reuses canon 19d.2's and 19d.8's four-value assurance scale, keeps
+  // AccountStatus at six values, and holds SessionRecord at service
+  // level rather than adding it to canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.13.0");
+  assert.equal(REPOSITORY_VERSION, "0.14.0");
 });

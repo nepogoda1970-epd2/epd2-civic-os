@@ -51,6 +51,13 @@ yarn-error.log*
 
 # --- Logs ---
 *.log
+# ...except the external-CI transcripts under docs/handover/. They are
+# evidence, not incidental output: PACK-09's, PACK-11's and PACK-13's are
+# cited by their handover reports, and PACK-13's is a REQUIRED_PATH in
+# scripts/check_repository.py. A required path that .gitignore excludes
+# cannot be committed at all, so a fresh clone would fail the manifest
+# check while the working tree passed it.
+!docs/handover/*.log
 
 # --- OS artifacts ---
 .DS_Store

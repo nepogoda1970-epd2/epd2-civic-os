@@ -1,14 +1,26 @@
 # PACK-13 — Acceptance Matrix
 
+> **Status, as of the PACK-13 FINAL PASS round (2026-07-30):**
+> **PACK-13 EXTERNAL CI PASS · FINAL PASS ARCHIVE PREPARED ·
+> `REPOSITORY_VERSION` `0.13.0` · `CANON_VERSION` `0.8.0` ·
+> NOT PRODUCTION READY · NOT LEGALLY ACTIVATED.** See
+> `docs/handover/PACK-13-FINAL-PASS-REPORT.md`.
+>
+> The external pipeline has now run and passed. That changes the _round's_
+> status; it does not retroactively meet a criterion whose evidence is a
+> database grant inventory, a live catalog snapshot, a role inventory or an
+> egress-control review, because a pipeline deploys no database and grants
+> no role. The per-criterion statuses in the appendix are unchanged by the
+> PASS, and **`met` is still recorded for no criterion.**
+
 **The criteria in this document come from the PACK-13 specification round
 and are unchanged.** The implementation-status appendix at the end is
 added by the PACK-13 Implementation Candidate (`0.13.0`) and records, per
 criterion, the implemented component, the test file, the evidence, the
 status and any deferred dependency.
 
-**No criterion below has been met by this round.** A candidate is not a
-PASS: an external pipeline decides that. Each criterion remains a
-requirement, and the appendix says what exists against it.
+**No criterion below is recorded as met.** Each remains a requirement, and
+the appendix says what exists against it.
 
 `PASS blocker = yes` means the implementation round MUST NOT be declared
 PASS while the criterion is unmet. `Dependency` names the pack that owns

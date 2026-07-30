@@ -52,6 +52,8 @@ from _schema_helpers import (
     PACK12_SERVICE_DIRS,
     PACK13_REASON_CODES_PATH,
     PACK13_SERVICE_DIRS,
+    PACK14_REASON_CODES_PATH,
+    PACK14_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -78,6 +80,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-11", PACK11_REASON_CODES_PATH, PACK11_SERVICE_DIRS, 71),
     ("pack-12", PACK12_REASON_CODES_PATH, PACK12_SERVICE_DIRS, 141),
     ("pack-13", PACK13_REASON_CODES_PATH, PACK13_SERVICE_DIRS, 125),
+    ("pack-14", PACK14_REASON_CODES_PATH, PACK14_SERVICE_DIRS, 202),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -92,7 +95,7 @@ _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 #: checks (required-fields/no-duplicates/loads-via-epd2-core), which
 #: still validate pack-02.yml as its own, independently well-formed file.
 _EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
-    "pack-02": (PACK07_REASON_CODES_PATH,),
+    "pack-02": (PACK07_REASON_CODES_PATH, PACK14_REASON_CODES_PATH),
 }
 
 #: All-caps literals that the deliberately broad regex above matches but
@@ -123,6 +126,30 @@ _EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
 #: excluding them by a heuristic such as "appears inside `__all__`" would
 #: also hide a genuine code that a future `__all__` happened to mention.
 _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
+    #: PACK-02's own scan covers `identity-service`, which PACK-14 extends
+    #: in place, so the ten literals PACK-14 contributes to that directory
+    #: are false positives for pack-02's scan too. They are the same ten
+    #: enumerated under "pack-14" below - five `__init__` constant names,
+    #: three `ConfidentialityClass` values and two workspace sensitivity
+    #: strings - and they are repeated here rather than derived from that
+    #: entry, because an allowlist that quietly inherits from another
+    #: pack's is an allowlist nobody can read.
+    "pack-02": frozenset(
+        {
+            "CANDIDATE_FIR_ENTRIES",
+            "CANON_VERSION",
+            "COMMIT",
+            "CONFIDENTIAL",
+            "FINANCIAL_CONFIDENTIAL",
+            "IDENTITY_CONTEXT_IMPLEMENTATION_STATUS",
+            "IMPLEMENTED_FIR_ENTRIES",
+            "INTERNAL",
+            "PUBLIC_APPROVED",
+            "REPOSITORY_VERSION",
+            "RESTRICTED",
+            "ROLLBACK",
+        }
+    ),
     "pack-10": frozenset({"EUR"}),
     "pack-11": frozenset(
         {
@@ -162,6 +189,42 @@ _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
             "DATA_PLANE_CONTEXT_IMPLEMENTATION_STATUS",
             "IMPLEMENTED_FIR_ENTRIES",
             "REPOSITORY_VERSION",
+        }
+    ),
+    #: PACK-14's five `__init__` constant names are the same shape as
+    #: PACK-11's through PACK-13's. `COMMIT` and `ROLLBACK` are SQL verbs
+    #: in the statement strings
+    #: `epd2_identity_service.migration_runner` executes to open and
+    #: close a migration transaction; they are keywords of another
+    #: language that happen to be upper case, and registering them would
+    #: put SQL in the refusal registry. The four remaining entries are a
+    #: new shape and are enumerated for the same reason rather than
+    #: excluded by a rule: `INTERNAL`, `CONFIDENTIAL` and `RESTRICTED` are the
+    #: values of `epd2_identity_service.forms.ConfidentialityClass` (the
+    #: form inventory's confidentiality column), and `PUBLIC_APPROVED`
+    #: and `FINANCIAL_CONFIDENTIAL` are two of the sensitivity strings
+    #: `epd2_identity_service.workspaces` copies verbatim from
+    #: `frontend/web-shell/foundation/workspaces.ts`. Each is an
+    #: upper-case *classification value*, not a refusal, and none could
+    #: be registered as a reason code without putting a confidentiality
+    #: class in the refusal registry. Enumerated exactly rather than
+    #: excluded by a rule such as "no underscore, therefore not a code",
+    #: because such a rule would also hide a future genuine single-word
+    #: code.
+    "pack-14": frozenset(
+        {
+            "CANDIDATE_FIR_ENTRIES",
+            "CANON_VERSION",
+            "COMMIT",
+            "CONFIDENTIAL",
+            "FINANCIAL_CONFIDENTIAL",
+            "IDENTITY_CONTEXT_IMPLEMENTATION_STATUS",
+            "IMPLEMENTED_FIR_ENTRIES",
+            "INTERNAL",
+            "ROLLBACK",
+            "PUBLIC_APPROVED",
+            "REPOSITORY_VERSION",
+            "RESTRICTED",
         }
     ),
 }

@@ -48,8 +48,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 EXPECTED_CANON_VERSION = "0.8.0"
 #: The repository version this checker expects to find.
 #:
-#: Moved 0.11.0 -> 0.12.0 by the PACK-12 implementation round, and
-#: 0.12.0 -> 0.13.0 by the PACK-13 implementation candidate. This
+#: Moved 0.11.0 -> 0.12.0 by the PACK-12 implementation round,
+#: 0.12.0 -> 0.13.0 by the PACK-13 implementation candidate, and
+#: 0.13.0 -> 0.14.0 by the PACK-14 implementation candidate. This
 #: checker verifies the *canon 0.8.0 amendment's* state, not that the
 #: repository is frozen at the version the amendment shipped with: canon
 #: stays 0.8.0 while the repository moves on, and pinning this at 0.10.0
@@ -57,7 +58,7 @@ EXPECTED_CANON_VERSION = "0.8.0"
 #: not touch. `CANON_AMENDED_AT_REPOSITORY_VERSION` (0.9.0) is the
 #: constant that must *not* drift - it records when the amendment
 #: happened - and it is deliberately left alone here.
-EXPECTED_REPOSITORY_VERSION = "0.13.0"
+EXPECTED_REPOSITORY_VERSION = "0.14.0"
 
 #: The repository version the canon 0.8.0 amendment itself was made at.
 #: `minimum_repository_version` records that fact and must not drift with
@@ -1362,7 +1363,7 @@ def check_document_implementation_status(root: Path) -> list[str]:
 CHECKS: tuple[tuple[str, str], ...] = (
     ("check_canon_version_declared", "canon version is 0.8.0 everywhere"),
     ("check_repository_version_unchanged", "REPOSITORY_VERSION is 0.12.0"),
-    ("check_repository_compatibility", "compatibility metadata accepts 0.12.0"),
+    ("check_repository_compatibility", "compatibility metadata accepts 0.14.0"),
     ("check_finance_implementation_status", "PACK-10 declared reference_implementation"),
     ("check_finance_runtime_within_boundary", "finance runtime within boundary"),
     ("check_finance_context_present", "finance bounded context present"),

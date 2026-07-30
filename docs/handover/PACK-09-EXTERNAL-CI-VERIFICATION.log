@@ -1,0 +1,382 @@
+uv run python scripts/check_repository.py
+OK: all 556 required paths are present.
+uv run python scripts/check_forbidden_files.py
+OK: no forbidden paths found.
+uv run python scripts/verify_versions.py
+OK: all version sources are consistent.
+uv run ruff format --check .
+389 files already formatted
+npm run format:check
+
+> epd2-civic-os@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+uv run ruff check .
+All checks passed!
+npm run lint --workspace=frontend/web-shell
+
+> web-shell@0.1.0 lint
+> eslint .
+
+uv run mypy packages/python/epd2-core scripts tests/repository conftest.py
+Success: no issues found in 25 source files
+uv run mypy tests/contract
+Success: no issues found in 24 source files
+uv run mypy services/account-service
+Success: no issues found in 8 source files
+uv run mypy services/identity-service
+Success: no issues found in 9 source files
+uv run mypy services/eligibility-service
+Success: no issues found in 9 source files
+uv run mypy services/credential-service
+Success: no issues found in 11 source files
+uv run mypy services/audit-core
+Success: no issues found in 10 source files
+uv run mypy services/initiative-service
+Success: no issues found in 9 source files
+uv run mypy services/deliberation-service
+Success: no issues found in 9 source files
+uv run mypy services/moderation-service
+Success: no issues found in 9 source files
+uv run mypy services/voting-service
+Success: no issues found in 9 source files
+uv run mypy services/tally-service
+Success: no issues found in 9 source files
+uv run mypy services/delegation-service
+Success: no issues found in 9 source files
+uv run mypy services/transparency-service
+Success: no issues found in 9 source files
+uv run mypy services/governance-service
+Success: no issues found in 11 source files
+uv run mypy services/ai-processing-service
+Success: no issues found in 11 source files
+uv run mypy services/membership-service
+Success: no issues found in 9 source files
+uv run mypy services/organization-service
+Success: no issues found in 9 source files
+uv run mypy services/compliance-service
+Success: no issues found in 17 source files
+npm run typecheck --workspace=packages/typescript/epd2-types
+
+> epd2-types@0.1.0 typecheck
+> tsc --noEmit
+
+npm run typecheck --workspace=frontend/web-shell
+
+> web-shell@0.1.0 typecheck
+> tsc --noEmit
+
+uv run pytest
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/runner/work/epd2-civic-os/epd2-civic-os
+configfile: pyproject.toml
+testpaths: packages/python/epd2-core/tests, tests/repository, tests/contract, services/account-service/tests, services/identity-service/tests, services/eligibility-service/tests, services/credential-service/tests, services/audit-core/tests, services/initiative-service/tests, services/deliberation-service/tests, services/moderation-service/tests, services/voting-service/tests, services/tally-service/tests, services/delegation-service/tests, services/transparency-service/tests, services/governance-service/tests, services/ai-processing-service/tests, services/membership-service/tests, services/organization-service/tests, services/compliance-service/tests
+plugins: cov-5.0.0, hypothesis-6.160.0
+collected 2663 items
+
+packages/python/epd2-core/tests/test_canonical_json.py .......           [  0%]
+packages/python/epd2-core/tests/test_clock.py ......                     [  0%]
+packages/python/epd2-core/tests/test_event_envelope.py ..............    [  1%]
+packages/python/epd2-core/tests/test_identifiers.py .......              [  1%]
+packages/python/epd2-core/tests/test_minimal_json_schema.py ............ [  1%]
+                                                                         [  1%]
+packages/python/epd2-core/tests/test_reason_codes.py .......             [  1%]
+packages/python/epd2-core/tests/test_version.py ...                      [  2%]
+tests/repository/test_forbidden_paths.py ...                             [  2%]
+tests/repository/test_pack07_duplicated_logic_parity.py ........         [  2%]
+tests/repository/test_required_files.py ..                               [  2%]
+tests/repository/test_service_boundaries.py ............................ [  3%]
+...                                                                      [  3%]
+tests/repository/test_version_consistency.py .                           [  3%]
+tests/contract/test_audit.py ........                                    [  4%]
+tests/contract/test_ct00_01_pack07_schema_validation.py ................ [  4%]
+......                                                                   [  4%]
+tests/contract/test_ct00_01_pack08_schema_validation.py ............     [  5%]
+tests/contract/test_ct00_01_pack09_framework_schema_validation.py ...... [  5%]
+........................................................................ [  8%]
+........................................................................ [ 11%]
+...................................................                      [ 12%]
+tests/contract/test_ct00_01_pack09_schema_validation.py ................ [ 13%]
+........                                                                 [ 13%]
+tests/contract/test_ct00_01_schema_validation.py ..................      [ 14%]
+tests/contract/test_ct00_02_unknown_status.py .......................... [ 15%]
+...............                                                          [ 16%]
+tests/contract/test_ct00_03_forbidden_transition.py .................... [ 16%]
+.......................                                                  [ 17%]
+tests/contract/test_ct00_04_event_idempotency.py ..........              [ 18%]
+tests/contract/test_ct00_05_unsupported_event_version.py ............... [ 18%]
+.....                                                                    [ 18%]
+tests/contract/test_ct00_06_missing_permission.py ...................    [ 19%]
+tests/contract/test_ct00_07_audit_creation.py ...................        [ 20%]
+tests/contract/test_ct00_08_identity_leakage.py ........................ [ 21%]
+....................................                                     [ 22%]
+tests/contract/test_ct00_09_vote_linkability.py ...................      [ 23%]
+tests/contract/test_ct00_10_rule_freeze.py ......ss                      [ 23%]
+tests/contract/test_ct00_11_ai_human_control.py .....                    [ 23%]
+tests/contract/test_ct00_12_emergency_stop_not_applicable.py ss          [ 23%]
+tests/contract/test_openapi_contract.py ................................ [ 24%]
+...............                                                          [ 25%]
+tests/contract/test_property_based.py .......                            [ 25%]
+tests/contract/test_reason_codes_registry.py ........................... [ 26%]
+.....                                                                    [ 26%]
+tests/contract/test_state_transitions.py ............................... [ 28%]
+........................................................................ [ 30%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 41%]
+........................................................................ [ 44%]
+........................................................................ [ 47%]
+......................................................                   [ 49%]
+services/account-service/tests/test_application.py ......                [ 49%]
+services/account-service/tests/test_domain.py .............              [ 49%]
+services/identity-service/tests/test_application.py ...............      [ 50%]
+services/identity-service/tests/test_application_pack07.py .......       [ 50%]
+services/identity-service/tests/test_domain.py ..................        [ 51%]
+services/eligibility-service/tests/test_application.py ..............    [ 51%]
+services/eligibility-service/tests/test_application_pack07.py .......... [ 52%]
+............                                                             [ 52%]
+services/eligibility-service/tests/test_domain.py .....                  [ 52%]
+services/credential-service/tests/test_application.py ...........        [ 53%]
+services/credential-service/tests/test_domain.py .........               [ 53%]
+services/credential-service/tests/test_storage.py .....                  [ 53%]
+services/credential-service/tests/test_validation.py ...........         [ 54%]
+services/audit-core/tests/test_application.py ........                   [ 54%]
+services/audit-core/tests/test_domain.py ...........                     [ 54%]
+services/audit-core/tests/test_hash_chain.py .....                       [ 55%]
+services/audit-core/tests/test_storage.py .............                  [ 55%]
+services/initiative-service/tests/test_application.py .................. [ 56%]
+......................                                                   [ 57%]
+services/initiative-service/tests/test_domain.py ....................... [ 57%]
+................................................................         [ 60%]
+services/initiative-service/tests/test_storage.py ....................   [ 61%]
+services/deliberation-service/tests/test_application.py ................ [ 61%]
+...................................                                      [ 63%]
+services/deliberation-service/tests/test_domain.py ..................... [ 63%]
+....................                                                     [ 64%]
+services/deliberation-service/tests/test_storage.py ..........           [ 64%]
+services/moderation-service/tests/test_application.py .................. [ 65%]
+...                                                                      [ 65%]
+services/moderation-service/tests/test_domain.py ....................... [ 66%]
+.........................                                                [ 67%]
+services/moderation-service/tests/test_storage.py ...............        [ 68%]
+services/voting-service/tests/test_application.py ...................... [ 68%]
+............                                                             [ 69%]
+services/voting-service/tests/test_domain.py ........................... [ 70%]
+.................................                                        [ 71%]
+services/voting-service/tests/test_storage.py ........................   [ 72%]
+services/tally-service/tests/test_application.py .....................   [ 73%]
+services/tally-service/tests/test_domain.py ............................ [ 74%]
+.......................                                                  [ 75%]
+services/tally-service/tests/test_storage.py ..........                  [ 75%]
+services/delegation-service/tests/test_application.py .................. [ 76%]
+......                                                                   [ 76%]
+services/delegation-service/tests/test_domain.py ....................... [ 77%]
+..........                                                               [ 77%]
+services/delegation-service/tests/test_storage.py ............           [ 78%]
+services/transparency-service/tests/test_application.py ..............   [ 78%]
+services/transparency-service/tests/test_domain.py ..................    [ 79%]
+services/transparency-service/tests/test_storage.py .........            [ 79%]
+services/governance-service/tests/test_application.py .................. [ 80%]
+............                                                             [ 80%]
+services/governance-service/tests/test_bootstrap.py ......               [ 81%]
+services/governance-service/tests/test_domain.py ....................... [ 81%]
+.......                                                                  [ 82%]
+services/governance-service/tests/test_storage.py ............           [ 82%]
+services/ai-processing-service/tests/test_application.py ............... [ 83%]
+.........                                                                [ 83%]
+services/ai-processing-service/tests/test_domain.py .................... [ 84%]
+......                                                                   [ 84%]
+services/ai-processing-service/tests/test_storage.py ......              [ 84%]
+services/membership-service/tests/test_application.py .................. [ 85%]
+........                                                                 [ 85%]
+services/membership-service/tests/test_domain.py ....................... [ 86%]
+..                                                                       [ 86%]
+services/membership-service/tests/test_storage.py ..........             [ 87%]
+services/organization-service/tests/test_application.py ................ [ 87%]
+...............                                                          [ 88%]
+services/organization-service/tests/test_domain.py ..................... [ 88%]
+.....................                                                    [ 89%]
+services/organization-service/tests/test_storage.py .................... [ 90%]
+...                                                                      [ 90%]
+services/compliance-service/tests/test_application.py .................. [ 91%]
+................................                                         [ 92%]
+services/compliance-service/tests/test_casework.py ..................... [ 93%]
+.........................                                                [ 94%]
+services/compliance-service/tests/test_dataprotection.py ............... [ 94%]
+.........                                                                [ 95%]
+services/compliance-service/tests/test_domain.py ....................... [ 96%]
+......................................                                   [ 97%]
+services/compliance-service/tests/test_framework_application.py ........ [ 97%]
+........................                                                 [ 98%]
+services/compliance-service/tests/test_notices.py ...................... [ 99%]
+.                                                                        [ 99%]
+services/compliance-service/tests/test_storage.py .............          [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/contract/test_ct00_10_rule_freeze.py:462: CT-00-10 NOT APPLICABLE in PACK-06 (ai-processing-service): required scope item 17 documents this explicitly rather than extending it. canon 27's CT-00-10 wording names Ballot configuration freeze, a voting-service concept ai-processing-service never touches. This pack's own freeze-shaped invariants (RedactionManifest immutability; disclosure_package_reference/disclosure_receipt_reference each set exactly once; terminal processing_status having no further transition) are already covered by this pack's own CT-00-03 (Forbidden Transition) tests, not a distinct rule-version/ballot freeze concept.
+SKIPPED [1] tests/contract/test_ct00_10_rule_freeze.py:487: CT-00-10 NOT APPLICABLE in PACK-07 (eligibility-service extensions, membership-service): canon 27's CT-00-10 wording names Ballot configuration freeze, a voting-service concept neither PACK-07 service touches. This pack's own freeze-shaped invariants that DO hold are covered elsewhere, not by a distinct CT-00-10 test: every critical-policy entity (ParticipantEligibilityPolicy, ProcessEligibilityPolicy, StepUpAuthenticationRequirement, PartyMembershipEligibilityPolicy) is a frozen dataclass whose content never mutates in place - superseding always creates a NEW versioned record via with_status/dataclasses.replace, never rewriting the old one - and DigitalDecision is documented as never transitioning after construction (see test_ct00_03_forbidden_transition.py's PACK-07 section for the forbidden-transition half of this). One related invariant is honestly NOT enforced this round, not silently glossed over: canon 19d.7's own CriticalPolicyVersionFrozenError (declared in both PACK-07 services' exceptions.py) is reserved for a future pack that introduces real Process/Election lifecycle tracking - see that exception class's own docstring for why raising it now, against no real 'is a process using this version' signal, would be worse than not enforcing it at all. This is reported here rather than claimed as covered, per required scope item 18's no-false-applicability-claims requirement.
+SKIPPED [1] tests/contract/test_ct00_12_emergency_stop_not_applicable.py:71: CT-00-11 NOT APPLICABLE in PACK-02, PACK-03, PACK-05, or PACK-07 (superseded - see test_ct00_11_ai_human_control.py for PACK-06, where CT-00-11 is fully applicable): AIProcessingRecord (canon section 17.1) was out of scope for all four of these packs (PACK-02 pack section 3.2; PACK-03 docs/handover/PACK-03-SPEC.md section 1; PACK-05 required scope item 13; PACK-07 required scope item 19) - no AI-produced result existed in any of them for a human-control gate to apply to. PACK-07's own canon 19d.16 human-control invariant (membership/critical-policy decisions requiring an authorized human decision-maker) is a distinct concept, exercised in services/membership-service's and services/eligibility-service's own test suites, not by this CT-00-11 gate.
+SKIPPED [1] tests/contract/test_ct00_12_emergency_stop_not_applicable.py:93: CT-00-12 NOT APPLICABLE in PACK-02, PACK-03, PACK-05, PACK-06, or PACK-07: EmergencyAction (canon section 19.1) is out of scope for all five packs (PACK-02 pack section 3.2; PACK-03 docs/handover/PACK-03-SPEC.md section 1; PACK-05 required scope item 13; PACK-06 required scope item 19's explicit Emergency/Crisis Override exclusion; PACK-07 required scope item 19's identical exclusion) - no freeze mechanism exists in any of them for a forbidden-operation-during-freeze test to exercise.
+======================= 2659 passed, 4 skipped in 19.98s =======================
+npm run test --workspace=packages/typescript/epd2-types
+
+> epd2-types@0.1.0 test
+> node --import tsx --test tests/**/*.test.ts
+
+TAP version 13
+# Subtest: CANON_VERSION is a semver-like string
+ok 1 - CANON_VERSION is a semver-like string
+  ---
+  duration_ms: 0.951112
+  type: 'test'
+  ...
+# Subtest: REPOSITORY_VERSION is a semver-like string
+ok 2 - REPOSITORY_VERSION is a semver-like string
+  ---
+  duration_ms: 0.15504
+  type: 'test'
+  ...
+# Subtest: current versions match the expected skeleton version
+ok 3 - current versions match the expected skeleton version
+  ---
+  duration_ms: 0.125836
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 186.106716
+npm run test --workspace=frontend/web-shell
+
+> web-shell@0.1.0 test
+> node --import tsx --test tests/**/*.test.ts
+
+TAP version 13
+# Subtest: organization browser page has the required German-authoritative heading
+ok 1 - organization browser page has the required German-authoritative heading
+  ---
+  duration_ms: 1.299325
+  type: 'test'
+  ...
+# Subtest: organization browser page does not call any backend or render a <form>
+ok 2 - organization browser page does not call any backend or render a <form>
+  ---
+  duration_ms: 0.43789
+  type: 'test'
+  ...
+# Subtest: organization detail page renders relations, authorities, and an as-of selector
+ok 3 - organization detail page renders relations, authorities, and an as-of selector
+  ---
+  duration_ms: 0.212458
+  type: 'test'
+  ...
+# Subtest: as-of selector resolves historical status from static sample data only, no API
+ok 4 - as-of selector resolves historical status from static sample data only, no API
+  ---
+  duration_ms: 0.196368
+  type: 'test'
+  ...
+# Subtest: dev authorization console is clearly labeled development-only and not wired to a backend
+ok 5 - dev authorization console is clearly labeled development-only and not wired to a backend
+  ---
+  duration_ms: 0.36827
+  type: 'test'
+  ...
+# Subtest: authorization check defaults to deny when no sample grant matches
+ok 6 - authorization check defaults to deny when no sample grant matches
+  ---
+  duration_ms: 20.389344
+  type: 'test'
+  ...
+# Subtest: authorization check allows a subject with a matching, currently-valid sample grant
+ok 7 - authorization check allows a subject with a matching, currently-valid sample grant
+  ---
+  duration_ms: 0.46435
+  type: 'test'
+  ...
+# Subtest: authorization check denies a matching subject/scope/action outside the grant's validity window
+ok 8 - authorization check denies a matching subject/scope/action outside the grant's validity window
+  ---
+  duration_ms: 0.414416
+  type: 'test'
+  ...
+# Subtest: statusAsOf resolves the status in effect at a historical date, not just the current one
+ok 9 - statusAsOf resolves the status in effect at a historical date, not just the current one
+  ---
+  duration_ms: 5.114592
+  type: 'test'
+  ...
+# Subtest: home page renders the required EPD² Civic OS heading
+ok 10 - home page renders the required EPD² Civic OS heading
+  ---
+  duration_ms: 0.871393
+  type: 'test'
+  ...
+# Subtest: home page does not reference forbidden concerns
+ok 11 - home page does not reference forbidden concerns
+  ---
+  duration_ms: 0.209092
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 279.413707
+npm run build --workspace=frontend/web-shell
+
+> web-shell@0.1.0 build
+> next build
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.21
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.1s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/10) ...
+   Generating static pages (2/10) 
+   Generating static pages (4/10) 
+   Generating static pages (7/10) 
+ ✓ Generating static pages (10/10)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                   Size  First Load JS
+┌ ○ /                                                        122 B         103 kB
+├ ○ /_not-found                                              987 B         103 kB
+├ ○ /organizations                                           162 B         106 kB
+├ ● /organizations/[id]                                      643 B         109 kB
+├   ├ /organizations/00000000-0000-0000-0000-000000000001
+├   ├ /organizations/00000000-0000-0000-0000-000000000002
+├   ├ /organizations/00000000-0000-0000-0000-000000000003
+├   └ /organizations/00000000-0000-0000-0000-000000000004
+└ ○ /organizations/dev-authorization-console               1.25 kB         110 kB
++ First Load JS shared by all                               103 kB
+  ├ chunks/18-ff6a2aec3d6a1486.js                          46.3 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js                    54.2 kB
+  └ other shared chunks (total)                            1.92 kB
+
+
+○  (Static)  prerendered as static content
+●  (SSG)     prerendered as static HTML (uses generateStaticParams)
+

@@ -4,39 +4,39 @@
 > `CANON_VERSION` — `0.8.0`.
 >
 > Последний раунд — **PACK-13 — Production Data Plane & Contract
-> Evolution**, **IMPLEMENTATION CANDIDATE**.
-> **NOT PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
-> Внешний GitHub Actions по этому кандидату **ещё не запускался**, и
-> локальный прогон здесь неполон (нет сетевого доступа к PyPI и npm —
-> см. `LOCAL_VERIFICATION.md` и
-> `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`, раздел
-> «Verification results»). Каждый storage-адаптер PACK-13 — in-memory:
-> production-БД, реальный брокер, внешний schema registry, production
-> search engine и production IAM не разворачиваются и не заявляются.
-> См. `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md` и
+> Evolution**, **FINAL PASS**: внешний GitHub Actions прошёл полностью
+> (800/800 repository paths, forbidden paths — нет, version consistency,
+> Ruff format 520 файлов, Prettier, Ruff lint, ESLint, mypy по всем 23
+> группам, оба TypeScript typecheck — PASS, Python 4625 passed / 4
+> skipped, Node 34 passed, frontend unit/render 16 passed, Next.js
+> production build — PASS, browser/visual/accessibility 108 passed). См.
+> `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+> `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` и
+> `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
+>
+> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** Каждый storage-адаптер
+> PACK-13 — in-memory: production-БД, реальный брокер, внешний schema
+> registry, production search engine и production IAM не разворачиваются
+> и не заявляются. Зелёный pipeline проверяет дерево репозитория; он
+> ничего не разворачивает. См.
 > `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
 >
-> **PACK-12 (`0.12.0`, FINAL PASS) остаётся авторитетным PASS-базисом**,
-> от которого построен PACK-13, и этот статус кандидатом не заменяется.
->
 > Предыдущий раунд — **PACK-12 — Privileged Admin, Authorization-Aware
-> Search & Governed Export**, **FINAL PASS**: внешний GitHub Actions
-> прошёл полностью (728/728 repository paths, forbidden paths — нет,
-> Ruff format, Prettier, Ruff lint, mypy, TypeScript typecheck — PASS,
-> Python 4062 passed / 4 skipped, browser 108 passed, accessibility и
-> visual checks — PASS). См.
+> Search & Governed Export**, **FINAL PASS** (728/728 repository paths,
+> Python 4062 passed / 4 skipped, browser 108 passed). См.
 > `docs/handover/PACK-12-FINAL-PASS-REPORT.md` и
 > `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
 >
-> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** Зелёный pipeline
-> подтверждает, что репозиторий собирается, типизируется и проходит
-> тесты; он не подтверждает production-готовность, юридическую
-> активацию, production-БД, production search engine, внешний IAM,
-> реальный DLP-провайдер, реальную доставку уведомлений, production
-> session assurance или что-либо в домене голосования.
+> Зелёный pipeline подтверждает, что репозиторий собирается,
+> типизируется и проходит тесты; он не подтверждает production-готовность,
+> юридическую активацию, production-БД, реальный брокер, внешний schema
+> registry, production search engine, внешний IAM, реальный
+> DLP-провайдер, реальную доставку уведомлений, production session
+> assurance, backup/restore-готовность, multi-region-развёртывание или
+> что-либо в домене голосования.
 >
-> PACK-11 (`0.11.0`, FINAL PASS) остаётся историческим базисом, от
-> которого построен PACK-12.
+> PACK-11 (`0.11.0`) и PACK-12 (`0.12.0`) остаются историческими
+> PASS-базисами, от которых построен PACK-13.
 
 > FRONT-00 adds a frontend foundation **implementation candidate** to the existing
 > Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
@@ -475,9 +475,9 @@ PACK-11 — последний раунд, для которого внешни�
 полный PASS. Он остаётся историческим базисом репозитория; PACK-12
 построен от него и **не** заменяет этот статус.
 
-## PACK-13 — Production Data Plane & Contract Evolution (`0.13.0`, IMPLEMENTATION CANDIDATE)
+## PACK-13 — Production Data Plane & Contract Evolution (`0.13.0`, FINAL PASS)
 
-> **PACK-13 IMPLEMENTATION CANDIDATE · NOT PASS**
+> **PACK-13 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
 > **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
 
 `services/data-plane-service` — тринадцатый сервис и единственный новый
@@ -539,12 +539,33 @@ PACK-11 — последний раунд, для которого внешни�
 PACK-13 плюс 37 классификаций `*_RECORDED`). Ни одного универсального
 `DATA_ERROR` и ни одного универсального `CONFLICT`.
 
-Реестр: `FIR-ROADMAP-003` переведён в `scheduled`, **не** в
-`implemented`. Отдельной документационной коррекцией в реестр добавлено
-утверждённое ранее требование `FIR-PROG-003` — Public Presentation of
-Adopted Programme and Projects (раздел 17, статус `approved`): это
-**future frontend obligation**, а не пункт реализации PACK-13. `docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md`
-по-прежнему содержит ноль `implemented`, и это проверяется структурно
+Реестр: после внешнего CI PASS `FIR-ROADMAP-003` переведён в
+`implemented in reference form` — **не** в `implemented` без оговорки:
+контракты, gate'ы и отказы реальны и внешне проверены, production data
+plane не развёрнут. Отдельной документационной коррекцией в реестр
+добавлено утверждённое ранее требование `FIR-PROG-003` — Public
+Presentation of Adopted Programme and Projects (раздел 17, статус
+`approved`): это **future frontend obligation**, а не пункт реализации
+PACK-13; PASS по PACK-13 о нём ничего не говорит. Раундом FINAL PASS в
+реестр добавлены три новых cross-cutting раздела: **26 — Canonical Forms,
+Submissions & Official Renditions** (`FIR-FORM-001` … `FIR-FORM-005`),
+**27 — Cross-cutting procedural, trust and operational foundations**
+(`FIR-RULE-001`, `FIR-REF-001`, `FIR-DELIVERY-001`, `FIR-TRUST-001`,
+`FIR-REPRESENT-001`, `FIR-INCLUSION-001`, `FIR-QUALITY-001`,
+`FIR-CONFIG-001`, `FIR-IMPORT-001`, `FIR-SERVICE-001`) и **28 — Frontend
+design, visualization and interaction governance** (`FIR-UX-003` …
+`FIR-UX-010`). Раздел 28 фиксирует принятую реализацию FRONT-00/FRONT-01 —
+существующие публичные страницы, общие компоненты, фактические токены,
+типографику, ритм отступов, цвета, границы, радиусы, ширины, сетку,
+характер навигации и принятые скриншоты — как **авторитетный визуальный
+baseline**: «минималистичный дизайн EPD²» не означает разрешения нарисовать
+новый несвязанный минимализм с нуля. Это reference baseline, а не заморозка
+пикселей: обоснованные улучшения допустимы, несвязанный редизайн — нет. Все
+двадцать три записи — `approved`, ни одна не реализована и ни одна **не
+покрыта внешним CI-прогоном** (они написаны после него): это выявленный
+общесистемный future implementation debt, а не работа PACK-13.
+`docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md` по-прежнему содержит
+ноль `implemented`, и это проверяется структурно
 (`tests/repository/test_pack13_fir_matrix.py`, `AC-P13-155`).
 
 ### Чего PACK-13 не делает

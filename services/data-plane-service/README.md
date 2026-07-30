@@ -1,7 +1,11 @@
 # data-plane-service — PACK-13 reference implementation
 
-**Status: PACK-13 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION
-READY. NOT LEGALLY ACTIVATED.**
+**Status:** FINAL PASS at repository version `0.13.0`, verified by an
+external GitHub Actions run. Canon version unchanged at `0.8.0` — this
+round amends no canon.
+
+**PACK-13 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+**NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
 
 The bounded implementation area for PACK-13 (`Production Data Plane &
 Contract Evolution`, ADR-069 through ADR-078). It is deliberately **not**

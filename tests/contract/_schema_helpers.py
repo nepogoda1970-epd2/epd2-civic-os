@@ -111,6 +111,25 @@ PACK12_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-12.y
 #: surface, only contract-level administrative view models.
 PACK13_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-13.yml"
 
+#: PACK-14's own reason-code registry (Identity, Authentication & Account
+#: Security; FIR-ROADMAP-004, ADR-079 through ADR-088) - added alongside
+#: (never replacing) the PACK-02 through PACK-13 constants above. There
+#: is deliberately no `PACK14_OPENAPI_PATH`, for the same reason PACK-10
+#: through PACK-13 have none: PACK-14 exposes no new public HTTP surface,
+#: only the contract-level endpoint catalogue in
+#: `epd2_identity_service.api`.
+#:
+#: There is also no PACK-14 canon constant. Canon stays at 0.8.0: this
+#: round amends no canon, reuses canon 19d.2's and 19d.8's existing
+#: four-value assurance scale rather than inventing an AAL-0..3
+#: vocabulary, and every CREDENTIAL_*, MFA_*, ASSURANCE_*, STEP_UP_*,
+#: SESSION_*, ACCOUNT_*, RECOVERY_*, CONTACT_*, BOOTSTRAP_* and
+#: VOTING_HANDOFF_* code in the registry is an additive
+#: `pack-14-service` code justified in ADR-079 through ADR-088, because
+#: canon section 24 registers no authentication, session, credential,
+#: recovery or proofing code at all.
+PACK14_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-14.yml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -179,6 +198,19 @@ PACK12_SERVICE_DIRS: tuple[str, ...] = ("privileged-access-service",)
 #: PACK-02-through-PACK-12 service is extended in place this round, so
 #: this scan needs no union with an earlier pack's directory list.
 PACK13_SERVICE_DIRS: tuple[str, ...] = ("data-plane-service",)
+
+#: PACK-14 adds **no** new service directory. Like PACK-07 - and unlike
+#: every other pack - it extends an EXISTING service in place:
+#: `identity-service`, which is already listed in `PACK02_SERVICE_DIRS`
+#: and already carries PACK-02's and PACK-07's own literals. It is listed
+#: here anyway, because `contracts/reason-codes/pack-14.yml` redeclares
+#: every code that directory uses and is therefore a complete, standalone
+#: source of truth for a scan over it. The other direction is handled the
+#: way PACK-07's was: `test_reason_codes_registry.py` unions pack-14.yml
+#: into pack-02's own literal-usage scan (see that file's
+#: `_EXTRA_REGISTRIES_FOR_LITERAL_CHECK`), so neither pack's scan reports
+#: the other pack's codes as unregistered.
+PACK14_SERVICE_DIRS: tuple[str, ...] = ("identity-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code

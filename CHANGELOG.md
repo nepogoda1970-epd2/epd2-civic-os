@@ -1,14 +1,153 @@
 # Changelog
 
-## [0.13.0] - production data plane & contract evolution (IMPLEMENTATION CANDIDATE)
+## [0.14.0] - identity, authentication & account security (IMPLEMENTATION CANDIDATE)
 
-- **PACK-13 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION READY. NOT
-  LEGALLY ACTIVATED.** The external GitHub Actions pipeline has not run
-  against this candidate, and the local run here is incomplete: this
-  environment has no network access to PyPI or npm, so `make setup`,
-  `uv sync`, `npm install` and every Node-dependent stage could not run.
-  What did run, and what did not, is stated exactly in
-  `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`.
+- **PACK-14 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION READY. NOT
+  LEGALLY ACTIVATED.** External GitHub Actions has not run against this
+  round; local verification results and what could not be verified
+  locally are recorded verbatim in
+  `docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md`.
+- Extended `services/identity-service` in place with the six bounded
+  contexts specification §4.1 assigns to it - Account Registry,
+  Credential Registry, Authentication, Session Security, Recovery
+  coordination and Identity-Proofing references - as internally separated
+  modules with separate storage boundaries. **No parallel authentication
+  service was created**, and ownership of canon 7.2's `Account` and canon
+  7.3's `IdentityRecord` is unchanged.
+- `FIR-INV-001` survives the round that most threatened it: **no global
+  user ID exists**. Five identifier spaces are distinct Python types,
+  what crosses a domain boundary is a purpose-scoped
+  `ScopedIdentityReference` derived per purpose and per organizational
+  scope, and every event payload passes `reject_prohibited_payload_keys`
+  before an envelope exists.
+- The account lifecycle is represented **without extending canon 7.2's
+  six statuses** (OD-P14-01): `AccountLock`, a security-class
+  `AccountRestriction`, `AccountClosureRequest` state and lifecycle
+  outcomes, each separately queryable and separately reversible.
+- Passkey-first authentication behind a `WebAuthnVerifier` port whose
+  default binding **refuses**; controlled password fallback behind a
+  `PasswordHasher` port whose default binding **refuses**. **No WebAuthn
+  cryptography and no password-hashing algorithm is implemented in this
+  repository.** A synced passkey caps at `substantial`; `high` requires a
+  device-bound credential (OD-P14-08).
+- `MfaFactorClass` has **no `sms_otp` member**: SMS OTP is not a login
+  method, not a step-up factor and carries no assurance level at all
+  (OD-P14-09). The system operates with no SMS provider.
+- Session security with two mandatory deadlines and no sentinel for
+  either, refresh-token families whose reuse revokes the family, and
+  `SessionRecord` held as a **service-level aggregate** on PACK-12's
+  `PrivilegedSession` precedent rather than added to canon (OD-P14-05).
+- Step-up bound to an action **and an object version**: a confirmation
+  obtained against version _n_ does not authorise version _n+1_
+  (ADR-082).
+- A per-workspace authentication bootstrap that is **explicitly not
+  SSO** - single-use, audience-bound, no parent-domain cookie, no
+  reusable cross-origin token (OD-P14-06) - and the WS-03
+  `VotingHandoffArtifact`, whose issuance record carries no account
+  reference of any kind so no pair of records resolves a redemption back
+  to the holder (ADR-088). **No Voting Client is implemented.**
+- The governed recovery workflow with revocation before completion, dual
+  control, cooling-off, out-of-band notification, and the
+  resulting-confidence rule that requires an explicit reason-coded risk
+  acceptance for a shortfall (OD-P14-10).
+- Added `contracts/reason-codes/pack-14.yml` (213 entries: 131 additive,
+  22 redeclared from PACK-02/07/08/09, 60 `*_RECORDED` audit
+  classifications derived mechanically from the event catalog).
+  **There is no generic `AUTH_ERROR` and none may be added.**
+- Fifty-nine event types in nine families, all on PACK-13's canonical
+  envelope **unchanged**. `PUBLIC_PROJECTION_ALLOWED` is empty by design.
+- `REPOSITORY_VERSION` 0.13.0 -> 0.14.0. **`CANON_VERSION` remains
+  0.8.0**: the round amends no canon, reuses canon 19d.2's and 19d.8's
+  existing four-value assurance scale rather than inventing an
+  AAL-0…AAL-3 vocabulary, and adds no canonical enum value.
+- `OD-P14-07` (retention durations) **remains open pending legal
+  confirmation** and does not block the reference implementation: safe
+  provisional schedules exist, deletion under a legal hold refuses, an
+  unknown hold state fails closed, and a destructive disposition against
+  an unconfirmed schedule is refused with
+  `RETENTION_SCHEDULE_UNCONFIRMED`.
+- **Correction round, 2026-07-30, before external CI.** The first
+  candidate archive was reviewed and three findings were returned and
+  fixed. No functional scope was expanded, no frontend was built, no
+  dependency was added, no CI gate was weakened, no existing test was
+  removed, and `REPOSITORY_VERSION 0.14.0` / `CANON_VERSION 0.8.0` are
+  unchanged. The status remains `PACK-14 IMPLEMENTATION CANDIDATE
+COMPLETE`. `docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md` §12
+  records the three findings in full.
+  1. **The persistence was metadata, not persistence.** Added ten real
+     SQL migration artefacts under `services/identity-service/migrations/`
+     and `migration_runner`, which applies them in order inside a single
+     transaction with a recorded SHA-256 checksum and a compatibility
+     check that refuses a database whose history disagrees with the files
+     on disk; `sql_storage` with eleven durable adapters, a `UnitOfWork`
+     transaction boundary and a monotonic optimistic-concurrency guard;
+     `codecs`, a type-hint-driven serializer that keeps typed identifiers
+     and timezone-aware timestamps intact and refuses raw `bytes` and
+     naive datetimes; and `runtime`, the composition root. Applying the
+     artefacts produces 29 tables and 35 indexes, 9 of them unique
+     constraints (2 partial) and 10 of them expiry indexes.
+     **This is a reference persistence path on SQLite through the
+     standard library** — it adds no dependency, `uv.lock` and
+     `package-lock.json` are unchanged, and **no production database is
+     deployed and no production durability is claimed.** The `InMemory*`
+     adapters remain as explicit **test** adapters and are no longer any
+     runtime's default binding.
+  2. **The breached-password default was permissive.** Removed
+     `NoBreachedPasswordChecker`. The unbound default is now
+     `UnboundBreachedPasswordChecker`, which raises
+     `BREACH_CHECK_UNAVAILABLE` rather than returning either boolean:
+     **no checker means no password enrollment and no password
+     replacement.** `DeterministicBreachedPasswordChecker` is a declared
+     test double. `PasswordDegradedModeDecision` is the one governed
+     exception and permits **authentication against an already stored
+     hash only** — it has no field that could re-open enrollment, and a
+     test asserts the field set.
+  3. **`api.py` was an endpoint catalogue, not a boundary.** Added
+     `service_api`, a transport-agnostic runnable adapter: request
+     parsing and validation, envelope validation in a fixed order (origin
+     → session → idempotency → version), audience assertion, durable
+     idempotency, a registered reason code on **every** response
+     including successes, and `assert_response_safe` in
+     `ApiResponse.__post_init__` so a response carrying a prohibited
+     identifier or a secret cannot be constructed. `ROUTED_OPERATIONS`
+     (12) and `CONTRACT_ONLY_OPERATIONS` (30) are named constants, so no
+     document can imply that all 42 catalogued operations run. **No HTTP
+     server, no production gateway, no public deployment and no real
+     external provider.**
+  - 46 tests added in `services/identity-service`
+    (`test_pack14_persistence.py`, `test_pack14_service_api.py`, and the
+    fail-closed breach-boundary section of `test_pack14_security.py`) and
+    14 at the repository level
+    (`tests/repository/test_pack14_default_binding.py` plus the migration
+    -vocabulary parity section of
+    `tests/repository/test_pack14_duplicated_logic_parity.py`). Local
+    suite: **4898 passed, 5 skipped**.
+- **Not implemented, and not claimed:** production IAM, real eID, real
+  email or SMS delivery, production HSM or KMS, a production database or
+  any operational durability, an HTTP surface or production gateway, a
+  complete Voting Client, membership or candidate eligibility, voting
+  credential issuance, ballots, tallies, a full legal electronic
+  signature, or the full Account & Security FRONT-PACK (`FIR-UX-011`
+  stays future).
+
+## [0.13.0] - production data plane & contract evolution (FINAL PASS)
+
+- **PACK-13 FINAL PASS — external GitHub Actions passed every stage:**
+  800/800 repository paths, no forbidden paths, version consistency, Ruff
+  format over 520 files, Prettier, Ruff lint, ESLint, mypy across all 23
+  groups and both TypeScript typechecks all PASS, 4625 Python tests passed
+  with 4 skipped, 34 Node tests, 16 frontend unit and render tests, a
+  successful Next.js production build, and 108 browser, accessibility and
+  visual tests. See `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+  `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` and the raw
+  transcript at `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
+- **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** The pipeline verifies
+  the repository; it deploys nothing. Every storage adapter in
+  `services/data-plane-service` is in memory.
+- The round reached PASS as a candidate first. The candidate's own report
+  and the local-verification caveats it recorded are retained unchanged in
+  `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`, which is
+  deliberately not rewritten to read as though it had always been a PASS.
 - Added `services/data-plane-service` (22 source modules, 20 test
   modules, 555 tests): the reference implementation of PACK-13's
   transactional persistence contracts, the canonical schema registry and
@@ -32,20 +171,68 @@
   **reference form**.
 - Extended `docs/packs/PACK-13/PACK-13-ACCEPTANCE-MATRIX.md` with an
   implementation-status appendix covering all 176 criteria (implemented
-  component, test file, evidence, status, deferred dependency). **Met by
-  this round: 0** — a candidate satisfies no acceptance criterion by its
-  own assertion.
+  component, test file, evidence, status, deferred dependency). **Recorded
+  as met: 0** — unchanged by the PASS, because the criteria whose evidence
+  is a database grant inventory, a live catalog snapshot, a role inventory
+  or an egress-control review describe an environment no pipeline creates.
 - Extended `docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md` with an
   implementation-coverage appendix. The matrix still contains **zero**
   `implemented` values, now asserted structurally by
   `tests/repository/test_pack13_fir_matrix.py` (`AC-P13-155`).
 - Updated `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`:
-  round record 1.8, `FIR-BASE-001` gains a candidate working head beside
-  the unchanged PASS baseline, and `FIR-ROADMAP-003` moves from
-  `approved` to `scheduled` — **not** to `implemented`. No entry deleted,
-  no identifier reused, no status downgraded, no second register created.
-- Added `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md` and
-  `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
+  round records 1.8 (candidate), 1.9–1.12 (the register addenda) and 1.13
+  (FINAL PASS); `FIR-BASE-001` now names the PACK-13 FINAL PASS archive
+  as the authoritative cumulative baseline with PACK-12 as the previous
+  one; `FIR-ROADMAP-003` moves `approved` → `scheduled` → **`implemented in
+reference form`**, and not to `implemented` outright; and section 21
+  records PACK-01 through PACK-13 as PASS. No entry deleted, no identifier
+  reused, no status downgraded, no second register created.
+- Added register section 26, **Canonical Forms, Submissions & Official
+  Renditions** (`FIR-FORM-001` … `FIR-FORM-005`, all `approved`): the
+  cross-cutting future layer for governed form definitions, per-domain form
+  inventories, governed German content, submissions and multi-channel
+  official renditions, together with the reporting rule that every later
+  domain PACK must carry a `Forms and Official Documents Coverage` section.
+- Added register section 27, **Cross-cutting procedural, trust and
+  operational foundations** (`FIR-RULE-001`, `FIR-REF-001`,
+  `FIR-DELIVERY-001`, `FIR-TRUST-001`, `FIR-REPRESENT-001`,
+  `FIR-INCLUSION-001`, `FIR-QUALITY-001`, `FIR-CONFIG-001`,
+  `FIR-IMPORT-001`, `FIR-SERVICE-001`, all `approved`): the governed rules
+  registry, reference-data and taxonomy registry, official delivery and
+  service evidence, electronic signature/seal/trusted-timestamp framework,
+  representation and assisted action, alternative-channel procedure, data
+  quality and reconciliation, governed operational configuration, legacy
+  import, and the service catalogue.
+- Added register section 28, **Frontend design, visualization and
+  interaction governance** (`FIR-UX-003` … `FIR-UX-010`, all `approved`):
+  the design-system and component governance, information architecture and
+  navigation, interaction patterns for consequential actions, system states
+  and recovery, content and terminology, responsive behaviour, visual status
+  semantics, and design evidence for frontend acceptance. It establishes the
+  approved FRONT-00/FRONT-01 implementation — the existing public pages,
+  shared components, actual design tokens, typography, spacing rhythm,
+  colours, borders, radii, page widths, grid and navigation character, and
+  the accepted reference screenshots — as the **authoritative visual
+  baseline**. A future FRONT-PACK must inventory what exists, extract the
+  real tokens, classify each pattern as reuse/extend/replace, justify every
+  replacement, compare against the accepted screenshots and preserve
+  recognisable continuity. The baseline is a reference, not a pixel freeze:
+  justified improvement is allowed, unrelated redesign is not.
+- All three sections are recorded as **future implementation debt**:
+  nothing in them is implemented, none changes any canon, none extends
+  PACK-13's scope, and **none is covered by the external CI run**, which
+  verified the implementation candidate before they were written.
+- The register in this archive is the consolidated version supplied for
+  this round, adopted verbatim at its canonical path, with only the four
+  status changes this round is required to make: the FINAL PASS round
+  record, the `FIR-BASE-001` baseline pointer, `FIR-ROADMAP-003`'s status,
+  and section 21's implementation summary. All 140 FIR entries are present
+  and no identifier is duplicated.
+- Added `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`,
+  `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`,
+  `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+  `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` and
+  `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
   `docs/handover/PACK-13-SPEC-ADR-REPORT.md` is retained unchanged as the
   specification round's own report and is deliberately not rewritten as an
   implementation report.
@@ -70,8 +257,9 @@
   connection-pool topology, service names, credential topology and
   transport provider are deliberately **not decided** — they are
   PACK-15/16's, taken with that pack's own threat model.
-- **PACK-12 (`0.12.0`, FINAL PASS) remains the authoritative PASS
-  baseline.** This candidate does not replace it.
+- **PACK-12 (`0.12.0`, FINAL PASS) is now the previous PASS baseline.**
+  The PACK-13 FINAL PASS archive supersedes it as the authoritative
+  cumulative baseline; nothing in PACK-12 was rewritten to achieve that.
 - **Documentation correction, 2026-07-30, after the first candidate
   archive.** One approved requirement was found missing from
   `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` and is now
@@ -86,7 +274,20 @@
   implementation item. The correction touched only the register, the
   candidate report and this changelog: no code, test, CI configuration,
   ADR, PACK-13 architecture decision, repository version or canon version
-  changed.
+  changed. It remains `approved` after the PASS.
+- **FINAL PASS packaging round, 2026-07-30.** Documentation and status only:
+  the register, this changelog, `README.md`, `docs/adr/README.md`,
+  `services/README.md`, `services/data-plane-service/README.md`, the PACK-13
+  known-limitations document, the acceptance matrix's and FIR coverage
+  matrix's status blocks, one superseding status note on the PACK-13
+  specification, and the three new handover documents. Two files were
+  adopted from the externally verified tree because the packaging sandbox's
+  copies were stale: `uv.lock`, which now registers
+  `epd2-data-plane-service` as a workspace member, and
+  `docs/frontend/FRONT-00-PAGE-INVENTORY.csv`, whose content is identical
+  and whose line endings are not. No service module, test, reason code,
+  ADR, contract, frontend file, route or visual snapshot changed, and
+  neither version moved.
 
 ## [0.12.0] - privileged administration, authorization-aware search & governed export (FINAL PASS)
 

@@ -232,5 +232,27 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # "reference_implementation" - deliberately not "implemented",
     # because every storage adapter in that service is in memory and the
     # production data plane it specifies is not deployed).
+    # REPOSITORY_VERSION then moved 0.13.0 -> 0.14.0 for the PACK-14
+    # implementation candidate: services/identity-service gains the
+    # Account Registry, Credential Registry, Authentication, Session
+    # Security, Recovery-coordination and Identity-Proofing-reference
+    # contexts in reference form - the account lifecycle that represents
+    # locks, restrictions and closure requests WITHOUT extending canon
+    # 7.2's six statuses, passkey-first authentication behind a
+    # verification port, the fenced password fallback, MFA with SMS OTP
+    # deliberately absent as a factor class, the fail-closed assurance
+    # conjunction, the session aggregate with two mandatory deadlines,
+    # action- and object-version-bound step-up, the per-workspace
+    # authentication bootstrap that is explicitly not SSO, the
+    # identity-free WS-03 voting handoff boundary, the governed recovery
+    # workflow, the proofing boundary and the scoped identity mappings -
+    # plus contracts/reason-codes/pack-14.yml. Six new bounded contexts
+    # inside an existing service is a minor bump per canon section 25.
+    # CANON_VERSION remains 0.8.0: PACK-14 makes NO canon amendment,
+    # which its own canon assessment records. It reuses canon 19d.2's and
+    # 19d.8's existing four-value assurance scale rather than inventing
+    # an AAL-0..3 vocabulary, keeps AccountStatus at six values, and
+    # holds SessionRecord as a service-level aggregate on PACK-12's
+    # PrivilegedSession precedent rather than adding it to canon.
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.13.0"
+    assert REPOSITORY_VERSION == "0.14.0"
