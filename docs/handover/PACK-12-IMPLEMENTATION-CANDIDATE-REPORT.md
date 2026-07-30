@@ -1,5 +1,20 @@
 # PACK-12 — Implementation Candidate Report
 
+> **Historical document — superseded, deliberately not rewritten.**
+>
+> This report describes the round **as it stood when it was written**: an
+> implementation candidate whose external CI had not yet run. It is kept
+> verbatim as the audit trail of that stage.
+>
+> PACK-12 subsequently passed external GitHub Actions in full and is now
+> **FINAL PASS** at repository version `0.12.0`. For the round's final
+> status see `docs/handover/PACK-12-FINAL-PASS-REPORT.md` and
+> `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+>
+> Nothing below has been edited to read as though it had always been a
+> PASS. Where this document says verification was incomplete, that was
+> true of the candidate stage and remains the correct record of it.
+
 **PACK-12 IMPLEMENTATION CANDIDATE**
 
 **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS**

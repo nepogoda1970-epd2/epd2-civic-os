@@ -207,5 +207,30 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # "reference_implementation", which is - like finance's - deliberately
     # not "implemented": the production data plane and the real content
     # store remain PACK-13's, not PACK-11's).
+    # REPOSITORY_VERSION moved 0.11.0 -> 0.12.0 for the PACK-12
+    # implementation round (services/privileged-access-service and
+    # contracts/reason-codes/pack-12.yml), and 0.12.0 -> 0.13.0 for the
+    # PACK-13 implementation candidate: services/data-plane-service
+    # implements Production Data Plane & Contract Evolution in reference
+    # form - transactional persistence contracts, optimistic concurrency,
+    # scoped idempotency, the canonical schema registry with its
+    # format-specific canonicalization and its digest/identity
+    # separation, the deterministic compatibility checker, API and event
+    # contract evolution, the migration framework and its five automated
+    # gates, the backfill runner, the transactional outbox,
+    # at-least-once delivery with effectively-once consumer effect,
+    # projection governance, the search and export persistence
+    # contracts, retention and legal-hold bindings, the PACK-12
+    # privileged gates and the structural boundary guards - plus
+    # contracts/reason-codes/pack-13.yml. A new bounded context is a
+    # minor bump per canon section 25.
+    # CANON_VERSION remains 0.8.0: PACK-13 made NO canon amendment, which
+    # its own canon assessment records. canon-version.json changed only
+    # its non-canonical bookkeeping fields (repository_compatibility
+    # widened to <0.14.0 and the new
+    # data_plane_context_implementation_status =
+    # "reference_implementation" - deliberately not "implemented",
+    # because every storage adapter in that service is in memory and the
+    # production data plane it specifies is not deployed).
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.12.0"
+    assert REPOSITORY_VERSION == "0.13.0"

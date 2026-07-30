@@ -1,6 +1,94 @@
 # Changelog
 
-## [0.12.0] - privileged administration, authorization-aware search & governed export (implementation candidate)
+## [0.13.0] - production data plane & contract evolution (IMPLEMENTATION CANDIDATE)
+
+- **PACK-13 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION READY. NOT
+  LEGALLY ACTIVATED.** The external GitHub Actions pipeline has not run
+  against this candidate, and the local run here is incomplete: this
+  environment has no network access to PyPI or npm, so `make setup`,
+  `uv sync`, `npm install` and every Node-dependent stage could not run.
+  What did run, and what did not, is stated exactly in
+  `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`.
+- Added `services/data-plane-service` (22 source modules, 20 test
+  modules, 555 tests): the reference implementation of PACK-13's
+  transactional persistence contracts, the canonical schema registry and
+  its format-specific canonicalization, the deterministic compatibility
+  checker with its semantic-risk escalation, API and event contract
+  evolution, the migration framework and its five automated gates, the
+  backfill runner, the transactional outbox, at-least-once delivery with
+  effectively-once consumer effect, projection governance, the search and
+  export persistence contracts, retention and legal-hold bindings, the
+  PACK-12 privileged gates, the structural boundary guards, the
+  thirty-seven canonical events, the storage ports and their in-memory
+  adapters, the governed commands, and the contract-level administrative
+  surfaces.
+- Added `contracts/reason-codes/pack-13.yml` (125 entries: 78 additive
+  PACK-13 codes, 10 redeclared unchanged from earlier packs, and 37
+  `*_RECORDED` audit classifications, one per event). There is no generic
+  `DATA_ERROR` and no generic `CONFLICT`, per `P13-RSN-002`.
+- Added the accepted ADR-069 through ADR-078 and the eleven PACK-13
+  specification documents under `docs/packs/PACK-13/`. The ADRs move from
+  `proposed` to `accepted` and record that the decision is implemented in
+  **reference form**.
+- Extended `docs/packs/PACK-13/PACK-13-ACCEPTANCE-MATRIX.md` with an
+  implementation-status appendix covering all 176 criteria (implemented
+  component, test file, evidence, status, deferred dependency). **Met by
+  this round: 0** — a candidate satisfies no acceptance criterion by its
+  own assertion.
+- Extended `docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md` with an
+  implementation-coverage appendix. The matrix still contains **zero**
+  `implemented` values, now asserted structurally by
+  `tests/repository/test_pack13_fir_matrix.py` (`AC-P13-155`).
+- Updated `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`:
+  round record 1.8, `FIR-BASE-001` gains a candidate working head beside
+  the unchanged PASS baseline, and `FIR-ROADMAP-003` moves from
+  `approved` to `scheduled` — **not** to `implemented`. No entry deleted,
+  no identifier reused, no status downgraded, no second register created.
+- Added `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md` and
+  `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
+  `docs/handover/PACK-13-SPEC-ADR-REPORT.md` is retained unchanged as the
+  specification round's own report and is deliberately not rewritten as an
+  implementation report.
+- Renamed nothing in earlier packs. One naming decision was forced:
+  the data-plane suite's application test is
+  `test_data_plane_application.py`, not `test_application.py`, because
+  `services/document-service/tests/test_privacy_boundary.py` imports a
+  helper with `from test_application import Flow` and a second module of
+  that name collected earlier in directory order would shadow the one it
+  means.
+- Repository version `0.12.0` -> `0.13.0`. Canon version unchanged at
+  `0.8.0`: this round amends no canon, and the PACK-13 canon assessment
+  records why none is needed.
+- **What this round does not do.** No production PostgreSQL, cloud
+  database, real broker, external schema-registry product, production
+  search engine, production IAM or multi-region topology is deployed or
+  claimed. Every storage adapter is in memory. No identity domain
+  (PACK-14), eligibility, credential, voting or tally domain
+  (PACK-15/16), and no backup or restore capability (PACK-17). No
+  arbitrary-SQL console and no universal administration surface. The
+  voting domain's broker topics, broker deployment arrangement,
+  connection-pool topology, service names, credential topology and
+  transport provider are deliberately **not decided** — they are
+  PACK-15/16's, taken with that pack's own threat model.
+- **PACK-12 (`0.12.0`, FINAL PASS) remains the authoritative PASS
+  baseline.** This candidate does not replace it.
+- **Documentation correction, 2026-07-30, after the first candidate
+  archive.** One approved requirement was found missing from
+  `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` and is now
+  recorded there as `FIR-PROG-003` — Public Presentation of Adopted
+  Programme and Projects (status `approved`, section 17): the adopted
+  programme is the primary content of the public `Programm` page, with its
+  adoption facts and version history directly available; projects appear
+  only as a single compact `Projekte in Beratung` card per thematic
+  section, explicitly marked `Noch nicht beschlossen` and linking to a
+  separate page; and the adopted/not-adopted distinction never rests on
+  colour alone. It is a **future frontend obligation**, not a PACK-13
+  implementation item. The correction touched only the register, the
+  candidate report and this changelog: no code, test, CI configuration,
+  ADR, PACK-13 architecture decision, repository version or canon version
+  changed.
+
+## [0.12.0] - privileged administration, authorization-aware search & governed export (FINAL PASS)
 
 - Added `services/privileged-access-service` (17 source modules, 16 test
   modules, 327 tests): the privileged-access grant lifecycle, the governed break-glass
@@ -20,16 +108,21 @@
   register was created.
 - Repository version `0.11.0` -> `0.12.0`. Canon version unchanged at
   `0.8.0`: this round amends no canon.
-- **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS.**
-  The build environment cannot reach the package registries, so
-  `uv sync --frozen`, `uv lock` and `npm ci` fail and `make verify` was never
-  run end to end. Ruff, mypy and the repository-wide `pytest` suite passed;
-  every frontend stage, Prettier and the lockfile resolution did not run. See
-  `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` section 5 for
-  exactly which stages ran and which did not.
-- `uv.lock`'s new workspace-member entry was added **by hand** because `uv`
-  cannot run offline. It is verified structurally only; `uv` has never
-  accepted it. CI must run `uv lock` and commit its output.
+- **PACK-12 FINAL PASS — external GitHub Actions passed every stage:**
+  728/728 repository paths, no forbidden paths, Ruff format, Prettier, Ruff
+  lint, mypy and TypeScript typecheck all PASS, 4062 Python tests passed
+  with 4 skipped, 108 browser tests passed, accessibility and visual checks
+  PASS. See `docs/handover/PACK-12-FINAL-PASS-REPORT.md` and
+  `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+- Reached through two CI corrections, both retained in the history: a
+  documentation correction (removing an inaccurate "locally verified" claim
+  and fixing the module inventory) and Prettier formatting, which included
+  deleting the stray duplicate `docs/handover/PACK-12-FIR-COVERAGE-MATRIX.md`.
+  The canonical matrix is `docs/packs/PACK-12/PACK-12-FIR-COVERAGE-MATRIX.md`.
+- **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** PACK-12 provides no
+  production database, production search engine, external IAM, real DLP
+  provider, real notification delivery, production session assurance, voting
+  capability or legal activation. `AC-P12-090` remains deferred.
 
 ## FRONT-00 foundation candidate correction 0.1.1
 

@@ -50,6 +50,8 @@ from _schema_helpers import (
     PACK11_SERVICE_DIRS,
     PACK12_REASON_CODES_PATH,
     PACK12_SERVICE_DIRS,
+    PACK13_REASON_CODES_PATH,
+    PACK13_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -75,6 +77,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-10", PACK10_REASON_CODES_PATH, PACK10_SERVICE_DIRS, 90),
     ("pack-11", PACK11_REASON_CODES_PATH, PACK11_SERVICE_DIRS, 71),
     ("pack-12", PACK12_REASON_CODES_PATH, PACK12_SERVICE_DIRS, 141),
+    ("pack-13", PACK13_REASON_CODES_PATH, PACK13_SERVICE_DIRS, 125),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -140,6 +143,24 @@ _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
             "CANON_VERSION",
             "IMPLEMENTED_FIR_ENTRIES",
             "PRIVILEGED_ACCESS_CONTEXT_IMPLEMENTATION_STATUS",
+            "REPOSITORY_VERSION",
+        }
+    ),
+    #: PACK-13's five are the same shape again - `__all__` entries in
+    #: `epd2_data_plane_service.__init__`, each an upper-case *name in a
+    #: string*, none a reason code. `CANDIDATE_FIR_ENTRIES` is the one
+    #: new shape: it names the FIR entry this round leaves at candidate
+    #: status, and it is a constant name rather than a refusal.
+    #: Enumerated exactly for the same reason as PACK-11's and
+    #: PACK-12's: a heuristic such as "appears inside `__all__`" would
+    #: also hide a genuine code that a future `__all__` happened to
+    #: mention.
+    "pack-13": frozenset(
+        {
+            "CANDIDATE_FIR_ENTRIES",
+            "CANON_VERSION",
+            "DATA_PLANE_CONTEXT_IMPLEMENTATION_STATUS",
+            "IMPLEMENTED_FIR_ENTRIES",
             "REPOSITORY_VERSION",
         }
     ),

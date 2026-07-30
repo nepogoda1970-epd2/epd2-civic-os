@@ -139,6 +139,109 @@ reverted the PACK-11 round record, the PACK-11 status changes and the
 current baseline pointer. No entry was deleted, no identifier reused, no
 status downgraded, and no second register was created.
 
+## 1.7 Round record — PACK-12 FINAL PASS (2026-07-29)
+
+**PACK-12 EXTERNAL CI PASS. PACK-12 FINAL PASS ARCHIVE PREPARED.**
+`REPOSITORY_VERSION` `0.12.0`; `CANON_VERSION` `0.8.0`.
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+
+A packaging round, not an implementation round. No service module, test,
+reason code, ADR, contract or frontend file was changed.
+
+**FIR IDs implemented:** `FIR-ROADMAP-002`, moved from `scheduled` to
+`implemented` on the strength of an external GitHub Actions run that
+passed every stage — 728/728 repository paths, no forbidden paths, Ruff
+format, Prettier, Ruff lint, mypy and TypeScript typecheck all PASS,
+4062 Python tests passed with 4 skipped, 108 browser tests passed, and
+accessibility and visual checks PASS. Evidence:
+`docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md` and
+`docs/handover/PACK-12-FINAL-PASS-REPORT.md`.
+
+**FIR IDs whose foundation-only status is unchanged by this round:** all
+sixteen recorded in §1.6. A green pipeline does not implement a
+requirement that the round never set out to implement, and none of them
+is promoted here.
+
+**FIR IDs intentionally left unchanged:** every other entry, including
+every `FIR-UX-*`, `FIR-ID-*`, `FIR-COMM-*`, `FIR-SEARCH-*`,
+`FIR-SUPPORT-*` and `FIR-METRIC-*` entry added by sections 24 and 25.
+Those remain **future requirements**: PACK-12 supplies enforcement
+foundations for search and small-cohort disclosure control, and
+implements no cabinet, identity, communication-persona, support or
+metrics surface.
+
+**New FIR IDs created:** none.
+
+**`AC-P12-090` remains deferred** and is not closed by this round.
+
+**Register updates only.** No entry was deleted, no identifier reused, no
+status downgraded, and no second register was created. The candidate
+round records in §1.6 are preserved unmodified: the round genuinely was a
+candidate at the time, and rewriting that history to read as though it
+had always been FINAL PASS would destroy the audit trail this register
+exists to keep.
+
+## 1.8 Round record — PACK-13 Implementation Candidate (2026-07-30)
+
+Per section 1.3, every PACK task lists what it did to this register.
+
+**Baseline:** PACK-12 FINAL PASS (`0.12.0`). **Repository version after
+this round:** `0.13.0`. **Canon version:** unchanged at `0.8.0`.
+
+**FIR IDs implemented:** none. `FIR-ROADMAP-003` moves from `approved` to
+`scheduled` and no further. PACK-13 is an **implementation candidate that
+has not passed external CI**, and `implemented` claimed on the strength of
+a locally-run, partially-runnable pipeline would be a claim the evidence
+does not support. The same reasoning PACK-12's round record recorded
+applies unchanged.
+
+**FIR IDs given a foundation but explicitly NOT implemented:**
+`FIR-INV-001`, `FIR-INV-006`, `FIR-INV-013`, `FIR-INV-014`, `FIR-INV-015`,
+`FIR-DATA-001`, `FIR-DATA-003`, `FIR-INV-007`, `FIR-INV-011`. Each is
+addressed in **reference form** by `services/data-plane-service` — the
+contracts, the gates and the refusals are real and tested — and none is
+closed, because the production data plane those invariants would finally be
+enforced in is not deployed.
+
+**FIR IDs intentionally left unchanged:** every other entry. In particular
+`FIR-INV-002`, `FIR-INV-003`, `FIR-INV-004` and `FIR-INV-005` are
+untouched. PACK-13 establishes the _structural absence_ of ballot,
+credential and tally material in the general data plane and prescribes no
+broker topic, broker deployment arrangement, connection-pool topology,
+service name, credential topology or transport provider for the voting
+domain — those are PACK-15/16's, taken with that pack's own threat model
+(`P13-VOTE-008`). Deciding them here would be settling a security
+architecture from outside the pack that owns it.
+
+**New FIR IDs created by implementation discovery:** none. The limitations
+this round found are the known boundary of existing requirements rather
+than new ones, and are recorded in
+`docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
+
+**Documentation correction (2026-07-30), after the first candidate
+archive.** One approved requirement was found to be missing from this
+register: the public presentation of the adopted programme and its
+projects. It had been approved before the candidate was built but had
+never been written here, so the round that was told not to delete it was
+working from a baseline that did not contain it. It is now recorded as
+**`FIR-PROG-003` — Public Presentation of Adopted Programme and Projects**
+in section 17, status `approved`, as a **future frontend obligation**.
+
+The correction is documentation-only. No code, test, CI configuration,
+ADR, PACK-13 architecture decision, repository version or canon version
+changed, and `FIR-PROG-003` is **not** a PACK-13 implementation item — it
+is recorded here, and it stays outside this round's scope.
+
+**Production infrastructure items remain future.** No production
+PostgreSQL, no cloud database, no real broker, no external schema-registry
+product, no production search engine, no production IAM and no
+multi-region topology is deployed or claimed by this round. The identity
+(PACK-14), eligibility/credential/voting/tally (PACK-15/16) and backup
+recovery (PACK-17) items remain future in exactly the state they were.
+
+**Register updates only.** No entry was deleted, no identifier reused, no
+status downgraded, and no second register was created.
+
 ---
 
 # 2. Current confirmed baseline
@@ -146,15 +249,48 @@ status downgraded, and no second register was created.
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
-**Last updated:** PACK-11 implementation round (2026-07-28)
+**Last updated:** PACK-13 Implementation Candidate round (2026-07-30)
 
 **Current authoritative cumulative baseline (PASS):**
+
+```text
+EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_FINAL_PASS.zip
+```
+
+**Current working head — a CANDIDATE, not a baseline:**
+
+```text
+EPD2_PACK-13_PRODUCTION_DATA_PLANE_CONTRACT_EVOLUTION_0.13.0_CANDIDATE.zip
+```
+
+Repository version `0.13.0`; canon version `0.8.0` (unchanged — this
+round amends no canon). **NOT PASS. NOT PRODUCTION READY. NOT LEGALLY
+ACTIVATED.** The PASS baseline above is unchanged and remains the
+authoritative one until an external GitHub Actions run passes over the
+candidate. Added by the candidate:
+
+- `services/data-plane-service`: 22 source modules, 20 test modules
+- Data-plane implementation status: `reference_implementation`
+- `contracts/reason-codes/pack-13.yml` (125 entries: 88 from the PACK-13
+  reason-code catalog, 37 `*_RECORDED` audit classifications)
+- ADR-069 through ADR-078, accepted
+- still no production database, no production event bus, no external
+  schema-registry product, no production search engine, no production
+  IAM, no backup or restore capability
+
+Repository version `0.12.0`; canon version `0.8.0`. Verified by an
+external GitHub Actions run — see
+`docs/handover/PACK-12-FINAL-PASS-REPORT.md` and
+`docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+**Not production ready. Not legally activated.**
+
+**Previous PASS baseline, superseded by the line above:**
 
 ```text
 EPD2_PACK-11_GOVERNED_DOCUMENTS_EVIDENCE_0.11.0_FINAL_PASS.zip
 ```
 
-**Previous PASS baseline, superseded by the line above:**
+**Earlier PASS baseline:**
 
 ```text
 EPD2_PACK-10_PARTY_FINANCE_0.10.0_FINAL_PASS.zip
@@ -193,6 +329,8 @@ external GitHub Actions run
 ---
 
 # 3. Master roadmap
+
+---
 
 ## FIR-ROADMAP-001 — PACK-11 Governed Documents & Evidence
 
@@ -236,28 +374,26 @@ Scope, with delivery state per item:
 
 ## FIR-ROADMAP-002 — PACK-12 Privileged Admin, Search & Data Export Security
 
-**Status:** scheduled  
-**Target version:** `0.12.0` — implementation candidate produced, external
-CI not yet passed  
-**Implementing round:** PACK-12 implementation candidate (2026-07-29)
+**Status:** implemented in reference form  
+**Target version:** `0.12.0` — delivered by PACK-12, FINAL PASS  
+**Implementing round:** PACK-12 implementation round (2026-07-29),
+candidate → two CI corrections → FINAL PASS
 
-**This entry is NOT `implemented`, and may not be marked so on the
-strength of this round.** The specification round produced requirements;
-this round produced a reference implementation of them as an
-**implementation candidate**.
+**External GitHub Actions passed every stage:** 728/728 repository paths,
+no forbidden paths, Ruff format, Prettier, Ruff lint, mypy and TypeScript
+typecheck all PASS, 4062 Python tests passed with 4 skipped, 108 browser
+tests passed, accessibility and visual checks PASS.
 
-**Full local verification is incomplete and external CI is pending.** The
-sandbox this round was built in cannot reach the package registries, so
-`uv sync --frozen`, `uv lock` and `npm ci` all fail and `make verify` was
-never run end to end. The stages that did run — Ruff, mypy, and the
-repository-wide `pytest` suite — passed; every frontend stage, Prettier,
-and the lockfile resolution did not run at all. Calling that "locally
-verified" would overstate it, so this round does not.
+**`implemented in reference form`, not `implemented` outright**, and the
+distinction is load-bearing. The governed workflows, the separation model
+and the refusal surface are real and externally verified. The production
+data plane is not: every storage adapter is in-memory, there is no
+external IAM, no MFA, no HSM/PKI, no production search engine, no real
+DLP provider, no real notification transport, and no administrative
+frontend. Those belong to PACK-13, PACK-14, PACK-17 and FRONT-PACK, and
+are listed as remaining work below.
 
-A status change to `implemented in reference form` requires a green
-`make verify` on a networked CI runner and nothing less. Section 5 of
-`docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` enumerates
-each stage individually.
+**Not production ready. Not legally activated.**
 
 Scope, with delivery state per item:
 
@@ -281,23 +417,28 @@ Scope, with delivery state per item:
 - `docs/packs/PACK-12/` (nine specification documents)
 - `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md`,
   `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`
+- `docs/handover/PACK-12-FINAL-PASS-REPORT.md`,
+  `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`
+- `docs/handover/PACK-12-SPEC-ADR-REPORT.md`
 
-**Remaining work before this entry may be marked implemented in reference
-form:**
+**Remaining work before this entry could ever be marked `implemented`
+outright:**
 
-1. `make verify` green on a networked CI runner (`uv sync`, `pytest`,
-   `ruff`, `mypy`, `npm`, `tsc`, `vitest`, Playwright) — not executable in
-   the build sandbox, which is why this round ships as a candidate;
-2. production persistence and the event bus (PACK-13);
-3. an external IAM/IdP, MFA and HSM/PKI (PACK-14 and PACK-17);
-4. a production search engine and a production DLP provider;
-5. the administrative frontend surfaces (FRONT-PACK);
-6. a PACK-12 PASS round.
+1. production persistence, the event bus and a production search index
+   (PACK-13);
+2. an external IAM/IdP, MFA and HSM/PKI (PACK-14);
+3. real out-of-band notification delivery and the incident-response
+   platform (PACK-17);
+4. a production DLP provider performing real content inspection;
+5. the twelve administrative frontend surfaces (FRONT-PACK);
+6. `AC-P12-090`, which remains **deferred** and is not closed by this
+   round.
 
 ## FIR-ROADMAP-003 — PACK-13 Production Data Plane & Contract Evolution
 
-**Status:** approved  
-**Target version:** `0.13.0`
+**Status:** scheduled  
+**Target version:** `0.13.0`  
+**Repository version carrying the candidate:** `0.13.0`
 
 Scope:
 
@@ -310,6 +451,64 @@ Scope:
 - compatibility policy;
 - migration discipline;
 - contract versioning.
+
+**PACK-13 specification and ADR round: ACCEPTED.** `PACK-13-SPECIFICATION.md`
+and ADR-069 through ADR-078 were accepted as the normative basis. That
+round set no version and implemented nothing.
+
+**PACK-13 implementation round: CANDIDATE. This entry is NOT
+implemented.** `services/data-plane-service` implements the specification
+in **reference form**: the transactional persistence contracts, the
+canonical schema registry, the deterministic compatibility checker, the
+API and event contract-evolution model, the migration framework and its
+five automated gates, the backfill runner, the transactional outbox, the
+at-least-once delivery semantics with effectively-once consumer effect,
+projection governance, the search and export persistence contracts, the
+retention and legal-hold bindings, the PACK-12 privileged gates and the
+structural boundary guards — twenty-two source modules and twenty test
+modules, with `contracts/reason-codes/pack-13.yml` carrying 125 entries.
+
+**Why the status is `scheduled` and not `implemented`:**
+
+1. this round produced an **implementation candidate**, not a PASS, and
+   the external GitHub Actions pipeline has not run against it;
+2. every storage adapter is **in memory**. No production PostgreSQL,
+   cloud database, real broker, external schema-registry product,
+   production search engine or production IAM is deployed. The
+   requirements a production data plane must satisfy are implemented as
+   contracts and refusals, which is a different and lesser claim than
+   satisfying them in production;
+3. the criteria whose evidence is a database grant inventory, a live
+   catalog snapshot or an egress-control review are recorded as
+   `deferred to production infrastructure` in the acceptance matrix's
+   implementation-status appendix, not as met.
+
+**Evidence:**
+
+- `services/data-plane-service/` (source and tests);
+- `contracts/reason-codes/pack-13.yml`;
+- `docs/adr/ADR-069-*` through `docs/adr/ADR-078-*` (accepted);
+- `docs/packs/PACK-13/` (specification and matrices, including the
+  acceptance matrix's implementation-status appendix);
+- `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`;
+- `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`;
+- `docs/handover/PACK-13-SPEC-ADR-REPORT.md` (the specification round's
+  own report, retained unchanged).
+
+**Remaining work before this entry could ever be marked `implemented`
+outright:**
+
+1. an external GitHub Actions PASS over this candidate;
+2. a production PostgreSQL-compatible deployment with domain-owned
+   schemas, per-domain grants and the immutable-history tables enforced at
+   the privilege level;
+3. a production event broker, and the dispatcher and consumer adapters
+   that talk to it;
+4. a production schema-registry deployment and a real search index;
+5. domain-by-domain adapter migration behind the unchanged ports
+   (`P13-PATH-004`), each with its own acceptance evidence;
+6. backup and restore capability, which is **PACK-17's** and which
+   `P13-BAK-011` forbids claiming without a restore test.
 
 ## FIR-ROADMAP-004 — PACK-14 Identity/Auth & External Gateway Security
 
@@ -1981,6 +2180,120 @@ The system must preserve:
 
 The implementation is complete only when no programme provision can reach final adoption voting without the required AI analysis, legal opinion and applicable expert opinions linked to the exact version and made available to participants in advance.
 
+## FIR-PROG-003 — Public Presentation of Adopted Programme and Projects
+
+**Status:** approved
+**Priority:** high
+**Domain:** public website / program formation / governed publication
+**Target:** future Public Website and Program Formation frontend packages
+**Recorded by:** PACK-13 candidate documentation correction (2026-07-30).
+This entry was approved before the PACK-13 implementation candidate was
+built but had not yet been written into this register; the correction adds
+it and changes nothing else.
+
+### Why this entry exists
+
+A party's public `Programm` page has one job: say what the party has
+actually decided. The failure mode is specific and common — the page fills
+up with proposals, drafts and things "in discussion", a reader cannot tell
+which sentences are binding, and the adopted programme becomes one voice
+among many on its own page. Every requirement below exists to prevent
+that, and the distinction it protects is **adopted versus not adopted**,
+not "new versus old".
+
+### Normative requirement
+
+**The adopted programme is the primary content of the public `Programm`
+page.** It is what a reader sees first, and it dominates the page both
+visually and in substance.
+
+For the programme as a whole, and where applicable for each thematic
+section, the following must be directly available:
+
+- the exact text currently in force;
+- the version number;
+- the date of adoption;
+- the competent body that adopted it;
+- the manner of adoption — for example a `Parteitag` or a
+  `Mitgliederentscheid`;
+- the date it entered into force;
+- a reference to the adopting decision;
+- the change history;
+- previous versions, reachable through a separate archive path.
+
+**Public projects and proposals must not be rendered as a full list beside
+the adopted programme**, and must not crowd the main page.
+
+After the corresponding thematic section, exactly **one** compact,
+secondary card is permitted:
+
+```text
+Projekte in Beratung
+```
+
+That card must:
+
+- show the number of active projects;
+- carry the explicit marking `Noch nicht beschlossen`;
+- link to a separate projects page for that thematic section;
+- not read as part of the adopted programme.
+
+A **separate page listing all public projects** must exist in addition.
+
+### The status distinction must not rest on colour alone
+
+The difference between the adopted programme and projects must be carried
+**simultaneously** by:
+
+- a textual status;
+- the page structure;
+- the shape of the card;
+- an icon or another accessible visual marker;
+- different actions and links.
+
+Colour alone is not an accessible status signal, and it is not a
+sufficient one here for the same reason `FIR-INV-012` exists: a reader who
+cannot distinguish the two by colour must still be able to tell what the
+party has decided from what it is merely discussing.
+
+### Boundaries
+
+This entry is:
+
+- a **future frontend obligation**;
+- **not** a PACK-13 implementation item, and not implemented by it;
+- **not** a canon change;
+- **not** a basis for treating Program Formation as implemented;
+- **not** a basis for treating the Public Website as complete.
+
+PACK-13 records this requirement and touches nothing it governs. No
+data-plane model, event, reason code or contract in
+`services/data-plane-service` presents, orders or renders programme
+content.
+
+### Dependencies
+
+`FIR-PROG-001` (the programme formation lifecycle that produces an adopted
+version at all), `FIR-PROG-002` (the pre-adoption review gate whose
+decision reference this page cites), `FIR-INV-012` (accessibility), and
+the governed-publication semantics PACK-11 owns — an adopted version is an
+immutable governed version, and previous versions are superseded rather
+than overwritten.
+
+### Acceptance criteria
+
+The requirement is implemented only when:
+
+1. the main page does not mix a full list of projects into the text in
+   force;
+2. the adopted text and the facts of its adoption — version, date, body,
+   manner, entry into force, decision reference — are directly available;
+3. the projects card states explicitly that the material is not yet
+   adopted;
+4. projects open on a separate page;
+5. the status is distinguishable without relying on colour alone;
+6. historical versions are not overwritten.
+
 ## FIR-DEL-001 — Delegation Reputation
 
 **Status:** captured
@@ -2494,16 +2807,20 @@ Required gate families:
 
 - PACK-01 through PACK-10 (PASS);
 - PACK-11 (PASS — external GitHub Actions verification complete);
+- **PACK-12 (PASS — external GitHub Actions verification complete);**
 - FRONT-00;
 - FRONT-01;
 - finance reference implementation;
 - **governed documents and evidence reference implementation** (PACK-11);
+- **privileged administration, authorization-aware search and governed
+  export reference implementation** (PACK-12);
 - cumulative architecture baseline;
 - 45 visual snapshots.
 
-PACK-12 is deliberately absent from this list. It exists as an
-implementation candidate at `0.12.0` whose external verification has not
-run; see `FIR-ROADMAP-002`.
+"Reference implementation" is the operative qualifier for PACK-10,
+PACK-11 and PACK-12 alike: the governed workflows are real and externally
+verified; the production data plane is not. Nothing in this list is
+production ready or legally activated.
 
 ## Specified but not implemented
 
@@ -2514,9 +2831,6 @@ run; see `FIR-ROADMAP-002`.
 - member payments;
 - SEPA mandate record (PACK-11 provides the mandate _evidence_ foundation only);
 - full voting implementation;
-- privileged admin (PACK-12 provides a reference implementation as an
-  **implementation candidate**; external CI has not yet passed, so this
-  entry stays here rather than moving to "Implemented");
 - production data plane;
 - identity/auth;
 - communications (PACK-11 provides the correspondence-document foundation only);
@@ -2525,7 +2839,13 @@ run; see `FIR-ROADMAP-002`.
   foundation only);
 - emergency governance;
 - representative desk;
-- lobbying disclosure.
+- lobbying disclosure;
+- applicant and member cabinets, identity and session model, communication
+  persona and scoped directory, person/document search surfaces, layered
+  user assistance, and membership metrics (sections 24 and 25) — PACK-12
+  supplies enforcement foundations for authorization-aware search and
+  small-cohort disclosure control only, and implements none of these
+  surfaces.
 
 ## Production-blocked
 

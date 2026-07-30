@@ -109,6 +109,13 @@ records that verdict in full. The eight ADRs plus
 for the model, because the context has no canon section of its own. All
 eight are `proposed`.
 
+PACK-12 reached **FINAL PASS** at repository version `0.12.0` on an
+external GitHub Actions run; the ADRs' `proposed` status is unaffected by
+that, exactly as ADR-055 through ADR-060 stayed `proposed` after PACK-11's
+FINAL PASS. A green pipeline verifies the implementation, not the
+governance status of the decision records. See
+`docs/handover/PACK-12-FINAL-PASS-REPORT.md`.
+
 ADR-055 through ADR-060 are this project's eleventh governance round —
 the PACK-11 implementation round (Governed Documents & Evidence,
 `FIR-ROADMAP-001`, `FIR-INV-010`). Unlike ADR-054, this round amends **no**
@@ -501,3 +508,33 @@ directory, JSON Schema, OpenAPI file, or reason-code registry was
 created, and no PACK-02/03 source code was touched. Implementation of
 `transparency-service` remains a separate, later task, gated on this
 canon content but not authorized by it alone.
+
+---
+
+## ADR-069 — ADR-078 (PACK-13, Production Data Plane & Contract Evolution)
+
+**Status: accepted.** Proposed and accepted by the PACK-13 specification
+round, which set no version and implemented nothing; implemented in
+**reference form** by the PACK-13 Implementation Candidate (`0.13.0`) in
+`services/data-plane-service`. Reference form means the contracts, the
+governed workflows and the refusals are real and tested, and the
+production data plane is neither deployed nor claimed. **NOT PASS. NOT
+PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+
+| ADR     | Decision                                                                                                                                                           | Where the reference implementation lives |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| ADR-069 | A PostgreSQL-compatible relational data plane organised as domain-owned schemas, with organizational scope as a first-class column from the first migration        | `domain`, `storage`, `boundaries`        |
+| ADR-070 | Every table has exactly one owning domain; exactly four integration mechanisms are admissible; audit ingestion is submission, not persistence                      | `boundaries`, `storage`                  |
+| ADR-071 | The transactional outbox is mandatory; transport metadata stays off the canonical envelope, which is what keeps this pack canon-neutral                            | `outbox`, `storage.ReferenceUnitOfWork`  |
+| ADR-072 | At-least-once delivery with effectively-once consumer effect through mandatory consumer idempotency; the stronger phrase is claimed nowhere and a scan enforces it | `delivery`, `idempotency`                |
+| ADR-073 | A canonical schema registry in which content digest and schema-version identity are separate fields answering separate questions                                   | `registry`, `canonicalization`           |
+| ADR-074 | Five compatibility modes with `unknown` as a first-class outcome; six structurally invisible change classes always require semantic review                         | `compatibility`, `contracts`             |
+| ADR-075 | A migration is immutable once applied; five checks are automated gates rather than reviewer vigilance                                                              | `migrations`, `backfill`                 |
+| ADR-076 | A read model is never authoritative, never widens source authorization, and is not a hidden cross-domain database                                                  | `projections`                            |
+| ADR-077 | Optimistic concurrency everywhere it matters; idempotency keys scoped to a domain and an operation, never derived from a person identifier                         | `concurrency`, `idempotency`             |
+| ADR-078 | Retention applies to infrastructure; a legal hold preserves data and authorizes nothing; evidence uses PACK-11's mechanisms rather than a second store             | `retention`                              |
+
+Specification and matrices: `docs/packs/PACK-13/`. Round reports:
+`docs/handover/PACK-13-SPEC-ADR-REPORT.md` (the specification round,
+retained unchanged), `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`
+and `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.

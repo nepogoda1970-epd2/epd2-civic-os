@@ -103,6 +103,14 @@ PACK11_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-11.y
 #: export code at all.
 PACK12_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-12.yml"
 
+#: PACK-13's own reason-code registry (Production Data Plane & Contract
+#: Evolution; ADR-069 through ADR-078) - added alongside (never
+#: replacing) the PACK-02 through PACK-12 constants above. There is
+#: deliberately no `PACK13_OPENAPI_PATH`, for the same reason PACK-10,
+#: PACK-11 and PACK-12 have none: PACK-13 exposes no new public HTTP
+#: surface, only contract-level administrative view models.
+PACK13_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-13.yml"
+
 #: Exactly which service directories belong to which pack - used so a
 #: registry/contract scan can be scoped to its own pack's services rather
 #: than indiscriminately scanning the whole `services/` tree (which now
@@ -166,6 +174,11 @@ PACK11_SERVICE_DIRS: tuple[str, ...] = ("document-service",)
 #: PACK-12 defines share this one directory by design (`OD-P12-04`); they
 #: are separated by module, aggregate and role rather than by deployable.
 PACK12_SERVICE_DIRS: tuple[str, ...] = ("privileged-access-service",)
+
+#: PACK-13's own service directory. One wholly new service; no existing
+#: PACK-02-through-PACK-12 service is extended in place this round, so
+#: this scan needs no union with an earlier pack's directory list.
+PACK13_SERVICE_DIRS: tuple[str, ...] = ("data-plane-service",)
 
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code

@@ -48,7 +48,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 EXPECTED_CANON_VERSION = "0.8.0"
 #: The repository version this checker expects to find.
 #:
-#: Moved 0.11.0 -> 0.12.0 by the PACK-12 implementation round. This
+#: Moved 0.11.0 -> 0.12.0 by the PACK-12 implementation round, and
+#: 0.12.0 -> 0.13.0 by the PACK-13 implementation candidate. This
 #: checker verifies the *canon 0.8.0 amendment's* state, not that the
 #: repository is frozen at the version the amendment shipped with: canon
 #: stays 0.8.0 while the repository moves on, and pinning this at 0.10.0
@@ -56,7 +57,7 @@ EXPECTED_CANON_VERSION = "0.8.0"
 #: not touch. `CANON_AMENDED_AT_REPOSITORY_VERSION` (0.9.0) is the
 #: constant that must *not* drift - it records when the amendment
 #: happened - and it is deliberately left alone here.
-EXPECTED_REPOSITORY_VERSION = "0.12.0"
+EXPECTED_REPOSITORY_VERSION = "0.13.0"
 
 #: The repository version the canon 0.8.0 amendment itself was made at.
 #: `minimum_repository_version` records that fact and must not drift with
@@ -279,7 +280,15 @@ PRE_EXISTING_ADR_NUMBERS: tuple[int, ...] = tuple(
 
 EXPECTED_THIS_ROUND_ADR_STATUS = "proposed"
 
-_ADR_FILENAME_RE = re.compile(r"^ADR-(\d{3})-[a-z0-9.\-]+\.md$")
+#: The PACK-13 specification round delivered ADR-069 through ADR-078 with
+#: UPPER-CASE slugs, and `docs/handover/PACK-13-SPEC-ADR-REPORT.md`
+#: records each file's SHA-256 under that exact path. Renaming them to
+#: the lower-case convention every earlier ADR follows would falsify that
+#: historical report by pointing its digest table at paths that no longer
+#: exist, so the accepted filenames are kept and the pattern is widened
+#: to accept either case. The convention itself is unchanged for new
+#: ADRs; this is a recorded exception, not a relaxation.
+_ADR_FILENAME_RE = re.compile(r"^ADR-(\d{3})-[A-Za-z0-9.\-]+\.md$")
 _ADR_HEADING_RE = re.compile(r"^#\s*ADR-(\d{3})\b")
 
 _BULLET_RE = re.compile(r"^\s*(?:[-*+]\s|\d+\.\s)")

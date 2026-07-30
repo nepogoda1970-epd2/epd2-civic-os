@@ -5,17 +5,17 @@
 **Artifact:** `EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_SPEC_ADR_CORRECTED.zip`
 **Supersedes:** `EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_SPEC_ADR.zip`
 
-> **Status note added by the PACK-12 implementation candidate round
+> **Status note, updated by the PACK-12 FINAL PASS round
 > (2026-07-29).** The "specification-only / not implemented" statement
 > above describes the _specification round_ that produced this document
 > and is preserved as the historical record. It is no longer the state of
 > the repository: `services/privileged-access-service` now implements this
-> specification as an **implementation candidate** at repository version
-> `0.12.0`.
+> specification; the implementation reached **FINAL PASS** at repository
+> version `0.12.0`.
 >
-> **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS.**
-> Nothing here is claimed as verified, passed, or production-ready. See
-> `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` section 5.
+> **PACK-12 is now FINAL PASS** at repository version `0.12.0`, verified
+> by an external GitHub Actions run. **NOT PRODUCTION READY. NOT LEGALLY
+> ACTIVATED.** See `docs/handover/PACK-12-FINAL-PASS-REPORT.md`.
 
 **Status:**
 

@@ -150,6 +150,13 @@ test("current versions match the expected skeleton version", () => {
   // contracts/reason-codes/pack-10.yml. A new bounded context is a minor
   // bump per canon section 25; CANON_VERSION stays 0.8.0 because the
   // implementation round amends no canon.
+  // REPOSITORY_VERSION then moved 0.11.0 -> 0.12.0 for the PACK-12
+  // implementation round and 0.12.0 -> 0.13.0 for the PACK-13
+  // implementation candidate, which ships services/data-plane-service -
+  // the reference implementation of the production data plane and
+  // contract evolution - and contracts/reason-codes/pack-13.yml. A new
+  // bounded context is a minor bump per canon section 25; CANON_VERSION
+  // stays 0.8.0 because the implementation round amends no canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.12.0");
+  assert.equal(REPOSITORY_VERSION, "0.13.0");
 });

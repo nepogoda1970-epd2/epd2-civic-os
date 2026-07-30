@@ -1,18 +1,42 @@
 # EPD² Civic OS
 
-> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.12.0`,
+> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.13.0`,
 > `CANON_VERSION` — `0.8.0`.
 >
-> Последний раунд — **PACK-12 — Privileged Admin, Authorization-Aware
-> Search & Governed Export**, поставленный как **IMPLEMENTATION
-> CANDIDATE**: полная локальная верификация **не завершена**, внешний CI
-> **не пройден**, это **не FINAL PASS**. Подробности — в разделе
-> «PACK-12» ниже и в
-> `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` (раздел 5).
+> Последний раунд — **PACK-13 — Production Data Plane & Contract
+> Evolution**, **IMPLEMENTATION CANDIDATE**.
+> **NOT PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+> Внешний GitHub Actions по этому кандидату **ещё не запускался**, и
+> локальный прогон здесь неполон (нет сетевого доступа к PyPI и npm —
+> см. `LOCAL_VERIFICATION.md` и
+> `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`, раздел
+> «Verification results»). Каждый storage-адаптер PACK-13 — in-memory:
+> production-БД, реальный брокер, внешний schema registry, production
+> search engine и production IAM не разворачиваются и не заявляются.
+> См. `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md` и
+> `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
 >
-> Последний раунд с подтверждённым внешним CI — **PACK-11 (`0.11.0`,
-> FINAL PASS)**; он остаётся историческим базисом, от которого построен
-> PACK-12.
+> **PACK-12 (`0.12.0`, FINAL PASS) остаётся авторитетным PASS-базисом**,
+> от которого построен PACK-13, и этот статус кандидатом не заменяется.
+>
+> Предыдущий раунд — **PACK-12 — Privileged Admin, Authorization-Aware
+> Search & Governed Export**, **FINAL PASS**: внешний GitHub Actions
+> прошёл полностью (728/728 repository paths, forbidden paths — нет,
+> Ruff format, Prettier, Ruff lint, mypy, TypeScript typecheck — PASS,
+> Python 4062 passed / 4 skipped, browser 108 passed, accessibility и
+> visual checks — PASS). См.
+> `docs/handover/PACK-12-FINAL-PASS-REPORT.md` и
+> `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+>
+> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** Зелёный pipeline
+> подтверждает, что репозиторий собирается, типизируется и проходит
+> тесты; он не подтверждает production-готовность, юридическую
+> активацию, production-БД, production search engine, внешний IAM,
+> реальный DLP-провайдер, реальную доставку уведомлений, production
+> session assurance или что-либо в домене голосования.
+>
+> PACK-11 (`0.11.0`, FINAL PASS) остаётся историческим базисом, от
+> которого построен PACK-12.
 
 > FRONT-00 adds a frontend foundation **implementation candidate** to the existing
 > Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
@@ -451,9 +475,95 @@ PACK-11 — последний раунд, для которого внешни�
 полный PASS. Он остаётся историческим базисом репозитория; PACK-12
 построен от него и **не** заменяет этот статус.
 
-## PACK-12 — Privileged Admin, Search & Export (`0.12.0`, IMPLEMENTATION CANDIDATE)
+## PACK-13 — Production Data Plane & Contract Evolution (`0.13.0`, IMPLEMENTATION CANDIDATE)
 
-> **LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS**
+> **PACK-13 IMPLEMENTATION CANDIDATE · NOT PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
+
+`services/data-plane-service` — тринадцатый сервис и единственный новый
+сервис раунда: **reference-реализация** production data plane и эволюции
+контрактов. **22 модуля исходного кода, 20 тестовых модулей**, 555
+собственных тестов. Спецификация и ADR-069 — ADR-078 приняты отдельным
+раундом (`docs/handover/PACK-13-SPEC-ADR-REPORT.md`, сохранён без
+изменений); этот раунд их реализует.
+
+Управляющее правило всего пакета — первое предложение спецификации:
+
+> **The data plane is infrastructure. It is not an authority.**
+> Persistence must not create a capability that the domain layer refuses.
+
+Что реализовано (в reference-форме):
+
+- **transactional persistence contracts** — `concurrency`: версия
+  агрегата, `ExpectedVersion` с раздельными «any» и «must not exist»,
+  reason-coded конфликт вместо тихой перезаписи, границы транзакции и
+  unit of work;
+- **canonical schema registry** — `registry` и `canonicalization`:
+  жизненный цикл, владелец-домен, обязательные fixtures, и главное —
+  **`content_digest` и `schema_version_id` разделены**: одинаковый
+  контент после format-specific канонизации даёт один digest, но
+  равенство digest не определяет identity версии;
+- **compatibility checker** — `compatibility`: детерминированный
+  структурный diff плюс восемь семантических классов, которые **всегда**
+  уходят на ручной разбор; `unknown` — полноценный исход, а не
+  «вероятно совместимо»;
+- **API/event contract evolution** — `contracts`: тринадцать
+  обязательных полей breaking change, окна сосуществования, готовность
+  потребителей, детерминированные upcaster'ы, которые **не выдумывают
+  юридических фактов**;
+- **migration framework** — `migrations`: неизменяемость применённой
+  миграции, checksum без пути авторемонта, детерминированный порядок,
+  expand/contract, пять **автоматических** gate'ов (scope, hold,
+  evidence linkage, global identifier, voting unlinkability);
+- **backfill runner** — `backfill`: детерминированный, перезапускаемый,
+  идемпотентный, с checkpoint'ами и очередью разбора; ничего не
+  домысливает;
+- **transactional outbox и delivery** — `outbox`, `delivery`: атомарная
+  запись состояния и outbox-записи, стабильный logical event ID,
+  раздельные «опубликовано» и «подтверждено брокером», **at-least-once
+  delivery с effectively-once consumer effect**;
+- **projection governance** — `projections`: read model не
+  авторитетен, не расширяет авторизацию источника, показывает
+  устаревание и распространяет удаление с доказательством;
+- **search/export contracts** — `integration`: политика остаётся за
+  PACK-12; **raw database export bypass отсутствует**;
+- **retention и legal hold** — `retention`: инфраструктура не
+  освобождена от PACK-09, а hold **сохраняет данные и не даёт доступа**;
+- **privileged operations** — `privileged`: scoped grant PACK-12,
+  separation of duties, отсутствие произвольного SQL, отсутствие
+  универсального администратора БД;
+- **структурные границы** — `boundaries`: audit-ingestion contract,
+  идентичность, семь запретов голосового домена.
+
+`contracts/reason-codes/pack-13.yml` — 125 записей (88 из каталога
+PACK-13 плюс 37 классификаций `*_RECORDED`). Ни одного универсального
+`DATA_ERROR` и ни одного универсального `CONFLICT`.
+
+Реестр: `FIR-ROADMAP-003` переведён в `scheduled`, **не** в
+`implemented`. Отдельной документационной коррекцией в реестр добавлено
+утверждённое ранее требование `FIR-PROG-003` — Public Presentation of
+Adopted Programme and Projects (раздел 17, статус `approved`): это
+**future frontend obligation**, а не пункт реализации PACK-13. `docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md`
+по-прежнему содержит ноль `implemented`, и это проверяется структурно
+(`tests/repository/test_pack13_fir_matrix.py`, `AC-P13-155`).
+
+### Чего PACK-13 не делает
+
+Не разворачивает и не заявляет: production PostgreSQL, облачную БД,
+реальный Kafka/RabbitMQ/NATS-брокер, внешний schema registry, production
+search engine, production IAM, multi-region-топологию. Не реализует
+identity-домен (PACK-14), eligibility/credential/voting/tally-домены
+(PACK-15/16) и backup recovery (PACK-17). Не создаёт универсальную
+админ-консоль и не выполняет произвольный SQL. Не является FRONT-PACK:
+административные поверхности здесь — контрактные view-модели, не
+интерфейс. Топология брокера, пулов соединений, имён сервисов и
+транспорта для голосового домена **сознательно не решается** — это
+PACK-15/16 вместе с их собственной моделью угроз.
+
+## PACK-12 — Privileged Admin, Search & Export (`0.12.0`, FINAL PASS)
+
+> **PACK-12 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
 
 `services/privileged-access-service` — двенадцатый сервис: привилегированное
 администрирование, поиск с учётом авторизации и управляемый экспорт данных
@@ -490,32 +600,42 @@ PACK-11 — последний раунд, для которого внешни�
 — `0.12.0`. `FIR-ROADMAP-002` переведён в `scheduled`, **не** в
 `implemented`.
 
-### Статус верификации — почему это candidate, а не PASS
+### Статус верификации
 
-Среда сборки не имеет доступа к реестрам пакетов (PyPI и npm отвечают
-`403 Forbidden`), поэтому `uv sync --frozen`, `uv lock` и `npm ci`
-завершаются ошибкой и **`make verify` не был выполнен полностью**.
+Внешний GitHub Actions прошёл полностью:
 
-**Выполнено и пройдено:** `ruff check .` и `ruff format --check .` по всему
-репозиторию, `mypy` по каждой цели из `Makefile`, `pytest` по всему
-репозиторию (4053 passed, 5 skipped), контрактные тесты реестра reason
-codes, структурные проверки репозитория на свежей распаковке архива.
+| Проверка                    | Результат                     |
+| --------------------------- | ----------------------------- |
+| Repository path manifest    | PASS — 728 / 728              |
+| Forbidden paths             | PASS — нет                    |
+| Ruff format / Ruff lint     | PASS                          |
+| Prettier                    | PASS                          |
+| mypy / TypeScript typecheck | PASS                          |
+| Python tests                | PASS — 4062 passed, 4 skipped |
+| Browser / frontend          | PASS — 108 passed             |
+| Accessibility / visual      | PASS                          |
 
-**Не выполнено:** `uv sync`, `uv lock`, `npm ci`, Prettier, eslint, `tsc`,
-vitest, сборка Next.js, Playwright. Наиболее вероятная первая ошибка в CI —
-Prettier `format:check`: раунд добавляет много Markdown и один большой YAML,
-не прошедшие через Prettier.
+Раунд прошёл через два CI-исправления до зелёного прогона: правку
+документации (устранение неверного утверждения «locally verified» и
+инвентаря модулей) и Prettier-форматирование, включая удаление лишнего
+дубликата `docs/handover/PACK-12-FIR-COVERAGE-MATRIX.md`. Канонический
+файл — только `docs/packs/PACK-12/PACK-12-FIR-COVERAGE-MATRIX.md`.
+Историю этапов см. в
+`docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md`, который
+сохранён без переписывания.
 
-**`uv.lock`:** запись нового workspace-члена добавлена **вручную**, потому
-что `uv` не может выполниться без сети. Она проверена только структурно
-(файл разбирается как TOML, форма ключей совпадает с
-`epd2-document-service`, запись присутствует в обоих корневых списках).
-**`uv` её не принимал и не подтверждал.** CI обязан выполнить `uv lock` и
-зафиксировать полученный результат; если сгенерированная запись отличается
-от добавленной вручную, верна сгенерированная.
+Итог раунда — `docs/handover/PACK-12-FINAL-PASS-REPORT.md`; результаты
+внешнего прогона — `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`;
+ограничения — `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`.
 
-Полный перечень — `docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md`
-(раздел 5) и `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`.
+### Чего PACK-12 не делает
+
+Не реализованы и не заявляются: production-БД, production search engine,
+внешний IAM/IdP, MFA, HSM/PKI, реальный DLP-провайдер, реальная доставка
+out-of-band уведомлений, production session assurance, голосование,
+юридическая активация и двенадцать административных frontend-поверхностей.
+Они принадлежат PACK-13, PACK-14, PACK-17 и FRONT-PACK. `AC-P12-090`
+остаётся **deferred**.
 
 ## Архитектурный принцип
 

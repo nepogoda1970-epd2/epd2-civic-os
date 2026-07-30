@@ -3,18 +3,23 @@
 Privileged administration, authorization-aware search, and governed data
 export with DLP and statistical disclosure control.
 
-**Status:** implementation candidate at repository version `0.12.0`.
-Canon version unchanged at `0.8.0` — this round amends no canon.
+**Status:** FINAL PASS at repository version `0.12.0`. Canon version
+unchanged at `0.8.0` — this round amends no canon.
 
-**LOCAL VERIFICATION INCOMPLETE / EXTERNAL CI PENDING / NOT FINAL PASS**
+**PACK-12 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+**NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
 
-`make verify` was never run end to end: the build environment cannot reach
-PyPI or npm. Ruff, mypy and the repository-wide `pytest` suite passed;
-every frontend stage, Prettier and the lockfile resolution did not run at
-all. `uv.lock`'s new workspace-member entry was added by hand and has never
-been accepted by `uv`. See
-`docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md` §5 for exactly
-which stages ran and which could not.
+External CI passed every stage: 728/728 repository paths, no forbidden
+paths, Ruff format, Prettier, Ruff lint, mypy and TypeScript typecheck all
+PASS, 4062 Python tests passed with 4 skipped, 108 browser tests passed,
+accessibility and visual checks PASS. See
+`docs/handover/PACK-12-FINAL-PASS-REPORT.md` and
+`docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+
+The qualifier that still applies is **reference implementation**: the
+governed workflows, the separation model and the refusal surface are real
+and externally verified; the production data plane is not. See "Honest
+limits" below.
 
 ---
 
