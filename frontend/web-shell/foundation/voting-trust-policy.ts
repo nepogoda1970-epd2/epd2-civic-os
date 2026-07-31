@@ -26,12 +26,7 @@ export type ParticipationStateId =
  * or a symbol, never a colour and never a colour alone.
  */
 export type ParticipationMarkerKind =
-  | "dot"
-  | "clock"
-  | "check"
-  | "crossed"
-  | "key"
-  | "expired";
+  "dot" | "clock" | "check" | "crossed" | "key" | "expired";
 
 export type ParticipationState = Readonly<{
   id: ParticipationStateId;
