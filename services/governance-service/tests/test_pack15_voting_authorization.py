@@ -176,6 +176,21 @@ def test_eligibility_officer_with_the_credential_secret_is_refused(
 
 # -- SD-10 and the audit separation -----------------------------------------
 
+#: The auditor roles as parametrize cases, sorted by value so the case
+#: order is deterministic rather than set-iteration order.
+#:
+#: The explicit annotation is load-bearing rather than decorative.
+#: `pytest.mark.parametrize` declares `argvalues` as an iterable of
+#: `object`, and passing `sorted(...)` straight into it lets that `object`
+#: flow backwards into `sorted`'s own type variable - which makes the key
+#: function's parameter `object`, and `object` has no `.value`. Binding the
+#: result to a named `tuple[VotingRole, ...]` first gives `sorted` a
+#: concrete expected type, so the key parameter is inferred as `VotingRole`
+#: and the enum's `.value` resolves.
+AUDITOR_ROLE_CASES: tuple[VotingRole, ...] = tuple(
+    sorted(AUDITOR_ROLES, key=lambda role: role.value)
+)
+
 
 def test_no_auditor_role_correlates_in_the_shipped_matrix() -> None:
     assert_auditor_cannot_correlate()
@@ -195,7 +210,7 @@ def test_an_auditor_holding_one_side_only_is_not_refused(
     assert_auditor_cannot_correlate(matrix)
 
 
-@pytest.mark.parametrize("role", sorted(AUDITOR_ROLES, key=lambda item: item.value))
+@pytest.mark.parametrize("role", AUDITOR_ROLE_CASES)
 def test_an_auditor_holding_both_stream_groups_is_refused(
     role: VotingRole, matrix: dict[VotingRole, frozenset[Capability]]
 ) -> None:
