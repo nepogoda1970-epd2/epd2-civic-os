@@ -2,13 +2,22 @@
 
 ```text
 PACK-15 IMPLEMENTATION CANDIDATE
-PARTIAL LOCAL VERIFICATION ONLY
-DEPENDENCY INSTALLATION BLOCKED BY SANDBOX NETWORK POLICY
+HYGIENE CORRECTED
 EXTERNAL CI NOT YET VERIFIED
 NOT FINAL PASS
 NOT PRODUCTION READY
 NOT LEGALLY ACTIVATED
 ```
+
+> **Superseded in one respect.** An external GitHub Actions run has since
+> passed — but against a tree that also contained `epd2-civic-os/`, a
+> stale nested copy of the repository at `0.6.0`. That directory has been
+> removed, which changes the verified tree, so the external result does
+> not carry over and this remains a candidate. The three stages are
+> distinct and must not be conflated: **local partial verification**
+> (this document), **the external run** (which verified a tree that is no
+> longer the one shipped), and **FINAL PASS assembly** (which has not
+> happened). See `PACK-15-HYGIENE-CORRECTION-REPORT.md`.
 
 **`REPOSITORY_VERSION` is `0.15.0`. `CANON_VERSION` remains `0.8.0`.**
 
