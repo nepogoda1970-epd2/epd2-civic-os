@@ -1,0 +1,797 @@
+uv run python scripts/check_repository.py
+OK: all 867 required paths are present.
+uv run python scripts/check_forbidden_files.py
+OK: no forbidden paths found.
+uv run python scripts/verify_versions.py
+OK: all version sources are consistent.
+uv run ruff format --check .
+566 files already formatted
+npm run format:check
+
+> epd2-civic-os@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+uv run ruff check .
+All checks passed!
+npm run lint --workspace=frontend/web-shell
+
+> web-shell@0.1.0 lint
+> eslint .
+
+uv run mypy packages/python/epd2-core scripts tests/repository conftest.py
+Success: no issues found in 32 source files
+uv run mypy tests/contract
+Success: no issues found in 24 source files
+uv run mypy services/account-service
+Success: no issues found in 8 source files
+uv run mypy services/identity-service
+Success: no issues found in 52 source files
+uv run mypy services/eligibility-service
+Success: no issues found in 9 source files
+uv run mypy services/credential-service
+Success: no issues found in 11 source files
+uv run mypy services/audit-core
+Success: no issues found in 10 source files
+uv run mypy services/initiative-service
+Success: no issues found in 9 source files
+uv run mypy services/deliberation-service
+Success: no issues found in 9 source files
+uv run mypy services/moderation-service
+Success: no issues found in 9 source files
+uv run mypy services/voting-service
+Success: no issues found in 9 source files
+uv run mypy services/tally-service
+Success: no issues found in 9 source files
+uv run mypy services/delegation-service
+Success: no issues found in 9 source files
+uv run mypy services/transparency-service
+Success: no issues found in 9 source files
+uv run mypy services/governance-service
+Success: no issues found in 11 source files
+uv run mypy services/ai-processing-service
+Success: no issues found in 11 source files
+uv run mypy services/membership-service
+Success: no issues found in 9 source files
+uv run mypy services/organization-service
+Success: no issues found in 9 source files
+uv run mypy services/compliance-service
+Success: no issues found in 17 source files
+uv run mypy services/finance-service
+Success: no issues found in 23 source files
+uv run mypy services/document-service
+Success: no issues found in 27 source files
+uv run mypy services/privileged-access-service
+Success: no issues found in 33 source files
+uv run mypy services/data-plane-service
+Success: no issues found in 44 source files
+npm run typecheck --workspace=packages/typescript/epd2-types
+
+> epd2-types@0.1.0 typecheck
+> tsc --noEmit
+
+npm run typecheck --workspace=frontend/web-shell
+
+> web-shell@0.1.0 typecheck
+> tsc --noEmit
+
+uv run pytest
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/runner/work/epd2-civic-os/epd2-civic-os
+configfile: pyproject.toml
+testpaths: packages/python/epd2-core/tests, tests/repository, tests/contract, services/account-service/tests, services/identity-service/tests, services/eligibility-service/tests, services/credential-service/tests, services/audit-core/tests, services/initiative-service/tests, services/deliberation-service/tests, services/moderation-service/tests, services/voting-service/tests, services/tally-service/tests, services/delegation-service/tests, services/transparency-service/tests, services/governance-service/tests, services/ai-processing-service/tests, services/membership-service/tests, services/organization-service/tests, services/compliance-service/tests, services/finance-service/tests, services/document-service/tests, services/privileged-access-service/tests, services/data-plane-service/tests
+plugins: cov-5.0.0, hypothesis-6.160.0
+collected 4909 items
+
+packages/python/epd2-core/tests/test_canonical_json.py .......           [  0%]
+packages/python/epd2-core/tests/test_clock.py ......                     [  0%]
+packages/python/epd2-core/tests/test_event_envelope.py ..............    [  0%]
+packages/python/epd2-core/tests/test_identifiers.py .......              [  0%]
+packages/python/epd2-core/tests/test_minimal_json_schema.py ............ [  0%]
+                                                                         [  0%]
+packages/python/epd2-core/tests/test_reason_codes.py .......             [  1%]
+packages/python/epd2-core/tests/test_version.py ...                      [  1%]
+tests/repository/test_canon_0_8_0_amendment.py ..................        [  1%]
+tests/repository/test_forbidden_paths.py ...                             [  1%]
+tests/repository/test_pack07_duplicated_logic_parity.py ........         [  1%]
+tests/repository/test_pack13_fir_matrix.py ....                          [  1%]
+tests/repository/test_pack14_default_binding.py .........                [  1%]
+tests/repository/test_pack14_duplicated_logic_parity.py ...............  [  2%]
+tests/repository/test_pack14_fir_matrix.py ....                          [  2%]
+tests/repository/test_required_files.py ..                               [  2%]
+tests/repository/test_service_boundaries.py ............................ [  2%]
+..............                                                           [  3%]
+tests/repository/test_version_consistency.py .                           [  3%]
+tests/contract/test_audit.py ........                                    [  3%]
+tests/contract/test_ct00_01_pack07_schema_validation.py ................ [  3%]
+......                                                                   [  3%]
+tests/contract/test_ct00_01_pack08_schema_validation.py ............     [  4%]
+tests/contract/test_ct00_01_pack09_framework_schema_validation.py ...... [  4%]
+........................................................................ [  5%]
+........................................................................ [  7%]
+...................................................                      [  8%]
+tests/contract/test_ct00_01_pack09_schema_validation.py ................ [  8%]
+........                                                                 [  8%]
+tests/contract/test_ct00_01_schema_validation.py ..................      [  9%]
+tests/contract/test_ct00_02_unknown_status.py .......................... [  9%]
+...............                                                          [  9%]
+tests/contract/test_ct00_03_forbidden_transition.py .................... [ 10%]
+.......................                                                  [ 10%]
+tests/contract/test_ct00_04_event_idempotency.py ..........              [ 11%]
+tests/contract/test_ct00_05_unsupported_event_version.py ............... [ 11%]
+.....                                                                    [ 11%]
+tests/contract/test_ct00_06_missing_permission.py ...................    [ 11%]
+tests/contract/test_ct00_07_audit_creation.py ...................        [ 12%]
+tests/contract/test_ct00_08_identity_leakage.py ........................ [ 12%]
+....................................                                     [ 13%]
+tests/contract/test_ct00_09_vote_linkability.py ...................      [ 13%]
+tests/contract/test_ct00_10_rule_freeze.py ......ss                      [ 13%]
+tests/contract/test_ct00_11_ai_human_control.py .....                    [ 14%]
+tests/contract/test_ct00_12_emergency_stop_not_applicable.py ss          [ 14%]
+tests/contract/test_openapi_contract.py ................................ [ 14%]
+...............                                                          [ 15%]
+tests/contract/test_property_based.py .......                            [ 15%]
+tests/contract/test_reason_codes_registry.py ........................... [ 15%]
+.........................                                                [ 16%]
+tests/contract/test_state_transitions.py ............................... [ 16%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 21%]
+........................................................................ [ 22%]
+........................................................................ [ 24%]
+........................................................................ [ 25%]
+........................................................................ [ 27%]
+......................................................                   [ 28%]
+services/account-service/tests/test_application.py ......                [ 28%]
+services/account-service/tests/test_domain.py .............              [ 28%]
+services/identity-service/tests/test_application.py ...............      [ 28%]
+services/identity-service/tests/test_application_pack07.py .......       [ 29%]
+services/identity-service/tests/test_domain.py ..................        [ 29%]
+services/identity-service/tests/test_pack14_integration.py ............. [ 29%]
+..........                                                               [ 29%]
+services/identity-service/tests/test_pack14_invariants.py .............. [ 30%]
+................................................                         [ 31%]
+services/identity-service/tests/test_pack14_persistence.py ............. [ 31%]
+.........                                                                [ 31%]
+services/identity-service/tests/test_pack14_security.py ................ [ 31%]
+..........................                                               [ 32%]
+services/identity-service/tests/test_pack14_service_api.py ............. [ 32%]
+....                                                                     [ 32%]
+services/identity-service/tests/test_pack14_unit.py .................... [ 33%]
+..........................                                               [ 33%]
+services/identity-service/tests/test_pack14_workflows.py ............... [ 34%]
+.....................                                                    [ 34%]
+services/eligibility-service/tests/test_application.py ..............    [ 34%]
+services/eligibility-service/tests/test_application_pack07.py .......... [ 35%]
+............                                                             [ 35%]
+services/eligibility-service/tests/test_domain.py .....                  [ 35%]
+services/credential-service/tests/test_application.py ...........        [ 35%]
+services/credential-service/tests/test_domain.py .........               [ 35%]
+services/credential-service/tests/test_storage.py .....                  [ 35%]
+services/credential-service/tests/test_validation.py ...........         [ 36%]
+services/audit-core/tests/test_application.py ........                   [ 36%]
+services/audit-core/tests/test_domain.py ...........                     [ 36%]
+services/audit-core/tests/test_hash_chain.py .....                       [ 36%]
+services/audit-core/tests/test_storage.py .............                  [ 36%]
+services/initiative-service/tests/test_application.py .................. [ 37%]
+......................                                                   [ 37%]
+services/initiative-service/tests/test_domain.py ....................... [ 38%]
+................................................................         [ 39%]
+services/initiative-service/tests/test_storage.py ....................   [ 39%]
+services/deliberation-service/tests/test_application.py ................ [ 40%]
+...................................                                      [ 40%]
+services/deliberation-service/tests/test_domain.py ..................... [ 41%]
+....................                                                     [ 41%]
+services/deliberation-service/tests/test_storage.py ..........           [ 41%]
+services/moderation-service/tests/test_application.py .................. [ 42%]
+...                                                                      [ 42%]
+services/moderation-service/tests/test_domain.py ....................... [ 42%]
+.........................                                                [ 43%]
+services/moderation-service/tests/test_storage.py ...............        [ 43%]
+services/voting-service/tests/test_application.py ...................... [ 44%]
+............                                                             [ 44%]
+services/voting-service/tests/test_domain.py ........................... [ 44%]
+.................................                                        [ 45%]
+services/voting-service/tests/test_storage.py ........................   [ 46%]
+services/tally-service/tests/test_application.py .....................   [ 46%]
+services/tally-service/tests/test_domain.py ............................ [ 47%]
+.......................                                                  [ 47%]
+services/tally-service/tests/test_storage.py ..........                  [ 47%]
+services/delegation-service/tests/test_application.py .................. [ 48%]
+......                                                                   [ 48%]
+services/delegation-service/tests/test_domain.py ....................... [ 48%]
+..........                                                               [ 48%]
+services/delegation-service/tests/test_storage.py ............           [ 49%]
+services/transparency-service/tests/test_application.py ..............   [ 49%]
+services/transparency-service/tests/test_domain.py ..................    [ 49%]
+services/transparency-service/tests/test_storage.py .........            [ 49%]
+services/governance-service/tests/test_application.py .................. [ 50%]
+............                                                             [ 50%]
+services/governance-service/tests/test_bootstrap.py ......               [ 50%]
+services/governance-service/tests/test_domain.py ....................... [ 51%]
+.......                                                                  [ 51%]
+services/governance-service/tests/test_storage.py ............           [ 51%]
+services/ai-processing-service/tests/test_application.py ............... [ 51%]
+.........                                                                [ 52%]
+services/ai-processing-service/tests/test_domain.py .................... [ 52%]
+......                                                                   [ 52%]
+services/ai-processing-service/tests/test_storage.py ......              [ 52%]
+services/membership-service/tests/test_application.py .................. [ 53%]
+........                                                                 [ 53%]
+services/membership-service/tests/test_domain.py ....................... [ 53%]
+..                                                                       [ 53%]
+services/membership-service/tests/test_storage.py ..........             [ 53%]
+services/organization-service/tests/test_application.py ................ [ 54%]
+...............                                                          [ 54%]
+services/organization-service/tests/test_domain.py ..................... [ 54%]
+.....................                                                    [ 55%]
+services/organization-service/tests/test_storage.py .................... [ 55%]
+...                                                                      [ 55%]
+services/compliance-service/tests/test_application.py .................. [ 56%]
+................................                                         [ 56%]
+services/compliance-service/tests/test_casework.py ..................... [ 57%]
+.........................                                                [ 57%]
+services/compliance-service/tests/test_dataprotection.py ............... [ 58%]
+.........                                                                [ 58%]
+services/compliance-service/tests/test_domain.py ....................... [ 58%]
+......................................                                   [ 59%]
+services/compliance-service/tests/test_framework_application.py ........ [ 59%]
+........................                                                 [ 60%]
+services/compliance-service/tests/test_notices.py ...................... [ 60%]
+.                                                                        [ 60%]
+services/compliance-service/tests/test_storage.py .............          [ 60%]
+services/finance-service/tests/test_application.py ..................... [ 61%]
+............................................                             [ 62%]
+services/finance-service/tests/test_authorization.py ................... [ 62%]
+..................                                                       [ 63%]
+services/finance-service/tests/test_domain.py .......................... [ 63%]
+..............                                                           [ 63%]
+services/finance-service/tests/test_events.py .......................... [ 64%]
+........................................................................ [ 65%]
+......................................................................   [ 67%]
+services/finance-service/tests/test_ledger.py .......................... [ 67%]
+..............                                                           [ 68%]
+services/finance-service/tests/test_privacy_boundary.py ................ [ 68%]
+........................                                                 [ 68%]
+services/finance-service/tests/test_projections.py ..................... [ 69%]
+...........................................                              [ 70%]
+services/finance-service/tests/test_records.py ......................... [ 70%]
+......................                                                   [ 71%]
+services/finance-service/tests/test_references.py ...................... [ 71%]
+..............................................                           [ 72%]
+services/finance-service/tests/test_reporting.py ....................... [ 73%]
+....................................................                     [ 74%]
+services/finance-service/tests/test_storage.py ......................... [ 74%]
+........                                                                 [ 74%]
+services/document-service/tests/test_application.py .................... [ 75%]
+..................................                                       [ 75%]
+services/document-service/tests/test_authorization.py .................. [ 76%]
+................                                                         [ 76%]
+services/document-service/tests/test_determinations.py ................. [ 76%]
+........                                                                 [ 77%]
+services/document-service/tests/test_documents.py ...................... [ 77%]
+...............                                                          [ 77%]
+services/document-service/tests/test_domain.py ......................... [ 78%]
+............                                                             [ 78%]
+services/document-service/tests/test_events.py ......................... [ 79%]
+                                                                         [ 79%]
+services/document-service/tests/test_evidence.py ....................... [ 79%]
+......                                                                   [ 79%]
+services/document-service/tests/test_privacy_boundary.py ............... [ 79%]
+.....                                                                    [ 80%]
+services/document-service/tests/test_projections.py .................... [ 80%]
+.                                                                        [ 80%]
+services/document-service/tests/test_references.py .................     [ 80%]
+services/document-service/tests/test_storage.py ........................ [ 81%]
+.                                                                        [ 81%]
+services/document-service/tests/test_versions.py ....................... [ 81%]
+...........                                                              [ 82%]
+services/privileged-access-service/tests/test_access.py ................ [ 82%]
+.........                                                                [ 82%]
+services/privileged-access-service/tests/test_application.py ........... [ 82%]
+..........                                                               [ 82%]
+services/privileged-access-service/tests/test_application_flows.py ..... [ 83%]
+...                                                                      [ 83%]
+services/privileged-access-service/tests/test_breakglass.py ............ [ 83%]
+                                                                         [ 83%]
+services/privileged-access-service/tests/test_disclosure.py ............ [ 83%]
+........                                                                 [ 83%]
+services/privileged-access-service/tests/test_dlp.py ................... [ 84%]
+..                                                                       [ 84%]
+services/privileged-access-service/tests/test_domain.py ................ [ 84%]
+.........                                                                [ 84%]
+services/privileged-access-service/tests/test_events.py ................ [ 85%]
+...                                                                      [ 85%]
+services/privileged-access-service/tests/test_export.py ................ [ 85%]
+............                                                             [ 85%]
+services/privileged-access-service/tests/test_policy.py .........        [ 85%]
+services/privileged-access-service/tests/test_roles.py ................. [ 86%]
+.............                                                            [ 86%]
+services/privileged-access-service/tests/test_search.py ................ [ 86%]
+..........................                                               [ 87%]
+services/privileged-access-service/tests/test_sessions.py .............. [ 87%]
+...                                                                      [ 87%]
+services/privileged-access-service/tests/test_storage.py ............... [ 87%]
+...................................                                      [ 88%]
+services/data-plane-service/tests/test_administration.py ............... [ 88%]
+.........                                                                [ 89%]
+services/data-plane-service/tests/test_backfill.py ...................   [ 89%]
+services/data-plane-service/tests/test_boundaries.py ................... [ 89%]
+......................                                                   [ 90%]
+services/data-plane-service/tests/test_canonicalization.py ............. [ 90%]
+.                                                                        [ 90%]
+services/data-plane-service/tests/test_compatibility.py ................ [ 91%]
+............                                                             [ 91%]
+services/data-plane-service/tests/test_concurrency.py .................. [ 91%]
+.                                                                        [ 91%]
+services/data-plane-service/tests/test_contracts.py .................... [ 92%]
+...........                                                              [ 92%]
+services/data-plane-service/tests/test_data_plane_application.py ....... [ 92%]
+...........................                                              [ 92%]
+services/data-plane-service/tests/test_delivery.py ..................... [ 93%]
+.........................                                                [ 93%]
+services/data-plane-service/tests/test_domain.py .....................   [ 94%]
+services/data-plane-service/tests/test_events.py ....................... [ 94%]
+....                                                                     [ 94%]
+services/data-plane-service/tests/test_idempotency.py .................. [ 95%]
+.                                                                        [ 95%]
+services/data-plane-service/tests/test_integration.py .................. [ 95%]
+...                                                                      [ 95%]
+services/data-plane-service/tests/test_migrations.py ................... [ 96%]
+..........................                                               [ 96%]
+services/data-plane-service/tests/test_outbox.py ....................... [ 97%]
+....                                                                     [ 97%]
+services/data-plane-service/tests/test_privileged.py ................... [ 97%]
+..........                                                               [ 97%]
+services/data-plane-service/tests/test_projections.py .................. [ 98%]
+..........                                                               [ 98%]
+services/data-plane-service/tests/test_registry.py ..................... [ 98%]
+.........                                                                [ 98%]
+services/data-plane-service/tests/test_retention.py .................... [ 99%]
+..                                                                       [ 99%]
+services/data-plane-service/tests/test_storage.py ...................... [ 99%]
+........                                                                 [100%]
+
+=========================== short test summary info ============================
+SKIPPED [1] tests/contract/test_ct00_10_rule_freeze.py:462: CT-00-10 NOT APPLICABLE in PACK-06 (ai-processing-service): required scope item 17 documents this explicitly rather than extending it. canon 27's CT-00-10 wording names Ballot configuration freeze, a voting-service concept ai-processing-service never touches. This pack's own freeze-shaped invariants (RedactionManifest immutability; disclosure_package_reference/disclosure_receipt_reference each set exactly once; terminal processing_status having no further transition) are already covered by this pack's own CT-00-03 (Forbidden Transition) tests, not a distinct rule-version/ballot freeze concept.
+SKIPPED [1] tests/contract/test_ct00_10_rule_freeze.py:487: CT-00-10 NOT APPLICABLE in PACK-07 (eligibility-service extensions, membership-service): canon 27's CT-00-10 wording names Ballot configuration freeze, a voting-service concept neither PACK-07 service touches. This pack's own freeze-shaped invariants that DO hold are covered elsewhere, not by a distinct CT-00-10 test: every critical-policy entity (ParticipantEligibilityPolicy, ProcessEligibilityPolicy, StepUpAuthenticationRequirement, PartyMembershipEligibilityPolicy) is a frozen dataclass whose content never mutates in place - superseding always creates a NEW versioned record via with_status/dataclasses.replace, never rewriting the old one - and DigitalDecision is documented as never transitioning after construction (see test_ct00_03_forbidden_transition.py's PACK-07 section for the forbidden-transition half of this). One related invariant is honestly NOT enforced this round, not silently glossed over: canon 19d.7's own CriticalPolicyVersionFrozenError (declared in both PACK-07 services' exceptions.py) is reserved for a future pack that introduces real Process/Election lifecycle tracking - see that exception class's own docstring for why raising it now, against no real 'is a process using this version' signal, would be worse than not enforcing it at all. This is reported here rather than claimed as covered, per required scope item 18's no-false-applicability-claims requirement.
+SKIPPED [1] tests/contract/test_ct00_12_emergency_stop_not_applicable.py:71: CT-00-11 NOT APPLICABLE in PACK-02, PACK-03, PACK-05, or PACK-07 (superseded - see test_ct00_11_ai_human_control.py for PACK-06, where CT-00-11 is fully applicable): AIProcessingRecord (canon section 17.1) was out of scope for all four of these packs (PACK-02 pack section 3.2; PACK-03 docs/handover/PACK-03-SPEC.md section 1; PACK-05 required scope item 13; PACK-07 required scope item 19) - no AI-produced result existed in any of them for a human-control gate to apply to. PACK-07's own canon 19d.16 human-control invariant (membership/critical-policy decisions requiring an authorized human decision-maker) is a distinct concept, exercised in services/membership-service's and services/eligibility-service's own test suites, not by this CT-00-11 gate.
+SKIPPED [1] tests/contract/test_ct00_12_emergency_stop_not_applicable.py:93: CT-00-12 NOT APPLICABLE in PACK-02, PACK-03, PACK-05, PACK-06, or PACK-07: EmergencyAction (canon section 19.1) is out of scope for all five packs (PACK-02 pack section 3.2; PACK-03 docs/handover/PACK-03-SPEC.md section 1; PACK-05 required scope item 13; PACK-06 required scope item 19's explicit Emergency/Crisis Override exclusion; PACK-07 required scope item 19's identical exclusion) - no freeze mechanism exists in any of them for a forbidden-operation-during-freeze test to exercise.
+======================= 4905 passed, 4 skipped in 33.94s =======================
+npm run test --workspace=packages/typescript/epd2-types
+
+> epd2-types@0.1.0 test
+> node --import tsx --test tests/**/*.test.ts
+
+TAP version 13
+# Subtest: CANON_VERSION is a semver-like string
+ok 1 - CANON_VERSION is a semver-like string
+  ---
+  duration_ms: 0.966844
+  type: 'test'
+  ...
+# Subtest: REPOSITORY_VERSION is a semver-like string
+ok 2 - REPOSITORY_VERSION is a semver-like string
+  ---
+  duration_ms: 0.172242
+  type: 'test'
+  ...
+# Subtest: current versions match the expected skeleton version
+ok 3 - current versions match the expected skeleton version
+  ---
+  duration_ms: 0.132057
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 184.510708
+npm run test --workspace=frontend/web-shell
+
+> web-shell@0.1.0 test
+> node --import tsx --test tests/**/*.test.ts && vitest run
+
+TAP version 13
+# Subtest: declares exactly ten separate workspaces
+ok 1 - declares exactly ten separate workspaces
+  ---
+  duration_ms: 1.786653
+  type: 'test'
+  ...
+# Subtest: Voting Client policy forbids analytics and all browser storage
+ok 2 - Voting Client policy forbids analytics and all browser storage
+  ---
+  duration_ms: 0.399806
+  type: 'test'
+  ...
+# Subtest: telemetry fails closed for Voting Client and sensitive identifiers
+ok 3 - telemetry fails closed for Voting Client and sensitive identifiers
+  ---
+  duration_ms: 0.334263
+  type: 'test'
+  ...
+# Subtest: mandatory state catalogue is complete
+ok 4 - mandatory state catalogue is complete
+  ---
+  duration_ms: 0.256629
+  type: 'test'
+  ...
+# Subtest: representative routes have explicit ownership, activation and backend dependency
+ok 5 - representative routes have explicit ownership, activation and backend dependency
+  ---
+  duration_ms: 0.427127
+  type: 'test'
+  ...
+# Subtest: shell and components include accessibility primitives
+ok 6 - shell and components include accessibility primitives
+  ---
+  duration_ms: 0.35345
+  type: 'test'
+  ...
+# Subtest: dialog uses native modal semantics and labelled heading
+ok 7 - dialog uses native modal semantics and labelled heading
+  ---
+  duration_ms: 0.308255
+  type: 'test'
+  ...
+# Subtest: foundation does not claim PASS, production readiness or legal activation
+ok 8 - foundation does not claim PASS, production readiness or legal activation
+  ---
+  duration_ms: 0.666714
+  type: 'test'
+  ...
+# Subtest: FRONT-00 contains no API integration or global identity storage
+ok 9 - FRONT-00 contains no API integration or global identity storage
+  ---
+  duration_ms: 0.630146
+  type: 'test'
+  ...
+# Subtest: Mobile App is a client channel and does not change workspace or origin counts
+ok 10 - Mobile App is a client channel and does not change workspace or origin counts
+  ---
+  duration_ms: 0.718831
+  type: 'test'
+  ...
+# Subtest: Mobile App capability scope is limited and privileged capabilities are prohibited
+ok 11 - Mobile App capability scope is limited and privileged capabilities are prohibited
+  ---
+  duration_ms: 1.051502
+  type: 'test'
+  ...
+# Subtest: citizen-office request status is WS-05 and activation-gated by PACK-33
+ok 12 - citizen-office request status is WS-05 and activation-gated by PACK-33
+  ---
+  duration_ms: 0.215172
+  type: 'test'
+  ...
+# Subtest: Mobile voting requires isolated system-browser handoff
+ok 13 - Mobile voting requires isolated system-browser handoff
+  ---
+  duration_ms: 0.188802
+  type: 'test'
+  ...
+# Subtest: Mobile offline, push and production activation policies fail closed
+ok 14 - Mobile offline, push and production activation policies fail closed
+  ---
+  duration_ms: 0.19868
+  type: 'test'
+  ...
+# Subtest: FRONT-01 implements every required public route in WS-01
+ok 15 - FRONT-01 implements every required public route in WS-01
+  ---
+  duration_ms: 1.745326
+  type: 'test'
+  ...
+# Subtest: every capability uses a controlled status and complete banner metadata
+ok 16 - every capability uses a controlled status and complete banner metadata
+  ---
+  duration_ms: 0.25714
+  type: 'test'
+  ...
+# Subtest: navigation is coherent, limited and points to real routes
+ok 17 - navigation is coherent, limited and points to real routes
+  ---
+  duration_ms: 0.206806
+  type: 'test'
+  ...
+# Subtest: audit C1 corrects PACK-09 and C6 keeps PACK-10 non-runtime
+ok 18 - audit C1 corrects PACK-09 and C6 keeps PACK-10 non-runtime
+  ---
+  duration_ms: 0.698153
+  type: 'test'
+  ...
+# Subtest: voting remains explanation-only with the complete isolation boundary
+ok 19 - voting remains explanation-only with the complete isolation boundary
+  ---
+  duration_ms: 0.803038
+  type: 'test'
+  ...
+# Subtest: citizen office and representative desk keep ownership and access separate
+ok 20 - citizen office and representative desk keep ownership and access separate
+  ---
+  duration_ms: 0.231503
+  type: 'test'
+  ...
+# Subtest: program skeleton and lifecycle controlled states are present in source
+ok 21 - program skeleton and lifecycle controlled states are present in source
+  ---
+  duration_ms: 0.39647
+  type: 'test'
+  ...
+# Subtest: all 61 legacy HTML pages have exactly one migration decision
+ok 22 - all 61 legacy HTML pages have exactly one migration decision
+  ---
+  duration_ms: 0.475798
+  type: 'test'
+  ...
+# Subtest: FRONT-01 source contains no operational forms or cross-workspace client assumptions
+ok 23 - FRONT-01 source contains no operational forms or cross-workspace client assumptions
+  ---
+  duration_ms: 1.015294
+  type: 'test'
+  ...
+# Subtest: organization browser page has the required German-authoritative heading
+ok 24 - organization browser page has the required German-authoritative heading
+  ---
+  duration_ms: 1.941251
+  type: 'test'
+  ...
+# Subtest: organization browser page does not call any backend or render a <form>
+ok 25 - organization browser page does not call any backend or render a <form>
+  ---
+  duration_ms: 0.503189
+  type: 'test'
+  ...
+# Subtest: organization detail page renders relations, authorities, and an as-of selector
+ok 26 - organization detail page renders relations, authorities, and an as-of selector
+  ---
+  duration_ms: 0.284311
+  type: 'test'
+  ...
+# Subtest: as-of selector resolves historical status from static sample data only, no API
+ok 27 - as-of selector resolves historical status from static sample data only, no API
+  ---
+  duration_ms: 0.226854
+  type: 'test'
+  ...
+# Subtest: dev authorization console is clearly labeled development-only and not wired to a backend
+ok 28 - dev authorization console is clearly labeled development-only and not wired to a backend
+  ---
+  duration_ms: 0.358099
+  type: 'test'
+  ...
+# Subtest: authorization check defaults to deny when no sample grant matches
+ok 29 - authorization check defaults to deny when no sample grant matches
+  ---
+  duration_ms: 34.079307
+  type: 'test'
+  ...
+# Subtest: authorization check allows a subject with a matching, currently-valid sample grant
+ok 30 - authorization check allows a subject with a matching, currently-valid sample grant
+  ---
+  duration_ms: 0.671543
+  type: 'test'
+  ...
+# Subtest: authorization check denies a matching subject/scope/action outside the grant's validity window
+ok 31 - authorization check denies a matching subject/scope/action outside the grant's validity window
+  ---
+  duration_ms: 0.565726
+  type: 'test'
+  ...
+# Subtest: statusAsOf resolves the status in effect at a historical date, not just the current one
+ok 32 - statusAsOf resolves the status in effect at a historical date, not just the current one
+  ---
+  duration_ms: 11.077308
+  type: 'test'
+  ...
+# Subtest: home page renders the governed EPD² public page
+ok 33 - home page renders the governed EPD² public page
+  ---
+  duration_ms: 0.850807
+  type: 'test'
+  ...
+# Subtest: home page does not reference forbidden concerns
+ok 34 - home page does not reference forbidden concerns
+  ---
+  duration_ms: 0.32148
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 547.230317
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/epd2-civic-os/epd2-civic-os/frontend/web-shell[39m
+
+ [32m✓[39m tests/front01.render.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 229[2mms[22m[39m
+ [32m✓[39m tests/foundation.render.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 409[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 20:42:12
+[2m   Duration [22m 1.76s[2m (transform 263ms, setup 461ms, import 371ms, tests 638ms, environment 1.59s)[22m
+
+npm run build --workspace=frontend/web-shell
+
+> web-shell@0.1.0 build
+> next build
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.21
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.6s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/46) ...
+   Generating static pages (11/46) 
+   Generating static pages (22/46) 
+   Generating static pages (34/46) 
+ ✓ Generating static pages (46/46)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                   Size  First Load JS
+┌ ○ /                                                        166 B         106 kB
+├ ○ /_not-found                                              987 B         103 kB
+├ ● /[...slug]                                               166 B         106 kB
+├   ├ /ueber-uns
+├   ├ /ziele
+├   ├ /grundsaetze
+├   └ [+27 more paths]
+├ ○ /foundation                                              705 B         107 kB
+├ ● /foundation/examples/[kind]                              160 B         106 kB
+├   ├ /foundation/examples/public
+├   ├ /foundation/examples/cockpit
+├   ├ /foundation/examples/communication
+├   └ [+2 more paths]
+├ ○ /organizations                                           166 B         106 kB
+├ ● /organizations/[id]                                      643 B         109 kB
+├   ├ /organizations/00000000-0000-0000-0000-000000000001
+├   ├ /organizations/00000000-0000-0000-0000-000000000002
+├   ├ /organizations/00000000-0000-0000-0000-000000000003
+├   └ /organizations/00000000-0000-0000-0000-000000000004
+└ ○ /organizations/dev-authorization-console               1.25 kB         110 kB
++ First Load JS shared by all                               103 kB
+  ├ chunks/18-ff6a2aec3d6a1486.js                          46.3 kB
+  ├ chunks/87c73c54-24122e7b92478d00.js                    54.2 kB
+  └ other shared chunks (total)                            1.92 kB
+
+
+○  (Static)  prerendered as static content
+●  (SSG)     prerendered as static HTML (uses generateStaticParams)
+
+npm run test:browser --workspace=frontend/web-shell
+
+> web-shell@0.1.0 test:browser
+> playwright test
+
+
+Running 108 tests using 1 worker
+
+[1/108] [mobile] › tests/browser/front00.browser.spec.ts:13:7 › @visual index matches approved migrated fixture
+[2/108] [mobile] › tests/browser/front00.browser.spec.ts:24:7 › @a11y index has no serious or critical axe violations
+[3/108] [mobile] › tests/browser/front00.browser.spec.ts:36:7 › @a11y index has keyboard skip link, headings and landmarks
+[4/108] [mobile] › tests/browser/front00.browser.spec.ts:13:7 › @visual dashboard matches approved migrated fixture
+[5/108] [mobile] › tests/browser/front00.browser.spec.ts:24:7 › @a11y dashboard has no serious or critical axe violations
+[6/108] [mobile] › tests/browser/front00.browser.spec.ts:36:7 › @a11y dashboard has keyboard skip link, headings and landmarks
+[7/108] [mobile] › tests/browser/front00.browser.spec.ts:13:7 › @visual kommunikation matches approved migrated fixture
+[8/108] [mobile] › tests/browser/front00.browser.spec.ts:24:7 › @a11y kommunikation has no serious or critical axe violations
+[9/108] [mobile] › tests/browser/front00.browser.spec.ts:36:7 › @a11y kommunikation has keyboard skip link, headings and landmarks
+[10/108] [mobile] › tests/browser/front00.browser.spec.ts:13:7 › @visual buerger-login matches approved migrated fixture
+[11/108] [mobile] › tests/browser/front00.browser.spec.ts:24:7 › @a11y buerger-login has no serious or critical axe violations
+[12/108] [mobile] › tests/browser/front00.browser.spec.ts:36:7 › @a11y buerger-login has keyboard skip link, headings and landmarks
+[13/108] [mobile] › tests/browser/front00.browser.spec.ts:13:7 › @visual abstimmungen matches approved migrated fixture
+[14/108] [mobile] › tests/browser/front00.browser.spec.ts:24:7 › @a11y abstimmungen has no serious or critical axe violations
+[15/108] [mobile] › tests/browser/front00.browser.spec.ts:36:7 › @a11y abstimmungen has keyboard skip link, headings and landmarks
+[16/108] [mobile] › tests/browser/front00.browser.spec.ts:52:5 › @a11y showcase dialog semantics and focus lifecycle
+[17/108] [mobile] › tests/browser/front00.browser.spec.ts:66:5 › @a11y reduced motion is requested by the browser project
+[18/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual homepage matches reviewed public baseline
+[19/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual about-goals matches reviewed public baseline
+[20/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual open-program matches reviewed public baseline
+[21/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual program-detail matches reviewed public baseline
+[22/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual initiative-lifecycle matches reviewed public baseline
+[23/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual voting-explanation matches reviewed public baseline
+[24/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual transparency-model matches reviewed public baseline
+[25/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual technology-security matches reviewed public baseline
+[26/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual participation matches reviewed public baseline
+[27/108] [mobile] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual roadmap-status matches reviewed public baseline
+[28/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y / has no serious or critical axe violations
+[29/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /programm/struktur has no serious or critical axe violations
+[30/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /initiativen has no serious or critical axe violations
+[31/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /abstimmungen has no serious or critical axe violations
+[32/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /transparenz has no serious or critical axe violations
+[33/108] [mobile] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /status has no serious or critical axe violations
+[34/108] [mobile] › tests/browser/front01.browser.spec.ts:51:5 › @front01-a11y public shell supports keyboard and semantic landmarks
+[35/108] [mobile] › tests/browser/front01.browser.spec.ts:66:5 › all FRONT-01 internal links resolve without error
+[36/108] [mobile] › tests/browser/front01.browser.spec.ts:84:5 › voting and finance pages expose no mutation forms
+[37/108] [desktop] › tests/browser/front00.browser.spec.ts:13:7 › @visual index matches approved migrated fixture
+[38/108] [desktop] › tests/browser/front00.browser.spec.ts:24:7 › @a11y index has no serious or critical axe violations
+[39/108] [desktop] › tests/browser/front00.browser.spec.ts:36:7 › @a11y index has keyboard skip link, headings and landmarks
+[40/108] [desktop] › tests/browser/front00.browser.spec.ts:13:7 › @visual dashboard matches approved migrated fixture
+[41/108] [desktop] › tests/browser/front00.browser.spec.ts:24:7 › @a11y dashboard has no serious or critical axe violations
+[42/108] [desktop] › tests/browser/front00.browser.spec.ts:36:7 › @a11y dashboard has keyboard skip link, headings and landmarks
+[43/108] [desktop] › tests/browser/front00.browser.spec.ts:13:7 › @visual kommunikation matches approved migrated fixture
+[44/108] [desktop] › tests/browser/front00.browser.spec.ts:24:7 › @a11y kommunikation has no serious or critical axe violations
+[45/108] [desktop] › tests/browser/front00.browser.spec.ts:36:7 › @a11y kommunikation has keyboard skip link, headings and landmarks
+[46/108] [desktop] › tests/browser/front00.browser.spec.ts:13:7 › @visual buerger-login matches approved migrated fixture
+[47/108] [desktop] › tests/browser/front00.browser.spec.ts:24:7 › @a11y buerger-login has no serious or critical axe violations
+[48/108] [desktop] › tests/browser/front00.browser.spec.ts:36:7 › @a11y buerger-login has keyboard skip link, headings and landmarks
+[49/108] [desktop] › tests/browser/front00.browser.spec.ts:13:7 › @visual abstimmungen matches approved migrated fixture
+[50/108] [desktop] › tests/browser/front00.browser.spec.ts:24:7 › @a11y abstimmungen has no serious or critical axe violations
+[51/108] [desktop] › tests/browser/front00.browser.spec.ts:36:7 › @a11y abstimmungen has keyboard skip link, headings and landmarks
+[52/108] [desktop] › tests/browser/front00.browser.spec.ts:52:5 › @a11y showcase dialog semantics and focus lifecycle
+[53/108] [desktop] › tests/browser/front00.browser.spec.ts:66:5 › @a11y reduced motion is requested by the browser project
+[54/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual homepage matches reviewed public baseline
+[55/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual about-goals matches reviewed public baseline
+[56/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual open-program matches reviewed public baseline
+[57/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual program-detail matches reviewed public baseline
+[58/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual initiative-lifecycle matches reviewed public baseline
+[59/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual voting-explanation matches reviewed public baseline
+[60/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual transparency-model matches reviewed public baseline
+[61/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual technology-security matches reviewed public baseline
+[62/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual participation matches reviewed public baseline
+[63/108] [desktop] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual roadmap-status matches reviewed public baseline
+[64/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y / has no serious or critical axe violations
+[65/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /programm/struktur has no serious or critical axe violations
+[66/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /initiativen has no serious or critical axe violations
+[67/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /abstimmungen has no serious or critical axe violations
+[68/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /transparenz has no serious or critical axe violations
+[69/108] [desktop] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /status has no serious or critical axe violations
+[70/108] [desktop] › tests/browser/front01.browser.spec.ts:51:5 › @front01-a11y public shell supports keyboard and semantic landmarks
+[71/108] [desktop] › tests/browser/front01.browser.spec.ts:66:5 › all FRONT-01 internal links resolve without error
+[72/108] [desktop] › tests/browser/front01.browser.spec.ts:84:5 › voting and finance pages expose no mutation forms
+[73/108] [wide] › tests/browser/front00.browser.spec.ts:13:7 › @visual index matches approved migrated fixture
+[74/108] [wide] › tests/browser/front00.browser.spec.ts:24:7 › @a11y index has no serious or critical axe violations
+[75/108] [wide] › tests/browser/front00.browser.spec.ts:36:7 › @a11y index has keyboard skip link, headings and landmarks
+[76/108] [wide] › tests/browser/front00.browser.spec.ts:13:7 › @visual dashboard matches approved migrated fixture
+[77/108] [wide] › tests/browser/front00.browser.spec.ts:24:7 › @a11y dashboard has no serious or critical axe violations
+[78/108] [wide] › tests/browser/front00.browser.spec.ts:36:7 › @a11y dashboard has keyboard skip link, headings and landmarks
+[79/108] [wide] › tests/browser/front00.browser.spec.ts:13:7 › @visual kommunikation matches approved migrated fixture
+[80/108] [wide] › tests/browser/front00.browser.spec.ts:24:7 › @a11y kommunikation has no serious or critical axe violations
+[81/108] [wide] › tests/browser/front00.browser.spec.ts:36:7 › @a11y kommunikation has keyboard skip link, headings and landmarks
+[82/108] [wide] › tests/browser/front00.browser.spec.ts:13:7 › @visual buerger-login matches approved migrated fixture
+[83/108] [wide] › tests/browser/front00.browser.spec.ts:24:7 › @a11y buerger-login has no serious or critical axe violations
+[84/108] [wide] › tests/browser/front00.browser.spec.ts:36:7 › @a11y buerger-login has keyboard skip link, headings and landmarks
+[85/108] [wide] › tests/browser/front00.browser.spec.ts:13:7 › @visual abstimmungen matches approved migrated fixture
+[86/108] [wide] › tests/browser/front00.browser.spec.ts:24:7 › @a11y abstimmungen has no serious or critical axe violations
+[87/108] [wide] › tests/browser/front00.browser.spec.ts:36:7 › @a11y abstimmungen has keyboard skip link, headings and landmarks
+[88/108] [wide] › tests/browser/front00.browser.spec.ts:52:5 › @a11y showcase dialog semantics and focus lifecycle
+[89/108] [wide] › tests/browser/front00.browser.spec.ts:66:5 › @a11y reduced motion is requested by the browser project
+[90/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual homepage matches reviewed public baseline
+[91/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual about-goals matches reviewed public baseline
+[92/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual open-program matches reviewed public baseline
+[93/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual program-detail matches reviewed public baseline
+[94/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual initiative-lifecycle matches reviewed public baseline
+[95/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual voting-explanation matches reviewed public baseline
+[96/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual transparency-model matches reviewed public baseline
+[97/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual technology-security matches reviewed public baseline
+[98/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual participation matches reviewed public baseline
+[99/108] [wide] › tests/browser/front01.browser.spec.ts:18:7 › @front01-visual roadmap-status matches reviewed public baseline
+[100/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y / has no serious or critical axe violations
+[101/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /programm/struktur has no serious or critical axe violations
+[102/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /initiativen has no serious or critical axe violations
+[103/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /abstimmungen has no serious or critical axe violations
+[104/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /transparenz has no serious or critical axe violations
+[105/108] [wide] › tests/browser/front01.browser.spec.ts:38:7 › @front01-a11y /status has no serious or critical axe violations
+[106/108] [wide] › tests/browser/front01.browser.spec.ts:51:5 › @front01-a11y public shell supports keyboard and semantic landmarks
+[107/108] [wide] › tests/browser/front01.browser.spec.ts:66:5 › all FRONT-01 internal links resolve without error
+[108/108] [wide] › tests/browser/front01.browser.spec.ts:84:5 › voting and finance pages expose no mutation forms
+  108 passed (1.3m)

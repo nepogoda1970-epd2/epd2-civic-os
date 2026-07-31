@@ -482,32 +482,254 @@ summary line. The correction round adds no fifth change of kind: it
 updates the text of those same four places and the candidate archive
 name, and it moves no entry's status.
 
+## 1.16 Round record — PACK-14 FINAL PASS (2026-07-30)
+
+**Round:** PACK-14 — Identity, Authentication & Account Security, **FINAL
+PASS**. External GitHub Actions has run against the candidate tree and
+**passed every stage**.
+
+**Repository version:** unchanged at `0.14.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**This is a packaging round.** No implementation was rebuilt. No
+`identity-service` module, migration artefact, test, reason code, ADR,
+contract, frontend file, route, visual snapshot or CI definition changed.
+The archive is the externally verified tree plus the status, register and
+handover documents that close the round.
+
+**External CI results, read from the committed transcript**
+(`docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION.log`):
+
+| Stage                            | Result                        |
+| -------------------------------- | ----------------------------- |
+| Repository path manifest         | PASS — 867 / 867              |
+| Forbidden paths                  | PASS — none present           |
+| Version consistency              | PASS                          |
+| Ruff format                      | PASS — 566 files              |
+| Prettier                         | PASS                          |
+| Ruff lint                        | PASS                          |
+| ESLint                           | PASS                          |
+| mypy, 23 targets                 | PASS — no issues in any group |
+| TypeScript typecheck, 2 packages | PASS                          |
+| Python test suite                | PASS — 4905 passed, 4 skipped |
+| TypeScript package tests         | PASS — 3 passed               |
+| Node tests                       | PASS — 34 passed              |
+| Frontend unit / render tests     | PASS — 16 passed              |
+| Next.js production build         | PASS — 46 / 46 static pages   |
+| Browser / visual / accessibility | PASS — 108 passed             |
+
+Evidence archive SHA-256:
+`c80b2f1a05f97423c782f7b0e42f78502a802bd47432a43caee207321dff515d`;
+the verification ZIP it contains:
+`df6981227d80f4a01d406bcf882f7dea3cfd31400d3c262eb93009c1eb1b6054`.
+Both were recomputed in the environment that assembled this archive.
+
+**FIR IDs implemented by this round: none.** `FIR-ROADMAP-004` moves from
+`candidate` to `implemented in reference form` — not to `implemented`,
+because no provider is bound and nothing is deployed.
+
+**FIR IDs whose status is otherwise unchanged:** every other entry in this
+register. 141 FIR entries before this round and 141 after. In particular
+`FIR-UX-011` stays **future**: no FRONT-PACK was built, no page catalogue
+or screen-state matrix exists, and the identity journey is explicitly not
+claimed as designed. `FIR-TRUST-001`, `FIR-REPRESENT-001` and
+`FIR-INCLUSION-001` stay future. `FIR-CONFIG-001` remains a consumer
+relationship, not an implementation. **No future obligation was removed
+and no entry was rolled back.**
+
+**`OD-P14-07` remains open**, pending legal confirmation of retention
+durations. The PASS does not close it: every `duration_confirmed` flag is
+still `False`, every destructive disposition still refuses, deletion under
+a legal hold still refuses and an unknown hold state still fails closed.
+
+**One factual correction.** The PACK-14 candidate round's entry in
+`FIR-BASE-001` described ADR-079 — ADR-088 as "accepted in the
+specification round". `docs/handover/PACK-14-SPEC-ADR-REPORT.md` §2 records
+them as `proposed`, and the ADR files themselves say `proposed`. The
+register now says `proposed` too. No ADR file was edited: their governance
+status is for the body that owns them, and a green pipeline does not move
+it — the same treatment ADR-061 — ADR-068 received through PACK-11's and
+PACK-12's FINAL PASS rounds.
+
+**The three changes this round makes to this register** are: this round
+record, `FIR-BASE-001`'s baseline pointer (PACK-14 becomes the
+authoritative cumulative PASS baseline; PACK-13 becomes the previous one),
+and `FIR-ROADMAP-004`'s status. Section 21's implementation summary is
+updated to move PACK-14 out of the "candidate, not yet externally
+verified" subsection, which that subsection existed to hold.
+
+
+## 1.17 Documentation-only register update — Open-source licensing and reuse governance (2026-07-31)
+
+This documentation-only update selects the **European Union Public Licence
+Version 1.2 (`EUPL-1.2`)** as the intended project licence for original EPD²
+software, subject to final legal review before public release.
+
+The choice is fixed to Version 1.2 rather than “or later”. Adoption of any
+later EUPL version requires a separate governed decision.
+
+**New FIR IDs created:** `FIR-OSS-001` through `FIR-OSS-006`, all with status
+`approved`.
+
+No implementation status changes. No code, test, CI, repository version or
+canon version changes are implied by this register update.
+
+
+## 1.18 Round record — PACK-15 implementation candidate (2026-07-31)
+
+**Round:** PACK-15 — Voting Trust Boundary, Eligibility & Credential
+Separation, **implementation candidate**.
+
+**Repository version:** `0.14.0` -> `0.15.0`.
+**Canon version:** unchanged at `0.8.0`. PACK-15 makes no canon amendment,
+which its own canon assessment records: no canon entity, no canon status
+value and no canon event was added. `canon-version.json` changed only its
+non-canonical bookkeeping - `repository_compatibility` widened to
+`<0.16.0`.
+
+**What was built.** The separation between knowing who someone is and
+knowing that a vote was cast, implemented rather than specified. The
+design turns on ADR-093's structural cut: the spent-nonce record is a
+**set** with three columns and no value column, so no store, log, event,
+trace, backup or export contains both an assertion reference and a
+credential reference for the same participation. Seven separate SQLite
+database files - one per trust boundary - make a cross-boundary foreign
+key inexpressible rather than merely unwritten. Exactly-once is enforced
+on both sides differently, each by an INSERT that is itself the check.
+Twenty-two versioned API endpoints sit over a shared contract layer in
+`epd2-core`. Ten roles and eight structural separation rules are validated
+at import time.
+
+**Deliberately not a new workspace member.** PACK-15 extends
+`eligibility-service`, `credential-service`, `governance-service` and
+`audit-core` in place. A new member would have required regenerating
+`uv.lock`, which CI installs `--frozen`; in an environment where the
+package registries return HTTP 403 that could not have been done honestly.
+**Neither lock file was modified.**
+
+**Verification, stated exactly.**
+
+| Check | Result |
+| ----- | ------ |
+| `pytest`, full repository | PASS - 5335 passed, 5 skipped |
+| `mypy`, every Python group of the `typecheck` target | PASS |
+| `ruff check` / `ruff format --check` | PASS |
+| `scripts/check_repository.py` | PASS - 983 paths |
+| `scripts/check_forbidden_files.py` | PASS |
+| `scripts/verify_versions.py` | PASS |
+| `scripts/check_canon_0_8_0.py` | PASS - 18 checks |
+| `uv sync --frozen` | NOT EXECUTED - ENVIRONMENT BLOCKED (PyPI HTTP 403) |
+| Every npm-dependent check | NOT EXECUTED - ENVIRONMENT BLOCKED (registry HTTP 403; `node_modules` uninstallable) |
+| Property-based tests | NOT EXECUTED - ENVIRONMENT BLOCKED (`hypothesis` unavailable) |
+| Visual regression | NOT APPLICABLE - no PACK-15 baselines were added |
+
+This corrects the two preceding PACK-15 rounds, which recorded that no
+Python tooling could run at all. `pytest`, `mypy` and `ruff` are present
+in this environment and were really executed - but from outside the
+project environment, so the versions they resolve to are not the versions
+`uv.lock` pins. **External CI remains the authoritative run.** No CI check
+was weakened and no test result was fabricated.
+
+**FIR IDs implemented by this round: none.** `FIR-ROADMAP-005` moves from
+`approved` to `candidate` - not to `implemented in reference form`, which
+is what PACK-14 reached only after external CI passed. No FIR entry may
+move on the strength of a locally verified candidate whose entire frontend
+has never been executed.
+
+**FIR IDs whose status is otherwise unchanged:** every other entry in this
+register, including all six `FIR-OSS-001` through `FIR-OSS-006` and
+`FIR-UX-011`, which stays **future**: no FRONT-PACK was built, no page
+catalogue or screen-state matrix exists, and the five PACK-15 frontend
+files are unverified source rather than a designed journey.
+`FIR-INV-002` (identity / ballot unlinkability) is **partially addressed
+and stays future**: PACK-15 closes the identity-to-credential half, the
+credential-to-ballot half is PACK-16's, and neither half alone closes the
+invariant. **No future obligation was removed and no entry was rolled
+back.**
+
+**One defect found and closed while assembling the evidence.** The
+assurance flag `required_assurance_satisfied` was carried across the trust
+boundary, persisted, and never read - a fail-open in a control the
+specification marks fail-closed. It was found by building the traceability
+matrix, which is the argument for building one, and is now refused with
+`ELIGIBILITY_ASSURANCE_INSUFFICIENT`. Three further defects found by
+adversarial review of the API layer are recorded in
+`docs/handover/PACK-15-IMPLEMENTATION-REPORT.md` section 5.
+
+**One numbering correction.** The open-source licensing update above was
+filed as `1.15`, a number `1.15 Round record — PACK-14 implementation
+candidate` already held; it is renumbered `1.17`. No content, no entry and
+no status changed - two sections with one number is a filing error, and
+leaving it would have made this round's record the third `1.16`.
+
+**The four changes this round makes to this register** are: this round
+record, that renumbering, `FIR-BASE-001`'s candidate pointer, and
+`FIR-ROADMAP-005`'s status. Nothing else in this file was edited.
+
+
 # 2. Current confirmed baseline
 
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
-**Last updated:** PACK-14 implementation candidate round (2026-07-30)
+**Last updated:** PACK-15 implementation candidate round (2026-07-31)
 
-**Current candidate (NOT a PASS baseline):**
+**Current unverified candidate (NOT a baseline):**
 
 ```text
-EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_CANDIDATE_CORRECTED.zip
+EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_CANDIDATE.zip
+```
+
+Repository version `0.15.0`; canon version `0.8.0` (unchanged — PACK-15
+amends no canon). **This archive is not the baseline and does not replace
+the one below.** It was verified locally in part only: the full Python
+suite, mypy, ruff and all four repository scripts pass, and the entire
+npm-dependent half — TypeScript typecheck, frontend tests, Playwright,
+axe, `next build`, Prettier — was never executed, because the package
+registries return HTTP 403 and `node_modules` cannot be installed. It
+becomes a baseline candidate only when external GitHub Actions has run
+against it. See `docs/handover/PACK-15-IMPLEMENTATION-REPORT.md` and
+`docs/handover/PACK-15-TEST-EVIDENCE.md`.
+**PARTIAL LOCAL VERIFICATION ONLY. EXTERNAL CI NOT YET VERIFIED. NOT FINAL
+PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+
+**Current authoritative cumulative baseline (PASS):**
+
+```text
+EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_FINAL_PASS.zip
 ```
 
 Repository version `0.14.0`; canon version `0.8.0` (unchanged — this round
-amends no canon). **External GitHub Actions has not run against it**, so
-it is deliberately not recorded as a baseline: the authoritative PASS
-baseline below is unchanged until an external pipeline says otherwise.
+amends no canon). Verified by an external GitHub Actions run that passed
+every stage — see `docs/handover/PACK-14-FINAL-PASS-REPORT.md`,
+`docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md` and
+`docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION.log`.
 **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 
-Added at this candidate:
+The verified candidate was
+`EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_CANDIDATE_CORRECTED_PRETTIER.zip`.
+This FINAL PASS archive is that externally verified tree plus the status,
+register and handover documents that close the round; no service module,
+test, migration artefact, reason code, ADR, contract, frontend file, route,
+visual snapshot or CI definition changed, and neither version moved.
 
+Confirmed at this baseline:
+
+- Repository version: `0.14.0`
+- Canon version: `0.8.0`
+- PACK-01 through PACK-14: PASS
+- FRONT-00 Foundation: PASS
+- FRONT-01 Public Website: PASS
 - `services/identity-service`: 40 source modules (34 new), 12 test modules
 - Identity implementation status: `reference_implementation`
 - `contracts/reason-codes/pack-14.yml` (213 entries: 131 additive, 22
   redeclared from earlier packs, 60 `*_RECORDED` audit classifications)
-- ADR-079 through ADR-088, accepted in the specification round
+- ADR-079 through ADR-088. **These ten records carry `proposed` status**,
+  which `docs/handover/PACK-14-SPEC-ADR-REPORT.md` §2 already stated and
+  which the FINAL PASS round did not change: a green pipeline verifies an
+  implementation, not the governance status of a decision record — the
+  same treatment ADR-061—ADR-068 received. An earlier draft of this bullet
+  said "accepted"; that was wrong and is corrected here.
 - A **reference persistence path**: ten SQL migration artefacts applied in
   order in a transaction with a recorded checksum, producing 29 tables and
   35 indexes; eleven durable adapters; a transaction boundary and an
@@ -525,36 +747,39 @@ Added at this candidate:
   HSM or KMS, no Voting Client, no HTTP surface or production gateway,
   and no frontend
 
-**Correction round, 2026-07-30, before external CI.** The first candidate
-archive was reviewed and three findings were returned and fixed:
-persistence that was metadata rather than persistence, a permissive
-breached-password default, and an API module that was a catalogue rather
-than a boundary. No functional scope was expanded, no frontend was built,
-no dependency was added, no CI gate was weakened, no existing test was
-removed, and the repository and canon versions are unchanged. The
-superseded archive is
-`EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_CANDIDATE.zip`.
+The last line is why `FIR-ROADMAP-004` is `implemented in reference form`
+rather than `implemented`. A green pipeline verifies the tree; it binds no
+provider and deploys nothing.
 
-**Current authoritative cumulative baseline (PASS):**
+**Lineage of this baseline.** The round shipped a first candidate,
+`EPD2_PACK-14_..._0.14.0_CANDIDATE.zip`; a correction round before
+external CI returned and fixed three findings — persistence that was
+metadata rather than persistence, a permissive breached-password default,
+and an API module that was a catalogue rather than a boundary — producing
+`..._CANDIDATE_CORRECTED.zip`; the first external run then failed on one
+Prettier-unformatted file, and the whitespace-only fix produced
+`..._CANDIDATE_CORRECTED_PRETTIER.zip`, which is the archive the passing
+run verified. No functional scope was expanded, no frontend was built, no
+dependency was added and no CI gate was weakened at any step.
+
+**Previous PASS baseline, superseded by the line above:**
 
 ```text
 EPD2_PACK-13_PRODUCTION_DATA_PLANE_CONTRACT_EVOLUTION_0.13.0_FINAL_PASS.zip
 ```
 
-Repository version `0.13.0`; canon version `0.8.0` (unchanged — this round
-amends no canon). Verified by an external GitHub Actions run that passed
-every stage — see `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+Repository version `0.13.0`; canon version `0.8.0`. Verified by an
+external GitHub Actions run that passed every stage — see
+`docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
 `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` and
 `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
 **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 
-Confirmed at this baseline:
+Confirmed at that baseline:
 
 - Repository version: `0.13.0`
 - Canon version: `0.8.0`
 - PACK-01 through PACK-13: PASS
-- FRONT-00 Foundation: PASS
-- FRONT-01 Public Website: PASS
 - `services/data-plane-service`: 22 source modules, 20 test modules
 - Data-plane implementation status: `reference_implementation`
 - `contracts/reason-codes/pack-13.yml` (125 entries: 88 from the PACK-13
@@ -568,7 +793,7 @@ The last line is why `FIR-ROADMAP-003` is `implemented in reference form`
 rather than `implemented`. A green pipeline verifies the tree; it deploys
 nothing.
 
-**Previous PASS baseline, superseded by the line above:**
+**Earlier PASS baseline:**
 
 ```text
 EPD2_PACK-12_PRIVILEGED_ADMIN_SEARCH_EXPORT_0.12.0_FINAL_PASS.zip
@@ -822,22 +1047,29 @@ reference form`. Retained rather than deleted, because the register
 
 ## FIR-ROADMAP-004 — PACK-14 Identity/Auth & External Gateway Security
 
-**Status:** candidate  
+**Status:** implemented in reference form  
 **Target version:** `0.14.0`
 
 Moved from `approved` to `candidate` by the PACK-14 implementation
-candidate round (§1.15). Deliberately **not** `implemented` and not
-`implemented in reference form`: no external pipeline has verified this
-round, and until one has, "candidate" is the only status the evidence
-supports. The gateway-hardening and external-trust-provider halves of the
-scope below remain untouched — this round defines a provider **adapter
-boundary** and selects no provider.
+candidate round (§1.15), and from `candidate` to `implemented in reference
+form` by the PACK-14 FINAL PASS round (§1.16), on the evidence of an
+external GitHub Actions run that passed every stage.
 
-The correction round (§1.15) does not move this status. It added a
-reference persistence path and a runnable reference service boundary,
-both of which are repository artefacts on the standard library; neither
-is a deployment, neither is a gateway, and no external pipeline has yet
-verified either.
+Deliberately **not** `implemented` outright. Reference form means the
+aggregates, the governed workflows, the refusals, the reference
+persistence path and the runnable service boundary are real and tested.
+It does not mean any of the following, none of which exists:
+
+- a bound WebAuthn verifier, password hasher, breached-password checker or
+  assertion-signature verifier — all four ports **refuse** by default, and
+  no password can be enrolled or replaced without the third;
+- a production database. The persistence path runs on SQLite through the
+  standard library; no replication, backup, failover or restore exists;
+- an HTTP surface, TLS termination or production gateway. **The
+  gateway-hardening half of the scope below is untouched.**
+- a selected identity provider, eID scheme or KYC integration. **The
+  external-trust-provider half of the scope below is untouched** — this
+  round defines a provider _adapter boundary_ and selects no provider.
 
 Scope:
 
@@ -851,8 +1083,15 @@ Scope:
 
 ## FIR-ROADMAP-005 — PACK-15 Voting Trust Boundary & Unlinkability Threat Model
 
-**Status:** approved  
+**Status:** candidate  
 **Target version:** `0.15.0`
+
+Moved from `approved` to `candidate` by the PACK-15 implementation
+candidate round (2026-07-31). It does **not** move to `implemented in
+reference form`: that step requires an external CI run, and the entire
+npm-dependent half of this repository - TypeScript typecheck, frontend
+tests, Playwright, axe, `next build`, Prettier - could not be executed in
+the environment that assembled the candidate.
 
 Scope:
 
@@ -3132,56 +3371,60 @@ Required gate families:
 - PACK-01 through PACK-10 (PASS);
 - PACK-11 (PASS — external GitHub Actions verification complete);
 - PACK-12 (PASS — external GitHub Actions verification complete);
-- **PACK-13 (PASS — external GitHub Actions verification complete);**
+- PACK-13 (PASS — external GitHub Actions verification complete);
+- **PACK-14 (PASS — external GitHub Actions verification complete);**
 - FRONT-00;
 - FRONT-01;
 - finance reference implementation;
 - governed documents and evidence reference implementation (PACK-11);
 - privileged administration, authorization-aware search and governed
   export reference implementation (PACK-12);
-- **production data plane and contract evolution reference
-  implementation** (PACK-13);
+- production data plane and contract evolution reference implementation
+  (PACK-13);
+- **identity, authentication and account security reference
+  implementation** (PACK-14);
 - cumulative architecture baseline;
 - 45 visual snapshots.
 
-"Reference implementation" is the operative qualifier for PACK-10,
-PACK-11, PACK-12 and PACK-13 alike: the governed workflows are real and
-externally verified; the production data plane is not. PACK-13 is the
-sharpest case of the distinction, because it is the pack _named_ for the
-production data plane and every storage adapter in it is a Python
-dictionary. Nothing in this list is production ready or legally activated.
+"Reference implementation" is the operative qualifier for PACK-10 through
+PACK-14 alike: the governed workflows are real and externally verified;
+the production infrastructure is not. PACK-13 is the sharpest case of the
+distinction, because it is the pack _named_ for the production data plane
+and every storage adapter in it is a Python dictionary. PACK-14 is the
+second sharpest, and in a different way: its persistence really is
+migrated, transactional and durable across a restart — on SQLite through
+the standard library — while all four of its security ports refuse
+because no WebAuthn library, password hasher, breached-password corpus or
+signature verifier is bound, and no identity provider is selected.
+Nothing in this list is production ready or legally activated.
 
-## Candidate, not yet externally verified
+## What PACK-14's PASS does and does not cover
 
-- **PACK-14 — Identity, Authentication & Account Security (implementation
-  candidate, repository `0.14.0`).** The six bounded contexts
-  specification §4.1 assigns to `identity-service` exist in reference
-  form: the account lifecycle that represents locks, restrictions and
-  closure requests without extending canon 7.2's six statuses,
-  passkey-first authentication behind a verification port, the fenced
-  password fallback, MFA with SMS OTP deliberately absent as a factor
-  class, the fail-closed assurance conjunction, the session aggregate
-  with two mandatory deadlines, action- and object-version-bound
-  step-up, the per-workspace authentication bootstrap that is explicitly
-  not SSO, the identity-free WS-03 voting handoff boundary, the governed
-  recovery workflow, the proofing boundary and the scoped identity
-  mappings.
+The six bounded contexts specification §4.1 assigns to `identity-service`
+exist in reference form and are externally verified: the account lifecycle
+that represents locks, restrictions and closure requests without extending
+canon 7.2's six statuses, passkey-first authentication behind a
+verification port, the fenced password fallback, MFA with SMS OTP
+deliberately absent as a factor class, the fail-closed assurance
+conjunction, the session aggregate with two mandatory deadlines, action-
+and object-version-bound step-up, the per-workspace authentication
+bootstrap that is explicitly not SSO, the identity-free WS-03 voting
+handoff boundary, the governed recovery workflow, the proofing boundary
+and the scoped identity mappings. Behind them is a reference persistence
+path that really runs — ten applied SQL migration artefacts, 29 tables, 35
+indexes, eleven durable adapters, transaction boundaries and an
+optimistic-concurrency guard — and a runnable reference service boundary
+for 12 of the 42 catalogued operations.
 
-  It is listed **separately from the implemented list above** because no
-  external GitHub Actions run has verified it. It integrates no
-  production IAM, no eID scheme, no email or SMS provider and no HSM or
-  KMS; it implements no WebAuthn cryptography and no password-hashing
-  algorithm (all four security ports refuse when unbound); it deploys no
-  production database; it exposes no HTTP surface and no production
-  gateway; and it builds no frontend.
-
-  What it **does** now have, after the correction round, is a reference
-  persistence path that really runs — ten applied SQL migration
-  artefacts, durable adapters, transaction boundaries and an
-  optimistic-concurrency guard — and a runnable reference service
-  boundary for 12 of its 42 catalogued operations. Both are reference
-  artefacts on the standard library, not a deployment.
-  `FIR-ROADMAP-004` is `candidate`.
+The PASS covers exactly that and nothing beyond it. PACK-14 integrates no
+production IAM, no eID scheme, no email or SMS provider and no HSM or KMS;
+it implements no WebAuthn cryptography and no password-hashing algorithm,
+and **all four security ports refuse when unbound**, so an unconfigured
+deployment cannot enroll or replace a password at all; it deploys no
+production database and claims no operational durability; it exposes no
+HTTP surface and no production gateway; and it builds no frontend, so
+`FIR-UX-011` stays **future**. `FIR-ROADMAP-004` is therefore
+`implemented in reference form`, not `implemented`.
 
 ## Specified but not implemented
 
@@ -5138,3 +5381,226 @@ These entries:
 - remain approved future obligations;
 - require explicit treatment in later FRONT-PACK specifications, acceptance
   matrices, implementation candidates and FINAL PASS reports.
+
+# 29. Open-source licensing, reuse and official-instance governance
+
+EPD² is intended to be open-source civic infrastructure.
+
+The intended licence for original EPD² software is:
+
+```text
+European Union Public Licence Version 1.2
+SPDX-License-Identifier: EUPL-1.2
+```
+
+The selection is `EUPL-1.2` only. A future change to another version or
+licence requires an explicit governed decision and legal compatibility review.
+
+This licence choice is subject to final review by qualified legal counsel
+before the first public source release. Until the repository contains the
+approved licence text, notices and provenance records, no incomplete licence
+statement may be presented as final legal activation.
+
+## FIR-OSS-001 — EUPL-1.2 Project Licensing Baseline
+
+- **Status:** `approved`
+- **Scope:** original EPD² software and source-controlled software assets
+- **Target:** repository licensing and first public source release
+- **Dependencies:** legal review, copyright ownership verification,
+  third-party dependency review
+
+License original EPD² software under `EUPL-1.2`.
+
+The implementation must include:
+
+- the official EUPL-1.2 licence text in the repository root;
+- `SPDX-License-Identifier: EUPL-1.2` in supported source-file headers or
+  repository-standard SPDX metadata;
+- copyright and contributor notices;
+- a machine-readable licence declaration;
+- package metadata aligned with `EUPL-1.2`;
+- a `NOTICE` or equivalent attribution file;
+- a public licensing policy;
+- a release checklist preventing unlicensed publication;
+- confirmation that all original code can legally be licensed by the project.
+
+The project must not use an ambiguous statement such as “open source” without
+identifying the applicable licence.
+
+### Rights granted to downstream users
+
+Subject to compliance with the EUPL-1.2, recipients may:
+
+- use the software for any lawful purpose;
+- study and inspect the source code;
+- copy the software;
+- modify it;
+- run modified deployments;
+- redistribute original or modified versions;
+- use it commercially;
+- provide services based on it.
+
+These rights do not imply endorsement, certification, official EPD status,
+access to EPD data, access to infrastructure secrets or authority to act on
+behalf of EPD.
+
+## FIR-OSS-002 — Source Availability for Network-Provided Modified Versions
+
+- **Status:** `approved`
+- **Scope:** EPD² deployments communicated or provided over a network
+- **Target:** public release, deployment and distribution governance
+- **Dependencies:** FIR-OSS-001
+
+Document and enforce EUPL obligations applicable when the work or a derivative
+work is distributed or communicated to the public, including network-provided
+services.
+
+A compliant deployment process must provide, as applicable:
+
+- access to the corresponding source of the deployed derivative work;
+- the applicable licence text;
+- copyright and attribution notices;
+- identification of modifications;
+- build and installation information needed to exercise the licensed rights;
+- source for project-controlled frontend, backend and protocol changes;
+- a visible source-code notice from user-facing network services where legally
+  required.
+
+No deployment may falsely claim compliance while withholding modified
+project-controlled source that must be provided under the licence.
+
+## FIR-OSS-003 — Third-Party Licence and Dependency Compliance
+
+- **Status:** `approved`
+- **Scope:** all direct, transitive, vendored and generated dependencies
+- **Target:** build, CI, release and SBOM governance
+- **Dependencies:** PACK-13 contract evolution and dependency governance
+
+Create a governed third-party licence compliance process covering:
+
+- direct and transitive dependencies;
+- frontend and backend packages;
+- containers and base images;
+- fonts, icons, media and datasets;
+- generated code;
+- vendored components;
+- cryptographic libraries;
+- build tools included in distributed artefacts.
+
+Required controls:
+
+- SBOM generation;
+- licence inventory;
+- compatibility review against `EUPL-1.2`;
+- attribution generation;
+- prohibited or review-required licence policy;
+- dependency provenance;
+- release blocking on unresolved licence conflicts;
+- documented treatment of permissive, weak-copyleft and strong-copyleft
+  dependencies;
+- no assumption that a dependency is compatible merely because it is publicly
+  available.
+
+## FIR-OSS-004 — Contribution, Copyright and Provenance Governance
+
+- **Status:** `approved`
+- **Scope:** internal and external contributions
+- **Target:** contribution workflow before accepting public contributions
+- **Dependencies:** FIR-OSS-001
+
+Define who owns or is authorised to license every contribution.
+
+The contribution model must include:
+
+- contributor sign-off through a Developer Certificate of Origin or another
+  explicitly approved mechanism;
+- contributor identity and provenance records;
+- confirmation that contributions are original or properly licensed;
+- no copying from incompatible or unknown sources;
+- AI-assisted contribution disclosure and provenance policy;
+- copyright notice rules;
+- contribution review;
+- retention of sign-off evidence;
+- a process for removing or replacing code with defective provenance.
+
+A Contributor Licence Agreement may be adopted only through a separate
+governed decision. No CLA may silently grant broader relicensing rights than
+contributors were clearly informed about.
+
+## FIR-OSS-005 — Trademark, Name and Official Instance Separation
+
+- **Status:** `approved`
+- **Scope:** EPD² names, logos, visual identity and official-service claims
+- **Target:** public release and deployment governance
+- **Dependencies:** trademark and organizational governance
+
+Open-source rights to the software do not automatically grant rights to:
+
+- the EPD² name;
+- EPD Plattform e.V. names;
+- logos;
+- official seals;
+- official domains;
+- certification marks;
+- claims of endorsement;
+- claims that a deployment is an official EPD service.
+
+Define a separate trademark and naming policy.
+
+Third parties may operate forks and modified deployments under the software
+licence, but must not misrepresent them as official EPD² instances.
+
+An official-instance policy must define:
+
+- authorised domains;
+- release provenance;
+- signed release manifests;
+- operator identity;
+- certification or conformance status;
+- security and legal activation status;
+- rules for describing forks;
+- mandatory removal or alteration of protected branding where required.
+
+## FIR-OSS-006 — Open Verification, Reproducible Builds and Public Security Process
+
+- **Status:** `approved`
+- **Scope:** public trust and independently verifiable releases
+- **Target:** future public releases
+- **Dependencies:** CI, supply-chain security, incident response
+
+Open-source publication must support meaningful independent verification, not
+only source visibility.
+
+Future public releases must provide, as applicable:
+
+- reproducible or independently verifiable build instructions;
+- signed release tags and manifests;
+- source-to-binary provenance;
+- public protocol and schema documentation;
+- public test suites;
+- public verification tools;
+- vulnerability reporting instructions;
+- coordinated disclosure policy;
+- security advisories;
+- release history and change logs;
+- clear separation between public source and protected operational secrets.
+
+Security through obscurity must not be treated as a primary control.
+Publication must nevertheless exclude credentials, private keys, personal
+data, protected evidence, live configuration secrets and exploit-sensitive
+incident details whose temporary restriction is justified.
+
+## Section 29 boundaries
+
+These entries:
+
+- select an intended open-source licence but do not themselves complete legal
+  licensing;
+- do not grant access to personal data, ballots, membership records or
+  operational secrets;
+- do not certify any fork as an official EPD² service;
+- do not require publication of private keys or confidential records;
+- do not change `REPOSITORY_VERSION`;
+- do not change `CANON_VERSION`;
+- require implementation, legal review and release evidence before a public
+  source release may claim full compliance.

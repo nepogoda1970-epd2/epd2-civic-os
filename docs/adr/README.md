@@ -547,3 +547,42 @@ retained unchanged), `docs/handover/PACK-13-IMPLEMENTATION-CANDIDATE-REPORT.md`
 `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`,
 `docs/handover/PACK-13-FINAL-PASS-REPORT.md` and
 `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md`.
+
+## ADR-079 — ADR-088 (PACK-14, Identity, Authentication & Account Security)
+
+Written by PACK-14's specification round and implemented in **reference
+form** by `services/identity-service`, which PACK-14 extended in place
+rather than splitting. Reference form means the aggregates, the governed
+workflows, the refusals, the reference persistence path and the runnable
+service boundary are real and tested; no identity provider, WebAuthn
+library, password hasher, breached-password corpus, production database,
+HTTP gateway or frontend is bound, and none is claimed.
+
+These ten records carry `proposed` status, and the PACK-14 FINAL PASS
+round left it that way for the same reason ADR-061—ADR-068 kept theirs
+through PACK-11's and PACK-12's FINAL PASS rounds: **a green pipeline
+verifies the implementation, not the governance status of a decision
+record.** Moving them to `accepted` is a governance act for the body that
+owns them, not a side effect of packaging. **NOT PRODUCTION READY. NOT
+LEGALLY ACTIVATED.**
+
+| ADR     | Decision                                                                                                                                                      | Where the reference implementation lives |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| ADR-079 | There is no global user identity; five identifier spaces stay distinct and only a purpose-scoped derived reference crosses a domain boundary                  | `identifiers`, `mappings`                |
+| ADR-080 | Account, person record and membership are separated; none is derivable from another without a governed mapping                                                | `identifiers`, `accounts`, `linking`     |
+| ADR-081 | Passkey-first authentication, with a controlled password fallback that always requires MFA and never reaches `high`                                           | `passkeys`, `passwords`, `mfa`           |
+| ADR-082 | A four-value assurance scale reused from canon 19d.2, and step-up bound to an action **and** an object version                                                | `assurance`, `stepup`                    |
+| ADR-083 | Session security with two mandatory deadlines, refresh-token families, and cross-workspace isolation that is explicitly not SSO                               | `sessions`, `bootstrap`, `workspaces`    |
+| ADR-084 | The canonical status enum is not extended; locks, security restrictions and closure requests carry lifecycle state beside it                                  | `accounts`, `credentials`                |
+| ADR-085 | Recovery requires revocation before completion, dual control, cooling-off and out-of-band notification together, never severally                              | `recovery`                               |
+| ADR-086 | Identity proofing is a boundary that holds evidence by reference; PACK-11 keeps the evidence and no verdict implies a membership approval                     | `proofing`, `providers`                  |
+| ADR-087 | Privileged identity administration reuses PACK-12's model; no second privileged mechanism and no universal identity console                                   | `administration`                         |
+| ADR-088 | The voting handoff carries no identity: the issuance record has no account field of any kind, and no pair of records resolves a redemption back to its holder | `voting_handoff`                         |
+
+Specification and matrices: `docs/packs/PACK-14/`. Round reports:
+`docs/handover/PACK-14-SPEC-ADR-REPORT.md` (the specification round,
+retained unchanged), `docs/handover/PACK-14-IMPLEMENTATION-CANDIDATE-REPORT.md`
+(the candidate round, likewise retained apart from a superseding status
+note), `docs/packs/PACK-14/PACK-14-OPEN-ITEMS.md`,
+`docs/handover/PACK-14-FINAL-PASS-REPORT.md` and
+`docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md`.

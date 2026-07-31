@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/pack15-assertion-queue-payload.v1.schema.json",
+  "title": "PACK-15 assertion queue event payload (v1)",
+  "description": "Produced by epd2_eligibility_service.voting_trust_events.build_queue_event. Used by eligibility_assertion.queued, the one assertion-stream type whose payload reports the release batch and the cohort it was released with. It deliberately omits every exact size - cohort size, batch size and queue depth are never published, only the class in cohort_size_class (epd2_eligibility_service.voting_timing.CohortSizeClass), because an exact cohort size in a small electorate is itself a participation statement (T-P15-37).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assertion_id",
+    "voting_context_reference",
+    "batch_reference",
+    "cohort_size_class",
+    "below_minimum_cohort"
+  ],
+  "properties": {
+    "assertion_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "voting_context_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "batch_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cohort_size_class": {
+      "type": "string",
+      "enum": ["single", "below_minimum", "at_minimum", "above_minimum"]
+    },
+    "below_minimum_cohort": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,979 @@
+# Centralized PACK-15 reason-code registry (Voting Trust Boundary,
+# Eligibility & Credential Separation; FIR-ROADMAP-005; ADR-089 through
+# ADR-098).
+#
+# This is the single source of truth for every `reason_code` string
+# literal the PACK-15 code paths raise: the voting context registry
+# (governance-service), eligibility evaluation, the assertion issuer and
+# its queued release, the one-time pickup, the handoff acceptance
+# boundary (eligibility-service), voting credential issuance, revocation,
+# redemption and replay rejection (credential-service), and the
+# independent-auditor evidence bundle (audit-core). No PACK-15 code path
+# may use a free-text string in place of a registered code.
+#
+# **There is no generic `VOTING_ERROR` in this registry, and none may be
+# added.** That is PACK-13's `P13-RSN-002` and PACK-14's restatement
+# applied to the domain where it matters most: in a contested election
+# the difference between `CREDENTIAL_EXPIRED` and `CREDENTIAL_REVOKED` is
+# the difference between an administrative fact and an allegation, and
+# the difference between `ELIGIBILITY_DENIED` and
+# `ELIGIBILITY_REVIEW_REQUIRED` is the difference between an appeal and a
+# wait. Where two failures differ in what the participant must do next,
+# they are two codes.
+#
+# **`ALREADY_VOTED` and `PARTICIPATION_CONFIRMED` are deliberately
+# absent** and may never be added. To emit either, some component would
+# have to know that a particular participant's credential was redeemed
+# and a ballot cast - which is exactly the linkage ADR-093 makes
+# structurally impossible. The nearest permissible codes are
+# `CREDENTIAL_ALREADY_ISSUED` (identity side, about issuance) and
+# `CREDENTIAL_ALREADY_REDEEMED` (voting side, about a credential the
+# presenter is holding). Neither says a person voted.
+#
+# A code's meaning never changes. A new meaning is a new code.
+
+- code: ELIGIBILITY_APPROVED
+  meaning: >-
+    Every criterion of the frozen rule-set version was satisfied for this
+    participant in this voting context.
+  severity: info
+  description: "The participant is eligible for this voting context."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_DENIED
+  meaning: >-
+    A criterion of the frozen rule-set version was not satisfied. A
+    denial is contestable and always names the dispute path.
+  severity: warning
+  description: "The participant is not eligible for this voting context."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_REVIEW_REQUIRED
+  meaning: >-
+    A human decision is needed before the case can be decided. This is
+    NOT a denial and must never be presented as one.
+  severity: info
+  description: "The eligibility case requires manual review."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_MEMBERSHIP_INACTIVE
+  meaning: >-
+    The minimized `membership_active` predicate returned false at the
+    source. Distinct from a scope mismatch: the remedy is the membership
+    process, not a correction of the context.
+  severity: warning
+  description: "Membership is not active for this voting context."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_SCOPE_MISMATCH
+  meaning: >-
+    The participant's organizational scope, matched at the source, does
+    not fall within the voting context's scope (Bund/Land/Kreis
+    isolation).
+  severity: warning
+  description: "The participant is outside the context's organizational scope."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_RULE_NOT_SATISFIED
+  meaning: >-
+    A named criterion of the frozen rule-set version was not met. The
+    criterion identifier is carried in the decision's reason list, never
+    as free text.
+  severity: warning
+  description: "A named eligibility criterion was not satisfied."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_ASSURANCE_INSUFFICIENT
+  meaning: >-
+    The context's required authentication assurance is not satisfied.
+    Evaluated fail-closed: an absent or unresolvable assurance assertion
+    is a refusal, never a default permit.
+  severity: warning
+  description: "The required assurance level is not satisfied."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_SOURCE_STALE
+  meaning: >-
+    A minimized source attribute is outside its freshness bound for this
+    context. Fail-closed; the case waits for refreshed facts rather than
+    deciding on stale ones.
+  severity: warning
+  description: "A source attribute is outside its freshness bound."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_SOURCE_UNAVAILABLE
+  meaning: >-
+    A required minimized source could not be reached. Fail-closed: no
+    provisional approval and no provisional denial is recorded.
+  severity: error
+  description: "A required eligibility source was unavailable."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_EVIDENCE_INCOMPLETE
+  meaning: >-
+    Required evidence references are missing from the case. Only
+    references are held; evidence content never enters the case.
+  severity: warning
+  description: "Required evidence references are missing."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_DECISION_EXPIRED
+  meaning: >-
+    The decision's validity window elapsed. A new request is required and
+    is never automatic.
+  severity: warning
+  description: "The eligibility decision has expired."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_DECISION_SUPERSEDED
+  meaning: >-
+    A source fact the decision relied on changed before an assertion was
+    minted, so the decision was superseded and must be re-evaluated.
+  severity: warning
+  description: "The eligibility decision was superseded by a source change."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_SELF_REVIEW_REFUSED
+  meaning: >-
+    A reviewer attempted to decide a case they raised or are the subject
+    of. Separation of duties is re-checked at the act, never only at
+    assignment.
+  severity: error
+  description: "A reviewer may not decide their own case."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_CASE_NOT_FOUND
+  meaning: >-
+    A plain lookup miss for an eligibility case reference. Distinct from
+    a refusal: nothing was decided.
+  severity: warning
+  description: "No eligibility case exists for the given reference."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_ATTRIBUTE_NOT_DECLARED
+  meaning: >-
+    The governed adapter was offered an attribute the frozen rule-set
+    version does not declare. An undeclared attribute is refused, never
+    silently dropped, because a dropped attribute still travelled.
+  severity: error
+  description: "An attribute not declared by the rule-set version was offered."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ELIGIBILITY_ATTRIBUTE_PROHIBITED
+  meaning: >-
+    The governed adapter was offered an attribute on the prohibited set -
+    an account, person-record, membership or contact identifier, a name,
+    a date of birth, an address or a communication persona.
+  severity: critical
+  description: "A prohibited identity attribute was offered to the eligibility adapter."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_ISSUED
+  meaning: >-
+    A minimized eligibility assertion was minted and entered the issuance
+    queue. Minting is never the same act as release.
+  severity: info
+  description: "An eligibility assertion was minted."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_QUEUED
+  meaning: >-
+    The assertion is held in the issuance queue awaiting its governed
+    release schedule. Immediate release is not an available mode.
+  severity: info
+  description: "The assertion is queued for governed release."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_RELEASE_PENDING
+  meaning: >-
+    The release schedule has not yet elapsed. Reported without a queue
+    position or an estimate, both of which would leak cohort structure.
+  severity: info
+  description: "The assertion's release schedule has not yet elapsed."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_PICKUP_PENDING
+  meaning: >-
+    The assertion has been released into a one-time pickup that has not
+    been collected.
+  severity: info
+  description: "A released assertion is awaiting its one-time pickup."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_PICKUP_ALREADY_USED
+  meaning: >-
+    The one-time pickup has already been consumed. A second collection is
+    a refusal, never a re-serve.
+  severity: warning
+  description: "The one-time assertion pickup was already consumed."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_PICKUP_EXPIRED
+  meaning: >-
+    The one-time pickup was not collected within its window.
+  severity: warning
+  description: "The one-time assertion pickup expired uncollected."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_INVALID
+  meaning: >-
+    Integrity verification of the presented assertion failed against the
+    assertion issuer's own trust boundary.
+  severity: error
+  description: "The presented assertion did not verify."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_EXPIRED
+  meaning: >-
+    The assertion was presented after its expiry. Expiry is checked at
+    presentation, never assumed from a scheduler.
+  severity: warning
+  description: "The presented assertion has expired."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_AUDIENCE_MISMATCH
+  meaning: >-
+    The assertion was presented to a party it was not issued for. The
+    only permitted audience is the voting credential issuer.
+  severity: error
+  description: "The assertion was presented to the wrong audience."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_PURPOSE_MISMATCH
+  meaning: >-
+    The assertion was presented for a purpose other than voting
+    credential issuance. It authenticates nothing and authorizes nothing
+    else.
+  severity: error
+  description: "The assertion was presented for the wrong purpose."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_CONTEXT_MISMATCH
+  meaning: >-
+    The assertion belongs to a different voting context. A mismatch is a
+    refusal, never a best-effort match.
+  severity: error
+  description: "The assertion belongs to a different voting context."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_ALREADY_USED
+  meaning: >-
+    The assertion's nonce is already in the spent set. The spent set is a
+    set, not a map: it records that a nonce was used, never what it
+    produced (ADR-093).
+  severity: warning
+  description: "The assertion nonce has already been spent."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_REVOKED
+  meaning: >-
+    The assertion was revoked before pickup or before use under the
+    context's declared policy.
+  severity: warning
+  description: "The assertion was revoked."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ASSERTION_NOT_FOUND
+  meaning: >-
+    A plain lookup miss for an assertion reference.
+  severity: warning
+  description: "No assertion exists for the given reference."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_ISSUANCE_AUTHORIZED
+  meaning: >-
+    A verified, unexpired, unspent assertion authorized one credential
+    issuance in one voting context.
+  severity: info
+  description: "Credential issuance was authorized by a verified assertion."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_DUPLICATE_REQUEST
+  meaning: >-
+    A duplicate issuance request was detected and refused. Distinct from
+    a safe idempotent retry, which returns the original outcome.
+  severity: warning
+  description: "A duplicate credential issuance request was refused."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_ALREADY_ISSUED
+  meaning: >-
+    This participation unit already holds a credential for this voting
+    context. Enforced on the identity side, which knows the participant;
+    the voting side never learns who.
+  severity: warning
+  description: "A credential has already been issued for this participation unit."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_REVOKED
+  meaning: >-
+    The credential was withdrawn before redemption and before the
+    revocation cutoff, on a governed condition.
+  severity: warning
+  description: "The credential was revoked."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_EXPIRED
+  meaning: >-
+    The credential's validity elapsed unused.
+  severity: warning
+  description: "The credential expired unused."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_ALREADY_REDEEMED
+  meaning: >-
+    The credential was already consumed. `redeemed` is an absorbing
+    state: no administrative act, break-glass grant or incident response
+    moves a credential out of it.
+  severity: warning
+  description: "The credential has already been redeemed."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_REPLAY_DETECTED
+  meaning: >-
+    A further presentation of a spent credential was refused and recorded
+    with no holder attribution, because no holder is knowable here.
+  severity: error
+  description: "A credential replay attempt was rejected."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_CONTEXT_MISMATCH
+  meaning: >-
+    The credential was presented in a different voting context than the
+    one it is bound to.
+  severity: error
+  description: "The credential belongs to a different voting context."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_AUDIENCE_MISMATCH
+  meaning: >-
+    The credential was presented at an origin it was not issued for. The
+    only permitted audience is the isolated voting origin.
+  severity: error
+  description: "The credential was presented at the wrong audience."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_ORIGIN_REFUSED
+  meaning: >-
+    An issuance or redemption request did not originate from the isolated
+    voting origin. Credential material exists only inside that origin.
+  severity: error
+  description: "The request did not originate from the isolated voting origin."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_ISSUANCE_WINDOW_CLOSED
+  meaning: >-
+    The voting context's credential issuance window is not open.
+  severity: warning
+  description: "The credential issuance window is closed."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_REDEMPTION_WINDOW_CLOSED
+  meaning: >-
+    The voting context's redemption window is not open.
+  severity: warning
+  description: "The credential redemption window is closed."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_REVOCATION_CUTOFF_PASSED
+  meaning: >-
+    A revocation was requested after the context's revocation cutoff and
+    refused. The cutoff bounds the window in which participation can be
+    removed at all.
+  severity: warning
+  description: "The revocation cutoff has passed."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_MINTING_DELAYED
+  meaning: >-
+    The randomized minting delay is in progress. A progress state
+    reported to the isolated client, never a failure.
+  severity: info
+  description: "Credential minting is delayed by the governed timing policy."
+  retryable: true
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_NOT_FOUND
+  meaning: >-
+    A plain lookup miss for a credential reference supplied by its
+    holder. Answered with the same shape as a revoked credential so the
+    lookup cannot be used as an oracle.
+  severity: warning
+  description: "No credential exists for the given reference."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CREDENTIAL_REDEEMED
+  meaning: >-
+    The credential was atomically consumed and a minimal single-use
+    continuation capability was handed to the isolated client. No ballot
+    exists yet; PACK-16 owns everything after this point.
+  severity: info
+  description: "The credential was redeemed."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: DELIVERY_CHANNEL_REFUSED
+  meaning: >-
+    A delivery of credential material outside the isolated voting origin
+    was attempted and refused. Email, SMS, push, clipboard, URL, file,
+    print and any operator-visible surface are prohibited channels.
+  severity: critical
+  description: "Credential delivery outside the isolated origin was refused."
+  retryable: false
+  owner: credential-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_INVALID
+  meaning: >-
+    The presented one-time handoff artifact did not verify.
+  severity: error
+  description: "The handoff artifact did not verify."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_EXPIRED
+  meaning: >-
+    The handoff artifact was presented after its expiry.
+  severity: warning
+  description: "The handoff artifact has expired."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_ALREADY_USED
+  meaning: >-
+    A second presentation of a one-time handoff artifact. Never a silent
+    re-issue.
+  severity: warning
+  description: "The handoff artifact was already used."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_AUDIENCE_MISMATCH
+  meaning: >-
+    The handoff artifact was presented to an audience it was not bound
+    to.
+  severity: error
+  description: "The handoff artifact was presented to the wrong audience."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_ORIGIN_MISMATCH
+  meaning: >-
+    The handoff artifact was presented from an origin it was not bound
+    to. Origin binding is checked before anything else is read.
+  severity: error
+  description: "The handoff artifact was presented from the wrong origin."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: HANDOFF_ACCEPTED
+  meaning: >-
+    A valid, single-use, audience- and origin-bound handoff artifact was
+    accepted for a stated voting context. The acceptance record carries
+    no account reference and permits no reverse identity resolution.
+  severity: info
+  description: "The handoff artifact was accepted."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_NOT_ACTIVE
+  meaning: >-
+    The voting context is not in a state that permits this act.
+  severity: warning
+  description: "The voting context is not active."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_SCOPE_MISMATCH
+  meaning: >-
+    The organizational scope of the act does not match the voting
+    context's declared scope.
+  severity: warning
+  description: "The organizational scope does not match the voting context."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_CONFIGURATION_INVALID
+  meaning: >-
+    The voting context's configuration is not internally consistent - a
+    window ordering, a cutoff maximum, or an issuance timing profile
+    outside its permitted range.
+  severity: error
+  description: "The voting context configuration is invalid."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_SUSPENDED
+  meaning: >-
+    The voting context is suspended; issuance and redemption are stopped
+    without destroying state.
+  severity: warning
+  description: "The voting context is suspended."
+  retryable: true
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_CLOSED
+  meaning: >-
+    The voting context is closed. A closed context accepts no further
+    eligibility, issuance or redemption act.
+  severity: warning
+  description: "The voting context is closed."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_NOT_FOUND
+  meaning: >-
+    A plain lookup miss for a voting context reference.
+  severity: warning
+  description: "No voting context exists for the given reference."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_ACTIVATED
+  meaning: >-
+    A voting context was activated under dual control and its immutable
+    activation snapshot was recorded. Critical parameters are frozen from
+    this moment.
+  severity: info
+  description: "The voting context was activated."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: TIMING_PROFILE_OUT_OF_BOUNDS
+  meaning: >-
+    A configured issuance timing value is outside its permitted range or
+    below its hard lower bound. Refused, never clamped silently: a
+    silently clamped privacy control is a disabled privacy control.
+  severity: error
+  description: "An issuance timing value is outside its permitted range."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: ISSUANCE_WINDOW_GUARANTEE_UNSATISFIED
+  meaning: >-
+    The issuance timing profile cannot guarantee release before the
+    credential issuance window closes, so a queued assertion could be
+    stranded by its own privacy controls.
+  severity: error
+  description: "The timing profile cannot guarantee release before the window closes."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: COHORT_THRESHOLD_NOT_MET
+  meaning: >-
+    A release batch reached the maximum cohort wait below the minimum
+    cohort size and was released anyway, with the cohort-size class
+    recorded. Access is never denied for want of a cohort.
+  severity: warning
+  description: "A batch was released below the minimum cohort size."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: MANUAL_REVIEW_REQUIRED
+  meaning: >-
+    A human decision is required before the act may proceed. An
+    unavailable reviewer never yields an automatic approval or an
+    automatic denial.
+  severity: info
+  description: "A manual review is required."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: DUAL_CONTROL_REQUIRED
+  meaning: >-
+    A second authorized approver is required for this act - context
+    activation, a late revocation, a governed reissue, or a pre-closure
+    evidence-bundle export.
+  severity: warning
+  description: "A second authorized approver is required."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: PRIVILEGED_APPROVAL_MISSING
+  meaning: >-
+    A required privileged-access grant is absent or expired.
+  severity: error
+  description: "A required privileged-access grant is missing."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: SEPARATION_OF_DUTIES_REFUSED
+  meaning: >-
+    The actor's role combination is prohibited for this act. No actor may
+    hold eligibility, issuance and tally authority in one context, and no
+    grant, flag or emergency path may assemble that combination.
+  severity: critical
+  description: "The actor's role combination is prohibited."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: DISPUTE_OPEN
+  meaning: >-
+    A dispute is open against this artifact and blocks a competing act.
+  severity: info
+  description: "A dispute is open."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: DISPUTE_RESOLVED
+  meaning: >-
+    A dispute was resolved by a reviewer who was not the original
+    decider, with a registered remedy class.
+  severity: info
+  description: "A dispute was resolved."
+  retryable: false
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: SYSTEM_DEPENDENCY_UNAVAILABLE
+  meaning: >-
+    A required dependency was unreachable and the act failed closed. The
+    audit stream and the replay store are never bypassed under any load,
+    with any flag.
+  severity: error
+  description: "A required dependency was unavailable; the act failed closed."
+  retryable: true
+  owner: eligibility-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: AUDIT_UNAVAILABLE
+  meaning: >-
+    The audit stream was unreachable, so no consequential act was
+    performed. There is no unlogged issuance, revocation or redemption.
+  severity: critical
+  description: "The audit stream was unavailable; no consequential act was performed."
+  retryable: true
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: INTERMEDIATE_TALLY_PROHIBITED
+  meaning: >-
+    A request would have disclosed outcome-bearing data before the
+    official tally. Refused and recorded, because the attempt is worth
+    knowing about.
+  severity: critical
+  description: "An intermediate-tally disclosure was refused."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: CORRELATION_RISK_DETECTED
+  meaning: >-
+    A near-miss against the unlinkability boundary was detected - a
+    shared key across streams, a cross-side read, a cohort of one, or a
+    shared trace identifier.
+  severity: critical
+  description: "A correlation risk was detected at the voting boundary."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: DISCLOSURE_CONTROL_SUPPRESSED
+  meaning: >-
+    An aggregate cell was suppressed because it fell below the minimum
+    cell size. Suppressed, never rounded, and flagged in the disclosure
+    metadata.
+  severity: info
+  description: "An aggregate cell was suppressed by disclosure control."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: EVIDENCE_BUNDLE_INVALID
+  meaning: >-
+    A validation check on an independent-auditor evidence bundle failed.
+    A failing bundle is rejected, never repaired.
+  severity: error
+  description: "The evidence bundle failed validation."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: EVIDENCE_BUNDLE_SUPPRESSED
+  meaning: >-
+    A bundle section or cell was suppressed by disclosure control,
+    including the complementary suppression that prevents recovery by
+    differencing.
+  severity: info
+  description: "An evidence bundle section was suppressed."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: EVIDENCE_BUNDLE_SCOPE_REFUSED
+  meaning: >-
+    An export named two voting contexts, or requested raw stream content.
+    There is no export-everything operation, and its absence is a
+    specified property.
+  severity: error
+  description: "The evidence bundle export scope was refused."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: EVIDENCE_BUNDLE_PRECLOSURE_REFUSED
+  meaning: >-
+    An outcome-bearing bundle section was requested before the voting
+    context closed. A pre-closure count is an intermediate tally.
+  severity: error
+  description: "A pre-closure outcome-bearing bundle section was refused."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: EVIDENCE_BUNDLE_EXPORTED
+  meaning: >-
+    A versioned, signed, privacy-preserving evidence bundle was exported
+    to an authorized independent auditor for exactly one voting context.
+  severity: info
+  description: "An evidence bundle was exported."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_BOUNDARY_INTEGRITY_VIOLATION
+  meaning: >-
+    A structural boundary rule was violated at runtime - a prohibited
+    field crossing, a pairing of an assertion and a credential reference,
+    or a payload carrying identity into the voting domain.
+  severity: critical
+  description: "A voting-boundary integrity violation was detected."
+  retryable: false
+  owner: audit-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: PRIVILEGED_VOTING_ACTION_PERFORMED
+  meaning: >-
+    A privileged act was performed inside the voting trust boundary, with
+    its role, grant reference and dual-control reference recorded.
+  severity: warning
+  description: "A privileged voting action was performed."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+# --- The versioned API boundary ------------------------------------------
+#
+# Five codes for refusals the adapter makes before any domain command
+# runs. They are deliberately about the *request*, never about the
+# resource: an unknown operation and a forbidden one must be
+# indistinguishable to a caller probing the surface, and neither may
+# reveal whether a context, a case or a credential exists.
+#
+# Two adapter refusals reuse existing codes rather than adding near
+# duplicates: a role refused by the separation matrix returns
+# `SEPARATION_OF_DUTIES_REFUSED`, and a response body carrying a
+# prohibited field or an assertion-credential pairing returns
+# `VOTING_BOUNDARY_INTEGRITY_VIOLATION`, because that is what it is.
+
+- code: API_OPERATION_UNKNOWN
+  meaning: >-
+    The requested operation is not in the closed endpoint catalogue. The
+    catalogue is closed so an operation is never dispatched by name.
+  severity: warning
+  description: "The requested operation does not exist."
+  retryable: false
+  owner: epd2-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: API_REQUEST_MALFORMED
+  meaning: >-
+    A required request field was absent or unparseable. The refused value
+    is never echoed back.
+  severity: warning
+  description: "The request is malformed."
+  retryable: false
+  owner: epd2-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: API_ORIGIN_REFUSED
+  meaning: >-
+    The request arrived from an origin this boundary does not serve. On
+    the voting side this is the WS-03 isolation rule: a credential
+    operation reached from the ordinary workspace is refused, not
+    redirected.
+  severity: warning
+  description: "The request origin is not permitted for this boundary."
+  retryable: false
+  owner: epd2-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: API_IDEMPOTENCY_KEY_REQUIRED
+  meaning: >-
+    A consequential operation was called without an idempotency key. It
+    is refused rather than executed once, because a retried issuance
+    without a key is how one participation becomes two credentials.
+  severity: warning
+  description: "This operation requires an idempotency key."
+  retryable: true
+  owner: epd2-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: API_VERSION_CHECK_REQUIRED
+  meaning: >-
+    A consequential operation was called without the resource version it
+    expects to act on, so a lost update could not be detected.
+  severity: warning
+  description: "This operation requires the expected resource version."
+  retryable: true
+  owner: epd2-core (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+# PACK-02's own code, restated here so this registry is independently
+# well-formed - every pack registry carries it, and
+# `tests/contract/test_reason_codes_registry.py` requires it. PACK-15
+# uses it for a permission refusal that is not a separation-of-duties
+# refusal: a role that simply lacks the permission, rather than a role
+# that holds two that may never be combined.
+- code: PERMISSION_DENIED
+  meaning: >-
+    The actor lacks the permission the operation requires. PACK-02's own
+    code, unchanged.
+  severity: error
+  description: "The actor lacks the required permission."
+  retryable: false
+  owner: account-service, identity-service (PACK-02)
+  introduced_in_version: pack-15-0.15.0
+
+# --- Registry version conflicts ------------------------------------------
+#
+# Both were briefly served by `VOTING_CONTEXT_CONFIGURATION_INVALID`, which
+# is the wrong answer under this registry's own rule: where two failures
+# differ in what the caller must do next, they are two codes. A version
+# conflict is resolved by re-reading and retrying; a frozen version is not
+# resolved by retrying at all, and telling an operator otherwise during a
+# running ballot would waste the minutes that matter.
+
+- code: VOTING_CONTEXT_VERSION_CONFLICT
+  meaning: >-
+    The caller acted on a context version that is no longer the current
+    one. The write was refused rather than applied, so a lost update
+    cannot silently change the parameters a ballot is running under.
+  severity: warning
+  description: "The voting context version is out of date."
+  retryable: true
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0
+
+- code: VOTING_CONTEXT_VERSION_FROZEN
+  meaning: >-
+    The change targeted a version whose activation snapshot is captured.
+    An activated version is immutable: the correct action is a new
+    version, never an edit, because the version someone voted under may
+    not change underneath them.
+  severity: warning
+  description: "An activated voting context version cannot be edited."
+  retryable: false
+  owner: governance-service (PACK-15)
+  introduced_in_version: pack-15-0.15.0

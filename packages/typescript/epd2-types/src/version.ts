@@ -14,4 +14,4 @@
  */
 
 export const CANON_VERSION = "0.8.0";
-export const REPOSITORY_VERSION = "0.14.0";
+export const REPOSITORY_VERSION = "0.15.0";

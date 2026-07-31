@@ -1,5 +1,21 @@
 # PACK-14 — Acceptance Matrix
 
+> **Status, as of the PACK-14 FINAL PASS round (2026-07-30):**
+> **PACK-14 EXTERNAL CI PASS · FINAL PASS ARCHIVE PREPARED ·
+> `REPOSITORY_VERSION` `0.14.0` · `CANON_VERSION` `0.8.0` ·
+> NOT PRODUCTION READY · NOT LEGALLY ACTIVATED.** See
+> `docs/handover/PACK-14-FINAL-PASS-REPORT.md`.
+>
+> The header below records the **specification** round that wrote this
+> matrix and is retained unchanged. The implementation round has since
+> happened and the external pipeline has now run and passed. That changes
+> the _round's_ status; it does not retroactively meet a criterion whose
+> evidence is a bound WebAuthn library, a bound password hasher, a bound
+> breached-password corpus, a deployed database, a selected identity
+> provider or a rendered frontend, because a pipeline binds no provider
+> and deploys nothing. The per-criterion treatments are unchanged by the
+> PASS.
+
 **Round:** PACK-14 — specification and ADR only. **No code. Not implemented. Not a candidate. Not a PASS.**
 **Repository version:** unchanged at `0.13.0` · **Canon version:** unchanged at `0.8.0`
 **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**

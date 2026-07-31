@@ -254,5 +254,23 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # an AAL-0..3 vocabulary, keeps AccountStatus at six values, and
     # holds SessionRecord as a service-level aggregate on PACK-12's
     # PrivilegedSession precedent rather than adding it to canon.
+    # REPOSITORY_VERSION then moved 0.14.0 -> 0.15.0 for the PACK-15
+    # implementation candidate: the voting trust boundary, with
+    # eligibility and voting-credential issuance separated so that no
+    # store, log, event or export pairs an assertion reference with a
+    # credential reference (ADR-093). The Eligibility, Assertion Issuer,
+    # Voting Credential, Voting Context Registry and voting-audit
+    # contexts arrive in reference form across four existing services,
+    # each with its own database file so a cross-boundary foreign key is
+    # not expressible - plus contracts/reason-codes/pack-15.yml and eight
+    # event payload schemas. New bounded contexts inside existing
+    # services is a minor bump per canon section 25.
+    # CANON_VERSION remains 0.8.0: PACK-15 makes NO canon amendment,
+    # which its own canon assessment records. It adds no canon entity, no
+    # canon status value and no canon event; the voting context registry
+    # is a service-level aggregate on the same precedent PACK-12's
+    # PrivilegedSession and PACK-14's SessionRecord set.
+    # canon-version.json changed only its non-canonical bookkeeping:
+    # repository_compatibility widened to <0.16.0.
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.14.0"
+    assert REPOSITORY_VERSION == "0.15.0"

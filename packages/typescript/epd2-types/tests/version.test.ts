@@ -169,5 +169,5 @@ test("current versions match the expected skeleton version", () => {
   // AccountStatus at six values, and holds SessionRecord at service
   // level rather than adding it to canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.14.0");
+  assert.equal(REPOSITORY_VERSION, "0.15.0");
 });

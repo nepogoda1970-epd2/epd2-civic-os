@@ -2,6 +2,18 @@
 
 **Round type:** specification and ADR only. **No code. Not implemented. Not a candidate. Not a PASS.**
 
+> **Superseding status note, added by the PACK-14 FINAL PASS round
+> (2026-07-30).** The line above describes the _specification_ round that
+> wrote this document and is retained unchanged as the historical record.
+> The implementation round has since happened: PACK-14 reached **FINAL
+> PASS** at `REPOSITORY_VERSION 0.14.0` / `CANON_VERSION 0.8.0`, verified
+> by an external GitHub Actions run that passed every stage. The
+> specification text below was **not** rewritten to match the
+> implementation; where the two differ, the deviations are recorded in
+> `docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md` rather than
+> silently folded in here. **NOT PRODUCTION READY. NOT LEGALLY
+> ACTIVATED.** See `docs/handover/PACK-14-FINAL-PASS-REPORT.md`.
+
 **Architecture correction applied (2026-07-30).** Ten implementation-blocking
 open decisions are resolved in this revision — account lifecycle
 representation, bounded-context ownership, password fallback, session and

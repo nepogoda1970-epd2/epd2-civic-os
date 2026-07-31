@@ -212,6 +212,22 @@ PACK13_SERVICE_DIRS: tuple[str, ...] = ("data-plane-service",)
 #: the other pack's codes as unregistered.
 PACK14_SERVICE_DIRS: tuple[str, ...] = ("identity-service",)
 
+#: PACK-15 adds **no** new service directory either. Like PACK-07 and
+#: PACK-14, it extends existing services in place: `eligibility-service`,
+#: `credential-service` and `audit-core` (all already in
+#: `PACK02_SERVICE_DIRS`) and `governance-service` (already in
+#: `PACK05_SERVICE_DIRS`). Keeping PACK-15 inside existing workspace
+#: members is deliberate - a new member would have required regenerating
+#: `uv.lock`, and CI runs `uv sync --frozen` plus
+#: `git diff --exit-code -- uv.lock`.
+PACK15_REASON_CODES_PATH = REPO_ROOT / "contracts" / "reason-codes" / "pack-15.yml"
+PACK15_SERVICE_DIRS: tuple[str, ...] = (
+    "eligibility-service",
+    "credential-service",
+    "governance-service",
+    "audit-core",
+)
+
 #: identity-service and eligibility-service (both already listed in
 #: `PACK02_SERVICE_DIRS` above) also gained PACK-07 additive reason-code
 #: literals in this implementation round (ADR-026 through ADR-031).

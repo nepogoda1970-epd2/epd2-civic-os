@@ -1,6 +1,16 @@
 **Round:** PACK-14 — implementation candidate. **NOT PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 **Repository version:** `0.14.0` · **Canon version:** unchanged at `0.8.0`
-**External GitHub Actions has not run against this round.**
+
+> **Superseding status note, added by the PACK-14 FINAL PASS round
+> (2026-07-30).** The header above records the implementation-candidate
+> round that wrote this document and is retained unchanged as the
+> historical record. External GitHub Actions has since run against this
+> exact tree and **passed every stage**, so PACK-14 is now **FINAL PASS**
+> at `REPOSITORY_VERSION 0.14.0` / `CANON_VERSION 0.8.0`. The PASS changes
+> the _round's_ status and nothing else: no limitation below is closed by
+> it, and **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** See
+> `docs/handover/PACK-14-FINAL-PASS-REPORT.md` and
+> `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md`.
 
 # PACK-14 — Security Verification
 

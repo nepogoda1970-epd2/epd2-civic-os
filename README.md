@@ -1,31 +1,64 @@
 # EPD² Civic OS
 
-> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.13.0`,
+> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.15.0`,
 > `CANON_VERSION` — `0.8.0`.
 >
-> Последний раунд — **PACK-13 — Production Data Plane & Contract
-> Evolution**, **FINAL PASS**: внешний GitHub Actions прошёл полностью
-> (800/800 repository paths, forbidden paths — нет, version consistency,
-> Ruff format 520 файлов, Prettier, Ruff lint, ESLint, mypy по всем 23
-> группам, оба TypeScript typecheck — PASS, Python 4625 passed / 4
-> skipped, Node 34 passed, frontend unit/render 16 passed, Next.js
-> production build — PASS, browser/visual/accessibility 108 passed). См.
+> Последний раунд — **PACK-15 — Voting Trust Boundary, Eligibility &
+> Credential Separation**, **IMPLEMENTATION CANDIDATE**. Разделение между
+> «кто человек» и «голос подан» реализовано структурно: запись
+> потраченного nonce — это **множество** из трёх колонок без колонки
+> значения, поэтому ни одно хранилище, событие, лог, резервная копия или
+> выгрузка не содержит одновременно ссылку на assertion и ссылку на
+> credential (ADR-093). Семь отдельных файлов базы данных — по одному на
+> границу доверия, — поэтому внешний ключ через границу не выражается в
+> принципе. 22 endpoint'а версионированного API, десять ролей и восемь
+> структурных правил разделения обязанностей, 89 reason-кодов.
+>
+> **Проверено локально:** Python 5335 passed / 5 skipped, mypy по всем
+> группам — чисто, `ruff check` и `ruff format --check` — чисто, все
+> четыре repository-скрипта — PASS (983 путей).
+> **Не выполнено:** весь npm-контур (реестр отдаёт HTTP 403, `node_modules`
+> установить невозможно) — TypeScript typecheck, frontend-тесты,
+> Playwright, axe, `next build` и Prettier не запускались, пять
+> frontend-файлов PACK-15 ни разу не исполнялись. **EXTERNAL CI NOT YET
+> VERIFIED. NOT FINAL PASS.** См.
+> `docs/handover/PACK-15-IMPLEMENTATION-REPORT.md`,
+> `docs/handover/PACK-15-TEST-EVIDENCE.md`,
+> `docs/handover/PACK-15-SECURITY-EVIDENCE.md`,
+> `docs/handover/PACK-15-PRIVACY-EVIDENCE.md` и
+> `docs/handover/PACK-15-TRACEABILITY-MATRIX.md`.
+>
+> Предыдущий раунд — **PACK-14 — Identity, Authentication & Account
+> Security**, **FINAL PASS**: внешний GitHub Actions прошёл полностью
+> (867/867 repository paths, forbidden paths — нет, version consistency,
+> Ruff format 566 файлов, Prettier, Ruff lint, ESLint, mypy по всем 23
+> группам, оба TypeScript typecheck — PASS, Python 4905 passed / 4
+> skipped, epd2-types 3 passed, Node 34 passed, frontend unit/render 16
+> passed, Next.js production build — PASS, 46/46 static pages,
+> browser/visual/accessibility 108 passed). См.
+> `docs/handover/PACK-14-FINAL-PASS-REPORT.md`,
+> `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md` и
+> `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION.log`.
+>
+> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** У PACK-14 все четыре
+> security-порта не связаны и **отказывают**: ни WebAuthn-библиотека, ни
+> memory-hard password hasher, ни breached-password-корпус, ни
+> assertion-signature verifier не выбраны, поэтому без явной привязки
+> нельзя ни зарегистрировать, ни сменить пароль. Persistence — реальный
+> **reference**-путь на SQLite из стандартной библиотеки: миграции,
+> ограничения, транзакции и optimistic concurrency настоящие, но
+> production-БД не разворачивается и durability не заявляется. Границы
+> сервиса transport-agnostic: HTTP-поверхности, TLS и production-gateway
+> нет. Ни IAM, ни eID, ни email/SMS, ни HSM/KMS не интегрированы. См.
+> `docs/packs/PACK-14/PACK-14-OPEN-ITEMS.md`.
+>
+> Предыдущий раунд — **PACK-13 — Production Data Plane & Contract
+> Evolution**, **FINAL PASS** (800/800 repository paths, Python 4625
+> passed / 4 skipped, browser 108 passed). Каждый storage-адаптер
+> PACK-13 — in-memory. См.
 > `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
 > `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` и
-> `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION.log`.
->
-> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** Каждый storage-адаптер
-> PACK-13 — in-memory: production-БД, реальный брокер, внешний schema
-> registry, production search engine и production IAM не разворачиваются
-> и не заявляются. Зелёный pipeline проверяет дерево репозитория; он
-> ничего не разворачивает. См.
 > `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
->
-> Предыдущий раунд — **PACK-12 — Privileged Admin, Authorization-Aware
-> Search & Governed Export**, **FINAL PASS** (728/728 repository paths,
-> Python 4062 passed / 4 skipped, browser 108 passed). См.
-> `docs/handover/PACK-12-FINAL-PASS-REPORT.md` и
-> `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`.
 >
 > Зелёный pipeline подтверждает, что репозиторий собирается,
 > типизируется и проходит тесты; он не подтверждает production-готовность,
@@ -35,8 +68,8 @@
 > assurance, backup/restore-готовность, multi-region-развёртывание или
 > что-либо в домене голосования.
 >
-> PACK-11 (`0.11.0`) и PACK-12 (`0.12.0`) остаются историческими
-> PASS-базисами, от которых построен PACK-13.
+> PACK-11 (`0.11.0`), PACK-12 (`0.12.0`) и PACK-13 (`0.13.0`) остаются
+> историческими PASS-базисами, от которых построен PACK-14.
 
 > FRONT-00 adds a frontend foundation **implementation candidate** to the existing
 > Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
@@ -474,6 +507,61 @@ eID-интеграция, географическая/избирательна�
 PACK-11 — последний раунд, для которого внешний GitHub Actions вернул
 полный PASS. Он остаётся историческим базисом репозитория; PACK-12
 построен от него и **не** заменяет этот статус.
+
+## PACK-14 — Identity, Authentication & Account Security (`0.14.0`, FINAL PASS)
+
+> **PACK-14 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
+
+`services/identity-service` расширен **на месте**: шесть ограниченных
+контекстов, которые §4.1 спецификации закрепляет за ним — Account
+Registry, Credential Registry, Authentication, Session Security,
+координация восстановления и ссылки на identity proofing. **Отдельный
+сервис аутентификации не создавался**, владение каноническими `Account`
+(канон 7.2) и `IdentityRecord` (канон 7.3) не изменилось. 34 новых модуля
+исходного кода, 288 собственных тестов, 213 зарегистрированных
+reason-кодов, 59 типов событий на неизменённом конверте PACK-13.
+Спецификация и ADR-079 — ADR-088 приняты отдельным раундом
+(`docs/handover/PACK-14-SPEC-ADR-REPORT.md`, сохранён без изменений).
+
+**`FIR-INV-001` устоял в раунде, который угрожал ему больше всего:
+глобального user ID нет.** Пять пространств идентификаторов — различные
+типы Python; через границу домена проходит только
+`ScopedIdentityReference`, выведенный для конкретной цели и
+организационного scope из секрета развёртывания; две ссылки, выведенные
+для двух целей из одного аккаунта, не равны.
+
+Канонический перечень статусов **не расширялся**: `AccountLock`,
+`AccountRestriction` класса security, состояние `AccountClosureRequest` и
+исходы жизненного цикла несут то, что иначе стало бы `locked`,
+`closure_pending` и `deleted_or_anonymized` (OD-P14-01).
+`MfaFactorClass` **не содержит `sms_otp`**: SMS OTP не даёт никакого
+уровня уверенности (OD-P14-09). `VotingHandoffIssuance` **не содержит ни
+одного поля аккаунта** — это и есть свойство необратимости ADR-088,
+выраженное набором полей, и схема хранит его отсутствием колонки.
+
+Persistence — реальный **reference**-путь: десять SQL-артефактов
+миграций применяются по порядку в одной транзакции с записанной
+контрольной суммой SHA-256 и создают 29 таблиц и 35 индексов (9
+уникальных ограничений, 10 индексов истечения); одиннадцать durable-
+адаптеров, граница транзакции `UnitOfWork` и монотонная проверка
+optimistic concurrency. Всё это работает на SQLite из стандартной
+библиотеки — новых зависимостей раунд не добавил. In-memory-адаптеры
+остались **только как тестовые** и не являются runtime-привязкой по
+умолчанию; это проверяется отдельным тестом репозитория.
+
+### Чего PACK-14 не делает
+
+Не реализованы и не заявляются: production IAM, eID/KYC-схема,
+email- и SMS-доставка, HSM или KMS, production-БД и какая-либо
+операционная durability, HTTP-поверхность и production-gateway, Voting
+Client, выпуск credential для голосования, бюллетени и подсчёт, полная
+юридическая электронная подпись и Account & Security FRONT-PACK.
+Все четыре security-порта **отказывают** без явной привязки: без
+breached-password-корпуса нельзя ни зарегистрировать, ни сменить пароль.
+`OD-P14-07` (сроки хранения) остаётся открытым до юридического
+подтверждения; ни одно разрушающее действие не выполняется, пока флаг
+`duration_confirmed` равен `False`. `FIR-UX-011` остаётся **future**.
 
 ## PACK-13 — Production Data Plane & Contract Evolution (`0.13.0`, FINAL PASS)
 

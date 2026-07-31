@@ -1,12 +1,75 @@
 # Changelog
 
-## [0.14.0] - identity, authentication & account security (IMPLEMENTATION CANDIDATE)
+## [0.15.0] - voting trust boundary, eligibility & credential separation (IMPLEMENTATION CANDIDATE)
 
-- **PACK-14 IMPLEMENTATION CANDIDATE. NOT PASS. NOT PRODUCTION READY. NOT
-  LEGALLY ACTIVATED.** External GitHub Actions has not run against this
-  round; local verification results and what could not be verified
-  locally are recorded verbatim in
-  `docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md`.
+- **PACK-15 implementation candidate.** The separation between knowing who
+  someone is and knowing that a vote was cast, implemented rather than
+  specified. The design turns on ADR-093's structural cut: the spent-nonce
+  record is a **set** with three columns and no value column, so no store,
+  log, event, trace, backup or export contains both an assertion reference
+  and a credential reference for the same participation.
+- **Seven databases, not one.** The eligibility store, the Assertion
+  Issuer store, the voting-credential store, the voting context registry
+  and the three audit-stream stores are separate SQLite database files, so
+  a foreign key across a trust boundary is not expressible rather than
+  merely unwritten. Ten migration files across seven migration sets, with
+  a shared dependency-free migration runner in `epd2-core`.
+- **Exactly-once, split across the boundary.** The identity side enforces
+  one assertion per participation unit (`participation_unit_ledger`
+  primary key); the voting side enforces one credential per assertion
+  nonce (`spent_nonce` primary key). Both are decided by the INSERT, so a
+  concurrent second attempt loses on a constraint rather than on a
+  check-then-act read that raced.
+- **A versioned, transport-agnostic API**: 22 endpoints across four
+  services over a shared contract layer in `epd2-core`, where a
+  consequential endpoint may waive no obligation, an operation name may
+  not exist on both sides of the boundary, and every response body is
+  scanned at every nesting depth before it leaves.
+- **Ten roles and eight structural separation rules**, validated at import
+  time: no role holds eligibility, issuance and tally; the Credential
+  Issuer holds no identity access; no auditor spans the identity-side and
+  voting-side audit streams; privileged export and break-glass need two
+  distinct approvers holding different roles.
+- **89 reason codes.** `ALREADY_VOTED` and `PARTICIPATION_CONFIRMED` are
+  deliberately absent and may never be added: to emit either, a component
+  would have to know that a particular participant's credential was
+  redeemed, which is exactly the linkage this pack removes.
+- **Verification.** 5335 Python tests passed (5 skipped), mypy clean
+  across every group, `ruff check` and `ruff format --check` clean, and
+  all four repository scripts pass. **The npm side was not executed at
+  all** - the registry returns HTTP 403, `node_modules` cannot be
+  installed, and the five PACK-15 frontend files have never been run,
+  type-checked or rendered. See `docs/handover/PACK-15-TEST-EVIDENCE.md`.
+- **PARTIAL LOCAL VERIFICATION ONLY. EXTERNAL CI NOT YET VERIFIED. NOT
+  FINAL PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** No CI check
+  was weakened, no lock file was modified, and no test result was
+  fabricated.
+
+## [0.14.0] - identity, authentication & account security (FINAL PASS)
+
+- **PACK-14 FINAL PASS — external GitHub Actions passed every stage:**
+  867/867 repository paths, no forbidden paths, version consistency, Ruff
+  format over 566 files, Prettier, Ruff lint, ESLint, mypy across all 23
+  groups and both TypeScript typechecks all PASS, 4905 Python tests passed
+  with 4 skipped, 3 `epd2-types` tests, 34 Node tests, 16 frontend unit and
+  render tests, a successful Next.js production build with 46/46 static
+  pages, and 108 browser, accessibility and visual tests. See
+  `docs/handover/PACK-14-FINAL-PASS-REPORT.md`,
+  `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md` and the raw
+  transcript at `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION.log`.
+- **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** The pipeline verifies
+  the repository; it binds no provider and deploys nothing. All four of
+  PACK-14's security ports are still unbound and still **refuse**, the
+  persistence path is still a SQLite reference path with no production
+  database behind it, and the service boundary is still transport-agnostic
+  with no HTTP surface or gateway in front of it.
+- The round reached PASS as a candidate first. The candidate's own report
+  and the local-verification caveats it recorded are retained in
+  `docs/handover/PACK-14-IMPLEMENTATION-CANDIDATE-REPORT.md`, which is
+  deliberately not rewritten to read as though it had always been a PASS;
+  a superseding status note was added to it and to the ten
+  implementation-round documents under `docs/packs/PACK-14/`, and nothing
+  else in any of them changed.
 - Extended `services/identity-service` in place with the six bounded
   contexts specification §4.1 assigns to it - Account Registry,
   Credential Registry, Authentication, Session Security, Recovery
@@ -129,6 +192,21 @@ COMPLETE`. `docs/packs/PACK-14/PACK-14-IMPLEMENTATION-REPORT.md` §12
   credential issuance, ballots, tallies, a full legal electronic
   signature, or the full Account & Security FRONT-PACK (`FIR-UX-011`
   stays future).
+- **PACK-13 (`0.13.0`, FINAL PASS) is now the previous PASS baseline.** The
+  PACK-14 FINAL PASS archive supersedes it as the authoritative cumulative
+  baseline; nothing in PACK-01—PACK-13 was rewritten to achieve that.
+- **FINAL PASS packaging round, 2026-07-30.** Documentation and status
+  only: the register, this changelog, `README.md`, `docs/adr/README.md`,
+  `services/README.md`, `services/identity-service/README.md`, the
+  acceptance matrix's and FIR coverage matrix's status blocks, one
+  superseding status note on the PACK-14 specification and on each of the
+  eleven implementation-round documents, and the three new handover
+  documents. Three files were adopted from the externally verified tree
+  because the packaging sandbox's copies were stale: the PACK-09, PACK-11
+  and PACK-13 external-CI transcripts, whose content is identical and
+  three of whose lines carried a stray `CR`. No service module, test,
+  reason code, migration artefact, ADR, contract, frontend file, route,
+  visual snapshot or CI definition changed, and neither version moved.
 
 ## [0.13.0] - production data plane & contract evolution (FINAL PASS)
 

@@ -54,6 +54,8 @@ from _schema_helpers import (
     PACK13_SERVICE_DIRS,
     PACK14_REASON_CODES_PATH,
     PACK14_SERVICE_DIRS,
+    PACK15_REASON_CODES_PATH,
+    PACK15_SERVICE_DIRS,
     REASON_CODES_PATH,
     SERVICES_DIR,
 )
@@ -81,6 +83,7 @@ _PACKS: tuple[tuple[str, Path, tuple[str, ...], int], ...] = (
     ("pack-12", PACK12_REASON_CODES_PATH, PACK12_SERVICE_DIRS, 141),
     ("pack-13", PACK13_REASON_CODES_PATH, PACK13_SERVICE_DIRS, 125),
     ("pack-14", PACK14_REASON_CODES_PATH, PACK14_SERVICE_DIRS, 202),
+    ("pack-15", PACK15_REASON_CODES_PATH, PACK15_SERVICE_DIRS, 84),
 )
 _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 
@@ -95,7 +98,36 @@ _PACK_IDS = [pack_name for pack_name, _, _, _ in _PACKS]
 #: checks (required-fields/no-duplicates/loads-via-epd2-core), which
 #: still validate pack-02.yml as its own, independently well-formed file.
 _EXTRA_REGISTRIES_FOR_LITERAL_CHECK: dict[str, tuple[Path, ...]] = {
-    "pack-02": (PACK07_REASON_CODES_PATH, PACK14_REASON_CODES_PATH),
+    "pack-02": (
+        PACK07_REASON_CODES_PATH,
+        PACK14_REASON_CODES_PATH,
+        PACK15_REASON_CODES_PATH,
+    ),
+    # PACK-15 extends `governance-service` (PACK-05's directory) with the
+    # Voting Context Registry, so pack-05's own literal scan must union
+    # pack-15.yml - the same mechanism PACK-07 and PACK-14 already use for
+    # the PACK-02 directories above.
+    "pack-05": (PACK15_REASON_CODES_PATH,),
+    # PACK-15's own scan covers four directories that already carry
+    # PACK-02 through PACK-14 literals, so every earlier registry is
+    # unioned in before computing "used but not registered". This is the
+    # inverse of the rows above and exists for the same reason: a scan
+    # scoped to one pack must not fail on another pack's codes.
+    "pack-15": (
+        REASON_CODES_PATH,
+        PACK03_REASON_CODES_PATH,
+        PACK04_REASON_CODES_PATH,
+        PACK05_REASON_CODES_PATH,
+        PACK06_REASON_CODES_PATH,
+        PACK07_REASON_CODES_PATH,
+        PACK08_REASON_CODES_PATH,
+        PACK09_REASON_CODES_PATH,
+        PACK10_REASON_CODES_PATH,
+        PACK11_REASON_CODES_PATH,
+        PACK12_REASON_CODES_PATH,
+        PACK13_REASON_CODES_PATH,
+        PACK14_REASON_CODES_PATH,
+    ),
 }
 
 #: All-caps literals that the deliberately broad regex above matches but
