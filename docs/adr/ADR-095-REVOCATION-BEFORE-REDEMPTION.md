@@ -27,7 +27,7 @@ READY. NOT LEGALLY ACTIVATED.**
 > linkage**.
 >
 > One honest consequence of `OD-P15-07`: because issuance and redemption now
-> occur in a single WS-03 visit, the *practical* window of the
+> occur in a single WS-03 visit, the _practical_ window of the
 > after-issuance regime is usually seconds. The regime that does most of the
 > work is therefore the **assertion** regime, before pickup — which is also
 > the regime in which nothing is lost. The cutoff maxima are unchanged.
@@ -128,7 +128,7 @@ finding.
 
 **Post-redemption revocation "in exceptional circumstances".** Rejected:
 the exception requires the person→ballot link, and an exception that
-requires the link *is* the link.
+requires the link _is_ the link.
 
 **A global cutoff for all context types.** Rejected: an assembly decision
 and a contested office election have different fault profiles and different

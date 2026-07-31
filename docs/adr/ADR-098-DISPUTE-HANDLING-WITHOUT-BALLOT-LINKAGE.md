@@ -52,7 +52,7 @@ including at the participant's own request.**
 
 4. **The Dispute Reviewer holds no correlation capability** (`SD-11`): no
    search over credentials, no cross-stream read, no grant spanning the
-   boundary, and case records carrying timing *classes* rather than precise
+   boundary, and case records carrying timing _classes_ rather than precise
    timestamps — because case timing correlated with redemption timing is a
    link obtained by arithmetic rather than by access.
 

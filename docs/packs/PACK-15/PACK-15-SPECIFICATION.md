@@ -64,7 +64,7 @@ any join of any two stores.**
 There are two ways this round can fail, and they are opposites.
 
 **The first failure is a link.** Eligibility is inherently identified: you
-cannot decide whether *this member* may vote without knowing which member.
+cannot decide whether _this member_ may vote without knowing which member.
 A credential is inherently unidentified: the moment it carries anything
 that resolves backwards, the ballot it eventually redeems is attributable.
 Between those two facts sits a temptation that has defeated most systems
@@ -146,19 +146,19 @@ fixture, a CI workflow, `REPOSITORY_VERSION` or `CANON_VERSION`.
 
 ## 2. Relationship to the existing canon, services and packs
 
-| Source                     | What PACK-15 takes from it                                                                                       | What PACK-15 does not do                                              |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Canon 9 / 19d.4            | `EligibilityRule`, `EligibilityDecision`, `EligibilitySnapshot`, `ParticipantEligibilityPolicy`, rule freeze      | Redefine them, move their owner, or add a second eligibility scale    |
-| Canon 10.1                 | `ParticipationCredential` and its forbidden-field prohibition                                                    | Replace it or weaken its prohibition                                  |
-| Canon 15.1–15.4            | `Ballot`, `VoteEnvelope`, `VoteReceipt` and their structural identity-freedom                                    | Touch them at all — PACK-16 owns them                                 |
-| Canon 19d.8 / 19d.9        | Assurance separation; the two-stage membership boundary                                                          | Cross the membership boundary or invent a third assurance vocabulary  |
-| Canon §21                  | The canonical event envelope                                                                                     | Add transport metadata or a second envelope                           |
-| PACK-11                    | Governed documents and evidence references                                                                       | Inline evidence content anywhere                                      |
-| PACK-12                    | Privileged access, dual control, break-glass, statistical disclosure control                                     | Build a second privileged-access mechanism                            |
-| PACK-13                    | Outbox, idempotent consumers, contract evolution, retention and legal hold                                        | Choose the voting domain's broker topics or transport                 |
-| PACK-14 / ADR-088          | The outbound `VotingHandoffArtifact`, WS-03 isolation, no global ID, scoped actor references                     | Re-open the handoff's properties or issue a session for WS-03         |
-| FRONT-00 / FRONT-01        | The visual baseline and `sessionSharing: forbidden` on every workspace                                           | Introduce a new design language or a page sequence                    |
-| Register §29 / `FIR-OSS-*` | The intended `EUPL-1.2` licensing baseline and its boundaries                                                    | Complete legal licensing, or claim any release compliance             |
+| Source                     | What PACK-15 takes from it                                                                                   | What PACK-15 does not do                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Canon 9 / 19d.4            | `EligibilityRule`, `EligibilityDecision`, `EligibilitySnapshot`, `ParticipantEligibilityPolicy`, rule freeze | Redefine them, move their owner, or add a second eligibility scale   |
+| Canon 10.1                 | `ParticipationCredential` and its forbidden-field prohibition                                                | Replace it or weaken its prohibition                                 |
+| Canon 15.1–15.4            | `Ballot`, `VoteEnvelope`, `VoteReceipt` and their structural identity-freedom                                | Touch them at all — PACK-16 owns them                                |
+| Canon 19d.8 / 19d.9        | Assurance separation; the two-stage membership boundary                                                      | Cross the membership boundary or invent a third assurance vocabulary |
+| Canon §21                  | The canonical event envelope                                                                                 | Add transport metadata or a second envelope                          |
+| PACK-11                    | Governed documents and evidence references                                                                   | Inline evidence content anywhere                                     |
+| PACK-12                    | Privileged access, dual control, break-glass, statistical disclosure control                                 | Build a second privileged-access mechanism                           |
+| PACK-13                    | Outbox, idempotent consumers, contract evolution, retention and legal hold                                   | Choose the voting domain's broker topics or transport                |
+| PACK-14 / ADR-088          | The outbound `VotingHandoffArtifact`, WS-03 isolation, no global ID, scoped actor references                 | Re-open the handoff's properties or issue a session for WS-03        |
+| FRONT-00 / FRONT-01        | The visual baseline and `sessionSharing: forbidden` on every workspace                                       | Introduce a new design language or a page sequence                   |
+| Register §29 / `FIR-OSS-*` | The intended `EUPL-1.2` licensing baseline and its boundaries                                                | Complete legal licensing, or claim any release compliance            |
 
 **Nothing above is modified by this round.**
 
@@ -270,7 +270,7 @@ a credential.
    yield the other.
 3. **Structurally unable to read ordinary account, person-record or
    membership stores.** No import path, no client, no connection, no
-   credential, no network route. Not "does not"; *cannot*.
+   credential, no network route. Not "does not"; _cannot_.
 4. **A consumer of minimized eligibility decisions only.** Its declared
    input is the decision's result, class, organizational scope,
    assurance-satisfied flag and context reference — nothing else, and
@@ -377,7 +377,7 @@ nonce**. Neither needs the other's identifier, and between them the effect
 is exactly-once (§13).
 
 **Three. The consumption record is a set, not a map.** When the Credential
-Issuer accepts an assertion it records the assertion's nonce as *spent*. It
+Issuer accepts an assertion it records the assertion's nonce as _spent_. It
 does not record which credential it then issued. **There is no row anywhere
 that contains both.** ADR-093 is its decision record.
 
@@ -397,18 +397,18 @@ and the break-glass constraints are
 `PACK-15-SEPARATION-OF-DUTIES-MATRIX.md`, which is the `FIR-ROLE-005`
 Election Administration Separation Matrix for this domain.
 
-| Role                     | May do                                                              | May never                                                        |
-| ------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Membership Authority     | Maintain membership facts                                           | Issue a voting credential; see an assertion                      |
-| Eligibility Officer      | Configure and operate eligibility evaluation                        | See a ballot; see a credential; issue a credential               |
-| Eligibility Reviewer     | Decide manual-review cases                                          | Approve a case they raised or are the subject of; see a ballot   |
-| Credential Issuer        | Issue, revoke and mark redeemed                                     | See ordinary identity; see a ballot; see a tally                 |
-| Voting Operations Officer| Operate the voting context and its windows                          | Evaluate eligibility; issue credentials; read the tally early    |
-| Voting Client Operator   | Operate WS-03                                                       | Receive membership data; hold identity; retain credential material |
-| Tally Authority          | Perform the official tally (PACK-16)                                | Receive identity; receive credentials; publish before closure    |
-| Independent Auditor      | Verify integrity from evidence bundles                              | Hold unrestricted identity correlation access                    |
-| Security Auditor         | Review integrity and security evidence                              | Read ballot content; join two evidence streams                   |
-| Dispute Reviewer         | Decide eligibility and issuance disputes                            | Link a person to a ballot; require ballot content as evidence    |
+| Role                      | May do                                       | May never                                                          |
+| ------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| Membership Authority      | Maintain membership facts                    | Issue a voting credential; see an assertion                        |
+| Eligibility Officer       | Configure and operate eligibility evaluation | See a ballot; see a credential; issue a credential                 |
+| Eligibility Reviewer      | Decide manual-review cases                   | Approve a case they raised or are the subject of; see a ballot     |
+| Credential Issuer         | Issue, revoke and mark redeemed              | See ordinary identity; see a ballot; see a tally                   |
+| Voting Operations Officer | Operate the voting context and its windows   | Evaluate eligibility; issue credentials; read the tally early      |
+| Voting Client Operator    | Operate WS-03                                | Receive membership data; hold identity; retain credential material |
+| Tally Authority           | Perform the official tally (PACK-16)         | Receive identity; receive credentials; publish before closure      |
+| Independent Auditor       | Verify integrity from evidence bundles       | Hold unrestricted identity correlation access                      |
+| Security Auditor          | Review integrity and security evidence       | Read ballot content; join two evidence streams                     |
+| Dispute Reviewer          | Decide eligibility and issuance disputes     | Link a person to a ballot; require ballot content as evidence      |
 
 Hard prohibitions: the Membership Authority does not issue credentials; the
 Eligibility Service never sees a ballot; the Credential Issuer never sees
@@ -440,15 +440,15 @@ VotingContext
 Seven, and they are **not** interchangeable in their eligibility, assurance
 or revocation rules.
 
-| Type                        | Typical eligible population              | Assurance                | Revocation cutoff        | Notes                                                                          |
-| --------------------------- | ---------------------------------------- | ------------------------ | ------------------------ | ------------------------------------------------------------------------------ |
-| `internal_party_vote`       | Active members in scope                  | `substantial`            | Issuance window close    | The default case                                                               |
-| `programme_vote`            | Active members in scope                  | `substantial`            | Issuance window close    | May carry a longer window and a wider scope                                    |
-| `organizational_election`   | Active members in scope, duration rule   | `substantial` … `high`   | Strict, early            | Contest and appeal pressure is highest here                                    |
-| `candidate_nomination`      | Members in the nominating body           | `high`                   | Strict, early            | Conflict-of-interest and candidacy-status criteria apply                       |
-| `assembly_decision`         | Present and entitled assembly members    | `substantial`            | Session-bound            | Bound to an assembly session; `FIR-ASM-*` owns the meeting side                |
-| `advisory_consultation`     | May extend beyond members                | `low` … `substantial`    | Lenient                  | Non-binding; **must be labelled as such in every surface**                     |
-| `public_election_profile`   | Defined by law                           | Defined by law           | Defined by law           | **Profile only. Not activated, not permitted, not claimed. No legal effect.**  |
+| Type                      | Typical eligible population            | Assurance              | Revocation cutoff     | Notes                                                                         |
+| ------------------------- | -------------------------------------- | ---------------------- | --------------------- | ----------------------------------------------------------------------------- |
+| `internal_party_vote`     | Active members in scope                | `substantial`          | Issuance window close | The default case                                                              |
+| `programme_vote`          | Active members in scope                | `substantial`          | Issuance window close | May carry a longer window and a wider scope                                   |
+| `organizational_election` | Active members in scope, duration rule | `substantial` … `high` | Strict, early         | Contest and appeal pressure is highest here                                   |
+| `candidate_nomination`    | Members in the nominating body         | `high`                 | Strict, early         | Conflict-of-interest and candidacy-status criteria apply                      |
+| `assembly_decision`       | Present and entitled assembly members  | `substantial`          | Session-bound         | Bound to an assembly session; `FIR-ASM-*` owns the meeting side               |
+| `advisory_consultation`   | May extend beyond members              | `low` … `substantial`  | Lenient               | Non-binding; **must be labelled as such in every surface**                    |
+| `public_election_profile` | Defined by law                         | Defined by law         | Defined by law        | **Profile only. Not activated, not permitted, not claimed. No legal effect.** |
 
 ### 7.2 Status lifecycle
 
@@ -504,7 +504,7 @@ shape canon already sanctions: an attestation mapping, not a record.
 Never passed downstream, to any PACK-15 component, in any form: full member
 record · full address · email · phone · member number · account ID · person
 record ID · communication persona · raw identity-proofing data · unrelated
-roles · unrelated restrictions · date of birth where an age *predicate*
+roles · unrelated restrictions · date of birth where an age _predicate_
 suffices · name.
 
 `PACK-15-ATTRIBUTE-MINIMIZATION-MATRIX.md` states, per criterion, the
@@ -542,7 +542,7 @@ date of birth · address · communication persona · eligibility evidence ·
 raw reason history · **any persistent cross-context subject identifier** ·
 **any context-scoped pseudonym** (§10.3).
 
-The prohibition is on *derivability*, not on field names. A hash of the
+The prohibition is on _derivability_, not on field names. A hash of the
 member number is the member number. A per-member salt reused across
 contexts is a persistent subject identifier wearing a costume.
 
@@ -563,7 +563,7 @@ handle.
 Binding rules:
 
 1. **Unique per voting context.** Derived per `(participant,
-   VotingContextId)` with a context-scoped secret held only inside the
+VotingContextId)` with a context-scoped secret held only inside the
    voting-trust service.
 2. **Never reusable across contexts**, never derivable from another
    context's pseudonym, and never derivable from the participant's
@@ -656,20 +656,20 @@ session and is not resumable after use.
 
 ### 13.1 The split
 
-| Concern                                | Enforced by                | Using                                        |
-| -------------------------------------- | -------------------------- | -------------------------------------------- |
-| One participation per eligible person  | Identity side (VC-02)      | The participation-unit ledger                |
-| One pickup per released assertion      | Identity side (VC-05)      | The pickup's one-time state                  |
-| One credential per assertion           | Voting side (VC-04)        | The spent-nonce set                          |
-| One redemption per credential          | Voting side (VC-04)        | The credential's own status                  |
-| One ballot per redemption              | PACK-16                    | The continuation capability                   |
+| Concern                               | Enforced by           | Using                         |
+| ------------------------------------- | --------------------- | ----------------------------- |
+| One participation per eligible person | Identity side (VC-02) | The participation-unit ledger |
+| One pickup per released assertion     | Identity side (VC-05) | The pickup's one-time state   |
+| One credential per assertion          | Voting side (VC-04)   | The spent-nonce set           |
+| One redemption per credential         | Voting side (VC-04)   | The credential's own status   |
+| One ballot per redemption             | PACK-16               | The continuation capability   |
 
 Four obligations hold in every exceptional case: **exactly-once effect ·
 safe idempotent retry · no double credential · no identity leakage.**
 
 ### 13.2 The uncomfortable cases
 
-*Credential issued, delivery uncertain* cannot be resolved by asking the
+_Credential issued, delivery uncertain_ cannot be resolved by asking the
 voting side who the credential belongs to. It is resolved by: the assertion
 being already spent, the credential being obtainable only inside the same
 WS-03 visit, and — if that fails — a governed reissue that revokes the
@@ -698,18 +698,18 @@ boundary.** The reference delivery flow:
 
 **Prohibited absolutely, as delivery channels for credential material:**
 
-| Prohibited                                          | Note                                                                 |
-| --------------------------------------------------- | -------------------------------------------------------------------- |
-| Email                                                | Ordinary mailboxes are shared, forwarded, archived and breached      |
-| SMS                                                  | Same, plus carrier-side exposure                                     |
-| Clipboard                                            | Readable by other origins and by extensions                          |
-| Ordinary URL query or fragment                       | Logged by proxies, servers, history and referrers                    |
-| Downloadable file                                    | Persists outside the isolation boundary                              |
-| On-screen display as copyable or transcribable text  | Becomes a transferable bearer value, and a coercion instrument       |
-| Push notification payload                            | Delivered through third-party infrastructure                         |
-| Print or PDF rendition                               | Persists, and is operator-visible in an assisted setting             |
-| Any operator-visible surface                         | A helper who can see it can retain it                                |
-| Any persistent client storage in WS-03               | ADR-096 already forbids the storage; this forbids the content too    |
+| Prohibited                                          | Note                                                              |
+| --------------------------------------------------- | ----------------------------------------------------------------- |
+| Email                                               | Ordinary mailboxes are shared, forwarded, archived and breached   |
+| SMS                                                 | Same, plus carrier-side exposure                                  |
+| Clipboard                                           | Readable by other origins and by extensions                       |
+| Ordinary URL query or fragment                      | Logged by proxies, servers, history and referrers                 |
+| Downloadable file                                   | Persists outside the isolation boundary                           |
+| On-screen display as copyable or transcribable text | Becomes a transferable bearer value, and a coercion instrument    |
+| Push notification payload                           | Delivered through third-party infrastructure                      |
+| Print or PDF rendition                              | Persists, and is operator-visible in an assisted setting          |
+| Any operator-visible surface                        | A helper who can see it can retain it                             |
+| Any persistent client storage in WS-03              | ADR-096 already forbids the storage; this forbids the content too |
 
 5. **No operator, helper or support role ever sees credential material.**
    Not in a screen share, not in a log, not in an error report, not in a
@@ -720,7 +720,7 @@ boundary.** The reference delivery flow:
 Because credential material may not persist outside WS-03 and may not be
 displayed, **credential issuance and redemption occur within one WS-03
 visit** in the reference flow. `CredentialIssuanceWindow` therefore governs
-when a participant may *enter* the voting origin, not a period during which
+when a participant may _enter_ the voting origin, not a period during which
 they hold a credential outside it.
 
 If the WS-03 page is lost between issuance and redemption, the credential
@@ -738,25 +738,25 @@ and that a cryptographic construction may solve properly (`OD-P15-05`).
 The assisted and accessible paths must preserve isolation and must not
 create helper custody:
 
-| Requirement                                                                                 | Consequence                                                        |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Assistance ends at the boundary of the voting origin's credential exchange                  | A helper may bring the participant to WS-03 and no further         |
-| **No helper or operator retains credential material** — there is none to retain             | The exchange is machine-to-machine inside the page                 |
-| No screen sharing, remote control or shadowing during the credential exchange               | An observed exchange is an operator-visible credential             |
-| Assisted-action receipts record the assistance, never the credential                        | `F-P15-08`                                                         |
-| The accessible path is an **independent** path, not a supervised one                        | Screen-reader, keyboard-only and low-bandwidth flows are first-class |
-| Where an independent accessible path is not achievable, it is a named limitation with an owner | Not a silent downgrade                                            |
-| Offline and in-person fallback confirms **eligibility**, never delivers a credential outside WS-03 | The isolation is not waived for accessibility               |
+| Requirement                                                                                        | Consequence                                                          |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Assistance ends at the boundary of the voting origin's credential exchange                         | A helper may bring the participant to WS-03 and no further           |
+| **No helper or operator retains credential material** — there is none to retain                    | The exchange is machine-to-machine inside the page                   |
+| No screen sharing, remote control or shadowing during the credential exchange                      | An observed exchange is an operator-visible credential               |
+| Assisted-action receipts record the assistance, never the credential                               | `F-P15-08`                                                           |
+| The accessible path is an **independent** path, not a supervised one                               | Screen-reader, keyboard-only and low-bandwidth flows are first-class |
+| Where an independent accessible path is not achievable, it is a named limitation with an owner     | Not a silent downgrade                                               |
+| Offline and in-person fallback confirms **eligibility**, never delivers a credential outside WS-03 | The isolation is not waived for accessibility                        |
 
 ---
 
 ## 14. Revocation — normative rule, explicit
 
-| Moment                            | What may be invalidated | By whom                                          | Effect on a ballot |
-| --------------------------------- | ----------------------- | ------------------------------------------------ | ------------------ |
-| **Before issuance**               | The eligibility decision, and the assertion before pickup | Eligibility Service; Assertion Issuer | none — nothing exists |
-| **After issuance, before redemption** | The credential      | Credential Issuer, before `RevocationCutoff`     | none               |
-| **After redemption**              | **Nothing**             | **Nobody**                                       | **none, ever**     |
+| Moment                                | What may be invalidated                                   | By whom                                      | Effect on a ballot    |
+| ------------------------------------- | --------------------------------------------------------- | -------------------------------------------- | --------------------- |
+| **Before issuance**                   | The eligibility decision, and the assertion before pickup | Eligibility Service; Assertion Issuer        | none — nothing exists |
+| **After issuance, before redemption** | The credential                                            | Credential Issuer, before `RevocationCutoff` | none                  |
+| **After redemption**                  | **Nothing**                                               | **Nobody**                                   | **none, ever**        |
 
 Stated normatively, because these are the sentences an implementation must
 be able to point at:
@@ -807,12 +807,12 @@ the **set** of published signals rather than to each one alone — are
 
 Four different things, and they do not travel together.
 
-| Status                        | Who may know it                                        | Who may never                                            |
-| ----------------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
-| Eligibility status            | The participant; Eligibility Service                    | The voting domain                                        |
-| **Issuance availability**     | The participant; the identity side, as a fact           | The tally side                                           |
-| Credential redemption status  | The Credential Issuer; the holder, against a reference  | **The identity domain**                                  |
-| Ballot cast status            | PACK-16's voting domain; the participant's own receipt  | **Everyone else, including the identity domain**         |
+| Status                       | Who may know it                                        | Who may never                                    |
+| ---------------------------- | ------------------------------------------------------ | ------------------------------------------------ |
+| Eligibility status           | The participant; Eligibility Service                   | The voting domain                                |
+| **Issuance availability**    | The participant; the identity side, as a fact          | The tally side                                   |
+| Credential redemption status | The Credential Issuer; the holder, against a reference | **The identity domain**                          |
+| Ballot cast status           | PACK-16's voting domain; the participant's own receipt | **Everyone else, including the identity domain** |
 
 Normative statements:
 
@@ -866,16 +866,16 @@ nor a voting-side identifier — are
 
 ## 18. Cryptographic boundary
 
-| Function                             | Key owner                        | Never the same key or trust root as               |
-| ------------------------------------ | -------------------------------- | ------------------------------------------------- |
-| Ordinary authentication credential   | `identity-service` (PACK-14)     | Everything below                                  |
-| Eligibility assertion integrity      | Assertion Issuer (VC-03)         | Credential issuance; ballot; tally; audit; **and the eligibility decision store** |
-| Voting credential issuance           | Credential Issuer (VC-04)        | Assertion; ballot; tally; audit                   |
-| Ballot credential                    | **PACK-16**                      | All of the above                                  |
-| Ballot encryption                    | **PACK-16**                      | All of the above                                  |
-| Tally keys                           | **PACK-16**, Tally Authority     | All of the above                                  |
-| Audit / evidence integrity           | `audit-core`, per stream         | All of the above, and not shared between streams  |
-| **Evidence bundle signature**        | Audit trust boundary (§20.2)     | All of the above                                  |
+| Function                           | Key owner                    | Never the same key or trust root as                                               |
+| ---------------------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| Ordinary authentication credential | `identity-service` (PACK-14) | Everything below                                                                  |
+| Eligibility assertion integrity    | Assertion Issuer (VC-03)     | Credential issuance; ballot; tally; audit; **and the eligibility decision store** |
+| Voting credential issuance         | Credential Issuer (VC-04)    | Assertion; ballot; tally; audit                                                   |
+| Ballot credential                  | **PACK-16**                  | All of the above                                                                  |
+| Ballot encryption                  | **PACK-16**                  | All of the above                                                                  |
+| Tally keys                         | **PACK-16**, Tally Authority | All of the above                                                                  |
+| Audit / evidence integrity         | `audit-core`, per stream     | All of the above, and not shared between streams                                  |
+| **Evidence bundle signature**      | Audit trust boundary (§20.2) | All of the above                                                                  |
 
 **No single key and no single trust root serves two of these functions.**
 
@@ -900,17 +900,17 @@ and its tests bind to.
 
 ### 19.1 The controls
 
-| # | Control                          | Where it applies                          |
-| - | -------------------------------- | ----------------------------------------- |
-| 1 | **Queued issuance**              | Assertion minting → release (VC-03)       |
-| 2 | **Coarsened timestamps**         | Every crossing artifact and voting-side record |
-| 3 | **Randomized delay**             | Assertion release, and credential minting |
-| 4 | **Batching**                     | Assertion release                         |
-| 5 | **Minimum cohort**               | Assertion release                         |
-| 6 | **No immediate minting for a cohort of one** | Assertion release             |
-| 7 | **Explicit small-electorate policy** | Contexts below the small-electorate threshold |
-| 8 | **Disclosure-control integration**   | Every operational signal               |
-| 9 | **Configurable values with safe lower bounds** | All of the above             |
+| #   | Control                                        | Where it applies                               |
+| --- | ---------------------------------------------- | ---------------------------------------------- |
+| 1   | **Queued issuance**                            | Assertion minting → release (VC-03)            |
+| 2   | **Coarsened timestamps**                       | Every crossing artifact and voting-side record |
+| 3   | **Randomized delay**                           | Assertion release, and credential minting      |
+| 4   | **Batching**                                   | Assertion release                              |
+| 5   | **Minimum cohort**                             | Assertion release                              |
+| 6   | **No immediate minting for a cohort of one**   | Assertion release                              |
+| 7   | **Explicit small-electorate policy**           | Contexts below the small-electorate threshold  |
+| 8   | **Disclosure-control integration**             | Every operational signal                       |
+| 9   | **Configurable values with safe lower bounds** | All of the above                               |
 
 The long waits happen **before** the participant is told access is
 available, so that a participant is never left waiting on a page for a
@@ -923,30 +923,30 @@ Every value has a **safe lower bound that configuration cannot go below**;
 a configuration outside the permitted range is refused with
 `VOTING_CONTEXT_CONFIGURATION_INVALID` rather than clamped silently.
 
-| Parameter                        | Default   | Permitted range        | Hard lower bound | Notes                                                        |
-| -------------------------------- | --------- | ---------------------- | ---------------- | ------------------------------------------------------------ |
-| `issuance_mode`                  | `queued`  | `queued` only          | —                | **Immediate minting is not a permitted mode**                |
-| `timestamp_granularity`          | 300 s     | 60 s … 3600 s          | 60 s             | Applied to `IssuedAt`/`ExpiresAt` and every voting-side record |
-| `release_delay_min`              | 30 s      | 10 s … 300 s           | 10 s             | Randomized release, lower edge                               |
-| `release_delay_max`              | 300 s     | ≥ 4 × min, ≤ 1800 s    | 60 s             | Randomized release, upper edge                               |
-| `release_delay_distribution`     | uniform   | uniform                | —                | Never deterministic; never a fixed offset                    |
-| `batch_interval`                 | 120 s     | 60 s … 900 s           | 60 s             | Releases are grouped into intervals                          |
-| `batch_max_size`                 | 250       | 50 … 2000              | 50               | An oversized batch is split across intervals                 |
-| `minimum_cohort_size` (*k*)      | 5         | 3 … 50                 | 3                | A release batch must contain at least *k* assertions         |
-| `cohort_wait_max`                | 3600 s    | 600 s … 21600 s        | 600 s            | The longest an assertion waits for its cohort                |
-| `minting_delay_min`              | 5 s       | 2 s … 60 s             | 2 s              | Voting-side, inside WS-03; a participant waits through it    |
-| `minting_delay_max`              | 30 s      | ≥ 3 × min, ≤ 300 s     | 10 s             | Same                                                         |
-| `small_electorate_threshold`     | 50        | 20 … 200               | 20               | Eligible population below this triggers §19.4                |
-| `disclosure_min_cell`            | 5         | ≥ 5                    | 5                | PACK-12's mechanism; never lowered per context               |
-| `issuance_window_min_duration`   | 4 h       | ≥ 4 h                  | 4 h              | 24 h for small electorates (§19.4)                           |
+| Parameter                      | Default  | Permitted range     | Hard lower bound | Notes                                                          |
+| ------------------------------ | -------- | ------------------- | ---------------- | -------------------------------------------------------------- |
+| `issuance_mode`                | `queued` | `queued` only       | —                | **Immediate minting is not a permitted mode**                  |
+| `timestamp_granularity`        | 300 s    | 60 s … 3600 s       | 60 s             | Applied to `IssuedAt`/`ExpiresAt` and every voting-side record |
+| `release_delay_min`            | 30 s     | 10 s … 300 s        | 10 s             | Randomized release, lower edge                                 |
+| `release_delay_max`            | 300 s    | ≥ 4 × min, ≤ 1800 s | 60 s             | Randomized release, upper edge                                 |
+| `release_delay_distribution`   | uniform  | uniform             | —                | Never deterministic; never a fixed offset                      |
+| `batch_interval`               | 120 s    | 60 s … 900 s        | 60 s             | Releases are grouped into intervals                            |
+| `batch_max_size`               | 250      | 50 … 2000           | 50               | An oversized batch is split across intervals                   |
+| `minimum_cohort_size` (_k_)    | 5        | 3 … 50              | 3                | A release batch must contain at least _k_ assertions           |
+| `cohort_wait_max`              | 3600 s   | 600 s … 21600 s     | 600 s            | The longest an assertion waits for its cohort                  |
+| `minting_delay_min`            | 5 s      | 2 s … 60 s          | 2 s              | Voting-side, inside WS-03; a participant waits through it      |
+| `minting_delay_max`            | 30 s     | ≥ 3 × min, ≤ 300 s  | 10 s             | Same                                                           |
+| `small_electorate_threshold`   | 50       | 20 … 200            | 20               | Eligible population below this triggers §19.4                  |
+| `disclosure_min_cell`          | 5        | ≥ 5                 | 5                | PACK-12's mechanism; never lowered per context                 |
+| `issuance_window_min_duration` | 4 h      | ≥ 4 h               | 4 h              | 24 h for small electorates (§19.4)                             |
 
 ### 19.3 Behaviour
 
 1. **Queued release.** A minted assertion enters the queue in status
    `queued`. It is released when its batch interval closes **and** the
-   batch holds at least *k* assertions, at a time drawn uniformly from
+   batch holds at least _k_ assertions, at a time drawn uniformly from
    `[release_delay_min, release_delay_max]` after the interval boundary.
-2. **Cohort of one.** A batch below *k* is **never released immediately**.
+2. **Cohort of one.** A batch below _k_ is **never released immediately**.
    It waits for further assertions until `cohort_wait_max`.
 3. **At `cohort_wait_max`.** The assertion is released regardless, at a
    randomized time within a further `release_delay_max` window, and
@@ -976,19 +976,19 @@ Where a context's eligible population is below
 `small_electorate_threshold` (default 50), the following apply and cannot
 be relaxed per context:
 
-| Rule                                                                         | Value                                            |
-| ---------------------------------------------------------------------------- | ------------------------------------------------ |
-| Minimum cohort                                                               | `k = max(3, ceil(0.1 × N))`                      |
-| Timestamp granularity                                                        | ≥ 3600 s                                         |
-| Issuance window minimum duration                                             | ≥ 24 h                                           |
-| Per-scope operational metrics                                                | **None at all** — not thresholded, not delayed   |
-| Aggregate credential-processing counts                                       | Published only after `voting_closed`             |
-| Disclosure-control suppression                                               | Applies to every published figure, jointly       |
-| Context activation                                                           | Requires an explicit governance acknowledgement that the electorate is small and that unlinkability is correspondingly weaker |
+| Rule                                   | Value                                                                                                                         |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Minimum cohort                         | `k = max(3, ceil(0.1 × N))`                                                                                                   |
+| Timestamp granularity                  | ≥ 3600 s                                                                                                                      |
+| Issuance window minimum duration       | ≥ 24 h                                                                                                                        |
+| Per-scope operational metrics          | **None at all** — not thresholded, not delayed                                                                                |
+| Aggregate credential-processing counts | Published only after `voting_closed`                                                                                          |
+| Disclosure-control suppression         | Applies to every published figure, jointly                                                                                    |
+| Context activation                     | Requires an explicit governance acknowledgement that the electorate is small and that unlinkability is correspondingly weaker |
 
 **The honest statement that accompanies this policy:** in a body of eleven
 people, no timing control makes participation unlinkable to an observer who
-knows the eleven. The controls reduce what the *system* discloses; they do
+knows the eleven. The controls reduce what the _system_ discloses; they do
 not change what a small group knows about itself. The governance
 acknowledgement exists so that this is decided rather than discovered.
 
@@ -1008,14 +1008,14 @@ it can be replaced without redesigning the boundary.
 
 ### 20.1 Six streams
 
-| Stream                | Contains                                                                                   | Must not contain                                  |
-| --------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| `AS-01` Eligibility   | Rule-set version, scoped source references, decision, reason codes, reviewer, evidence ref | Assertion nonce; credential ref; ballot; tally    |
-| `AS-02` Assertion     | Minting, queueing, release, pickup, expiry, revocation; context; audience; integrity data  | Identity; credential ref; redemption outcome      |
-| `AS-03` Credential    | Issuance, status, revocation, redemption, replay rejection                                 | Identity; assertion ref; ballot; tally            |
-| `AS-04` Voting integrity | Boundary violations, correlation-risk detections, cohort-threshold events, integrity checks | **Any identity, in any field**                |
-| `AS-05` Independent   | Versioned privacy-preserving evidence bundles                                              | Raw stream access; correlation keys               |
-| `AS-06` System        | Service health, key events, configuration changes, privileged acts                          | Participation data; outcome-inferring metrics     |
+| Stream                   | Contains                                                                                    | Must not contain                               |
+| ------------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `AS-01` Eligibility      | Rule-set version, scoped source references, decision, reason codes, reviewer, evidence ref  | Assertion nonce; credential ref; ballot; tally |
+| `AS-02` Assertion        | Minting, queueing, release, pickup, expiry, revocation; context; audience; integrity data   | Identity; credential ref; redemption outcome   |
+| `AS-03` Credential       | Issuance, status, revocation, redemption, replay rejection                                  | Identity; assertion ref; ballot; tally         |
+| `AS-04` Voting integrity | Boundary violations, correlation-risk detections, cohort-threshold events, integrity checks | **Any identity, in any field**                 |
+| `AS-05` Independent      | Versioned privacy-preserving evidence bundles                                               | Raw stream access; correlation keys            |
+| `AS-06` System           | Service health, key events, configuration changes, privileged acts                          | Participation data; outcome-inferring metrics  |
 
 **No unified audit table may be created**, and no query, export, dashboard,
 warehouse, SIEM, backup restore or incident tool may join across the
@@ -1099,7 +1099,7 @@ person-to-ballot linkage**.
 Context-scoped pseudonyms and their derivation secrets are destroyed at the
 context's retention boundary, and the destruction is an audited act.
 
-Retention *periods* remain PACK-09's (`OD-P15-06`).
+Retention _periods_ remain PACK-09's (`OD-P15-06`).
 
 ---
 
@@ -1123,7 +1123,7 @@ immutable assisted-action receipt; and helper attribution on every assisted
 act.
 
 The hard limit: **assistance must never reveal or control a ballot
-choice**, and the accessible path must be an *independent* path. Where it
+choice**, and the accessible path must be an _independent_ path. Where it
 cannot be, that is a named limitation with an owner.
 
 ---
@@ -1235,21 +1235,21 @@ an amendment, is `PACK-15-CANON-ASSESSMENT.md`.
 
 **Closed by this correction:**
 
-| ID        | Question                                          | Resolution                                                                      |
-| --------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| OD-P15-01 | Assertion Issuer packaging                        | **Closed** — §4.3: separately bounded module and storage, separate signing keys and service credentials, no read path to account/person/membership stores, minimized-decision input only, extractable later without contract change |
-| OD-P15-02 | Timing-correlation controls                       | **Closed** — §19: nine controls with reference defaults, permitted ranges and hard lower bounds; cohort-of-one never minted immediately; explicit small-electorate policy |
-| OD-P15-03 | Context-scoped pseudonym                          | **Closed** — §10.3: default none; permitted only for context-local exactly-once enforcement; per-context, non-reusable, never exposed to WS-03, not reverse-resolvable, governed destruction |
-| OD-P15-04 | Auditor evidence bundle                           | **Closed** — §20.2: `EvidenceBundle` v1 with eight permitted sections, a prohibited-content list, validation, versioning, export authorization and complementary small-cohort suppression |
-| OD-P15-07 | Credential delivery                               | **Closed** — §13.3–13.5: delivery only inside WS-03; ten prohibited channels; one-time handoff artifact from the ordinary workspace; single-visit issuance; assisted and accessible fallbacks preserve isolation and create no helper custody |
+| ID        | Question                    | Resolution                                                                                                                                                                                                                                    |
+| --------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OD-P15-01 | Assertion Issuer packaging  | **Closed** — §4.3: separately bounded module and storage, separate signing keys and service credentials, no read path to account/person/membership stores, minimized-decision input only, extractable later without contract change           |
+| OD-P15-02 | Timing-correlation controls | **Closed** — §19: nine controls with reference defaults, permitted ranges and hard lower bounds; cohort-of-one never minted immediately; explicit small-electorate policy                                                                     |
+| OD-P15-03 | Context-scoped pseudonym    | **Closed** — §10.3: default none; permitted only for context-local exactly-once enforcement; per-context, non-reusable, never exposed to WS-03, not reverse-resolvable, governed destruction                                                  |
+| OD-P15-04 | Auditor evidence bundle     | **Closed** — §20.2: `EvidenceBundle` v1 with eight permitted sections, a prohibited-content list, validation, versioning, export authorization and complementary small-cohort suppression                                                     |
+| OD-P15-07 | Credential delivery         | **Closed** — §13.3–13.5: delivery only inside WS-03; ten prohibited channels; one-time handoff artifact from the ordinary workspace; single-visit issuance; assisted and accessible fallbacks preserve isolation and create no helper custody |
 
 **Remaining open:**
 
-| ID        | Question                                                                                | Owner      | Must close by         |
-| --------- | --------------------------------------------------------------------------------------- | ---------- | --------------------- |
-| OD-P15-05 | Whether PACK-16 replaces the spent-nonce set with a cryptographic issuance construction, and the migration | **PACK-16** | PACK-16 specification |
-| OD-P15-06 | Retention periods per artifact class                                                    | **PACK-09** | Before production     |
-| OD-P15-08 | Whether `advisory_consultation` may extend beyond members, and under what governed rule  | **Governance** | Before first advisory use |
+| ID        | Question                                                                                                   | Owner          | Must close by             |
+| --------- | ---------------------------------------------------------------------------------------------------------- | -------------- | ------------------------- |
+| OD-P15-05 | Whether PACK-16 replaces the spent-nonce set with a cryptographic issuance construction, and the migration | **PACK-16**    | PACK-16 specification     |
+| OD-P15-06 | Retention periods per artifact class                                                                       | **PACK-09**    | Before production         |
+| OD-P15-08 | Whether `advisory_consultation` may extend beyond members, and under what governed rule                    | **Governance** | Before first advisory use |
 
 **None of the three remaining blocks the acceptance of this
 specification**, and none may be closed by an implementation making a

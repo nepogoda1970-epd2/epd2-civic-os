@@ -74,7 +74,7 @@ and two audit streams. Neither holds a reference to the other's artifact.**
    report.
 
 4. **The Credential Issuer holds no eligibility reference.** It records the
-   assertion's nonce as *spent* — set membership, not a mapping — and
+   assertion's nonce as _spent_ — set membership, not a mapping — and
    records the credential separately with no back-reference. ADR-093 is
    the decision record for that construction.
 
@@ -102,7 +102,7 @@ statement that the participation is lost for that context. This is a real
 cost, paid deliberately.
 
 **Reconciliation becomes harder.** Counting assertions issued and
-credentials minted and finding a discrepancy is possible; finding *which*
+credentials minted and finding a discrepancy is possible; finding _which_
 one is missing is not. The auditor's evidence bundles are designed around
 counts for exactly this reason (ADR-097).
 
@@ -125,7 +125,7 @@ operator, not only against the application.
 
 **One service, with the linkage encrypted.** Rejected: the ciphertext and
 the key are both inside the same trust boundary, so this is access control
-with extra steps, and it produces a system that *can* be made to answer the
+with extra steps, and it produces a system that _can_ be made to answer the
 question — which is the property being refused.
 
 **Separation by policy, with the pairing stored "for audit".** Rejected:

@@ -16,25 +16,25 @@ indistinguishable from being disenfranchised on purpose.
 
 ## 1. Dependency failures
 
-| #        | Failure                             | Behaviour     | Retry                        | Manual path                 | User-visible status                                | Evidence                | Recovery                                             |
-| -------- | ----------------------------------- | ------------- | ---------------------------- | --------------------------- | -------------------------------------------------- | ----------------------- | ---------------------------------------------------- |
-| `FM-01`  | Membership source unavailable       | **fail-closed** | Bounded, backoff           | Assisted eligibility review | „Prüfung derzeit nicht möglich", with a next step  | `AS-01` + `AS-06`       | Resume; extend the issuance window if the outage spans it |
-| `FM-02`  | Eligibility rule registry unavailable | **fail-closed** | Bounded                    | None — no rule, no decision | Same                                               | `AS-01`                 | Resume                                               |
-| `FM-03`  | Stale source data                   | **fail-closed** if outside the freshness bound | None    | Manual review               | „Angaben veraltet", with the next step             | `AS-01`                 | Re-evaluate on refresh                               |
-| `FM-04`  | Identity service unavailable        | **fail-closed** | Bounded                    | Assisted channel            | „Anmeldung derzeit nicht möglich"                   | `AS-06`                 | Resume                                               |
-| `FM-05`  | Credential issuer unavailable       | **fail-closed** | Idempotent retry on the nonce | Deferred issuance queue  | „Ausgabe verzögert", with the retry statement      | `AS-03` + `AS-06`       | The assertion remains unspent and valid until expiry |
-| `FM-06`  | Assertion signer unavailable        | **fail-closed** | Bounded                    | Deferred issuance           | Same                                               | `AS-02`                 | Resume; no assertion is issued unsigned              |
-| `FM-07`  | Clock skew beyond tolerance         | **fail-closed** | None                       | Operator escalation         | „Zeitprüfung fehlgeschlagen"                        | `AS-06`                 | Fix time sync; windows are re-checked, never assumed |
-| `FM-08`  | Duplicate request                   | idempotent    | Same key → same outcome      | None needed                 | The original outcome                               | `AS-03`                 | —                                                    |
-| `FM-09`  | Database partial failure            | **fail-closed** | Transactional; no partial write | Operator escalation    | „Vorgang nicht abgeschlossen"                       | `AS-06`                 | A half-issued credential must not exist              |
-| `FM-10`  | Audit service unavailable           | **fail-closed** for every consequential act | Bounded | Operator escalation | „Aus Sicherheitsgründen nicht ausgeführt"       | Local durable buffer    | **No unlogged issuance, revocation or redemption**   |
-| `FM-11`  | Notification failure                | proceed, record | Bounded                    | Alternative channel         | Status visible in the workspace regardless          | `AS-06`                 | Delivery evidence is `FIR-DELIVERY-001`'s round      |
-| `FM-12`  | Handoff timeout                     | refuse        | New handoff required         | Assisted channel            | „Übergang abgelaufen", with a restart action        | `AS-06`                 | Start again; nothing was consumed                    |
-| `FM-13`  | Credential redemption timeout       | **fail-closed**, idempotent | Same request → same outcome | Deferred            | „Einlösung nicht bestätigt", with a retry action    | `AS-03`                 | Atomic redemption means either it happened or it did not |
-| `FM-14`  | Replay store unavailable            | **fail-closed** | Bounded                    | None — never bypassed       | „Prüfung nicht möglich"                             | `AS-03` + `AS-06`       | **Never issue without the spent-set check**          |
-| `FM-15`  | Operator review unavailable         | wait + escalate | n/a                        | Escalation path             | „In Prüfung", with the escalation stated            | `AS-01`                 | Never auto-approve, never auto-deny                  |
-| `FM-16`  | Voting origin unavailable           | refuse        | Client retry                 | Assisted / alternative channel | „Wahlbereich derzeit nicht erreichbar"          | `AS-06`                 | Context-level extension if it spans the window       |
-| `FM-17`  | Key service unavailable             | **fail-closed** | Bounded                    | Operator escalation         | „Vorgang derzeit nicht möglich"                     | `AS-06`                 | No unsigned assertion, no unverified credential      |
+| #       | Failure                               | Behaviour                                      | Retry                           | Manual path                    | User-visible status                               | Evidence             | Recovery                                                  |
+| ------- | ------------------------------------- | ---------------------------------------------- | ------------------------------- | ------------------------------ | ------------------------------------------------- | -------------------- | --------------------------------------------------------- |
+| `FM-01` | Membership source unavailable         | **fail-closed**                                | Bounded, backoff                | Assisted eligibility review    | „Prüfung derzeit nicht möglich", with a next step | `AS-01` + `AS-06`    | Resume; extend the issuance window if the outage spans it |
+| `FM-02` | Eligibility rule registry unavailable | **fail-closed**                                | Bounded                         | None — no rule, no decision    | Same                                              | `AS-01`              | Resume                                                    |
+| `FM-03` | Stale source data                     | **fail-closed** if outside the freshness bound | None                            | Manual review                  | „Angaben veraltet", with the next step            | `AS-01`              | Re-evaluate on refresh                                    |
+| `FM-04` | Identity service unavailable          | **fail-closed**                                | Bounded                         | Assisted channel               | „Anmeldung derzeit nicht möglich"                 | `AS-06`              | Resume                                                    |
+| `FM-05` | Credential issuer unavailable         | **fail-closed**                                | Idempotent retry on the nonce   | Deferred issuance queue        | „Ausgabe verzögert", with the retry statement     | `AS-03` + `AS-06`    | The assertion remains unspent and valid until expiry      |
+| `FM-06` | Assertion signer unavailable          | **fail-closed**                                | Bounded                         | Deferred issuance              | Same                                              | `AS-02`              | Resume; no assertion is issued unsigned                   |
+| `FM-07` | Clock skew beyond tolerance           | **fail-closed**                                | None                            | Operator escalation            | „Zeitprüfung fehlgeschlagen"                      | `AS-06`              | Fix time sync; windows are re-checked, never assumed      |
+| `FM-08` | Duplicate request                     | idempotent                                     | Same key → same outcome         | None needed                    | The original outcome                              | `AS-03`              | —                                                         |
+| `FM-09` | Database partial failure              | **fail-closed**                                | Transactional; no partial write | Operator escalation            | „Vorgang nicht abgeschlossen"                     | `AS-06`              | A half-issued credential must not exist                   |
+| `FM-10` | Audit service unavailable             | **fail-closed** for every consequential act    | Bounded                         | Operator escalation            | „Aus Sicherheitsgründen nicht ausgeführt"         | Local durable buffer | **No unlogged issuance, revocation or redemption**        |
+| `FM-11` | Notification failure                  | proceed, record                                | Bounded                         | Alternative channel            | Status visible in the workspace regardless        | `AS-06`              | Delivery evidence is `FIR-DELIVERY-001`'s round           |
+| `FM-12` | Handoff timeout                       | refuse                                         | New handoff required            | Assisted channel               | „Übergang abgelaufen", with a restart action      | `AS-06`              | Start again; nothing was consumed                         |
+| `FM-13` | Credential redemption timeout         | **fail-closed**, idempotent                    | Same request → same outcome     | Deferred                       | „Einlösung nicht bestätigt", with a retry action  | `AS-03`              | Atomic redemption means either it happened or it did not  |
+| `FM-14` | Replay store unavailable              | **fail-closed**                                | Bounded                         | None — never bypassed          | „Prüfung nicht möglich"                           | `AS-03` + `AS-06`    | **Never issue without the spent-set check**               |
+| `FM-15` | Operator review unavailable           | wait + escalate                                | n/a                             | Escalation path                | „In Prüfung", with the escalation stated          | `AS-01`              | Never auto-approve, never auto-deny                       |
+| `FM-16` | Voting origin unavailable             | refuse                                         | Client retry                    | Assisted / alternative channel | „Wahlbereich derzeit nicht erreichbar"            | `AS-06`              | Context-level extension if it spans the window            |
+| `FM-17` | Key service unavailable               | **fail-closed**                                | Bounded                         | Operator escalation            | „Vorgang derzeit nicht möglich"                   | `AS-06`              | No unsigned assertion, no unverified credential           |
 
 ---
 
@@ -58,13 +58,13 @@ Fail-closed protects correctness and can, at scale, disenfranchise. Where a
 dependency is down for a large part of the issuance or voting window, the
 answer is **not** to relax a control automatically.
 
-| Situation                                                | Governed remedy                                     | Authority                                | Evidence                     |
-| -------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------- | ---------------------------- |
-| Outage spanning a significant part of the issuance window| Extend the issuance window                          | Voting Operations Officer + Governance   | Context change record        |
-| Outage spanning a significant part of the voting window  | Extend the voting window                            | Governance                               | Context change record        |
-| Outage making the context unusable                       | Suspend, then re-run                                | Governance                               | Suspension + announcement    |
-| Systematic wrong denials discovered mid-window            | Suspend issuance; correct; re-open with an extension| Governance + Eligibility Officer         | Both, plus auditor notification |
-| Integrity violation detected                              | Suspend the context immediately                     | Security Auditor may trigger; Governance decides | `AS-04`              |
+| Situation                                                 | Governed remedy                                      | Authority                                        | Evidence                        |
+| --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------ | ------------------------------- |
+| Outage spanning a significant part of the issuance window | Extend the issuance window                           | Voting Operations Officer + Governance           | Context change record           |
+| Outage spanning a significant part of the voting window   | Extend the voting window                             | Governance                                       | Context change record           |
+| Outage making the context unusable                        | Suspend, then re-run                                 | Governance                                       | Suspension + announcement       |
+| Systematic wrong denials discovered mid-window            | Suspend issuance; correct; re-open with an extension | Governance + Eligibility Officer                 | Both, plus auditor notification |
+| Integrity violation detected                              | Suspend the context immediately                      | Security Auditor may trigger; Governance decides | `AS-04`                         |
 
 Every one of these is announced. A window extended quietly is a window
 extended for whoever noticed.
@@ -73,18 +73,18 @@ extended for whoever noticed.
 
 ## 4. What must never happen on failure
 
-| Prohibited failure behaviour                                        | Why                                                         |
-| ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Auto-approving eligibility because a source is down                 | The electorate becomes whoever asked during the outage      |
-| Auto-denying eligibility because a source is down                   | Silent disenfranchisement                                   |
-| Issuing a credential without the spent-set check                    | Double participation                                        |
-| Issuing a credential without audit evidence                         | Unaccountable issuance                                      |
-| Retrying an issuance with a fresh nonce after an ambiguous failure  | Double credential                                           |
-| Falling back to a shared session for WS-03 during an outage         | The isolation is not conditional on the weather             |
-| Logging identifiers "temporarily, for the incident"                 | The classic breach                                          |
-| Enabling a cross-boundary trace to debug an outage                  | Same                                                        |
-| Reporting a failure without a reason code                           | The participant cannot act, and the auditor cannot review   |
-| Failing silently                                                    | Indistinguishable from targeted denial                      |
+| Prohibited failure behaviour                                       | Why                                                       |
+| ------------------------------------------------------------------ | --------------------------------------------------------- |
+| Auto-approving eligibility because a source is down                | The electorate becomes whoever asked during the outage    |
+| Auto-denying eligibility because a source is down                  | Silent disenfranchisement                                 |
+| Issuing a credential without the spent-set check                   | Double participation                                      |
+| Issuing a credential without audit evidence                        | Unaccountable issuance                                    |
+| Retrying an issuance with a fresh nonce after an ambiguous failure | Double credential                                         |
+| Falling back to a shared session for WS-03 during an outage        | The isolation is not conditional on the weather           |
+| Logging identifiers "temporarily, for the incident"                | The classic breach                                        |
+| Enabling a cross-boundary trace to debug an outage                 | Same                                                      |
+| Reporting a failure without a reason code                          | The participant cannot act, and the auditor cannot review |
+| Failing silently                                                   | Indistinguishable from targeted denial                    |
 
 ---
 
@@ -103,17 +103,17 @@ failure.
 
 ## 6. Failure modes added by the architecture correction (2026-07-31)
 
-| #        | Failure                                | Behaviour                       | Retry                 | Manual path             | User-visible status                                  | Evidence          | Recovery                                                       |
-| -------- | -------------------------------------- | ------------------------------- | --------------------- | ----------------------- | ---------------------------------------------------- | ----------------- | -------------------------------------------------------------- |
-| `FM-18`  | Issuance queue or release scheduler unavailable | **fail-closed for release**, assertions stay `queued` | Bounded, backoff | Operator escalation | „Zugang wird vorbereitet" — access is being prepared | `AS-02` + `AS-06` | On recovery the queue drains under the same cohort and delay rules; if the outage threatens the window guarantee, the context window is extended by a governed decision |
+| #       | Failure                                         | Behaviour                                             | Retry            | Manual path         | User-visible status                                  | Evidence          | Recovery                                                                                                                                                                |
+| ------- | ----------------------------------------------- | ----------------------------------------------------- | ---------------- | ------------------- | ---------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FM-18` | Issuance queue or release scheduler unavailable | **fail-closed for release**, assertions stay `queued` | Bounded, backoff | Operator escalation | „Zugang wird vorbereitet" — access is being prepared | `AS-02` + `AS-06` | On recovery the queue drains under the same cohort and delay rules; if the outage threatens the window guarantee, the context window is extended by a governed decision |
 
 ### 6.1 Behaviour changes to existing modes
 
-| #        | Change                                                                                                                                       |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FM-05`  | Credential issuer unavailable: the participant is inside WS-03, so the visible state is a waiting state with a retry action, not a background queue. The assertion remains `picked_up` and its nonce unspent |
-| `FM-13`  | Redemption timeout: because issuance and redemption are one visit, an ambiguous redemption leaves the credential `issued`; the retry is idempotent and no second credential can arise |
-| `FM-16`  | Voting origin unavailable: **the only path to a credential**, so a prolonged outage is a context-level decision (window extension) rather than an inconvenience |
+| #       | Change                                                                                                                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `FM-05` | Credential issuer unavailable: the participant is inside WS-03, so the visible state is a waiting state with a retry action, not a background queue. The assertion remains `picked_up` and its nonce unspent |
+| `FM-13` | Redemption timeout: because issuance and redemption are one visit, an ambiguous redemption leaves the credential `issued`; the retry is idempotent and no second credential can arise                        |
+| `FM-16` | Voting origin unavailable: **the only path to a credential**, so a prolonged outage is a context-level decision (window extension) rather than an inconvenience                                              |
 
 ### 6.2 The rule the correction adds
 

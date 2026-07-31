@@ -558,7 +558,6 @@ and `FIR-ROADMAP-004`'s status. Section 21's implementation summary is
 updated to move PACK-14 out of the "candidate, not yet externally
 verified" subsection, which that subsection existed to hold.
 
-
 ## 1.17 Documentation-only register update — Open-source licensing and reuse governance (2026-07-31)
 
 This documentation-only update selects the **European Union Public Licence
@@ -573,7 +572,6 @@ later EUPL version requires a separate governed decision.
 
 No implementation status changes. No code, test, CI, repository version or
 canon version changes are implied by this register update.
-
 
 ## 1.18 Round record — PACK-15 implementation candidate (2026-07-31)
 
@@ -609,19 +607,19 @@ package registries return HTTP 403 that could not have been done honestly.
 
 **Verification, stated exactly.**
 
-| Check | Result |
-| ----- | ------ |
-| `pytest`, full repository | PASS - 5335 passed, 5 skipped |
-| `mypy`, every Python group of the `typecheck` target | PASS |
-| `ruff check` / `ruff format --check` | PASS |
-| `scripts/check_repository.py` | PASS - 983 paths |
-| `scripts/check_forbidden_files.py` | PASS |
-| `scripts/verify_versions.py` | PASS |
-| `scripts/check_canon_0_8_0.py` | PASS - 18 checks |
-| `uv sync --frozen` | NOT EXECUTED - ENVIRONMENT BLOCKED (PyPI HTTP 403) |
-| Every npm-dependent check | NOT EXECUTED - ENVIRONMENT BLOCKED (registry HTTP 403; `node_modules` uninstallable) |
-| Property-based tests | NOT EXECUTED - ENVIRONMENT BLOCKED (`hypothesis` unavailable) |
-| Visual regression | NOT APPLICABLE - no PACK-15 baselines were added |
+| Check                                                | Result                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `pytest`, full repository                            | PASS - 5335 passed, 5 skipped                                                        |
+| `mypy`, every Python group of the `typecheck` target | PASS                                                                                 |
+| `ruff check` / `ruff format --check`                 | PASS                                                                                 |
+| `scripts/check_repository.py`                        | PASS - 983 paths                                                                     |
+| `scripts/check_forbidden_files.py`                   | PASS                                                                                 |
+| `scripts/verify_versions.py`                         | PASS                                                                                 |
+| `scripts/check_canon_0_8_0.py`                       | PASS - 18 checks                                                                     |
+| `uv sync --frozen`                                   | NOT EXECUTED - ENVIRONMENT BLOCKED (PyPI HTTP 403)                                   |
+| Every npm-dependent check                            | NOT EXECUTED - ENVIRONMENT BLOCKED (registry HTTP 403; `node_modules` uninstallable) |
+| Property-based tests                                 | NOT EXECUTED - ENVIRONMENT BLOCKED (`hypothesis` unavailable)                        |
+| Visual regression                                    | NOT APPLICABLE - no PACK-15 baselines were added                                     |
 
 This corrects the two preceding PACK-15 rounds, which recorded that no
 Python tooling could run at all. `pytest`, `mypy` and `ruff` are present
@@ -665,7 +663,6 @@ leaving it would have made this round's record the third `1.16`.
 **The four changes this round makes to this register** are: this round
 record, that renumbering, `FIR-BASE-001`'s candidate pointer, and
 `FIR-ROADMAP-005`'s status. Nothing else in this file was edited.
-
 
 # 2. Current confirmed baseline
 

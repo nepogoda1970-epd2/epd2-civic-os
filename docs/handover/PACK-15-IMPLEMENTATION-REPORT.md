@@ -43,13 +43,13 @@ tape and a court order.
 The preceding round left five implementation groups open and refused to
 call the archive a candidate while they were. This round closed all five:
 
-| Group | What was built |
-| ----- | -------------- |
-| 1. Durable persistence and migrations | Ten migration files across seven migration **sets**, SQL adapters for every store port in four services, two composition roots, and transactional and concurrency tests |
-| 2. Versioned API | A shared contract layer in `epd2-core` plus four per-service endpoint catalogues and reference adapters - 22 endpoints |
-| 3. Event JSON schemas | Eight payload schemas and their contract tests (closed in the previous round; unchanged here) |
-| 4. Authorization and separation matrix | Ten roles, a capability matrix validated at import time, and eight structural separation rules |
-| 5. Implementation evidence | This report plus the test, security, privacy and traceability documents |
+| Group                                  | What was built                                                                                                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Durable persistence and migrations  | Ten migration files across seven migration **sets**, SQL adapters for every store port in four services, two composition roots, and transactional and concurrency tests |
+| 2. Versioned API                       | A shared contract layer in `epd2-core` plus four per-service endpoint catalogues and reference adapters - 22 endpoints                                                  |
+| 3. Event JSON schemas                  | Eight payload schemas and their contract tests (closed in the previous round; unchanged here)                                                                           |
+| 4. Authorization and separation matrix | Ten roles, a capability matrix validated at import time, and eight structural separation rules                                                                          |
+| 5. Implementation evidence             | This report plus the test, security, privacy and traceability documents                                                                                                 |
 
 Only after all five were present and wired was `REPOSITORY_VERSION` moved
 to `0.15.0`, the register updated and the archive named a candidate. That
@@ -64,18 +64,18 @@ ordering was the previous round's own rule and it was kept.
 The separation this pack exists to create is expressed as **separate
 SQLite database files**, one per trust boundary:
 
-| Database | Migration set | Holds |
-| -------- | ------------- | ----- |
-| Eligibility | `eligibility-service/migrations/eligibility/` | cases, decisions, the participation-unit ledger |
-| Assertion issuer | `eligibility-service/migrations/assertion-issuer/` | assertions, the release queue, one-time pickups, handoff acceptances |
-| Voting credentials | `credential-service/migrations/` | credentials, the spent-nonce set, redemptions, replays, revocations |
-| Voting context registry | `governance-service/migrations/` | administrative configuration only |
-| Identity-side audit | `audit-core/migrations/identity-side/` | AS-01, AS-02 |
-| Voting-side audit | `audit-core/migrations/voting-side/` | AS-03, AS-04 |
-| Neutral audit | `audit-core/migrations/neutral/` | AS-05, AS-06, the export log |
+| Database                | Migration set                                      | Holds                                                                |
+| ----------------------- | -------------------------------------------------- | -------------------------------------------------------------------- |
+| Eligibility             | `eligibility-service/migrations/eligibility/`      | cases, decisions, the participation-unit ledger                      |
+| Assertion issuer        | `eligibility-service/migrations/assertion-issuer/` | assertions, the release queue, one-time pickups, handoff acceptances |
+| Voting credentials      | `credential-service/migrations/`                   | credentials, the spent-nonce set, redemptions, replays, revocations  |
+| Voting context registry | `governance-service/migrations/`                   | administrative configuration only                                    |
+| Identity-side audit     | `audit-core/migrations/identity-side/`             | AS-01, AS-02                                                         |
+| Voting-side audit       | `audit-core/migrations/voting-side/`               | AS-03, AS-04                                                         |
+| Neutral audit           | `audit-core/migrations/neutral/`                   | AS-05, AS-06, the export log                                         |
 
 A foreign key from a credential to an assertion is therefore not
-*expressible*, which is a stronger guarantee than not written. A test
+_expressible_, which is a stronger guarantee than not written. A test
 asserts the practical form of this: selecting the voting-side audit table
 through the identity-side connection is not a permission failure - the
 table does not exist there.
@@ -105,9 +105,9 @@ Two pieces of machinery were needed by four services at once, and
 `tests/repository/test_service_boundaries.py` forbids one service
 importing another:
 
-* `epd2_core.sqlite_migrations` - the migration runner: definition
+- `epd2_core.sqlite_migrations` - the migration runner: definition
   records, checksums, bookkeeping, statement splitting, apply and verify.
-* `epd2_core.api_contracts` - the endpoint spec and its obligations, the
+- `epd2_core.api_contracts` - the endpoint spec and its obligations, the
   request and response values, the response-safety scan and the
   dispatcher.
 
@@ -121,9 +121,9 @@ Exactly-once is enforced on **both sides, differently**, because a single
 enforcement point would have to see both sides and that is the thing
 being prevented:
 
-* identity side: one assertion per participation unit per context, by the
+- identity side: one assertion per participation unit per context, by the
   `participation_unit_ledger` composite primary key;
-* voting side: one credential per assertion nonce, by the `spent_nonce`
+- voting side: one credential per assertion nonce, by the `spent_nonce`
   primary key.
 
 Both are decided by the INSERT itself, so a concurrent second attempt
@@ -147,18 +147,18 @@ over a socket succeeded".
 
 ## 4. Inventory
 
-| Category | Count | Note |
-| -------- | ----: | ---- |
-| Reason codes in `contracts/reason-codes/pack-15.yml` | 89 | includes 5 API-boundary codes, 2 registry-version codes, and `PERMISSION_DENIED` restated |
-| Event payload schemas | 8 | `contracts/events/pack15-*.v1.schema.json` |
-| Migration files | 10 | across 7 migration sets |
-| Python modules added or extended by PACK-15 | 26 | four services plus two `epd2-core` modules |
-| API endpoints | 22 | 9 identity-side, 4 voting-side, 5 governance, 4 audit |
-| Roles in the separation matrix | 10 | |
-| PACK-15 test modules | 15 | |
-| PACK-15 tests | 434 | all passing |
-| Full repository suite | 5335 passing, 5 skipped | see the test evidence for the skips |
-| Required paths registered | 983 | `scripts/check_repository.py` |
+| Category                                             |                   Count | Note                                                                                      |
+| ---------------------------------------------------- | ----------------------: | ----------------------------------------------------------------------------------------- |
+| Reason codes in `contracts/reason-codes/pack-15.yml` |                      89 | includes 5 API-boundary codes, 2 registry-version codes, and `PERMISSION_DENIED` restated |
+| Event payload schemas                                |                       8 | `contracts/events/pack15-*.v1.schema.json`                                                |
+| Migration files                                      |                      10 | across 7 migration sets                                                                   |
+| Python modules added or extended by PACK-15          |                      26 | four services plus two `epd2-core` modules                                                |
+| API endpoints                                        |                      22 | 9 identity-side, 4 voting-side, 5 governance, 4 audit                                     |
+| Roles in the separation matrix                       |                      10 |                                                                                           |
+| PACK-15 test modules                                 |                      15 |                                                                                           |
+| PACK-15 tests                                        |                     434 | all passing                                                                               |
+| Full repository suite                                | 5335 passing, 5 skipped | see the test evidence for the skips                                                       |
+| Required paths registered                            |                     983 | `scripts/check_repository.py`                                                             |
 
 ---
 
@@ -206,20 +206,20 @@ tooling could run: **`pytest`, `mypy` and `ruff` are available in this
 environment and were really executed.** The npm side remains entirely
 blocked.
 
-| Check | Result |
-| ----- | ------ |
-| `pytest` (full repository) | **PASS** — 5335 passed, 5 skipped |
-| `mypy` (every Python group of the `typecheck` target) | **PASS** — no issues |
-| `ruff check` | **PASS** |
-| `ruff format --check` | **PASS** |
-| `scripts/check_repository.py` | **PASS** — 983 paths |
-| `scripts/check_forbidden_files.py` | **PASS** |
-| `scripts/verify_versions.py` | **PASS** |
-| `scripts/check_canon_0_8_0.py` | **PASS** — 18 checks |
-| `uv sync --frozen` | **NOT EXECUTED — ENVIRONMENT BLOCKED** |
-| npm typecheck, tests, lint, `next build`, Playwright, axe, Prettier | **NOT EXECUTED — ENVIRONMENT BLOCKED** |
-| Property-based tests | **NOT EXECUTED — ENVIRONMENT BLOCKED** (`hypothesis` unavailable) |
-| Visual regression | **NOT APPLICABLE** |
+| Check                                                               | Result                                                            |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `pytest` (full repository)                                          | **PASS** — 5335 passed, 5 skipped                                 |
+| `mypy` (every Python group of the `typecheck` target)               | **PASS** — no issues                                              |
+| `ruff check`                                                        | **PASS**                                                          |
+| `ruff format --check`                                               | **PASS**                                                          |
+| `scripts/check_repository.py`                                       | **PASS** — 983 paths                                              |
+| `scripts/check_forbidden_files.py`                                  | **PASS**                                                          |
+| `scripts/verify_versions.py`                                        | **PASS**                                                          |
+| `scripts/check_canon_0_8_0.py`                                      | **PASS** — 18 checks                                              |
+| `uv sync --frozen`                                                  | **NOT EXECUTED — ENVIRONMENT BLOCKED**                            |
+| npm typecheck, tests, lint, `next build`, Playwright, axe, Prettier | **NOT EXECUTED — ENVIRONMENT BLOCKED**                            |
+| Property-based tests                                                | **NOT EXECUTED — ENVIRONMENT BLOCKED** (`hypothesis` unavailable) |
+| Visual regression                                                   | **NOT APPLICABLE**                                                |
 
 The Python tools ran from outside the project environment, so the
 versions they resolve to are not the versions `uv.lock` pins. **External

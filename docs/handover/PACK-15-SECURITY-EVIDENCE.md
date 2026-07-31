@@ -14,12 +14,12 @@ NOT LEGALLY ACTIVATED
 
 ## 1. Trust boundaries, and what crosses each
 
-| Boundary | Direction permitted | What crosses | What may not |
-| -------- | ------------------- | ------------ | ------------ |
-| Ordinary workspace -> isolated voting origin (WS-03) | one way | PACK-14's opaque, single-use, audience- and context-bound handoff artifact | account, session, device, persona - ten prohibited fields, refused on arrival rather than trusted absent |
-| Identity side -> voting side | one way | the twelve-field eligibility assertion | anything else; the field list is closed and enforced in `wire_payload()` |
-| Voting side -> identity side | **none** | - | there is no read edge, and ADR-089 exists to keep it that way |
-| Governance registry -> both sides | read only | administrative configuration | the registry has no column for a participant, an assertion, a credential, a ballot or a turnout figure |
+| Boundary                                             | Direction permitted | What crosses                                                               | What may not                                                                                             |
+| ---------------------------------------------------- | ------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Ordinary workspace -> isolated voting origin (WS-03) | one way             | PACK-14's opaque, single-use, audience- and context-bound handoff artifact | account, session, device, persona - ten prohibited fields, refused on arrival rather than trusted absent |
+| Identity side -> voting side                         | one way             | the twelve-field eligibility assertion                                     | anything else; the field list is closed and enforced in `wire_payload()`                                 |
+| Voting side -> identity side                         | **none**            | -                                                                          | there is no read edge, and ADR-089 exists to keep it that way                                            |
+| Governance registry -> both sides                    | read only           | administrative configuration                                               | the registry has no column for a participant, an assertion, a credential, a ballot or a turnout figure   |
 
 The asymmetry is the design. A voting-side component that could read
 identity-side state would make every other control cosmetic.
@@ -39,16 +39,16 @@ the module loads, not when someone exercises the gap in production.
 The structural rules, each its own named function raising a reason-coded
 exception:
 
-| Rule | What it prevents |
-| ---- | ---------------- |
-| No role holds eligibility **and** issuance **and** tally | One principal deciding who may vote, minting their credential and counting the result |
-| The Credential Issuer holds no ordinary identity-record access | The one component that sees credentials also seeing who people are |
-| The Eligibility Officer holds no credential-secret access | The mirror of the above |
-| No auditor role spans the identity-side and voting-side audit streams | An auditor reconstructing the link by reading both sides |
-| No role spans the audit stream groups, auditor or not | The same, arrived at through a job title nobody classified as auditing |
-| Security administrator and system administrator are distinct, with neither capability set containing the other | The "two roles" that are one person with one login |
-| No self-review | An officer reviewing their own decision |
-| Privileged export and break-glass need two **distinct** approvers holding **different** roles | One person approving twice |
+| Rule                                                                                                           | What it prevents                                                                      |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| No role holds eligibility **and** issuance **and** tally                                                       | One principal deciding who may vote, minting their credential and counting the result |
+| The Credential Issuer holds no ordinary identity-record access                                                 | The one component that sees credentials also seeing who people are                    |
+| The Eligibility Officer holds no credential-secret access                                                      | The mirror of the above                                                               |
+| No auditor role spans the identity-side and voting-side audit streams                                          | An auditor reconstructing the link by reading both sides                              |
+| No role spans the audit stream groups, auditor or not                                                          | The same, arrived at through a job title nobody classified as auditing                |
+| Security administrator and system administrator are distinct, with neither capability set containing the other | The "two roles" that are one person with one login                                    |
+| No self-review                                                                                                 | An officer reviewing their own decision                                               |
+| Privileged export and break-glass need two **distinct** approvers holding **different** roles                  | One person approving twice                                                            |
 
 ### 2.2 The API boundary
 
@@ -59,10 +59,10 @@ version), the handler, and a response-safety scan.
 
 Two properties are enforced at declaration time rather than at call time:
 
-* `EndpointSpec` has **no defaults** for `idempotency_key_required`,
+- `EndpointSpec` has **no defaults** for `idempotency_key_required`,
   `version_check_required`, `audit_evidence_required` or
   `authorized_roles`. A new endpoint must state all of them.
-* `assert_consequential_contract` refuses a spec that calls itself
+- `assert_consequential_contract` refuses a spec that calls itself
   consequential and then waives an obligation, and
   `assert_no_endpoint_spans_the_boundary` refuses an operation name
   declared on both sides of the trust boundary - so the correlation
@@ -81,12 +81,12 @@ where an account context would be exactly the linkage the origin removes.
 An unconfigured deployment must fail at its first real operation, not
 after an incident.
 
-| Port | Default binding | Behaviour |
-| ---- | --------------- | --------- |
-| Assertion signing custody | `FutureKeyServiceCustody` | every method raises `SYSTEM_DEPENDENCY_UNAVAILABLE` |
-| Assertion verifier (voting side) | **none - a required argument** | `build_voting_credential_service` has no default; there is no fallback verifier that accepts |
-| Storage adapters | `Sql*` in both composition roots | `tests/repository/test_pack15_default_binding.py` asserts no in-memory adapter is named by either root, and walks a built runtime to catch a binding made through a default argument |
-| Identity-side databases | **none - both are required arguments** | a default would have to be either one shared database, which collapses the boundary, or a pair of names nobody chose |
+| Port                             | Default binding                        | Behaviour                                                                                                                                                                            |
+| -------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Assertion signing custody        | `FutureKeyServiceCustody`              | every method raises `SYSTEM_DEPENDENCY_UNAVAILABLE`                                                                                                                                  |
+| Assertion verifier (voting side) | **none - a required argument**         | `build_voting_credential_service` has no default; there is no fallback verifier that accepts                                                                                         |
+| Storage adapters                 | `Sql*` in both composition roots       | `tests/repository/test_pack15_default_binding.py` asserts no in-memory adapter is named by either root, and walks a built runtime to catch a binding made through a default argument |
+| Identity-side databases          | **none - both are required arguments** | a default would have to be either one shared database, which collapses the boundary, or a pair of names nobody chose                                                                 |
 
 `assert_production_custody` refuses any custody whose key identifier
 starts with `test-`, so a test key cannot sign a real assertion by
@@ -99,10 +99,10 @@ omission.
 The exactly-once guarantee is deliberately **split** across the boundary,
 because a single enforcement point would need to see both sides:
 
-| Side | Rule | Enforced by |
-| ---- | ---- | ----------- |
+| Side     | Rule                                             | Enforced by                                                                 |
+| -------- | ------------------------------------------------ | --------------------------------------------------------------------------- |
 | Identity | one assertion per participation unit per context | `participation_unit_ledger` composite primary key - the INSERT is the check |
-| Voting | one credential per assertion nonce | `spent_nonce` primary key - again, the INSERT is the check |
+| Voting   | one credential per assertion nonce               | `spent_nonce` primary key - again, the INSERT is the check                  |
 
 Neither side can enforce the other's half, and neither needs to know the
 other's data to enforce its own. Both are decided by the database, so a
@@ -113,12 +113,12 @@ one winner.
 
 Single-use artefacts and how a second presentation is refused:
 
-| Artefact | Key | Second presentation |
-| -------- | --- | ------------------- |
-| Handoff artifact | SHA-256 digest, primary key | `HANDOFF_ALREADY_USED` |
-| Assertion pickup | `consumed_at IS NULL` inside the UPDATE predicate | `ASSERTION_PICKUP_ALREADY_USED` |
-| Voting credential | `uq_credential_redemption_credential` | `CREDENTIAL_ALREADY_REDEEMED` |
-| Assertion nonce | `uq_eligibility_assertion_nonce` | refused at insert |
+| Artefact          | Key                                               | Second presentation             |
+| ----------------- | ------------------------------------------------- | ------------------------------- |
+| Handoff artifact  | SHA-256 digest, primary key                       | `HANDOFF_ALREADY_USED`          |
+| Assertion pickup  | `consumed_at IS NULL` inside the UPDATE predicate | `ASSERTION_PICKUP_ALREADY_USED` |
+| Voting credential | `uq_credential_redemption_credential`             | `CREDENTIAL_ALREADY_REDEEMED`   |
+| Assertion nonce   | `uq_eligibility_assertion_nonce`                  | refused at insert               |
 
 The artifact **value** is never stored - only its digest. A record
 holding the value would be a replayable secret at rest.
@@ -164,12 +164,12 @@ Fixed by walking every depth on the way in as well. Two tests now send
 
 ### 5.3 Two smaller corrections in the same pass
 
-* A client-controlled `minting_delay_seconds` outside the governed window
+- A client-controlled `minting_delay_seconds` outside the governed window
   raised a bare `ValueError` from the domain, which has no reason code,
   so the dispatcher re-raised it and the boundary failed open into a
   stack trace. The value is now bounded where it arrives and refused with
   `API_REQUEST_MALFORMED`.
-* `credential.revoke` declared `DUAL_CONTROL_REQUIRED` while no code path
+- `credential.revoke` declared `DUAL_CONTROL_REQUIRED` while no code path
   could return it. Rather than deleting the declaration, the boundary now
   requires a second signature - a declared code no path can produce is a
   contract that reads stricter than the system is, and a reviewer reads
@@ -179,13 +179,13 @@ Fixed by walking every depth on the way in as well. Two tests now send
 
 ## 6. Cryptography
 
-| Use | Implementation | Status |
-| --- | -------------- | ------ |
-| Assertion integrity | HMAC-SHA256 over a canonical message | **reference implementation**; production custody is unbound and refuses |
+| Use                       | Implementation                                          | Status                                                                                                  |
+| ------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Assertion integrity       | HMAC-SHA256 over a canonical message                    | **reference implementation**; production custody is unbound and refuses                                 |
 | Evidence bundle signature | HMAC-SHA256, a key distinct from every other function's | **reference implementation**; key identifier is `test-` prefixed and refused outside a test trust store |
-| Handoff artifact digest | SHA-256 | production-shaped; the digest is the stored key and the value is never stored |
-| Audience comparison | `hmac.compare_digest` | constant-time, so audience checking is not a timing oracle |
-| Nonce generation | `secrets.token_hex` | production-shaped |
+| Handoff artifact digest   | SHA-256                                                 | production-shaped; the digest is the stored key and the value is never stored                           |
+| Audience comparison       | `hmac.compare_digest`                                   | constant-time, so audience checking is not a timing oracle                                              |
+| Nonce generation          | `secrets.token_hex`                                     | production-shaped                                                                                       |
 
 No asymmetric signing, no HSM or KMS integration, and no key rotation
 procedure exists in this round. `FutureKeyServiceCustody` is the declared

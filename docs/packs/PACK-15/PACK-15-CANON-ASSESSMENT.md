@@ -54,7 +54,7 @@ PACK-15 adds one prohibition: **no assertion identifier alongside a
 credential identifier.** Adding to a prohibition list is not an amendment
 in any direction that matters: it removes possibilities, it does not
 change a meaning, and canon nowhere permits the field being forbidden. If
-the direction were reversed — if PACK-15 needed canon to *permit*
+the direction were reversed — if PACK-15 needed canon to _permit_
 something 10.1 forbids — this verdict would be different.
 
 ### 3. The ballot's identity-freedom already exists
@@ -98,27 +98,27 @@ rather than adding to them.
 
 ## What would have required an amendment, and was avoided
 
-| Tempting move                                                              | Why it would have amended canon                        | What PACK-15 does instead                                                                        |
-| -------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| A canonical `VotingContext` aggregate                                      | Adds a canonical entity with an owner                  | Pack-level configuration store in `governance-service`; canonical treatment deferred to PACK-16 if ever needed |
-| A canonical `EligibilityAssertion` entity                                  | Same                                                   | A pack-level artifact whose events use canon §21's envelope unchanged                            |
-| A new eligibility-assurance scale for voting                               | A second assurance vocabulary beside canon 19d.8's     | Reuses canon's four values and asserts only a boolean across the boundary                        |
-| Extending canon 10.1's `ParticipationCredential` with a context field as canonical | Changes a canonical entity's shape             | Specifies context binding at pack level; the canonical shape is unchanged                        |
-| A canonical linkage table between eligibility and credentials              | Directly contradicts `FIR-INV-002` and `FIR-INV-004`   | The pairing is structurally absent; ADR-093                                                      |
-| A canonical unified audit chain                                            | Adds a canonical aggregate and breaks `FIR-INV-002`    | Six separately keyed streams at pack level                                                       |
-| Declaring `credential_proof` a retained mapping                            | Changes canon 15.3's meaning                           | Records the non-retention requirement as PACK-16's obligation                                    |
+| Tempting move                                                                      | Why it would have amended canon                      | What PACK-15 does instead                                                                                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| A canonical `VotingContext` aggregate                                              | Adds a canonical entity with an owner                | Pack-level configuration store in `governance-service`; canonical treatment deferred to PACK-16 if ever needed |
+| A canonical `EligibilityAssertion` entity                                          | Same                                                 | A pack-level artifact whose events use canon §21's envelope unchanged                                          |
+| A new eligibility-assurance scale for voting                                       | A second assurance vocabulary beside canon 19d.8's   | Reuses canon's four values and asserts only a boolean across the boundary                                      |
+| Extending canon 10.1's `ParticipationCredential` with a context field as canonical | Changes a canonical entity's shape                   | Specifies context binding at pack level; the canonical shape is unchanged                                      |
+| A canonical linkage table between eligibility and credentials                      | Directly contradicts `FIR-INV-002` and `FIR-INV-004` | The pairing is structurally absent; ADR-093                                                                    |
+| A canonical unified audit chain                                                    | Adds a canonical aggregate and breaks `FIR-INV-002`  | Six separately keyed streams at pack level                                                                     |
+| Declaring `credential_proof` a retained mapping                                    | Changes canon 15.3's meaning                         | Records the non-retention requirement as PACK-16's obligation                                                  |
 
 ---
 
 ## Canonical questions this round raises and closes without an amendment
 
-| Question                                                                        | Decision                                                                                                                        | Canon effect |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| Does the voting context belong in canon?                                        | **No.** It is administrative configuration, not a domain aggregate, and PACK-16 may revisit it with the casting model            | **None**     |
-| Does the eligibility assertion belong in canon?                                 | **No.** It is a short-lived boundary artifact; its events use canon §21 unchanged                                               | **None**     |
-| Does the rule-**set** need a canonical form beside canon 9's `EligibilityRule`?  | **No.** A set version is a composition of frozen rules; the freeze property is canon's and is reused                            | **None**     |
-| Does `ParticipationCredential` need canonical extension for context binding?     | **No.** Binding is a pack-level constraint on how the existing entity is issued                                                | **None**     |
-| Does the six-stream audit separation need a canonical audit model?               | **No.** `audit-core` provides primitives; the separation is a pack-level authorization and keying decision                      | **None**     |
+| Question                                                                        | Decision                                                                                                              | Canon effect |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Does the voting context belong in canon?                                        | **No.** It is administrative configuration, not a domain aggregate, and PACK-16 may revisit it with the casting model | **None**     |
+| Does the eligibility assertion belong in canon?                                 | **No.** It is a short-lived boundary artifact; its events use canon §21 unchanged                                     | **None**     |
+| Does the rule-**set** need a canonical form beside canon 9's `EligibilityRule`? | **No.** A set version is a composition of frozen rules; the freeze property is canon's and is reused                  | **None**     |
+| Does `ParticipationCredential` need canonical extension for context binding?    | **No.** Binding is a pack-level constraint on how the existing entity is issued                                       | **None**     |
+| Does the six-stream audit separation need a canonical audit model?              | **No.** `audit-core` provides primitives; the separation is a pack-level authorization and keying decision            | **None**     |
 
 ---
 
@@ -147,15 +147,15 @@ Five open decisions were closed. Each closure was resolved in the direction
 that needs no canon change, and that was a selection criterion rather than
 a coincidence.
 
-| Closure                                              | Canonical question it raises                                | Decision                                                                                                     | Canon effect |
-| ---------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------ |
-| `OD-P15-01` Assertion Issuer boundary                | Does a module boundary inside `eligibility-service` change a canonical ownership? | **No.** Canon 9 and 19d.4 assign ownership to the service; internal module and storage boundaries are pack-level, exactly as PACK-14 treated its six identity modules | **None** |
-| `OD-P15-02` Timing controls                          | Do queueing, cohorts and delays introduce a canonical entity? | **No.** `IssuanceTimingProfile` is governed configuration attached to a pack-level context object, not a canonical aggregate; `FIR-CONFIG-001` owns the class | **None** |
-| `OD-P15-03` Context-scoped pseudonym                 | Does a pseudonym create a canonical identifier space?        | **No** — and the closure makes it *less* canonical, not more: the pseudonym is now internal to one service, absent from every crossing artifact, and never a subject identifier anywhere | **None** |
-| `OD-P15-04` Evidence bundle                          | Does the bundle need a canonical evidence entity?            | **No.** `audit-core` provides the primitives; the bundle is a pack-level export format with its own schema version, governed by ADR-074's evolution rules | **None** |
-| `OD-P15-07` Credential delivery                      | Does restricting delivery change canon 10.1's `ParticipationCredential`? | **No.** Delivery is a boundary constraint on how an existing entity reaches its holder. Canon 10.1's shape and prohibition list are untouched; PACK-15 only adds prohibitions | **None** |
+| Closure                               | Canonical question it raises                                                      | Decision                                                                                                                                                                                 | Canon effect |
+| ------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `OD-P15-01` Assertion Issuer boundary | Does a module boundary inside `eligibility-service` change a canonical ownership? | **No.** Canon 9 and 19d.4 assign ownership to the service; internal module and storage boundaries are pack-level, exactly as PACK-14 treated its six identity modules                    | **None**     |
+| `OD-P15-02` Timing controls           | Do queueing, cohorts and delays introduce a canonical entity?                     | **No.** `IssuanceTimingProfile` is governed configuration attached to a pack-level context object, not a canonical aggregate; `FIR-CONFIG-001` owns the class                            | **None**     |
+| `OD-P15-03` Context-scoped pseudonym  | Does a pseudonym create a canonical identifier space?                             | **No** — and the closure makes it _less_ canonical, not more: the pseudonym is now internal to one service, absent from every crossing artifact, and never a subject identifier anywhere | **None**     |
+| `OD-P15-04` Evidence bundle           | Does the bundle need a canonical evidence entity?                                 | **No.** `audit-core` provides the primitives; the bundle is a pack-level export format with its own schema version, governed by ADR-074's evolution rules                                | **None**     |
+| `OD-P15-07` Credential delivery       | Does restricting delivery change canon 10.1's `ParticipationCredential`?          | **No.** Delivery is a boundary constraint on how an existing entity reaches its holder. Canon 10.1's shape and prohibition list are untouched; PACK-15 only adds prohibitions            | **None**     |
 
-**The direction of every closure matters.** Each one *removes*
+**The direction of every closure matters.** Each one _removes_
 possibilities: immediate issuance becomes unavailable, the pseudonym stops
 crossing the boundary, ten delivery channels become structurally absent,
 the assertion field list stays closed, and the bundle's content list is

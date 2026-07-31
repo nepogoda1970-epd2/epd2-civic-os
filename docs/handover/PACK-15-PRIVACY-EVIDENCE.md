@@ -34,12 +34,12 @@ The question decomposes into a four-link chain:
 person -> eligibility assertion -> voting credential -> ballot
 ```
 
-| Link | How it is cut | Where |
-| ---- | ------------- | ----- |
-| `person -> assertion` | The assertion carries twelve fields and none of them identifies anyone. The participation-unit ledger records **that** an assertion was minted for a unit, never **which** assertion - there is no `assertion_id` column in that table, and adding one would be the pairing ADR-093 forbids. | `voting_eligibility.ASSERTION_FIELD_NAMES`; `eligibility/0001_eligibility_cases.sql` |
-| `assertion -> credential` | The spent-nonce record is a **set**: three columns, no value column, no room for a credential reference beside the nonce. The bounded idempotency window is the only place the two ever coexist, it lives in memory-equivalent storage for at most 900 seconds, and `CredentialIssuanceIdempotencyRecord.assert_not_durable` refuses to make it permanent. | `0002_spent_nonce_set.sql`; `voting_credentials.py` |
-| `credential -> ballot` | Out of scope for this pack by construction: `credential-service` has no ballot store, no ballot column and no read edge to one. Redemption returns a continuation capability to the caller in the moment and stores it as `withheld`. | `voting_credential_sql_storage.SqlCredentialRedemptionStore` |
-| the whole chain | The four boundaries are **separate SQLite database files**, so a foreign key between them is not expressible and a JOIN has no syntax. This is not a discipline anyone has to keep. | four migration sets |
+| Link                      | How it is cut                                                                                                                                                                                                                                                                                                                                              | Where                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `person -> assertion`     | The assertion carries twelve fields and none of them identifies anyone. The participation-unit ledger records **that** an assertion was minted for a unit, never **which** assertion - there is no `assertion_id` column in that table, and adding one would be the pairing ADR-093 forbids.                                                               | `voting_eligibility.ASSERTION_FIELD_NAMES`; `eligibility/0001_eligibility_cases.sql` |
+| `assertion -> credential` | The spent-nonce record is a **set**: three columns, no value column, no room for a credential reference beside the nonce. The bounded idempotency window is the only place the two ever coexist, it lives in memory-equivalent storage for at most 900 seconds, and `CredentialIssuanceIdempotencyRecord.assert_not_durable` refuses to make it permanent. | `0002_spent_nonce_set.sql`; `voting_credentials.py`                                  |
+| `credential -> ballot`    | Out of scope for this pack by construction: `credential-service` has no ballot store, no ballot column and no read edge to one. Redemption returns a continuation capability to the caller in the moment and stores it as `withheld`.                                                                                                                      | `voting_credential_sql_storage.SqlCredentialRedemptionStore`                         |
+| the whole chain           | The four boundaries are **separate SQLite database files**, so a foreign key between them is not expressible and a JOIN has no syntax. This is not a discipline anyone has to keep.                                                                                                                                                                        | four migration sets                                                                  |
 
 The most important sentence in this section is the last one. Every
 guarantee above could have been implemented as a rule in application code.
@@ -80,17 +80,17 @@ same participation regardless of what the schema permits.
 reference default, a permitted range and a **hard floor configuration
 cannot go below**:
 
-| Control | Default | Hard floor |
-| ------- | ------: | ---------: |
-| Timestamp granularity | 300 s | 60 s |
-| Release delay (min / max) | 30 / 300 s | 10 / 60 s |
-| Batch interval | 120 s | 60 s |
-| Batch maximum size | 250 | 50 |
-| Minimum cohort | 5 | 3 |
-| Cohort wait maximum | 3600 s | 600 s |
-| Minting delay (min / max) | 5 / 30 s | 2 / 10 s |
-| Small-electorate threshold | 50 | 20 |
-| Disclosure minimum cell | 5 | 5 |
+| Control                    |    Default | Hard floor |
+| -------------------------- | ---------: | ---------: |
+| Timestamp granularity      |      300 s |       60 s |
+| Release delay (min / max)  | 30 / 300 s |  10 / 60 s |
+| Batch interval             |      120 s |       60 s |
+| Batch maximum size         |        250 |         50 |
+| Minimum cohort             |          5 |          3 |
+| Cohort wait maximum        |     3600 s |      600 s |
+| Minting delay (min / max)  |   5 / 30 s |   2 / 10 s |
+| Small-electorate threshold |         50 |         20 |
+| Disclosure minimum cell    |          5 |          5 |
 
 A value outside its range is refused with
 `TIMING_PROFILE_OUT_OF_BOUNDS`, **never clamped silently**. A silently
@@ -100,10 +100,10 @@ as enabled.
 Two properties of this design are worth stating because they pull in
 opposite directions and the resolution matters:
 
-* **A cohort of one is never released early.** It waits for others.
-* **Access is never denied for want of a cohort.** At the cohort-wait
+- **A cohort of one is never released early.** It waits for others.
+- **Access is never denied for want of a cohort.** At the cohort-wait
   deadline the assertion is released anyway, and the exception is
-  recorded with the cohort-size *class*.
+  recorded with the cohort-size _class_.
 
 Disenfranchising a participant in order to protect that participant's own
 unlinkability is not a trade this system makes. The privacy loss is
@@ -138,12 +138,12 @@ than the rule alone.
 
 ## 5. Person-level status is not offered anywhere
 
-| Surface | What it will answer | What it will not |
-| ------- | ------------------- | ---------------- |
-| `credential.status` | The status class of a credential reference **the caller already holds** | Anything keyed on a person; and an unknown reference returns the same shape as a withdrawn one, so it is not an existence oracle |
-| `eligibility.case.read` | The case's own status and a decision count | Nothing about a credential or a ballot - this side holds no such value |
-| `evidence.stream.read` | One stream, for one context | Any request naming both an identity-side and a voting-side stream is refused by `assert_streams_separable` |
-| Evidence bundles | Eight sections of aggregates | Fifteen forbidden keys, scanned at every nesting depth; cells below the disclosure floor are suppressed **complementarily**, so a suppressed cell cannot be recovered by subtraction |
+| Surface                 | What it will answer                                                     | What it will not                                                                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `credential.status`     | The status class of a credential reference **the caller already holds** | Anything keyed on a person; and an unknown reference returns the same shape as a withdrawn one, so it is not an existence oracle                                                     |
+| `eligibility.case.read` | The case's own status and a decision count                              | Nothing about a credential or a ballot - this side holds no such value                                                                                                               |
+| `evidence.stream.read`  | One stream, for one context                                             | Any request naming both an identity-side and a voting-side stream is refused by `assert_streams_separable`                                                                           |
+| Evidence bundles        | Eight sections of aggregates                                            | Fifteen forbidden keys, scanned at every nesting depth; cells below the disclosure floor are suppressed **complementarily**, so a suppressed cell cannot be recovered by subtraction |
 
 There is no search endpoint on the voting side. Not a restricted one - none.
 
@@ -151,13 +151,13 @@ There is no search endpoint on the voting side. Not a restricted one - none.
 
 ## 6. Retention and deletion
 
-| Class | Where | Note |
-| ----- | ----- | ---- |
-| Eligibility case | `eligibility_case.retention_class`, with `legal_hold` | Identity-side, identified, and governed by the existing PACK-11/PACK-12 retention machinery |
-| Assertion and queue entry | Assertion-issuer database | Carries no participant reference, so its retention is not a personal-data question at all |
-| Spent nonce | Voting-side database | Must outlive the voting window: deleting it would re-enable a second issuance for a nonce already used |
-| Idempotency record | Voting-side database | Bounded to 900 seconds and purgeable; this is the only record that pairs an assertion nonce with a credential, and it is the one record designed to disappear |
-| Audit records | Three separate audit databases | Per-stream `retention_class` and `legal_hold` columns |
+| Class                     | Where                                                 | Note                                                                                                                                                          |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Eligibility case          | `eligibility_case.retention_class`, with `legal_hold` | Identity-side, identified, and governed by the existing PACK-11/PACK-12 retention machinery                                                                   |
+| Assertion and queue entry | Assertion-issuer database                             | Carries no participant reference, so its retention is not a personal-data question at all                                                                     |
+| Spent nonce               | Voting-side database                                  | Must outlive the voting window: deleting it would re-enable a second issuance for a nonce already used                                                        |
+| Idempotency record        | Voting-side database                                  | Bounded to 900 seconds and purgeable; this is the only record that pairs an assertion nonce with a credential, and it is the one record designed to disappear |
+| Audit records             | Three separate audit databases                        | Per-stream `retention_class` and `legal_hold` columns                                                                                                         |
 
 The asymmetry in that table is deliberate and is the honest cost of the
 design: the spent-nonce set must be kept, and the idempotency record must
@@ -179,8 +179,8 @@ is a marketing document:
    voting origin is not itself hostile. A malicious client sees the
    credential and the ballot together, by necessity.
 3. **A participant who tells someone.** Coercion resistance is not
-   claimed and is not implemented. This pack makes the *system* unable to
-   answer the question; it does not make the *participant* unable to.
+   claimed and is not implemented. This pack makes the _system_ unable to
+   answer the question; it does not make the _participant_ unable to.
 4. **Correlation from data outside this system.** If an external register
    records who requested eligibility and an external log records who
    opened the voting origin, the two together are a correlation this

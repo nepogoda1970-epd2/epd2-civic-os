@@ -10,13 +10,13 @@
 Required by `FIR-FORM-002` and `FIR-FORM-004`. **These are real texts, not
 placeholders.**
 
-| Property               | Value                                                                    |
-| ---------------------- | ------------------------------------------------------------------------ |
+| Property               | Value                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------- |
 | Owner                  | Eligibility Service / Credential Issuer / Election administration (per section) |
-| Content version        | `P15-DE-1.0.0`                                                           |
-| Effective from         | On acceptance of the PACK-15 implementation round — **not yet in force** |
-| Authoritative language | Deutsch                                                                  |
-| Form version binding   | `F-P15-01` … `F-P15-09`, version 1                                       |
+| Content version        | `P15-DE-1.0.0`                                                                  |
+| Effective from         | On acceptance of the PACK-15 implementation round — **not yet in force**        |
+| Authoritative language | Deutsch                                                                         |
+| Form version binding   | `F-P15-01` … `F-P15-09`, version 1                                              |
 
 Translations must not silently alter legal or procedural meaning
 (`FIR-FORM-004`). Where an English gloss appears below it is
@@ -263,30 +263,30 @@ Stimmen und keine Möglichkeit, Personen und Stimmen einander zuzuordnen.
 
 ## 9. Störungen und Ausfälle
 
-| Situation                        | Text                                                                                                                                                                     |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Quelle nicht erreichbar          | Die Prüfung ist derzeit nicht möglich, weil erforderliche Angaben nicht abgerufen werden können. Aus Sicherheitsgründen wird nicht vorläufig entschieden. Wir versuchen es erneut. |
-| Ausgabe verzögert                | Die Ausgabe des Zugangs ist derzeit verzögert. Ihr Nachweis der Teilnahmeberechtigung bleibt gültig; er wurde noch nicht verbraucht.                                      |
-| Einlösung nicht bestätigt        | Die Einlösung konnte nicht bestätigt werden. Bitte versuchen Sie es erneut. Es kann dabei kein zweiter Zugang entstehen.                                                  |
-| Prüfung nicht möglich            | Eine erforderliche Sicherheitsprüfung ist derzeit nicht möglich. Aus Sicherheitsgründen wird kein Zugang ausgegeben.                                                     |
-| Abstimmungsbereich nicht erreichbar | Der Abstimmungsbereich ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte die Störung längere Zeit andauern, wird über eine Verlängerung entschieden. |
-| Zeitprüfung fehlgeschlagen       | Der Vorgang konnte nicht ausgeführt werden, weil die Zeitprüfung fehlgeschlagen ist. Bitte versuchen Sie es später erneut.                                               |
-| Nachweisführung nicht möglich    | Aus Sicherheitsgründen wird diese Handlung nicht ausgeführt, solange sie nicht nachweisbar aufgezeichnet werden kann.                                                    |
-| Prüfung durch Person ausstehend  | Ihr Vorgang wartet auf die Prüfung durch eine zuständige Person. Der Vorgang wird nicht automatisch entschieden.                                                          |
+| Situation                           | Text                                                                                                                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Quelle nicht erreichbar             | Die Prüfung ist derzeit nicht möglich, weil erforderliche Angaben nicht abgerufen werden können. Aus Sicherheitsgründen wird nicht vorläufig entschieden. Wir versuchen es erneut. |
+| Ausgabe verzögert                   | Die Ausgabe des Zugangs ist derzeit verzögert. Ihr Nachweis der Teilnahmeberechtigung bleibt gültig; er wurde noch nicht verbraucht.                                               |
+| Einlösung nicht bestätigt           | Die Einlösung konnte nicht bestätigt werden. Bitte versuchen Sie es erneut. Es kann dabei kein zweiter Zugang entstehen.                                                           |
+| Prüfung nicht möglich               | Eine erforderliche Sicherheitsprüfung ist derzeit nicht möglich. Aus Sicherheitsgründen wird kein Zugang ausgegeben.                                                               |
+| Abstimmungsbereich nicht erreichbar | Der Abstimmungsbereich ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte die Störung längere Zeit andauern, wird über eine Verlängerung entschieden.      |
+| Zeitprüfung fehlgeschlagen          | Der Vorgang konnte nicht ausgeführt werden, weil die Zeitprüfung fehlgeschlagen ist. Bitte versuchen Sie es später erneut.                                                         |
+| Nachweisführung nicht möglich       | Aus Sicherheitsgründen wird diese Handlung nicht ausgeführt, solange sie nicht nachweisbar aufgezeichnet werden kann.                                                              |
+| Prüfung durch Person ausstehend     | Ihr Vorgang wartet auf die Prüfung durch eine zuständige Person. Der Vorgang wird nicht automatisch entschieden.                                                                   |
 
 ## 10. Wiederkehrende Bausteine
 
-| Baustein                          | Text                                                                                                                                                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Trennung Anmeldung / Berechtigung | Angemeldet zu sein bedeutet nicht, teilnahmeberechtigt zu sein. Beides wird getrennt geprüft.                                                            |
-| Trennung Berechtigung / Zugang    | Teilnahmeberechtigt zu sein bedeutet noch nicht, Zugang zu haben. Der Zugang wird gesondert ausgegeben.                                                  |
-| Einmaligkeit                      | Der Zugang gilt für eine Abstimmung und kann nur einmal verwendet werden.                                                                                |
-| Keine Zuordnung                   | Es besteht keine Verbindung zwischen Ihrer Person und Ihrer Stimme. Diese Verbindung wird nicht gespeichert und kann nicht hergestellt werden.           |
-| Keine Zwischenergebnisse          | Vor dem offiziellen Abschluss werden keine Zwischenstände, Teilergebnisse oder Beteiligungszahlen veröffentlicht.                                        |
-| Kein Nachweis der Stimmabgabe     | Das System kann und darf nicht bestätigen, ob eine bestimmte Person abgestimmt hat. Ein solcher Nachweis wird nicht ausgestellt.                         |
-| Widerspruch                       | Gegen jede Entscheidung können Sie Widerspruch einlegen. Die Mitteilung nennt Ihnen die zuständige Stelle und die Frist.                                 |
-| Erklärung zum Widerruf            | Ein Widerruf ist nur möglich, solange der Zugang nicht eingelöst wurde und die Widerrufsfrist nicht abgelaufen ist.                                      |
-| Verlassen des Mitgliederbereichs  | Sie verlassen jetzt den Mitgliederbereich. Im Abstimmungsbereich werden keine Angaben zu Ihrer Person geführt und keine Nutzungsdaten erhoben.           |
+| Baustein                          | Text                                                                                                                                           |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trennung Anmeldung / Berechtigung | Angemeldet zu sein bedeutet nicht, teilnahmeberechtigt zu sein. Beides wird getrennt geprüft.                                                  |
+| Trennung Berechtigung / Zugang    | Teilnahmeberechtigt zu sein bedeutet noch nicht, Zugang zu haben. Der Zugang wird gesondert ausgegeben.                                        |
+| Einmaligkeit                      | Der Zugang gilt für eine Abstimmung und kann nur einmal verwendet werden.                                                                      |
+| Keine Zuordnung                   | Es besteht keine Verbindung zwischen Ihrer Person und Ihrer Stimme. Diese Verbindung wird nicht gespeichert und kann nicht hergestellt werden. |
+| Keine Zwischenergebnisse          | Vor dem offiziellen Abschluss werden keine Zwischenstände, Teilergebnisse oder Beteiligungszahlen veröffentlicht.                              |
+| Kein Nachweis der Stimmabgabe     | Das System kann und darf nicht bestätigen, ob eine bestimmte Person abgestimmt hat. Ein solcher Nachweis wird nicht ausgestellt.               |
+| Widerspruch                       | Gegen jede Entscheidung können Sie Widerspruch einlegen. Die Mitteilung nennt Ihnen die zuständige Stelle und die Frist.                       |
+| Erklärung zum Widerruf            | Ein Widerruf ist nur möglich, solange der Zugang nicht eingelöst wurde und die Widerrufsfrist nicht abgelaufen ist.                            |
+| Verlassen des Mitgliederbereichs  | Sie verlassen jetzt den Mitgliederbereich. Im Abstimmungsbereich werden keine Angaben zu Ihrer Person geführt und keine Nutzungsdaten erhoben. |
 
 ## 11. Was das System bewusst nicht anbietet
 
@@ -294,13 +294,13 @@ Diese Texte erscheinen dort, wo Mitglieder eine Funktion erwarten, die es
 aus Gründen des Verfahrens nicht gibt. Sie erklären den Grund, statt eine
 Lücke zu lassen.
 
-| Erwartete Funktion              | Text                                                                                                                                                                                                                        |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nachweis „Ich habe abgestimmt"  | Ein solcher Nachweis wird nicht ausgestellt. Er würde eine Verbindung zwischen Person und Stimme voraussetzen, die es nicht gibt — und er könnte gegen Sie verwendet werden, etwa um Druck auf Ihre Teilnahme auszuüben.       |
-| Stimme zurückziehen             | Eine abgegebene Stimme kann nicht zurückgezogen werden. Sie ist keiner Person zugeordnet und kann deshalb nicht aufgefunden werden.                                                                                            |
-| Teilnehmerliste einsehen        | Eine Liste der Teilnehmenden wird nicht geführt und nicht veröffentlicht.                                                                                                                                                     |
-| Zwischenstand ansehen           | Zwischenstände gibt es nicht. Das Ergebnis wird nach dem Abschluss durch die zuständige Stelle festgestellt und veröffentlicht.                                                                                               |
-| Zugang übertragen               | Der Zugang kann nicht übertragen werden. Er ist an eine Abstimmung gebunden und nur einmal verwendbar.                                                                                                                        |
+| Erwartete Funktion             | Text                                                                                                                                                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Nachweis „Ich habe abgestimmt" | Ein solcher Nachweis wird nicht ausgestellt. Er würde eine Verbindung zwischen Person und Stimme voraussetzen, die es nicht gibt — und er könnte gegen Sie verwendet werden, etwa um Druck auf Ihre Teilnahme auszuüben. |
+| Stimme zurückziehen            | Eine abgegebene Stimme kann nicht zurückgezogen werden. Sie ist keiner Person zugeordnet und kann deshalb nicht aufgefunden werden.                                                                                      |
+| Teilnehmerliste einsehen       | Eine Liste der Teilnehmenden wird nicht geführt und nicht veröffentlicht.                                                                                                                                                |
+| Zwischenstand ansehen          | Zwischenstände gibt es nicht. Das Ergebnis wird nach dem Abschluss durch die zuständige Stelle festgestellt und veröffentlicht.                                                                                          |
+| Zugang übertragen              | Der Zugang kann nicht übertragen werden. Er ist an eine Abstimmung gebunden und nur einmal verwendbar.                                                                                                                   |
 
 ---
 
@@ -405,12 +405,12 @@ Ausgabezeiträume, gröbere Zeitangaben und keine Zwischenzahlen.
 
 ### 12.9 Ergänzung zu Abschnitt 11 — was das System weiterhin nicht anbietet
 
-| Erwartete Funktion                | Text                                                                                                                                                                    |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Zugang zusenden lassen            | Der Zugang wird ausschließlich im Abstimmungsbereich erstellt und dort sofort verwendet. Ein Versand ist nicht vorgesehen und wäre ein Sicherheitsrisiko.                  |
-| Zugang für später aufbewahren     | Der Zugang wird nicht gespeichert und nicht angezeigt. Erstellung und Verwendung erfolgen in einem Durchgang.                                                             |
-| Status „hat teilgenommen" abrufen | Ob eine bestimmte Person teilgenommen hat, wird nicht gespeichert und kann nicht abgefragt werden — weder durch Sie noch durch die Administration.                        |
-| Zwischenzahlen zur Beteiligung    | Vor dem Abschluss werden keine Beteiligungszahlen veröffentlicht, auch nicht als Fortschrittsanzeige.                                                                     |
+| Erwartete Funktion                | Text                                                                                                                                                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zugang zusenden lassen            | Der Zugang wird ausschließlich im Abstimmungsbereich erstellt und dort sofort verwendet. Ein Versand ist nicht vorgesehen und wäre ein Sicherheitsrisiko. |
+| Zugang für später aufbewahren     | Der Zugang wird nicht gespeichert und nicht angezeigt. Erstellung und Verwendung erfolgen in einem Durchgang.                                             |
+| Status „hat teilgenommen" abrufen | Ob eine bestimmte Person teilgenommen hat, wird nicht gespeichert und kann nicht abgefragt werden — weder durch Sie noch durch die Administration.        |
+| Zwischenzahlen zur Beteiligung    | Vor dem Abschluss werden keine Beteiligungszahlen veröffentlicht, auch nicht als Fortschrittsanzeige.                                                     |
 
 **Grundsatz, unverändert:** Jede Ablehnung nennt einen Grund, die zuständige
 Stelle und den nächsten möglichen Schritt. Kein Text bestätigt, verneint

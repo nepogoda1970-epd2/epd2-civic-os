@@ -69,16 +69,16 @@ cross-origin token; cross-workspace frontend state.
 
 Added by this round:
 
-| Control            | Requirement                                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| CSP                | Own policy; `frame-ancestors 'none'`; **no third-party script origin at all**; no inline script without a nonce; no `connect-src` to any ordinary workspace origin |
-| Allowed origins    | Explicit allow-list; the ordinary workspaces are not on it                                                                     |
-| Redirects          | Targets from a fixed allow-list; never a caller-supplied raw URL; no open redirect                                             |
-| Referrer           | `no-referrer` on the entry navigation and on every navigation leaving WS-03                                                    |
-| Cache              | `no-store` on every credential-bearing and status-bearing response; no shared cache entry keyed by anything participant-specific |
-| Service worker     | Not shared; none that persists participation state across contexts                                                             |
-| Error reporting    | Reason codes only — no identity, no credential value, no pseudonym, no stack containing either                                 |
-| Return navigation  | Carries no identity-bearing token **and no voting-side identifier**                                                            |
+| Control           | Requirement                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CSP               | Own policy; `frame-ancestors 'none'`; **no third-party script origin at all**; no inline script without a nonce; no `connect-src` to any ordinary workspace origin |
+| Allowed origins   | Explicit allow-list; the ordinary workspaces are not on it                                                                                                         |
+| Redirects         | Targets from a fixed allow-list; never a caller-supplied raw URL; no open redirect                                                                                 |
+| Referrer          | `no-referrer` on the entry navigation and on every navigation leaving WS-03                                                                                        |
+| Cache             | `no-store` on every credential-bearing and status-bearing response; no shared cache entry keyed by anything participant-specific                                   |
+| Service worker    | Not shared; none that persists participation state across contexts                                                                                                 |
+| Error reporting   | Reason codes only — no identity, no credential value, no pseudonym, no stack containing either                                                                     |
+| Return navigation | Carries no identity-bearing token **and no voting-side identifier**                                                                                                |
 
 Two rules deserve emphasis:
 

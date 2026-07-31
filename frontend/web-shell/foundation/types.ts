@@ -51,7 +51,10 @@ export type WorkspacePolicy = Readonly<{
   browserStorage: "preferences-only" | "purpose-specific" | "none";
   sessionSharing: "forbidden";
   activation:
-    "design-baseline" | "wave-1-gated" | "planned" | "candidate-gated";
+    | "design-baseline"
+    | "wave-1-gated"
+    | "planned"
+    | "candidate-gated";
 }>;
 
 export type RouteMetadata = Readonly<{

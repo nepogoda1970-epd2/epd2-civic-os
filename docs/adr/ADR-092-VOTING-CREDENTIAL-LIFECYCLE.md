@@ -25,7 +25,7 @@ READY. NOT LEGALLY ACTIVATED.**
 >
 > **A consequence, stated rather than discovered:** issuance and redemption
 > occur in **one WS-03 visit**, so `CredentialIssuanceWindow` governs when a
-> participant may *enter* the voting origin, not a period during which they
+> participant may _enter_ the voting origin, not a period during which they
 > hold a credential outside it. **Advance issuance across separate visits is
 > out of scope for this round** and is deferred to PACK-16 with
 > `OD-P15-05`, because holding a credential between visits requires a

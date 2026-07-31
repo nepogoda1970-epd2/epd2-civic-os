@@ -26,8 +26,8 @@ READY. NOT LEGALLY ACTIVATED.**
 > **Pre-closure evidence export is restricted** to the non-outcome-bearing
 > sections of the bundle (context metadata, versions, commitments,
 > disclosure metadata, provenance) and requires **dual control** — an
-> auditor's legitimate need to verify *process* before closure does not
-> extend to *totals*. Queue depth, cohort size and release-batch size join
+> auditor's legitimate need to verify _process_ before closure does not
+> extend to _totals_. Queue depth, cohort size and release-batch size join
 > the prohibited-disclosure list wherever they could narrow a cohort.
 
 ## Context

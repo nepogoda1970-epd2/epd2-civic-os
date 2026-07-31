@@ -40,14 +40,14 @@ round.**
 
 ## 1. Voting context family — stream `AS-06`, producer VC-01
 
-| Event                       | Subject         | Notable payload                                                        |
-| --------------------------- | --------------- | ---------------------------------------------------------------------- |
-| `VotingContextCreated`      | voting context  | Type, organizational scope, rule-set version reference, audit profile, privacy profile |
-| `VotingContextActivated`    | voting context  | Activating authority, dual-control references, windows                 |
-| `VotingContextSuspended`    | voting context  | Reason code, authority, effect on issuance and redemption              |
-| `VotingContextClosed`       | voting context  | Closing authority, final window boundaries                             |
-| `VotingWindowOpened`        | voting context  | Window boundaries                                                      |
-| `VotingWindowClosed`        | voting context  | Window boundaries; **no counts, no totals, no turnout**                |
+| Event                    | Subject        | Notable payload                                                                        |
+| ------------------------ | -------------- | -------------------------------------------------------------------------------------- |
+| `VotingContextCreated`   | voting context | Type, organizational scope, rule-set version reference, audit profile, privacy profile |
+| `VotingContextActivated` | voting context | Activating authority, dual-control references, windows                                 |
+| `VotingContextSuspended` | voting context | Reason code, authority, effect on issuance and redemption                              |
+| `VotingContextClosed`    | voting context | Closing authority, final window boundaries                                             |
+| `VotingWindowOpened`     | voting context | Window boundaries                                                                      |
+| `VotingWindowClosed`     | voting context | Window boundaries; **no counts, no totals, no turnout**                                |
 
 `VotingWindowClosed` is the event most likely to acquire a turnout field
 during implementation "because it is convenient". It must not.
@@ -56,17 +56,17 @@ during implementation "because it is convenient". It must not.
 
 ## 2. Eligibility family — stream `AS-01`, producer VC-02
 
-| Event                          | Subject           | Notable payload                                                          |
-| ------------------------------ | ----------------- | ------------------------------------------------------------------------ |
-| `EligibilityRequested`         | eligibility case  | Context reference, request channel, assisted-by reference where applicable |
-| `EligibilityEvaluationStarted` | eligibility case  | Rule-set version                                                         |
-| `EligibilityApproved`          | eligibility case  | Rule-set version, reason codes, validity window, participation class     |
-| `EligibilityDenied`            | eligibility case  | Rule-set version, reason codes, appeal path reference                    |
-| `EligibilityReviewRequired`    | eligibility case  | Trigger reason code, review queue reference                              |
-| `EligibilityEvidenceReferenced`| eligibility case  | PACK-11 reference only — **never content**                               |
-| `EligibilityDecisionExpired`   | eligibility case  | Reason code                                                              |
-| `EligibilityDisputed`          | eligibility case  | Dispute reference, ground reason code                                    |
-| `EligibilityDisputeResolved`   | eligibility case  | Outcome, reason code, reviewer role, remedy class                        |
+| Event                           | Subject          | Notable payload                                                            |
+| ------------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| `EligibilityRequested`          | eligibility case | Context reference, request channel, assisted-by reference where applicable |
+| `EligibilityEvaluationStarted`  | eligibility case | Rule-set version                                                           |
+| `EligibilityApproved`           | eligibility case | Rule-set version, reason codes, validity window, participation class       |
+| `EligibilityDenied`             | eligibility case | Rule-set version, reason codes, appeal path reference                      |
+| `EligibilityReviewRequired`     | eligibility case | Trigger reason code, review queue reference                                |
+| `EligibilityEvidenceReferenced` | eligibility case | PACK-11 reference only — **never content**                                 |
+| `EligibilityDecisionExpired`    | eligibility case | Reason code                                                                |
+| `EligibilityDisputed`           | eligibility case | Dispute reference, ground reason code                                      |
+| `EligibilityDisputeResolved`    | eligibility case | Outcome, reason code, reviewer role, remedy class                          |
 
 The subject of every event in this family is the **eligibility case**,
 which is identity-side. That is correct and is the last family in which it
@@ -76,13 +76,13 @@ is true.
 
 ## 3. Assertion family — stream `AS-02`, producer VC-03
 
-| Event                              | Subject   | Notable payload                                                     |
-| ---------------------------------- | --------- | ------------------------------------------------------------------- |
-| `EligibilityAssertionIssued`       | assertion | Context reference, class, expiry, audience, integrity metadata      |
-| `EligibilityAssertionRevoked`      | assertion | Reason code, authority                                              |
-| `EligibilityAssertionExpired`      | assertion | —                                                                   |
-| `EligibilityAssertionRedeemed`     | assertion | Context reference, timing class — **no credential reference**       |
-| `EligibilityAssertionReplayRejected` | assertion | Reason code, timing class                                          |
+| Event                                | Subject   | Notable payload                                                |
+| ------------------------------------ | --------- | -------------------------------------------------------------- |
+| `EligibilityAssertionIssued`         | assertion | Context reference, class, expiry, audience, integrity metadata |
+| `EligibilityAssertionRevoked`        | assertion | Reason code, authority                                         |
+| `EligibilityAssertionExpired`        | assertion | —                                                              |
+| `EligibilityAssertionRedeemed`       | assertion | Context reference, timing class — **no credential reference**  |
+| `EligibilityAssertionReplayRejected` | assertion | Reason code, timing class                                      |
 
 `EligibilityAssertionRedeemed` is produced by the voting side about an
 identity-side artifact, and is therefore the single most dangerous event in
@@ -94,26 +94,26 @@ the credential that was minted, must never share a `correlation_id` with
 
 ## 4. Credential family — stream `AS-03`, producer VC-04
 
-| Event                                | Subject    | Notable payload                                                   |
-| ------------------------------------ | ---------- | ----------------------------------------------------------------- |
-| `VotingCredentialRequested`          | credential | Context reference, timing class                                   |
-| `VotingCredentialIssued`             | credential | Context reference, credential type, expiry — **no assertion reference** |
-| `VotingCredentialRevoked`            | credential | Reason code, authority, dual-control reference where required, position relative to the cutoff |
-| `VotingCredentialExpired`            | credential | —                                                                 |
-| `VotingCredentialRedeemed`           | credential | Context reference, timing class, redemption reference             |
-| `VotingCredentialReplayRejected`     | credential | Reason code, timing class                                         |
-| `DuplicateCredentialIssuanceRejected`| credential request | Reason code                                                |
+| Event                                 | Subject            | Notable payload                                                                                |
+| ------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `VotingCredentialRequested`           | credential         | Context reference, timing class                                                                |
+| `VotingCredentialIssued`              | credential         | Context reference, credential type, expiry — **no assertion reference**                        |
+| `VotingCredentialRevoked`             | credential         | Reason code, authority, dual-control reference where required, position relative to the cutoff |
+| `VotingCredentialExpired`             | credential         | —                                                                                              |
+| `VotingCredentialRedeemed`            | credential         | Context reference, timing class, redemption reference                                          |
+| `VotingCredentialReplayRejected`      | credential         | Reason code, timing class                                                                      |
+| `DuplicateCredentialIssuanceRejected` | credential request | Reason code                                                                                    |
 
 ---
 
 ## 5. Handoff family — stream `AS-06`, producer VC-05
 
-| Event                          | Subject | Notable payload                                     |
-| ------------------------------ | ------- | --------------------------------------------------- |
-| `VotingHandoffAccepted`        | handoff | Context reference, audience, origin validation result |
-| `VotingHandoffRejected`        | handoff | Reason code                                         |
-| `VotingHandoffExpired`         | handoff | —                                                   |
-| `VotingHandoffReplayRejected`  | handoff | Reason code                                         |
+| Event                         | Subject | Notable payload                                       |
+| ----------------------------- | ------- | ----------------------------------------------------- |
+| `VotingHandoffAccepted`       | handoff | Context reference, audience, origin validation result |
+| `VotingHandoffRejected`       | handoff | Reason code                                           |
+| `VotingHandoffExpired`        | handoff | —                                                     |
+| `VotingHandoffReplayRejected` | handoff | Reason code                                           |
 
 These extend PACK-14's outbound artifact into PACK-15's inbound handling
 and carry no account reference, consistent with ADR-088.
@@ -122,12 +122,12 @@ and carry no account reference, consistent with ADR-088.
 
 ## 6. Audit and integrity family — stream `AS-04`, producer VC-06
 
-| Event                                     | Subject          | Notable payload                                                    |
-| ----------------------------------------- | ---------------- | ------------------------------------------------------------------ |
-| `VotingBoundaryIntegrityViolationDetected`| detection        | Violation class, boundary, detector, severity — **no identity**    |
-| `CorrelationRiskDetected`                 | detection        | Risk class (shared key, shared trace, cross-stream read, cohort size), severity |
-| `IntermediateTallyAttemptRejected`        | request          | Surface class, reason code                                         |
-| `PrivilegedVotingActionPerformed`         | privileged act   | Act class, role, grant reference, dual-control reference, context  |
+| Event                                      | Subject        | Notable payload                                                                 |
+| ------------------------------------------ | -------------- | ------------------------------------------------------------------------------- |
+| `VotingBoundaryIntegrityViolationDetected` | detection      | Violation class, boundary, detector, severity — **no identity**                 |
+| `CorrelationRiskDetected`                  | detection      | Risk class (shared key, shared trace, cross-stream read, cohort size), severity |
+| `IntermediateTallyAttemptRejected`         | request        | Surface class, reason code                                                      |
+| `PrivilegedVotingActionPerformed`          | privileged act | Act class, role, grant reference, dual-control reference, context               |
 
 `CorrelationRiskDetected` exists so that a near-miss is recorded rather
 than fixed quietly: the cases it fires on — a shared identifier appearing
@@ -139,14 +139,14 @@ real breach.
 
 ## 7. Events deliberately absent
 
-| Event that will be proposed          | Why it is refused                                                  |
-| ------------------------------------ | ------------------------------------------------------------------ |
-| `ParticipationCompleted`             | Joins an identity-side subject to a voting-side act                |
-| `MemberVoted`                        | A person-level participation statement                             |
-| `CredentialIssuedForMember`          | The pairing, as an event name                                      |
-| `TurnoutUpdated`                     | An intermediate tally                                              |
-| `VotingJourneyStepCompleted`         | A journey is a chain                                               |
-| A generic `VotingError`              | Prohibited by the reason-code discipline                           |
+| Event that will be proposed  | Why it is refused                                   |
+| ---------------------------- | --------------------------------------------------- |
+| `ParticipationCompleted`     | Joins an identity-side subject to a voting-side act |
+| `MemberVoted`                | A person-level participation statement              |
+| `CredentialIssuedForMember`  | The pairing, as an event name                       |
+| `TurnoutUpdated`             | An intermediate tally                               |
+| `VotingJourneyStepCompleted` | A journey is a chain                                |
+| A generic `VotingError`      | Prohibited by the reason-code discipline            |
 
 ---
 
@@ -170,15 +170,15 @@ this round:
 
 ### 9.1 Assertion queue and pickup — stream `AS-02`, producer VC-03 / VC-05
 
-| Event                              | Subject   | Notable payload                                                                 |
-| ---------------------------------- | --------- | ------------------------------------------------------------------------------- |
-| `EligibilityAssertionMinted`       | assertion | Context reference, class, expiry (coarsened), audience, integrity metadata      |
-| `EligibilityAssertionQueued`       | assertion | Context reference, batch reference, scheduled-release **window class**          |
-| `EligibilityAssertionReleased`     | assertion | Context reference, batch reference, batch size **class**                        |
-| `AssertionPickupCreated`           | pickup    | Context reference, expiry (coarsened) — **no account, no artifact value**       |
-| `AssertionPickupRedeemed`          | pickup    | Context reference, timing class — **no credential reference**                   |
-| `AssertionPickupExpired`           | pickup    | Reason code                                                                     |
-| `AssertionPickupReplayRejected`    | pickup    | Reason code, timing class                                                       |
+| Event                           | Subject   | Notable payload                                                            |
+| ------------------------------- | --------- | -------------------------------------------------------------------------- |
+| `EligibilityAssertionMinted`    | assertion | Context reference, class, expiry (coarsened), audience, integrity metadata |
+| `EligibilityAssertionQueued`    | assertion | Context reference, batch reference, scheduled-release **window class**     |
+| `EligibilityAssertionReleased`  | assertion | Context reference, batch reference, batch size **class**                   |
+| `AssertionPickupCreated`        | pickup    | Context reference, expiry (coarsened) — **no account, no artifact value**  |
+| `AssertionPickupRedeemed`       | pickup    | Context reference, timing class — **no credential reference**              |
+| `AssertionPickupExpired`        | pickup    | Reason code                                                                |
+| `AssertionPickupReplayRejected` | pickup    | Reason code, timing class                                                  |
 
 `EligibilityAssertionIssued` from §3 is retained as the family's compatible
 predecessor name for the minting event; implementations emit
@@ -186,26 +186,26 @@ predecessor name for the minting event; implementations emit
 
 ### 9.2 Issuance timing and cohort — stream `AS-04`, producer VC-03
 
-| Event                              | Subject   | Notable payload                                                                 |
-| ---------------------------------- | --------- | ------------------------------------------------------------------------------- |
-| `IssuanceCohortThresholdNotMet`    | batch     | Context reference, cohort-size **class**, `cohort_wait_max` reached — **never the exact size, never a participant** |
-| `IssuanceTimingProfileApplied`     | context   | The profile values in force at activation                                       |
-| `IssuanceWindowGuaranteeViolated`  | context   | Reason code; raised when the queue cannot guarantee release before the window closes |
+| Event                             | Subject | Notable payload                                                                                                     |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| `IssuanceCohortThresholdNotMet`   | batch   | Context reference, cohort-size **class**, `cohort_wait_max` reached — **never the exact size, never a participant** |
+| `IssuanceTimingProfileApplied`    | context | The profile values in force at activation                                                                           |
+| `IssuanceWindowGuaranteeViolated` | context | Reason code; raised when the queue cannot guarantee release before the window closes                                |
 
 ### 9.3 Credential delivery — stream `AS-03`, producer VC-04
 
-| Event                              | Subject    | Notable payload                                                                |
-| ---------------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| `CredentialMintingDelayed`          | credential request | Delay class only — a progress fact, not a failure                      |
-| `CredentialDeliveryChannelRefused`  | request    | Reason code, channel class — raised when any non-WS-03 delivery is attempted   |
+| Event                              | Subject            | Notable payload                                                              |
+| ---------------------------------- | ------------------ | ---------------------------------------------------------------------------- |
+| `CredentialMintingDelayed`         | credential request | Delay class only — a progress fact, not a failure                            |
+| `CredentialDeliveryChannelRefused` | request            | Reason code, channel class — raised when any non-WS-03 delivery is attempted |
 
 ### 9.4 Evidence bundle — stream `AS-05`, producer VC-06
 
-| Event                       | Subject | Notable payload                                                                       |
-| --------------------------- | ------- | ------------------------------------------------------------------------------------- |
-| `EvidenceBundleGenerated`   | bundle  | Bundle schema version, context reference, sections included, suppression summary      |
-| `EvidenceBundleExported`    | bundle  | Export authorization reference, requesting role, pre- or post-closure scope           |
-| `EvidenceBundleRejected`    | bundle  | Which validation check failed, by reason code                                          |
+| Event                     | Subject | Notable payload                                                                  |
+| ------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `EvidenceBundleGenerated` | bundle  | Bundle schema version, context reference, sections included, suppression summary |
+| `EvidenceBundleExported`  | bundle  | Export authorization reference, requesting role, pre- or post-closure scope      |
+| `EvidenceBundleRejected`  | bundle  | Which validation check failed, by reason code                                    |
 
 ### 9.5 Payload rules that apply to all of the above
 

@@ -116,7 +116,7 @@ Allowed and forbidden transitions:
 | `approved`                | `published`               | yes     | approval **and** publication authorization                                                         |
 | any post-submission state | `amended_or_restated`     | yes     | new version with `restatement_of_version_reference`                                                |
 | `draft`                   | `submitted`               | no      | skips required intermediate states                                                                 |
-| `submitted`               | `accepted_by_authority`   | no*     | telemetry/acknowledgement/read status alone (`FINANCE_EXTERNAL_ACKNOWLEDGEMENT_NOT_AUTHORITATIVE`) |
+| `submitted`               | `accepted_by_authority`   | no\*    | telemetry/acknowledgement/read status alone (`FINANCE_EXTERNAL_ACKNOWLEDGEMENT_NOT_AUTHORITATIVE`) |
 | `draft`                   | `published`               | no      | a draft is never publishable                                                                       |
 | `signed`                  | `published`               | no      | publication requires `approved`, not merely `signed`                                               |
 | (any submitted/published) | (edited in place)         | no      | `FINANCE_IMMUTABLE_RECORD_MODIFICATION_ATTEMPTED`                                                  |

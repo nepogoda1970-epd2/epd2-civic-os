@@ -73,7 +73,7 @@ participation.**
 
 Concretely:
 
-1. **The Credential Issuer records the assertion nonce as *spent*: set
+1. **The Credential Issuer records the assertion nonce as _spent_: set
    membership, not a mapping.** There is no value column, no
    `credential_id` beside the nonce, and no schema in which one could be
    added without changing this ADR.
@@ -130,14 +130,14 @@ principle — blind signatures, anonymous credentials, oblivious issuance.
 **PACK-15 deliberately does not choose one** (`OD-P15-05`). Choosing a
 ballot-adjacent cryptographic scheme from outside the round that owns the
 ballot threat model is the mistake PACK-13 refused and PACK-14 inherited.
-The spent-set design is chosen as the *weakest* structure that achieves
+The spent-set design is chosen as the _weakest_ structure that achieves
 exactly-once, precisely so that a stronger construction can replace it
 without redesigning the boundary.
 
 ## Alternatives rejected
 
 **Store the pair, encrypt it, split the key.** Rejected: it produces a
-system that *can* answer the question given cooperation, and "given
+system that _can_ answer the question given cooperation, and "given
 cooperation" is exactly the threat model — insider collusion, compulsion,
 compromise of two components.
 

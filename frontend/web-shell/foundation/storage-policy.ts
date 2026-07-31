@@ -9,7 +9,11 @@ export type StorageKind =
   | "cacheStorage"
   | "serviceWorker";
 export type StoragePurpose =
-  "preference" | "sensitive-data" | "ballot" | "identity" | "technical-cache";
+  | "preference"
+  | "sensitive-data"
+  | "ballot"
+  | "identity"
+  | "technical-cache";
 
 export function storageAllowed(
   workspaceId: WorkspaceId,
