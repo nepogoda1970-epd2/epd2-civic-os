@@ -115,6 +115,7 @@ class VotingCredentialDependencyUnavailableError(VotingCredentialError):
 
     reason_code = "SYSTEM_DEPENDENCY_UNAVAILABLE"
 
+
 class AssertionAssuranceInsufficientError(VotingCredentialError):
     """The presented assertion says the assurance requirement was not met.
 

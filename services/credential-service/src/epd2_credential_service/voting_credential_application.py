@@ -37,8 +37,8 @@ from epd2_credential_service.voting_credential_events import (
     build_replay_event,
 )
 from epd2_credential_service.voting_credential_exceptions import (
-    AssertionAssuranceInsufficientError,
     AssertionAlreadyUsedError,
+    AssertionAssuranceInsufficientError,
     AssertionAudienceMismatchError,
     AssertionContextMismatchError,
     AssertionExpiredError,
