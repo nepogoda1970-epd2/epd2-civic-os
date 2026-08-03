@@ -1,10 +1,15 @@
 # EPD² Civic OS
 
-> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.15.0`,
+> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.16.0`,
 > `CANON_VERSION` — `0.8.0`.
 >
 > Последний раунд — **PACK-15 — Voting Trust Boundary, Eligibility &
-> Credential Separation**, **IMPLEMENTATION CANDIDATE**. Разделение между
+> Credential Separation**, **FINAL PASS**: внешний GitHub Actions прошёл
+> полностью (983/983 repository paths, forbidden paths — нет, version
+> consistency, Ruff format 436 файлов, Prettier, Ruff lint, ESLint, mypy —
+> PASS, Python 5343 passed / 4 skipped, epd2-types 3 passed, Node 41
+> passed, frontend 23 passed, Next.js production build — PASS, 48/48
+> static pages, browser/visual/accessibility 135 passed). Разделение между
 > «кто человек» и «голос подан» реализовано структурно: запись
 > потраченного nonce — это **множество** из трёх колонок без колонки
 > значения, поэтому ни одно хранилище, событие, лог, резервная копия или
@@ -14,14 +19,12 @@
 > принципе. 22 endpoint'а версионированного API, десять ролей и восемь
 > структурных правил разделения обязанностей, 89 reason-кодов.
 >
-> **Проверено локально:** Python 5335 passed / 5 skipped, mypy по всем
-> группам — чисто, `ruff check` и `ruff format --check` — чисто, все
-> четыре repository-скрипта — PASS (983 путей).
-> **Не выполнено:** весь npm-контур (реестр отдаёт HTTP 403, `node_modules`
-> установить невозможно) — TypeScript typecheck, frontend-тесты,
-> Playwright, axe, `next build` и Prettier не запускались, пять
-> frontend-файлов PACK-15 ни разу не исполнялись. **EXTERNAL CI NOT YET
-> VERIFIED. NOT FINAL PASS.** См.
+> Перед этим прогоном из дерева удалена устаревшая вложенная копия
+> репозитория `epd2-civic-os/` (версия `0.6.0`); счётчик Ruff изменился с
+> 609 на 436, и **все артефакты верификации для деревьев с этим каталогом
+> считаются устаревшими**. **NOT PRODUCTION READY. NOT LEGALLY
+> ACTIVATED.** См.
+> `docs/handover/PACK-15-FINAL-PASS-REPORT.md`,
 > `docs/handover/PACK-15-IMPLEMENTATION-REPORT.md`,
 > `docs/handover/PACK-15-TEST-EVIDENCE.md`,
 > `docs/handover/PACK-15-SECURITY-EVIDENCE.md`,

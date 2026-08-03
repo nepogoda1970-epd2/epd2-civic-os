@@ -10,6 +10,13 @@ dependencies = [
     "epd2-credential-service",
     "epd2-eligibility-service",
     "epd2-governance-service",
+    # Vetted Ed25519 provider for bulletin-board checkpoint signatures
+    # (PACK-16D final correction §5). This replaced a hand-written
+    # implementation of the primitive; there is deliberately no fallback,
+    # so the reference package does not import without it. The floor is the
+    # version this repository's RFC 8032 conformance tests were run
+    # against; the ceiling excludes the next major.
+    "cryptography>=46.0.7,<47",
 ]
 
 [build-system]

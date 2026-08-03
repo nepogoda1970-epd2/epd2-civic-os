@@ -262,6 +262,35 @@ _NON_REASON_CODE_LITERALS: dict[str, frozenset[str]] = {
 }
 
 
+#: Directory names under a service's `src/` whose reason-code-shaped
+#: literals belong to a different catalogue and must not be scanned here.
+#:
+#: There is exactly one, and it is scoped by **path** rather than by listing
+#: its ~65 literals in `_NON_REASON_CODE_LITERALS`, because those literals
+#: *are* genuine refusal codes — they are simply not this registry's.
+#:
+#: `services/voting-service/src/epd2_voting_service/reference/` is the
+#: PACK-16D **reference implementation**. It is not a production service
+#: path: it authenticates nobody, is reachable from no endpoint, and its
+#: package banner says so. Its codes are the refusals of an executable
+#: model of the PACK-16A/16B/16C specification, and they are catalogued in
+#: `docs/packs/PACK-16/PACK-16D-REASON-CODE-COVERAGE.md`, which is asserted
+#: against the code by that pack's own tests.
+#:
+#: Registering them in `contracts/reason-codes/pack-03.yml` instead would be
+#: worse than leaving them out: that file is the voting service's **public
+#: contract**, and putting `EPD2_VOTING_REFERENCE_TEST_PROFILE` or
+#: `CRYPTO_TEST_MODE_REACHABLE` in it would tell a client to expect refusals
+#: the deployed service can never emit.
+#:
+#: This exclusion was added when PyYAML became installable in the build
+#: environment and this test ran for the first time since PACK-16D landed.
+#: It had been **skipping**, not passing — which is why the mismatch went
+#: unnoticed through two candidate rounds, and is worth remembering the next
+#: time a skipped test looks harmless.
+_EXCLUDED_SUBTREES: frozenset[str] = frozenset({"reference"})
+
+
 def _registered_codes(registry_path: Path) -> set[str]:
     raw = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
     return {entry["code"] for entry in raw}
@@ -293,12 +322,16 @@ def _reason_code_like_literals_in(pack_name: str, service_dir_names: tuple[str, 
       searched for, not a `reason_code` value ever produced by this
       service). Reason codes are used and defined in a service's `src/`,
       never in its own test assertions about source text.
+    - **The PACK-16D reference implementation subtree is excluded**, by
+      path, for the reason stated at `_EXCLUDED_SUBTREES` below.
     """
     found: set[str] = set()
     for service_dir_name in service_dir_names:
         src_dir = SERVICES_DIR / service_dir_name / "src"
         for path in src_dir.rglob("*.py"):
             if "__pycache__" in path.parts:
+                continue
+            if any(part in _EXCLUDED_SUBTREES for part in path.parts):
                 continue
             for match in _LITERAL_RE.finditer(path.read_text(encoding="utf-8")):
                 found.add(match.group(1))

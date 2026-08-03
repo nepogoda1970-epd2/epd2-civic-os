@@ -1,0 +1,231 @@
+# PACK-16D — Reason-Code Coverage
+
+**Round:** PACK-16D — Cryptographic Implementation Architecture, Reference
+Components, Atomic Persistence, Test Vectors and Verification Harness.
+**Reference implementation. Not production code. Not certified. Not a PASS.**
+**Repository version:** unchanged at `0.16.0` · **Canon version:** unchanged at `0.8.0`
+**ADR:** `ADR-102`, status `proposed`
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. PUBLIC-ELECTION ACTIVATION PROHIBITED BY DEFAULT.**
+
+---
+
+## 1. Scope
+
+Two tables.
+
+The first lists **every typed error class in the reference
+implementation** — all **48** of them, one per `reason_code` declaration
+under `services/voting-service/src/epd2_voting_service/reference/` — with
+the code it carries, the module it lives in, and the test that reaches it.
+Where no test reaches it, or where nothing raises it at all, the row says
+so. The count was **38** in the first candidate; the correction round added
+ten, listed together in §2.2 rather than interleaved, so that a reader can
+see exactly what the guardian, target-profile and checkpoint-signature work
+introduced.
+
+The second maps the **twelve reason codes §48 requires** onto the
+implementation's typed error or verification result code, with the test
+that discharges each. All twelve have a reachable path and a test; the one
+that previously had neither (`RC-47`) is marked with where it is now
+raised.
+
+Test names are given as `module::test`. Every module named is under
+`services/voting-service/tests/reference/`.
+
+## 2. Every typed error class
+
+| ID | Class | `reason_code` | Module (under `reference/`) | Test that reaches it |
+| -- | ----- | ------------- | --------------------------- | -------------------- |
+| `RC-01` | `AuditFieldRejected` | `AUDIT_FIELD_REJECTED` | `audit.py` | `test_invariants::test_audit_records_reject_extra_fields` |
+| `RC-02` | `UnsafeFeatureFlagError` | `CONFIGURATION_REJECTED` | `invariants.py` | `test_invariants::test_unsafe_flag_override_fails_startup` (parametrised over all 10 invariants × 4 name shapes) |
+| `RC-03` | `UnknownFeatureFlagError` | `CONFIGURATION_REJECTED` | `invariants.py` | `test_invariants::test_unknown_flag_fails_startup_rather_than_being_ignored` |
+| `RC-04` | `ForbiddenLogFieldError` | `LOG_FIELD_REJECTED` | `logging_boundary.py` | `test_invariants::test_forbidden_log_field_fails_the_test_sink` (parametrised over all 23 forbidden names), `::test_an_undeclared_field_is_refused_even_if_it_looks_harmless`, `::test_free_text_reason_codes_are_refused` |
+| `RC-05` | `SchemaError` | `INVALID_SCHEMA` | `schemas.py` | **None — base class, never raised directly.** Only its three subclasses are raised |
+| `RC-06` | `UnknownSchemaError` | `UNSUPPORTED_PROFILE` | `schemas.py` | `test_invariants::test_migration_is_never_silent` |
+| `RC-07` | `UnknownCriticalFieldError` | `INVALID_SCHEMA` | `schemas.py` | `test_negative_corpus::test_neg_unknown_critical_field` |
+| `RC-08` | `MissingCriticalFieldError` | `INVALID_SCHEMA` | `schemas.py` | `test_negative_corpus::test_neg_missing_critical_field` |
+| `RC-09` | `ReferenceApiError` | `REFERENCE_API_ERROR` | `api.py` | `test_verifier_branches::test_reference_api_reports_missing_state_rather_than_guessing`, which reaches both raise sites — `get_publication_state()` with no obligation and `get_board_checkpoint()` with no checkpoint |
+| `RC-10` | `UnregisteredDomainLabelError` | `VALIDATION_FORBIDDEN_TRANSITION` | `crypto/domain_separation.py` | `test_crypto_units::test_domain_labels_are_unique_and_registered` |
+| `RC-11` | `CanonicalEncodingError` | `INVALID_CANONICAL_ENCODING` | `crypto/encoding.py` | `test_crypto_units::test_canonical_encoding_is_fixed_width_and_rejects_short_forms`, `::test_canonical_struct_rejects_duplicate_fields`; `test_negative_corpus::test_neg_non_canonical_integer`, `::test_neg_duplicate_field` |
+| `RC-12` | `PlaintextDomainError` | `BALLOT_PREPARATION_CONTEST_INVALID` | `crypto/elgamal.py` | `test_negative_corpus::test_neg_invalid_scalar`; `test_crypto_units::test_encrypt_rejects_out_of_domain_plaintext`, `::test_accumulate_rejects_empty_and_invalid` |
+| `RC-13` | `DecryptionDomainError` | `TALLY_MISMATCH` | `crypto/elgamal.py` | `test_verifier_branches::test_decode_exponent_fails_closed_outside_its_bound`, which reaches both raise sites in `decode_exponent()` — a value outside the bounded domain, and the search bound exceeded |
+| `RC-14` | `MerkleError` | `BATCH_ROOT_MISMATCH` | `crypto/merkle.py` | `test_verifier_branches::test_merkle_helpers_fail_closed` — leaf index out of range, and `old_size` at 0 and above `n` |
+| `RC-15` | `ParameterValidationError` | `PARAMETER_SET_INVALID` | `crypto/parameters.py` | `test_negative_corpus::test_neg_wrong_p_q_g`, `::test_neg_invalid_subgroup_element`, `::test_neg_zero_element`, `::test_neg_element_ge_p`, `::test_neg_invalid_ciphertext`; `test_crypto_units::test_parameter_validation_fails_closed`; `test_verifier_branches::test_require_in_subgroup_names_the_value_it_rejected` |
+| `RC-16` | `ParameterProfileUnavailableError` | `PARAMETER_SET_NOT_APPROVED` | `crypto/parameters.py` | `test_crypto_units::test_production_profile_is_registered_but_unavailable`, `::test_unknown_profile_fails_closed` |
+| `RC-17` | `ProofGenerationError` | `BALLOT_PROOF_GENERATION_FAILED` | `crypto/proofs.py` | `test_crypto_units::test_selection_proof_refuses_out_of_domain_message` |
+| `RC-18` | `RandomnessUnavailableError` | `CRYPTO_RANDOMNESS_UNAVAILABLE` | `crypto/randomness.py` | `test_verifier_branches::test_production_random_source_reports_failure_rather_than_degrading` |
+| `RC-19` | `DeterministicSourceForbiddenError` | `CRYPTO_TEST_MODE_REACHABLE` | `crypto/randomness.py` | `test_crypto_units::test_deterministic_source_requires_both_guards`, `::test_select_source_can_never_return_a_deterministic_source`; `test_invariants::test_test_rng_cannot_be_selected_in_production_profile` |
+| `RC-20` | `BallotStructureError` | `BALLOT_PREPARATION_STYLE_SHAPE_MISMATCH` | `casting/ballot.py` | `test_negative_corpus::test_neg_wrong_manifest_digest`, `::test_neg_wrong_election_context`, `::test_neg_wrong_ballot_style`, `::test_neg_invalid_proof`, `::test_neg_reused_nonce` |
+| `RC-21` | `OvervoteError` | `BALLOT_PREPARATION_OVERVOTE` | `casting/ballot.py` | `test_negative_corpus::test_neg_overvote` |
+| `RC-22` | `ChallengeOpeningError` | `CHALLENGE_REENCRYPTION_MISMATCH` | `casting/confirmation.py` | `test_negative_corpus::test_neg_cast_nonce_revealed` |
+| `RC-23` | `CastEntitlementExhaustedError` | `CONTINUATION_CAST_ENTITLEMENT_EXHAUSTED` | `casting/continuation.py` | `test_negative_corpus::test_neg_duplicate_cast`, `::test_neg_capability_replay`; `test_e2e::test_e2e_04_double_cast_race`; `test_concurrency::test_c01_two_simultaneous_casts_on_one_capability`; `test_property::test_p08_one_capability_cannot_cast_twice` |
+| `RC-24` | `PublicChallengeEntitlementExhaustedError` | `CHALLENGE_PUBLIC_ENTITLEMENT_EXHAUSTED` | `casting/continuation.py` | `test_negative_corpus::test_neg_duplicate_public_challenge`; `test_e2e::test_e2e_03_second_public_challenge_rejected`; `test_concurrency::test_c02_two_simultaneous_public_challenges`, `::test_c03_cast_and_public_challenge_concurrently`; `test_property::test_p09_one_capability_cannot_publish_two_challenges` |
+| `RC-25` | `CapabilityUnknownError` | `CONTINUATION_INVALID` | `casting/continuation.py` | `test_negative_corpus::test_neg_unknown_capability` |
+| `RC-26` | `IdempotencyConflictError` | `SUBMISSION_IDEMPOTENCY_CONFLICT` | `casting/idempotency.py` | `test_negative_corpus::test_neg_idempotency_conflict`; `test_concurrency::test_c04_same_idempotency_key_concurrently`; `test_property::test_p07_different_request_with_same_key_fails` |
+| `RC-27` | `ReservationUnavailableError` | `RESERVATION_UNAVAILABLE` | `casting/store.py` | **None — base class, never raised directly.** Its own docstring says so; the two subclasses exist because a cast and a public challenge exhaust different capacity and the PACK-16C catalogue gives them different codes |
+| `RC-28` | `CastCapacityUnavailableError` | `SUBMISSION_CAST_CAPACITY_UNAVAILABLE` | `casting/store.py` | `test_negative_corpus::test_neg_leaf_reservation_race`; `test_e2e::test_e2e_07_capacity_exhaustion`; `test_concurrency::test_c05_two_reservations_for_the_same_slot` |
+| `RC-29` | `PublicChallengeReservationUnavailableError` | `CHALLENGE_PUBLIC_RESERVATION_UNAVAILABLE` | `casting/store.py` | `test_negative_corpus::test_neg_wrong_slot_type` |
+| `RC-30` | `DuplicateArtifactError` | `ACCEPTANCE_DUPLICATE_BALLOT_ID` | `casting/store.py` | `test_negative_corpus::test_neg_challenged_ballot_submitted_as_cast`. Both transactions raise it for a ballot id already present in `accepted_ballots` or `spoiled_ballots` |
+| `RC-31` | `CapacityPlanInvalidError` | `ELECTION_CAPACITY_PLAN_INVALID` | `publication/capacity.py` | `test_negative_corpus::test_neg_adaptive_overflow_attempt`; `test_casting_units::test_capacity_plan_rejects_a_plan_that_cannot_cover_l_max` |
+| `RC-32` | `CapacityExhaustedError` | `BULLETIN_BOARD_BATCH_CAPACITY_EXHAUSTED` | `publication/capacity.py` | `test_verifier_branches::test_capacity_exhaustion_is_caught_at_sealing_time`. `seal_batch()` raises it when the committed reservations exceed the batch's leaves. See `RC-47` |
+| `RC-33` | `BatchIntegrityError` | `BULLETIN_BOARD_BATCH_ROOT_MISMATCH` | `publication/sealed_batches.py` | `test_verifier_branches::test_batch_helpers_fail_closed_on_bad_input` |
+| `RC-34` | `BoardIntegrityError` | `BULLETIN_BOARD_BATCH_ROOT_MISMATCH` | `publication/bulletin_board.py` | `test_verifier_branches::test_board_integrity_errors_are_raised_for_out_of_range_requests`, which reaches all three sites — `inclusion_proof()` with a sequence out of range, `consistency_proof()` with `old_tree_size` outside `(0, n]`, and `root_at()` with a tree size out of range |
+| `RC-35` | `PreClosurePublicationError` | `PUBLICATION_UNSCHEDULED_BATCH_PROHIBITED` | `publication/bulletin_board.py` | `test_negative_corpus::test_neg_pre_closure_decryption_artifact`; `test_invariants::test_every_post_closure_entry_type_is_refused_before_closure` (parametrised over **every** post-closure type, not a sample); `test_e2e::test_e2e_10_pre_closure_tally_attempt` |
+| `RC-36` | `IntermediateTallyProhibitedError` | `TALLY_PRE_CLOSURE_PROHIBITED` | `election_record/builder.py` | `test_negative_corpus::test_neg_intermediate_tally_artifact`; `test_invariants::test_tally_construction_is_unavailable_before_closure`; `test_e2e::test_e2e_10_pre_closure_tally_attempt` |
+| `RC-37` | `ReconciliationError` | `BULLETIN_BOARD_BATCH_RECONCILIATION_FAILED` | `election_record/builder.py` | `test_negative_corpus::test_neg_duplicate_opening`, `::test_neg_cover_leaf_in_tally` |
+| `RC-38` | `InjectedFault` | `INTERNAL_FAIL_CLOSED` | `testing/faults.py` | `test_fault_injection` (8 tests over the 11 fault points); `test_e2e::test_e2e_05_crash_before_commit`, `::test_e2e_06_crash_after_commit_before_publication`; `test_concurrency::test_c08_crash_after_persistence_before_dispatch`, `::test_c09_crash_after_dispatch_before_acknowledgement`. This class is test infrastructure and is not part of the production surface |
+
+### 2.1 The two classes with no test, stated plainly
+
+Two of the 38 rows above have no test that reaches them, and both are that
+way by design:
+
+| ID | Kind |
+| -- | ---- |
+| `RC-39` | `SchemaError` (`RC-05`) and `ReservationUnavailableError` (`RC-27`) are **abstract bases that are never raised by design**. Their `reason_code` exists so that a caller catching the base still has a code. Nothing is missing |
+| `RC-40` | `DecryptionDomainError` (`RC-13`), `MerkleError` (`RC-14`), `BoardIntegrityError` (`RC-34`) and `ReferenceApiError` (`RC-09`) were raised in the code and reached by no test. **Each now has one**, named in its row above. The measured line coverage of the reference package is **90.9 % (3 816 / 4 200 executable lines)**, measured with the stdlib `trace` module. Branch coverage was **not** measured; no tool for it is installable in this environment |
+| `RC-41` | `DuplicateArtifactError` (`RC-30`) and `CapacityExhaustedError` (`RC-32`) were **declared and never raised anywhere in the package** — dead declarations carrying a reason code no code path could produce. **Both are now raised and tested**: a duplicate ballot id in either transaction raises `DuplicateArtifactError`, and `seal_batch()` raises `CapacityExhaustedError` when committed reservations exceed the batch's leaves. See `RC-47` |
+
+### 2.2 The ten classes the correction round added
+
+Ten `reason_code` declarations are new: one for the target-profile
+substitution guard, one for Ed25519, one for checkpoint signing and seven
+for the guardian package. Every one of them is reached by a test.
+
+| ID | Class | `reason_code` | Module (under `reference/`) | Test that reaches it |
+| -- | ----- | ------------- | --------------------------- | -------------------- |
+| `RC-64` | `ProfileSubstitutionError` | `PARAMETER_SET_NOT_APPROVED` | `crypto/parameters.py` | `test_epd2_crypto_1::test_epd2_crypto_1_no_fallback`, which calls `require_target_profile()` on **every** non-target profile in `PROFILE_REGISTRY` and matches on `"never stand in"` |
+| `RC-65` | `SignatureFormatError` | `BOARD_SIGNATURE_INVALID` | `crypto/signature_provider.py` | `test_checkpoint_signatures::test_a_seed_of_the_wrong_length_is_refused` |
+| `RC-65a` | `SignatureProviderUnavailableError` | `SIGNATURE_PROVIDER_UNAVAILABLE` | `crypto/signature_provider.py` | `test_checkpoint_signatures::test_missing_provider_fails_closed` — raised at **import time**, so it never reaches a caller as a result code; it stops the process instead, which is the point |
+| `RC-66` | `CheckpointSigningError` | `BOARD_SIGNATURE_INVALID` | `publication/checkpoint_signing.py` | `test_checkpoint_signatures::test_a_seed_of_the_wrong_length_is_refused`, the second half of the same case |
+| `RC-67` | `GuardianConfigurationError` | `GUARDIAN_THRESHOLD_MISMATCH` | `guardians/ceremony.py` | `test_guardians::test_invalid_configurations_fail_closed`, parametrised over the rejected `(k, n)` shapes — `k > n`, `k < 1`, `n < 1` and `2k <= n` |
+| `RC-68` | `ThresholdMismatchError` | `GUARDIAN_THRESHOLD_MISMATCH` | `guardians/ceremony.py` | `test_guardians::test_shares_for_different_options_cannot_be_combined` |
+| `RC-69` | `InsufficientQuorumError` | `GUARDIAN_INSUFFICIENT_QUORUM` | `guardians/ceremony.py` | `test_guardians::test_2_of_5_rejected`, `::test_3_of_7_rejected`, `::test_threshold_reduction_rejected`; `test_negative_corpus::test_neg_insufficient_guardian_quorum`; `test_e2e::test_e2e_12_insufficient_guardian_quorum` |
+| `RC-70` | `DuplicateGuardianShareError` | `GUARDIAN_DUPLICATE_SHARE` | `guardians/ceremony.py` | `test_guardians::test_duplicate_guardian_share_rejected` |
+| `RC-71` | `InvalidShareProofError` | `GUARDIAN_INVALID_SHARE_PROOF` | `guardians/ceremony.py` | `test_guardians::test_a_corrupt_share_aborts_the_ceremony` (via `run_ceremony(corrupt_share_from=…)`), `::test_invalid_guardian_share_proof_rejected` |
+| `RC-72` | `UnknownGuardianError` | `GUARDIAN_UNKNOWN_GUARDIAN` | `guardians/ceremony.py` | `test_guardians::test_unknown_guardian_rejected`, `::test_lagrange_coefficients_reconstruct_at_zero` |
+| `RC-73` | `CompensatedDecryptionProhibited` | `GUARDIAN_COMPENSATION_PROHIBITED` | `guardians/ceremony.py` | `test_guardians::test_compensated_decryption_unavailable`. The function exists **only** to raise, so that the prohibition is discoverable in code rather than only in a document |
+
+| ID | Rule |
+| -- | ---- |
+| `RC-74` | **The five `guardian.*` reason codes are a separate, named vocabulary.** `GuardianErrorCode` in `guardians/ceremony.py` is a `StrEnum` declaring `guardian.threshold_mismatch`, `guardian.insufficient_quorum`, `guardian.duplicate_share`, `guardian.invalid_share_proof` and `guardian.unknown_guardian`, and `test_guardians::test_error_codes_are_the_declared_ones` asserts the enum's value set is **exactly** those five. The `GUARDIAN_*` strings in the table above are the class attributes a caller reads off a raised exception; the dotted names are the catalogue-level codes. Both exist, and neither is a rename of the other |
+| `RC-75` | **Two classes share `GUARDIAN_THRESHOLD_MISMATCH` (`RC-67`, `RC-68`) and that is deliberate**, on the same reasoning as `RC-63`: a policy that cannot be validated and a set of shares that cannot be combined are the same caller-visible outcome — the declared threshold does not match what was presented — and the distinction between them is internal |
+| `RC-76` | **Two classes share `BOARD_SIGNATURE_INVALID` (`RC-65`, `RC-66`)** for the same reason. A malformed key or signature at the Ed25519 layer and a malformed signing seed at the checkpoint layer both mean the caller cannot produce or check a valid signature |
+| `RC-77` | **`GUARDIAN_COMPENSATION_PROHIBITED` (`RC-73`) is unreachable in normal operation by design, and is not a dead declaration.** It is the only code in the package whose purpose is to be raised by a function nothing calls. The same test reads the source of `guardians/threshold.py` and asserts the words `compensate`, `reconstruct_secret`, `escrow` and `break_glass` do not appear in it, so a compensation path cannot be added without that assertion failing |
+
+## 3. The twelve reason codes §48 requires
+
+| ID | §48 reason code | Implementation | Test that discharges it |
+| -- | --------------- | -------------- | ----------------------- |
+| `RC-42` | `challenge.public_entitlement_exhausted` | `PublicChallengeEntitlementExhaustedError`, `reason_code = "CHALLENGE_PUBLIC_ENTITLEMENT_EXHAUSTED"`, `casting/continuation.py` | `test_negative_corpus::test_neg_duplicate_public_challenge`, which asserts the raised exception's `reason_code` equals the corpus index value. Also reached under a thread race by `test_concurrency::test_c02` and `::test_c03` |
+| `RC-43` | `continuation.cast_entitlement_exhausted` | `CastEntitlementExhaustedError`, `reason_code = "CONTINUATION_CAST_ENTITLEMENT_EXHAUSTED"`, `casting/continuation.py` | `test_negative_corpus::test_neg_duplicate_cast`, asserting the `reason_code` value. Also `::test_neg_capability_replay` and `test_concurrency::test_c01` |
+| `RC-44` | `submission.idempotency_conflict` | `IdempotencyConflictError`, `reason_code = "SUBMISSION_IDEMPOTENCY_CONFLICT"`, `casting/idempotency.py` | `test_negative_corpus::test_neg_idempotency_conflict`, asserting the `reason_code` value. Also `test_concurrency::test_c04_same_idempotency_key_concurrently`, the race that found the round's first real defect |
+| `RC-45` | `submission.cast_capacity_unavailable` | `CastCapacityUnavailableError`, `reason_code = "SUBMISSION_CAST_CAPACITY_UNAVAILABLE"`, `casting/store.py` | `test_negative_corpus::test_neg_leaf_reservation_race`, asserting the `reason_code` value. Also `test_e2e::test_e2e_07_capacity_exhaustion` and `test_concurrency::test_c05` |
+| `RC-46` | `challenge.public_reservation_unavailable` | `PublicChallengeReservationUnavailableError`, `reason_code = "CHALLENGE_PUBLIC_RESERVATION_UNAVAILABLE"`, `casting/store.py` | `test_negative_corpus::test_neg_wrong_slot_type`, which asserts the exception type, the `reason_code` value against the corpus index, and that the cast-reserved slot was not taken |
+| `RC-47` | `bulletin_board.batch_capacity_exhausted` | `CapacityExhaustedError`, `reason_code = "BULLETIN_BOARD_BATCH_CAPACITY_EXHAUSTED"`, `publication/capacity.py` | `test_verifier_branches::test_capacity_exhaustion_is_caught_at_sealing_time`. The normal exhaustion path is still leaf reservation: a submission that finds no free slot receives `SUBMISSION_CAST_CAPACITY_UNAVAILABLE` (`RC-45`) or `CHALLENGE_PUBLIC_RESERVATION_UNAVAILABLE` (`RC-46`). `CapacityExhaustedError` is raised at sealing time, the last point at which an over-full batch can be caught before a committed ballot would be silently dropped |
+| `RC-48` | `bulletin_board.batch_root_mismatch` | Two typed errors carry `"BULLETIN_BOARD_BATCH_ROOT_MISMATCH"` — `BatchIntegrityError` (`publication/sealed_batches.py`) and `BoardIntegrityError` (`publication/bulletin_board.py`) — and the verifier returns `VerificationResultCode.BATCH_ROOT_MISMATCH`, exit code 41 | `test_verifier_branches::test_batch_helpers_fail_closed_on_bad_input` reaches `BatchIntegrityError`; `test_negative_corpus::test_neg_batch_root_mismatch` forges a commitment root and asserts the verifier returns `BATCH_ROOT_MISMATCH` with exit code 41. `BoardIntegrityError` is reached by `test_verifier_branches::test_board_integrity_errors_are_raised_for_out_of_range_requests` (`RC-34`) |
+| `RC-49` | `bulletin_board.batch_reconciliation_failed` | `ReconciliationError`, `reason_code = "BULLETIN_BOARD_BATCH_RECONCILIATION_FAILED"`, `election_record/builder.py`; the verifier's corresponding code is `BATCH_RECONCILIATION_FAILED`, exit 42 | `test_negative_corpus::test_neg_duplicate_opening` (one artefact mapped to two leaves) and `::test_neg_cover_leaf_in_tally` (a cover leaf promoted to an accepted cast), both asserting the `reason_code` value. The **verifier** code is not reachable through `verify_record`: `reconcile()` raises before a record can be built, which is declared in `test_verifier_branches.UNREACHABLE_IN_REFERENCE_VERIFIER` |
+| `RC-50` | `publication.unscheduled_batch_prohibited` | `PreClosurePublicationError`, `reason_code = "PUBLICATION_UNSCHEDULED_BATCH_PROHIBITED"`, `publication/bulletin_board.py` | `test_negative_corpus::test_neg_pre_closure_decryption_artifact`, asserting the `reason_code` value **and** that the board is left empty. `test_invariants::test_every_post_closure_entry_type_is_refused_before_closure` is parametrised over every post-closure entry type |
+| `RC-51` | `election.capacity_plan_invalid` | `CapacityPlanInvalidError`, `reason_code = "ELECTION_CAPACITY_PLAN_INVALID"`, `publication/capacity.py` | `test_negative_corpus::test_neg_adaptive_overflow_attempt`, asserting the `reason_code` value and that the message contains `"adaptive-overflow"`. Also `test_casting_units::test_capacity_plan_rejects_a_plan_that_cannot_cover_l_max` |
+| `RC-52` | `verification.batch_inclusion_failed` | `VerificationResultCode.BATCH_INCLUSION_FAILED`, exit code 43, `verification/results.py` | `test_verifier_branches::test_batch_inclusion_failed_branch`, through `verify_leaf_inclusion()` in three directions: the real leaf under its own path verifies, a leaf not in the batch does not, and a real leaf under another leaf's path does not. **Not reachable through `verify_record`** — for a complete opening the per-leaf check is redundant with root recomputation, which is declared in `UNREACHABLE_IN_REFERENCE_VERIFIER` |
+| `RC-53` | `verification.batch_consistency_failed` | `VerificationResultCode.BATCH_CONSISTENCY_FAILED`, exit code 44, `verification/results.py` | `test_verifier_branches::test_board_consistency_proofs_are_checked_when_supplied`, which asserts the code for a corrupted consistency proof and again for a proof naming a tree size with no checkpoint. `::test_a_board_export_without_proofs_claims_no_consistency_check` closes the other half: with no proofs supplied, `board.consistency_proofs` is not added to `checks_run`, so an unchecked claim never reads as a passed one |
+
+### 3.1 Summary of §48 coverage
+
+All twelve have a reachable path and a test.
+`bulletin_board.batch_capacity_exhausted` (`RC-47`) had neither and now
+has both, through `seal_batch()`. `ACCEPTANCE_DUPLICATE_BALLOT_ID`
+(`RC-30`), which is not one of the twelve but was in the same condition,
+is likewise raised and tested. No reason code declared in the
+implementation is now unreachable.
+
+### 3.2 The seven verification result codes added this round
+
+`VerificationResultCode` now declares **26** codes with **26** distinct
+exit codes; `test_verifier_branches::test_every_exit_code_is_distinct_and_stable`
+asserts both the distinctness and that the `EXIT_CODES` mapping covers
+every member. Seven codes and seven exit codes are new, and none of the
+existing numbers moved — exit codes are never renumbered.
+
+Five of the seven come from checkpoint signatures.
+`CheckpointSignatureOutcome` in `publication/checkpoint_signing.py` is a
+`StrEnum` of six outcomes, and `_SIGNATURE_OUTCOME_CODES` in
+`verification/verifier.py` maps the five failures **one-to-one** onto
+result codes, so a reader of an exit code can tell "nobody signed this"
+from "the wrong person signed it" from "the bytes were altered".
+
+| ID | Outcome / code | Exit | Returned when | Test |
+| -- | -------------- | ---- | ------------- | ---- |
+| `RC-78` | `BOARD_SIGNATURE_VALID` | — | The signature verifies against an authorised, in-window key. It is an outcome, not a result code: success continues into the rest of `verify_board` and adds `board.checkpoint_signatures` to `checks_run` | `test_checkpoint_signatures::test_valid_checkpoint_signature`, `::test_verifier_checks_signatures_and_says_so` |
+| `RC-79` | `BOARD_SIGNATURE_MISSING` | 45 | The checkpoint carries no signature at all | `test_checkpoint_signatures::test_missing_checkpoint_signature_rejected` |
+| `RC-80` | `BOARD_SIGNER_UNKNOWN` | 46 | The `signing_key_id` does not resolve inside the supplied `SignerRegistry` | `test_checkpoint_signatures::test_unknown_signer_rejected`, `::test_verifier_reports_an_unknown_signer_distinctly`; `test_negative_corpus::test_neg_unauthorized_board_signer`; `test_e2e::test_e2e_13_invalid_checkpoint_signer` |
+| `RC-81` | `BOARD_SIGNER_UNAUTHORIZED` | 47 | The key resolves but names another election or board, or the checkpoint sequence falls outside the key's declared `active_from_sequence` / `active_to_sequence` window | `test_checkpoint_signatures::test_unauthorized_signer_rejected`, `::test_signer_outside_its_activation_window_rejected` |
+| `RC-82` | `BOARD_SIGNATURE_INVALID` | 48 | The bytes do not verify under the resolved public key | `test_checkpoint_signatures::test_altered_checkpoint_rejected`, `::test_signature_is_not_malleable`, `::test_verifier_reports_a_forged_signature_distinctly` |
+| `RC-83` | `BOARD_SIGNATURE_CONTEXT_MISMATCH` | 49 | The payload's `schema_version` is not `EPD2-CHECKPOINT-2`, or it names a different election or board than the registry | `test_checkpoint_signatures::test_schema_version_is_bound`, `::test_wrong_election_signature_rejected`, `::test_wrong_board_signature_rejected`, `::test_signature_replay_rejected` |
+| `RC-84` | `INVALID_CEREMONY_TRANSCRIPT` | 23 | `verify_ceremony` rejects the transcript, the transcript names a different election, or the record's joint public key is not the one that derives from the roster's commitments. Run **immediately after the joint-key subgroup check and before anything that uses the key** | `test_e2e::test_e2e_14_election_record_verification_with_threshold_artifacts` swaps the record's joint key and asserts the result is `INVALID_CEREMONY` **or** `INVALID_CEREMONY_TRANSCRIPT`. **That is a set assertion, so no test pins this code exclusively** — the underlying rejection is pinned at the ceremony layer by `test_guardians::test_ceremony_rejects_a_tampered_transcript`, which asserts `verify_ceremony` returns `False`. A branch test that pins exit 23 on its own is not present this round |
+| `RC-85` | `GUARDIAN_QUORUM_MISMATCH` | 24 | A tallied option carries a duplicate guardian share, or fewer shares than the ceremony's quorum. The quorum comes from the transcript, never from the caller | `test_e2e::test_e2e_14_election_record_verification_with_threshold_artifacts`, which removes a guardian's share from a verified record and asserts this code exactly. The *builder*-side refusal of the same reduction is `test_e2e::test_e2e_12_insufficient_guardian_quorum`, which raises `InsufficientQuorumError` (`RC-69`) before a record can be built at all |
+
+| ID | Rule |
+| -- | ---- |
+| `RC-86` | **A valid signature is never reported as consistency.** Two *validly signed* checkpoints at one sequence carrying different roots returns `BOARD_INCONSISTENCY` (40), not a signature success — equivocation by an authorised signer is worse than a forgery. `test_checkpoint_signatures::test_conflicting_signed_checkpoints_detected` builds that case with both signatures genuine, and `::test_a_valid_signature_is_not_evidence_of_a_single_view` states the same separation |
+| `RC-87` | **A missing signature is not a downgrade.** An export carrying checkpoint tuples but no signed checkpoints returns `INCOMPLETE_RECORD` (10) rather than falling back to the pre-correction digest, because a fallback covering less than the board actually signed is a downgrade the verifier's caller could not see. `test_checkpoint_signatures::test_an_export_without_signed_checkpoints_is_incomplete` |
+
+### 3.3 Reachable and unreachable, recounted from the source
+
+| ID | Statement |
+| -- | --------- |
+| `RC-88` | **26 result codes; 7 declared unreachable through the reference verifier; 19 reachable.** The seven are the keys of `UNREACHABLE_IN_REFERENCE_VERIFIER` in `test_verifier_branches.py`: `VERIFIED_WITH_WARNINGS`, `INVALID_SCHEMA`, `INVALID_CANONICAL_ENCODING`, `INVALID_MANIFEST`, `BATCH_INCLUSION_FAILED`, `BATCH_RECONCILIATION_FAILED` and `ARCHIVE_CORRUPTION`. `test_unreachable_codes_are_declared_and_still_exist` asserts every key is a real enum member with a non-empty reason |
+| `RC-89` | **`UNSUPPORTED_PROFILE` is no longer among them.** It was an eighth entry while the verifier derived expected bit lengths from the record it was checking — a comparison of a value against itself. `verify_record` now reads `PROFILE_BIT_LENGTHS` from code and returns `UNSUPPORTED_PROFILE` (exit 11) for a parameter set it has no declared lengths for, before any other check. `test_verifier_branches::test_unsupported_profile_branch` reaches it. `SR-39` in `PACK-16D-SCHEMA-REGISTRY.md` states the same correction from the registry's side |
+| `RC-90` | **The nineteen reachable codes** are `VERIFIED`, `INCOMPLETE_RECORD`, `UNSUPPORTED_PROFILE`, `INVALID_PARAMETER_SET`, `INVALID_CEREMONY`, `INVALID_CEREMONY_TRANSCRIPT`, `GUARDIAN_QUORUM_MISMATCH`, `INVALID_BALLOT_PROOF`, `INVALID_CHALLENGE_OPENING`, `BOARD_INCONSISTENCY`, `BATCH_ROOT_MISMATCH`, `BATCH_CONSISTENCY_FAILED`, `BOARD_SIGNATURE_MISSING`, `BOARD_SIGNER_UNKNOWN`, `BOARD_SIGNER_UNAUTHORIZED`, `BOARD_SIGNATURE_INVALID`, `BOARD_SIGNATURE_CONTEXT_MISMATCH`, `INVALID_DECRYPTION_SHARE` and `TALLY_MISMATCH` |
+| `RC-91` | **Unreachable is not unused.** Four of the seven are reached by another component — the schema registry, the canonical encoder, `reconcile()` and `verify_leaf_inclusion` — and the declaration names which. The declaration is a test, so a code that becomes reachable must be removed from the dict by hand, which is a reviewable diff. That is exactly what happened to `UNSUPPORTED_PROFILE` |
+| `RC-92` | **Reachable is not the same as exclusively pinned by a test, and one code is in that gap.** `INVALID_CEREMONY_TRANSCRIPT` (`RC-84`) is returned from three sites in `verify_record` and is not declared unreachable, but the only assertion naming it accepts `INVALID_CEREMONY` as well. The distinction is recorded here rather than smoothed over: eighteen of the nineteen reachable codes are pinned exactly, and one is pinned as a member of a two-element set |
+
+## 4. Where the negative-corpus index and the class attributes used to diverge
+
+`EXPECTED_REASON_CODES` in `test_negative_corpus.py` is the
+machine-readable index of **39** named cases, and
+`test_every_declared_case_has_a_test` asserts that each key has a
+correspondingly named test. **All 39 cases assert their declared
+code** — through `raised.value.reason_code == EXPECTED_REASON_CODES[case]`
+for a typed error, or `result.code.value == EXPECTED_REASON_CODES[case]`
+for a verification result — and
+`test_every_case_asserts_its_declared_reason_code` inspects each case's
+source and fails if one stops referencing the index. Four declared codes
+disagreed with what was raised; each was corrected to what the
+implementation actually produces.
+
+| ID | Case(s) | Index declares | What was corrected |
+| -- | ------- | -------------- | ------------------ |
+| `RC-54` | `non_canonical_integer`, `duplicate_field` | `INVALID_CANONICAL_ENCODING` | `CanonicalEncodingError.reason_code` was `VALIDATION_SCHEMA_INVALID` — a canonical-encoding failure reported as a schema failure. The class now carries `INVALID_CANONICAL_ENCODING`, matching the `VerificationResultCode` of the same name (exit 13) |
+| `RC-55` | `wrong_manifest_digest`, `wrong_election_context`, `wrong_ballot_style`, `invalid_proof`, `reused_nonce`, `overvote` | `BALLOT_PREPARATION_STYLE_SHAPE_MISMATCH`, and `BALLOT_PREPARATION_OVERVOTE` for `overvote` | The index declared `BALLOT_STRUCTURE_INVALID`, a string that appears nowhere in the reference package. It was corrected to the codes the classes carry: `BallotStructureError` for the first five, `OvervoteError` for `overvote` |
+| `RC-56` | `challenged_ballot_submitted_as_cast` | `ACCEPTANCE_DUPLICATE_BALLOT_ID` | The case used to surface as `IdempotencyConflictError`. Both transactions now raise `DuplicateArtifactError` for an already-published ballot id, which is the class that carries the declared code (`RC-30`). The two codes stay distinct because a client may retry one and must not retry the other |
+| `RC-57` | `invalid_consistency_proof` | `BATCH_CONSISTENCY_FAILED` | The index declared `BOARD_INCONSISTENCY` (exit 40). The case now goes through `verify_board` and asserts `BATCH_CONSISTENCY_FAILED` with exit code 44 for every single-node corruption and for a truncated proof — the code the verifier actually returns (`RC-53`) |
+
+| ID | Rule |
+| -- | ---- |
+| `RC-58` | **The index is now pinned to the implementation's own codes by test.** Every case asserts its declared code, and `test_every_case_asserts_its_declared_reason_code` makes a silent return to a type-only assertion impossible. The index is still a specification-level statement, but it can no longer drift from what the code raises without a test failing |
+
+## 5. Normative rules
+
+| ID | Rule |
+| -- | ---- |
+| `RC-59` | **A generic HTTP 500 is never used in place of a domain result.** Every failure a caller can provoke resolves to a typed error carrying a `reason_code`, or to a `VerificationResult` carrying a `VerificationResultCode` and a stable exit code. An internal server error is reserved for conditions that are not domain outcomes at all |
+| `RC-60` | **The scope of `RC-59` in this round, stated honestly.** The reference package exposes no HTTP surface: `ReferenceApi` is a Python class with nine methods, and nothing under `reference/` constructs an HTTP response. `RC-59` is therefore a normative obligation on the service that wraps this package, and **nothing in this round enforces it**. What this round does provide is the precondition — a typed, coded result for every reachable failure — which is what makes the rule satisfiable |
+| `RC-61` | **The verifier returns, it does not raise.** Every `verify_*` function returns a `VerificationResult`, so a caller always receives a code and an exit code rather than a traceback. That is why the verification half of the §48 list (`RC-52`, `RC-53`) maps to result codes rather than to exception classes |
+| `RC-62` | **A failure is never downgraded to a warning.** `test_negative_corpus`'s module docstring states the rule: a case that merely returns a warning, or that succeeds with a degraded result, is a defect in the implementation rather than a lenient test. `VERIFIED_WITH_WARNINGS` exists in the code and no reference check emits it |
+| `RC-63` | **Two errors may share a reason code, but for a stated reason.** `UnsafeFeatureFlagError` and `UnknownFeatureFlagError` both carry `CONFIGURATION_REJECTED` (`RC-02`, `RC-03`); `BatchIntegrityError` and `BoardIntegrityError` both carry `BULLETIN_BOARD_BATCH_ROOT_MISMATCH` (`RC-33`, `RC-34`); three schema errors share `INVALID_SCHEMA` (`RC-05`, `RC-07`, `RC-08`). In each case the caller-visible outcome is the same and the distinction is internal. Conversely, a cast and a public challenge exhaust different capacity and therefore get different types **and** different codes — `ReservationUnavailableError`'s docstring records that as the reason the subclasses exist |
+
+## 6. What this document does not decide
+
+```text
+Reconciling EXPECTED_REASON_CODES with the class attributes  → done this round, see RC-58
+Tests for the four untested error classes                    → done this round, see RC-40
+Wiring up the two dead declarations                          → done this round, see RC-41
+A reachable path for bulletin_board.batch_capacity_exhausted → done this round, see RC-47
+HTTP status mapping and the RC-59 obligation                 → PACK-17, service layer
+An exclusive branch test for INVALID_CEREMONY_TRANSCRIPT     → PACK-17, see RC-92
+Branch coverage of the reason-code paths                     → not measurable here
+```
+
+**REFERENCE IMPLEMENTATION. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY.
+NOT LEGALLY ACTIVATED.**

@@ -1,0 +1,215 @@
+# PACK-16D — Security and Side-Channel Limitations
+
+**Round:** PACK-16D — Network-Enabled Finalization: Lockfile Regeneration,
+Immutable ElectionGuard Provenance and Final Acceptance Alignment.
+**Reference implementation. Not production code. Not certified. Not a PASS.**
+**Repository version:** unchanged at `0.16.0` · **Canon version:** unchanged at `0.8.0`
+**ADR:** `ADR-102`, status `proposed`
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. PUBLIC-ELECTION ACTIVATION PROHIBITED BY DEFAULT.**
+
+---
+
+## 1. Scope
+
+This document works through the §60 security review checklist item by
+item against the reference implementation under
+`services/voting-service/src/epd2_voting_service/reference/`, and states
+for each what is implemented, what is only partly implemented and what is
+not implemented at all.
+
+It is not a security assessment. A security assessment is performed by a
+party that did not write the code. This document is the input such a party
+would need in order to know where to look, and it is written so that a
+reader who checks every line against the source finds no claim that is
+larger than the code.
+
+Three items on the checklist are **not implemented and cannot be
+implemented in this language**: secret-material zeroization, constant-time
+behaviour, and nonce-reuse detection. One further limitation is stated in
+the same way: `tally_accepted()` tallies only the first ballot style.
+
+A fifth limitation stated here in an earlier pass — that `verify_board`
+carried a checkpoint signature it never verified — **no longer holds**.
+Checkpoints are now signed with Ed25519 against a declared signer registry
+and the verifier checks them; §6 records the new state and the narrower
+residual that survives it. Everything in the body below is stated in the
+same tables as everything else. None of it is a footnote.
+
+**One surface moved in this correction, and §4 is where it moved.** The
+Ed25519 signing path is no longer a hand-written implementation in this
+repository; it is a vetted library. That is a real reduction in risk and it
+is not an assurance about timing, because EPD² measured nothing. It also
+put a compiled native artefact into the runtime path for the first time,
+which is a new consideration rather than a resolved one. §4.1 states both.
+
+## 2. The §60 checklist, one row per item
+
+| ID | Checklist item | Implemented | Not implemented |
+| -- | -------------- | ----------- | --------------- |
+| `SL-01` | secret material zeroization | Nothing | **Nothing is zeroized.** Python cannot reliably overwrite an immutable `int` or `bytes`, and the garbage collector may copy either. See §3 |
+| `SL-02` | nonce reuse | Every selection draws a fresh nonce from the `RandomSource`; every proof is bound to a context that includes the base hash, the ballot id, the contest id and the option id, so a copied proof does not transfer (`test_neg_reused_nonce`) | **No nonce-reuse detector exists.** A caller that passes the same nonce value twice into `encrypt()` is not caught by anything. See §5 |
+| `SL-03` | randomness failure | `ProductionRandomSource` fails closed on both `random_bytes` and `random_below` with `RandomnessUnavailableError` (`CRYPTO_RANDOMNESS_UNAVAILABLE`). `random_below` uses rejection sampling over whole bytes drawn through `random_bytes`, so a CSPRNG failure surfaces through the same fail-closed path rather than as a bare `OSError` from the stdlib. `test_production_random_source_reports_failure_rather_than_degrading` | No hardware entropy source, no health test on the entropy stream, no reseed policy. There is no fallback source, which is the intended design, not a gap |
+| `SL-04` | canonicalization ambiguity | `EPD2-ENC-1` is fixed-width, length-prefixed, ordered, NFC-normalised and duplicate-rejecting. A **real ambiguity defect was found and fixed this round**: `encode_seq` concatenated items raw after a count and `encode_struct` appended field values raw, so `SEQ([b"ab", b"c"])` and `SEQ([b"a", b"bc"])` produced identical bytes and therefore shared a digest. Both now length-prefix. It was found because the independent cross-implementation verifier was written from the documented grammar rather than from the code and disagreed with it. `test_p05b_struct_is_not_length_ambiguous` asserts that `("ab","c")` and `("a","bc")` do not collide; `test_neg_ambiguous_sequence_encoding` asserts the same for sequences and structs; `test_canonical_struct_rejects_duplicate_fields` and `test_canonical_encoding_is_fixed_width_and_rejects_short_forms` cover the rest | Nothing outstanding on the encoder itself. The verifier does not re-parse a manifest from wire bytes on the `verify_record` path, so a wire-format ambiguity would not be caught end-to-end this round |
+| `SL-05` | subgroup validation | Every ciphertext component, every proof element and the public key are subgroup-checked **before** any equation is evaluated, in all three verify functions. `test_ballot_proof_verifiers_reject_a_public_key_outside_the_subgroup`, `test_require_in_subgroup_names_the_value_it_rejected` | Nothing outstanding |
+| `SL-06` | proof malleability | Fiat–Shamir over a context-bound, domain-separated transcript. `test_selection_proof_roundtrip_and_tamper_detection` tampers every field of the proof in turn and asserts each tampered proof fails; `test_p03_modified_proof_fails` repeats this over the deterministic property loop | No formal proof of soundness or simulation-extractability. Formal verification is not in scope this round and stays open |
+| `SL-07` | replay | The idempotency scope is `(election_context_id, operation, idempotency_key)` and the check runs **inside** `store.transaction()`. `test_idempotency_scope_is_context_operation_key`, `test_c04_same_idempotency_key_concurrently` | Idempotency records have no expiry policy in the reference store |
+| `SL-08` | idempotency collision | A different canonical request under the same key raises `IdempotencyConflictError` (`SUBMISSION_IDEMPOTENCY_CONFLICT`) — never a silent replay. `test_neg_idempotency_conflict`, `test_p07_different_request_with_same_key_fails` | Nothing outstanding |
+| `SL-09` | transaction race | Nine named races, twelve repeats each, in `test_concurrency.py`. One real defect was found this way and fixed — the idempotency check had been outside the transaction, so two concurrent requests sharing a key could both observe "no record yet" | The races run against the reference in-memory store, whose transaction boundary is a re-entrant lock. **This proves nothing about a production datastore**, where the same invariants must come from row-level locking or a serialisable isolation level (`OD-P16D-04`) |
+| `SL-10` | outbox duplication | Dispatch is at-least-once. `dispatch_outbox()` marks a row `DISPATCHED` only after the publish step, so a crash between the two leaves the row `PENDING` and the next sweep retries it. `test_c07_publication_worker_retry`, `test_before_outbox_publish_leaves_the_obligation_pending`, `test_after_commit_leaves_the_obligation_dispatched_and_not_repeated` | Duplicate suppression is the board's job — one obligation id, one entry — and the reference board is in-memory. A production board must enforce that uniqueness durably |
+| `SL-11` | batch reservation leakage | `LeafReservation` carries a `submission_reference`, never a capability. `test_no_capability_to_ballot_leakage_in_any_persisted_row` asserts over every reservation, obligation, outbox row, continuation state and idempotency entry that the capability string does not appear in any of them, and that no continuation state names a ballot id | The assertion is a substring check over `str(row)`. It catches a value that is present; it cannot prove that no derivable correlation exists |
+| `SL-12` | capacity oracle | Batch size is constant: `seal_batch()` fills every unused slot with a cover leaf, so a batch is always exactly `capacity` leaves. `test_sealed_batch_size_is_independent_of_occupancy` builds an empty batch and a four-ballot batch and asserts identical serialised lengths and identical leaf sizes. A rejected submission leaves no public trace and does not consume the capability. `test_publication_state_reveals_nothing_about_others` asserts the publication-state view exposes no `turnout` and no `accepted_count` | Response **timing** is not equalised. A rejected submission returns sooner than an accepted one, and nothing in this round measures or bounds that difference. See §4 |
+| `SL-13` | turnout leakage | No pre-closure entry type carries a count. `test_turnout_and_accepted_enumeration_are_not_exported_pre_closure` casts three ballots, publishes a checkpoint, and asserts that no exported entry is of type `ballot_accepted` and that no accepted ballot id appears in any exported payload | Only the reference board's own export is asserted. A production deployment's network-level metadata — request counts, connection timing, CDN logs — is out of scope for this round |
+| `SL-14` | event payload leakage | `FORBIDDEN_OUTBOX_FIELDS` (8 names) is scanned over every persisted outbox row, together with the 23 forbidden log fields, in `test_event_payloads_carry_no_forbidden_field` | A field-name scan cannot detect a forbidden value carried inside a permitted field. The same structural limit applies here as at the logging boundary |
+| `SL-15` | log leakage | 23 forbidden field names, 7 allowed, allow-list enforced, no redaction path. Every one of the 23 is tested individually by `test_forbidden_log_field_fails_the_test_sink`, which also asserts nothing was written | It is a field-**name** boundary. See `PACK-16D-LOGGING-AND-AUDIT-BOUNDARY.md` |
+| `SL-16` | test RNG leakage | Two independent guards on `DeterministicTestRandomSource` (`allow_in_test=True` **and** `EPD2_VOTING_REFERENCE_TEST_PROFILE=1`); `select_source()` accepts only the literal `"production"` and has no code path returning a deterministic source. `test_select_source_can_never_return_a_deterministic_source`, `test_test_rng_cannot_be_selected_in_production_profile`, `test_no_production_module_reads_the_test_profile_environment` | Nothing outstanding at this boundary |
+| `SL-17` | unsafe feature flags | 10 immutable invariant names; a flag whose normalised name *contains* one is refused, so `disable_no_intermediate_tally` fails exactly as `no_intermediate_tally` does. An unknown flag also fails startup rather than being ignored. Tested for every invariant under four name shapes | The guard is a **name** guard. It stops a flag from reaching a code path; it cannot prove the code path behind the name is correct. `invariants.py` says so in its own module docstring |
+| `SL-18` | archive inclusion of secrets | The three files under `crypto/profiles/` contain public group parameters only. The two `.params` files are named `EPD2-TESTONLY-NOTCONFORMANT-P4096-Q256` and `EPD2-TESTONLY-NOTCONFORMANT-P1024-Q160` and open with the banner `# TEST ONLY` / `# NOT EPD2-CRYPTO-1` / `# NOT ELECTIONGUARD 2.1 CONFORMANCE` / `# NOT PRODUCTION`; `EPD2-CRYPTO-1.json` is the target profile's published constants and its provenance block. `python scripts/check_forbidden_files.py` reported `OK: no forbidden paths found.` No private key, guardian secret, Ed25519 signing seed, credential or real member/voter data exists anywhere in the tree | There is no archive packaging step and no archive reader this round, so there is no test that an *exported archive* excludes secrets — only that the repository contains none |
+
+## 3. Secret-material zeroization is NOT implemented
+
+| ID | Statement |
+| -- | --------- |
+| `SL-19` | **Nothing in the reference implementation zeroizes secret material.** Not the ballot nonce, not a guardian's polynomial coefficients or its secret key share `s_l`, not the encryption randomness, not the deterministic source's seed, not the board's Ed25519 signing seed |
+| `SL-20` | **This is a property of the language, not an oversight.** A Python `int` and a Python `bytes` are immutable: there is no supported way to overwrite the storage backing a live object, and no way to reach the copies the interpreter has already made. Large integers are heap-allocated and the garbage collector may relocate or copy them; string and integer interning can retain a value past the last reference the program holds. Writing `secret = 0` rebinds a name and leaves the original object for the collector — it does not erase anything |
+| `SL-21` | **Consequence, stated plainly:** a memory dump, a core file, a swap page or a hibernation image taken from a process running this code may contain ballot nonces, guardian secret shares and the board's Ed25519 signing seed. Nothing in this round reduces that exposure |
+
+A production implementation needs secret material held in `bytearray` or
+in memory owned by a native library with an explicit wipe, and needs the
+process protected against swapping. Neither is attempted here, and neither
+is claimed.
+
+## 4. Constant-time behaviour is NOT claimed — and the four surfaces differ
+
+A single blanket sentence about constant-time behaviour is not usable by a
+reviewer, because the consequence differs by surface: a routine that leaks
+timing while touching only published values leaks nothing, and a routine
+that leaks timing while touching a key leaks the key. The surfaces are
+therefore separated, and the separation — not the blanket sentence — is
+what a reader should take away.
+
+| ID | Surface | Secret-bearing? | Status |
+| -- | ------- | --------------- | ------ |
+| `SL-39` | **Public verification** — `verify_selection`, `verify_contest_sum`, `verify_decryption_share`, `guardians.threshold.verify_share`, `guardians.ceremony.verify_possession` / `verify_share` / `verify_ceremony`, `signature_provider.verify_checkpoint`, Merkle root and consistency recomputation | **No** | Every input is a published value. **Timing carries no secret**, because there is no secret in the computation to carry. No constant-time claim is made, and none is required here |
+| `SL-40` | **Guardian secret operations** — the DKG polynomial draw and Horner evaluation in `guardians/ceremony.py`, the accumulation of `s_l = sum_i P_i(l)`, `prove_possession`'s Schnorr response, and `guardians/threshold.py`'s `compute_share` computing `M_l = alpha^(s_l)` with its Chaum–Pedersen witness | **Yes** | **Not constant-time. Production blocker** (`OD-P16D-05`). `pow(a, b, m)` with a secret `b` is a sliding-window exponentiation whose work depends on the exponent's bit pattern, and `%` on a secret residue is not fixed-time either. A co-resident observer able to time a ceremony or a decryption share is timing operations on guardian key material |
+| `SL-41` | **Secret nonce generation** — `ProductionRandomSource.random_bytes` / `random_below` in `crypto/randomness.py`, feeding every encryption nonce, every proof nonce and every guardian coefficient | **Yes** | The bytes come from the OS CSPRNG through `secrets`, and `random_below` is rejection sampling over whole bytes. **The draw is not the exposure; the subsequent use is.** A freshly drawn nonce is immediately used as a secret exponent, and that use is on the `SL-40` row. Rejection sampling itself has a value-dependent iteration count |
+| `SL-42` | **Ed25519 private-key signing** — `signature_provider.sign_checkpoint` and `generate_test_keypair` in `crypto/signature_provider.py`, and therefore `checkpoint_signing.sign_checkpoint` and `BulletinBoard.publish_checkpoint` | **Yes** | **Changed this round, and the change is a risk reduction rather than an assurance.** The scalar arithmetic is no longer in this repository: `crypto/ed25519.py` is **deleted**, and signing is `cryptography` 46.0.7 over OpenSSL. The previous implementation's `_mul()` was a double-and-add that **branched on the bits of the secret scalar** — a defect the audit was right to fail. OpenSSL pursues side-channel resistance as a **design goal** for Ed25519, which is a materially better position. **EPD² has measured nothing**, makes no constant-time claim, and treats a library's own design goals as the library's evidence rather than this repository's. Verification touches no secret and sits on the `SL-39` row instead |
+
+| ID | Statement |
+| -- | --------- |
+| `SL-22` | **No constant-time or side-channel resistance claim is made by EPD² about any module in this round.** `crypto/proofs.py` states this in its own module docstring: Python's arbitrary-precision integers and `pow()` are not constant-time, and neither the exponentiations nor the comparisons are written to be |
+| `SL-23` | The exposure is concrete. `pow(a, b, m)` in CPython runs a sliding-window modular exponentiation whose work depends on the bit pattern of `b`; `int` multiplication switches algorithm at a size threshold; `%` and `==` on large integers are not written to run in fixed time. Every proof generation and every guardian secret operation in this round is built from those operations. Digest comparison is written with `==` on `bytes`, not with `hmac.compare_digest` |
+| `SL-24` | **This is a production blocker** (`OD-P16D-05`), and the split above narrows *where* it blocks rather than softening it. A production implementation needs a constant-time bignum path for every operation on `SL-40` and `SL-41`. `SL-42` has moved to a library that pursues the property; nothing here measures whether it achieves it on the deployed build. `SL-39` needs no such path. It is recorded as a blocker, not as a residual nicety |
+
+### 4.1 What the provider changed, and what it did not
+
+`OD-P16D-05` is **narrowed in scope by this correction. It is not closed.**
+
+| ID | Statement |
+| -- | --------- |
+| `SL-48` | **What was removed.** `crypto/ed25519.py` — a from-scratch Edwards-curve implementation with point arithmetic, compression, scalar multiplication and private-key expansion — is **deleted, not deprecated and not relocated.** The audit's finding was `CHECKPOINT SIGNATURE PRIMITIVE POLICY: FAIL — HANDWRITTEN ED25519`. A file kept "for reference" would still be from-scratch curve code in the repository, one import away from being active again |
+| `SL-49` | **What replaced it.** `crypto/signature_provider.py`, a port rather than an implementation: a `CheckpointSignatureProvider` Protocol with six operations, and one active implementation, `CryptographyEd25519Provider`, with `backend = "cryptography (OpenSSL Ed25519)"`. `cryptography` **46.0.7**, linked against OpenSSL **3.5.6 (7 April 2026)**, licence Apache-2.0 / BSD-3-Clause. Six library calls, all in that one module, asserted by an `ast` test |
+| `SL-50` | **There is no fallback, and the absence is the security property.** `cryptography` is imported at module scope; if it is missing the import raises `SignatureProviderUnavailableError` and the process does not start. A `try: import cryptography / except: use our own curve code` would silently reinstate exactly what the audit removed, on whichever machine happened to lack the dependency — and that is the machine you would least want running hand-rolled cryptography |
+| `SL-51` | **The risk reduction, stated exactly.** The vulnerability classes that matter for a low-level primitive — a missing subgroup check, a branch that leaks a key bit, a non-canonical encoding accepted on an input nobody tried — are found by years of adversarial attention paid to one widely deployed implementation. They cannot be found by the author of a fresh one, however many vectors that author writes. Moving to a vetted provider is a real reduction in custom-cryptography risk |
+| `SL-52` | **The risk reduction is NOT a side-channel assurance, and the two must not be run together.** OpenSSL pursues constant-time behaviour for Ed25519 as a design goal. EPD² has **not measured timing, not run a leakage assessment, not pinned the build, and not read the assembly path the deployed wheel takes.** No constant-time claim is made here, `OD-P16D-05` stays open, and a reader who takes "we now use OpenSSL" as an assurance is reading a claim this document declines to make |
+| `SL-53` | **The narrowing is real but small.** `SL-42` moved. `SL-40` and `SL-41` did not: the group arithmetic, the NIZK proof families, the DKG polynomial draw and Horner evaluation, the accumulation of `s_l`, the Schnorr response and `compute_share`'s `alpha^(s_l)` are **all still pure Python `int` and `pow()`**. Guardian secret operations are the largest secret-bearing surface in the system, and none of it was touched. The provider covers signatures and is deliberately not used for hashing, randomness or the group arithmetic |
+| `SL-54` | **NEW consideration: a compiled native dependency is now in the runtime path.** `cryptography` links a Rust binding layer over OpenSSL's libcrypto. The wheel is a platform-specific compiled artefact, not pure Python. Consequences, stated rather than minimised: the build and supply-chain surface widens; the wheel must exist for the deployment platform; a CVE in libcrypto becomes an EPD² concern; and a compiled artefact is reviewable in principle and is not read line-by-line by this repository's reviewers in practice. That last point is equally true of the Python runtime itself, which is why the policy exists to make the trade deliberately rather than accidentally (`PACK-16D-LANGUAGE-AND-DEPENDENCY-ASSESSMENT.md` `LD-28`, `LD-30`) |
+| `SL-55` | **The dependency is declared and locked, which settles a supply-chain question rather than a packaging one.** `cryptography>=46.0.7,<47` is in `services/voting-service/pyproject.toml` and resolves in `uv.lock` as 46.0.7, from a registry, with `sha256:` hashes on all 43 artefacts and both transitives locked — so the round can now say which bytes a frozen install fetches. What a hash-pinned resolution does **not** supply is any side-channel property: it fixes *which* implementation runs, not how that implementation behaves under timing observation, and `SL-33` is unaffected |
+
+**The summary this section exists to prevent a reader from getting wrong:**
+
+```text
+The vetted provider materially reduces custom cryptographic
+implementation risk.
+
+It does not by itself establish production side-channel assurance,
+certification or complete BSI conformity.
+```
+
+## 5. There is no nonce-reuse detector
+
+| ID | Statement |
+| -- | --------- |
+| `SL-25` | **What is done.** Each selection draws a fresh nonce from the injected `RandomSource`. Each Fiat–Shamir challenge is computed over a transcript bound to a context that includes the base hash, the ballot id, the contest id and the option id. `test_neg_reused_nonce` takes a valid proof from one selection, presents it against a *different* selection's ciphertext, and asserts both that `verify_ballot_proofs` rejects the ballot and that `verify_selection` returns `False` under the other option's context. A copied proof therefore does not transfer |
+| `SL-26` | **What is not done.** Nothing anywhere records which nonce values have been used, and nothing compares a new nonce against them. A caller that passes the same nonce integer twice into `encrypt()` — through a broken client, a repeated deterministic seed, or a bug — is not caught by the reference implementation at any layer. The result would be two ciphertexts sharing randomness, which is a real cryptographic failure, and it would be accepted |
+| `SL-27` | **Why context binding is not a substitute.** Context binding stops a proof being *replayed* onto other material. It says nothing about whether the randomness underneath two different, individually well-formed ciphertexts was distinct. These are different properties and only the first one holds here |
+
+Detecting nonce reuse in general requires either a stateful record of
+issued nonces or a deterministic derivation whose inputs are unique by
+construction. Neither is implemented this round.
+
+## 6. `verify_board` now verifies checkpoint signatures — and what still is not proved
+
+The limitation this section used to record is **resolved**. It is replaced
+by the behaviour that replaced it and by the narrower residual that
+survives, rather than deleted.
+
+| ID | Statement |
+| -- | --------- |
+| `SL-28` | **Checkpoints are signed with Ed25519, not with a symmetric HMAC key.** `BulletinBoard.publish_checkpoint()` builds a `CheckpointPayload`, derives its domain-separated `signing_input()` under the `BOARD_CHECKPOINT` label, and calls `sign_checkpoint()`, which signs through `crypto/signature_provider.py` — `SIGNATURE_PROFILE = "Ed25519 (RFC 8032, PureEdDSA, SHA-512)"`, supplied by a vetted library rather than implemented here (§4.1). Keys and signatures are strict raw canonical encodings only: 32 and 64 bytes, no PEM, no DER, no base64, so one key cannot have two byte spellings in a registry keyed on bytes. The payload binds the schema version, the protocol profile, the election context, the board, the checkpoint sequence, the tree size, the root, the previous checkpoint hash, the publication phase and the signing key id. **The `S < L` canonicality check that EPD² used to perform in its own code is now the provider's**, along with the rest of the primitive; this repository no longer implements it and no longer asserts it directly, which is a consequence of §4.1 worth naming rather than leaving for a reader to notice |
+| `SL-29` | **The verifier checks the signature, against a trust anchor it was given rather than one carried by the artefact.** `verify_board()` resolves each checkpoint's `signing_key_id` inside a `SignerRegistry` supplied alongside the export, and returns a distinct result code for each failure mode: `BOARD_SIGNATURE_MISSING` (45), `BOARD_SIGNER_UNKNOWN` (46), `BOARD_SIGNER_UNAUTHORIZED` (47), `BOARD_SIGNATURE_INVALID` (48) and `BOARD_SIGNATURE_CONTEXT_MISMATCH` (49). `CheckpointPayload` has **no** `public_key` field, so there is no path that reads a key out of the artefact being verified. An export carrying checkpoint tuples but no signed checkpoints returns `INCOMPLETE_RECORD` rather than falling back to a weaker digest |
+| `SL-43` | **Authenticity is not consistency, and the verifier keeps them apart.** Two *validly signed* checkpoints at one sequence carrying different roots is equivocation by an authorised signer, and `verify_board` returns `BOARD_INCONSISTENCY` for it rather than reporting a signature success. `test_checkpoint_signatures::test_conflicting_signed_checkpoints_detected` constructs exactly that case with both signatures genuine |
+| `SL-30` | **The residual is narrower and is `OD-P16D-12`: the verifier cannot tell you the signer registry it was given was itself authorised.** It checks a checkpoint against the registry it was handed; it has no way to establish that the Election Board authorised that registry. That residual is the eighth entry in the verifier's nine-entry `NOT_CHECKED` list, printed with every result including `VERIFIED`: *"that the authorised signer set itself is the right one - the verifier checks a checkpoint against the signer registry it was given, and cannot tell you that registry was authorised by the Election Board"*. The ninth entry states the other half — that a valid signature is never evidence of a single view, and cross-mirror comparison remains unimplemented (`OD-P16D-06`) |
+
+The registry's own authorisation is a governance and key-custody problem,
+not a verification one, and the reference implementation does not model
+it (`OD-P16D-11` records the same gap for the guardian ceremony). What the
+exported board now proves is internal consistency **and** that each
+checkpoint was issued by a key in the set the verifier was told to trust.
+Whether that set is the right set is outside its reach.
+
+## 7. `tally_accepted()` tallies only the first ballot style
+
+| ID | Statement |
+| -- | --------- |
+| `SL-31` | **`tally_accepted()` reads `manifest.ballot_styles[0]` and iterates that style's contests only.** Contests that exist only in a second or later ballot style are never gathered, never accumulated and never decrypted |
+| `SL-32` | **Consequence:** a multi-style election is **not** tallied correctly by the reference builder. Every fixture in this round uses a single ballot style, so no test fails; the limitation is invisible to the suite and is stated here instead. A record built for a multi-style manifest would be silently incomplete rather than rejected, which is the worse of the two failure modes and is the reason this is written down rather than deferred quietly |
+
+Multi-style tallying is a PACK-17 item. Until it exists, the reference
+builder must be treated as single-style only.
+
+## 8. Production blockers arising from this document
+
+| ID | Blocker | Owner |
+| -- | ------- | ----- |
+| `SL-33` | Constant-time arithmetic for every operation on a secret exponent (`OD-P16D-05`, `SL-40`, `SL-41`). **Unchanged by this correction**: the group arithmetic, the proofs and the guardian secret operations are still pure Python | PACK-17 / external cryptographic review |
+| `SL-34` | Governance evidence that a signer registry is the one the Election Board authorised (`OD-P16D-12`, `SL-30`). The asymmetric checkpoint signature this row used to demand **exists** (`SL-28`, `SL-29`); what remains is the authorisation of the trust anchor itself, which is a custody and governance obligation rather than a verification one | PACK-17 / governance |
+| `SL-35` | Secret-material handling that permits wiping, plus swap protection (`SL-19`…`SL-21`) | PACK-17 |
+| `SL-36` | Multi-ballot-style tallying in the election-record builder (`SL-31`, `SL-32`) | PACK-17 |
+| `SL-37` | Concurrency evidence against a production datastore's isolation level, not an in-memory lock (`OD-P16D-04`) | PACK-17 |
+| `SL-38` | Nonce-uniqueness enforcement, by stateful record or by construction (`SL-25`…`SL-27`) | PACK-17 |
+| `SL-44` | **Narrowed, not discharged.** The replacement half is done: the pure-Python signing path is gone and the primitive is a vetted library (`SL-42`, `SL-48`…`SL-52`). What remains on this row is (a) timing or side-channel **evidence** about the deployed build, which EPD² has not produced, and (b) **key custody for the signing seed** — an air gap, an HSM or an equivalent — which is untouched: the seed is still ordinary Python `bytes` in the process (`OD-P16D-11`). Verification may stay as it is (`SL-39`) | PACK-17 |
+| `SL-45` | Authenticated, custodial share exchange for the guardian ceremony: the reference ceremony passes shares in-process with no authenticated channel, no HSM, no air gap and no key custody (`OD-P16D-11`) | PACK-17 |
+| `SL-56` | Supply-chain controls for the compiled native dependency now in the runtime path, beyond the hash-pinned lock that `SL-55` records: a policy for tracking libcrypto advisories, and a decision about which platform wheels a deployment accepts (`SL-54`) | PACK-17 / release engineering |
+
+**None of these is closed by this round.** `SL-44` is the only one that
+narrowed, and narrowing is not mitigation: a blocker that has become
+smaller is still a blocker, and describing it otherwise is how a production
+gate gets passed by a sentence.
+
+### 8.1 The FIR obligation this section creates
+
+| ID | Statement |
+| -- | --------- |
+| `SL-46` | **`SL-33`, `SL-44`, `SL-45` and `SL-56` are carried into the Future Implementation Register with the §55 outcome `production hardening required`**, against the existing entries `FIR-TRUST-001` (the signature and timestamp framework, which now has a real asymmetric signature under it, produced by a vetted provider rather than by this repository) and `FIR-ROADMAP-007` (PACK-17 independent verification and resilience). **No new FIR ID is created by this round**, and no entry's `Status:` line is edited; the register is the single register and this document is a view of it |
+| `SL-47` | **The obligation is replacement, hardening and evidence, not documentation.** Restating `OD-P16D-05` in a later round does not discharge `SL-33`, and neither does a comment. Discharge requires a constant-time path for the `SL-40` and `SL-41` surfaces, measured side-channel evidence for `SL-42` rather than a library's design goal, an external review of both, and key custody for the signing seed. **Adopting the vetted provider discharged the part of `SL-44` that was about writing curve code. It discharged none of the part that is about evidence.** Until those exist the production blockers stand |
+
+## 9. What this document does not decide
+
+```text
+Independent security assessment                      → external party, open
+Formal verification of the proof systems             → open
+Constant-time bignum path                            → OD-P16D-05, PACK-17
+Side-channel evidence for the signing provider       → OD-P16D-05, PACK-17, external party
+Key custody for the checkpoint signing seed          → OD-P16D-11, PACK-17
+Which platform wheels a deployment accepts           → SL-54, SL-56, release engineering
+Supply-chain policy for the native dependency        → PACK-17, release engineering
+Authorisation of the signer registry itself          → OD-P16D-12, PACK-17, governance
+Secret zeroization and memory hygiene                → PACK-17
+Multi-style tally                                    → PACK-17
+Production datastore isolation evidence              → OD-P16D-04, PACK-17
+Cross-mirror split-view detection                    → OD-P16D-06, PACK-17
+Parameter appropriateness                            → VO-08, PACK-16B external review
+```
+
+**REFERENCE IMPLEMENTATION. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY.
+NOT LEGALLY ACTIVATED.**

@@ -1,0 +1,244 @@
+# PACK-16C — Failure and Abort Matrix
+
+**Round:** PACK-16C — Casting, Receipt, Verification Client, Bulletin Board and Election Record. **Specification and ADR only. No code. No cryptographic implementation. Not implemented. Not a PASS.**
+**Repository version:** unchanged at `0.15.0` · **Canon version:** unchanged at `0.8.0`
+**ADR:** `ADR-101`, status `proposed`
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. PUBLIC-ELECTION ACTIVATION PROHIBITED BY DEFAULT.**
+
+Extends `PACK-15-FAILURE-MODE-MATRIX.md`, `PACK-16A-FAILURE-AND-ABORT-MODEL.md`
+and `PACK-16B-FAILURE-AND-ABORT-MATRIX.md`. **All three remain in force
+unchanged.** The governing rule is PACK-15 §27's:
+
+> **Fail closed wherever failing open would produce a wrong participation,
+> and fail visibly always.**
+
+---
+
+## 0. Outcome vocabulary
+
+The PACK-16A vocabulary — `continue`, `pause`, `suspend`, `extend`, `abort`,
+`annul`, `re-run` — is **inherited unchanged**. PACK-16C adds two
+ballot-level outcomes that were implicit before and are named here:
+
+| Outcome | Meaning |
+| ------- | ------- |
+| `reject` | This envelope is refused. **Nothing is consumed.** The voter may prepare and submit a new ballot |
+| `retry` | The client repeats the same operation, with the same retry token where one exists. Nothing is consumed and nothing is lost |
+
+```text
+REJECT and RETRY are voter-level and never election-level.
+PAUSE, ABORT, ANNUL and RE-RUN are election-level and never
+   applied to an individual ballot.
+
+No outcome anywhere in this matrix acts on one person's ballot.
+```
+
+| ID       | Rule                                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `FMR-01` | **There is no outcome "correct the ballot".** Every ballot-level outcome ends either in a rejected envelope the voter replaces, or in an accepted ballot nobody can touch (`DP-07`) |
+| `FMR-02` | **A re-run is a new context** with a new manifest, a new ceremony, new parameters and a new board, and never reuses a key (`FM-P16A` §1, unchanged) |
+
+---
+
+## 1. The matrix
+
+**Decider** is the party with authority. **Concurrence** marks where the
+Independent Auditor must agree, not merely be told.
+
+| ID | Condition | Detected at | Outcome | Decider | Auditor | Capability | Reason codes | Told to the voter | Published |
+| -- | --------- | ----------- | ------- | ------- | ------- | ---------- | ------------ | ----------------- | --------- |
+| `FM-16C-01` | **Client build does not match the published digest** | Step 1, client self-check | `reject` + **suspend the build** if systemic | system, then `R-01` | **yes**, if systemic | untouched | `manifest.client_build_mismatch` | Do not proceed; report it | **yes** — `D-05` |
+| `FM-16C-02` | **Manifest unavailable, unsigned, wrong signer, wrong digest, context closed, or style unknown** | Steps 2, 3, 8 | `reject` | system | no | untouched | `manifest.unavailable`, `manifest.signature_invalid`, `manifest.signer_unknown`, `manifest.digest_mismatch`, `manifest.context_closed`, `manifest.ballot_style_unknown` | Retry, or do not proceed and report — the code decides which | aggregate after closure |
+| `FM-16C-03` | **Parameter set not approved, mismatched, deprecated or prohibited** | Step 4 | `reject`; **refuse activation** if the context itself is affected | system, then `R-01` | **yes**, at context level | untouched | `parameter_set.*` (PACK-16B) | Do not proceed; report it | **yes**, at context level |
+| `FM-16C-04` | **Joint key does not match the ceremony record, or the ceremony checkpoint is missing** | Step 5 | `reject`; **abort** if confirmed at context level | system, then `R-01` | **yes** | untouched | `manifest.joint_key_mismatch`, `manifest.ceremony_checkpoint_missing` | Do not proceed; report it | **yes** — the key's provenance is the whole trust chain |
+| `FM-16C-05` | **No continuation capability, or it does not parse** | Step 6 | `reject` | system | no | untouched | `continuation.absent`, `continuation.malformed` | Start again from the workspace | aggregate after closure |
+| `FM-16C-06` | **Capability invalid, already spent, or outside its window** | Step 7 probe, and stage 18 | `reject` | system | no | **untouched — the probe consumes nothing** | `continuation.invalid`, `continuation.already_spent`, `continuation.window_closed` | Distinct text per code; `already_spent` routes to the dispute path | aggregate after closure |
+| `FM-16C-07` | **Ballot does not satisfy the style's constraints** | Steps 9, 10 | `reject`, client-side | client | no | untouched | `ballot_preparation.contest_invalid`, `.overvote`, `.selection_unknown`, `.contest_inactive`, `.placeholder_failure`, `.style_shape_mismatch` | Adjust the selection, or report a client defect | aggregate after closure |
+| `FM-16C-08` | **Encryption fails, or the randomness self-test fails** | Step 11 | **fail closed** — `reject`, no ballot produced | client | no | untouched | `ballot.randomness_insufficient` (PACK-16B), `ballot_encryption.failed` | This device cannot be used safely; alternatives, including the alternative channel | aggregate after closure |
+| `FM-16C-09` | **Proof generation fails** | Step 12 | **fail closed** — `reject`, nothing submitted | client | no | untouched | `ballot_proof.generation_failed` | Try again; another device; alternative channel | aggregate after closure |
+| `FM-16C-10` | **Cast or challenge attempted with no prior commitment** | Step 13 | **the flow stops** — `reject` | client | no | untouched | `challenge.commitment_missing` | Start the ballot again | aggregate after closure |
+| `FM-16C-11` | **Challenge opening incomplete, or its class does not match** | Steps 14–15 | `reject` the opening; **the ballot remains spoiled and uncounted** | system | no | untouched | `challenge.opening_incomplete`, `challenge.class_mismatch` | Prepare a fresh ballot | aggregate after closure |
+| `FM-16C-12` | **Submission malformed, over-size, non-canonical, unknown profile or context, or outside the window** | Stages 1–6 | `reject` | system | no | untouched | `submission.*` | Retry, or report a client defect | aggregate after closure |
+| `FM-16C-13` | **A cryptographic check fails at the service, or a challenge re-encryption does not match** | Stages 9–15; challenge validation | `reject` the ballot; **suspend the client build and escalate** if the pattern is systemic; **annul** if a challenge mismatch is confirmed | system, then `R-01` | **yes**, for the systemic and mismatch cases | untouched | `ballot_proof.*`, `parameter_set.membership_failed`, `challenge.reencryption_mismatch` | The ballot could not be verified; this is not something you can fix — escalate | **yes** — `D-03`, `D-04`; a confirmed `challenge.reencryption_mismatch` is published in full |
+| `FM-16C-14` | **The atomic boundary rolls back** | Stages 19–22 | `retry` with the same token | system | no | **rolled back — nothing consumed** | `acceptance.atomic_boundary_failed`, `acceptance.capability_already_spent`, `acceptance.duplicate_ballot_id`, `submission.retry_token_conflict` | Nothing was used; try again with the same session | aggregate after closure |
+| `FM-16C-15` | **The publication commitment cannot be signed** | Stage 22 | **rollback** — the acceptance does not stand | system | no | rolled back | `acceptance.commitment_signing_failed` | Try again | aggregate after closure |
+| `FM-16C-16` | **Accepted ballot not published by the deadline** | Stage 23, board | `publication_disputed`; **pause** casting if systemic; **abort** if unrecoverable and outcome-relevant | board operator, then `R-01` | **yes** | **spent — the ballot is cast** | `publication.delayed`, `publication.failed`, `publication.deadline_missed`, `publication.recovered`, `publication.unrecoverable` | Your ballot was accepted and has not appeared; this is our failure and is handled in public | **yes, immediately** |
+| `FM-16C-17` | **Receipt generation fails** | Step 22 | `continue` — **the ballot stays accepted** | system | no | spent, correctly | `receipt.generation_failed` | Your ballot is cast; the receipt is re-derivable from your confirmation code | aggregate after closure |
+
+---
+
+## 1A. The sealed batch layer
+
+Added by the turnout correction. Columns as §1; **detection** is stated
+because a failure nobody detects is not handled.
+
+| ID | Condition | Detected at | Outcome | Decider | Auditor | Capability | Ballot state | Publication state | Reason codes | Told to the voter | Published |
+| -- | --------- | ----------- | ------- | ------- | ------- | ---------- | ------------ | ----------------- | ------------ | ----------------- | --------- |
+| `FM-16C-18` | **A scheduled `sealed_batch_commitment` is not published at its window time** | Any reader — the cadence is public and gapless | **pause** casting; **abort** if unresolved past the escalation window | board operator, then `R-01` | **yes** | untouched | `accepted_pending_publication` | window unfulfilled | `bulletin_board.batch_commitment_missing` | The board missed a scheduled publication; your ballot is unaffected so far | **yes, immediately, without a count** |
+| `FM-16C-19` | **Commitment published late, or the checkpoint signer is unavailable** | Board scheduler; any reader | `continue` if inside tolerance; **pause** if the signer is unavailable at the next window | board operator | no, unless repeated | untouched | unchanged | delayed | `bulletin_board.batch_commitment_late`, `publication.batch_delayed` | Publication is behind schedule | **yes**, with the delay stated; **the cadence is not re-planned** (`TC-24`) |
+| `FM-16C-20` | **An accepted ballot's leaf is absent from its named batch commitment** | **The voter**, via the inclusion-proof lookup, before closure | `publication_disputed` | board operator, then `R-01` | **yes** | **spent** | `publication_disputed` | obligation broken | `publication.deadline_missed`, `verification.batch_inclusion_failed` | Your ballot was accepted and its commitment is missing; this is our failure and is handled in public | **yes** |
+| `FM-16C-21` | **A ballot is accepted at a batch-window boundary** | Board scheduler | `continue` — commit it in the **next uncommitted** window | system | no | spent, correctly | `accepted_pending_publication` | deferred by one window | none — this is normal | no; the receipt names the window (`PA-11`) |
+| `FM-16C-22` | **A `commitment_root` does not recompute from its opening** | Any verifier, at closure | **abort — uncertifiable** | `R-01` | **yes** | n/a | n/a | record invalid | `bulletin_board.batch_root_mismatch` | The published record does not verify | **yes, in full** |
+| `FM-16C-23` | **A published commitment has no opening, or a partial one** | Any verifier, at closure | **abort — uncertifiable** | `R-01` | **yes** | n/a | n/a | record incomplete | `bulletin_board.batch_opening_missing`, `bulletin_board.batch_opening_invalid`, `election_record.batch_artifact_missing` | The published record is incomplete | **yes** |
+| `FM-16C-24` | **Duplicate or conflicting leaf opening** | Any verifier, at closure | **abort — uncertifiable** | `R-01` | **yes** | n/a | n/a | record invalid | `bulletin_board.duplicate_leaf_opening` | Same | **yes** |
+| `FM-16C-25` | **A tally input has no pre-closure committed leaf — late insertion** | Any verifier, at closure | **annul** | `R-01` | **yes** | n/a | n/a | record invalid | `bulletin_board.late_insertion_detected` | The published result does not match the published record | **yes, in full** |
+| `FM-16C-26` | **An invalid cover leaf, or a cover leaf claimed as a ballot** | Any verifier, at closure | **annul** | `R-01` | **yes** | n/a | n/a | record invalid | `bulletin_board.cover_leaf_invalid` | Same | **yes** |
+| `FM-16C-27` | **Batch reconciliation does not close in either direction** | Auditor and any verifier, at closure | **abort — uncertifiable**; **annul** if the tally was already published | `R-01` | **yes** | n/a | n/a | record invalid | `bulletin_board.batch_reconciliation_failed` | Same | **yes** |
+| `FM-16C-28` | **Mirrors publish different `commitment_root` values for the same `batch_sequence`** | Mirror comparison, checkpoint gossip, or a voter's two lookups | **abort — uncertifiable** (`FM-P16A-10`, `AO-12`, unchanged) | `R-01` | **yes** | untouched | frozen | divergent | `bulletin_board.batch_root_mismatch`, `verification.batch_consistency_failed` | Voting stopped; independent evidence is being examined | **yes — every divergent view, in full** |
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-15` | **No sealed-batch failure has a silent repair.** There is no operation that re-issues a commitment, back-dates a window, re-derives a root, or opens a batch partially. Every remedy is publication plus an election-level decision (`TC-54`) |
+| `FMR-16` | **`FM-16C-18` is published without a count.** Saying how many ballots a missed window should have held would disclose the turnout the whole model exists to hide (`PA-05`, `RN-16C-26`) |
+| `FMR-17` | **`FM-16C-20` is the correction's clearest gain.** Under the rejected padding model a voter could not detect non-publication until closure. Under the sealed-batch model the voter detects it **at their named window**, from their own inclusion-proof lookup, while the election is still running (`PA-12`) |
+| `FMR-18` | **`FM-16C-22` through `FM-16C-27` are all closure-time findings**, because the openings that make them detectable exist only at closure. That is a consequence of the turnout guarantee, is stated in `EC-14`, and is not presented as late detection by accident |
+| `FMR-19` | **A `privacy.turnout_oracle_detected` observation is never a voter-facing outcome.** It raises an incident under `FIR-SEC-001` and rate-limit policy; it is never returned to the caller (`RN-16C-27`) |
+
+---
+
+## 1B. Bounded challenge and finite capacity
+
+Added by the capacity correction. `FM-16C-29` is specified at full depth
+because it is the one the audit named.
+
+### `FM-16C-29` — batch capacity exhausted
+
+| Field | Value |
+| ----- | ----- |
+| **Detection** | An **atomic leaf reservation fails** because every predeclared slot allowed to the submission in the current interval is unavailable (`TC-70`, `TC-78`) |
+| **Immediate system action** | **Fail closed** for new publication-bearing submissions · **pause public evidentiary challenges immediately** · escalate an election incident · **preserve unused cast entitlements** · preserve prepared local ballot state where safe |
+| **Voter-facing action** | A generic temporary election-pause message. **No current turnout figure, no occupancy, no remaining-slot count, no queue depth** (`TC-81`) |
+| **Capability state** | **Unchanged**, because no atomic reservation or commit occurred. Nothing is spent (`TC-82`, `CN-42`) |
+| **Ballot state** | The submission is **not accepted**. A prepared ballot may be retried **only under governed recovery rules**, never by indefinite client retry (`TC-78`) |
+| **Publication state** | **No hidden queue and no unscheduled batch** (`TC-79`, `TC-80`) |
+| **Audit evidence** | A **signed capacity incident record**, checkpoint and reservation-state evidence, and a privacy-filtered public incident notice (artefact 37) |
+| **Election-level consequence** | **pause** · governed **extension** · **abort** · **uncertifiable** · **re-run** — decided by `R-01` with **Auditor concurrence** |
+| **Silent recovery** | **Prohibited.** No unscheduled batch, no enlarged `C`, no dropped artefact, no cast accepted without a committed leaf, no hidden queue (`TC-79`) |
+| **Reason codes** | `bulletin_board.batch_capacity_exhausted`, `submission.cast_capacity_unavailable`, `challenge.public_reservation_unavailable` |
+
+### The remaining capacity failure modes
+
+| ID | Condition | Detected at | Outcome | Decider | Auditor | Capability | Reason codes | Told to the voter | Published |
+| -- | --------- | ----------- | ------- | ------- | ------- | ---------- | ------------ | ----------------- | --------- |
+| `FM-16C-30` | **The published capacity plan does not satisfy `Σ C_interval ≥ L_max + reserve`, or was not published before opening** | Activation review; any reader, from artefact 36 | **Refuse activation**; if found after opening, **abort — uncertifiable** | `R-01` | **yes** | untouched | `election.capacity_plan_invalid` | The vote was not opened, and why | **yes, with the plan** |
+| `FM-16C-31` | **A batch commitment appears outside the predeclared schedule**, or a predeclared reserve commitment is missing | Any reader — the schedule is public | **abort — uncertifiable** | `R-01` | **yes** | untouched | `publication.unscheduled_batch_prohibited`, `bulletin_board.batch_commitment_missing` | The published record does not match the published schedule | **yes** |
+| `FM-16C-32` | **A second, differing public evidentiary challenge on a spent entitlement** | Public-challenge boundary, step 3 | `reject` — **fail closed** | system | no | **unchanged; the cast entitlement is intact** | `challenge.public_entitlement_exhausted` | You have used your one public audit challenge; you can still run local checks, and you can still cast (`CH-45`) | aggregate after closure |
+| `FM-16C-33` | **A leaf reservation is leaked** — held after a fail-closed rejection, or never released on timeout | Reservation-state audit; capacity reconciliation at closure | `continue` with release; **investigate** if systemic, because leaked reservations shrink real capacity silently | system, then `R-01` | **yes**, if systemic | untouched | `privacy.adaptive_capacity_signal_prevented` where a compensating change was refused | nothing | aggregate after closure; **systemic leakage is published** |
+| `FM-16C-34` | **A public evidentiary challenge would consume a cast-reserved slot** | Reservation, before durable acceptance | `reject` the challenge — **cast capacity is never yielded** (`TC-75`) | system | no | unchanged | `challenge.public_reservation_unavailable` | Audit challenges are temporarily unavailable; you can still cast | aggregate after closure |
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-20` | **`FM-16C-29` never resolves itself.** Every path out of it is an election-level decision with Auditor concurrence. There is no operational remedy, because every operational remedy would change the published shape (`TC-68`, `TC-79`) |
+| `FMR-21` | **`FM-16C-32` is not a failure of the voter and is not styled as one.** The entitlement was announced before use; the code exists for the fail-closed path and for a defective client |
+| `FMR-22` | **`FM-16C-33` is the quiet one.** A leaked reservation reduces real capacity without any public sign, and its only detection is reservation-state audit plus the closure reconciliation. It is recorded as a residual (`RB-16C-13`) |
+| `FMR-23` | **`FM-16C-34` proves the partition is real.** A design in which challenges could take cast slots under pressure would have no partition, only an intention |
+
+---
+
+## 2. The four rows that matter most
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-03` | **`FM-16C-13`'s challenge branch is the system's alarm.** A confirmed `challenge.reencryption_mismatch` means a client encrypted something other than what a voter chose. It is published in full, it suspends the build, and it is a candidate for annulment. It is never absorbed as a client bug report |
+| `FMR-04` | **`FM-16C-16` is the only row where the voter has already spent their capability and cannot act.** Everything before it is recoverable by the voter; this one is recoverable only by the election. That asymmetry is why publication has a deadline, a signed commitment and a public failure path (`PA-*`) |
+| `FMR-05` | **`FM-16C-14` and `FM-16C-15` are rollbacks, not losses**, and the participant text must not read like a loss — a voter told "something went wrong" after an irreversible-sounding step will abandon a ballot they still hold (`RN-16C-18`) |
+| `FMR-06` | **`FM-16C-17` is not a casting failure and must never be presented as one.** The receipt is derivable from public data (`RE-04`); a failure to render it is cosmetic, and treating it as a casting failure would invite a voter to try to vote again |
+
+---
+
+## 3. Interrupted submission — the honest case
+
+Inherited from `FM-P16A-07`, restated because PACK-16C is where it becomes
+concrete.
+
+```text
+If the atomic boundary COMMITS and the client never learns the outcome,
+the ballot is cast and the capability is spent.
+
+The voter's remedy is a status check with the retry token (CN-26),
+which returns the committed outcome. The ballot is not lost.
+
+If the boundary commits and PUBLICATION then fails past the deadline
+and past the escalation window, the ballot is cast, spent and unpublished.
+That participation is LOST for this context (PA-08, PA-09).
+```
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-07` | **The capability is never restored.** Restoring it would allow a second ballot from a voter who may already have one on the board, which is a double-vote path (`CN-*`, `FM-P16A-07` unchanged) |
+| `FMR-08` | **The lost-participation case is stated to voters in advance**, not discovered at the dispute desk (`DP-18`) |
+| `FMR-09` | **The record's integrity is chosen over repairing an individual participation**, and this is a deliberate, published trade-off rather than an unhandled state (`PA-09`) |
+
+---
+
+## 4. Election-level escalation
+
+| Trigger | Outcome | Concurrence |
+| ------- | ------- | ----------- |
+| Board outage — ballots cannot be published | **pause** (`FM-P16A-09`, unchanged) | no |
+| A scheduled batch commitment is missing | **pause**, then **abort** if unresolved (`FM-16C-18`) | **yes** |
+| A batch root does not recompute, or an opening is missing | **abort — uncertifiable** (`FM-16C-22`, `FM-16C-23`) | **yes** |
+| A late insertion or an invalid cover leaf is found | **annul** (`FM-16C-25`, `FM-16C-26`) | **yes** |
+| Batch reconciliation does not close | **abort**, or **annul** if the tally was published (`FM-16C-27`) | **yes** |
+| Mirrors diverge on a batch commitment root | **abort — uncertifiable** (`FM-16C-28`) | **yes** |
+| Batch capacity exhausted in an interval | **pause**, then governed **extension**, **abort** or **re-run** (`FM-16C-29`) | **yes** |
+| Capacity plan invalid or unpublished | **refuse activation**, or **abort** if found later (`FM-16C-30`) | **yes** |
+| An unscheduled batch appears, or a predeclared reserve is missing | **abort — uncertifiable** (`FM-16C-31`) | **yes** |
+| Board equivocation or mirror divergence | **abort — uncertifiable** (`FM-P16A-10`, `FM-P16A-11`, unchanged) | **yes** |
+| Systemic `FM-16C-13` across many submissions | **pause**, suspend the build, investigate | **yes** |
+| Confirmed challenge re-encryption mismatch | **abort or annul** | **yes** |
+| Unrecoverable publication failure affecting the outcome | **annul** | **yes** |
+| Independent verifier returns `TALLY_MISMATCH` | **annul** (`IV-*`) | **yes** |
+| Independent verifier returns `INVALID_CEREMONY` | **annul** | **yes** |
+| Independent verifier returns `BOARD_INCONSISTENCY` | **abort — uncertifiable** | **yes** |
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-10` | **No election-level outcome is reached by an operator alone.** Every row above requires the Election Board's decision and, where marked, the Independent Auditor's concurrence (`DP-16`) |
+| `FMR-11` | **Ballots are never accepted while they cannot be published** (`FM-P16A-09`, unchanged). A pause is preferable to an accumulating set of accepted-but-unpublishable ballots |
+| `FMR-12` | **An election that is aborted or annulled is never partially salvaged** (`FM-P16A` §1, unchanged) |
+
+---
+
+## 5. Counts
+
+```text
+PACK-16C failure modes                                   34   §1 17 · §1A 11 · §1B 6
+Rows whose outcome touches an individual ballot           0
+   (reject and retry act on an ENVELOPE, never on an
+    accepted ballot)
+Rows where the capability is consumed and unrecoverable   2   FM-16C-16, FM-16C-20
+Rows requiring Auditor concurrence in some branch         19   01, 03, 04, 13, 16,
+                                                               18, 20, 22, 23, 24,
+                                                               25, 26, 27, 28, 29,
+                                                               30, 31, and 19 and
+                                                               33 when systemic
+Rows that are fail-closed at the client                    2   FM-16C-08, FM-16C-09
+Rows that are rollbacks, not losses                        2   FM-16C-14, FM-16C-15
+Rows that are not failures at all                          2   FM-16C-17, FM-16C-21
+Rows added by the capacity correction                      6   FM-16C-29 ... FM-16C-34
+Rows where the voter's cast entitlement survives           6   29, 32, 33, 34, and
+                                                               14, 15
+Rows with a silent-repair path                             0
+Sealed-batch rows detectable only at closure               6   22, 23, 24, 25, 26, 27
+```
+
+| ID       | Rule                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `FMR-13` | **Every row of §1 cites at least one reason code, and every *failure* code in `PACK-16C-REASON-CODE-CATALOG.md` appears in a row of §1** — directly or through its namespace wildcard. Neither document may grow without the other |
+| `FMR-14` | **The catalogue's non-failure codes appear nowhere in this matrix, by design.** `ballot_preparation.undervote_confirmed`, `.blank_contest_confirmed`, `.blank_ballot_confirmed`, `challenge.selected`, `challenge.spoiled_published`, `challenge.abandoned`, `submission.sent`, `acceptance.committed`, `acceptance.excluded`, `publication.published`, `election.closed`, `archive.sealed` and `verification.code_not_found` describe normal outcomes or governed processes, and listing them as failure modes would misrepresent both documents |
+
+---
+
+## 6. What this document does not decide
+
+```text
+Timeouts, retry bounds and escalation windows   → PACK-16D, OD-P16C-13
+Batch interval, capacity and tolerance            → OD-P16C-10, GOVERNANCE
+Operational runbooks                             → PACK-16D
+Governance procedure for abort and annulment      → GOVERNANCE, PACK-15 lineage
+Alternative-channel activation                     → OD-P16A-09
+```
+
+**SPECIFIED. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY. NOT LEGALLY
+ACTIVATED.**

@@ -1,6 +1,398 @@
 # Changelog
 
-## [0.15.0] - voting trust boundary, eligibility & credential separation (IMPLEMENTATION CANDIDATE)
+## [0.16.0] - PACK-16D reference cryptographic implementation, atomic persistence, test vectors and verification harness (FINAL CORRECTED CANDIDATE)
+
+### Network-enabled finalization — lockfile regeneration, immutable ElectionGuard provenance, final acceptance alignment
+
+The two findings the previous pass recorded as environmental blockers have
+been cleared on a host with the network access they needed. **No
+cryptographic work was done**: no algorithm, guardian path, checkpoint
+semantic, atomic transaction, sealed-batch rule or conformance oracle was
+touched.
+
+- **`DEPENDENCY LOCK: REGENERATED`.** `uv lock` and
+  `rm -rf .venv && uv sync --all-groups --frozen` (`Checked 61 packages`) ran
+  on the network-enabled host. `uv.lock` goes from `1a1e5a72…d543` to
+  `b2d0775458…8066`: `cryptography 46.0.7` resolves from
+  `https://pypi.org/simple` with `sha256:` hashes on all 43 artefacts, plus
+  `cffi 2.1.0` and `pycparser 3.0`. 149 lines added, 0 removed, **0 existing
+  package versions changed**. The lock was **verified, not accepted** —
+  parsed as TOML, checked for a registry source, artefact hashes, membership
+  of the `epd2-voting-service` dependency graph rather than the workspace
+  root, and a resolved version satisfying every clause of the declared
+  specifier.
+- **`IMMUTABLE UPSTREAM IMPLEMENTATION PROVENANCE: RECORDED`.**
+  `microsoft/electionguard-rust` at commit
+  `520651138110a13f777409e96606454df928ceac` (2025-02-02),
+  `src/eg/src/standard_parameters.rs`, raw-byte SHA-256
+  `ad38bfa68d31131a7d721e08d359224b21e967aae4d517534a60a109e10f5770`,
+  retrieved 2026-08-03. `unpinned_reason` and `auditor_action` were removed
+  **in the same change** that added the pin, which a test enforces: a
+  repository keeping an excuse beside the thing the excuse was for is telling
+  a reader two incompatible stories. The digest an earlier round computed over
+  a markdown rendering stays **withdrawn** and was not restored.
+- **Pinning the implementation source did not promote it.** It stays
+  `is_normative: false`; the normative reference remains the ElectionGuard
+  Design Specification v2.1.0 at a versioned release asset, and the parameter
+  values continue to rest on that specification and on the offline
+  reconstruction in `derivation` — neither of which consults the Rust file.
+- **Two things were verified elsewhere, and say so.** The frozen install and
+  the upstream byte fetch happened on the network-enabled host. The build
+  session verified the lock's parsed contents, asserted the imported
+  `cryptography` version-identical to the locked resolution, checked the pin's
+  internal consistency and re-derived every parameter offline — it did not
+  re-run `uv sync` and did not re-fetch the bytes.
+  `source_sha256_verification_scope` records that in the artefact, and one
+  command settles it: `curl -sL <pinned-url> | sha256sum`.
+- **`AM-79` and `AM-89` promoted to `SATISFIED` — on evidence, not on the
+  blockers' removal.** Each of the ten conditions across the two rows is
+  asserted by a named offline test. The previous pass's defect was a status
+  drifting ahead of its evidence; promoting because an obstacle disappeared
+  would be the same error pointed the other way. Matrix: 90 rows, **76
+  `SATISFIED`, 6 `PARTIALLY SATISFIED`, 3 `DEFERRED`, 4 `BLOCKED`, 1 `NOT
+  APPLICABLE`**.
+- **Every dual-state test branch is gone.** While the blockers were open, the
+  dependency and provenance tests were deliberately written to pass in both
+  states, because a permanently red test trains a reader to ignore red. That
+  accommodation ended the moment the facts existed, or it would have become a
+  check that cannot fail. A `null` `upstream_commit`, a missing lock entry, an
+  abbreviated hash, a URL pinning a different commit than the field beside it,
+  or an outstanding-lock notice outliving its cause each fail now.
+- **`OD-P16D-16` and `OD-P16D-17` CLOSED** on recorded command output.
+  **Nothing else moved:** `VO-08`, external cryptographic review, a fully
+  independent verifier, full ElectionGuard ecosystem interoperability,
+  constant-time production assurance, production HSM and key custody, the
+  production guardian ceremony and legal certification all remain **OPEN**.
+- **`PACK-16D-ENVIRONMENT-BLOCKED-EVIDENCE.md` converted to a RESOLVED
+  historical record** rather than deleted. The failed transcripts are
+  reproduced unchanged under an explicit `HISTORICAL FINDING` heading: a
+  resolved blocker whose evidence has been tidied away is indistinguishable
+  from one that was never real.
+- **One transcription discrepancy recorded rather than silently corrected.**
+  The finalization brief quoted the new lock digest as `02d0775458…`; the
+  digest over the delivered file's bytes is `b2d0775458…`. They agree in 63 of
+  64 hex characters, which no byte-level corruption produces. The computed
+  value governs, because it is the one anybody can reproduce from the file.
+- **0 files added, 0 deleted, 24 modified.** `package-lock.json` and
+  `services/voting-service/pyproject.toml` unchanged; no migration, API
+  implementation, event schema, frontend file, CI workflow or version constant
+  touched; no file under `docs/canonical/` modified.
+- **Verification.** 5851 Python tests passed, 5 skipped, 0 failed, no
+  `--ignore`; 506 in the reference suite; `ruff check`, `ruff format --check`
+  (498 files) and `mypy services/voting-service` (70 source files) clean; all
+  four repository scripts pass.
+- `REPOSITORY_VERSION` stays 0.16.0, `CANON_VERSION` stays 0.8.0, `ADR-102`
+  stays `proposed`, `VO-08` stays **OPEN**, and PACK-17 is **not started**.
+
+### Lockfile, provenance and acceptance-matrix correction pass (superseded by the finalization above)
+
+A third independent audit passed **every cryptographic finding** — the
+vetted provider, the removal of the hand-written Ed25519, checkpoint
+authenticity, the real `EPD2-CRYPTO-1`, both guardian paths, the
+target-profile cross-implementation core and archive hygiene. It raised
+three items. One was fixable in this environment and is fixed; two were
+not, and are recorded as blocked rather than worked around.
+
+- **`AM-79` corrected from `SATISFIED` to `PARTIALLY SATISFIED`.** The row
+  claimed the parameter set was *immutably provenanced* while its own
+  evidence column recorded that the commit, the pinned URL and the source
+  digest were all absent. **Nothing new was learned to force the
+  downgrade** — the facts were already in the artefact, the evidence
+  registry and the previous handover. What was wrong was the status sitting
+  on top of them. An evidence column that stays honest while a status
+  column drifts optimistic is invisible to anyone who reads only the
+  status, and it is exactly what an audit reading both will catch.
+- **`DEPENDENCY LOCK: BLOCKED BY ENVIRONMENT`. `FROZEN CLEAN INSTALL: NOT
+  EXECUTED`.** `cryptography>=46.0.7,<47` stays declared and stays absent
+  from `uv.lock`. `uv lock` and `uv sync --all-groups --frozen` were
+  **re-run this round** and failed again on a proxy 403 — `Host not in
+  allowlist: pypi.org` — as did a clean-environment attempt. Hand-editing
+  the lock is prohibited and was not done. `NOT EXECUTED` rather than
+  "failed": a run ending in a proxy 403 produced no verdict about this
+  repository.
+- **`IMMUTABLE UPSTREAM IMPLEMENTATION PROVENANCE: PARTIALLY SATISFIED`.**
+  The **normative** source stays pinned to a versioned release asset with
+  its digest in the artefact. The **corroborating implementation** source
+  could not be pinned: three access paths refused by **two distinct
+  mechanisms** — `api.github.com` by a per-repository access broker,
+  `raw.githubusercontent.com` and `git clone` by the egress allowlist. **No
+  commit SHA and no byte-exact digest was invented.** An earlier round's
+  digest, computed over a markdown rendering, stays withdrawn.
+- **The source hierarchy is now declared, not inferred.** `source.hierarchy`
+  names normative / corroborating / local artefact; `is_normative` is `true`
+  on one block and `false` on the other; and `source.corroborating.role`
+  states it is not a substitute for the specification. The failure mode this
+  guards against is a reader treating a reference implementation's source
+  file as normative.
+- **New: `PACK-16D-ENVIRONMENT-BLOCKED-EVIDENCE.md`** — every command
+  attempted and every error output, verbatim. A blocker with no
+  reproduction is indistinguishable from an excuse; a reviewer with network
+  access can run the same six commands and see a different result.
+- **Tests now parse `uv.lock` as TOML rather than searching it as text**, and
+  the dependency guard grew from 3 to 7 tests. Five provenance tests were
+  added. **All twelve are written to pass in both the blocked and the
+  resolved state on purpose**: a test that stays red until somebody gets
+  round to it trains a reader to ignore red. What they forbid is the state
+  that would actually mislead — a gap with nothing saying so.
+- **No cryptographic, guardian, checkpoint, conformance, transaction or
+  sealed-batch code was modified.** 1 file added, 0 deleted, 11 modified.
+  `uv.lock` and `package-lock.json` unchanged.
+- **Verification.** 5847 Python tests passed, 5 skipped, 0 failed, no
+  `--ignore`; 504 in the reference suite; ruff, `ruff format --check` (498
+  files) and `mypy services/voting-service` (70 source files) clean; all
+  four repository scripts pass.
+- `REPOSITORY_VERSION` stays 0.16.0, `CANON_VERSION` stays 0.8.0, `ADR-102`
+  stays `proposed`, `VO-08` stays **OPEN**, and no file under
+  `docs/canonical/` was modified.
+
+### Final correction pass — vetted cryptographic provider, immutable parameter provenance, target-profile conformance
+
+A second independent audit passed the parameter profile, the target-profile
+crypto tests, both guardian paths, checkpoint signature *semantics* and
+archive hygiene. It failed one thing and half-passed two, and all three are
+addressed here.
+
+- **The signature primitive is no longer ours.** The previous round
+  implemented Ed25519 from RFC 8032 in the standard library and defended it
+  on the grounds that it was a published standard, implemented as written,
+  and cross-checked against OpenSSL. Every fact in that defence was true and
+  the conclusion was wrong: the round had optimised for **"add no
+  dependency"** when the property that mattered was **"implement no
+  cryptographic primitive"**. `crypto/ed25519.py` is **deleted** — not
+  archived, not deprecated — and `crypto/signature_provider.py` is a thin
+  port over `cryptography` 46.0.7 (OpenSSL 3.5.6): a Protocol with six
+  operations, one active implementation, strict raw canonical encodings,
+  fail-closed verification, and **no fallback** of any kind. An `ast` test
+  fails if any module re-adds curve arithmetic under another name, and a
+  subprocess test — with a control run, so it cannot pass for the wrong
+  reason — proves the import raises when the library is absent.
+- **The parameters no longer depend on a URL at all.** The artefact's
+  authoritative reference moved from a mutable `/main/` branch to the
+  **specification at its versioned release asset**, with its SHA-256
+  recorded **in the artefact** rather than only in an evidence register.
+  More importantly it gained a `derivation` block: `p` is reconstructed
+  **offline** from the published `ln 2` rule (3305 bits, computed locally as
+  `2·atanh(1/3)`) plus a recorded 279-bit offset, and `q`, `r` and `g`
+  follow in closed form. A URL says where bytes came from; this says the
+  bytes are the ones the published rule produces.
+- **The previous round's source digest was withdrawn, not relabelled.** It
+  had been computed over a markdown rendering rather than the raw file. The
+  field is now `null` with `NOT RECORDED` and a stated reason: this
+  environment's proxy blocks github.com, api.github.com and every CDN
+  mirror, so no commit SHA and no byte-exact digest could be obtained
+  (`OD-P16D-17`). Keeping a number that looks like a file digest and is not
+  would have been worse than having none.
+- **All twelve cross-implementation core operations now run on
+  `EPD2-CRYPTO-1` itself**, not on the fast test group — parameter digest,
+  both encodings, selection encryption, selection proof, ballot hash,
+  confirmation code, accumulation, guardian commitment, decryption share,
+  3-of-5 combination and tally recovery — from one deterministic fixture set
+  with fixed nonces, plus two invalid fixtures that stay **inside the
+  subgroup** so they are refused by the mathematics rather than a cheap
+  structural check. The oracle is handed the ballot's *fields* and rebuilds
+  the canonical bytes itself, because handing it the producer's encoding
+  would test the hash and not the encoding.
+- **Five conformance classifications replace three.** One
+  `cross-implementation` label covering both profiles is exactly how it
+  stayed invisible that most checks ran on a group no election will use.
+- **A pre-existing repository defect surfaced and was fixed.** A contract
+  test had been *skipping* rather than passing since PACK-16D first landed,
+  because PyYAML was not importable — hiding ~65 reference-package reason
+  codes that had never been checked against the voting service's contract
+  registry, through two rounds and two audits. Verified pre-existing against
+  the untouched source tree, then fixed by excluding the reference subtree
+  by path with the reason recorded. **A skipped test is not a passing test.**
+- **One thing is unfinished, and it is stated at the top of the handover
+  rather than the bottom.** `cryptography` is declared in `pyproject.toml`
+  and **absent from `uv.lock`**: regenerating the lock re-resolves the whole
+  workspace against an index this environment blocks with HTTP 403, and
+  hand-editing a lock is prohibited. **This round does not claim that a
+  frozen install of this repository produces a working reference
+  implementation.** `uv sync --all-groups --frozen` was run: it built every
+  workspace member and then failed downloading a third-party wheel — a
+  network failure, not a lock inconsistency. The gap is held open by a test
+  and a `LOCK REGENERATION OUTSTANDING` notice that the same test forbids
+  outliving its cause (`OD-P16D-16`).
+- **Constant-time is narrowed, not closed.** Ed25519 signing moved to
+  OpenSSL, which pursues side-channel resistance as a design goal — a real
+  risk reduction and **not an assurance**, since EPD² measured nothing. The
+  guardian secret operations and secret-nonce use remain pure Python.
+  `OD-P16D-05` stays the production blocker. A compiled native artefact is
+  now in the runtime path, which is stated rather than netted off.
+- **Verification.** 5847 Python tests passed, 5 skipped, **no `--ignore`**
+  (previously 5616 passed / 17 skipped *with* one); 499 in the reference
+  suite; `ruff check`, `ruff format --check` (497 files) and
+  `mypy services/voting-service` (70 source files) clean; all four
+  repository scripts pass. Line coverage 90.9 %. **`uv lock`, the entire npm
+  side, hypothesis and branch coverage were still not executed** and none is
+  claimed as a PASS.
+- `REPOSITORY_VERSION` stays 0.16.0. **`CANON_VERSION` remains 0.8.0. No
+  Canon domain, aggregate, event or invariant semantics changed. Canon
+  compatibility metadata continues to support repository version 0.16.x** —
+  no file under `docs/canonical/` was modified by this pass. `ADR-102`
+  remains `proposed`; `VO-08` remains **OPEN**.
+
+### Correction pass — cryptographic profile, threshold guardians, checkpoint authenticity and conformance
+
+An independent audit of the first PACK-16D candidate returned **NOT
+ACCEPTED**, passing the harness and failing four things: the actual
+`EPD2-CRYPTO-1` profile, the threshold guardian model, checkpoint
+authenticity and external conformance. All four are now implemented. The
+version number does not move: a correction of a candidate that was never
+accepted does not consume a new one.
+
+- **`EPD2-CRYPTO-1` is real and loads.** The ElectionGuard 2.1 §3.1.1
+  standard baseline parameters are committed as
+  `crypto/profiles/EPD2-CRYPTO-1.json`, transcribed from
+  `microsoft/electionguard-rust` `standard_parameters.rs` and **verified by
+  mathematics rather than by trusting the fetch**: `q = 2^256 - 189`,
+  `q | p-1`, `p = qr + 1`, `g^q = 1`, `p`/`q`/`r/2` probable-prime, both
+  256-bit one-runs, and the `ln(2)` middle. A single wrong hex digit breaks
+  all of them. `load_profile` has **no fallback** — no `except`, no default,
+  no environment variable, no feature flag — proved by a test that parses
+  its source. The two fast profiles are renamed
+  `EPD2-TESTONLY-NOTCONFORMANT-*` so a name cannot invite the substitution
+  the code forbids. `OD-P16D-01` is **closed**.
+- **Threshold guardians.** Feldman verifiable secret sharing with Schnorr
+  proofs of possession, Shamir decryption in the exponent, a generic
+  `k`-of-`n` quorum engine, the PACK-16B 3-of-5 default and 4-of-7
+  high-assurance configurations. No party ever holds the joint secret, the
+  quorum comes from the ceremony transcript rather than the caller, `2k ≤ n`
+  is refused, and compensated decryption exists only to raise. A 3-of-5
+  ceremony and a complete election record both run on `EPD2-CRYPTO-1`.
+  `OD-P16D-07` is **closed**.
+- **Checkpoint authenticity.** Ed25519 (RFC 8032 PureEdDSA), implemented in
+  the standard library because no lock change was possible, and **proved**
+  to agree with OpenSSL out-of-process. The trust anchor is a
+  `SignerRegistry` supplied alongside the export — no path reads a key out
+  of the artefact being verified — with declared-in-advance rotation windows
+  and five distinct failure outcomes. Authenticity and consistency are kept
+  apart: two *validly signed* conflicting checkpoints still return
+  `BOARD_INCONSISTENCY`. `OD-P16D-09` is **closed** and is no longer a
+  production blocker.
+- **External conformance, in three named classes.** 2 primary-source and 11
+  cross-implementation entries alongside the 23 internal-stability vectors,
+  which keep their `interoperability NOT established` status. Two oracles
+  share no code with the producer: OpenSSL out-of-process, and a Node.js
+  verifier that re-derives the canonical encoding from the written grammar.
+  Six operations have no published external vector and say so rather than
+  being filled with a relabelled self-generated value.
+- **A real defect the independent oracle found.** `encode_seq` concatenated
+  its items raw after a count, so `SEQ([b"ab", b"c"])` and
+  `SEQ([b"a", b"bc"])` produced identical bytes — two different sequences
+  sharing a digest, in a function every protocol digest runs through.
+  `encode_struct` had the same flaw. Both now length-prefix every member;
+  every digest in the round changed, and the stability vectors caught it.
+  **No self-generated vector could have found this**, which is the clearest
+  evidence available that the audit was right.
+- **Two new open decisions replace the three closed.** `OD-P16D-11`: the
+  reference ceremony runs in one process with no authenticated channel, no
+  HSM, no air gap and no custody. `OD-P16D-12`: the verifier checks a
+  checkpoint against the signer registry it was given and cannot tell you
+  that registry was authorised by the Election Board.
+- **Constant-time was widened, not softened.** Four surfaces are now
+  distinguished: public verification carries no secret, while guardian
+  secret operations, secret-nonce use and Ed25519 private-key signing are
+  all secret-bearing and none is constant-time. `OD-P16D-05` is now the
+  round's **only** production blocker.
+- **Verification after the correction.** 5616 Python tests passed (17
+  skipped), 464 of them in the reference suite; `ruff check`,
+  `ruff format --check` (496 files) and `mypy services/voting-service` (69
+  source files) clean; all four repository scripts pass. Line coverage of
+  the reference package is 90.9% (3816/4200) with the stdlib `trace`
+  module. **`uv sync --frozen`, the entire npm side, hypothesis and branch
+  coverage were still not executed** and none is claimed as a PASS.
+- **No dependency and no lock file changed.** `uv.lock` and
+  `package-lock.json` are unchanged and neither was hand-edited.
+  `cryptography` and Node.js are used only by out-of-process test oracles.
+- `REPOSITORY_VERSION` stays 0.16.0. **`CANON_VERSION` remains 0.8.0. No
+  Canon domain, aggregate, event or invariant semantics changed. Canon
+  compatibility metadata was updated to include repository version 0.16.x**
+  — that widening happened in the 0.16.0 round, is correct, and is not
+  reverted; this correction modified no file under `docs/canonical/`.
+- `ADR-102` remains `proposed`, as do `ADR-099`, `ADR-100` and `ADR-101`.
+  `VO-08` remains **OPEN**: having the published parameters is not having an
+  assessment that they are appropriate for a binding German election.
+
+### Original candidate pass
+
+*The entries below describe the candidate the audit rejected. They are kept
+as the record of what was delivered and when. **Where they conflict with the
+correction section above, the correction section is current** — in
+particular the profile availability, the guardian model, checkpoint
+signature verification, the vector counts and the two production blockers
+have all changed.*
+
+- **The first PACK-16 round that ships code.** PACK-16A specified the
+  protocol, PACK-16B the parameters and ceremony, PACK-16C the casting,
+  publication and record model. PACK-16D implements a *reference* form of
+  all three inside `services/voting-service`, under
+  `epd2_voting_service.reference`: cryptography, canonical encoding,
+  domain separation, randomness, ballot preparation, proofs, the two
+  atomic transactions, sealed batches, the bulletin board, the election
+  record and an independent verifier. **This is a reference
+  implementation and a candidate for audit. It is not production code,
+  not certified, and not legally activated.**
+- **Zero new dependencies.** Finite-field exponential ElGamal, the NIZK
+  proof family and the transparency log are built on `hashlib`, `hmac`,
+  `secrets` and Python's arbitrary-precision integers. `uv.lock` and
+  `package-lock.json` are byte-identical to 0.15.0. No cryptographic
+  library was added, so none had to be assessed for abandonment,
+  provenance or supply-chain risk this round.
+- **`EPD2-CRYPTO-1` is registered but deliberately unavailable.** The
+  published ElectionGuard 2.1 4096-bit `p` and `g` could not be obtained
+  first-hand in this environment, and transcribing 1024 hex digits from a
+  summarised source would be a fabrication. `load_profile("EPD2-CRYPTO-1")`
+  therefore raises `ParameterProfileUnavailableError` rather than
+  substituting anything, and two clearly banner-marked TEST profiles
+  (4096/256 and 1024/160, both self-verified) carry the tests.
+  `OD-P16D-01` owns closing this. `q = 2^256 - 189` *was* confirmed
+  first-hand and is asserted by test.
+- **Eighteen defects were found by this round's own harness and readers,
+  and every one was fixed in the implementation rather than documented
+  around.** The two that mattered most: the idempotency check ran outside
+  the transaction boundary, so two concurrent requests sharing a key could
+  both observe "no record yet"; and the shared reserve was inferred from
+  whatever capacity was left in a batch rather than read from the declared
+  plan, which silently reintroduced adaptive overflow whenever a batch
+  grew. The full list is in
+  `docs/packs/PACK-16/PACK-16D-IMPLEMENTATION-REPORT.md` §7 — including a
+  record digest that omitted the batch openings, decryption-share proofs
+  bound to nothing, two verifiers that skipped a subgroup check, and a
+  concurrency test whose own assertion was wrong about one run in thirty.
+- **The Merkle construction was replaced, not patched.** The first draft
+  duplicated the last node on odd levels, which makes two different leaf
+  sequences share a root. `crypto/merkle.py` now follows the RFC 6962
+  shape with EPD² domain separation, and adds consistency proofs, so
+  rollback and equivocation **within one exported view** are detectable
+  rather than merely named. Split view **across mirrors** is still not
+  detected, because that mechanism remains unstandardised; `OD-P16D-06`
+  owns it.
+- **Verification.** 5513 Python tests passed (17 skipped), mypy clean
+  across every group, `ruff check` and `ruff format --check` clean.
+  361 of those tests are new PACK-16D tests: 23 test vectors across 20
+  families, 36 negative-corpus cases, 15 properties, 9 concurrency races,
+  11 fault points and 10 end-to-end scenarios. **`uv sync --frozen` and the whole
+  npm side were not executed at all** - both registries return HTTP 403
+  in this environment, exactly as `LOCAL_VERIFICATION.md` records. Line
+  coverage of the reference package is 91.8% measured with the stdlib
+  `trace` module; **branch coverage was not measured**, because neither
+  `pytest-cov` nor `coverage` is installable here.
+- **`VO-08` remains OPEN** and is carried into the implementation
+  acceptance gates. No BSI conformity is claimed. Constant-time and
+  side-channel behaviour is explicitly NOT claimed: Python's big integers
+  are not constant-time, and `crypto/proofs.py` says so where a reader
+  will see it. Two open decisions are **production blockers**:
+  `OD-P16D-05` (no constant-time guarantee) and `OD-P16D-09` (checkpoint
+  signatures are carried but never verified).
+- `REPOSITORY_VERSION` 0.15.0 -> 0.16.0. **`CANON_VERSION` remains
+  0.8.0**; PACK-16D's canon assessment concludes NO CANON CHANGE
+  REQUIRED. `canon-version.json` changed only its non-canonical
+  bookkeeping: `repository_compatibility` widened to `<0.17.0`.
+- `ADR-102` is `proposed`. It does not declare `ADR-099`, `ADR-100` or
+  `ADR-101` accepted; all four remain proposed pending review.
+
+## [0.15.0] - voting trust boundary, eligibility & credential separation (FINAL PASS)
 
 - **PACK-15 implementation candidate.** The separation between knowing who
   someone is and knowing that a vote was cast, implemented rather than
@@ -40,10 +432,22 @@
   all** - the registry returns HTTP 403, `node_modules` cannot be
   installed, and the five PACK-15 frontend files have never been run,
   type-checked or rendered. See `docs/handover/PACK-15-TEST-EVIDENCE.md`.
-- **PARTIAL LOCAL VERIFICATION ONLY. EXTERNAL CI NOT YET VERIFIED. NOT
-  FINAL PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** No CI check
-  was weakened, no lock file was modified, and no test result was
-  fabricated.
+- **PACK-15 FINAL PASS — external GitHub Actions passed every stage:**
+  983/983 repository paths, no forbidden paths, version consistency, Ruff
+  format over 436 files, Prettier, Ruff lint, ESLint and mypy all PASS,
+  5343 Python tests passed with 4 skipped, 3 `epd2-types` tests, 41 Node
+  tests, 23 frontend tests, a successful Next.js production build with
+  48/48 static pages, and 135 browser, visual and accessibility tests.
+  See `docs/handover/PACK-15-FINAL-PASS-REPORT.md`.
+- A stale nested copy of the repository at `epd2-civic-os/` (version
+  `0.6.0`) was removed before this run and the tree re-verified from
+  scratch; the Ruff count moved from 609 to 436, and **every verification
+  artifact for a tree containing that directory is superseded.**
+- **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** The pipeline verifies
+  the repository; it binds no provider and deploys nothing. Key custody is
+  unbound and refuses, there is no transport layer, and SQLite remains the
+  reference persistence. No CI check was weakened, no lock file was
+  modified, and no test result was fabricated.
 
 ## [0.14.0] - identity, authentication & account security (FINAL PASS)
 

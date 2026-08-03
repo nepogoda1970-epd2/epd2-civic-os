@@ -664,33 +664,1119 @@ leaving it would have made this round's record the third `1.16`.
 record, that renumbering, `FIR-BASE-001`'s candidate pointer, and
 `FIR-ROADMAP-005`'s status. Nothing else in this file was edited.
 
+## 1.19 Round record — PACK-15 FINAL PASS (2026-07-31)
+
+**Round:** PACK-15 — Voting Trust Boundary, Eligibility & Credential
+Separation, **FINAL PASS**. External GitHub Actions has run against the
+cleaned candidate tree and **passed every stage**.
+
+**Repository version:** unchanged at `0.15.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**This is a packaging round.** No implementation was rebuilt. No service
+module, migration artefact, API catalogue, event schema, reason code,
+test, contract, frontend file or CI definition changed. The archive is
+the externally verified tree plus the status, register and handover
+documents that close the round.
+
+**External CI results, read from the committed run log:**
+
+| Stage                            | Result                        |
+| -------------------------------- | ----------------------------- |
+| Required paths                   | PASS — 983 / 983              |
+| Forbidden paths                  | PASS                          |
+| Version consistency              | PASS                          |
+| Ruff format                      | PASS — 436 files              |
+| Prettier                         | PASS                          |
+| Ruff lint                        | PASS                          |
+| ESLint                           | PASS                          |
+| mypy                             | PASS                          |
+| Python tests                     | PASS — 5343 passed, 4 skipped |
+| TypeScript package tests         | PASS — 3 passed               |
+| Node tests                       | PASS — 41 passed              |
+| Frontend tests                   | PASS — 23 passed              |
+| Next.js production build         | PASS                          |
+| Static pages                     | 48 / 48                       |
+| Browser / visual / accessibility | PASS — 135 passed             |
+
+Verification artifact SHA-256:
+`e8fd5b2a14e61be95be49afd461467a9ddbaab8f5dc70db68a9ab5f0bb9cd1b4`;
+the internal verification ZIP it contains:
+`7ea70c5b9ba3c7350e1d0831148c2be560512e17f78392031c1b0e5e7ea3df8c`.
+Both were recomputed in the environment that assembled this archive and
+both matched.
+
+**A hygiene correction preceded this run, and it is why the run was
+repeated.** An earlier external run passed against a tree that also
+contained `epd2-civic-os/`, a complete stale copy of the repository at
+`REPOSITORY_VERSION 0.6.0` / `CANON_VERSION 0.6.0`. That run reported
+`Ruff format: 609 files`, which is 436 root files plus the nested copy's 173. The directory was removed — PACK-08, PACK-10, PACK-11 and PACK-14
+had each already recommended it — and the tree was re-verified from
+scratch. This run reports **436 files**. **Every verification artifact
+for a tree containing that directory is superseded and is not FINAL PASS
+evidence.** The archive shipped here was compared file by file against
+the newly verified tree: 1171 source files, zero differences.
+
+**FIR IDs implemented by this round: none.** `FIR-ROADMAP-005` moves from
+`candidate` to `implemented in reference form` — not to `implemented`,
+because no provider is bound and nothing is deployed.
+
+**FIR IDs whose status is otherwise unchanged:** every other entry in this
+register, including all six `FIR-OSS-001` through `FIR-OSS-006` and
+`FIR-UX-011`, which stays **future**: no FRONT-PACK was built, no page
+catalogue or screen-state matrix exists. `FIR-ROADMAP-006` (PACK-16),
+`FIR-ROADMAP-007` and `FIR-ROADMAP-008` stay future and unchanged.
+`FIR-INV-002` remains **partially addressed and future**: PACK-15 closes
+the identity-to-credential half, the credential-to-ballot half is
+PACK-16's, and neither half alone closes the invariant. **No future
+obligation was removed and no entry was rolled back.**
+
+**No production-readiness and no legal-activation claim is made by this
+round.** The pipeline verifies the repository; it binds no provider and
+deploys nothing. Key custody is unbound and refuses, there is no
+transport layer, and SQLite remains the reference persistence.
+
+**The four changes this round makes to this register** are: this round
+record, `FIR-BASE-001`'s baseline pointer (PACK-15 becomes the
+authoritative cumulative PASS baseline; PACK-14 becomes the previous
+one), `FIR-ROADMAP-005`'s status, and section 21's implementation summary,
+where PACK-15 joins the externally verified packs and the reference-
+implementation qualifier is extended to cover it.
+
+## 1.20 Round record — PACK-16A specification and ADR (2026-08-01)
+
+**Round:** PACK-16A — Verifiable Voting Protocol and Ballot Model
+Selection. **Specification and ADR only. No code. Not implemented. Not an
+implementation candidate. Not a PASS.**
+
+**Repository version:** unchanged at `0.15.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_FINAL_PASS.zip`,
+SHA-256 `38697c0a0bca9d211bf9f44ec5c2f7b475d86bd38eb1ccc10bc9521c3f2f087a`,
+1172 files, one repository root, one `uv.lock`, one `package-lock.json`,
+one canonical Master Register, no duplicate archive paths and no nested
+ZIP files. The baseline was read in full — specification, matrices, threat
+model, catalogues, `ADR-088` … `ADR-098`, the canonical domain and event
+model and this register — rather than quoted from a handover.
+
+**What this round did.** Nine mature verifiable-voting protocol families
+were assessed against primary sources — official specifications,
+peer-reviewed papers, official caveat documents, official repositories, a
+binding regulatory ordinance, a constitutional judgment, current national
+technical guidance and party law. Fifty-six evidence entries were recorded
+with document, version, date, section, URL and a classification as
+protocol property, implementation property, legal or inference;
+unverifiable items were marked as such and support no conclusion. One
+family was selected, bounded into one profile, and recorded as a
+**proposed** ADR.
+
+```text
+SELECTED   homomorphic exponential-ElGamal ballots with threshold
+           distributed key generation and decryption, NIZK well-formedness
+           proofs and Benaloh cast-or-challenge, in the lineage of the
+           ElectionGuard Design Specification 2.1.0
+PROFILE    EPD2-HOM-1 — cardinal ballots, homomorphic tally
+DEFERRED   EPD2-MIX-1 — ordinal ballots, mixnet tally; defined, not
+           selected, prohibited pending research
+REVOTING   none — explicitly decided, not deferred
+ADR        ADR-099, status `proposed`
+```
+
+**Documents added.** Twenty-two documents under `docs/packs/PACK-16/` and
+`docs/adr/ADR-099-VERIFIABLE-VOTING-PROTOCOL-AND-BALLOT-MODEL.md`. Nothing
+else in the repository was created, modified or deleted apart from this
+register entry and `FIR-ROADMAP-006`'s cross-reference note.
+
+**FIR IDs implemented by this round:** none, and none may be. **FIR IDs
+deferred:** `FIR-ROADMAP-007` (network and infrastructure metadata,
+backup topology, resilience, incident readiness, independent-verification
+operations); `FIR-ASM-006`; `FIR-ASM-007`; `FIR-SEC-001`; `FIR-SEC-002`;
+`FIR-TRUST-001`; `FIR-OSS-006` (delivery); `FIR-DATA-003` (assessed).
+**FIR IDs blocked pending legal assessment:** `FIR-CAND-001` — statutory
+candidate nomination requires simultaneous physical presence and written
+secret paper ballots under § 17 PartG in conjunction with § 21 Abs. 3 and
+§ 27 Abs. 5 BWahlG and the Bundeswahlleiterin's operative guidance.
+**FIR IDs intentionally left unchanged:** `FIR-ROADMAP-005`,
+`FIR-ROADMAP-008`, `FIR-ROADMAP-009`, `FIR-INV-004`, `FIR-INV-010`,
+`FIR-INV-013`, `FIR-ROLE-004`, `FIR-ROLE-006`, `FIR-UX-011`,
+`FIR-OSS-001` … `FIR-OSS-006`, and every entry not named in
+`docs/packs/PACK-16/PACK-16A-FIR-COVERAGE-MATRIX.md`. **New FIR IDs
+created by this round: none.**
+
+`FIR-INV-002` remains **partially addressed and future**. PACK-15 closed
+the identity→credential half; PACK-16A **specifies the architecture** of
+the credential→ballot half and does not implement or demonstrate it.
+Specification is not closure, neither half alone closes the invariant, and
+the strongest residual — redemption-to-casting timing correlation — is
+**reduced and bounded, not eliminated**.
+
+`FIR-ROADMAP-006` **keeps its status `approved` and its target version
+`0.16.0`.** PACK-16A performs the research and selection stage only. Ballot
+casting, vote verification and tally controls remain unimplemented, and
+the version bump belongs to the implementation candidate, not to a
+specification stage.
+
+**Canon.** `CANON CLARIFICATION REQUIRED`; six clarifications recorded;
+**no amendment proposed**; three amendment candidates recorded for
+PACK-16B/16C — a bulletin-board publication aggregate (canon 19a.1 forbids
+`PublicLedgerEntry → VoteEnvelope`, and that prohibition stands), a
+trustee/key-ceremony evidence aggregate, and a mirror registry.
+`CANON_VERSION` unchanged at `0.8.0` and the canon files are untouched.
+
+**No production-readiness, external-CI, FINAL PASS or legal-activation
+claim is made by this round.** `PUBLIC-ELECTION ACTIVATION PROHIBITED BY
+DEFAULT`. PACK-16B must not start before architectural acceptance of
+PACK-16A.
+
+**The two changes this round makes to this register** are: this round
+record, and a cross-reference note under `FIR-ROADMAP-006`. No entry was
+deleted, no identifier reused, no status changed, no status downgraded and
+no second register created.
+
+## 1.21 Round record — PACK-16B specification and ADR (2026-08-01)
+
+**Round:** PACK-16B — Cryptographic Parameters, Key Ceremony and Trustee
+Architecture. **Specification and ADR only. No code. No cryptographic code.
+Not implemented. Not an implementation candidate. Not a PASS.**
+
+**Repository version:** unchanged at `0.15.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CORRECTED_CANDIDATE.zip`,
+SHA-256 `14b65dae696eeb80e237fbb33a14f7bad55e8ca043672ba0fa2e86a90b011f9e`,
+1195 files, one repository root, one `uv.lock`, one `package-lock.json`,
+one canonical Master Register, no duplicate archive paths and no nested ZIP
+files. The corrected PACK-16A candidate — the one whose acceptance matrix
+and single consolidated evidence registry passed narrow correction — is the
+authoritative input; no earlier PACK-16A tree was used.
+
+**What this round did.** The pinned specification was read directly and its
+parameters were **independently regenerated and confirmed byte for byte**.
+Current German and international guidance — BSI TR-02102-1 (2026-01), BSI
+AIS 20/31 v3.0, NIST SP 800-56A Rev 3 and the SP 800-90 series — was
+assessed against the parameters from primary sources, with one sentence
+recorded as **unread and unverified** rather than assumed. Thirty-two
+evidence entries were recorded in a **single canonical registry** with
+twelve fields each, classified as protocol, analysis, normative, governance
+or EPD²-generated; four are EPD²'s own findings and are marked as such and
+never presented as external corroboration.
+
+```text
+PARAMETER PROFILE   EPD2-CRYPTO-1 — the specification's fixed 4096-bit
+                    finite-field parameters, adopted UNMODIFIED (Option A)
+EG COMPATIBILITY    full — every conforming 2.1 verifier accepts the record
+BSI ASSESSMENT      meets every figure verified first-hand; one sentence
+                    UNVERIFIED and carried as a blocking obligation
+GUARDIANS/QUORUM    k=3 of n=5 default; k=4 of n=7 high assurance;
+                    k >= 3 always; k may never be reduced
+CEREMONY            twenty phases; controlled hybrid or in person;
+                    FULLY REMOTE PROHIBITED
+BACKUP              per-guardian, own share, own custody, only
+COMPENSATION        DOES NOT EXIST in the pinned version — factual
+                    correction to PACK-16A KC-11's described mechanism;
+                    the requirement itself is unchanged
+BREAK-GLASS         none. PRE-CLOSURE DECRYPTION PROHIBITED
+ADR                 ADR-100, status `proposed`
+```
+
+**Documents added.** Twenty-nine documents under `docs/packs/PACK-16/` and
+`docs/adr/ADR-100-CRYPTOGRAPHIC-PARAMETERS-KEY-CEREMONY-AND-TRUSTEE-ARCHITECTURE.md`.
+Nothing else in the repository was created, modified or deleted apart from
+this register entry and `FIR-ROADMAP-006`'s cross-reference note. No source
+file, test, migration, API or event implementation, frontend file, CI
+workflow, `uv.lock`, `package-lock.json` or dependency was touched.
+
+**FIR IDs implemented by this round:** none, and none may be. **FIR IDs
+deferred:** `FIR-ROADMAP-007` (ceremony resilience, incident readiness,
+archive re-verification, independent-verification operations);
+`FIR-SEC-001` and `FIR-SEC-002` (runbooks and recovery testing);
+`FIR-TRUST-001` (the signature and timestamp framework itself);
+`FIR-OSS-006` (delivery). **FIR IDs assessed:** `FIR-DATA-003` — a legal
+hold may not extend the life of secret material, compel a guardian or
+produce a decryption. **FIR IDs intentionally left unchanged:**
+`FIR-ROADMAP-005`, `FIR-ROADMAP-008`, `FIR-ROADMAP-009`, `FIR-INV-011`,
+`FIR-ROLE-004`, `FIR-ROLE-006`, `FIR-UX-011`, `FIR-OSS-001` …
+`FIR-OSS-006`, `FIR-CAND-001`, `FIR-ASM-006`, `FIR-ASM-007`,
+`FIR-PROG-001`, and every entry not named in
+`docs/packs/PACK-16/PACK-16B-FIR-COVERAGE-MATRIX.md`. **New FIR IDs created
+by this round: none. FIR statuses changed by this round: none.**
+
+`FIR-INV-002` remains **partially addressed and future**, exactly as
+PACK-15 and PACK-16A left it. This round separates guardians structurally
+from eligibility, issuance and casting, and **does not advance the
+invariant**: it cannot be closed without a built system to demonstrate
+against.
+
+`FIR-ROADMAP-006` **keeps its status `approved` and its target version
+`0.16.0`.** PACK-16B performs the parameter, ceremony and trustee stage
+only.
+
+**Canon.** `CANON CLARIFICATION REQUIRED`; five clarifications recorded
+(`CQ-P16B-01` … `CQ-P16B-05`); **no amendment proposed**; three amendment
+candidates recorded (`CAM-P16B-01` … `CAM-P16B-03`). The ceremony
+transcript is found **not** to be a canonical aggregate and **not** a
+`PublicLedgerEntry`, and PACK-16A's `CA-02` candidate is therefore
+**narrowed rather than discharged**. The `PublicLedgerEntry →
+VoteEnvelope` prohibition stands untouched. `CANON_VERSION` unchanged at
+`0.8.0` and the canon files are untouched.
+
+**Open decisions.** Closed: `OD-P16A-03`, `OD-P16A-05`, and the
+cryptographic boundary of `OD-P15-05` (whose construction question is
+reassigned to PACK-16C). Opened: `OD-P16B-01` … `OD-P16B-06`. **Four
+independent activation blocks remain open and none is closed by
+assertion**, the gravest being that **no peer-reviewed security analysis of
+the selected specification's key ceremony exists, in any version, and no
+peer-reviewed analysis of version 2.1 exists at all** — recorded as
+`blocked pending cryptographic review`, not as satisfied.
+
+**No production-readiness, external-CI, FINAL PASS, certification or
+legal-activation claim is made by this round.** `PUBLIC-ELECTION ACTIVATION
+PROHIBITED BY DEFAULT`. PACK-16C must not start before architectural
+acceptance of PACK-16B, and PACK-16D is not begun.
+
+**The two changes this round makes to this register** are: this round
+record, and a cross-reference note under `FIR-ROADMAP-006`. No entry was
+deleted, no identifier reused, no status changed, no status downgraded and
+no second register created.
+
 # 2. Current confirmed baseline
+
+
+## 1.22 Round record — PACK-16C specification and ADR (2026-08-01)
+
+**Round:** PACK-16C — Casting, Receipt, Verification Client, Bulletin Board
+and Election Record. **Specification and ADR only. No code. No
+cryptographic implementation. Not implemented. Not an implementation
+candidate. Not a PASS.**
+
+**Repository version:** unchanged at `0.15.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-16B_CRYPTOGRAPHIC_PARAMETERS_KEY_CEREMONY_AND_TRUSTEE_ARCHITECTURE_SPEC_ADR_FINAL_REVIEW_CANDIDATE.zip`,
+SHA-256 `7074feedd7b5d97dd8b44bc2017dd5170fda6390766d5a41566e73283d688d9b`,
+one repository root, one `uv.lock`, one `package-lock.json`, one canonical
+Master Register, no duplicate archive paths and no nested ZIP files. The
+final-review PACK-16B candidate — the one whose `VO-08` ownership and
+Acceptance Matrix wording passed correction — is the authoritative input;
+no earlier PACK-16B tree was used.
+
+**What this round did.** It answered the three questions PACK-16A and
+PACK-16B left for it: when the continuation capability is consumed, what a
+voter may be given afterwards, and what must be published so that a stranger
+can check the outcome. The consumption point is fixed **inside an atomic
+acceptance boundary, after every cryptographic check and immediately before
+durable acceptance**, so that a ballot failing any check costs the voter
+nothing. The receipt proves **publication only**. The election record is
+fixed at **thirty-two mandatory artefacts**, sufficient for the sixteen
+checks an independent verifier must perform, plus a mandatory statement of
+the six things the record cannot show.
+
+```text
+CONSUMPTION      atomic validation + consumption + acceptance;
+                 exactly-once; mechanism deferred as OD-P16C-01 and
+                 an ARCHITECTURAL BLOCKER if undemonstrable
+BALLOT IDENTITY  four separated values; ballot_id client-random
+CHALLENGE        commitment before choice; unlimited, voter-manual;
+                 a challenged ballot is NEVER counted
+PIPELINE         23 ordered stages, fail closed, distinct reason code
+                 per stage; every cryptographic check before the boundary
+LIFECYCLE        16 states; PACK-16A's 14 extended, none redefined;
+                 superseded_if_permitted remains UNREACHABLE
+RECEIPT          proves publication only; re-derivable; proves
+                 PARTICIPATION, which is accepted and not solved
+BOARD            Merkle transparency log, chained signed checkpoints,
+                 mirror co-signing; TAMPER-EVIDENT, not tamper-proof
+PUBLICATION      durable acceptance + signed commitment + published
+                 deadline; no state "accepted but never published"
+RECORD           32 artefacts; 16 verifier checks; 0 checks unserved;
+                 4 artefacts retained for honesty, serving no check
+TURNOUT          fixed-size batches with padding; below a minimum
+                 electorate size a context is NOT activated electronically
+ADR              ADR-101, status `proposed`, CONDITIONAL on ADR-100
+```
+
+**Documents added.** Thirty-three documents under `docs/packs/PACK-16/` and
+`docs/adr/ADR-101-CASTING-RECEIPT-VERIFICATION-BULLETIN-BOARD-AND-ELECTION-RECORD.md`.
+Nothing else in the repository was created, modified or deleted apart from
+this register entry and `FIR-ROADMAP-006`'s cross-reference note. No source
+file, test, migration, API or event implementation, frontend file, CI
+workflow, `uv.lock`, `package-lock.json` or dependency was touched.
+
+**FIR IDs implemented by this round:** none, and none may be. **FIR IDs
+deferred:** `FIR-ROADMAP-007` (independent-verification operations, board
+resilience, archive re-verification, witness ecosystem); `FIR-SEC-001`
+(runbooks and rehearsal); `FIR-TRUST-001` (the signature and timestamp
+framework itself); `FIR-OSS-006` (delivery); and the remainders of
+`FIR-ASM-006` and `FIR-ASM-007`. **FIR IDs taken up as deferred to PACK-16C
+by PACK-16B:** `FIR-ASM-006` and `FIR-ASM-007`, both **specified,
+partially**. **FIR IDs assessed:** `FIR-SEC-002` and `FIR-DATA-003`. **FIR
+IDs intentionally left unchanged:** `FIR-ROADMAP-005`, `FIR-ROADMAP-008`,
+`FIR-ROADMAP-009`, `FIR-ROLE-004`, `FIR-ROLE-006`, `FIR-CAND-001`,
+`FIR-PROG-001`, `FIR-ASM-008`, `FIR-OSS-001` … `FIR-OSS-006`, and every
+entry not named in
+`docs/packs/PACK-16/PACK-16C-FIR-COVERAGE-MATRIX.md`. **New FIR IDs created
+by this round: none. FIR statuses changed by this round: none.**
+
+`FIR-INV-002` remains **partially addressed and future**, exactly as
+PACK-15, PACK-16A and PACK-16B left it. This round specifies the ballot side
+of `credential → ballot` in full — separate stores with no join key, no
+trace spanning the atomic boundary, the retry token stripped before
+publication, and no correlating field published — and **does not close the
+invariant**: it cannot be closed without a built system to demonstrate
+against, and an operator with database access to both stores plus precise
+timing remains a stated residual.
+
+`FIR-ROADMAP-006` **keeps its status `approved` and its target version
+`0.16.0`.** PACK-16C performs the casting, receipt, verification, board and
+record specification stage only.
+
+**Canon.** `CANON CLARIFICATION REQUIRED`; six clarifications recorded
+(`CQ-P16C-01` … `CQ-P16C-06`); **no amendment proposed**; three amendment
+candidates recorded (`CAM-P16C-01` … `CAM-P16C-03`). The finding is that the
+canon has **no publication primitive for a public ballot-bearing board**,
+because its only append-only public primitive — `PublicLedgerEntry` (19a.1)
+— correctly prohibits a link to `VoteEnvelope`. The board is therefore
+specified on its own terms and the gap is recorded rather than filled by
+analogy. The `PublicLedgerEntry → VoteEnvelope` prohibition stands
+untouched and is reinforced at the data-model level. `CANON_VERSION`
+unchanged at `0.8.0` and the canon files are untouched.
+
+**Open decisions.** Closed: **none**. Opened: `OD-P16C-01` … `OD-P16C-13`.
+`VO-08` is **not closed, not narrowed and not re-owned** by this round; it
+remains owned by PACK-16B external cryptographic review and confirmed by
+PACK-17. Three acceptance rows are `BLOCKED` and none is dressed as
+progress: challenge take-up is an empirical fact no specification act
+changes; independent verification of a real context requires a party that
+has not been engaged; and split-view resistance rests on organisational
+mirror independence because the mechanism is unstandardised — the IETF's own
+gossip draft for Certificate Transparency expired in 2020 without becoming
+an RFC.
+
+**Evidence.** Five entries in a single canonical registry. **Four new
+primary sources were read first-hand on 2026-08-01** — RFC 9162, RFC 6962,
+`draft-ietf-trans-gossip-05` and the C2SP `tlog-witness` specification — and
+quoted with section numbers; one entry is an inference and is marked as
+such. Fourteen inherited entries are cited **as inherited**, with no
+re-attestation of a reading this round did not perform. **All four new
+sources are from the certificate and software-supply-chain domain; none
+concerns elections**, and that limitation is stated rather than glossed.
+**Six of this round's central decisions rest on no external source at all**
+and are recorded as reasoned rather than evidenced.
+
+**Acceptance.** 166 rows: 134 `SATISFIED`, 9 `PARTIALLY SATISFIED`, 11
+`DEFERRED`, 3 `BLOCKED`, 9 `NOT APPLICABLE`. No row claims implementation,
+external review, production readiness or legal activation. **Lines of code
+written: 0.**
+
+**PACK-16D is not started.**
+
+## 1.23 Round record — PACK-16D reference implementation candidate (2026-08-02)
+
+**Round:** PACK-16D — Cryptographic Implementation Architecture, Reference
+Components, Atomic Persistence, Test Vectors and Verification Harness.
+**Reference implementation candidate. Not production code. Not certified.
+Not a PASS.**
+
+**Repository version:** `0.15.0` → `0.16.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-16C_CASTING_RECEIPT_VERIFICATION_BULLETIN_BOARD_AND_ELECTION_RECORD_SPEC_ADR_FINAL_CORRECTED_CANDIDATE.zip`,
+SHA-256 `60297babbcab02ea51db66db97ac50823a37d2373da735b88c5e5fd80a56ed83`,
+one repository root, one `uv.lock`, one `package-lock.json`, one canonical
+Master Register, no duplicate archive paths and no nested ZIP files. The
+final corrected PACK-16C candidate — the one whose event-privacy and
+open-decision corrections passed — is the authoritative input; no earlier
+PACK-16C tree was used.
+
+**What this round did.** It is the first PACK-16 round that ships code. It
+implements a *reference* form of the model PACK-16A, PACK-16B and PACK-16C
+specified: cryptography, canonical encoding, domain separation, randomness,
+ballot preparation, the NIZK proof family, the two atomic transactions,
+sealed fixed-capacity batches, the bulletin board, the election record and
+an independent verifier — 39 Python modules under
+`services/voting-service/src/epd2_voting_service/reference/`, with 361 tests
+under `services/voting-service/tests/reference/`.
+
+```text
+PLACEMENT        inside epd2-voting-service; NO new workspace member, so
+                 uv.lock and package-lock.json are byte-identical
+DEPENDENCIES     ZERO added; hashlib, hmac, secrets and Python integers
+PARAMETERS       EPD2-CRYPTO-1 REGISTERED BUT UNAVAILABLE and failing
+                 closed (OD-P16D-01); two banner-marked TEST profiles
+                 carry the tests; q = 2**256 - 189 confirmed first-hand
+ENCODING         EPD2-ENC-1 canonical binary tuples; order normative
+DOMAIN SEP       EPD2-DS-1, 25 labels, one registry, fail closed
+TRANSACTIONS     both atomic; a capability is never spent by a submission
+                 that does not commit; 11 fault points prove it
+CAPACITY         L_max = E x (K + A) from capabilities, never turnout;
+                 slot partition must cover the batch exactly
+BATCHES          constant-shaped; cover leaves are uniform random
+BOARD            RFC 6962 tree; inclusion, consistency, rollback and
+                 equivocation detected within one exported view
+RECORD           no tally artefact can be constructed before closure
+VERIFIER         public artefacts only; boundary enforced by ast tests
+VECTORS          23, ALL self-generated; stability only, NOT conformance
+GUARDIANS        SINGLE guardian; threshold DKG NOT implemented
+VO-08            OPEN; no BSI conformity claimed
+ADR              ADR-102, status `proposed`
+```
+
+**Documents added.** Thirty-three documents under `docs/packs/PACK-16/` and
+`docs/adr/ADR-102-CRYPTOGRAPHIC-REFERENCE-IMPLEMENTATION-ATOMIC-PERSISTENCE-AND-VERIFICATION-HARNESS.md`.
+
+**Source added.** 39 Python modules and 2 parameter files under
+`services/voting-service/src/epd2_voting_service/reference/`; 10 test
+modules and 1 test-vector catalogue under
+`services/voting-service/tests/reference/`. **Modified:** eight files, all
+of them version bookkeeping bound together by `scripts/verify_versions.py`
+and `scripts/check_canon_0_8_0.py`, plus `CHANGELOG.md` and `README.md`.
+**Deleted:** none. **No dependency, `uv.lock`, `package-lock.json`,
+migration, frontend file or CI workflow was touched.**
+
+**FIR IDs implemented by this round:** none in full. `FIR-ROADMAP-006` moves
+to **`implemented in reference form`** for the casting, publication, record
+and verification path and stays `approved` overall — see its entry. **FIR
+IDs deferred to PACK-17:** `FIR-ROADMAP-007` (independent verification,
+board resilience, archive re-verification, witness ecosystem); `FIR-SEC-001`
+(runbooks and rehearsal); `FIR-TRUST-001`; `FIR-OSS-006`. **FIR IDs
+intentionally left unchanged:** every entry not named in
+`docs/packs/PACK-16/PACK-16D-FIR-COVERAGE-MATRIX.md`. **New FIR IDs created
+by this round: none. FIR statuses changed by this round: none.**
+
+`FIR-INV-002` remains **partially addressed and future**, exactly as
+PACK-15, PACK-16A, PACK-16B and PACK-16C left it. This round *implements*
+the ballot side of `credential → ballot` — separate maps with no shared key,
+a leaf reservation that names a submission and never a capability, an outbox
+row scanned for forbidden fields, and tests that assert no persisted row
+pairs the two — and **does not close the invariant**: an in-memory reference
+store is not a production data plane, and the operator-with-database-access
+residual is unchanged.
+
+**Canon.** `NO CANON CHANGE REQUIRED`. All eight entities §54 names map onto
+aggregates PACK-16A/16B/16C already specified; five implementation types
+(`AuditRecord`, `FeatureFlags`, `LogRecord`, `SchemaDescriptor`,
+`FaultPoint`) are held at service level on the precedent PACK-12's
+`PrivilegedSession`, PACK-14's `SessionRecord` and PACK-15's voting context
+registry set.
+
+```text
+CANON_VERSION remains 0.8.0.
+
+No Canon domain, aggregate, event or invariant semantics changed.
+
+Canon compatibility metadata was updated to include
+repository version 0.16.x.
+```
+
+Concretely: `canon-version.json` had its non-canonical
+`repository_compatibility` widened from `>=0.1.0 <0.16.0` to
+`>=0.1.0 <0.17.0` because the repository moved to `0.16.0`. That is
+bookkeeping rather than semantics, it is correct under the repository's
+versioning rules, and it is not reverted — but the file **was** modified,
+so this round is not described as leaving the canon files untouched.
+
+**Open decisions.** Closed: **none**. Opened: `OD-P16D-01` … `OD-P16D-10`.
+`VO-08` is **not closed, not narrowed and not re-owned**; it remains owned by
+PACK-16B external cryptographic review with independent confirmation in
+PACK-17, and is named in the verifier's `NOT_CHECKED` list so that every
+verification result carries it. Two of this round's open decisions are
+**production blockers**: `OD-P16D-05` (no constant-time guarantee — Python
+big-integer arithmetic is not constant-time) and `OD-P16D-09` (checkpoint
+signatures are carried but never verified, because the reference board signs
+with a symmetric key a third-party verifier does not hold).
+
+**Verification.** 5513 Python tests passed, 17 skipped; mypy clean across
+every Makefile group; `ruff check` and `ruff format --check` clean; all four
+repository scripts pass. Line coverage of the reference package is 91.8 %,
+measured with the standard library's `trace` module. **`uv sync --frozen`
+and the entire npm side were NOT executed** — both registries return HTTP
+403 in this environment, exactly as `LOCAL_VERIFICATION.md` records — and
+**branch coverage was NOT measured**, because no coverage tool is
+installable here. Property tests run as deterministic seeded loops rather
+than `hypothesis` strategies, for the same reason.
+
+**Defects found by this round's own harness and fixed in the
+implementation.** Recorded because a round that reports none has usually not
+looked: the idempotency check ran outside the transaction, so two concurrent
+requests sharing a key could both proceed; the shared reserve was inferred
+from leftover batch capacity, which silently reintroduced adaptive overflow;
+the Merkle construction duplicated the last node on odd levels, which lets
+two leaf sequences share a root, and was replaced with the RFC 6962 shape;
+the election-record digest omitted the batch openings and the decryption
+shares; decryption-share proofs were not bound to the contest and option
+they decrypt; two proof verifiers did not subgroup-check the public key;
+`load_profile` and `verify_record` compared a parameter's bit length against
+itself; and a concurrency test asserted an outcome that was wrong about one
+run in thirty. Every one was fixed in the implementation, not in the test.
+
+**PACK-17 is not started.**
+
+## 1.24 Round record — PACK-16D correction: cryptographic profile, threshold guardians, checkpoint authenticity and conformance (2026-08-02)
+
+**Round:** PACK-16D — Cryptographic Profile, Threshold Guardians, Checkpoint
+Authenticity and Conformance Correction. **A correction of the section 1.23
+candidate, not a new round.**
+**Reference implementation candidate. Not production code. Not certified.
+Not a PASS.**
+
+**Repository version:** unchanged at `0.16.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-16D_CRYPTOGRAPHIC_IMPLEMENTATION_ATOMIC_PERSISTENCE_TEST_VECTORS_AND_VERIFICATION_HARNESS_CANDIDATE.zip`,
+SHA-256 `9ff64a5b97f0d9b237c25991f602d404304c0d13cdb08276ba3675ad7d54d4b0`.
+
+**Why there is a correction.** An independent audit of that archive returned
+**NOT ACCEPTED**:
+
+```text
+ARCHIVE HYGIENE:                    PASS
+REFERENCE TEST SUITE:               PASS
+REFERENCE IMPLEMENTATION SCAFFOLD:  PASS
+ATOMIC PERSISTENCE MODEL:           PASS FOR REFERENCE STORE
+ACTUAL EPD2-CRYPTO-1 PROFILE:       FAIL
+THRESHOLD GUARDIAN MODEL:           FAIL
+CHECKPOINT AUTHENTICITY:            FAIL
+EXTERNAL CONFORMANCE:               FAIL
+PACK-16D:                           NOT ACCEPTED
+PACK-17:                            DO NOT START
+```
+
+The four failures shared one shape: a central mechanism was missing, the
+absence was described carefully, and the description was filed under a
+heading — an open decision, a `BLOCKED` acceptance row, an external-party
+dependency — that made it read as somebody else's work. All four are now
+implemented. Everything the audit passed was preserved rather than rebuilt.
+
+```text
+PLACEMENT        unchanged; inside epd2-voting-service, NO new workspace
+                 member, uv.lock and package-lock.json unchanged
+DEPENDENCIES     still ZERO added; Ed25519 implemented from RFC 8032 in
+                 the standard library precisely so no lock change was
+                 needed; cryptography and Node.js are TEST ORACLES ONLY
+PARAMETERS       EPD2-CRYPTO-1 REAL AND LOADABLE. ElectionGuard 2.1
+                 §3.1.1 standard baseline, primary-sourced, verified by
+                 arithmetic no transcription error survives. NO FALLBACK
+                 of any kind. Test profiles renamed
+                 EPD2-TESTONLY-NOTCONFORMANT-*        (OD-P16D-01 CLOSED)
+ENCODING         EPD2-ENC-1; SEQ and STRUCT now length-prefix every
+                 member — the previous form was AMBIGUOUS and was found
+                 by the independent oracle, not by any internal vector
+DOMAIN SEP       EPD2-DS-1, 27 labels, one registry, fail closed
+GUARDIANS        Feldman VSS DKG; generic k-of-n; 3-of-5 default and
+                 4-of-7 high assurance; 2k <= n refused; threshold
+                 reduction impossible; compensated decryption refuses
+                                                      (OD-P16D-07 CLOSED)
+CHECKPOINTS      Ed25519 RFC 8032; canonical domain-separated payload;
+                 SignerRegistry trust anchor supplied ALONGSIDE the
+                 export, never read from the artefact; declared rotation
+                 windows; five distinct fail-closed outcomes
+                                                      (OD-P16D-09 CLOSED)
+CONFORMANCE      three named evidence classes; 23 internal-stability
+                 vectors UNCHANGED in status, plus 2 primary-source and
+                 11 cross-implementation entries from TWO oracles that
+                 share no code with the producer
+VERIFIER         26 result codes, 26 exit codes; NOT_CHECKED now 9
+                 entries — one removed because it became FALSE
+VO-08            OPEN; no BSI conformity claimed; obtaining the
+                 parameters did not narrow it by one word
+ADR              ADR-102, status `proposed`, unchanged
+```
+
+**Documents.** Three added
+(`PACK-16D-THRESHOLD-GUARDIAN-REFERENCE-IMPLEMENTATION.md`,
+`PACK-16D-CHECKPOINT-SIGNATURE-AND-SIGNER-TRUST-MODEL.md`,
+`PACK-16D-EXTERNAL-CONFORMANCE-REPORT.md`), bringing the round to 36
+documents under `docs/packs/PACK-16/` plus `ADR-102`. The rest were revised.
+
+**Source.** 14 files added (7 under `reference/`, 7 under
+`tests/reference/`), 2 renamed, 0 deleted. The reference package is now 45
+modules and 7 392 lines; the tests are 14 modules plus 2 oracles and 6 676
+lines. **No dependency, `uv.lock`, `package-lock.json`, migration, frontend
+file, CI workflow or version constant was touched, and no file under
+`docs/canonical/` was modified by this pass.**
+
+**FIR.** **New FIR IDs: none. FIR statuses changed: none.**
+`FIR-ROADMAP-006` stays `approved` and `implemented in reference form`,
+partially, with a materially stronger delivery. `FIR-TRUST-001` moves from
+*deferred to PACK-17* to **partially implemented**: the signature half of
+the signature-and-timestamp framework now exists; the timestamp half does
+not. `FIR-SEC-002` **stays** *blocked pending external review* — the
+parameters arrived, the assurance did not, and assurance is what the entry
+is about. `FIR-INV-002` remains partially addressed and is not closed.
+**None of the eight items that may not be closed was closed.**
+
+**Canon.**
+
+```text
+CANON_VERSION remains 0.8.0.
+
+No Canon domain, aggregate, event or invariant semantics changed.
+
+Canon compatibility metadata was updated to include
+repository version 0.16.x.
+```
+
+`NO CANON CHANGE REQUIRED`. The correction's new implementation types —
+guardian records, threshold shares, checkpoint signer records — are held at
+service level on the same PACK-12 / PACK-14 / PACK-15 precedent, bringing
+that list to nine. The closest call is `SignerRegistry`: a *published,
+governance-issued* signer set would be canon-visible, and it is not canon
+yet only because no governance act issues one. If `OD-P16D-12` closes with a
+published registry, the amendment question must be re-asked.
+
+**Open decisions.** **Closed: three** — `OD-P16D-01` (the profile loads),
+`OD-P16D-07` (threshold path implemented), `OD-P16D-09` (signatures
+verified). **Opened: two** — `OD-P16D-11` (the reference ceremony has no
+custody model: one process, no authenticated channel, no HSM, no air gap)
+and `OD-P16D-12` (the signer registry's own authorisation is outside the
+verifier's reach). `OD-P16D-02` is **narrowed but not closed**: two
+independent oracles and primary-source parameters now exist, but no
+comparison against a *complete* independent implementation. **No inherited
+decision was closed**, and `VO-08` remains open. **One production blocker
+remains**: `OD-P16D-05`, now across four distinguished surfaces — public
+verification carries no secret, while guardian secret operations,
+secret-nonce use and Ed25519 private-key signing are all secret-bearing and
+none is constant-time. `OD-P16D-09`'s blocker status is discharged.
+
+**Acceptance matrix.** 85 rows: 72 `SATISFIED`, 6 `PARTIALLY SATISFIED`,
+2 `DEFERRED`, 4 `BLOCKED`, 1 `NOT APPLICABLE`. Four rows left `BLOCKED`;
+three because the work was done, and one (`AM-77`, a fully independent
+verifier) because calling it blocked misdescribed this round's own omission
+as an external party's inaction. `CORRECTED` is not used as a status.
+
+**Verification.** 5 616 Python tests passed, 17 skipped, 464 of them in the
+reference suite; `ruff check` and `ruff format --check` (496 files) clean;
+`mypy services/voting-service` clean over 69 source files; all four
+repository scripts pass. Line coverage of the reference package is 90.9 %
+(3 816 / 4 200) with the standard library's `trace` module — a lower
+percentage than the first candidate's 91.8 % over a package a third larger.
+**`uv sync --frozen`, the entire npm side, hypothesis and branch coverage
+were NOT executed** and none is claimed as a PASS.
+
+**The defect that justifies the audit's judgement.** `encode_seq`
+concatenated its items raw after a count, so `SEQ([b"ab", b"c"])` and
+`SEQ([b"a", b"bc"])` produced identical bytes — two different sequences
+sharing a digest, in a function every protocol digest runs through.
+`encode_struct` had the same flaw. It was found by the independent Node.js
+oracle, which was written from the documented grammar rather than from the
+code and therefore disagreed with it. **No self-generated stability vector
+could have found this**, which is precisely why `EXTERNAL CONFORMANCE: FAIL`
+was the right call.
+
+**PACK-17 is not started and must not start before independent acceptance of
+PACK-16D.**
+
+## 1.25 Round record — PACK-16D final correction: vetted cryptographic provider, immutable parameter provenance, target-profile conformance (2026-08-02)
+
+**Round:** PACK-16D — Final Cryptographic Provider, Immutable Parameter
+Provenance and Target-Profile Conformance Correction. **A correction of the
+section 1.24 candidate, not a new round.**
+**Reference implementation candidate. Not production code. Not certified.
+Not a PASS.**
+
+**Repository version:** unchanged at `0.16.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:**
+`EPD2_PACK-16D_..._CORRECTED_CANDIDATE.zip`,
+SHA-256 `bd543264f04a98d962aa6cde4a8bff6405e790962a14f657cdb40ea3160ab891`.
+
+**Why there is a second correction.** The audit of that archive returned:
+
+```text
+ARCHIVE HYGIENE:                          PASS
+REAL EPD2-CRYPTO-1:                       PASS
+TARGET-PROFILE CRYPTO TESTS:              PASS
+3-OF-5 THRESHOLD REFERENCE PATH:          PASS
+4-OF-7 GENERIC PATH:                      PASS
+CHECKPOINT SIGNATURE SEMANTICS:           PASS
+CHECKPOINT SIGNATURE PRIMITIVE POLICY:    FAIL - HANDWRITTEN ED25519
+PARAMETER SOURCE REPRODUCIBILITY:         PARTIAL - MUTABLE URL / DIGEST NOT IN ARTIFACT
+CROSS-IMPLEMENTATION ON TARGET PROFILE:   PARTIAL
+PACK-16D:                                 NOT YET ACCEPTED
+PACK-17:                                  DO NOT START
+```
+
+The first finding is the instructive one. The previous round had implemented
+Ed25519 from RFC 8032 in the standard library and defended it carefully:
+published standard, implemented as written, cross-checked against OpenSSL on
+25 vectors. Every fact was true and the conclusion was wrong. The round had
+optimised for **"add no dependency"** when the property that mattered was
+**"implement no cryptographic primitive"** — two goals that pointed in
+opposite directions, with the weaker one chosen unnoticed.
+
+```text
+SIGNATURE          crypto/ed25519.py DELETED. crypto/signature_provider.py
+                   is a port over cryptography 46.0.7 / OpenSSL 3.5.6: a
+                   Protocol with six operations, one implementation, strict
+                   raw canonical encodings, fail-closed verify, NO FALLBACK.
+                   An ast test forbids re-adding curve arithmetic anywhere.
+                                                      (OD-P16D-13 CLOSED)
+PROVENANCE         authoritative reference moved from a mutable /main/ URL
+                   to the SPECIFICATION at a versioned release asset, digest
+                   recorded IN the artefact. Plus offline reconstruction: p
+                   from the published ln 2 rule (3305 bits, computed as
+                   2*atanh(1/3)) and a recorded 279-bit offset; q, r, g in
+                   closed form. The previous round's source digest was
+                   WITHDRAWN - it was computed over a markdown rendering.
+                                                      (OD-P16D-14 CLOSED)
+CONFORMANCE        all TWELVE core operations cross-checked on EPD2-CRYPTO-1
+                   itself, with fixed nonces, exported fixtures, a
+                   machine-readable oracle envelope, and two invalid
+                   fixtures that stay INSIDE the subgroup.
+                                                      (OD-P16D-15 CLOSED)
+CLASSIFICATIONS    five, not three: internal-stability, primary-source,
+                   rfc-conformance, cross-implementation-test-profile,
+                   cross-implementation-target-profile
+LOCK               NOT REGENERATED at the time. SUPERSEDED by section 1.27:
+                   uv.lock now resolves cryptography 46.0.7.
+                                              (OD-P16D-16 OPENED HERE, CLOSED)
+UPSTREAM PIN       no commit SHA or digest obtainable at the time. SUPERSEDED
+                   by section 1.27: pinned at 5206511...ceac.
+                                              (OD-P16D-17 OPENED HERE, CLOSED)
+CONSTANT-TIME      NARROWED, not closed. Signing is OpenSSL's; the guardian
+                   secret operations and nonce use remain pure Python.
+                   OD-P16D-05 is still the production blocker
+VO-08              OPEN. ADR-102 proposed. PACK-17 not started
+```
+
+**A pre-existing repository defect, found and fixed.**
+`tests/contract/test_reason_codes_registry.py` had been **skipping** rather
+than passing since PACK-16D first landed, because PyYAML was not importable
+— hiding roughly sixty-five reference-package reason-code literals that had
+never been checked against `contracts/reason-codes/pack-03.yml`, through two
+candidate rounds and two independent audits. Verified pre-existing by
+running it against the untouched source tree, then fixed by excluding the
+`reference/` subtree by path with the reason recorded in code. **A skipped
+test is not a passing test**, and a suite reporting "17 skipped" that nobody
+reads is a suite with unknown coverage.
+
+**Source.** 6 files added, 2 deleted, 12 modified. The reference package
+stays at 45 modules — one deleted, one added — and is now 7 534 lines; the
+tests are 15 modules plus 2 oracles and 7 977 lines. **`uv.lock`,
+`package-lock.json`, migrations, frontend files, CI workflows and every
+version constant are unchanged, and no file under `docs/canonical/` was
+modified.** `services/voting-service/pyproject.toml` gained one dependency
+and the root `pyproject.toml` gained one pytest marker.
+
+**FIR.** **No FIR outcome moved.** The correction improved the evidence
+behind `FIR-ROADMAP-006`, `FIR-SEC-002` and `FIR-TRUST-001` without changing
+any state. `FIR-SEC-002` in particular stays **blocked pending external
+review**: using a well-reviewed library means somebody else's code was
+reviewed, which is a different sentence from an external cryptographer
+reviewing this system. **New FIR IDs: none. Statuses changed: none. None of
+the eight unclosable items was closed.**
+
+**Canon.**
+
+```text
+CANON_VERSION remains 0.8.0.
+
+No Canon domain, aggregate, event or invariant semantics changed.
+
+Canon compatibility metadata continues to support
+repository version 0.16.x.
+```
+
+`NO CANON CHANGE REQUIRED`. Swapping an implementation for a library is the
+clearest possible case of a change invisible to canon: a signature that
+verifies under the same key over the same bytes is the same signature
+whoever's arithmetic produced it. The provider joins the service-level types
+held on the PACK-12 / PACK-14 / PACK-15 precedent, bringing that list to ten.
+
+**Acceptance matrix.** 90 rows: 75 `SATISFIED`, 7 `PARTIALLY SATISFIED`,
+3 `DEFERRED`, 4 `BLOCKED`, 1 `NOT APPLICABLE`. Row 89 — the dependency lock
+— is the only row that is unfinished rather than deferred.
+
+**Verification.** **5 847 Python tests passed, 5 skipped, 0 failed, with no
+`--ignore`** (the previous round: 5 616 passed, 17 skipped, *with* one);
+499 in the reference suite; `ruff check`, `ruff format --check` (497 files)
+and `mypy services/voting-service` (70 source files) clean; all four
+repository scripts pass. Line coverage 90.9 %. `uv sync --all-groups
+--frozen` **was run** and failed on a third-party wheel with HTTP 403 after
+building every workspace member — a network failure, not a lock
+inconsistency, and **not a PASS**. **`uv lock`, `uv lock --check`, the
+entire npm side, hypothesis and branch coverage were NOT executed.**
+
+**PACK-17 is not started and must not start before independent acceptance of
+PACK-16D.**
+
+## 1.26 Round record — PACK-16D lockfile, provenance and acceptance-matrix correction (2026-08-02)
+
+**Round:** PACK-16D — Final Lockfile, Immutable Provenance and
+Acceptance-Matrix Correction. **A correction of the section 1.25 candidate,
+not a new round.**
+**Reference implementation candidate. Not production code. Not certified.
+Not a PASS.**
+
+**Repository version:** unchanged at `0.16.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:** `EPD2_PACK-16D_..._FINAL_REVIEW_CANDIDATE.zip`,
+SHA-256 `ff3909bb1b8d195cfcb6c5c19ab2f63f7238daaa84c31a3bc573de0044b86de5`.
+
+**The audit of that archive passed every cryptographic finding:**
+
+```text
+ARCHIVE HYGIENE:                          PASS
+VETTED ED25519 PROVIDER:                  PASS
+HANDWRITTEN ED25519 REMOVAL:              PASS
+CHECKPOINT AUTHENTICITY:                  PASS
+REAL EPD2-CRYPTO-1:                       PASS
+3-OF-5 THRESHOLD PATH:                    PASS
+4-OF-7 CONFIGURATION:                     PASS
+TARGET-PROFILE CROSS-IMPLEMENTATION CORE: PASS
+DEPENDENCY LOCK / FROZEN INSTALL:         FAIL
+IMMUTABLE PARAMETER PROVENANCE:           FAIL
+ACCEPTANCE MATRIX:                        NARROW CORRECTION REQUIRED
+PACK-16D:                                 NOT YET ACCEPTED
+PACK-17:                                  DO NOT START
+```
+
+```text
+STATUS AFTER THIS ROUND - SUPERSEDED BY SECTION 1.27
+
+DEPENDENCY LOCK:                          BLOCKED BY ENVIRONMENT
+FROZEN CLEAN INSTALL:                     NOT EXECUTED
+IMMUTABLE UPSTREAM IMPLEMENTATION
+  PROVENANCE:                             PARTIALLY SATISFIED
+CRYPTOGRAPHIC AND TARGET-PROFILE
+  IMPLEMENTATION:                         UNCHANGED
+PACK-16D:                                 NOT ACCEPTED
+PACK-17:                                  DO NOT START
+```
+
+*The three findings above were environmental and were cleared on a
+network-enabled host. Section 1.27 records the resolving evidence; this block
+describes the state as of 2026-08-02 and must not be quoted as current.*
+
+**The matrix defect is the one worth recording for its own sake.** `AM-79`
+asserted the parameter set was *immutably provenanced* and carried status
+`SATISFIED`, while the same row's evidence column recorded that the upstream
+commit, the pinned URL and the source digest were all absent. **Nothing new
+was learned to force the downgrade** — those facts were already in the
+parameter artefact, in the evidence registry, and in the previous handover.
+What was wrong was the status placed on top of them. An evidence column that
+stays honest while a status column drifts optimistic is invisible to anyone
+who reads only the status, and it is precisely what an audit that reads both
+will find. `AM-79` is now `PARTIALLY SATISFIED`.
+
+**Both blockers were re-attempted, not carried forward.** `uv lock`,
+`uv sync --all-groups --frozen`, a clean-environment retry, and three
+distinct GitHub access paths were all re-run and all refused. Every command
+and every error string is reproduced verbatim in the new
+`PACK-16D-ENVIRONMENT-BLOCKED-EVIDENCE.md`, because a blocker quoted from a
+previous round's notes is indistinguishable from an excuse. Two distinct
+refusal mechanisms are involved on the GitHub side — a per-repository access
+broker and an egress allowlist — so this is not one misconfiguration.
+
+**Nothing was invented to close a gap.** No commit SHA, no source digest, no
+hand-edited `uv.lock`. An earlier round's `source_sha256`, computed over a
+markdown rendering rather than raw bytes, stays withdrawn.
+
+**Source.** 1 file added, 0 deleted, 11 modified. **No cryptographic,
+guardian, checkpoint, conformance, transaction or sealed-batch code was
+touched.** `uv.lock`, `package-lock.json`, migrations, frontend files, CI
+workflows and every version constant are unchanged, and no file under
+`docs/canonical/` was modified. `services/voting-service/pyproject.toml` is
+unchanged from the source candidate.
+
+**Acceptance matrix.** 90 rows: **74 `SATISFIED`, 8 `PARTIALLY SATISFIED`,
+3 `DEFERRED`, 4 `BLOCKED`, 1 `NOT APPLICABLE`.** Requirement IDs `AM-01` …
+`AM-90`, unique and contiguous; counts sum to the row count; `CORRECTED`
+appears nowhere as a status.
+
+**FIR.** **No FIR outcome moved.** A round that corrected a status and
+recorded two blockers changed no delivery. `FIR-SEC-002` stays *blocked
+pending external review*.
+
+**Canon.**
+
+```text
+CANON_VERSION remains 0.8.0.
+
+No Canon domain, aggregate, event or invariant semantics changed.
+
+Canon compatibility metadata continues to support
+repository version 0.16.x.
+```
+
+**Verification.** **5 847 Python tests passed, 5 skipped, 0 failed, with no
+`--ignore`**; 504 in the reference suite; `ruff check`,
+`ruff format --check` (498 files) and `mypy services/voting-service` (70
+source files) clean; all four repository scripts pass. The dependency guard
+grew from 3 to 7 tests and now parses `uv.lock` as TOML rather than
+searching it as text; five provenance tests were added.
+
+**PACK-17 is not started and must not start before independent acceptance of
+PACK-16D.**
+
+## 1.27 Round record — PACK-16D network-enabled finalization (2026-08-03)
+
+**Round:** PACK-16D — Network-Enabled Finalization: Lockfile Regeneration,
+Immutable ElectionGuard Provenance and Final Acceptance Alignment. **A
+narrow finalization of the section 1.26 candidate, not a new round.**
+**Reference implementation candidate. Not production code. Not certified.
+Not a PASS.**
+
+**Repository version:** unchanged at `0.16.0`.
+**Canon version:** unchanged at `0.8.0`.
+
+**Baseline:** `EPD2_PACK-16D_..._ENVIRONMENT_BLOCKED_CANDIDATE.zip`,
+SHA-256 `a6fc8b670991d51a9a3f4d6ce1db5306166506513b43c85662ab3317c48b947c`.
+
+**What this round did.** Nothing cryptographic. The two blockers section 1.26
+recorded as environmental were cleared on a host with the network access they
+needed, and the repository was aligned to that evidence.
+
+```text
+STATUS AFTER THIS ROUND
+
+DEPENDENCY LOCK:                          REGENERATED
+                                          cryptography 46.0.7 from
+                                          https://pypi.org/simple, hashes on
+                                          43 artefacts, cffi 2.1.0 +
+                                          pycparser 3.0, inside the
+                                          epd2-voting-service graph
+                                                      (OD-P16D-16 CLOSED)
+FROZEN CLEAN INSTALL:                     EXECUTED ON A NETWORK-ENABLED HOST
+                                          uv sync --all-groups --frozen,
+                                          Checked 61 packages; NOT re-run in
+                                          the build session, which has no
+                                          package index
+IMMUTABLE UPSTREAM IMPLEMENTATION
+  PROVENANCE:                             RECORDED
+                                          microsoft/electionguard-rust at
+                                          520651138110a13f777409e96606454df928ceac
+                                          (2025-02-02),
+                                          src/eg/src/standard_parameters.rs,
+                                          sha256 ad38bfa6...5770,
+                                          retrieved 2026-08-03
+                                                      (OD-P16D-17 CLOSED)
+CRYPTOGRAPHIC AND TARGET-PROFILE
+  IMPLEMENTATION:                         UNCHANGED
+VO-08:                                    OPEN
+ADR-102:                                  proposed
+PACK-16D:                                 REQUIRES INDEPENDENT AUDIT
+PACK-17:                                  DO NOT START
+```
+
+**One discrepancy is recorded rather than silently corrected.** The
+finalization brief quoted the new `uv.lock` digest as `02d0775458…`; the digest
+computed over the delivered file's actual bytes is `b2d0775458…`. The two agree
+in 63 of 64 hex characters, which no byte-level corruption produces — SHA-256
+avalanche makes a one-nibble difference about as likely as guessing the digest
+outright — so this is a transcription slip in the brief. The computed value
+governs, because it is the one anybody can reproduce from the file.
+
+**What was verified rather than accepted.** The supplied lock was parsed as
+TOML, not searched as text: `cryptography` resolves at `46.0.7` from a registry
+with `sha256:`-prefixed hashes on every artefact, both transitives are locked,
+the entry sits in `epd2-voting-service`'s own dependency list rather than at the
+workspace root, `requires-dist` echoes the manifest specifier, and the lock delta
+is purely additive — 149 lines added, none removed, no existing package's version
+changed. The imported library's version is asserted equal to the locked one, so
+a green suite against some other build cannot pass as evidence about this one.
+
+**What was not done here, and is recorded as not done here.** The frozen install
+and the upstream byte fetch both happened on the network-enabled host. The build
+session verified the lock's contents and the pin's internal consistency and
+re-derived every parameter offline; it did not re-run `uv sync` and did not
+re-fetch the upstream file. `source_sha256_verification_scope` in the parameter
+artefact states this where a verifier will look, and names the one command that
+closes it: `curl -sL <pinned-url> | sha256sum`.
+
+**Two matrix rows were promoted, and neither on the blocker's disappearance.**
+`AM-79` and `AM-89` moved to `SATISFIED` against the five conditions each row
+requires, every one of which is asserted by a named offline test. The previous
+correction's defect was a status drifting ahead of its evidence; promoting on
+"the obstacle went away" would be the same error pointed the other way.
+
+**Source.** 0 files added, 0 deleted; `uv.lock` plus the parameter artefact,
+two test modules and the documentation set. **No cryptographic, guardian,
+checkpoint, conformance, transaction or sealed-batch logic was touched.**
+`package-lock.json`, migrations, frontend files, CI workflows and every version
+constant are unchanged, and no file under `docs/canonical/` was modified.
+
+**Acceptance matrix.** 90 rows: **76 `SATISFIED`, 6 `PARTIALLY SATISFIED`,
+3 `DEFERRED`, 4 `BLOCKED`, 1 `NOT APPLICABLE`.** Requirement IDs `AM-01` …
+`AM-90`, unique and contiguous; counts sum to the row count; `CORRECTED`
+appears nowhere as a status.
+
+**Open decisions.** `OD-P16D-16` and `OD-P16D-17` closed on recorded command
+output; nothing else moved. `VO-08`, external cryptographic review, a fully
+independent verifier, full ElectionGuard ecosystem interoperability,
+constant-time production assurance, production HSM and key custody, the
+production guardian ceremony and legal certification all remain **OPEN**.
+
+**FIR.** **No FIR outcome moved.** `FIR-SEC-002` stays *blocked pending
+external review*: a hash-pinned lock and a commit-pinned source are supply-chain
+and traceability properties, and assurance remains a statement an external
+cryptographer makes about this system.
+
+**Canon.**
+
+```text
+CANON_VERSION remains 0.8.0.
+
+No Canon domain, aggregate, event or invariant semantics changed.
+
+Canon compatibility metadata continues to support
+repository version 0.16.x.
+```
+
+**Verification.** **5 851 Python tests passed, 5 skipped, 0 failed, with no
+`--ignore`**; 506 in the reference suite; `ruff check`,
+`ruff format --check` (498 files) and `mypy services/voting-service` (70
+source files) clean; all four repository scripts pass. The dependency guard
+grew from 7 to 9 tests and the provenance tests from 30 to 32; **every
+dual-state branch in both was removed**, so a `null` commit or a missing lock
+entry now fails rather than being tolerated.
+
+**Source.** 0 files added, 0 deleted, 24 modified.
+
+**PACK-17 is not started and must not start before independent acceptance of
+PACK-16D.**
 
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
-**Last updated:** PACK-15 implementation candidate round (2026-07-31)
+**Last updated:** PACK-15 FINAL PASS round (2026-07-31)
 
-**Current unverified candidate (NOT a baseline):**
+**Current authoritative cumulative baseline (PASS):**
 
 ```text
-EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_CANDIDATE.zip
+EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_FINAL_PASS.zip
 ```
 
 Repository version `0.15.0`; canon version `0.8.0` (unchanged — PACK-15
-amends no canon). **This archive is not the baseline and does not replace
-the one below.** It was verified locally in part only: the full Python
-suite, mypy, ruff and all four repository scripts pass, and the entire
-npm-dependent half — TypeScript typecheck, frontend tests, Playwright,
-axe, `next build`, Prettier — was never executed, because the package
-registries return HTTP 403 and `node_modules` cannot be installed. It
-becomes a baseline candidate only when external GitHub Actions has run
-against it. See `docs/handover/PACK-15-IMPLEMENTATION-REPORT.md` and
-`docs/handover/PACK-15-TEST-EVIDENCE.md`.
-**PARTIAL LOCAL VERIFICATION ONLY. EXTERNAL CI NOT YET VERIFIED. NOT FINAL
-PASS. NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
+amends no canon). Verified by an external GitHub Actions run that passed
+every stage — 983/983 required paths, Ruff format over **436 files**,
+5343 Python tests passed with 4 skipped, a Next.js production build with
+48/48 static pages and 135 browser, visual and accessibility tests. See
+`docs/handover/PACK-15-FINAL-PASS-REPORT.md`.
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.**
 
-**Current authoritative cumulative baseline (PASS):**
+The verified candidate was
+`EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_CANDIDATE_HYGIENE_CORRECTED.zip`.
+This FINAL PASS archive is that externally verified tree plus the status,
+register and handover documents that close the round; no service module,
+migration artefact, test, reason code, contract, frontend file or CI
+definition changed, and neither version moved.
+
+An earlier external run passed against a tree that also contained
+`epd2-civic-os/`, a stale copy of the repository at `0.6.0`. That
+directory was removed and the tree re-verified from scratch; **the
+artifacts for the earlier run are superseded and are not FINAL PASS
+evidence.**
+
+**Previous authoritative cumulative baseline (PASS):**
 
 ```text
 EPD2_PACK-14_IDENTITY_AUTHENTICATION_ACCOUNT_SECURITY_0.14.0_FINAL_PASS.zip
@@ -1080,15 +2166,16 @@ Scope:
 
 ## FIR-ROADMAP-005 — PACK-15 Voting Trust Boundary & Unlinkability Threat Model
 
-**Status:** candidate  
+**Status:** implemented in reference form  
 **Target version:** `0.15.0`
 
 Moved from `approved` to `candidate` by the PACK-15 implementation
-candidate round (2026-07-31). It does **not** move to `implemented in
-reference form`: that step requires an external CI run, and the entire
-npm-dependent half of this repository - TypeScript typecheck, frontend
-tests, Playwright, axe, `next build`, Prettier - could not be executed in
-the environment that assembled the candidate.
+candidate round, and from `candidate` to `implemented in reference form`
+by the PACK-15 FINAL PASS round (2026-07-31), on the strength of an
+external GitHub Actions run that passed every stage against the cleaned
+tree. It does **not** move to `implemented`: no provider is bound and
+nothing is deployed. Key custody refuses every call, there is no
+transport layer, and SQLite remains the reference persistence.
 
 Scope:
 
@@ -1115,6 +2202,134 @@ Scope:
 - tally controls;
 - no intermediate tally;
 - eligibility without identity-vote linkage.
+
+**Sequencing note added by PACK-16A (2026-08-01).** PACK-16 is delivered in
+four stages, and this entry is satisfied by none of them until the last:
+
+```text
+PACK-16A  protocol and ballot model selection      — specification + ADR
+PACK-16B  cryptographic parameters, key ceremony, trustee architecture
+PACK-16C  casting, verification, receipt, bulletin-board specification
+PACK-16D  implementation candidate
+```
+
+PACK-16A is complete as a **specification and ADR round only** and is
+recorded in section 1.20. It selects a protocol family and a bounded EPD²
+profile (`ADR-099`, status `proposed`; documents under
+`docs/packs/PACK-16/`) and **implements nothing in this entry's scope**.
+**Status stays `approved` and the target version stays `0.16.0`;** the
+version bump belongs to PACK-16D. PACK-16B must not start before
+architectural acceptance of PACK-16A.
+
+PACK-16B is complete as a **specification and ADR round only** and is
+recorded in section 1.21. It fixes the cryptographic parameter profile, the
+guardian count and quorum, the key ceremony, the trustee architecture and
+the recovery limits (`ADR-100`, status `proposed`; documents under
+`docs/packs/PACK-16/`) and **implements nothing in this entry's scope**.
+**Status stays `approved` and the target version stays `0.16.0`.** PACK-16C
+must not start before architectural acceptance of PACK-16B.
+
+PACK-16C is complete as a **specification and ADR round only** and is
+recorded in section 1.22. It fixes the casting flow, the continuation
+consumption boundary, the ballot envelope, the cast-or-challenge policy, the
+validation pipeline, the ballot lifecycle, the receipt, the Verification
+Client, the independent-verifier requirements, the bulletin board, the
+publication model and the election record (`ADR-101`, status `proposed`;
+documents under `docs/packs/PACK-16/`) and **implements nothing in this
+entry's scope**. **Status stays `approved` and the target version stays
+`0.16.0`.** PACK-16D must not start before architectural acceptance of
+PACK-16C.
+
+PACK-16D is complete as a **reference implementation candidate** and is
+recorded in section 1.23. It is the first stage that ships code, and it
+delivers the casting, publication, election-record and verification path in
+reference form (`ADR-102`, status `proposed`; documents under
+`docs/packs/PACK-16/`; source under
+`services/voting-service/src/epd2_voting_service/reference/`).
+
+**Outcome for this entry: `implemented in reference form`, partially.**
+The status stays **`approved`** and is NOT moved to `implemented`, because
+four items in this entry's scope are not delivered by a reference
+implementation:
+
+```text
+audited cryptographic protocol integration  -> VO-08 OPEN; EPD2-CRYPTO-1
+                                               constants absent
+                                               (OD-P16D-01); no external
+                                               conformance vectors
+                                               (OD-P16D-02)
+tally controls                              -> single guardian only;
+                                               threshold DKG and the
+                                               3-of-5 / 4-of-7 quorum NOT
+                                               implemented (OD-P16D-07)
+eligibility without identity-vote linkage   -> implemented against an
+                                               in-memory reference store,
+                                               not a production data plane;
+                                               no production authentication
+                                               (OD-P16D-08)
+verifiable voting end to end                -> checkpoint signatures are
+                                               never verified (OD-P16D-09);
+                                               no constant-time guarantee
+                                               (OD-P16D-05)
+```
+
+**The target version stays `0.16.0`, and `REPOSITORY_VERSION` reached
+`0.16.0` in this round** — the version bump this entry anticipated has now
+happened. Reaching the target version does not close the entry: production
+acceptance requires the external cryptographic review, the independent
+implementation and the PACK-17 verification that `FIR-ROADMAP-007` owns.
+
+**Correction note added by the PACK-16D correction round (2026-08-02),
+recorded in section 1.24.** The candidate above was audited and returned
+**NOT ACCEPTED** on four findings. The correction implements all four, and
+three of the four gaps named in the block above no longer hold:
+
+```text
+audited cryptographic protocol integration  -> EPD2-CRYPTO-1 is PRESENT
+                                               and loadable, primary-
+                                               sourced and arithmetically
+                                               verified (OD-P16D-01
+                                               CLOSED); conformance
+                                               evidence now spans three
+                                               named classes with two
+                                               independent oracles. STILL
+                                               NOT DELIVERED: VO-08 is
+                                               OPEN, and no complete
+                                               independent implementation
+                                               has checked this one
+                                               (OD-P16D-02)
+tally controls                              -> Feldman VSS DKG, generic
+                                               k-of-n, 3-of-5 default and
+                                               4-of-7 high assurance, all
+                                               running (OD-P16D-07
+                                               CLOSED). STILL NOT
+                                               DELIVERED: a key ceremony
+                                               with custody, authenticated
+                                               channels and an HSM
+                                               (OD-P16D-11)
+verifiable voting end to end                -> checkpoint signatures are
+                                               generated AND verified
+                                               against a declared signer
+                                               registry (OD-P16D-09
+                                               CLOSED). STILL NOT
+                                               DELIVERED: no constant-time
+                                               guarantee (OD-P16D-05,
+                                               the remaining production
+                                               blocker); the registry's
+                                               own authorisation is
+                                               outside the verifier's
+                                               reach (OD-P16D-12)
+eligibility without identity-vote linkage   -> UNCHANGED. Still an
+                                               in-memory reference store,
+                                               still no production
+                                               authentication
+                                               (OD-P16D-08)
+```
+
+**The status stays `approved` and the outcome stays `implemented in
+reference form`, partially.** A materially stronger delivery is still a
+reference delivery. `REPOSITORY_VERSION` stays `0.16.0`: a correction of a
+candidate that was never accepted does not consume a new version.
 
 ## FIR-ROADMAP-007 — PACK-17 Independent Verification, Resilience & Incident Readiness
 
@@ -3369,7 +4584,8 @@ Required gate families:
 - PACK-11 (PASS — external GitHub Actions verification complete);
 - PACK-12 (PASS — external GitHub Actions verification complete);
 - PACK-13 (PASS — external GitHub Actions verification complete);
-- **PACK-14 (PASS — external GitHub Actions verification complete);**
+- PACK-14 (PASS — external GitHub Actions verification complete);
+- **PACK-15 (PASS — external GitHub Actions verification complete);**
 - FRONT-00;
 - FRONT-01;
 - finance reference implementation;
@@ -3378,13 +4594,15 @@ Required gate families:
   export reference implementation (PACK-12);
 - production data plane and contract evolution reference implementation
   (PACK-13);
-- **identity, authentication and account security reference
-  implementation** (PACK-14);
+- identity, authentication and account security reference
+  implementation (PACK-14);
+- **voting trust boundary, eligibility and credential separation
+  reference implementation** (PACK-15);
 - cumulative architecture baseline;
 - 45 visual snapshots.
 
 "Reference implementation" is the operative qualifier for PACK-10 through
-PACK-14 alike: the governed workflows are real and externally verified;
+PACK-15 alike: the governed workflows are real and externally verified;
 the production infrastructure is not. PACK-13 is the sharpest case of the
 distinction, because it is the pack _named_ for the production data plane
 and every storage adapter in it is a Python dictionary. PACK-14 is the
@@ -4685,6 +5903,42 @@ silently redefine the procedural meaning of signatures, seals or timestamps.
 - verification failure blocks consequential use;
 - revocation and long-term evidence are preserved;
 - provider outage has a governed fallback rather than an unsafe downgrade.
+
+**Note added by the PACK-16D correction round (2026-08-02), recorded in
+section 1.24. Outcome: `partially implemented`. Status stays `approved`.**
+
+The correction delivers the **signature half** of this entry, for one
+object class only — bulletin-board checkpoints. Ed25519 (RFC 8032
+PureEdDSA) signing and verification over a canonical, domain-separated
+payload that binds the signer's key identifier, the exact object and its
+sequence, its digest and its publication phase; an authorised-signer
+registry that is part of the election context rather than carried by the
+artefact; declared-in-advance key rotation windows; and five distinct
+fail-closed verification outcomes, so that verification failure blocks
+consequential use rather than degrading.
+
+**What this entry still does not have:**
+
+```text
+the timestamp half entirely   no trusted timestamp, no RFC 3161, no time
+                              authority, no long-term validation evidence
+assurance classes             one method for one object class is not a
+                              framework distinguishing ten classes
+revocation                    no revocation or invalidation state exists;
+                              rotation windows are not revocation
+certificates and providers    no certificate, no provider reference, no
+                              governed fallback for provider outage
+key custody                   no HSM, no issuance procedure, no custody
+                              (OD-P16D-11)
+registry authorisation        the verifier cannot confirm the signer
+                              registry it was given was authorised
+                              (OD-P16D-12)
+```
+
+**Owner of the remainder:** PACK-17 and later trust-foundation work. This
+entry is **not closed** and the eight-item prohibition on closing external
+review, independent implementation, production HSM and production key
+ceremony is untouched by it.
 
 ## FIR-REPRESENT-001 — Representation, Mandate and Assisted Action
 

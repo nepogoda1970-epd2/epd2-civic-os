@@ -1,0 +1,525 @@
+# PACK-16C — Acceptance Matrix
+
+**Round:** PACK-16C — Casting, Receipt, Verification Client, Bulletin Board and Election Record. **Specification and ADR only. No code. No cryptographic implementation. Not implemented. Not a PASS.**
+**Repository version:** unchanged at `0.15.0` · **Canon version:** unchanged at `0.8.0`
+**ADR:** `ADR-101`, status `proposed`
+**NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. PUBLIC-ELECTION ACTIVATION PROHIBITED BY DEFAULT.**
+
+**CORRECTED THREE TIMES.** The first PACK-16C candidate carried six columns and no
+traceability: no inherited source, no external-evidence link, no decision
+document, no section reference, no residual risk and no next stage. **Every
+row below now carries the full ten-column schema.** All 166 original
+Requirement IDs are preserved with their requirement text; 28 rows were
+added for the sealed batch architecture, the API catalogue and this schema
+itself. The **capacity correction** then added 29 further rows for the
+two-tier challenge model and the finite capacity bound, and qualified
+`AC-P16C-041`, whose unqualified *"unlimited challenges permitted"* was the
+false absolute the audit named. The **event-privacy and open-decision
+correction** then added **no rows at all** and adjusted eight decisions in
+place — event-payload privacy, capability isolation, and the withdrawal of
+the plausible-load capacity criterion.
+
+---
+
+## 0. Status vocabulary
+
+| Status | Meaning |
+| ------ | ------- |
+| **SATISFIED** | Specified in this round, with a named artefact, and nothing outstanding at specification stage |
+| **PARTIALLY SATISFIED** | Specified, **with a residual that is stated in the specification itself** — not an omission, a declared limit |
+| **DEFERRED** | Deliberately not decided here; owner named in `PACK-16C-OPEN-DECISIONS.md` |
+| **BLOCKED** | Cannot be satisfied by any specification act; requires an external party, an engagement or an empirical fact |
+| **NOT APPLICABLE** | The requirement does not hold for this profile, or is **structurally unachievable** and is stated as such rather than pursued |
+
+```text
+SATISFIED does not mean implemented, tested, reviewed or safe.
+It means SPECIFIED, at specification stage, with the artefact named.
+
+There is no status CORRECTED, and none is used.
+Nothing in this matrix is a PASS.
+```
+
+## 0.1 Column schema — required on every row
+
+| Column | Content |
+| ------ | ------- |
+| **Requirement ID** | `AC-P16C-nnn`, unique, never reused, never renumbered |
+| **Requirement** | What must hold |
+| **Inherited source** | The PACK-16A / PACK-16B / PACK-15 / ADR provision this requirement descends from, or `— none; originated in PACK-16C` |
+| **External evidence** | An Evidence ID resolvable in `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md`, or `N/A — internal architecture requirement` |
+| **Decision document** | The exact PACK-16C file that owns the decision |
+| **Section** | The section heading inside that file |
+| **Decision** | What was actually decided — not a restatement of the requirement |
+| **Status** | One of the five above |
+| **Residual risk** | `none identified at specification level`, or a specific `RB-*`, `VO-*`, `OD-*`, `T-P16C-*` |
+| **Next stage** | `PACK-16D`, `PACK-17`, `external cryptographic review`, `legal assessment`, `governance`, or `none` |
+
+| ID | Rule |
+| -- | ---- |
+| `AC-R01` | **Every row names the artefact that satisfies it.** A row whose evidence is a document title rather than an identifier is not evidence, and none appears here |
+| `AC-R02` | **`NOT APPLICABLE` is used only where the requirement is structurally unachievable, outside the profile, or — in one case — not reproducible**, never to dispose of something inconvenient. Each of the ten rows says which |
+| `AC-R03` | **The counts in §2 are computed from the rows, not asserted.** They are recomputable by counting the status column |
+| `AC-R04` | **Inherited source and external evidence are different columns and are never conflated.** An inherited source is an EPD² provision this round is bound by; external evidence is a document outside EPD² that a claim rests on |
+| `AC-R05` | **Decision document and section were resolved mechanically** from the first identifier in each row's decision, against the definition index of the pack. A row pointing at a section that does not exist is a defect in this matrix |
+| `AC-R06` | **Requirement IDs are never renumbered.** The 28 rows added by the turnout correction use `AC-P16C-167`…`AC-P16C-194`; the 29 added by the capacity correction use `AC-P16C-195`…`AC-P16C-223` |
+| `AC-R07` | **A requirement's wording is preserved even when its decision is qualified.** `AC-P16C-041` still reads *"Unlimited challenges permitted"*, because the ID and its text are inherited; its **Decision** column now states exactly what is unlimited and what is bounded, so the row carries no false absolute |
+
+---
+
+## 1. The matrix
+
+### Round
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-001` | `REPOSITORY_VERSION` unchanged at `0.15.0` | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | No version file touched | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-002` | `CANON_VERSION` unchanged at `0.8.0` | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-CANON-ASSESSMENT.md` | 4. Why no amendment is proposed | Canon files byte-identical | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-003` | No source code, tests, migrations, frontend, API or event implementation changed | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Specification and ADR only | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-004` | No CI workflow, `uv.lock`, `package-lock.json` or dependency changed | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Dependency graph untouched | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-005` | `ADR-101` created with status `proposed` | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Never `accepted` | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-006` | Master Register updated additively only | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-FIR-COVERAGE-MATRIX.md` | 1. Roadmap | No FIR status changed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-007` | No FIR entry marked `implemented` | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Zero | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-008` | 33 documents created under `docs/packs/PACK-16/` | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Counted mechanically | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-009` | PACK-16D not started | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Deferrals named, none executed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-010` | `VO-08` not closed, narrowed or re-owned | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-SCOPE-AND-BOUNDARY.md` | 3. `VO-08` — inherited, referenced, not touched | Owner remains PACK-16B external review / PACK-17 | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-011` | No complete-BSI-conformity claim made | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 4. Prohibited claims — PACK-16C additions | Prohibited-claims registry | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-012` | No parameter family altered or approved | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Parameters consumed, never chosen | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-223` | Duplicate heading defect in the turnout document | user correction task §30 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.8 Failure handling | **No duplicate heading exists in the source tree.** `### 4.8 Failure handling` occurs exactly once, and a mechanical scan found no duplicate heading anywhere in the pack or the ADR. Nothing was removed; the finding is recorded as **not reproducible** rather than claimed as fixed | **NOT APPLICABLE** | none identified at specification level | none |
+| `AC-P16C-193` | Acceptance matrix carries the full traceability schema | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | Ten required columns on every row; document and section references resolved mechanically | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-194` | Existing Requirement IDs preserved and unique | user correction task §2, §20; PACK-16B round definition | N/A — internal architecture requirement | `PACK-16C-HANDOVER.md` | §1 | All 166 original IDs retained with their requirement text; new rows use the next free IDs | **SATISFIED** | none identified at specification level | none |
+
+### Scope
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-013` | Round boundary stated before any decision | `ADR-099`; `PACK-16A-SCOPE-AND-BOUNDARY.md` §1 | N/A — internal architecture requirement | `PACK-16C-SCOPE-AND-BOUNDARY.md` | 2. What this round may not revisit | §0–§6 | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-014` | Identifier namespaces declared and non-colliding | `ADR-099`; `PACK-16A-SCOPE-AND-BOUNDARY.md` §1 | N/A — internal architecture requirement | `PACK-16C-SCOPE-AND-BOUNDARY.md` | §1 | No PACK-16A/16B prefix reused | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-015` | Inherited commitments checked for consistency | `ADR-099`; `PACK-16A-SCOPE-AND-BOUNDARY.md` §1 | N/A — internal architecture requirement | `PACK-16C-SCOPE-AND-BOUNDARY.md` | §1 | 14 rows, each with a result | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-016` | What the round does not claim, stated at the front | `ADR-099`; `PACK-16A-SCOPE-AND-BOUNDARY.md` §1 | N/A — internal architecture requirement | `PACK-16C-SCOPE-AND-BOUNDARY.md` | §1 | Six non-claims | **SATISFIED** | none identified at specification level | none |
+
+### Casting flow
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-017` | Every casting step specified with actor, input, output, failure and irreversibility | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-CASTING-FLOW-SPECIFICATION.md` | Step 1 — Isolated Voting Client launch | 22 steps | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-018` | The irreversible steps identified explicitly | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-CASTING-FLOW-SPECIFICATION.md` | §1 | Two, named | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-019` | Capability probe consumes nothing | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 6. Cross-cutting behaviour | Read-only | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-020` | Client verifies manifest, parameters and joint key before encrypting | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-CASTING-FLOW-SPECIFICATION.md` | §1 | Fail closed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-021` | Randomness self-test before encryption, fail closed | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 1. The matrix | Reuses PACK-16B code | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-022` | Timeout and retry semantics specified per step | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-CASTING-FLOW-SPECIFICATION.md` | §1 | Retry token discipline | **SATISFIED** | none identified at specification level | none |
+
+### Consumption
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-023` | Consumption point fixed relative to validation and acceptance | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 3. The selected boundary, exactly | Atomic boundary | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-024` | Four options compared before selection | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | §1 | Selected option justified | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-025` | Exactly-once effect specified | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 6. The assumption this decision rests on | Semantics fixed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-026` | Transaction mechanism selected | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | PACK-16D — `ARCHITECTURAL BLOCKER` if undemonstrable | **DEFERRED** | none identified at specification level | PACK-16D |
+| `AC-P16C-027` | Rejected ballot never consumes the capability | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 2. Which side of the boundary each check sits on | Stages 1–18 | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-028` | Capability never persisted beside a ballot reference | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 7. Data models — `DM-*` | Separate stores, no shared key, no shared surrogate key, no common correlation column — **and no event carries a capability reference from which one could be reconstructed** (`DM-10`, `EV-71`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-029` | Linkage risk of the boundary stated, not hidden | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-THREAT-MODEL-EXTENSION.md` | 4. Threats against the atomic boundary | Residual: operator with access to both stores | **PARTIALLY SATISFIED** | `T-P16C-28` — operator with access to both boundary stores | PACK-16D |
+| `AC-P16C-030` | `OD-P15-05` boundary constraints honoured | PACK-15 `CC-01`…`CC-10`; `OD-P15-05` | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 10.1 `OD-P15-05` — the boundary this round adds | Construction question taken up | **SATISFIED** | `OD-P16C-01` · `RB-16C-08` | PACK-16D |
+
+### Envelope
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-031` | Ballot identity values separated | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-BALLOT-PREPARATION-AND-ENVELOPE-SPECIFICATION.md` | §1 | Four values, distinct purposes | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-032` | `ballot_id` unlinkable and structureless | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-BALLOT-PREPARATION-AND-ENVELOPE-SPECIFICATION.md` | §1 | Client random | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-033` | Canonical serialization rules normative | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 3. Format, stability and long-term readability | Fixed-length big-endian | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-034` | Fixed-length envelopes per ballot style | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | 2. The four channels that remain open | Length is not a selection channel | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-035` | Retry token stripped before publication | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-BALLOT-PREPARATION-AND-ENVELOPE-SPECIFICATION.md` | 4. The canonical envelope | Not re-verifiable by design | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-036` | Client build identifier is a build, never a device or user | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-BALLOT-PREPARATION-AND-ENVELOPE-SPECIFICATION.md` | 4. The canonical envelope | `OD-P16C-03` for technology | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-037` | Wire format selected | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | PACK-16D; canonicalisation fixed now | **DEFERRED** | none identified at specification level | PACK-16D |
+| `AC-P16C-038` | Write-in support | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-01`…`BM-06` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | Not in this profile; a future ADR | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Challenge
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-039` | Commitment precedes the cast/challenge choice | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 2. The flow, and the commitment that makes it work | Structural | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-040` | A challenged ballot is never counted | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 2. The flow, and the commitment that makes it work | Absorbing state | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-041` | Unlimited challenges permitted | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A. The two-tier challenge model | **Qualified by the capacity correction.** Unlimited **local diagnostic** challenges are permitted (`CH-18`, `CH-36`). **Public evidentiary** challenges are bounded to one per anonymous continuation capability in the initial profile (`CH-37`, `CH-43`). The unqualified claim is withdrawn | **SATISFIED** | `T-P16C-62` — a malicious client can fake a local check | PACK-16D |
+| `AC-P16C-042` | Spoiled ballots published with full openings | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | §1 | Public evidentiary spoiled ballots occupy leaves and are opened at closure; local diagnostic challenges produce no artefact at all (`CH-54`, `TC-58`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-043` | No unmodelled detection guarantee claimed | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | `E-29` (inherited — `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` §3) | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 6. Challenge probability — the decision, and what is not claimed | Probabilistic, take-up dependent | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-044` | Challenge result states plainly that the ballot was not counted | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 7. Accessibility of the choice | Governed text | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-045` | Challenge take-up sufficient for detection | `ADR-099`; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-07`…`BM-13` | `E-29` (inherited — `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` §3) | `PACK-16C-THREAT-MODEL-EXTENSION.md` | 2. Threats against the receipt and the verification path | Empirical; no per-voter guarantee follows | **BLOCKED** | blocking obligation — see Decision | external cryptographic review |
+
+### Pipeline
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-046` | Ordered pipeline with a distinct reason code per stage | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | §1 | 23 stages | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-047` | Fail closed; no provisional acceptance | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 0. The rule the whole pipeline exists to enforce | No accept-now-verify-later | **SATISFIED** | `T-P16C-15` · `RB-16C-04` | PACK-17 |
+| `AC-P16C-048` | Every cryptographic check before the boundary | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 2. Which side of the boundary each check sits on | Stages 9–15 | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-049` | Subgroup checks exhaustive, never sampled | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 3. The five prohibitions | Every element, every ballot | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-050` | No proof normalisation or field coercion | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 3. The five prohibitions | Rejection, not repair | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-051` | Server never sees plaintext | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 5. What the server does not do | Nothing to expose | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-052` | Re-verifiability of each stage stated, including the two that are not | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 6. Independent re-verification | Design property, not oversight | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-053` | Ballot stuffing detectable from the record | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-14`…`BM-16` | N/A — internal architecture requirement | `PACK-16C-BALLOT-VALIDATION-PIPELINE.md` | 6. Independent re-verification | Structurally impossible without breaking unlinkability | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Lifecycle
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-054` | 16 states specified | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | §1 | Enumerated | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-055` | Every PACK-16A state mapped, none redefined | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | §1 | Extension, not redefinition | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-056` | Prohibited transitions normative | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | 4. Prohibited transitions — normative | Eleven prohibited edges | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-057` | No revoting | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | 4. Prohibited transitions — normative | No supersession path | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-058` | `superseded_if_permitted` unreachable | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | 6. `superseded_if_permitted` — defined and unreachable | Retained, not enabled | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-059` | Privacy rules stated per state | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | §1 | Including in-flight states | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-060` | Retryability stated per state | `ADR-099` (no revoting); `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` | N/A — internal architecture requirement | `PACK-16C-BALLOT-LIFECYCLE.md` | §1 | What is spent, and when | **SATISFIED** | none identified at specification level | none |
+
+### Receipt
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-061` | Receipt proves publication only | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 2. Contents | Content-free | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-062` | No timestamp finer than granularity, no board position | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 2. Contents | Correlation handles removed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-063` | Receipt re-derivable, not a bearer token | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 2. Contents | Losing it costs nothing | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-064` | Publication status stated truthfully | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 3. Publication status, stated honestly | Never claims publication that has not happened | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-065` | Absence from the board is a first-class outcome | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 3. Publication status, stated honestly | Own code and dispute path | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-066` | Human-readable, transcribable, audio-readable; camera never required | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 4. Format and accessibility | Accessibility-bound | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-067` | Participation-proof cost of the receipt stated, not solved | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-RECEIPT-SPECIFICATION.md` | 5. What the receipt makes possible for a coercer | Accepted and recorded | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-068` | Encoding format selected | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-17`…`BM-19` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | PACK-16D | **DEFERRED** | none identified at specification level | PACK-16D |
+
+### Coercion
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-069` | PACK-16A permitted/prohibited registries extended, not altered | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 3. Permitted claims — PACK-16C additions | Inherited entries unchanged | **SATISFIED** | `T-P16C-09` · `RB-16C-*` | none |
+| `AC-P16C-070` | No receipt-freeness claim made | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 2. The five honest facts about the receipt | Requires a published, reviewed justification | **SATISFIED** | `OD-P16C-05`, `OD-P16C-06` | none |
+| `AC-P16C-071` | Every prohibited claim has a permitted alternative | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 4. Prohibited claims — PACK-16C additions | In the governed catalogue | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-072` | Prohibited-claims list mechanically scannable | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 4. Prohibited claims — PACK-16C additions | `FIR-INV-015` | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-073` | Challenge-transcript coercion pattern named | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 5. Where verification itself becomes the weapon | Named and not solved | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-074` | Alternative channel required where coercion risk is material | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 6. What is offered instead of a promise | Non-activation where none exists | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-075` | Coercion resistance achieved | `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md` `PC-01`…`PC-11` | N/A — internal architecture requirement | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | §1 | Profile is coercion-MITIGATING; never claimed otherwise | **NOT APPLICABLE** | `T-P16C-10` — challenge-transcript pattern, unsolved | none |
+
+### Verification client
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-076` | Separate published origin | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-VERIFICATION-CLIENT-ARCHITECTURE.md` | §1 | Selected with reasons | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-077` | Same-device versus second-device compared, limitation published | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-VERIFICATION-CLIENT-ARCHITECTURE.md` | §1 | Neither required to vote | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-078` | Offline verification a required capability | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-VERIFICATION-CLIENT-ARCHITECTURE.md` | 3. What it holds and what it must not | Bundle format deferred | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-079` | No account, no terms, no cookies to verify | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 0. Reading rules | Public reads | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-080` | Lookups not logged | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 6. Cross-cutting behaviour | No lookup event exists | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-081` | Offline bundle format selected | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-14`, `BB-36`; `FIR-INV-003` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | PACK-16D | **DEFERRED** | none identified at specification level | PACK-16D |
+
+### Independent verifier
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-082` | 21 checks specified in prose sufficient to write a verifier | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 1. What a verifier must be able to check | Plus the record schema | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-083` | Verifier classes distinguished; official verifier not sufficient | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 3. Verifier classes | Self-verification proves nothing | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-084` | Independent verification required before binding use | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 3. Verifier classes | No party engaged | **BLOCKED** | blocking obligation — see Decision | external cryptographic review |
+| `AC-P16C-085` | Reproducible builds, signed releases, cross-language test vectors | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 4. Distribution requirements | Criteria fixed; delivery PACK-16D | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-086` | Result model machine-readable with severities and effects | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 6. Result model | Eleven results | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-087` | Every result states what was not checked | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 5. What the verifier cannot check — published alongside what it can | Prohibited to omit | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-088` | `VERIFIED` is not certification | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-INDEPENDENT-VERIFIER-REQUIREMENTS.md` | 6. Result model | Activation gates remain | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-089` | Report governance settled | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `BM-26`…`BM-29` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | GOVERNANCE | **DEFERRED** | none identified at specification level | PACK-17 |
+
+### Board
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-090` | Board architecture specified | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-BULLETIN-BOARD-ARCHITECTURE.md` | 1. The board is a separate bounded context and a separate trust boundary | Structure, signers, mirrors | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-091` | Entry catalogue with prohibited content per type | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-BULLETIN-BOARD-ENTRY-CATALOG.md` | 2. The catalogue | 21 entry types, three added by the correction | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-092` | Append-only model selected with options compared | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-BULLETIN-BOARD-ARCHITECTURE.md` | §1 | Merkle transparency log | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-093` | Inclusion and consistency proofs offline-verifiable | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-API-CATALOG.md` | 6. Cross-cutting behaviour | Never trust the party being checked | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-094` | Checkpoints chained and signed; key history published | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-EVENT-CATALOG.md` | 2. Board and publication events — published | Rotation visible | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-095` | Split-view resistance | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-03`, `G-05` | `PACK-16C-APPEND-ONLY-AND-CONSISTENCY-MODEL.md` | 4.1 What is deferred, and what that costs | Rests on organisational mirror independence | **BLOCKED** | blocking obligation — see Decision | external cryptographic review |
+| `AC-P16C-096` | Mirror operators and independence established | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | GOVERNANCE | **DEFERRED** | none identified at specification level | PACK-16D |
+| `AC-P16C-097` | Board is tamper-proof | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-COERCION-AND-RECEIPT-BOUNDARY.md` | 4. Prohibited claims — PACK-16C additions | It is tamper-EVIDENT, and only if someone checks | **NOT APPLICABLE** | none identified at specification level | none |
+| `AC-P16C-098` | Publication atomicity model selected | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-PUBLICATION-ATOMICITY-MODEL.md` | 2. The options | Durable acceptance + signed commitment naming a batch window + closure opening — **and an atomic leaf reservation before durable acceptance on both the cast and public-challenge paths** (`PA-13`, `TC-70`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-099` | No terminal state "accepted but never published" | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-PUBLICATION-ATOMICITY-MODEL.md` | 5. Escalation | Publication failure is public | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-100` | Lost-participation case stated in advance | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-PUBLICATION-ATOMICITY-MODEL.md` | 5. Escalation | Record integrity chosen over repair | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-101` | Publication deadline in wall-clock terms | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-01`…`BB-37` | `G-01`, `G-02`, `G-04` | `PACK-16C-OPEN-DECISIONS.md` | 1. The register | PACK-16D + GOVERNANCE | **DEFERRED** | none identified at specification level | PACK-16D |
+
+### Record
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-102` | Record contents enumerated and mandatory | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 1. Contents of the election record | 37 artefacts | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-103` | Record self-describing and interpretable later | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 0. The definition this document is written against | Profile, parameters, schema version | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-104` | Record independent of EPD² infrastructure | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 0. The definition this document is written against | Bulk, mirrorable, byte-identical | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-105` | Prohibited contents enumerated | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | §1 | No correlating field | **SATISFIED** | `OD-P16C-12` · `RB-16C-02` | PACK-17 |
+| `AC-P16C-106` | Count reconciliation must close | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 1.6 Governance and honesty | Highest-severity finding if it does not | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-107` | "What you cannot check" published with the record | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 1.6 Governance and honesty | Six items, plain language | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-108` | Superseded artefacts retained, never deleted | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 3. Format, stability and long-term readability | Correction by supersession | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-109` | Completeness computed in both directions | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-COMPLETENESS-MATRIX.md` | 0.1 Conditions that make the record INCOMPLETE | Forward and reverse | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-110` | Artefacts serving no check justified | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-COMPLETENESS-MATRIX.md` | 3.1 Artefacts consumed by no check — justified, not dropped | Four, each with a purpose | **SATISFIED** | `RB-16C-05` — lost participation past every window | none |
+| `AC-P16C-111` | Checks with a missing artefact | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | §1 | Zero, as specified | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-112` | A real verifier executes all 21 checks against a real record | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-34`; `BM-20`…`BM-25` | N/A — internal architecture requirement | `PACK-16C-ELECTION-RECORD-COMPLETENESS-MATRIX.md` | 3.2 Checks with a missing artefact | PACK-16D, then `BM-28` | **DEFERRED** | none identified at specification level | PACK-16D |
+
+### Privacy
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-113` | Every metadata field enumerated with holder and treatment | PACK-15 privacy lineage; `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | §1 | 34 fields | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-114` | Default is non-retention | PACK-15 privacy lineage; `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | 0. The premise | Retention needs a named purpose | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-115` | Prohibition is on the join, not the field | PACK-15 privacy lineage; `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | 0. The premise | Structural | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-116` | Remaining open channels named | PACK-15 privacy lineage; `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | 2. The four channels that remain open | Four, declared not mitigated away | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-117` | Network-layer traffic analysis addressed | PACK-15 privacy lineage; `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` | N/A — internal architecture requirement | `PACK-16C-PRIVACY-AND-METADATA-MATRIX.md` | §1 | Out of scope; PACK-17 | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Turnout
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-118` | No intermediate tally, turnout, counter or derivable proxy | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07`; `FIR-INV-005` | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 0. The inherited prohibition | Information, not endpoint — and after the correction the board publishes no derivable figure either (`TC-21`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-119` | Board-size leak addressed with options compared | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07`; `FIR-INV-005` | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 3. The rejected model — `SUPERSEDED`, retained for the record | **Corrected.** Padding rejected (`TC-21`); fixed-cadence sealed fixed-capacity batch commitments selected, with real and cover leaves structurally indistinguishable | **SATISFIED** | `RB-16C-11` — batch-boundary timing resolution at closure (`T-P16C-46`) | PACK-16D |
+| `AC-P16C-120` | Minimum electorate size gates electronic activation | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07`; `FIR-INV-005` | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 6. Small contexts | Below it, another channel | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-121` | Suppression stated, never silent | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07`; `FIR-INV-005` | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 6. Small contexts | Threshold published | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-122` | Batch interval, capacity, cadence, partition and reserve values fixed | `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07`; `FIR-INV-005` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | 1.1 `OD-P16C-10` — Concrete Batch-Capacity Parameters | **Architecture closed; numbers open.** The plausible-load criterion is **withdrawn**; `N`, `C`, `R`, the slot partition and the safety reserve are election-governed pre-opening configuration, validated against `L_max` (`OD-R13`, `TC-64`) | DEFERRED | `OD-P16C-10` · `OD-P16C-18` | governance, PACK-16D, PACK-17 |
+
+### Accessibility
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-123` | BITV 2.0 / EN 301 549 / WCAG 2.1 AA floor for every surface | `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`; `FIR-INV-012` | N/A — internal architecture requirement | `PACK-16C-ACCESSIBILITY-REQUIREMENTS.md` | 1. Baseline | Including the Verification Client | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-124` | Requirements stated per barrier | `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`; `FIR-INV-012` | N/A — internal architecture requirement | `PACK-16C-ACCESSIBILITY-REQUIREMENTS.md` | 2.1 Vision | Vision, motor, cognition, hearing, device | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-125` | Public record accessible without JavaScript or an account | `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`; `FIR-INV-012` | N/A — internal architecture requirement | `PACK-16C-ACCESSIBILITY-REQUIREMENTS.md` | 4. Accessibility of the public record | Plain files | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-126` | Accessibility acceptance gates activation of a context | `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`; `FIR-INV-012` | N/A — internal architecture requirement | `PACK-16C-ACCESSIBILITY-REQUIREMENTS.md` | 5. Testing | Not a PACK-16D phase | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-127` | Known tensions stated rather than resolved | `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`; `FIR-INV-012` | N/A — internal architecture requirement | `PACK-16C-ACCESSIBILITY-REQUIREMENTS.md` | 6. Known tensions, stated rather than resolved | Six, none claimed solved | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+
+### Dispute
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-128` | Support cannot act on a ballot — architecturally | `ADR-098`; PACK-15 dispute lineage | N/A — internal architecture requirement | `PACK-16C-DISPUTE-AND-SUPPORT-BOUNDARY.md` | 0. The boundary, stated first | No such operation exists | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-129` | Dispute classes with one owner and a published outcome | `ADR-098`; PACK-15 dispute lineage | N/A — internal architecture requirement | `PACK-16C-DISPUTE-AND-SUPPORT-BOUNDARY.md` | 2. Dispute classes | Eight classes | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-130` | No dispute resolved by acting on an individual ballot | `ADR-098`; PACK-15 dispute lineage | N/A — internal architecture requirement | `PACK-16C-DISPUTE-AND-SUPPORT-BOUNDARY.md` | 2. Dispute classes | Build, board, context or election level | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-131` | Support records carry no ballot identifier | `ADR-098`; PACK-15 dispute lineage | N/A — internal architecture requirement | `PACK-16C-DISPUTE-AND-SUPPORT-BOUNDARY.md` | 4. Records and privacy | PACK-15 retention lineage | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-132` | Irreversibility told to voters in advance | `ADR-098`; PACK-15 dispute lineage | N/A — internal architecture requirement | `PACK-16C-DISPUTE-AND-SUPPORT-BOUNDARY.md` | 0. The boundary, stated first | Before the irreversible step | **SATISFIED** | none identified at specification level | none |
+
+### API
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-133` | Operation surface specified with auth class per operation | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 4.1 Casting operations | No identity input anywhere | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-134` | Prohibited operations listed as checkable absences | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 5. Operations that are prohibited | Not permission-gated — absent | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-135` | Data models specified with prohibited fields | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 7. Data models — `DM-*` | `DM-10` is the load-bearing one | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-136` | Transport, routes and OpenAPI | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | §1 | No route added in this round | **DEFERRED** | none identified at specification level | PACK-16D |
+| `AC-P16C-188` | Every operation carries all sixteen required specification fields | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 8. Completeness of this catalogue | 23 operations, 16/16 fields each, mechanically checkable | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-189` | Privacy classification vocabulary is defined once and applied per operation | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 1. Privacy classification vocabulary — defined once | Five classes; `PUBLIC_AFTER_CLOSURE` is a phase gate, not a permission check | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-190` | Rate-limit policy is normative without arbitrary numbers | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 2. Rate-limit policy — normative, without numbers | Seven policy rules; concrete values are governed configuration with bounds | **SATISFIED** | `OD-P16C-10` lineage — values need a governance basis | governance |
+| `AC-P16C-191` | Failure semantics are a shared vocabulary, not per-operation invention | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 3. Failure semantics — the shared vocabulary | Eleven named failures; privacy-sensitive lookups cannot be used to guess valid confirmation codes | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-192` | Operations added by the sealed batch layer are specified | `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md` `BB-36`; `FIR-INV-014` | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 4.3 Sealed batch operations — added by the turnout correction | Batch commitment, batch checkpoint, batch opening and reconciliation, all with phase gates | **SATISFIED** | `OD-P16C-16` — serialization deferred | PACK-16D |
+
+### Events
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-137` | Event catalogue with no correlating field | PACK-15 §28; `FIR-INV-007` | N/A — internal architecture requirement | `PACK-16C-EVENT-CATALOG.md` | 0. The rule that shapes every event | 38 → **36 events**; no correlating field in any payload. **The capability-side half of each atomic boundary is not an event at all** — `EV-15` and `EV-19b` were deleted, and their identifiers are retired, not reused (`EV-71`, `EV-74`, `EV-78`) | SATISFIED | none identified at specification level | none |
+| `AC-P16C-138` | No trace spans the atomic boundary | PACK-15 §28; `FIR-INV-007` | N/A — internal architecture requirement | `PACK-16C-EVENT-CATALOG.md` | 1. Casting-side events — internal, never published per ballot | Distributed tracing across the boundary is prohibited, and after the event-privacy correction there is **no capability-side event to correlate with** (`EV-05`, `EV-06`, `EV-71`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-139` | Events that must not exist enumerated | PACK-15 §28; `FIR-INV-007` | N/A — internal architecture requirement | `PACK-16C-EVENT-CATALOG.md` | 5. Events that must not exist | Eleven checkable absences, including `capability.consumed`, `challenge.public_entitlement_consumed` and **any renamed equivalent that still crosses a bus** (`EV-76`) | **SATISFIED** | none identified at specification level | none |
+
+### Reason codes
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-140` | Every failure class has a distinct code | `PACK-16A-REASON-CODE-SPECIFICATION.md` §0; `PACK-16B-REASON-CODE-SPECIFICATION.md` §1 | N/A — internal architecture requirement | `PACK-16C-REASON-CODE-CATALOG.md` | 0. The invariants, inherited and restated | No generic code | **SATISFIED** | `T-P16C-46` · `RB-16C-11` | none |
+| `AC-P16C-141` | No code reveals a value, an identity or a secret | `PACK-16A-REASON-CODE-SPECIFICATION.md` §0; `PACK-16B-REASON-CODE-SPECIFICATION.md` §1 | N/A — internal architecture requirement | `PACK-16C-REASON-CODE-CATALOG.md` | 0. The invariants, inherited and restated | Names the check | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-142` | No code re-minted for a condition an earlier round named | `PACK-16A-REASON-CODE-SPECIFICATION.md` §0; `PACK-16B-REASON-CODE-SPECIFICATION.md` §1 | N/A — internal architecture requirement | `PACK-16C-REASON-CODE-CATALOG.md` | 0. The invariants, inherited and restated | Seven reuses listed | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-143` | Registry implementation | `PACK-16A-REASON-CODE-SPECIFICATION.md` §0; `PACK-16B-REASON-CODE-SPECIFICATION.md` §1 | N/A — internal architecture requirement | `PACK-16C-REASON-CODE-CATALOG.md` | 6. Counts and uniqueness | Namespaces reserved only | **DEFERRED** | none identified at specification level | PACK-16D |
+
+### Failure model
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-144` | Every failure mode with outcome, decider and concurrence | PACK-15 §27; `PACK-16A-FAILURE-AND-ABORT-MODEL.md` §1 | N/A — internal architecture requirement | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 1. The matrix | 17 rows | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-145` | No outcome acts on an individual accepted ballot | PACK-15 §27; `PACK-16A-FAILURE-AND-ABORT-MODEL.md` §1 | N/A — internal architecture requirement | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 0. Outcome vocabulary | Zero rows | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-146` | Interrupted-submission case stated honestly | PACK-15 §27; `PACK-16A-FAILURE-AND-ABORT-MODEL.md` §1 | N/A — internal architecture requirement | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 3. Interrupted submission — the honest case | Capability never restored | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-147` | Election-level escalation enumerated with concurrence | PACK-15 §27; `PACK-16A-FAILURE-AND-ABORT-MODEL.md` §1 | N/A — internal architecture requirement | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 4. Election-level escalation | Eight triggers | **SATISFIED** | none identified at specification level | none |
+
+### Threat model
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-148` | PACK-16A threats inherited unchanged | `PACK-16A-THREAT-MODEL.md` `T-P16A-01`…`T-P16A-42` | N/A — internal architecture requirement | `PACK-16C-THREAT-MODEL-EXTENSION.md` | §1 | 42, none removed or downgraded | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-149` | New threats stated with residuals | `PACK-16A-THREAT-MODEL.md` `T-P16A-01`…`T-P16A-42` | N/A — internal architecture requirement | `PACK-16C-THREAT-MODEL-EXTENSION.md` | 1. Correlation threats introduced by publication | 35 threats, every one with a residual | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-150` | Threats fully solved | `PACK-16A-THREAT-MODEL.md` `T-P16A-01`…`T-P16A-42` | N/A — internal architecture requirement | `PACK-16C-THREAT-MODEL-EXTENSION.md` | 7. Counts | Zero — and that is the honest figure | **NOT APPLICABLE** | none identified at specification level | none |
+| `AC-P16C-151` | Out-of-scope threat classes named | `PACK-16A-THREAT-MODEL.md` `T-P16A-01`…`T-P16A-42` | N/A — internal architecture requirement | `PACK-16C-THREAT-MODEL-EXTENSION.md` | §1 | Eight | **SATISFIED** | none identified at specification level | none |
+
+### Evidence
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-152` | Single canonical PACK-16C evidence registry | `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md` §0.1 | `G-01`…`G-05` | `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` | §1 | One file | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-153` | Every new source read first-hand and quoted | `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md` §0.1 | `G-01`…`G-05` | `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` | 2. New entries | Retrieved 2026-08-01 | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-154` | Inherited evidence cited as inherited, not re-attested | `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md` §0.1 | `G-01`…`G-05` | `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` | §1 | 14 entries | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-155` | Decisions resting on no external source declared | `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md` §0.1 | `G-01`…`G-05` | `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` | §1 | Six | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-156` | New sources concern elections | `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md` §0.1 | `G-01`…`G-05` | `PACK-16C-PROTOCOL-EVIDENCE-MATRIX.md` | §1 | All four are from the certificate/supply-chain domain; stated plainly | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Open decisions
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-157` | Every open decision names what it blocks | `PACK-16A-OPEN-DECISIONS.md` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | §1 | 13 entries | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-158` | No inherited open decision closed or re-owned | `PACK-16A-OPEN-DECISIONS.md` | N/A — internal architecture requirement | `PACK-16C-OPEN-DECISIONS.md` | §1 | Zero | **SATISFIED** | none identified at specification level | none |
+
+### FIR
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-159` | No FIR created, removed, renamed or downgraded | `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` | N/A — internal architecture requirement | `PACK-16C-FIR-COVERAGE-MATRIX.md` | §1 | Zero | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-160` | No FIR status changed in the register | `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` | N/A — internal architecture requirement | `PACK-16C-FIR-COVERAGE-MATRIX.md` | §1 | Zero | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-161` | `FIR-ASM-006` and `FIR-ASM-007` taken up as deferred to this round | `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` | N/A — internal architecture requirement | `PACK-16C-FIR-COVERAGE-MATRIX.md` | §1 | Ballot-style and majority-rule content remains PACK-16D and governance | **PARTIALLY SATISFIED** | stated residual — see Decision | PACK-16D |
+| `AC-P16C-162` | `FIR-INV-002` closed | `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` | N/A — internal architecture requirement | `PACK-16C-FIR-COVERAGE-MATRIX.md` | §1 | Cannot be closed without a built system | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Canon
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-163` | Canon files unmodified; `CANON_VERSION` unchanged | `docs/canonical/TZ-00-domain-event-canon.md` 19a.1; `PACK-16B-CANON-ASSESSMENT.md` | N/A — internal architecture requirement | `PACK-16C-CANON-ASSESSMENT.md` | 4. Why no amendment is proposed | Byte-identical | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-164` | `PublicLedgerEntry → VoteEnvelope` prohibition untouched | `docs/canonical/TZ-00-domain-event-canon.md` 19a.1; `PACK-16B-CANON-ASSESSMENT.md` | N/A — internal architecture requirement | `PACK-16C-CANON-ASSESSMENT.md` | §1 | Reinforced at the data-model level | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-165` | Clarifications recorded, no amendment proposed | `docs/canonical/TZ-00-domain-event-canon.md` 19a.1; `PACK-16B-CANON-ASSESSMENT.md` | N/A — internal architecture requirement | `PACK-16C-CANON-ASSESSMENT.md` | 2. The six canonical questions raised | Gap recorded as a gap | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-166` | A canonical primitive exists for the bulletin board | `docs/canonical/TZ-00-domain-event-canon.md` 19a.1; `PACK-16B-CANON-ASSESSMENT.md` | N/A — internal architecture requirement | `PACK-16C-CANON-ASSESSMENT.md` | 2. The six canonical questions raised | None exists; recorded, not invented | **NOT APPLICABLE** | none identified at specification level | none |
+
+### Sealed batch
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-167` | Padding-entry turnout model is no longer active anywhere in the pack | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 3. The rejected model — `SUPERSEDED`, retained for the record | The four padding rules are marked SUPERSEDED and re-point at nothing; no document asserts an uncatalogued entry type | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-168` | Live turnout is not derivable from the number or structure of board entries | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 2.1 Fixed cadence | One constant-size `sealed_batch_commitment` per fixed window, whatever the turnout | **SATISFIED** | `T-P16C-46` — acceptance-time resolution at closure | PACK-16D |
+| `AC-P16C-169` | Empty windows publish a commitment like any other | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.1 Cadence and capacity | Absence of an entry is itself a disclosure, so absence is prohibited and a gap is a published failure | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-170` | Cover leaves structurally hide occupancy before closure | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.2 Commitment leaves | A cover leaf is a uniform random value of the leaf commitment’s exact size; real leaves are hiding commitments | **SATISFIED** | `T-P16C-45` · `RB-16C-10` — a weak generator would break indistinguishability silently | PACK-16D |
+| `AC-P16C-171` | Cover leaves are not ballots | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.2 Commitment leaves | No acceptance, no ciphertext, no capability, no receipt, no ballot state anywhere in `BL-*` | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-172` | Cover leaves never enter the tally | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.5 Closure reveal and reconciliation | Only `accepted` leaves are tally-eligible; reconciliation declares the count in each class | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-173` | The ElectionGuard ballot and tally profile is unchanged | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.6 No change to the ballot or tally profile | The commitment layer sits strictly above the ballot layer and commits only to digests of ballot artefacts | **SATISFIED** | none identified at specification level | external cryptographic review |
+| `AC-P16C-174` | Individual verification remains possible before closure | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.4 Individual verification before closure | A privacy-safe commitment inclusion proof by confirmation code, revealing only the caller’s own leaf | **SATISFIED** | `T-P16C-42` — a party already holding many codes learns those ballots are committed | PACK-16D |
+| `AC-P16C-175` | Public enumeration of individual ballots before closure is impossible | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.4 Individual verification before closure | No operation lists occupied leaves, returns occupancy, or serves a post-closure entry type early | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-176` | Closure opening recomputes every batch root | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.5 Closure reveal and reconciliation | Every batch is opened in full, cover leaves included; a root that does not recompute is `FM-16C-22` | **SATISFIED** | none identified at specification level | PACK-17 |
+| `AC-P16C-177` | Reconciliation proves completeness and the absence of late insertion | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.5 Closure reveal and reconciliation | One-to-one artefact↔leaf mapping by class; a tally input with no committed leaf is `TALLY_MISMATCH`; **public totals bounded by `E` and `E × K` (check 20)** | **SATISFIED** | `OD-P16C-19` · `RB-16C-15` — the per-capability proof is not specified by this round | PACK-16D, PACK-17 |
+| `AC-P16C-178` | Restricted reconciliation evidence cannot reconstruct identity-to-ballot linkage | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.7 Why this is not a ballot-stuffing channel | It is a comparison of two independently produced counts, never a pairing (`TC-52`); the **per-capability** statement needs evidence this round could not construct (`TC-83`) | **SATISFIED** | `OD-P16C-19` — `ARCHITECTURAL BLOCKER` for certification if unconstructible | PACK-16D, PACK-17 |
+| `AC-P16C-179` | Batch cadence is fixed, gapless and never adaptive | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.1 Cadence and capacity | Interval, capacity and schedule are frozen before voting opens and published with the manifest | **SATISFIED** | `T-P16C-43` — deviation is organisational, though publicly detectable | governance |
+| `AC-P16C-180` | Every sealed-batch failure has a defined non-silent handling | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-FAILURE-AND-ABORT-MATRIX.md` | 1A. The sealed batch layer | Eleven failure modes with detection, action, states, evidence, election consequence and no repair path | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-181` | Board entry catalogue covers every active entry type | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-BULLETIN-BOARD-ENTRY-CATALOG.md` | 2. The catalogue | Three types added by `ADR-101` and counted in the initial profile; the closed-catalogue rule is restated | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-182` | The commitment layer requires no canonical aggregate | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-CANON-ASSESSMENT.md` | 2. The six canonical questions raised | A commitment is not a link; the 19a.1 prohibition is honoured more strictly after the correction | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-183` | Publication atomicity is bounded by a named batch window | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-PUBLICATION-ATOMICITY-MODEL.md` | 2. The options | The obligation is one batch interval, not an unbounded asynchronous future | **SATISFIED** | `RB-16C-05` — participation lost if publication fails past every window | governance |
+| `AC-P16C-184` | The receipt distinguishes the three publication states | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-RECEIPT-SPECIFICATION.md` | 3. Publication status, stated honestly | `ACCEPTED_PENDING_BATCH_COMMITMENT`, `COMMITTED`, `PUBLISHED_AFTER_CLOSURE` — and no occupancy, no leaf index, **no residual entitlement** (`RE-21`) | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-185` | The election record contains every batch artefact | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-ELECTION-RECORD-SPECIFICATION.md` | 2. What the record must never contain | Commitments, openings including cover-leaf values, and the reconciliation are jointly indivisible | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-186` | Record completeness fails on any missing or inconsistent batch artefact | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`, `G-02` (data structure only — `G-R08`, `G-R09`) | `PACK-16C-ELECTION-RECORD-COMPLETENESS-MATRIX.md` | 0.1 Conditions that make the record INCOMPLETE | Seven named conditions make completeness `invalid` outright, none recoverable by re-derivation | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-187` | The sealed batch construction is reasoned, not externally evidenced | user correction task §4; `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` `NIT-01`…`NIT-07` | `G-01`…`G-05` | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | §1 | Transparency-log sources support the data structure only; the turnout use is this round’s own reasoning | **SATISFIED** | `RB-16C-09` — reasoned decisions await external review | external cryptographic review |
+
+### Bounded challenge
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-195` | Unlimited local diagnostic challenges are preserved | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 5.0 Three actions, three names — never one button | The repeatable part of Benaloh’s mechanism is preserved in full and moved to a client-local, unpublished tier | **SATISFIED** | `T-P16C-62` — a malicious client can fake one | PACK-16D |
+| `AC-P16C-196` | Public evidentiary challenges are bounded to K = 1 per anonymous continuation capability | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A. The two-tier challenge model | `K = 1` and `A = 1` are architectural constants of the initial protocol profile, not runtime configuration | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-197` | A public evidentiary challenge does not consume the final cast entitlement | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A.2 Public Evidentiary Challenge | The public-challenge boundary spends the challenge entitlement only; the cast entitlement is untouched | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-198` | A capability yields at most one public spoiled artefact and one accepted cast ballot | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 2A. Capability entitlement state | Three booleans of entitlement state, no counter, cleared by cast acceptance | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-199` | A second differing public evidentiary challenge fails closed | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 2B. The public-challenge atomic boundary | `challenge.public_entitlement_exhausted`; the same idempotent submission returns the same outcome | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-200` | Local diagnostic challenges create no board leaf, record artefact or event | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A.1 Local Diagnostic Challenge | No request is made, so there is nothing to publish, record, log or transmit | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-201` | The public challenge and the final cast carry independent public references | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A.3 The cast flow after a public evidentiary challenge | No reuse of ciphertext, nonce, ballot ID or confirmation code; nothing published links the two artefacts | **SATISFIED** | `T-P16C-61` — interval-level grouping remains at closure | PACK-16D |
+| `AC-P16C-202` | The interface distinguishes local check, public audit challenge and cast | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 5.0 Three actions, three names — never one button | Three separately named actions; an ambiguous single Challenge control is prohibited; the one-per-capability limit is stated before use | **SATISFIED** | none identified at specification level | PACK-16D |
+| `AC-P16C-203` | Entitlement state creates no identity or ballot linkage | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | 2A. Capability entitlement state | Three booleans inside the anonymous continuation boundary; no identity, credential, ballot reference or artefact ID — **and the transition is an internal atomic state change, never an event payload** (`CN-44`, `EV-74`, `EV-75`) | **SATISFIED** | `T-P16C-28` — operator with access to both stores | PACK-16D |
+| `AC-P16C-204` | Local challenge is not presented as evidence against a malicious client | user correction task §4–§10 | N/A — internal architecture requirement | `PACK-16C-CAST-OR-CHALLENGE-SPECIFICATION.md` | 1A.1 Local Diagnostic Challenge | The limitation is stated in participant text and in the record; the public audit challenge and independent verification are the evidentiary paths | **SATISFIED** | `T-P16C-62` — open by construction | PACK-17 |
+
+### Capacity
+
+| Requirement ID | Requirement | Inherited source | External evidence | Decision document | Section | Decision | Status | Residual risk | Next stage |
+| -- | -- | -- | -- | -- | -- | -- | -- | -- | -- |
+| `AC-P16C-205` | A provable finite publication-bearing upper bound is defined | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.9 The provable finite capacity bound | `L_max = E × (K + A) = E × 2`, computable before voting opens from `E` and the profile constants alone | **SATISFIED** | `RB-16C-12` — `L_max` scales with `E` | governance |
+| `AC-P16C-206` | The bound is derived from maximum valid continuations, not plausible turnout | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.9 The provable finite capacity bound | `E` comes from the eligibility snapshot and issuance policy. **Expected, historical or plausible turnout is not a sufficient capacity basis**, and no active criterion uses one (`TC-60`, `OD-R13`) | **SATISFIED** | `RB-16C-12` | governance |
+| `AC-P16C-207` | The bound includes both accepted casts and public challenged artefacts | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.9 The provable finite capacity bound | `K + A` per capability; cover leaves are not publication-bearing and are excluded from `L_max` | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-208` | Per-window capacity and atomic leaf reservation are specified | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | Reservation precedes durable acceptance, sits inside the boundary, releases on rejection, times out, and is anonymous | **SATISFIED** | `OD-P16C-17` · `T-P16C-56` | PACK-16D |
+| `AC-P16C-209` | Predeclared reserve commitments publish on schedule even when empty | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | `C_interval = C_primary + R × C_reserve`, all published with indistinguishable public structure | **SATISFIED** | cost: the record is larger than the election was — accepted | none |
+| `AC-P16C-210` | Adaptive batch creation is prohibited | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | No unscheduled batch at any time by any authority; `R` and `C` may not be enlarged after opening | **SATISFIED** | `T-P16C-54` | PACK-16D |
+| `AC-P16C-211` | Cast-reserved capacity is protected from challenge exhaustion | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | Capacity is partitioned in advance; a public challenge may never consume a cast-reserved slot | **SATISFIED** | `T-P16C-53` — a mis-sized partition refuses checks while cast capacity idles | governance |
+| `AC-P16C-212` | Unused challenge-reserved slots stay cover leaves | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | No adaptive conversion, because a conversion visible in the published shape would be an activity signal | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-213` | Batch-capacity exhaustion is fail-closed with a governed remedy | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | Fail closed, pause public challenges, preserve cast entitlements, publish a figure-free incident, enter governed pause/extension/abort/re-run | **SATISFIED** | `RB-16C-14` — the incident’s existence is itself a signal | governance |
+| `AC-P16C-214` | No hidden overflow queue and no unscheduled batch exist | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | An artefact is reserved into a scheduled leaf or it was never accepted | **SATISFIED** | `T-P16C-55` — an implementation could build one | PACK-16D |
+| `AC-P16C-215` | Capability state survives a failed reservation unchanged | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | Nothing is consumed, no entitlement is spent, the cast entitlement survives | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-216` | A capacity incident discloses no occupancy, remaining slots or turnout | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | The incident states that capacity is constrained and what happens next — never how constrained | **SATISFIED** | `RB-16C-14` | none |
+| `AC-P16C-217` | Single-capability challenge DoS is closed architecturally | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-API-CATALOG.md` | 2. Rate-limit policy — normative, without numbers | One capability yields at most one published challenge artefact, so total volume is bounded by entitlement, not by rate | **SATISFIED** | `RB-16C-12` — scales with a holder of many capabilities | governance |
+| `AC-P16C-218` | The capacity plan is published before opening and republished at closure | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-BULLETIN-BOARD-ENTRY-CATALOG.md` | 2. The catalogue | `E`, `K`, `A`, `L_max`, `C_primary`, `C_reserve`, `R`, interval count, partition and reserve — selected **before opening**, published as governed configuration, checkable against what was executed (`OD-P16C-10` §1.1) | **SATISFIED** | none identified at specification level | PACK-17 |
+| `AC-P16C-219` | An invalid or unpublished capacity plan blocks activation | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.9 The provable finite capacity bound | `election.capacity_plan_invalid` has no override and the context is not activated | **SATISFIED** | none identified at specification level | governance |
+| `AC-P16C-220` | Leaf class distinguishes cast, spoiled and cover at closure only | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.2 Commitment leaves | `accepted_cast`, `public_challenged_spoiled`, `cover` — bound privately at reservation, revealed at closure; separate pre-closure commitment types are prohibited | **SATISFIED** | none identified at specification level | none |
+| `AC-P16C-221` | Reservation leakage is named, detected and recorded as a residual | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.10 Per-window capacity, reservation and predeclared reserves | Release on rejection and on timeout, plus closure reconciliation — but leakage shrinks real capacity with no public sign until closure | **PARTIALLY SATISFIED** | `RB-16C-13` | PACK-16D |
+| `AC-P16C-222` | The per-capability bound is publicly checkable | user correction task §11–§16 | N/A — internal architecture requirement | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | 4.7 Why this is not a ballot-stuffing channel | Public totals (≤ `E`, ≤ `E × K`) are checkable now; the **per-capability** statement needs privacy-preserving evidence this round could not construct, and that gap is recorded rather than hidden | **PARTIALLY SATISFIED** | `OD-P16C-19` · `RB-16C-15` | PACK-16D, PACK-17 |
+
+---
+
+## 2. Counts — computed from §1
+
+```text
+SATISFIED              189
+PARTIALLY SATISFIED     10
+DEFERRED                11
+BLOCKED                  3
+NOT APPLICABLE          10
+TOTAL                  223
+```
+
+**Arithmetic:** 189 + 10 + 11 + 3 + 10 = 223
+
+| Measure | Value |
+| ------- | ----- |
+| Rows | 223 |
+| Original Requirement IDs preserved | 166 |
+| Requirement IDs added by the turnout correction | 28 — `AC-P16C-167`…`AC-P16C-194` |
+| Requirement IDs added by the capacity correction | 29 — `AC-P16C-195`…`AC-P16C-223` |
+| Duplicate Requirement IDs | **0** |
+| Requirement IDs removed or renumbered | **0** |
+| Rows missing a required column | **0** |
+| Rows with status `CORRECTED` | **0** — the status does not exist |
+| Rows with an unsupported status | **0** |
+| Rows claiming implementation | **0** |
+| Rows claiming external review | **0** |
+| Rows claiming production readiness | **0** |
+| Rows claiming legal activation | **0** |
+| Rows closing `VO-08` | **0** |
+| Rows closing an inherited open decision | **0** |
+| Rows closing `FIR-INV-002` | **0** |
+
+---
+
+## 3. The three `BLOCKED` rows, collected
+
+| Row | What is blocked | By what |
+| --- | --------------- | ------- |
+| Challenge take-up sufficient for detection | An empirical property of voter behaviour | `E-29`: take-up is 9.9 % at best in the most mature deployment. **No specification act changes this** |
+| Independent verification required before binding use | Binding use of any context | `BM-28`, `OD-P16C-08` — no party outside EPD² has been engaged |
+| Split-view resistance | A cryptographic guarantee against a board showing different views | `G-03`, `G-05`: the mechanism is unstandardised. Until witnesses exist, the property is **organisational** (`AO-13`) |
+
+**None of the three is dressed as progress, and none blocks completion of
+this specification round.** All three block activation, and they are the
+reason `ADR-101` is `proposed`.
+
+---
+
+## 4. The ten `NOT APPLICABLE` rows, collected
+
+| Row | Why |
+| --- | --- |
+| Write-in support | Not in this profile; free text defeats the homomorphic tally (`OD-P16C-02`) |
+| Ballot stuffing detectable from the record | **Structurally impossible** without creating the person-to-ballot link (`VP-17`, `EC-09`) |
+| Coercion resistance achieved | The profile is coercion-**mitigating**; the stronger property is never claimed (`CB-*`) |
+| Board is tamper-proof | It is tamper-**evident**, and only if someone checks (`PB-18`) |
+| Network-layer traffic analysis addressed | Out of scope for this round; PACK-17 (`PM-*` #34, `TC-56`) |
+| Threats fully solved | **Zero, and that is the honest figure** (`T-P16C-38`) |
+| New sources concern elections | All four new sources are from the certificate and supply-chain domain (`G-R08`, `G-R09`) |
+| `FIR-INV-002` closed | Cannot be closed without a built system to demonstrate against |
+| A canonical primitive exists for the bulletin board | None exists; the gap is recorded rather than filled by analogy (`CQ-P16C-01`, `CAN-P16C-04`) |
+| Duplicate heading defect in the turnout document | **Not reproducible.** `### 4.8 Failure handling` occurs exactly once in the source tree, and a mechanical scan found no duplicate heading anywhere in the pack. Recorded rather than claimed as fixed |
+
+---
+
+## 5. What this matrix does not assert
+
+```text
+It does not assert that any artefact works.
+It does not assert that any artefact is secure.
+It does not assert that any external party has looked at it.
+It does not assert that a real verifier can execute the twenty-one checks.
+It does not assert that the per-capability bound is publicly provable.
+It does not assert that the atomic boundary can be built.
+It does not assert that a cover leaf generator will be sound.
+It asserts, row by row, WHAT WAS SPECIFIED and WHAT WAS NOT.
+```
+
+**SPECIFIED. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY. NOT LEGALLY
+ACTIVATED.**

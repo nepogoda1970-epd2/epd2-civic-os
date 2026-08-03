@@ -1,0 +1,16 @@
+{
+  "profile_id": "EPD2-CRYPTO-1",
+  "note": "producer-side generation and one full independent oracle run, in seconds, measured on the build host. A benchmark, not a capacity statement.",
+  "seconds": {
+    "selection_encryption": 0.04,
+    "selection_proof_generation": 0.082,
+    "ballot_ciphertexts": 0.17,
+    "accumulation": 0.115,
+    "ballot_encryption": 0.56,
+    "ballot_hash": 0.0,
+    "confirmation_code": 0.0,
+    "ceremony_3_of_5": 2.098,
+    "threshold_shares": 0.203,
+    "independent_oracle_full_run": 0.811
+  }
+}

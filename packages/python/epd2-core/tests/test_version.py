@@ -273,4 +273,18 @@ def test_current_versions_match_expected_skeleton_version() -> None:
     # canon-version.json changed only its non-canonical bookkeeping:
     # repository_compatibility widened to <0.16.0.
     assert CANON_VERSION == "0.8.0"
-    assert REPOSITORY_VERSION == "0.15.0"
+    # REPOSITORY_VERSION then moved 0.15.0 -> 0.16.0 for the PACK-16D
+    # reference-implementation candidate: the first PACK-16 round that
+    # ships code rather than specification. It adds a reference
+    # cryptographic, casting, publication, election-record and
+    # verification implementation inside services/voting-service, under
+    # `epd2_voting_service.reference`, plus a self-generated test-vector
+    # catalogue and a negative-test corpus. New modules inside an
+    # existing service is a minor bump per canon section 25.
+    # CANON_VERSION remains 0.8.0: PACK-16D makes NO canon amendment,
+    # which its own canon assessment records. Every implementation
+    # entity it introduces maps onto an aggregate PACK-16A/16B/16C
+    # already specified, and no canon entity, status value or event is
+    # added. canon-version.json changed only its non-canonical
+    # bookkeeping: repository_compatibility widened to <0.17.0.
+    assert REPOSITORY_VERSION == "0.16.0"

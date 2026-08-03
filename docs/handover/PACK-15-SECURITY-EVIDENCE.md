@@ -1,11 +1,11 @@
 # PACK-15 — Security evidence
 
 ```text
-PACK-15 IMPLEMENTATION CANDIDATE
-PARTIAL LOCAL VERIFICATION ONLY
-DEPENDENCY INSTALLATION BLOCKED BY SANDBOX NETWORK POLICY
-EXTERNAL CI NOT YET VERIFIED
-NOT FINAL PASS
+PACK-15 FINAL PASS
+REPOSITORY_VERSION 0.15.0
+CANON_VERSION 0.8.0
+EXTERNAL CI PASS
+HYGIENE CORRECTION VERIFIED
 NOT PRODUCTION READY
 NOT LEGALLY ACTIVATED
 ```
@@ -241,3 +241,49 @@ step an operator can skip on a busy evening.
    two exports by hand. The architecture removes the data; it cannot
    remove a determined human with two spreadsheets and enough time - it
    can only make that the visible, auditable, effortful path it now is.
+
+---
+
+## External verification — the authoritative run
+
+GitHub Actions has run against the cleaned tree and **passed every
+stage**. This section records that run; the local results elsewhere in
+this document are what preceded it and are not a substitute for it.
+
+| Stage                            | Result                        |
+| -------------------------------- | ----------------------------- |
+| Required paths                   | PASS — 983 / 983              |
+| Forbidden paths                  | PASS                          |
+| Version consistency              | PASS — `0.15.0` / `0.8.0`     |
+| Ruff format                      | PASS — **436 files**          |
+| Prettier                         | PASS                          |
+| Ruff lint                        | PASS                          |
+| ESLint                           | PASS                          |
+| mypy                             | PASS                          |
+| Python tests                     | PASS — 5343 passed, 4 skipped |
+| TypeScript package tests         | PASS — 3 passed               |
+| Node tests                       | PASS — 41 passed              |
+| Frontend tests                   | PASS — 23 passed              |
+| Next.js production build         | PASS                          |
+| Static pages                     | 48 / 48                       |
+| Browser / visual / accessibility | PASS — 135 passed             |
+
+**Verification artifact SHA-256**
+`e8fd5b2a14e61be95be49afd461467a9ddbaab8f5dc70db68a9ab5f0bb9cd1b4`
+**Internal verification ZIP SHA-256**
+`7ea70c5b9ba3c7350e1d0831148c2be560512e17f78392031c1b0e5e7ea3df8c`
+
+Both were recomputed from the supplied files and both matched.
+
+**`Ruff format: 436 files` is the number that matters.** The previous
+external run reported 609, because the tree it verified still contained
+`epd2-civic-os/`, a stale nested copy of the repository at `0.6.0`. That
+directory has been removed and the tree re-verified from scratch. **Every
+verification artifact for a tree containing it is superseded and is not
+FINAL PASS evidence.**
+
+The verified tree was compared file by file against the archive shipped
+here: 1171 source files, zero differences. The artifact additionally
+contains 753 files that the run itself produced — `__pycache__`,
+`.hypothesis`, tool caches, Playwright output, a `tsbuildinfo` and five
+root scratch files — none of which are part of this archive.

@@ -270,3 +270,12 @@ testpaths = [
 # files in every tests/ directory (which previously caused a mypy
 # "Duplicate module named tests" error - see docs/handover/PACK-01-REPORT.md).
 addopts = "-ra --import-mode=importlib"
+# The target-profile conformance suite runs the whole cross-implementation
+# core on the real 4096-bit EPD2-CRYPTO-1 group. It is deliberately slow —
+# substituting a smaller group to make it fast is the exact substitution the
+# parameter policy forbids — so it carries its own marker and can be run
+# alone:
+#     pytest -m slow_conformance services/voting-service/tests/reference/
+markers = [
+    "slow_conformance: cross-implementation conformance on the real EPD2-CRYPTO-1 profile",
+]

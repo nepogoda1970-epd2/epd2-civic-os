@@ -169,5 +169,14 @@ test("current versions match the expected skeleton version", () => {
   // AccountStatus at six values, and holds SessionRecord at service
   // level rather than adding it to canon.
   assert.equal(CANON_VERSION, "0.8.0");
-  assert.equal(REPOSITORY_VERSION, "0.15.0");
+  // REPOSITORY_VERSION then moved 0.14.0 -> 0.15.0 for the PACK-15
+  // implementation candidate (the voting trust boundary, with
+  // eligibility and voting-credential issuance separated), and
+  // 0.15.0 -> 0.16.0 for the PACK-16D reference-implementation
+  // candidate, which adds the reference cryptographic, casting,
+  // publication, election-record and verification modules inside
+  // services/voting-service. New modules inside an existing service is
+  // a minor bump per canon section 25; CANON_VERSION stays 0.8.0
+  // because neither round amends the canon.
+  assert.equal(REPOSITORY_VERSION, "0.16.0");
 });
