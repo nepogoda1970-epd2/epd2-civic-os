@@ -1,0 +1,53 @@
+{
+  "schema_version": "epd2.pilot-roadmap-lock/1",
+  "status": "LOCKED",
+  "effective_date": "2026-08-19",
+  "authority": "project-approved PILOT roadmap",
+  "non_binding_pilot": true,
+  "stages": [
+    {"id": "PILOT-01", "title": "Internal Organization Pilot"},
+    {"id": "PILOT-02", "title": "Membership & Participation Pilot"},
+    {
+      "id": "PILOT-03",
+      "title": "Assemblies / Motions / Communications Pilot",
+      "required_capabilities": ["assemblies", "motions", "communications", "member_frontend_integration"],
+      "accepted_predecessor": {
+        "stage": "PILOT-02",
+        "filename": "EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip",
+        "sha256": "261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e"
+      }
+    },
+    {"id": "PILOT-04", "title": "Non-binding Digital Vote Pilot"},
+    {"id": "PILOT-05", "title": "Representative Desk / Transparency Pilot"},
+    {"id": "PILOT-06", "title": "Pilot Findings & Corrections"},
+    {"id": "PILOT-07", "title": "Production Readiness Decision"}
+  ],
+  "separate_workstreams": [
+    {
+      "id": "PILOT-OPS",
+      "title": "Deployment & Operations Readiness",
+      "must_not_be_numbered_as": "PILOT-03",
+      "disposition": "preserve as separate operations/readiness evidence and feed it into later production-readiness work, including PILOT-07 where applicable"
+    }
+  ],
+  "superseded_guidance": [
+    {
+      "source_artifact": "EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip",
+      "source_artifact_sha256": "261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e",
+      "path_inside_artifact": "docs/pilot/PILOT-02/25_NEXT_GATE_RECOMMENDATION.md",
+      "superseded_claims": [
+        "PILOT-03 — Pilot Operation Readiness",
+        "Do not add member features. Delegation, assemblies, reputation and messaging are absent from the product."
+      ],
+      "replacement": "PILOT-03 — Assemblies / Motions / Communications Pilot",
+      "note": "The accepted PILOT-02 C4 archive remains immutable. This lock supersedes the stale next-gate recommendation without modifying the accepted archive or invalidating its SHA256."
+    }
+  ],
+  "candidate_scope_contract": {
+    "required_from_stage": "PILOT-03",
+    "manifest_path": "docs/roadmap/PILOT_STAGE_SCOPE.json",
+    "must_match_this_lock": true,
+    "scope_mismatch_is_fatal": true,
+    "candidate_may_not_self_redefine_stage": true
+  }
+}
