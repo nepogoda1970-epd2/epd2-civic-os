@@ -1,7 +1,15 @@
 name: PILOT-02 Docker Verification
 
 on:
+  push:
+    branches:
+      - pilot02-verify
+    paths-ignore:
+      - PILOT02_VERIFY_RESULT.md
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   verify:
@@ -12,32 +20,192 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Environment
+        id: envcheck
+        shell: bash
         run: |
-          uname -a
-          cat /etc/os-release
-          docker --version
-          docker compose version
-          ls -l /dev/fd
-          bash -c 'cat < <(printf "process-substitution-ok\n")'
+          set +e
+          {
+            echo "## Environment"
+            uname -a
+            cat /etc/os-release
+            docker --version
+            docker compose version
+            ls -l /dev/fd
+            bash -c 'cat < <(printf "process-substitution-ok\n")'
+          } 2>&1 | tee environment.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Verify internal checksums
+      - name: Verify candidate ZIP
+        id: integrity
+        shell: bash
         run: |
-          sha256sum -c SHA256SUMS.txt
+          set +e
+          ZIP="EPD2_PILOT-02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.0.zip"
+          EXPECTED="6af0dbba39048ae50d358de74c2e758425b5a017dd058c96e196ffb21e381d12"
+          {
+            set -euo pipefail
+            ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+            echo "ZIP_SHA256=$ACTUAL"
+            test "$ACTUAL" = "$EXPECTED"
+            rm -rf /tmp/pilot02-candidate
+            mkdir -p /tmp/pilot02-candidate
+            unzip -q "$ZIP" -d /tmp/pilot02-candidate
+            ROOT="$(find /tmp/pilot02-candidate -mindepth 1 -maxdepth 1 -type d | head -n1)"
+            test -n "$ROOT"
+            echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+            cd "$ROOT"
+            sha256sum -c SHA256SUMS.txt
+          } 2>&1 | tee integrity.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Run PILOT-02 product smoke
+        id: smoke
+        if: steps.integrity.outputs.rc == '0'
+        shell: bash
         env:
           BUILDKIT_PROGRESS: plain
         run: |
-          set -o pipefail
-          bash scripts/pilot02/product-smoke.sh 2>&1 | tee pilot02-product-smoke.log
+          set +e
+          cd "$CANDIDATE_ROOT"
+          bash scripts/pilot02/product-smoke.sh 2>&1 | tee "$GITHUB_WORKSPACE/pilot02-product-smoke.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Verify success marker
+      - name: Capture Docker diagnostics
+        if: always() && steps.integrity.outputs.rc == '0'
+        shell: bash
         run: |
-          grep -F "PILOT-02 PRODUCT SMOKE OK" pilot02-product-smoke.log
+          set +e
+          cd "$CANDIDATE_ROOT"
+          ENVFILE="deploy/pilot/.env"
+          COMPOSE=(docker compose --env-file "$ENVFILE" -f deploy/pilot/compose.yaml)
+          {
+            echo "## docker compose ps -a"
+            "${COMPOSE[@]}" ps -a || true
+            echo
+            echo "## runtime inspect"
+            docker inspect epd2-pilot-01-runtime-1 2>&1 || true
+            echo
+            echo "## runtime logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps runtime 2>&1 || true
+            echo
+            echo "## voting logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps voting 2>&1 || true
+            echo
+            echo "## database logs (tail 200)"
+            "${COMPOSE[@]}" logs --no-color --timestamps --tail=200 database 2>&1 || true
+            echo
+            echo "## frontend logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps frontend 2>&1 || true
+          } | tee "$GITHUB_WORKSPACE/docker-diagnostics.log"
+          exit 0
 
-      - name: Upload raw log
+      - name: Check success marker
+        id: marker
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          if [ -f pilot02-product-smoke.log ]; then
+            grep -F "PILOT-02 PRODUCT SMOKE OK" pilot02-product-smoke.log
+            rc=$?
+          else
+            echo "pilot02-product-smoke.log not created"
+            rc=99
+          fi
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Write machine-readable result
+        if: always()
+        shell: bash
+        run: |
+          ENV_RC='${{ steps.envcheck.outputs.rc }}'
+          INT_RC='${{ steps.integrity.outputs.rc }}'
+          SMOKE_RC='${{ steps.smoke.outputs.rc }}'
+          MARKER_RC='${{ steps.marker.outputs.rc }}'
+          [ -n "$ENV_RC" ] || ENV_RC=98
+          [ -n "$INT_RC" ] || INT_RC=98
+          [ -n "$SMOKE_RC" ] || SMOKE_RC=98
+          [ -n "$MARKER_RC" ] || MARKER_RC=98
+
+          if [ "$ENV_RC" = 0 ] && [ "$INT_RC" = 0 ] && [ "$SMOKE_RC" = 0 ] && [ "$MARKER_RC" = 0 ]; then
+            VERDICT="VERIFIED — PILOT-02 OUTCOME A CONFIRMED"
+          elif [ "$ENV_RC" != 0 ]; then
+            VERDICT="ENVIRONMENT BLOCKED — environment precheck failed"
+          elif [ "$INT_RC" != 0 ]; then
+            VERDICT="NOT VERIFIED — candidate integrity/extraction failed"
+          else
+            VERDICT="NOT VERIFIED — PILOT-02 product smoke failed"
+          fi
+
+          {
+            echo "# PILOT-02 Docker Verification Result"
+            echo
+            echo "**Verdict:** $VERDICT"
+            echo
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Environment rc: $ENV_RC"
+            echo "- Integrity rc: $INT_RC"
+            echo "- Smoke rc: $SMOKE_RC"
+            echo "- Success-marker rc: $MARKER_RC"
+            echo
+            echo "## Environment log"
+            echo '```text'
+            cat environment.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## Integrity log (tail)"
+            echo '```text'
+            tail -n 80 integrity.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## Product smoke log (tail)"
+            echo '```text'
+            tail -n 250 pilot02-product-smoke.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## Docker diagnostics (tail)"
+            echo '```text'
+            tail -n 500 docker-diagnostics.log 2>/dev/null || true
+            echo '```'
+          } > PILOT02_VERIFY_RESULT.md
+
+      - name: Commit result back to verification branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PILOT02_VERIFY_RESULT.md
+          git diff --cached --quiet && exit 0
+          git commit -m "record PILOT-02 Docker verification result"
+          git push origin HEAD:pilot02-verify
+
+      - name: Upload raw logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pilot02-product-smoke-log
-          path: pilot02-product-smoke.log
+          path: |
+            pilot02-product-smoke.log
+            docker-diagnostics.log
+            environment.log
+            integrity.log
+            PILOT02_VERIFY_RESULT.md
+          if-no-files-found: ignore
+
+      - name: Final gate
+        if: always()
+        shell: bash
+        run: |
+          test '${{ steps.envcheck.outputs.rc }}' = '0'
+          test '${{ steps.integrity.outputs.rc }}' = '0'
+          test '${{ steps.smoke.outputs.rc }}' = '0'
+          test '${{ steps.marker.outputs.rc }}' = '0'
