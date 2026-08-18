@@ -42,8 +42,8 @@ jobs:
         shell: bash
         run: |
           set +e
-          ZIP="EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.1_C3.zip"
-          EXPECTED="0260925694906939a8511571893d36c8b1a14306914610ece76d337161a4a6d7"
+          ZIP="EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip"
+          EXPECTED="261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e"
           {
             set -euo pipefail
             ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
