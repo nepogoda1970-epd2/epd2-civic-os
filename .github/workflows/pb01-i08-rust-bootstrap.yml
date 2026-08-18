@@ -23,7 +23,8 @@ jobs:
       - name: Materialize verifier source
         run: |
           mkdir -p i08-bootstrap/src
-          base64 -d i08-bootstrap/main.rs.gz.b64 | gzip -d > i08-bootstrap/src/main.rs
+          cat i08-bootstrap/main.rs.gz.b64.part1 i08-bootstrap/main.rs.gz.b64.part2 | base64 -d | gzip -d > i08-bootstrap/src/main.rs
+          echo "c6f042635ef2980b6ec2514ff7e2221815b6493cd5f7d6251608eb753e6a8ad9  i08-bootstrap/src/main.rs" | sha256sum -c -
 
       - name: Install pinned Rust 1.97.1
         run: rustup toolchain install 1.97.1 --profile minimal
@@ -64,3 +65,15 @@ jobs:
           path: i08-rust-bootstrap.tgz
           if-no-files-found: error
           retention-days: 7
+
+      - name: Package pinned Rust toolchain for local live validation
+        run: |
+          tar -C "$HOME/.rustup/toolchains" -czf rust-toolchain-1.97.1-x86_64-unknown-linux-gnu.tgz 1.97.1-x86_64-unknown-linux-gnu
+
+      - name: Upload pinned Rust toolchain artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i08-rust-toolchain-1.97.1
+          path: rust-toolchain-1.97.1-x86_64-unknown-linux-gnu.tgz
+          if-no-files-found: error
+          retention-days: 2
