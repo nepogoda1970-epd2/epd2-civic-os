@@ -1,0 +1,28 @@
+name: Temporary I07 Node 24.19 runtime transport
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  node-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and verify exact Node 24.19.0 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://nodejs.org/download/release/latest-krypton/node-v24.19.0-linux-x64.tar.xz'
+          curl --fail --location --retry 3 "$url" -o /tmp/node-v24.19.0-linux-x64.tar.xz
+          echo '14b342e71204f811bde6153be8e04b62aef63c236fef92b55f9c83154b409647  /tmp/node-v24.19.0-linux-x64.tar.xz' | sha256sum -c -
+      - name: Upload verified runtime archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: i07-node-v24.19.0-linux-x64
+          path: /tmp/node-v24.19.0-linux-x64.tar.xz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
