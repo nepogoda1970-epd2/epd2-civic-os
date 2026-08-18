@@ -1,0 +1,28 @@
+name: Temporary I06 C1 PostgreSQL 16 runtime transport
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pg16-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download PostgreSQL 16.14 x86_64 GNU runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://github.com/theseus-rs/postgresql-binaries/releases/download/16.14.0/postgresql-16.14.0-x86_64-unknown-linux-gnu.tar.gz'
+          curl --fail --location --retry 3 "$url" -o /tmp/postgresql-16.14.0-x86_64-unknown-linux-gnu.tar.gz
+          echo '3541705c9ca2fdbb0bfc7562b10a36aac155f18d45577d8ec6725b874ccada4a  /tmp/postgresql-16.14.0-x86_64-unknown-linux-gnu.tar.gz' | sha256sum -c -
+      - name: Upload verified runtime archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: i06-c1-postgresql-16.14-runtime
+          path: /tmp/postgresql-16.14.0-x86_64-unknown-linux-gnu.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
