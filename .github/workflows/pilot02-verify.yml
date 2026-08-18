@@ -1,6 +1,9 @@
 name: PILOT-02 Docker Verification
 
 on:
+  push:
+    branches:
+      - pilot02-verify
   workflow_dispatch:
 
 jobs:
@@ -20,8 +23,21 @@ jobs:
           ls -l /dev/fd
           bash -c 'cat < <(printf "process-substitution-ok\n")'
 
-      - name: Verify internal checksums
+      - name: Verify candidate ZIP
         run: |
+          set -euo pipefail
+          ZIP="EPD2_PILOT-02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.0.zip"
+          EXPECTED="6af0dbba39048ae50d358de74c2e758425b5a017dd058c96e196ffb21e381d12"
+          ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+          echo "ZIP_SHA256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED"
+          rm -rf /tmp/pilot02-candidate
+          mkdir -p /tmp/pilot02-candidate
+          unzip -q "$ZIP" -d /tmp/pilot02-candidate
+          ROOT="$(find /tmp/pilot02-candidate -mindepth 1 -maxdepth 1 -type d | head -n1)"
+          test -n "$ROOT"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          cd "$ROOT"
           sha256sum -c SHA256SUMS.txt
 
       - name: Run PILOT-02 product smoke
@@ -29,7 +45,8 @@ jobs:
           BUILDKIT_PROGRESS: plain
         run: |
           set -o pipefail
-          bash scripts/pilot02/product-smoke.sh 2>&1 | tee pilot02-product-smoke.log
+          cd "$CANDIDATE_ROOT"
+          bash scripts/pilot02/product-smoke.sh 2>&1 | tee "$GITHUB_WORKSPACE/pilot02-product-smoke.log"
 
       - name: Verify success marker
         run: |
