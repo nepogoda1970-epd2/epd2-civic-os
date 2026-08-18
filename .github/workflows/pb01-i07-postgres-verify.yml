@@ -1,0 +1,195 @@
+name: PB01-I07 C1 Exact Candidate Verification
+
+on:
+  push:
+    branches:
+      - pilot02-verify
+    paths-ignore:
+      - PB01_I07_VERIFY_RESULT.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-i07:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Set up Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Install PostgreSQL 16 and tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          echo "Node: $(node --version)"
+          echo "Go: $(go version)"
+          /usr/lib/postgresql/16/bin/postgres --version
+          test "$(node --version)" = "v24.19.0"
+          /usr/lib/postgresql/16/bin/postgres --version | grep -F 'PostgreSQL) 16.'
+
+      - name: Verify exact candidate and unpack
+        id: integrity
+        shell: bash
+        run: |
+          set +e
+          ZIP="EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1.zip"
+          EXPECTED="32d5026f5398ea867997e6fddd472bf7eb59e636612a021864f4a07031d70c79"
+          {
+            set -euo pipefail
+            ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+            echo "ZIP_SHA256=$ACTUAL"
+            test "$ACTUAL" = "$EXPECTED"
+            rm -rf /tmp/pb01-i07-c1
+            mkdir -p /tmp/pb01-i07-c1
+            unzip -q "$ZIP" -d /tmp/pb01-i07-c1
+            mapfile -t ROOTS < <(find /tmp/pb01-i07-c1 -mindepth 1 -maxdepth 1 -type d)
+            test "${#ROOTS[@]}" -eq 1
+            ROOT="${ROOTS[0]}"
+            echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+            cd "$ROOT"
+            sha256sum -c SHA256SUMS.txt
+          } 2>&1 | tee integrity.log
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Install candidate dependencies
+        id: deps
+        if: steps.integrity.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          npm ci --ignore-scripts 2>&1 | tee "$GITHUB_WORKSPACE/i07-deps.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Prove packaged PostgreSQL evidence alone is rejected
+        id: stale
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          rm -f .i07-current-pg-run-token.json
+          node scripts/i07_final_validate.mjs > "$GITHUB_WORKSPACE/i07-stale-evidence.log" 2>&1
+          rc=$?
+          cat "$GITHUB_WORKSPACE/i07-stale-evidence.log"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -eq 0 ]; then
+            echo "ERROR: packaged/stale PostgreSQL evidence was accepted" >&2
+            exit 1
+          fi
+          exit 0
+
+      - name: Run live PostgreSQL 16 I07 acceptance 20/20
+        id: postgres
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
+        env:
+          EPD2_I07_PG_BIN: /usr/lib/postgresql/16/bin
+          EPD2_I07_NODE_BIN: ${{ env.NODE_HOME }}/bin/node
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          export EPD2_I07_NODE_BIN="$(command -v node)"
+          npm run test:i07:postgres 2>&1 | tee "$GITHUB_WORKSPACE/i07-postgres.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Run validate:i07 consuming current fresh attestation
+        id: validate
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0' && steps.postgres.outputs.rc == '0'
+        shell: bash
+        env:
+          EPD2_I07_PG_BIN: /usr/lib/postgresql/16/bin
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          npm run validate:i07 2>&1 | tee "$GITHUB_WORKSPACE/i07-validate.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Record verification result
+        if: always()
+        shell: bash
+        run: |
+          INT_RC='${{ steps.integrity.outputs.rc }}'; [ -n "$INT_RC" ] || INT_RC=98
+          DEP_RC='${{ steps.deps.outputs.rc }}'; [ -n "$DEP_RC" ] || DEP_RC=98
+          STALE_RC='${{ steps.stale.outputs.rc }}'; [ -n "$STALE_RC" ] || STALE_RC=98
+          PG_RC='${{ steps.postgres.outputs.rc }}'; [ -n "$PG_RC" ] || PG_RC=98
+          VAL_RC='${{ steps.validate.outputs.rc }}'; [ -n "$VAL_RC" ] || VAL_RC=98
+          NODEV="$(node --version 2>/dev/null || true)"
+          GOV="$(go version 2>/dev/null || true)"
+          PGV="$(/usr/lib/postgresql/16/bin/postgres --version 2>/dev/null || true)"
+          if [ "$INT_RC" = 0 ] && [ "$DEP_RC" = 0 ] && [ "$STALE_RC" != 0 ] && [ "$PG_RC" = 0 ] && [ "$VAL_RC" = 0 ]; then
+            VERDICT="PASS — PB01-I07 C1 external PostgreSQL gate passed"
+          else
+            VERDICT="NOT VERIFIED — PB01-I07 C1 external gate failed"
+          fi
+          {
+            echo '# PB01-I07 C1 Verification Result'
+            echo
+            echo "**Verdict:** $VERDICT"
+            echo
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo '- Candidate: `EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1.zip`'
+            echo '- Expected SHA256: `32d5026f5398ea867997e6fddd472bf7eb59e636612a021864f4a07031d70c79`'
+            echo "- Node: \`$NODEV\`"
+            echo "- Go: \`$GOV\`"
+            echo "- PostgreSQL: \`$PGV\`"
+            echo "- Integrity rc: $INT_RC"
+            echo "- Dependency install rc: $DEP_RC"
+            echo "- Packaged-evidence rejection rc: $STALE_RC (non-zero required)"
+            echo "- PostgreSQL 16 live gate rc: $PG_RC"
+            echo "- validate:i07 rc: $VAL_RC"
+            echo
+            echo '## PostgreSQL log tail'
+            echo '```text'
+            tail -n 160 i07-postgres.log 2>/dev/null || true
+            echo '```'
+            echo
+            echo '## validate:i07 log tail'
+            echo '```text'
+            tail -n 160 i07-validate.log 2>/dev/null || true
+            echo '```'
+          } > PB01_I07_VERIFY_RESULT.md
+
+      - name: Commit result back to verification branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PB01_I07_VERIFY_RESULT.md
+          git diff --cached --quiet && exit 0
+          git commit -m "record PB01-I07 C1 verification result"
+          git push origin HEAD:pilot02-verify
+
+      - name: Final gate
+        if: always()
+        shell: bash
+        run: |
+          test '${{ steps.integrity.outputs.rc }}' = '0'
+          test '${{ steps.deps.outputs.rc }}' = '0'
+          test '${{ steps.stale.outputs.rc }}' != '0'
+          test '${{ steps.postgres.outputs.rc }}' = '0'
+          test '${{ steps.validate.outputs.rc }}' = '0'
