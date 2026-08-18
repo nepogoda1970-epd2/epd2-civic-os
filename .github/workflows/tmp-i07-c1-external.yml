@@ -1,0 +1,87 @@
+name: Temporary PB01-I07 C1 exact-candidate verification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-i07-c1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require exact C1 candidate ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          f='artifacts/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1.zip'
+          test -f "$f"
+          echo '32d5026f5398ea867997e6fddd472bf7eb59e636612a021864f4a07031d70c79  '"$f" | sha256sum -c -
+
+      - name: Set up exact Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Set up Go 1.23.2
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: Install PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16
+          /usr/lib/postgresql/16/bin/postgres --version
+          node --version
+          go version
+
+      - name: Unpack exact candidate and verify internal SHA256SUMS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/i07-c1
+          unzip -q artifacts/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1.zip -d /tmp/i07-c1
+          cd /tmp/i07-c1/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1
+          sha256sum -c SHA256SUMS.txt
+          npm ci --ignore-scripts --offline
+
+      - name: PostgreSQL 16 acceptance — 20/20
+        shell: bash
+        env:
+          EPD2_I07_PG_BIN: /usr/lib/postgresql/16/bin
+        run: |
+          set -euo pipefail
+          cd /tmp/i07-c1/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1
+          npm run test:i07:postgres | tee /tmp/i07-postgresql.log
+          grep -F 'PB01-I07 PostgreSQL acceptance: 20/20 PASS' /tmp/i07-postgresql.log
+
+      - name: Current-run validate:i07
+        shell: bash
+        env:
+          EPD2_I07_PG_BIN: /usr/lib/postgresql/16/bin
+        run: |
+          set -euo pipefail
+          cd /tmp/i07-c1/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1
+          npm run validate:i07 | tee /tmp/i07-validation.log
+          node -e "const r=require('./evidence/results/i07/final-validation.json'); if(r.status!=='PASS'||r.checks.postgres_16_node_24_19!==true||r.postgresql_attestation_errors.length) process.exit(1)"
+          test ! -e .i07-current-pg-run-token.json
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i07-c1-external-verification
+          path: |
+            /tmp/i07-postgresql.log
+            /tmp/i07-validation.log
+            /tmp/i07-c1/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1/evidence/results/i07/postgresql-acceptance.json
+            /tmp/i07-c1/EPD2_VCRYPTO-PB01-I07_PUBLIC_RESULT_EVIDENCE_AND_INDEPENDENT_E2E_VERIFICATION_CANDIDATE_0.2_C1/evidence/results/i07/final-validation.json
+          if-no-files-found: warn
+          retention-days: 14
