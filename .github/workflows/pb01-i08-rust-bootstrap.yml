@@ -2,6 +2,10 @@ name: PB01-I08 Rust bootstrap
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/pb01-i08-trigger.txt"
 
 permissions:
   contents: read
