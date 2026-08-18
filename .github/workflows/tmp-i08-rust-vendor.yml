@@ -1,0 +1,41 @@
+name: Temporary I08 Rust dependency closure
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rust-vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact Rust 1.97.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          rustc --version --verbose
+          cargo --version --verbose
+      - name: Resolve and vendor exact closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd i08-rust-bootstrap
+          cargo generate-lockfile
+          cargo vendor --locked vendor > cargo-vendor-config.toml
+          cargo tree --locked > cargo-tree.txt
+          tar -czf /tmp/i08-rust-dependency-closure.tar.gz Cargo.lock vendor cargo-vendor-config.toml cargo-tree.txt
+          sha256sum /tmp/i08-rust-dependency-closure.tar.gz > /tmp/i08-rust-dependency-closure.sha256
+      - name: Upload dependency closure
+        uses: actions/upload-artifact@v4
+        with:
+          name: i08-rust-dependency-closure
+          path: |
+            /tmp/i08-rust-dependency-closure.tar.gz
+            /tmp/i08-rust-dependency-closure.sha256
+          retention-days: 1
+          compression-level: 0
