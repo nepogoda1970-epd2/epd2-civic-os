@@ -23,10 +23,10 @@ jobs:
       - name: Checkout verification branch
         uses: actions/checkout@v4
 
-      - name: Set up Node 22 LTS
+      - name: Set up Node 24.19.0
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: 24.19.0
 
       - name: Set up Go 1.23
         uses: actions/setup-go@v5
@@ -111,7 +111,7 @@ jobs:
           set +e
           root=$(cat i06-root.txt)
           cd "$root"
-          EPD2_I06_PG_BIN="$PG_BINDIR" bash scripts/run_i06_postgres_validation.sh > "$GITHUB_WORKSPACE/postgres.log" 2>&1
+          NODE_OPTIONS="--test-reporter=tap" EPD2_I06_PG_BIN="$PG_BINDIR" bash scripts/run_i06_postgres_validation.sh > "$GITHUB_WORKSPACE/postgres.log" 2>&1
           rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_WORKSPACE/postgres.log"
@@ -140,6 +140,8 @@ jobs:
             echo "- Commit: $GITHUB_SHA"
             echo "- Candidate: \`$CANDIDATE_ZIP\`"
             echo "- Expected SHA-256: \`$EXPECTED_SHA256\`"
+            echo "- Node: \`$(node --version)\`"
+            echo "- PostgreSQL: \`$(\"$PG_BINDIR/postgres\" --version)\`"
             echo "- Integrity rc: ${INTEGRITY_RC:-99}"
             echo "- Dependency install rc: ${DEPS_RC:-99}"
             echo "- Crypto/verifier rc: ${CRYPTO_RC:-99}"
