@@ -83,6 +83,43 @@ jobs:
       - name: Browser, accessibility, and visual regression tests
         run: npm run test:browser --workspace=frontend/web-shell
 
-# This workflow does not use any repository secrets, does not deploy
-# anything, and does not publish any package. It only verifies the
-# repository skeleton.
+  i08-rust-bootstrap:
+    name: PB01 I08 Rust locked offline bootstrap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Materialize verifier source
+        run: |
+          mkdir -p i08-bootstrap/src
+          base64 -d i08-bootstrap/main.rs.gz.b64 | gzip -d > i08-bootstrap/src/main.rs
+      - name: Install pinned Rust
+        run: rustup toolchain install 1.97.1 --profile minimal
+      - name: Generate exact lock and build
+        working-directory: i08-bootstrap
+        run: |
+          rustc --version | tee rustc-version.txt
+          cargo --version | tee cargo-version.txt
+          cargo generate-lockfile
+          cargo build --locked --release
+          cargo test --locked
+          cargo tree --locked > dependency-tree.txt
+          cargo metadata --locked --format-version 1 > cargo-metadata.json
+          sha256sum Cargo.lock target/release/epd2-i08-verifier-c > bootstrap-sha256.txt
+      - name: Vendor closure and prove offline locked build
+        working-directory: i08-bootstrap
+        run: |
+          mkdir -p .cargo
+          cargo vendor --locked vendor > .cargo/config.toml
+          rm -rf target
+          cargo build --locked --release --offline
+          cargo test --locked --offline
+          sha256sum target/release/epd2-i08-verifier-c >> bootstrap-sha256.txt
+      - name: Package evidence
+        run: tar -C i08-bootstrap -czf i08-rust-bootstrap.tgz Cargo.lock rustc-version.txt cargo-version.txt dependency-tree.txt cargo-metadata.json bootstrap-sha256.txt .cargo vendor target/release/epd2-i08-verifier-c
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i08-rust-bootstrap
+          path: i08-rust-bootstrap.tgz
+          if-no-files-found: error
+
+# This workflow does not use any repository secrets and does not deploy or publish.
