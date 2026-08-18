@@ -1,15 +1,17 @@
 # PB01-I06 External PostgreSQL Verification Result
 
-**Verdict:** NOT VERIFIED
+**Verdict:** PASS — PB01-I06 external PostgreSQL gate passed
 
-- Workflow run: 32149098908
-- Commit: 1b1336125d6e8b1614380a3d3e0dc2764b1d95f9
-- Candidate: `EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1.zip`
-- Expected SHA-256: `1f81f7f1193e92ffbb60be75b0b4ebc3f8c2879a6a4407c425a9a77426dc30be`
+- Workflow run: 32179048112
+- Commit: 301754fb30e0f7866d4430f447537b5624dd6fc8
+- Candidate: `EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip`
+- Expected SHA-256: `25114f10c95664e5145e4efc7c381aba4a2d9c3edc83760ee5e9bc72e55c532e`
+- Node: `v24.19.0`
+- PostgreSQL: ``
 - Integrity rc: 0
 - Dependency install rc: 0
 - Crypto/verifier rc: 0
-- PostgreSQL 16 rc: 1
+- PostgreSQL 16 rc: 0
 
 ## Integrity log (tail)
 ```text
@@ -138,7 +140,7 @@
 ## Dependency log (tail)
 ```text
 
-added 17 packages, and audited 18 packages in 2s
+added 17 packages, and audited 18 packages in 765ms
 
 found 0 vulnerabilities
 ```
@@ -153,29 +155,29 @@ found 0 vulnerabilities
 > epd2-pb01-i06-candidate@0.1.0 test:i06
 > node --test --test-concurrency=1 tests/i06-i05-corrective.test.mjs tests/i06-vectors.test.mjs tests/i06-mutation-vectors.test.mjs tests/i06-threshold-negatives.test.mjs tests/i06-api-boundary.test.mjs tests/i06-static-security.test.mjs
 
-✔ I06 API never accepts caller-selected aggregate/ciphertext input (129.37725ms)
-✔ I05 corrective recomputes digest from persisted aggregate bytes and I06 refuses byte-only mutation before ceremony access (192.159001ms)
-✔ stale/unauthorized I05 tally cannot enter guardian/decryption path (0.518071ms)
-✔ I06-N01 frozen mutation vector rejects (6.049113ms)
-✔ I06-N02 frozen mutation vector rejects (1.69739ms)
-✔ I06-N03 frozen mutation vector rejects (1.187022ms)
-✔ I06-N04 frozen mutation vector rejects (44.719383ms)
-✔ I06-N05 frozen mutation vector rejects (40.932731ms)
-✔ I06-N06 frozen mutation vector rejects (39.101774ms)
-✔ I06-N07 frozen mutation vector rejects (1.344705ms)
-✔ I06-N08 frozen mutation vector rejects (1.075055ms)
-✔ I06-N09 frozen mutation vector rejects (0.91646ms)
-✔ candidate contains no guardian private key material or decryption/admin secret API (30.454089ms)
-✔ I06 source has no plaintext result before threshold API route and no arbitrary aggregate input surface (1.341148ms)
-✔ mutation negatives: wrong aggregate/election/guardian/digests/plaintext/record fail closed (3.316293ms)
-✔ T-1 share has no Belenios plaintext result (35.483853ms)
-✔ invalid proof among threshold shares is rejected by pinned upstream Belenios (41.174681ms)
-✔ duplicate guardian cannot form threshold (39.016216ms)
-✔ I06-V01 real Belenios threshold vector verifies (160.488412ms)
-✔ I06-V02 real Belenios threshold vector verifies (191.081493ms)
-✔ I06-V03 real Belenios threshold vector verifies (190.391914ms)
-✔ I06-V04 real Belenios threshold vector verifies (118.490002ms)
-✔ N=5 T=3 different valid threshold subsets and all five give identical plaintext (255.42495ms)
+✔ I06 API never accepts caller-selected aggregate/ciphertext input (49.863455ms)
+✔ I05 corrective recomputes digest from persisted aggregate bytes and I06 refuses byte-only mutation before ceremony access (209.351754ms)
+✔ stale/unauthorized I05 tally cannot enter guardian/decryption path (0.641093ms)
+✔ I06-N01 frozen mutation vector rejects (5.240768ms)
+✔ I06-N02 frozen mutation vector rejects (1.351371ms)
+✔ I06-N03 frozen mutation vector rejects (1.155137ms)
+✔ I06-N04 frozen mutation vector rejects (50.429801ms)
+✔ I06-N05 frozen mutation vector rejects (46.958428ms)
+✔ I06-N06 frozen mutation vector rejects (41.34488ms)
+✔ I06-N07 frozen mutation vector rejects (1.136258ms)
+✔ I06-N08 frozen mutation vector rejects (0.948005ms)
+✔ I06-N09 frozen mutation vector rejects (0.79165ms)
+✔ candidate contains no guardian private key material or decryption/admin secret API (145.026959ms)
+✔ I06 source has no plaintext result before threshold API route and no arbitrary aggregate input surface (1.211581ms)
+✔ mutation negatives: wrong aggregate/election/guardian/digests/plaintext/record fail closed (2.961722ms)
+✔ T-1 share has no Belenios plaintext result (34.335163ms)
+✔ invalid proof among threshold shares is rejected by pinned upstream Belenios (40.378557ms)
+✔ duplicate guardian cannot form threshold (37.527972ms)
+✔ I06-V01 real Belenios threshold vector verifies (142.037126ms)
+✔ I06-V02 real Belenios threshold vector verifies (193.645788ms)
+✔ I06-V03 real Belenios threshold vector verifies (194.676362ms)
+✔ I06-V04 real Belenios threshold vector verifies (115.632138ms)
+✔ N=5 T=3 different valid threshold subsets and all five give identical plaintext (257.034927ms)
 ℹ tests 23
 ℹ suites 0
 ℹ pass 23
@@ -183,7 +185,7 @@ found 0 vulnerabilities
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 2157.904251
+ℹ duration_ms 2116.695334
 
 > epd2-pb01-i06-candidate@0.1.0 verify:i06:a
 > node verifier/i06_verifier_a.mjs
@@ -282,493 +284,203 @@ found 0 vulnerabilities
     "predecessor_semantic_regression_free": true,
     "i05_corrective_present": true,
     "no_guardian_private_key_files": true,
-    "postgres_runtime_executed": false
+    "postgres_runtime_executed": true
   },
-  "outcome": "Outcome C — BLOCKED",
+  "outcome": "Outcome A — I06 ESTABLISHED",
   "status": "PASS_WITH_CLASSIFICATION"
 }
 ```
 
 ## PostgreSQL 16 log
 ```text
+postgres (PostgreSQL) 16.14 (Ubuntu 16.14-1.pgdg24.04+1)
 waiting for server to start.... done
 server started
-applied 001_i03_submission_ledger.sql
-applied 002_i03_roles.sql
-applied 003_i04_finalization.sql
-applied 004_i04_roles.sql
-applied 005_i05_tally.sql
-applied 006_i05_roles.sql
-applied 007_i06_guardian_decryption.sql
-applied 008_i06_roles.sql
-16.14 (Ubuntu 16.14-1.pgdg24.04+1)
-✔ I05/PG append-only triggers reject mutation of committed tally state even for the schema owner (330.984336ms)
-✔ I05/PG privileged tamper that bypasses the triggers is still detected by evidence and recompute (349.895022ms)
-✔ I05/PG tally runtime cannot mutate I03 or I04 state (240.428691ms)
-✔ I05/PG submission, finalizer and evidence roles cannot mutate I05 tally state (261.104179ms)
-✔ I05/PG tally and evidence roles hold no DDL or TEMP privilege anywhere (236.234358ms)
-✔ I05/PG backup and restore preserve exact aggregate and tally bytes and every digest (859.15516ms)
-✖ I06/PG real threshold ceremony freezes immutable N=3 T=2 public context (97.25043ms)
-✖ I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext (71.591887ms)
-✖ I06/PG duplicate guardian and malformed/invalid share fail closed (82.597382ms)
-✖ I06/PG concurrent final threshold shares converge to one immutable record (98.444872ms)
-✖ I06/PG same-guardian concurrent duplicate race never double-counts threshold (73.419452ms)
-✖ I06/PG CRASH-01 retry deterministically converges (56.435894ms)
-✖ I06/PG CRASH-02 retry deterministically converges (53.839957ms)
-✖ I06/PG CRASH-03 retry deterministically converges (47.589613ms)
-✖ I06/PG CRASH-04 retry deterministically converges (49.908224ms)
-✖ I06/PG hard database crash/restart preserves same immutable plaintext and record digest (93.843188ms)
-✖ I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist (69.969969ms)
-✖ I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses (102.269757ms)
-✖ I06/PG privileged tamper: guardian public key after freeze is detected (78.566743ms)
-✖ I06/PG privileged tamper: threshold after ceremony freeze is detected (54.036971ms)
-✖ I06/PG privileged tamper: frozen guardian-set member replacement is detected (54.834104ms)
-✖ I06/PG privileged tamper: partial-decryption factor bytes are detected (51.975157ms)
-✖ I06/PG privileged tamper: partial-decryption proof bytes are detected (53.466346ms)
-✖ I06/PG privileged tamper: accepted share digest column is detected (49.694977ms)
-✖ I06/PG privileged tamper: aggregate digest alone is detected (51.187086ms)
-✖ I06/PG privileged tamper: final plaintext bytes are detected (49.685862ms)
-✖ I06/PG privileged tamper: final decryption-record digest is detected (49.893454ms)
-✖ I06/PG roles enforce coordinator/ingester/finalizer/runtime separation (47.829227ms)
-ℹ tests 28
-ℹ suites 0
-ℹ pass 6
-ℹ fail 22
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 4315.512196
-
-✖ failing tests:
-
-test at tests/i06-postgres-ceremony-decryption.test.mjs:2:1
-✖ I06/PG real threshold ceremony freezes immutable N=3 T=2 public context (97.25043ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-ceremony-decryption.test.mjs:2:98)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-ceremony-decryption.test.mjs:3:1
-✖ I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext (71.591887ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-ceremony-decryption.test.mjs:3:147)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-ceremony-decryption.test.mjs:4:1
-✖ I06/PG duplicate guardian and malformed/invalid share fail closed (82.597382ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-ceremony-decryption.test.mjs:4:92)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:2:1
-✖ I06/PG concurrent final threshold shares converge to one immutable record (98.444872ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:2:100)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:3:1
-✖ I06/PG same-guardian concurrent duplicate race never double-counts threshold (73.419452ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:3:103)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:9:4
-✖ I06/PG CRASH-01 retry deterministically converges (56.435894ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:9:93)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:9:4
-✖ I06/PG CRASH-02 retry deterministically converges (53.839957ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:9:93)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:9:4
-✖ I06/PG CRASH-03 retry deterministically converges (47.589613ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:9:93)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-concurrency-crash.test.mjs:9:4
-✖ I06/PG CRASH-04 retry deterministically converges (49.908224ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-concurrency-crash.test.mjs:9:93)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-restart-backup.test.mjs:3:1
-✖ I06/PG hard database crash/restart preserves same immutable plaintext and record digest (93.843188ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async complete (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-restart-backup.test.mjs:2:53)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-restart-backup.test.mjs:3:185)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-restart-backup.test.mjs:4:1
-✖ I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist (69.969969ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async complete (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-restart-backup.test.mjs:2:53)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-restart-backup.test.mjs:4:144)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:84:1
-✖ I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses (102.269757ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:85:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:109:1
-✖ I06/PG privileged tamper: guardian public key after freeze is detected (78.566743ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:110:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:118:1
-✖ I06/PG privileged tamper: threshold after ceremony freeze is detected (54.036971ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:119:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:127:1
-✖ I06/PG privileged tamper: frozen guardian-set member replacement is detected (54.834104ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:128:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:136:1
-✖ I06/PG privileged tamper: partial-decryption factor bytes are detected (51.975157ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:137:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:142:1
-✖ I06/PG privileged tamper: partial-decryption proof bytes are detected (53.466346ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:143:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:148:1
-✖ I06/PG privileged tamper: accepted share digest column is detected (49.694977ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:149:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:154:1
-✖ I06/PG privileged tamper: aggregate digest alone is detected (51.187086ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:155:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:164:1
-✖ I06/PG privileged tamper: final plaintext bytes are detected (49.685862ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:165:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:173:1
-✖ I06/PG privileged tamper: final decryption-record digest is detected (49.893454ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:174:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-
-test at tests/i06-postgres-tamper-roles.test.mjs:182:1
-✖ I06/PG roles enforce coordinator/ingester/finalizer/runtime separation (47.829227ms)
-  AssertionError [ERR_ASSERTION]: {"error":"FOREIGN_ELECTION_BALLOT"}
-  
-  422 !== 201
-  
-      at createThresholdChain (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06_postgres_helpers.mjs:44:619)
-      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-      at async completed (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:17:13)
-      at async TestContext.<anonymous> (file:///home/runner/work/epd2-civic-os/epd2-civic-os/i06-unpacked/EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1/tests/i06-postgres-tamper-roles.test.mjs:183:13)
-      at async Test.run (node:internal/test_runner/test:1389:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 422,
-    expected: 201,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
+I06/PG class tamper-and-roles: PostgreSQL 16.x fresh cluster on port 59907; migrations 001-008 applied
+TAP version 13
+# Subtest: I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses
+ok 1 - I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses
+  ---
+  duration_ms: 1066.915515
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: guardian public key after freeze is detected
+ok 2 - I06/PG privileged tamper: guardian public key after freeze is detected
+  ---
+  duration_ms: 556.836562
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: threshold after ceremony freeze is detected
+ok 3 - I06/PG privileged tamper: threshold after ceremony freeze is detected
+  ---
+  duration_ms: 499.22499
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: frozen guardian-set member replacement is detected
+ok 4 - I06/PG privileged tamper: frozen guardian-set member replacement is detected
+  ---
+  duration_ms: 495.185057
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: partial-decryption factor bytes are detected
+ok 5 - I06/PG privileged tamper: partial-decryption factor bytes are detected
+  ---
+  duration_ms: 510.871598
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: partial-decryption proof bytes are detected
+ok 6 - I06/PG privileged tamper: partial-decryption proof bytes are detected
+  ---
+  duration_ms: 522.109586
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: accepted share digest column is detected
+ok 7 - I06/PG privileged tamper: accepted share digest column is detected
+  ---
+  duration_ms: 515.198171
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: aggregate digest alone is detected
+ok 8 - I06/PG privileged tamper: aggregate digest alone is detected
+  ---
+  duration_ms: 498.123228
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: final plaintext bytes are detected
+ok 9 - I06/PG privileged tamper: final plaintext bytes are detected
+  ---
+  duration_ms: 515.477836
+  type: 'test'
+  ...
+# Subtest: I06/PG privileged tamper: final decryption-record digest is detected
+ok 10 - I06/PG privileged tamper: final decryption-record digest is detected
+  ---
+  duration_ms: 532.478387
+  type: 'test'
+  ...
+# Subtest: I06/PG roles enforce coordinator/ingester/finalizer/runtime separation
+ok 11 - I06/PG roles enforce coordinator/ingester/finalizer/runtime separation
+  ---
+  duration_ms: 505.491499
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6359.121759
+I06/PG class tamper-and-roles: 11/11 PASS
+waiting for server to start.... done
+server started
+I06/PG class concurrency-and-crash: PostgreSQL 16.x fresh cluster on port 59908; migrations 001-008 applied
+TAP version 13
+# Subtest: I06/PG concurrent final threshold shares converge to one immutable record
+ok 1 - I06/PG concurrent final threshold shares converge to one immutable record
+  ---
+  duration_ms: 1076.928394
+  type: 'test'
+  ...
+# Subtest: I06/PG same-guardian concurrent duplicate race never double-counts threshold
+ok 2 - I06/PG same-guardian concurrent duplicate race never double-counts threshold
+  ---
+  duration_ms: 337.03404
+  type: 'test'
+  ...
+# Subtest: I06/PG CRASH-01 retry deterministically converges
+ok 3 - I06/PG CRASH-01 retry deterministically converges
+  ---
+  duration_ms: 785.102278
+  type: 'test'
+  ...
+# Subtest: I06/PG CRASH-02 retry deterministically converges
+ok 4 - I06/PG CRASH-02 retry deterministically converges
+  ---
+  duration_ms: 625.497237
+  type: 'test'
+  ...
+# Subtest: I06/PG CRASH-03 retry deterministically converges
+ok 5 - I06/PG CRASH-03 retry deterministically converges
+  ---
+  duration_ms: 772.691932
+  type: 'test'
+  ...
+# Subtest: I06/PG CRASH-04 retry deterministically converges
+ok 6 - I06/PG CRASH-04 retry deterministically converges
+  ---
+  duration_ms: 661.26918
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4388.977058
+I06/PG class concurrency-and-crash: 6/6 PASS
+waiting for server to start.... done
+server started
+I06/PG class ceremony-and-threshold: PostgreSQL 16.x fresh cluster on port 59909; migrations 001-008 applied
+TAP version 13
+# Subtest: I06/PG real threshold ceremony freezes immutable N=3 T=2 public context
+ok 1 - I06/PG real threshold ceremony freezes immutable N=3 T=2 public context
+  ---
+  duration_ms: 648.932584
+  type: 'test'
+  ...
+# Subtest: I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext
+ok 2 - I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext
+  ---
+  duration_ms: 861.225731
+  type: 'test'
+  ...
+# Subtest: I06/PG duplicate guardian and malformed/invalid share fail closed
+ok 3 - I06/PG duplicate guardian and malformed/invalid share fail closed
+  ---
+  duration_ms: 513.892676
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2153.285918
+I06/PG class ceremony-and-threshold: 3/3 PASS
+waiting for server to start.... done
+server started
+I06/PG class restart-and-backup: PostgreSQL 16.x fresh cluster on port 59910; migrations 001-008 applied
+TAP version 13
+# Subtest: I06/PG hard database crash/restart preserves same immutable plaintext and record digest
+ok 1 - I06/PG hard database crash/restart preserves same immutable plaintext and record digest
+  ---
+  duration_ms: 1381.761917
+  type: 'test'
+  ...
+# Subtest: I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist
+ok 2 - I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist
+  ---
+  duration_ms: 1039.583341
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2546.269581
+I06/PG class restart-and-backup: 2/2 PASS
+PB01-I06 PostgreSQL acceptance: 22/22 PASS
 ```

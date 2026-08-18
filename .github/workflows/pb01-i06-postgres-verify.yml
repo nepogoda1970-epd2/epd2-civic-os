@@ -5,7 +5,7 @@ on:
   push:
     branches: [pilot02-verify]
     paths:
-      - 'EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1.zip'
+      - 'EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip'
       - '.github/workflows/pb01-i06-postgres-verify.yml'
 
 permissions:
@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      CANDIDATE_ZIP: EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.1.zip
-      EXPECTED_SHA256: 1f81f7f1193e92ffbb60be75b0b4ebc3f8c2879a6a4407c425a9a77426dc30be
+      CANDIDATE_ZIP: EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip
+      EXPECTED_SHA256: 25114f10c95664e5145e4efc7c381aba4a2d9c3edc83760ee5e9bc72e55c532e
 
     steps:
       - name: Checkout verification branch
@@ -46,10 +46,12 @@ jobs:
 
       - name: Verify exact candidate and unpack
         id: integrity
+        shell: bash
         run: |
           set +e
-          : > integrity.log
+          : > "$GITHUB_WORKSPACE/integrity.log"
           {
+            set -euo pipefail
             echo "candidate=$CANDIDATE_ZIP"
             test -f "$CANDIDATE_ZIP"
             actual=$(sha256sum "$CANDIDATE_ZIP" | awk '{print $1}')
@@ -66,14 +68,16 @@ jobs:
             echo "$root" > i06-root.txt
             cd "$root"
             sha256sum -c SHA256SUMS.txt
-          } >> integrity.log 2>&1
+          } >> "$GITHUB_WORKSPACE/integrity.log" 2>&1
           rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
-          cat integrity.log
+          cat "$GITHUB_WORKSPACE/integrity.log"
           exit 0
 
       - name: Install candidate dependencies offline
         id: deps
+        if: steps.integrity.outputs.rc == '0'
+        shell: bash
         run: |
           set +e
           root=$(cat i06-root.txt)
@@ -84,8 +88,10 @@ jobs:
           cat "$GITHUB_WORKSPACE/deps.log"
           exit 0
 
-      - name: Run cryptographic / verifier gate
+      - name: Run cryptographic and verifier gate
         id: crypto
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
         run: |
           set +e
           root=$(cat i06-root.txt)
@@ -99,11 +105,13 @@ jobs:
 
       - name: Run real PostgreSQL 16 I06 acceptance harness
         id: pg
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
         run: |
           set +e
           root=$(cat i06-root.txt)
           cd "$root"
-          EPD2_I06_PG_BIN="$PG_BINDIR" bash scripts/run_i06_postgres_validation.sh > "$GITHUB_WORKSPACE/postgres.log" 2>&1
+          NODE_OPTIONS="--test-reporter=tap" EPD2_I06_PG_BIN="$PG_BINDIR" bash scripts/run_i06_postgres_validation.sh > "$GITHUB_WORKSPACE/postgres.log" 2>&1
           rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_WORKSPACE/postgres.log"
@@ -116,6 +124,7 @@ jobs:
           DEPS_RC: ${{ steps.deps.outputs.rc }}
           CRYPTO_RC: ${{ steps.crypto.outputs.rc }}
           PG_RC: ${{ steps.pg.outputs.rc }}
+        shell: bash
         run: |
           set -euo pipefail
           verdict="NOT VERIFIED"
@@ -131,6 +140,8 @@ jobs:
             echo "- Commit: $GITHUB_SHA"
             echo "- Candidate: \`$CANDIDATE_ZIP\`"
             echo "- Expected SHA-256: \`$EXPECTED_SHA256\`"
+            echo "- Node: \`$(node --version)\`"
+            echo "- PostgreSQL: \`$(\"$PG_BINDIR/postgres\" --version)\`"
             echo "- Integrity rc: ${INTEGRITY_RC:-99}"
             echo "- Dependency install rc: ${DEPS_RC:-99}"
             echo "- Crypto/verifier rc: ${CRYPTO_RC:-99}"
@@ -138,22 +149,22 @@ jobs:
             echo
             echo "## Integrity log (tail)"
             echo '```text'
-            tail -n 120 integrity.log 2>/dev/null || true
+            tail -n 120 "$GITHUB_WORKSPACE/integrity.log" 2>/dev/null || true
             echo '```'
             echo
             echo "## Dependency log (tail)"
             echo '```text'
-            tail -n 120 deps.log 2>/dev/null || true
+            tail -n 120 "$GITHUB_WORKSPACE/deps.log" 2>/dev/null || true
             echo '```'
             echo
             echo "## Crypto / verifier log (tail)"
             echo '```text'
-            tail -n 240 crypto.log 2>/dev/null || true
+            tail -n 240 "$GITHUB_WORKSPACE/crypto.log" 2>/dev/null || true
             echo '```'
             echo
             echo "## PostgreSQL 16 log"
             echo '```text'
-            cat postgres.log 2>/dev/null || true
+            cat "$GITHUB_WORKSPACE/postgres.log" 2>/dev/null || true
             echo '```'
           } > PB01_I06_VERIFY_RESULT.md
 
@@ -162,7 +173,7 @@ jobs:
           git add PB01_I06_VERIFY_RESULT.md
           if ! git diff --cached --quiet; then
             git commit -m 'record PB01-I06 PostgreSQL verification result'
-            git push
+            git push origin HEAD:pilot02-verify
           fi
 
           test "$verdict" = "PASS — PB01-I06 external PostgreSQL gate passed"
