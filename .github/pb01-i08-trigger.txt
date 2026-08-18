@@ -1,2 +1,3 @@
 PB01-I08 live Rust gate trigger
 retry after Ed25519 subgroup-order fix
+retry with split source payload and exact source SHA gate
