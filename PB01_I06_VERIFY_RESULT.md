@@ -2,10 +2,12 @@
 
 **Verdict:** PASS — PB01-I06 external PostgreSQL gate passed
 
-- Workflow run: 32178860189
-- Commit: cabd32d186d51a2fc947153c91e9071d0fc46f2d
+- Workflow run: 32179048112
+- Commit: 301754fb30e0f7866d4430f447537b5624dd6fc8
 - Candidate: `EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip`
 - Expected SHA-256: `25114f10c95664e5145e4efc7c381aba4a2d9c3edc83760ee5e9bc72e55c532e`
+- Node: `v24.19.0`
+- PostgreSQL: ``
 - Integrity rc: 0
 - Dependency install rc: 0
 - Crypto/verifier rc: 0
@@ -137,156 +139,53 @@
 
 ## Dependency log (tail)
 ```text
-npm warn EBADENGINE Unsupported engine {
-npm warn EBADENGINE   package: 'epd2-pb01-i06-candidate@0.1.0',
-npm warn EBADENGINE   required: { node: '24.19.0' },
-npm warn EBADENGINE   current: { node: 'v22.23.2', npm: '10.9.8' }
-npm warn EBADENGINE }
 
-added 17 packages, and audited 18 packages in 909ms
+added 17 packages, and audited 18 packages in 765ms
 
 found 0 vulnerabilities
 ```
 
 ## Crypto / verifier log (tail)
 ```text
-# (node:2842) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
-# Subtest: I06-N01 frozen mutation vector rejects
-ok 4 - I06-N01 frozen mutation vector rejects
-  ---
-  duration_ms: 6.940643
-  type: 'test'
-  ...
-# Subtest: I06-N02 frozen mutation vector rejects
-ok 5 - I06-N02 frozen mutation vector rejects
-  ---
-  duration_ms: 2.662344
-  type: 'test'
-  ...
-# Subtest: I06-N03 frozen mutation vector rejects
-ok 6 - I06-N03 frozen mutation vector rejects
-  ---
-  duration_ms: 1.375645
-  type: 'test'
-  ...
-# Subtest: I06-N04 frozen mutation vector rejects
-ok 7 - I06-N04 frozen mutation vector rejects
-  ---
-  duration_ms: 46.442117
-  type: 'test'
-  ...
-# Subtest: I06-N05 frozen mutation vector rejects
-ok 8 - I06-N05 frozen mutation vector rejects
-  ---
-  duration_ms: 46.888222
-  type: 'test'
-  ...
-# Subtest: I06-N06 frozen mutation vector rejects
-ok 9 - I06-N06 frozen mutation vector rejects
-  ---
-  duration_ms: 39.559015
-  type: 'test'
-  ...
-# Subtest: I06-N07 frozen mutation vector rejects
-ok 10 - I06-N07 frozen mutation vector rejects
-  ---
-  duration_ms: 1.21181
-  type: 'test'
-  ...
-# Subtest: I06-N08 frozen mutation vector rejects
-ok 11 - I06-N08 frozen mutation vector rejects
-  ---
-  duration_ms: 0.952195
-  type: 'test'
-  ...
-# Subtest: I06-N09 frozen mutation vector rejects
-ok 12 - I06-N09 frozen mutation vector rejects
-  ---
-  duration_ms: 1.142079
-  type: 'test'
-  ...
-# (node:2878) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
-# Subtest: candidate contains no guardian private key material or decryption/admin secret API
-ok 13 - candidate contains no guardian private key material or decryption/admin secret API
-  ---
-  duration_ms: 32.62367
-  type: 'test'
-  ...
-# Subtest: I06 source has no plaintext result before threshold API route and no arbitrary aggregate input surface
-ok 14 - I06 source has no plaintext result before threshold API route and no arbitrary aggregate input surface
-  ---
-  duration_ms: 1.898781
-  type: 'test'
-  ...
-# (node:2890) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
-# Subtest: mutation negatives: wrong aggregate/election/guardian/digests/plaintext/record fail closed
-ok 15 - mutation negatives: wrong aggregate/election/guardian/digests/plaintext/record fail closed
-  ---
-  duration_ms: 3.674272
-  type: 'test'
-  ...
-# Subtest: T-1 share has no Belenios plaintext result
-ok 16 - T-1 share has no Belenios plaintext result
-  ---
-  duration_ms: 38.018255
-  type: 'test'
-  ...
-# Subtest: invalid proof among threshold shares is rejected by pinned upstream Belenios
-ok 17 - invalid proof among threshold shares is rejected by pinned upstream Belenios
-  ---
-  duration_ms: 48.105341
-  type: 'test'
-  ...
-# Subtest: duplicate guardian cannot form threshold
-ok 18 - duplicate guardian cannot form threshold
-  ---
-  duration_ms: 41.845686
-  type: 'test'
-  ...
-# (node:2922) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
-# Subtest: I06-V01 real Belenios threshold vector verifies
-ok 19 - I06-V01 real Belenios threshold vector verifies
-  ---
-  duration_ms: 151.670405
-  type: 'test'
-  ...
-# Subtest: I06-V02 real Belenios threshold vector verifies
-ok 20 - I06-V02 real Belenios threshold vector verifies
-  ---
-  duration_ms: 195.234951
-  type: 'test'
-  ...
-# Subtest: I06-V03 real Belenios threshold vector verifies
-ok 21 - I06-V03 real Belenios threshold vector verifies
-  ---
-  duration_ms: 190.631227
-  type: 'test'
-  ...
-# Subtest: I06-V04 real Belenios threshold vector verifies
-ok 22 - I06-V04 real Belenios threshold vector verifies
-  ---
-  duration_ms: 120.139993
-  type: 'test'
-  ...
-# Subtest: N=5 T=3 different valid threshold subsets and all five give identical plaintext
-ok 23 - N=5 T=3 different valid threshold subsets and all five give identical plaintext
-  ---
-  duration_ms: 245.907192
-  type: 'test'
-  ...
-1..23
-# tests 23
-# suites 0
-# pass 23
-# fail 0
-# cancelled 0
-# skipped 0
-# todo 0
-# duration_ms 2060.878048
+
+> epd2-pb01-i06-candidate@0.1.0 validate:i06
+> npm run test:i06 && npm run verify:i06:a && npm run verify:i06:b && node scripts/i06_final_validate.mjs
+
+
+> epd2-pb01-i06-candidate@0.1.0 test:i06
+> node --test --test-concurrency=1 tests/i06-i05-corrective.test.mjs tests/i06-vectors.test.mjs tests/i06-mutation-vectors.test.mjs tests/i06-threshold-negatives.test.mjs tests/i06-api-boundary.test.mjs tests/i06-static-security.test.mjs
+
+✔ I06 API never accepts caller-selected aggregate/ciphertext input (49.863455ms)
+✔ I05 corrective recomputes digest from persisted aggregate bytes and I06 refuses byte-only mutation before ceremony access (209.351754ms)
+✔ stale/unauthorized I05 tally cannot enter guardian/decryption path (0.641093ms)
+✔ I06-N01 frozen mutation vector rejects (5.240768ms)
+✔ I06-N02 frozen mutation vector rejects (1.351371ms)
+✔ I06-N03 frozen mutation vector rejects (1.155137ms)
+✔ I06-N04 frozen mutation vector rejects (50.429801ms)
+✔ I06-N05 frozen mutation vector rejects (46.958428ms)
+✔ I06-N06 frozen mutation vector rejects (41.34488ms)
+✔ I06-N07 frozen mutation vector rejects (1.136258ms)
+✔ I06-N08 frozen mutation vector rejects (0.948005ms)
+✔ I06-N09 frozen mutation vector rejects (0.79165ms)
+✔ candidate contains no guardian private key material or decryption/admin secret API (145.026959ms)
+✔ I06 source has no plaintext result before threshold API route and no arbitrary aggregate input surface (1.211581ms)
+✔ mutation negatives: wrong aggregate/election/guardian/digests/plaintext/record fail closed (2.961722ms)
+✔ T-1 share has no Belenios plaintext result (34.335163ms)
+✔ invalid proof among threshold shares is rejected by pinned upstream Belenios (40.378557ms)
+✔ duplicate guardian cannot form threshold (37.527972ms)
+✔ I06-V01 real Belenios threshold vector verifies (142.037126ms)
+✔ I06-V02 real Belenios threshold vector verifies (193.645788ms)
+✔ I06-V03 real Belenios threshold vector verifies (194.676362ms)
+✔ I06-V04 real Belenios threshold vector verifies (115.632138ms)
+✔ N=5 T=3 different valid threshold subsets and all five give identical plaintext (257.034927ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2116.695334
 
 > epd2-pb01-i06-candidate@0.1.0 verify:i06:a
 > node verifier/i06_verifier_a.mjs
@@ -397,74 +296,72 @@ ok 23 - N=5 T=3 different valid threshold subsets and all five give identical pl
 postgres (PostgreSQL) 16.14 (Ubuntu 16.14-1.pgdg24.04+1)
 waiting for server to start.... done
 server started
-I06/PG class tamper-and-roles: PostgreSQL 16.x fresh cluster on port 56610; migrations 001-008 applied
+I06/PG class tamper-and-roles: PostgreSQL 16.x fresh cluster on port 59907; migrations 001-008 applied
 TAP version 13
-# (node:4001) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses
 ok 1 - I06/PG mandatory I05 corrective detects privileged aggregate-byte-only rewrite and decryption refuses
   ---
-  duration_ms: 1080.944894
+  duration_ms: 1066.915515
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: guardian public key after freeze is detected
 ok 2 - I06/PG privileged tamper: guardian public key after freeze is detected
   ---
-  duration_ms: 547.495865
+  duration_ms: 556.836562
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: threshold after ceremony freeze is detected
 ok 3 - I06/PG privileged tamper: threshold after ceremony freeze is detected
   ---
-  duration_ms: 527.58566
+  duration_ms: 499.22499
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: frozen guardian-set member replacement is detected
 ok 4 - I06/PG privileged tamper: frozen guardian-set member replacement is detected
   ---
-  duration_ms: 521.007149
+  duration_ms: 495.185057
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: partial-decryption factor bytes are detected
 ok 5 - I06/PG privileged tamper: partial-decryption factor bytes are detected
   ---
-  duration_ms: 542.24118
+  duration_ms: 510.871598
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: partial-decryption proof bytes are detected
 ok 6 - I06/PG privileged tamper: partial-decryption proof bytes are detected
   ---
-  duration_ms: 595.646381
+  duration_ms: 522.109586
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: accepted share digest column is detected
 ok 7 - I06/PG privileged tamper: accepted share digest column is detected
   ---
-  duration_ms: 537.507527
+  duration_ms: 515.198171
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: aggregate digest alone is detected
 ok 8 - I06/PG privileged tamper: aggregate digest alone is detected
   ---
-  duration_ms: 508.953701
+  duration_ms: 498.123228
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: final plaintext bytes are detected
 ok 9 - I06/PG privileged tamper: final plaintext bytes are detected
   ---
-  duration_ms: 539.864579
+  duration_ms: 515.477836
   type: 'test'
   ...
 # Subtest: I06/PG privileged tamper: final decryption-record digest is detected
 ok 10 - I06/PG privileged tamper: final decryption-record digest is detected
   ---
-  duration_ms: 545.180345
+  duration_ms: 532.478387
   type: 'test'
   ...
 # Subtest: I06/PG roles enforce coordinator/ingester/finalizer/runtime separation
 ok 11 - I06/PG roles enforce coordinator/ingester/finalizer/runtime separation
   ---
-  duration_ms: 550.21297
+  duration_ms: 505.491499
   type: 'test'
   ...
 1..11
@@ -475,48 +372,46 @@ ok 11 - I06/PG roles enforce coordinator/ingester/finalizer/runtime separation
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 6634.148046
+# duration_ms 6359.121759
 I06/PG class tamper-and-roles: 11/11 PASS
 waiting for server to start.... done
 server started
-I06/PG class concurrency-and-crash: PostgreSQL 16.x fresh cluster on port 56611; migrations 001-008 applied
+I06/PG class concurrency-and-crash: PostgreSQL 16.x fresh cluster on port 59908; migrations 001-008 applied
 TAP version 13
-# (node:4640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: I06/PG concurrent final threshold shares converge to one immutable record
 ok 1 - I06/PG concurrent final threshold shares converge to one immutable record
   ---
-  duration_ms: 1126.0095
+  duration_ms: 1076.928394
   type: 'test'
   ...
 # Subtest: I06/PG same-guardian concurrent duplicate race never double-counts threshold
 ok 2 - I06/PG same-guardian concurrent duplicate race never double-counts threshold
   ---
-  duration_ms: 430.739993
+  duration_ms: 337.03404
   type: 'test'
   ...
 # Subtest: I06/PG CRASH-01 retry deterministically converges
 ok 3 - I06/PG CRASH-01 retry deterministically converges
   ---
-  duration_ms: 819.523188
+  duration_ms: 785.102278
   type: 'test'
   ...
 # Subtest: I06/PG CRASH-02 retry deterministically converges
 ok 4 - I06/PG CRASH-02 retry deterministically converges
   ---
-  duration_ms: 660.003639
+  duration_ms: 625.497237
   type: 'test'
   ...
 # Subtest: I06/PG CRASH-03 retry deterministically converges
 ok 5 - I06/PG CRASH-03 retry deterministically converges
   ---
-  duration_ms: 810.908156
+  duration_ms: 772.691932
   type: 'test'
   ...
 # Subtest: I06/PG CRASH-04 retry deterministically converges
 ok 6 - I06/PG CRASH-04 retry deterministically converges
   ---
-  duration_ms: 692.783452
+  duration_ms: 661.26918
   type: 'test'
   ...
 1..6
@@ -527,30 +422,28 @@ ok 6 - I06/PG CRASH-04 retry deterministically converges
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 4672.586028
+# duration_ms 4388.977058
 I06/PG class concurrency-and-crash: 6/6 PASS
 waiting for server to start.... done
 server started
-I06/PG class ceremony-and-threshold: PostgreSQL 16.x fresh cluster on port 56612; migrations 001-008 applied
+I06/PG class ceremony-and-threshold: PostgreSQL 16.x fresh cluster on port 59909; migrations 001-008 applied
 TAP version 13
-# (node:5140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: I06/PG real threshold ceremony freezes immutable N=3 T=2 public context
 ok 1 - I06/PG real threshold ceremony freezes immutable N=3 T=2 public context
   ---
-  duration_ms: 708.429422
+  duration_ms: 648.932584
   type: 'test'
   ...
 # Subtest: I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext
 ok 2 - I06/PG T-1 exposes no plaintext; exact threshold commits one immutable result; extra valid share cannot change plaintext
   ---
-  duration_ms: 911.693961
+  duration_ms: 861.225731
   type: 'test'
   ...
 # Subtest: I06/PG duplicate guardian and malformed/invalid share fail closed
 ok 3 - I06/PG duplicate guardian and malformed/invalid share fail closed
   ---
-  duration_ms: 545.798534
+  duration_ms: 513.892676
   type: 'test'
   ...
 1..3
@@ -561,24 +454,22 @@ ok 3 - I06/PG duplicate guardian and malformed/invalid share fail closed
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2292.723883
+# duration_ms 2153.285918
 I06/PG class ceremony-and-threshold: 3/3 PASS
 waiting for server to start.... done
 server started
-I06/PG class restart-and-backup: PostgreSQL 16.x fresh cluster on port 56613; migrations 001-008 applied
+I06/PG class restart-and-backup: PostgreSQL 16.x fresh cluster on port 59910; migrations 001-008 applied
 TAP version 13
-# (node:5403) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-# (Use `node --trace-warnings ...` to show where the warning was created)
 # Subtest: I06/PG hard database crash/restart preserves same immutable plaintext and record digest
 ok 1 - I06/PG hard database crash/restart preserves same immutable plaintext and record digest
   ---
-  duration_ms: 1405.194932
+  duration_ms: 1381.761917
   type: 'test'
   ...
 # Subtest: I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist
 ok 2 - I06/PG backup/restore preserves exact public ceremony/share/decryption evidence and no private guardian columns exist
   ---
-  duration_ms: 1074.611236
+  duration_ms: 1039.583341
   type: 'test'
   ...
 1..2
@@ -589,7 +480,7 @@ ok 2 - I06/PG backup/restore preserves exact public ceremony/share/decryption ev
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2598.779102
+# duration_ms 2546.269581
 I06/PG class restart-and-backup: 2/2 PASS
 PB01-I06 PostgreSQL acceptance: 22/22 PASS
 ```
