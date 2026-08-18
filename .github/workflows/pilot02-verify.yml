@@ -76,6 +76,35 @@ jobs:
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
           exit 0
 
+      - name: Capture Docker diagnostics
+        if: always() && steps.integrity.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          ENVFILE="deploy/pilot/.env"
+          COMPOSE=(docker compose --env-file "$ENVFILE" -f deploy/pilot/compose.yaml)
+          {
+            echo "## docker compose ps -a"
+            "${COMPOSE[@]}" ps -a || true
+            echo
+            echo "## runtime inspect"
+            docker inspect epd2-pilot-01-runtime-1 2>&1 || true
+            echo
+            echo "## runtime logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps runtime 2>&1 || true
+            echo
+            echo "## voting logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps voting 2>&1 || true
+            echo
+            echo "## database logs (tail 200)"
+            "${COMPOSE[@]}" logs --no-color --timestamps --tail=200 database 2>&1 || true
+            echo
+            echo "## frontend logs"
+            "${COMPOSE[@]}" logs --no-color --timestamps frontend 2>&1 || true
+          } | tee "$GITHUB_WORKSPACE/docker-diagnostics.log"
+          exit 0
+
       - name: Check success marker
         id: marker
         if: always()
@@ -141,6 +170,11 @@ jobs:
             echo '```text'
             tail -n 250 pilot02-product-smoke.log 2>/dev/null || true
             echo '```'
+            echo
+            echo "## Docker diagnostics (tail)"
+            echo '```text'
+            tail -n 500 docker-diagnostics.log 2>/dev/null || true
+            echo '```'
           } > PILOT02_VERIFY_RESULT.md
 
       - name: Commit result back to verification branch
@@ -154,13 +188,14 @@ jobs:
           git commit -m "record PILOT-02 Docker verification result"
           git push origin HEAD:pilot02-verify
 
-      - name: Upload raw log
+      - name: Upload raw logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pilot02-product-smoke-log
           path: |
             pilot02-product-smoke.log
+            docker-diagnostics.log
             environment.log
             integrity.log
             PILOT02_VERIFY_RESULT.md
