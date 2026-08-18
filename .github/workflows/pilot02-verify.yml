@@ -1,0 +1,43 @@
+name: PILOT-02 Docker Verification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Environment
+        run: |
+          uname -a
+          cat /etc/os-release
+          docker --version
+          docker compose version
+          ls -l /dev/fd
+          bash -c 'cat < <(printf "process-substitution-ok\n")'
+
+      - name: Verify internal checksums
+        run: |
+          sha256sum -c SHA256SUMS.txt
+
+      - name: Run PILOT-02 product smoke
+        env:
+          BUILDKIT_PROGRESS: plain
+        run: |
+          set -o pipefail
+          bash scripts/pilot02/product-smoke.sh 2>&1 | tee pilot02-product-smoke.log
+
+      - name: Verify success marker
+        run: |
+          grep -F "PILOT-02 PRODUCT SMOKE OK" pilot02-product-smoke.log
+
+      - name: Upload raw log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot02-product-smoke-log
+          path: pilot02-product-smoke.log
