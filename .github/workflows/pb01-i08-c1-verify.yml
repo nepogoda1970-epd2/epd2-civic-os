@@ -83,8 +83,9 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ -f "$CANDIDATE_ROOT/evidence/results/i08/current-run/current-run-result.json" ]; then
-            cp "$CANDIDATE_ROOT/evidence/results/i08/current-run/current-run-result.json" "$GITHUB_WORKSPACE/PB01_I08_C1_CURRENT_RUN.json"
+          RESULT="$CANDIDATE_ROOT/evidence/results/i08/current-run/I08_FINAL_VALIDATION.json"
+          if [ -f "$RESULT" ]; then
+            cp "$RESULT" "$GITHUB_WORKSPACE/PB01_I08_C1_CURRENT_RUN.json"
           fi
 
       - name: Record verification result
