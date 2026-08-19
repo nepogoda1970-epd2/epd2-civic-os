@@ -1,0 +1,31 @@
+name: PB01-I09 C4 Final Watch
+on:
+  push:
+    branches: [pilot02-verify]
+    paths: ['.github/workflows/pb01-i09-c4-watch.yml']
+permissions:
+  actions: read
+  contents: write
+jobs:
+  watch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for C4 final run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow pb01-i09-c4-final.yml --branch pilot02-verify --limit 1 --json databaseId --jq '.[0].databaseId')"
+          test -n "$RID"
+          echo "run_id=$RID"
+          gh run watch "$RID" --repo "$GITHUB_REPOSITORY" --interval 10 --exit-status || true
+          gh run view "$RID" --repo "$GITHUB_REPOSITORY" --json databaseId,status,conclusion,headSha,createdAt,updatedAt,url > PB01_I09_C4_FINAL_RUN_STATUS.json
+      - name: Record status
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PB01_I09_C4_FINAL_RUN_STATUS.json
+          git commit -m 'record PB01-I09 C4 final run status' || exit 0
+          for n in 1 2 3 4 5; do git fetch origin pilot02-verify; git rebase origin/pilot02-verify; git push origin HEAD:pilot02-verify && exit 0; sleep 2; done
+          exit 1
