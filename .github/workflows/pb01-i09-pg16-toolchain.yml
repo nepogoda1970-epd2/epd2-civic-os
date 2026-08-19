@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - ".github/pb01-i09-pg16-trigger.txt"
+      - "PB01-I09-PG16-TRIGGER.txt"
 
 permissions:
   contents: read
