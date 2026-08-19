@@ -1,0 +1,108 @@
+name: PB01-I09 C3 Final Exact Acceptance
+
+on:
+  push:
+    branches: [pilot02-verify]
+    paths:
+      - 'EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C3.zip'
+      - '.github/workflows/pb01-i09-c3-final-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ZIP: EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C3.zip
+  EXPECTED_SHA256: 13910e5475d40a145013d09e408f041c74cce808e19c6917503783bef965d219
+
+jobs:
+  verify-i09-c3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Set up Go 1.23.2
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: Set up exact Rust/Cargo 1.97.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          test "$(node --version)" = "v24.19.0"
+          test "$(go version | awk '{print $3}')" = "go1.23.2"
+          test "$(rustc --version)" = "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+          test "$(cargo --version)" = "cargo 1.97.1 (c980f4866 2026-06-30)"
+
+      - name: Resolve PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/lib/postgresql/16/bin/postgres ]; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-16 postgresql-client-16
+          fi
+          PGV="$(/usr/lib/postgresql/16/bin/postgres --version)"
+          echo "$PGV"
+          echo "$PGV" | grep -E '^postgres \(PostgreSQL\) 16\.'
+          echo "EPD2_I09_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+
+      - name: Verify exact sealed C3 ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+          echo "candidate_sha256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
+          rm -rf /tmp/pb01-i09-c3
+          mkdir -p /tmp/pb01-i09-c3
+          unzip -q "$ZIP" -d /tmp/pb01-i09-c3
+          mapfile -t ROOTS < <(find /tmp/pb01-i09-c3 -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "CANDIDATE_ZIP=$GITHUB_WORKSPACE/$ZIP" >> "$GITHUB_ENV"
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/i09-c3-sha256sums.log"
+          test "$(find . -type l | wc -l)" -eq 0
+
+      - name: Install locked Node dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          npm ci --ignore-scripts 2>&1 | tee "$GITHUB_WORKSPACE/i09-c3-npm-ci.log"
+
+      - name: Untouched full fresh validate:i09
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          I09_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I09_PG_BIN="$EPD2_I09_PG_BIN" npm run validate:i09 2>&1 | tee "$GITHUB_WORKSPACE/i09-c3-validate.log"
+          RESULT="evidence/results/i09/I09_FINAL_VALIDATION.json"
+          test -f "$RESULT"
+          node -e 'const fs=require("fs");const p=process.argv[1];const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.status!=="PASS")process.exit(1);console.log(JSON.stringify({status:j.status,verification_digest:j.verification_digest,current_run_nonce:j.current_run_nonce,candidate_sha256:j.candidate_sha256},null,2));' "$RESULT" | tee "$GITHUB_WORKSPACE/PB01_I09_C3_FINAL_SUMMARY.json"
+          cp "$RESULT" "$GITHUB_WORKSPACE/PB01_I09_C3_CURRENT_RUN.json"
+
+      - name: Upload external acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i09-c3-final-acceptance
+          if-no-files-found: warn
+          path: |
+            i09-c3-sha256sums.log
+            i09-c3-npm-ci.log
+            i09-c3-validate.log
+            PB01_I09_C3_FINAL_SUMMARY.json
+            PB01_I09_C3_CURRENT_RUN.json
