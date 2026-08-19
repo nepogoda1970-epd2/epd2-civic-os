@@ -88,6 +88,7 @@ jobs:
           mapfile -t HROOTS < <(find /tmp/pilot03-hygiene -mindepth 1 -maxdepth 1 -type d)
           test "${#HROOTS[@]}" -eq 1
           HROOT="${HROOTS[0]}"
+          echo "PRISTINE_ROOT=$HROOT" >> "$GITHUB_ENV"
           cd "$HROOT"
           python scripts/check_pilot_roadmap.py --self-check
           python scripts/check_pilot_roadmap.py --zip "$CANDIDATE_ZIP"
@@ -103,12 +104,12 @@ jobs:
           uv run pytest packages/python/epd2-runtime/tests/test_pilot03_assemblies.py packages/python/epd2-runtime/tests/test_pilot03_isolation.py packages/python/epd2-runtime/tests/test_pilot03_record_binding.py packages/python/epd2-runtime/tests/test_pilot03_assembly_operations.py tests/repository/test_pilot03_roadmap_gate.py -v 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-targeted.log"
           grep -Eq '119 passed' "$GITHUB_WORKSPACE/pilot03-targeted.log"
 
-      - name: Full runtime/repository regression — 2470
+      - name: Full runtime/repository regression — 2470 on pristine tree
         shell: bash
         run: |
           set -euo pipefail
-          cd "$CANDIDATE_ROOT"
-          uv run pytest -q packages/python/epd2-runtime/tests tests/repository 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-full.log"
+          cd "$PRISTINE_ROOT"
+          "$CANDIDATE_ROOT/.venv/bin/python" -m pytest -q packages/python/epd2-runtime/tests tests/repository 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-full.log"
           grep -Eq '2470 passed, 1 skipped' "$GITHUB_WORKSPACE/pilot03-full.log"
 
       - name: PILOT-03 quality gates
