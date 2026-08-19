@@ -1,0 +1,210 @@
+name: PILOT-03 C3 Exact External Acceptance
+
+on:
+  push:
+    branches:
+      - pilot02-verify
+    paths:
+      - 'EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip'
+      - '.github/workflows/pilot03-c3-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-pilot03-c3:
+    runs-on: ubuntu-24.04
+    env:
+      ZIP: EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
+      EXPECTED_SHA256: 52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:epd2pilot@127.0.0.1:5432/postgres
+      EPD2_PILOT_DB_HOST: 127.0.0.1
+      EPD2_PILOT_DB_PORT: '5432'
+      EPD2_PILOT_DB_USER: postgres
+      EPD2_PILOT_DB_PASSWORD: epd2pilot
+      EPD2_VOTING_SERVICE_TOKEN: 0123456789abcdef0123456789abcdef0123456789abcdef
+      EPD2_PILOT_SEED_SECRET: pilot03-external-verification-secret
+      NEXT_TELEMETRY_DISABLED: '1'
+      CI: '1'
+
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install and configure PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          sudo pg_ctlcluster 16 main start || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'epd2pilot';"
+          PGPASSWORD=epd2pilot psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -c 'SELECT version();'
+          psql --version | grep -F '16.'
+
+      - name: Verify exact candidate and unpack
+        id: integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+          echo "ZIP_SHA256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
+          rm -rf /tmp/pilot03-c3
+          mkdir -p /tmp/pilot03-c3
+          unzip -q "$ZIP" -d /tmp/pilot03-c3
+          mapfile -t ROOTS < <(find /tmp/pilot03-c3 -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "CANDIDATE_ZIP=$GITHUB_WORKSPACE/$ZIP" >> "$GITHUB_ENV"
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/pilot03-sha256.log"
+          echo "SHA256SUMS_OK=$(grep -c ': OK$' "$GITHUB_WORKSPACE/pilot03-sha256.log")"
+          test "$(grep -c ': OK$' "$GITHUB_WORKSPACE/pilot03-sha256.log")" = '3401'
+
+      - name: Install candidate dependencies from lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv sync --frozen --all-groups
+          npm ci
+
+      - name: Roadmap and repository hygiene gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run python scripts/check_pilot_roadmap.py --self-check
+          uv run python scripts/check_pilot_roadmap.py --zip "$CANDIDATE_ZIP"
+          uv run python scripts/check_forbidden_files.py
+          uv run python scripts/check_archive_hygiene.py
+          uv run python scripts/check_repository.py
+
+      - name: Run targeted PILOT-03 C1-C3 acceptance suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run pytest \
+            packages/python/epd2-runtime/tests/test_pilot03_assemblies.py \
+            packages/python/epd2-runtime/tests/test_pilot03_isolation.py \
+            packages/python/epd2-runtime/tests/test_pilot03_record_binding.py \
+            packages/python/epd2-runtime/tests/test_pilot03_assembly_operations.py \
+            tests/repository/test_pilot03_roadmap_gate.py -v \
+            2>&1 | tee "$GITHUB_WORKSPACE/pilot03-targeted.log"
+          grep -Eq '119 passed' "$GITHUB_WORKSPACE/pilot03-targeted.log"
+
+      - name: Run full runtime and repository regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run pytest -q packages/python/epd2-runtime/tests tests/repository \
+            2>&1 | tee "$GITHUB_WORKSPACE/pilot03-full.log"
+          grep -Eq '2470 passed, 1 skipped' "$GITHUB_WORKSPACE/pilot03-full.log"
+
+      - name: Static quality gates for PILOT-03 scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy packages/python/epd2-runtime
+
+      - name: Install Playwright Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT/frontend/pilot-web"
+          npx playwright install --with-deps chromium
+          BROWSER="$(node -e "const {chromium}=require('@playwright/test'); console.log(chromium.executablePath())")"
+          test -x "$BROWSER"
+          echo "EPD2_CHROMIUM=$BROWSER" >> "$GITHUB_ENV"
+
+      - name: Build pilot frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          NEXT_PUBLIC_EPD2_API_BASE=http://127.0.0.1:8000 npm --prefix frontend/pilot-web run build
+
+      - name: Run browser E2E against real PostgreSQL/runtime/voting stack
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          scripts/pilot/run-pilot-native.sh stop || true
+          scripts/pilot/run-pilot-native.sh reset
+          scripts/pilot/run-pilot-native.sh start
+          npx --prefix frontend/pilot-web playwright test tests/browser/assemblies.browser.spec.ts \
+            2>&1 | tee "$GITHUB_WORKSPACE/pilot03-browser.log"
+          grep -Eq '8 passed' "$GITHUB_WORKSPACE/pilot03-browser.log"
+
+      - name: Stop pilot stack
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${CANDIDATE_ROOT:-}" ] && [ -d "$CANDIDATE_ROOT" ]; then
+            cd "$CANDIDATE_ROOT"
+            scripts/pilot/run-pilot-native.sh stop || true
+          fi
+
+      - name: Record independent result
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          TARGETED="$(grep -E '119 passed' pilot03-targeted.log 2>/dev/null | tail -1 || true)"
+          FULL="$(grep -E '2470 passed, 1 skipped' pilot03-full.log 2>/dev/null | tail -1 || true)"
+          BROWSER="$(grep -E '8 passed' pilot03-browser.log 2>/dev/null | tail -1 || true)"
+          {
+            echo '# PILOT-03 C3 Independent External Acceptance'
+            echo
+            echo "- Candidate: \`$ZIP\`"
+            echo "- SHA256: \`$EXPECTED_SHA256\`"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- PostgreSQL: \`$(psql --version 2>/dev/null || true)\`"
+            echo "- Python: \`$(python --version 2>/dev/null || true)\`"
+            echo "- Node: \`$(node --version 2>/dev/null || true)\`"
+            echo "- Targeted: \`$TARGETED\`"
+            echo "- Full regression: \`$FULL\`"
+            echo "- Browser: \`$BROWSER\`"
+            echo
+            if [ -n "$TARGETED" ] && [ -n "$FULL" ] && [ -n "$BROWSER" ]; then
+              echo '**Verdict: PASS — PILOT-03 C3 exact external acceptance passed.**'
+            else
+              echo '**Verdict: NOT VERIFIED — one or more mandatory external gates did not complete successfully.**'
+            fi
+          } > PILOT03_C3_VERIFY_RESULT.md
+
+      - name: Commit result to verification branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PILOT03_C3_VERIFY_RESULT.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'record PILOT-03 C3 external acceptance result'
+          git push origin HEAD:pilot02-verify
