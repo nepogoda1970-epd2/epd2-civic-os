@@ -1,0 +1,115 @@
+name: PILOT-03 C3 Exact Browser Acceptance
+
+on:
+  push:
+    branches: [pilot02-verify]
+    paths:
+      - 'EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip'
+      - '.github/workflows/pilot03-c3-browser-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pilot03-c3-browser-exact
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    env:
+      ZIP: EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
+      EXPECTED_SHA256: 52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1
+      EPD2_PILOT_DB_HOST: 127.0.0.1
+      EPD2_PILOT_DB_PORT: '5432'
+      EPD2_PILOT_DB_USER: postgres
+      EPD2_PILOT_DB_PASSWORD: epd2pilot
+      EPD2_VOTING_SERVICE_TOKEN: 0123456789abcdef0123456789abcdef0123456789abcdef
+      EPD2_PILOT_SEED_SECRET: pilot03-external-verification-secret
+      NEXT_TELEMETRY_DISABLED: '1'
+      CI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: PostgreSQL 16 and exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y postgresql-16 postgresql-client-16 >/dev/null
+          sudo pg_ctlcluster 16 main start || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'epd2pilot';"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          rm -rf /tmp/pilot03-browser && mkdir -p /tmp/pilot03-browser
+          unzip -q "$ZIP" -d /tmp/pilot03-browser
+          mapfile -t ROOTS < <(find /tmp/pilot03-browser -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          echo "CANDIDATE_ROOT=${ROOTS[0]}" >> "$GITHUB_ENV"
+      - name: Install locked dependencies and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv sync --frozen --all-groups
+          npm ci
+          cd frontend/pilot-web
+          npx playwright install --with-deps chromium
+          BROWSER="$(node -e "const {chromium}=require('@playwright/test'); console.log(chromium.executablePath())")"
+          test -x "$BROWSER"
+          echo "EPD2_CHROMIUM=$BROWSER" >> "$GITHUB_ENV"
+          cd "$CANDIDATE_ROOT"
+          NEXT_PUBLIC_EPD2_API_BASE=http://127.0.0.1:8000 npm --prefix frontend/pilot-web run build
+      - name: Run exact real-stack desktop+mobile browser gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          scripts/pilot/run-pilot-native.sh stop || true
+          scripts/pilot/run-pilot-native.sh reset
+          scripts/pilot/run-pilot-native.sh start
+          cd frontend/pilot-web
+          npx playwright test tests/browser/assemblies.browser.spec.ts 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-browser-only.log"
+          grep -Eq '8 passed' "$GITHUB_WORKSPACE/pilot03-browser-only.log"
+      - name: Stop stack
+        if: always()
+        shell: bash
+        run: |
+          cd "$CANDIDATE_ROOT" 2>/dev/null && scripts/pilot/run-pilot-native.sh stop || true
+      - name: Record browser result
+        if: always()
+        shell: bash
+        run: |
+          BROWSER="$(grep -E '8 passed' pilot03-browser-only.log 2>/dev/null | tail -1 || true)"
+          if [ -n "$BROWSER" ]; then VERDICT='PASS'; else VERDICT='NOT VERIFIED'; fi
+          cat > PILOT03_C3_BROWSER_VERIFY_RESULT.md <<EOF
+          # PILOT-03 C3 Independent Browser Acceptance
+
+          - Candidate: \`$ZIP\`
+          - SHA256: \`$EXPECTED_SHA256\`
+          - Workflow run: $GITHUB_RUN_ID
+          - PostgreSQL: \`$(psql --version 2>/dev/null || true)\`
+          - Node: \`$(node --version 2>/dev/null || true)\`
+          - Browser: \`$BROWSER\`
+
+          **Verdict: $VERDICT**
+          EOF
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PILOT03_C3_BROWSER_VERIFY_RESULT.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'record PILOT-03 C3 browser acceptance result'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin pilot02-verify
+            git rebase origin/pilot02-verify
+            if git push origin HEAD:pilot02-verify; then exit 0; fi
+            sleep 2
+          done
+          exit 1
