@@ -2,8 +2,8 @@
 
 **Verdict:** NOT VERIFIED — candidate integrity/extraction failed
 
-- Workflow run: 32296785813
-- Commit: 1374777cfaafdb361244cb8efd7f76b479a60307
+- Workflow run: 32297014225
+- Commit: ec95a63840eca8b18672ea27a74e2fddce531834
 - Environment rc: 0
 - Integrity rc: 1
 - Smoke rc: 98
@@ -28,7 +28,7 @@ UBUNTU_CODENAME=noble
 LOGO=ubuntu-logo
 Docker version 28.0.4, build b8034c0
 Docker Compose version v2.38.2
-lrwxrwxrwx 1 root root 13 Aug 19 20:06 /dev/fd -> /proc/self/fd
+lrwxrwxrwx 1 root root 13 Aug 19 20:09 /dev/fd -> /proc/self/fd
 process-substitution-ok
 ```
 
