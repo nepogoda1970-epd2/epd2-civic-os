@@ -1,0 +1,45 @@
+name: PB01-I09 Run Status Probe
+
+on:
+  push:
+    branches: [pilot02-verify]
+    paths:
+      - '.github/workflows/pb01-i09-status-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture I09 external workflow status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow pb01-i09-c2-external.yml \
+            --branch pilot02-verify \
+            --limit 10 \
+            --json databaseId,status,conclusion,headSha,workflowName,createdAt,updatedAt,url \
+            > PB01_I09_EXTERNAL_RUN_STATUS.json
+          cat PB01_I09_EXTERNAL_RUN_STATUS.json
+      - name: Publish status
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PB01_I09_EXTERNAL_RUN_STATUS.json
+          git commit -m 'record PB01-I09 external run status' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git fetch origin pilot02-verify
+            git rebase origin/pilot02-verify
+            if git push origin HEAD:pilot02-verify; then exit 0; fi
+            sleep 2
+          done
+          exit 1
