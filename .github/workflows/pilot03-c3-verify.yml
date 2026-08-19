@@ -79,16 +79,21 @@ jobs:
           uv sync --frozen --all-groups
           npm ci
 
-      - name: Governance and hygiene
+      - name: Governance and hygiene on pristine exact ZIP
         shell: bash
         run: |
           set -euo pipefail
-          cd "$CANDIDATE_ROOT"
-          uv run python scripts/check_pilot_roadmap.py --self-check
-          uv run python scripts/check_pilot_roadmap.py --zip "$CANDIDATE_ZIP"
-          uv run python scripts/check_forbidden_files.py
-          uv run python scripts/check_archive_hygiene.py
-          uv run python scripts/check_repository.py
+          rm -rf /tmp/pilot03-hygiene && mkdir -p /tmp/pilot03-hygiene
+          unzip -q "$CANDIDATE_ZIP" -d /tmp/pilot03-hygiene
+          mapfile -t HROOTS < <(find /tmp/pilot03-hygiene -mindepth 1 -maxdepth 1 -type d)
+          test "${#HROOTS[@]}" -eq 1
+          HROOT="${HROOTS[0]}"
+          cd "$HROOT"
+          python scripts/check_pilot_roadmap.py --self-check
+          python scripts/check_pilot_roadmap.py --zip "$CANDIDATE_ZIP"
+          python scripts/check_forbidden_files.py
+          python scripts/check_archive_hygiene.py "$CANDIDATE_ZIP"
+          python scripts/check_repository.py
 
       - name: Targeted C1-C3 acceptance — 119
         shell: bash
