@@ -2,8 +2,8 @@
 
 **Verdict:** NOT VERIFIED — PB01-I08 C1 exact live validation failed
 
-- Workflow run: 32227647719
-- Commit: b51c87ff48455e9cf3cdfe0051059d3e0874feb7
+- Workflow run: 32227717370
+- Commit: 550a353c4b04b46f536ce393b13ede7b1e34967b
 - Candidate: `EPD2_VCRYPTO-PB01-I08_INDEPENDENT_VERIFIER_RELEASE_HARDENING_AND_RUST_PARITY_CANDIDATE_0.1_C1.zip`
 - Expected SHA256: `c274b373e153a875f5409c434330e2afded781619af842566cc5dc7e6c3be90a`
 - Node: `v24.19.0`
