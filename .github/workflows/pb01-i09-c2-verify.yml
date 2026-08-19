@@ -1,0 +1,189 @@
+name: PB01-I09 C2 Exact Candidate Verification
+
+on:
+  push:
+    branches:
+      - pilot02-verify
+    paths:
+      - 'EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C2.zip'
+      - '.github/workflows/pb01-i09-c2-verify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-i09-c2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Set up Go 1.23.2
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: Set up Rust and Cargo 1.97.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          test "$(node --version)" = "v24.19.0"
+          go version | grep -E 'go1\.(2[3-9]|[3-9][0-9])'
+          test "$(rustc --version)" = "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+          test "$(cargo --version)" = "cargo 1.97.1 (c980f4866 2026-06-30)"
+
+      - name: Install PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          test "$(/usr/lib/postgresql/16/bin/postgres --version | awk '{print $3}' | cut -d. -f1)" = "16"
+          echo "EPD2_I09_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+
+      - name: Verify exact C2 ZIP and unpack
+        id: integrity
+        shell: bash
+        run: |
+          set +e
+          ZIP="EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C2.zip"
+          EXPECTED="48fbddb686466208e4972908a3c213aa7021f4178d8bf71cc0b211f4af45ba53"
+          {
+            set -euo pipefail
+            ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+            echo "ZIP_SHA256=$ACTUAL"
+            test "$ACTUAL" = "$EXPECTED"
+            rm -rf /tmp/pb01-i09-c2
+            mkdir -p /tmp/pb01-i09-c2
+            unzip -q "$ZIP" -d /tmp/pb01-i09-c2
+            mapfile -t ROOTS < <(find /tmp/pb01-i09-c2 -mindepth 1 -maxdepth 1 -type d)
+            test "${#ROOTS[@]}" -eq 1
+            ROOT="${ROOTS[0]}"
+            echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+            echo "CANDIDATE_ZIP=$GITHUB_WORKSPACE/$ZIP" >> "$GITHUB_ENV"
+            cd "$ROOT"
+            sha256sum -c SHA256SUMS.txt
+          } 2>&1 | tee "$GITHUB_WORKSPACE/i09-c2-integrity.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Install locked Node dependencies
+        id: deps
+        if: steps.integrity.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          npm ci --ignore-scripts 2>&1 | tee "$GITHUB_WORKSPACE/i09-c2-npm-ci.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Run full exact live validate:i09
+        id: validate
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
+        env:
+          I09_CANDIDATE_ZIP: ${{ env.CANDIDATE_ZIP }}
+        run: |
+          set +e
+          cd "$CANDIDATE_ROOT"
+          I09_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I09_PG_BIN="$EPD2_I09_PG_BIN" npm run validate:i09 2>&1 | tee "$GITHUB_WORKSPACE/i09-c2-validate.log"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Capture fresh current-run result and C1 concurrency evidence
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${CANDIDATE_ROOT:-}" ]; then
+            RESULT="$CANDIDATE_ROOT/evidence/results/i09/I09_FINAL_VALIDATION.json"
+            CONC="$CANDIDATE_ROOT/evidence/results/i09/c1-real-db-concurrency.json"
+            MIXED="$CANDIDATE_ROOT/evidence/results/i09/c1-mixed-stage.json"
+            PGQ="$CANDIDATE_ROOT/evidence/results/i09/postgresql-qualification.json"
+            [ ! -f "$RESULT" ] || cp "$RESULT" "$GITHUB_WORKSPACE/PB01_I09_C2_CURRENT_RUN.json"
+            [ ! -f "$CONC" ] || cp "$CONC" "$GITHUB_WORKSPACE/PB01_I09_C2_CONCURRENCY.json"
+            [ ! -f "$MIXED" ] || cp "$MIXED" "$GITHUB_WORKSPACE/PB01_I09_C2_MIXED_STAGE.json"
+            [ ! -f "$PGQ" ] || cp "$PGQ" "$GITHUB_WORKSPACE/PB01_I09_C2_POSTGRESQL_QUALIFICATION.json"
+          fi
+
+      - name: Record exact external verification result
+        if: always()
+        shell: bash
+        run: |
+          INT_RC='${{ steps.integrity.outputs.rc }}'; [ -n "$INT_RC" ] || INT_RC=98
+          DEP_RC='${{ steps.deps.outputs.rc }}'; [ -n "$DEP_RC" ] || DEP_RC=98
+          VAL_RC='${{ steps.validate.outputs.rc }}'; [ -n "$VAL_RC" ] || VAL_RC=98
+          NODEV="$(node --version 2>/dev/null || true)"
+          GOV="$(go version 2>/dev/null || true)"
+          RUSTV="$(rustc --version 2>/dev/null || true)"
+          CARGOV="$(cargo --version 2>/dev/null || true)"
+          PGV="$(/usr/lib/postgresql/16/bin/postgres --version 2>/dev/null || true)"
+          if [ "$INT_RC" = 0 ] && [ "$DEP_RC" = 0 ] && [ "$VAL_RC" = 0 ]; then
+            VERDICT="PASS — PB01-I09 C2 exact external acceptance passed"
+          else
+            VERDICT="NOT VERIFIED — PB01-I09 C2 exact external acceptance failed"
+          fi
+          {
+            echo '# PB01-I09 C2 Independent External Acceptance'
+            echo
+            echo "**Verdict:** $VERDICT"
+            echo
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Source commit: $GITHUB_SHA"
+            echo '- Candidate: `EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C2.zip`'
+            echo '- Expected SHA256: `48fbddb686466208e4972908a3c213aa7021f4178d8bf71cc0b211f4af45ba53`'
+            echo "- Node: \`$NODEV\`"
+            echo "- Go: \`$GOV\`"
+            echo "- Rust: \`$RUSTV\`"
+            echo "- Cargo: \`$CARGOV\`"
+            echo "- PostgreSQL: \`$PGV\`"
+            echo "- Integrity rc: $INT_RC"
+            echo "- npm ci rc: $DEP_RC"
+            echo "- validate:i09 rc: $VAL_RC"
+            if [ -f PB01_I09_C2_CURRENT_RUN.json ]; then
+              echo
+              echo '## Fresh current-run validation'
+              echo '```json'
+              cat PB01_I09_C2_CURRENT_RUN.json
+              echo '```'
+            fi
+            echo
+            echo '## validate:i09 log tail'
+            echo '```text'
+            tail -n 300 i09-c2-validate.log 2>/dev/null || true
+            echo '```'
+          } > PB01_I09_C2_VERIFY_RESULT.md
+
+      - name: Commit result to verification branch
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PB01_I09_C2_VERIFY_RESULT.md
+          for f in PB01_I09_C2_CURRENT_RUN.json PB01_I09_C2_CONCURRENCY.json PB01_I09_C2_MIXED_STAGE.json PB01_I09_C2_POSTGRESQL_QUALIFICATION.json; do
+            [ ! -f "$f" ] || git add "$f"
+          done
+          git diff --cached --quiet && exit 0
+          git commit -m "record PB01-I09 C2 exact external acceptance"
+          git push origin HEAD:pilot02-verify
+
+      - name: Final acceptance gate
+        if: always()
+        shell: bash
+        run: |
+          test '${{ steps.integrity.outputs.rc }}' = '0'
+          test '${{ steps.deps.outputs.rc }}' = '0'
+          test '${{ steps.validate.outputs.rc }}' = '0'
