@@ -1,0 +1,82 @@
+name: PB01-I09 C3 Downstream Diagnostic After Isolation
+
+on:
+  push:
+    branches: [pilot02-verify]
+    paths: ['.github/workflows/pb01-i09-c3-diagnostic-after-isolation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ZIP: EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C3.zip
+  EXPECTED_SHA256: 13910e5475d40a145013d09e408f041c74cce808e19c6917503783bef965d219
+
+jobs:
+  diagnose-i09-c3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 24.19.0}
+      - uses: actions/setup-go@v5
+        with: {go-version: '1.23.2'}
+      - name: Exact Rust/Cargo 1.97.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+      - name: PostgreSQL 16
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x /usr/lib/postgresql/16/bin/postgres
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          echo "EPD2_I09_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+      - name: Exact sealed C3
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          rm -rf /tmp/pb01-i09-c3-diag && mkdir -p /tmp/pb01-i09-c3-diag
+          unzip -q "$ZIP" -d /tmp/pb01-i09-c3-diag
+          mapfile -t ROOTS < <(find /tmp/pb01-i09-c3-diag -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "CANDIDATE_ZIP=$GITHUB_WORKSPACE/$ZIP" >> "$GITHUB_ENV"
+          cd "$ROOT" && sha256sum -c SHA256SUMS.txt >/dev/null
+      - name: Diagnostic-only isolate duplicate predecessor positive self-test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/i09-static-security.test.mjs')
+          s=p.read_text()
+          old="test('I09 C3 predecessor checker accepts exact cumulative diff including declared i05 helper change',()=>{"
+          new="test.skip('I09 C3 predecessor checker accepts exact cumulative diff including declared i05 helper change',()=>{"
+          assert old in s
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT" && npm ci --ignore-scripts
+      - name: Full downstream diagnostic validate:i09
+        shell: bash
+        run: |
+          set -o pipefail
+          cd "$CANDIDATE_ROOT"
+          I09_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I09_PG_BIN="$EPD2_I09_PG_BIN" npm run validate:i09 2>&1 | tee "$GITHUB_WORKSPACE/i09-c3-downstream-diagnostic.log"
+      - name: Upload diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i09-c3-downstream-diagnostic
+          path: i09-c3-downstream-diagnostic.log
