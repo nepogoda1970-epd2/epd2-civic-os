@@ -141,7 +141,8 @@ jobs:
           scripts/pilot/run-pilot-native.sh stop || true
           scripts/pilot/run-pilot-native.sh reset
           scripts/pilot/run-pilot-native.sh start
-          npx --prefix frontend/pilot-web playwright test tests/browser/assemblies.browser.spec.ts 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-browser.log"
+          cd "$CANDIDATE_ROOT/frontend/pilot-web"
+          npx playwright test tests/browser/assemblies.browser.spec.ts 2>&1 | tee "$GITHUB_WORKSPACE/pilot03-browser.log"
           grep -Eq '8 passed' "$GITHUB_WORKSPACE/pilot03-browser.log"
 
       - name: Stop pilot stack
