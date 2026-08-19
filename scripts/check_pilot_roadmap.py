@@ -178,15 +178,19 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
             fail("deployment/operations workstream may not masquerade as PILOT-03")
 
         # Catch the exact stale-scope pattern that caused the rejected candidate.
+        # Scan only active documents for the candidate's current stage. Historical
+        # predecessor documents and the canonical roadmap lock intentionally quote
+        # superseded wording and must not trigger this heuristic.
         stale_markers = (
             "pilot operation readiness",
             "deployment operations and real pilot readiness",
             "it did not change the product",
         )
+        active_stage_prefix = f"{root}/docs/pilot/{stage_id}/"
         relevant_docs = [
             n
             for n in names
-            if n.startswith(f"{root}/docs/") and n.lower().endswith(".md")
+            if n.startswith(active_stage_prefix) and n.lower().endswith(".md")
         ]
         with zipfile.ZipFile(zip_path) as zf:
             for name in relevant_docs:
