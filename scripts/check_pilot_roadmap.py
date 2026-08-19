@@ -150,12 +150,21 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
             fail("PILOT-03 capability manifest is incomplete or drifted")
         if manifest.get("operations_workstream") in {True, "PILOT-03"}:
             fail("deployment/operations workstream may not masquerade as PILOT-03")
+        # Catch the exact stale-scope pattern that caused the rejected candidate.
+        # Scan only active documents for the candidate's current stage. Historical
+        # predecessor documents and the canonical roadmap lock intentionally quote
+        # superseded wording and must not trigger this heuristic.
         stale_markers = (
             "pilot operation readiness",
             "deployment operations and real pilot readiness",
             "it did not change the product",
         )
-        relevant_docs = [n for n in names if n.startswith(f"{root}/docs/") and n.lower().endswith(".md")]
+        active_stage_prefix = f"{root}/docs/pilot/{stage_id}/"
+        relevant_docs = [
+            n
+            for n in names
+            if n.startswith(active_stage_prefix) and n.lower().endswith(".md")
+        ]
         with zipfile.ZipFile(zip_path) as zf:
             for name in relevant_docs:
                 text = zf.read(name).decode("utf-8", errors="ignore").lower()
