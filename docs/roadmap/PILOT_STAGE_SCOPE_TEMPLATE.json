@@ -1,0 +1,17 @@
+{
+  "roadmap_lock_schema_version": "epd2.pilot-roadmap-lock/1",
+  "stage_id": "PILOT-03",
+  "stage_title": "Assemblies / Motions / Communications Pilot",
+  "accepted_predecessor": {
+    "filename": "EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip",
+    "sha256": "261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e"
+  },
+  "required_capabilities": [
+    "assemblies",
+    "motions",
+    "communications",
+    "member_frontend_integration"
+  ],
+  "operations_workstream": false,
+  "non_binding_pilot": true
+}
