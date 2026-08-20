@@ -1,0 +1,51 @@
+import os, json, hashlib, shutil, csv, zipfile, re
+from pathlib import Path
+
+C3ZIP=Path(os.environ.get('I10_C3_ZIP','EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip')).resolve()
+C3SHA='a185446dd4b7f004ac7c1513c66d1916e76616dd9a4df89e1f991cab9cf06c58'
+C4NAME='EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C4'
+C4ZIP=Path(os.environ.get('I10_C4_ZIP',C4NAME+'.zip')).resolve()
+WORK=Path(os.environ.get('I10_C4_WORK','/tmp/i10c4build')).resolve()
+if WORK.exists(): shutil.rmtree(WORK)
+WORK.mkdir()
+
+def sha(p:Path):
+    h=hashlib.sha256()
+    with open(p,'rb') as f:
+        for b in iter(lambda:f.read(1024*1024),b''): h.update(b)
+    return h.hexdigest()
+assert sha(C3ZIP)==C3SHA
+with zipfile.ZipFile(C3ZIP) as z: z.extractall(WORK/'c3')
+c3roots=[p for p in (WORK/'c3').iterdir() if p.is_dir()]; assert len(c3roots)==1
+c3root=c3roots[0]
+c4root=WORK/C4NAME
+shutil.copytree(c3root,c4root)
+
+def files_map(root):
+    return {str(p.relative_to(root)).replace(os.sep,'/'):sha(p) for p in root.rglob('*') if p.is_file()}
+before=files_map(c3root)
+
+# 1) Bound every command and emit deterministic progress markers.
+lib=c4root/'scripts/i10_lib.mjs'
+lib.write_text("""import {createHash,randomBytes} from 'node:crypto';
+import {readFile,readdir,stat,writeFile,mkdir} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import {resolve,join,relative,sep} from 'node:path';
+export const root=resolve(process.cwd());
+export const I10_TIMEOUTS=Object.freeze({quick:120000,unit:300000,build:600000,postgresClass:600000,postgresFull:1200000,scale:900000,workerTotal:2700000});
+export async function shaFile(p){const b=await readFile(p);return createHash('sha256').update(b).digest('hex');}
+export function shaText(s){return createHash('sha256').update(s).digest('hex');}
+export async function json(rel){return JSON.parse(await readFile(join(root,rel),'utf8'));}
+export function req(c,m){if(!c)throw new Error(m);}
+export async function walk(dir=root){const out=[];async function w(d){for(const n of await readdir(d)){const p=join(d,n);const s=await stat(p);if(s.isSymbolicLink())throw new Error(`SYMLINK:${relative(root,p)}`);if(s.isDirectory())await w(p);else out.push(relative(root,p).split(sep).join('/'));}}await w(dir);return out.sort();}
+export function run(cmd,args=[],opts={}){const cwd=opts.cwd??root;const timeoutMs=opts.timeoutMs??I10_TIMEOUTS.unit;const label=opts.label??`${cmd} ${args.join(' ')}`;const started=Date.now();console.log(`[I10_PROGRESS] START label=${JSON.stringify(label)} timeout_ms=${timeoutMs}`);const common={cwd,env:{...process.env,...opts.env},encoding:'utf8',stdio:opts.capture?'pipe':'inherit',maxBuffer:128*1024*1024};let r;if(process.platform==='linux'){const seconds=Math.max(1,Math.ceil(timeoutMs/1000));r=spawnSync('timeout',['--signal=TERM','--kill-after=10s',`${seconds}s`,cmd,...args],common);}else{r=spawnSync(cmd,args,{...common,timeout:timeoutMs,killSignal:'SIGKILL'});}const elapsed=Date.now()-started;const timedOut=(process.platform==='linux'&&r.status===124)||r.error?.code==='ETIMEDOUT';if(timedOut){console.error(`[I10_PROGRESS] TIMEOUT label=${JSON.stringify(label)} elapsed_ms=${elapsed} timeout_ms=${timeoutMs}`);throw new Error(`COMMAND_TIMEOUT:${label}:${timeoutMs}`);}if(r.error){console.error(`[I10_PROGRESS] ERROR label=${JSON.stringify(label)} elapsed_ms=${elapsed} code=${r.error.code??'UNKNOWN'}`);throw r.error;}if(r.status!==0){console.error(`[I10_PROGRESS] FAIL label=${JSON.stringify(label)} elapsed_ms=${elapsed} status=${r.status}`);throw new Error(`COMMAND_FAILED:${label}:${r.status}${opts.capture?`\n${r.stdout}\n${r.stderr}`:''}`);}console.log(`[I10_PROGRESS] PASS label=${JSON.stringify(label)} elapsed_ms=${elapsed}`);return r;}
+export function version(cmd,args=[]){const r=run(cmd,args,{capture:true,label:`version:${cmd}`,timeoutMs:I10_TIMEOUTS.quick});return (r.stdout||r.stderr).trim();}
+export function nonce(){return randomBytes(24).toString('hex');}
+export async function writeJson(rel,obj){const p=join(root,rel);await mkdir(resolve(p,'..'),{recursive:true}).catch(()=>{});await writeFile(p,JSON.stringify(obj,null,2)+'\n');}
+""")
+
+# 2) Worker: explicit labels/timeouts and C4 identity.
+worker=c4root/'scripts/i10_validate_worker.mjs'
+worker.write_text("""import {join} from 'node:path';import {readFile,writeFile,mkdir,rm} from 'node:fs/promises';import {root,shaFile,req,run,version,nonce,json,shaText,I10_TIMEOUTS} from './i10_lib.mjs';
+const EXPECTED_PRE='10e1f158a1ee621be45bf80b0f9dea21585a64ae728268affbbe41dbbc4e760a';
+req(process.env.EPD2_I10_CLEANROOM==='1','I10_CLEANROOM_REQUIRED');const candidateSha=process.env.I10_EXACT_CANDIDATE_SHA;req(/^[0-9a-f]{64}$/u.test(candidateSha??''),'CANDIDATE_SHA_REQUIRED');
