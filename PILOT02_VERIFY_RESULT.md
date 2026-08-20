@@ -2,8 +2,8 @@
 
 **Verdict:** NOT VERIFIED — candidate integrity/extraction failed
 
-- Workflow run: 32373247516
-- Commit: e652b84fae7dcdf1208e651cd25b549cdf8d284d
+- Workflow run: 32373499164
+- Commit: d4b0bc8185a219f038747e45a92ea65ba7256e13
 - Environment rc: 0
 - Integrity rc: 1
 - Smoke rc: 98
@@ -12,7 +12,7 @@
 ## Environment log
 ```text
 ## Environment
-Linux runnervm76f27 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+Linux runnervmzvulz 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
 PRETTY_NAME="Ubuntu 24.04.4 LTS"
 NAME="Ubuntu"
 VERSION_ID="24.04"
