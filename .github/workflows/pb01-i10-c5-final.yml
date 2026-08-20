@@ -20,8 +20,19 @@ jobs:
       C4_SHA256: 371262b0ff94c7cb51813168fcbe08cc1544e3661254855bf6b0b715d96c4fb2
       ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C5.zip
       EXPECTED_SHA256: ae62868b7f67eba6e3e2652f03167c965f32653d788d190c1f5b067e1e53bb2c
+      I09_ACCEPTED_COMMIT: ff9ea45d77888ed1ee70bfd4201dd40d1473b1b2
+      I09_ACCEPTED_ZIP_NAME: EPD2_VCRYPTO-PB01-I09_PRODUCTION_PILOT_ROBUSTNESS_CONCURRENCY_AND_SCALE_QUALIFICATION_CANDIDATE_0.1_C4.zip
+      I09_ACCEPTED_SHA256: 10e1f158a1ee621be45bf80b0f9dea21585a64ae728268affbbe41dbbc4e760a
     steps:
       - uses: actions/checkout@v4
+      - name: Materialize exact accepted I09 predecessor
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin "$I09_ACCEPTED_COMMIT"
+          I09_ZIP="$RUNNER_TEMP/$I09_ACCEPTED_ZIP_NAME"
+          git show "$I09_ACCEPTED_COMMIT:$I09_ACCEPTED_ZIP_NAME" > "$I09_ZIP"
+          test "$(sha256sum "$I09_ZIP" | awk '{print $1}')" = "$I09_ACCEPTED_SHA256"
+          echo "I09_CANDIDATE_ZIP=$I09_ZIP" >> "$GITHUB_ENV"
       - name: Reconstruct exact sealed C3 C4 C5
         run: |
           set -euo pipefail
@@ -86,7 +97,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "$CANDIDATE_ROOT"
-          I10_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I10_PG_BIN="$EPD2_I10_PG_BIN" EPD2_I09_PG_BIN="$EPD2_I09_PG_BIN" npm run validate:i10 2>&1 | tee "$GITHUB_WORKSPACE/i10-c5-validate.log"
+          I10_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I10_PG_BIN="$EPD2_I10_PG_BIN" EPD2_I09_PG_BIN="$EPD2_I09_PG_BIN" I09_CANDIDATE_ZIP="$I09_CANDIDATE_ZIP" npm run validate:i10 2>&1 | tee "$GITHUB_WORKSPACE/i10-c5-validate.log"
           RESULT=I10_FINAL_VALIDATION.json
           test -f "$RESULT"
           node -e 'const fs=require("fs");const p=process.argv[1],expected=process.argv[2];const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.status!=="PASS"||j.live_execution!==true||j.release_readiness_decision!=="RELEASE_READY"||j.candidate_sha256!==expected||j.historical_provenance_exception_count!==1||j.historical_provenance_exception_stage!=="I05"||j.validation_timeout_policy?.fail_closed!==true)process.exit(1);console.log(JSON.stringify({status:j.status,live_execution:j.live_execution,release_readiness_decision:j.release_readiness_decision,candidate_sha256:j.candidate_sha256,current_run_nonce:j.current_run_nonce,verification_result_digest:j.verification_result_digest,historical_provenance_exception_count:j.historical_provenance_exception_count,historical_provenance_exception_stage:j.historical_provenance_exception_stage,validation_timeout_policy:j.validation_timeout_policy,node_version:j.node_version,go_version:j.go_version,rust_version:j.rust_version,cargo_version:j.cargo_version,postgresql_version:j.postgresql_version},null,2));' "$RESULT" "$EXPECTED_SHA256" | tee "$GITHUB_WORKSPACE/PB01_I10_C5_FINAL_SUMMARY.json"
