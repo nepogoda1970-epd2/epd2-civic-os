@@ -1,0 +1,30 @@
+name: DATA-01 baseline transfer
+
+on:
+  push:
+    branches:
+      - tmp/data01-baseline-transfer-20260820
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  transfer-pilot03:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact accepted PILOT-03 C3
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip'
+          EXPECTED='52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1'
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED"
+      - name: Upload exact accepted PILOT-03 C3
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-pilot03-c3-sealed
+          path: EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
+          if-no-files-found: error
+          compression-level: 0
