@@ -113,6 +113,8 @@ jobs:
           if errors: raise SystemExit('remaining >100 lines: '+repr(errors))
           PY
           python3 -m py_compile "$ROOT/scripts/data01/data01_lib.py" "$ROOT/scripts/data01/validate_data01.py"
+          find "$ROOT" -type d -name '__pycache__' -prune -exec rm -rf {} +
+          find "$ROOT" -type f -name '*.pyc' -delete
           cd "$ROOT"
           find . -type f ! -path './SHA256SUMS.txt' -printf '%P\n' | LC_ALL=C sort | while read -r f; do sha256sum "$f"; done > SHA256SUMS.txt
           cd "$GITHUB_WORKSPACE"
@@ -136,6 +138,7 @@ jobs:
                       z.writestr(zi,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=6)
           PY
           ACTUAL="$(sha256sum "$TARGET" | awk '{print $1}')"
+          echo "candidate_sha256=$ACTUAL"
           test "$ACTUAL" = "$EXPECTED_SHA"
           echo "DATA01_SHA=$ACTUAL" >> "$GITHUB_ENV"
           echo "DATA01_ROOT=$ROOT" >> "$GITHUB_ENV"
