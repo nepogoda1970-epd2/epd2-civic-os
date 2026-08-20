@@ -1,0 +1,64 @@
+name: DATA-01 Format Overlay
+
+on:
+  push:
+    branches: [tmp/data01-candidate-20260820]
+    paths:
+      - '.github/workflows/data01-format-overlay.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconstitute overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat tools/data01/patch_parts/part*.txt > /tmp/data01-patch.tar.gz.b64
+          test "$(sha256sum /tmp/data01-patch.tar.gz.b64 | awk '{print $1}')" = '15324d6a35a4dc0cc4767ce926339051cff86b3ab06340a5961d64cf1533c988'
+          base64 -d /tmp/data01-patch.tar.gz.b64 > /tmp/data01-patch.tar.gz
+          mkdir -p /tmp/data01-overlay
+          tar -xzf /tmp/data01-patch.tar.gz -C /tmp/data01-overlay
+      - name: Format and lint DATA-01 sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'ruff==0.15.22'
+          cd /tmp/data01-overlay
+          python -m ruff check scripts/data01 tests/data01 --fix
+          python -m ruff format scripts/data01 tests/data01
+          python -m ruff check scripts/data01 tests/data01
+          python -m ruff format --check scripts/data01 tests/data01
+      - name: Package formatted overlay deterministically
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/data01-overlay
+          find . -exec touch -t 202608200000.00 {} +
+          tar --sort=name --mtime='2026-08-20 00:00:00 UTC' --owner=0 --group=0 --numeric-owner -czf "$GITHUB_WORKSPACE/data01-formatted-overlay.tar.gz" .
+          sha256sum "$GITHUB_WORKSPACE/data01-formatted-overlay.tar.gz" > "$GITHUB_WORKSPACE/data01-formatted-overlay.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data01-formatted-overlay
+          path: |
+            data01-formatted-overlay.tar.gz
+            data01-formatted-overlay.sha256
+          compression-level: 0
+      - name: Publish format run id
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_FORMAT_RUN_ID.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_FORMAT_RUN_ID.txt
+          git commit -m 'record DATA-01 format run id [skip ci]' || true
+          git push origin HEAD:tmp/data01-candidate-20260820 || true
