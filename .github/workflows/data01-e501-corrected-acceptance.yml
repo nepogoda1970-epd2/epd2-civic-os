@@ -1,0 +1,230 @@
+name: DATA-01 E501 Corrected Exact Acceptance
+
+on:
+  push:
+    branches: [tmp/data01-candidate-20260820]
+    paths:
+      - '.github/workflows/data01-e501-corrected-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: data01-e501-corrected-acceptance
+  cancel-in-progress: true
+
+env:
+  TARGET: EPD2_DATA-01_CANONICAL_DATA_OWNERSHIP_PERSISTENCE_BOUNDARIES_AND_AUDIT_EVIDENCE_FOUNDATION_CANDIDATE_0.1.zip
+  BASE_SHA: 21bb52522f84f18f37cddbdb0e4b0fa724a07b44e5edd749553760cb11edd3c1
+  EXPECTED_SHA: 0b709ad2dc5226b737510f9a46e696589fd11a43949b1e5ddddbd1c432443dc3
+  C3_SHA: 52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1
+  C6_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+  EPD2_PILOT_DB_HOST: 127.0.0.1
+  EPD2_PILOT_DB_PORT: '5432'
+  EPD2_PILOT_DB_USER: postgres
+  EPD2_PILOT_DB_PASSWORD: epd2data01
+  EPD2_TEST_DATABASE_URL: postgresql://postgres:epd2data01@127.0.0.1:5432/postgres
+  EPD2_PILOT_SEED_SECRET: data01-exact-acceptance-secret
+  EPD2_VOTING_SERVICE_TOKEN: 0123456789abcdef0123456789abcdef0123456789abcdef
+  NEXT_TELEMETRY_DISABLED: '1'
+  CI: '1'
+
+jobs:
+  validate-data01:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Recover run-3 exact candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/data01-run3
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/9420874683/zip > /tmp/data01-run3-outer.zip
+          unzip -q /tmp/data01-run3-outer.zip -d /tmp/data01-run3
+          BASE="$(find /tmp/data01-run3 -type f -name "$TARGET" -print -quit)"
+          test -n "$BASE"
+          test "$(sha256sum "$BASE" | awk '{print $1}')" = "$BASE_SHA"
+          cp "$BASE" /tmp/data01-base.zip
+
+      - name: Apply E501-only corrective and reseal deterministically
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/data01-corrected && mkdir /tmp/data01-corrected
+          unzip -q /tmp/data01-base.zip -d /tmp/data01-corrected
+          mapfile -t ROOTS < <(find /tmp/data01-corrected -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          python3 - "$ROOT" <<'PY'
+          import ast, json, sys
+          from pathlib import Path
+          root=Path(sys.argv[1])
+          for rel in ['scripts/data01/data01_lib.py','scripts/data01/validate_data01.py']:
+              p=root/rel
+              out=[]
+              for line in p.read_text().splitlines():
+                  if len(line)<=100:
+                      out.append(line); continue
+                  stripped=line.strip(); comma=stripped.endswith(',')
+                  expr=stripped[:-1] if comma else stripped
+                  try: value=ast.literal_eval(expr)
+                  except Exception: value=None
+                  if isinstance(value,str):
+                      indent=line[:len(line)-len(line.lstrip())]
+                      chunks=[]; remaining=value
+                      while len(remaining)>72:
+                          cut=max(remaining.rfind(' ',0,73),remaining.rfind(',',0,73))
+                          if cut<20: cut=72
+                          else: cut+=1
+                          chunks.append(remaining[:cut]); remaining=remaining[cut:]
+                      if remaining: chunks.append(remaining)
+                      out.append(indent+'(')
+                      out.extend(indent+'    '+json.dumps(chunk,ensure_ascii=False) for chunk in chunks)
+                      out.append(indent+')'+(',' if comma else ''))
+                  else:
+                      out.append(line)
+              p.write_text('\n'.join(out)+'\n')
+          p=root/'scripts/data01/data01_lib.py'
+          s=p.read_text()
+          replacements={
+            '            f"database contains unknown/out-of-order migration sequences: {sorted(set(applied) - expected_sequences)}"': '            f"database contains unknown/out-of-order migration sequences: "\n            f"{sorted(set(applied) - expected_sequences)}"',
+            '            SELECT rolname, rolcanlogin, rolsuper, rolcreatedb, rolcreaterole, rolbypassrls, rolinherit': '            SELECT rolname, rolcanlogin, rolsuper, rolcreatedb, rolcreaterole,\n                   rolbypassrls, rolinherit',
+            '            f"migration meta-table drift: expected={sorted(meta_expected)} actual={sorted(meta_actual)}"': '            f"migration meta-table drift: expected={sorted(meta_expected)} "\n            f"actual={sorted(meta_actual)}"',
+            '                    ON tc.constraint_name=kcu.constraint_name AND tc.constraint_schema=kcu.constraint_schema': '                    ON tc.constraint_name=kcu.constraint_name\n                   AND tc.constraint_schema=kcu.constraint_schema',
+            '                    ON tc.constraint_name=ccu.constraint_name AND tc.constraint_schema=ccu.constraint_schema': '                    ON tc.constraint_name=ccu.constraint_name\n                   AND tc.constraint_schema=ccu.constraint_schema',
+            '            f"routine privilege drift: {sorted(actual_routine ^ _runtime_expected_function_grants())}"': '            f"routine privilege drift: "\n            f"{sorted(actual_routine ^ _runtime_expected_function_grants())}"',
+            '    # Drift detector must catch undeclared table, grant, and dangerous view, all transactionally rolled back.': '    # Drift detector must catch undeclared table, grant, and dangerous view.\n    # Every probe is transactionally rolled back.',
+          }
+          for old,new in replacements.items():
+              if old not in s: raise SystemExit('expected E501 source not found: '+old[:60])
+              s=s.replace(old,new)
+          p.write_text(s)
+          errors=[]
+          for d in [root/'scripts/data01',root/'tests/data01']:
+              for source in d.rglob('*.py'):
+                  for n,line in enumerate(source.read_text().splitlines(),1):
+                      if len(line)>100: errors.append((str(source.relative_to(root)),n,len(line)))
+          if errors: raise SystemExit('remaining >100 lines: '+repr(errors))
+          PY
+          python3 -m py_compile "$ROOT/scripts/data01/data01_lib.py" "$ROOT/scripts/data01/validate_data01.py"
+          cd "$ROOT"
+          find . -type f ! -path './SHA256SUMS.txt' -printf '%P\n' | LC_ALL=C sort | while read -r f; do sha256sum "$f"; done > SHA256SUMS.txt
+          cd "$GITHUB_WORKSPACE"
+          python3 - /tmp/data01-base.zip "$ROOT" "$TARGET" <<'PY'
+          import sys, zipfile
+          from pathlib import Path
+          base,root,out=Path(sys.argv[1]),Path(sys.argv[2]),Path(sys.argv[3]); work=root.parent
+          modes={}
+          with zipfile.ZipFile(base) as z:
+              for info in z.infolist(): modes[info.filename.rstrip('/')]=(info.external_attr>>16)&0xFFFF
+          if out.exists(): out.unlink()
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,strict_timestamps=True) as z:
+              for p in [root,*sorted(root.rglob('*'),key=lambda x:x.relative_to(work).as_posix())]:
+                  rel=p.relative_to(work).as_posix(); key=rel.rstrip('/')
+                  mode=modes.get(key,0o40755 if p.is_dir() else 0o100644)
+                  if p.is_dir():
+                      zi=zipfile.ZipInfo(key+'/',(2026,8,20,0,0,0)); zi.create_system=3; zi.external_attr=(mode<<16)|0x10; zi.extra=b''
+                      z.writestr(zi,b'',compress_type=zipfile.ZIP_STORED)
+                  else:
+                      zi=zipfile.ZipInfo(rel,(2026,8,20,0,0,0)); zi.create_system=3; zi.external_attr=mode<<16; zi.extra=b''
+                      z.writestr(zi,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=6)
+          PY
+          ACTUAL="$(sha256sum "$TARGET" | awk '{print $1}')"
+          test "$ACTUAL" = "$EXPECTED_SHA"
+          echo "DATA01_SHA=$ACTUAL" >> "$GITHUB_ENV"
+          echo "DATA01_ROOT=$ROOT" >> "$GITHUB_ENV"
+          cd "$ROOT" && sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/data01-sha256sums.log"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+
+      - name: PostgreSQL 16 acceptance environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          sudo pg_ctlcluster 16 main start || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'epd2data01';"
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          test "$(node --version)" = 'v24.19.0'
+          echo "EPD2_DATA01_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+
+      - name: Locked dependencies and browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          uv sync --frozen --all-groups
+          npm ci
+          cd frontend/pilot-web
+          npx playwright install --with-deps chromium
+          BROWSER="$(node -e "const {chromium}=require('@playwright/test'); console.log(chromium.executablePath())")"
+          test -x "$BROWSER"
+          echo "EPD2_CHROMIUM=$BROWSER" >> "$GITHUB_ENV"
+
+      - name: Full exact-ZIP DATA-01 validation
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          DATA01_CANDIDATE_ZIP="$GITHUB_WORKSPACE/$TARGET" DATA01_REQUIRE_BROWSER=1 EPD2_DATA01_PG_BIN="$EPD2_DATA01_PG_BIN" npm run validate:data01 2>&1 | tee "$GITHUB_WORKSPACE/data01-validate.log"
+          python - <<'PY'
+          import json, os, pathlib
+          p=pathlib.Path(os.environ['DATA01_ROOT'])/'DATA01_FINAL_VALIDATION.json'; j=json.loads(p.read_text())
+          assert j['status']=='PASS', j
+          assert j['live_execution'] is True
+          assert j['candidate_sha256']==os.environ['DATA01_SHA']==os.environ['EXPECTED_SHA']
+          assert j['predecessor_sha256']==os.environ['C3_SHA']
+          assert j['pb01_frozen_baseline_sha256']==os.environ['C6_SHA']
+          assert 'PostgreSQL 16' in j['postgresql_version']
+          assert j['test_counts']['pilot03_targeted']==119
+          assert j['test_counts']['pilot03_full']==2470
+          assert j['test_counts']['pilot03_browser']==8
+          pathlib.Path(os.environ['GITHUB_WORKSPACE'],'DATA01_ACCEPTANCE_SUMMARY.json').write_text(json.dumps(j,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Publish run id and verdict
+        if: always()
+        shell: bash
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_ACCEPTANCE_RUN_ID.txt
+          if [ "$VALIDATE_OUTCOME" = success ]; then VERDICT=PASS; else VERDICT=FAIL; fi
+          printf '# DATA-01 Exact Acceptance\n\n- Verdict: **%s**\n- Run: %s\n- Candidate SHA-256: `%s`\n' "$VERDICT" "$GITHUB_RUN_ID" "${DATA01_SHA:-UNKNOWN}" > DATA01_ACCEPTANCE_RESULT.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_ACCEPTANCE_RUN_ID.txt DATA01_ACCEPTANCE_RESULT.md
+          git commit -m 'record DATA-01 E501-corrected acceptance [skip ci]' || true
+          git push origin HEAD:tmp/data01-candidate-20260820 || true
+
+      - name: Upload exact candidate and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-e501-corrected-exact-candidate
+          if-no-files-found: warn
+          compression-level: 0
+          path: |
+            ${{ env.TARGET }}
+            data01-sha256sums.log
+            data01-validate.log
+            DATA01_ACCEPTANCE_SUMMARY.json
+            DATA01_ACCEPTANCE_RESULT.md
