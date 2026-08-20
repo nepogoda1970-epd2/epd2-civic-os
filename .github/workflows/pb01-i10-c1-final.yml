@@ -4,8 +4,9 @@ on:
     branches: [pilot02-verify]
     paths:
       - 'EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C1.zip'
+      - '.github/workflows/pb01-i10-c1-final.yml'
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify-i10-c1:
     runs-on: ubuntu-24.04
@@ -63,6 +64,8 @@ jobs:
           (cd verifier/rust && cargo fetch --locked)
           (cd verifier/reference-go && go mod download)
       - name: Untouched full fresh validate:i10
+        id: validate
+        continue-on-error: true
         run: |
           set -euo pipefail
           cd "$CANDIDATE_ROOT"
@@ -71,6 +74,45 @@ jobs:
           test -f "$RESULT"
           node -e 'const fs=require("fs");const p=process.argv[1],expected=process.argv[2];const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.status!=="PASS"||j.live_execution!==true||j.release_readiness_decision!=="RELEASE_READY"||j.candidate_sha256!==expected||j.historical_provenance_exception_count!==1||j.historical_provenance_exception_stage!=="I05")process.exit(1);console.log(JSON.stringify({status:j.status,live_execution:j.live_execution,release_readiness_decision:j.release_readiness_decision,candidate_sha256:j.candidate_sha256,current_run_nonce:j.current_run_nonce,verification_result_digest:j.verification_result_digest,historical_provenance_exception_count:j.historical_provenance_exception_count,historical_provenance_exception_stage:j.historical_provenance_exception_stage,node_version:j.node_version,go_version:j.go_version,rust_version:j.rust_version,cargo_version:j.cargo_version,postgresql_version:j.postgresql_version},null,2));' "$RESULT" "$EXPECTED_SHA256" | tee "$GITHUB_WORKSPACE/PB01_I10_C1_FINAL_SUMMARY.json"
           cp "$RESULT" "$GITHUB_WORKSPACE/PB01_I10_C1_CURRENT_RUN.json"
+      - name: Record governed result in repository
+        if: always()
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "$VALIDATE_OUTCOME" = "success" ] && [ -f PB01_I10_C1_FINAL_SUMMARY.json ]; then
+            VERDICT="PASS"
+          else
+            VERDICT="FAIL"
+          fi
+          {
+            echo '# PB01-I10 C1 Final Acceptance Result'
+            echo
+            echo "- Verdict: **$VERDICT**"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Candidate: $ZIP"
+            echo "- Expected SHA-256: $EXPECTED_SHA256"
+            echo "- validate:i10 outcome: $VALIDATE_OUTCOME"
+            if [ -f PB01_I10_C1_FINAL_SUMMARY.json ]; then
+              echo
+              echo '```json'
+              cat PB01_I10_C1_FINAL_SUMMARY.json
+              echo '```'
+            fi
+            if [ "$VERDICT" = "FAIL" ] && [ -f i10-c1-validate.log ]; then
+              echo
+              echo '## Validation tail'
+              echo '```text'
+              tail -n 120 i10-c1-validate.log
+              echo '```'
+            fi
+          } > PB01_I10_C1_VERIFY_RESULT.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PB01_I10_C1_VERIFY_RESULT.md
+          git commit -m 'record PB01-I10 C1 final acceptance result' || true
+          git push origin HEAD:pilot02-verify
       - name: Upload final acceptance evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,3 +125,9 @@ jobs:
             i10-c1-validate.log
             PB01_I10_C1_FINAL_SUMMARY.json
             PB01_I10_C1_CURRENT_RUN.json
+            PB01_I10_C1_VERIFY_RESULT.md
+      - name: Enforce final outcome
+        if: always()
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: test "$VALIDATE_OUTCOME" = "success"
