@@ -33,6 +33,7 @@ jobs:
           set -euo pipefail
           python -m pip install --disable-pip-version-check 'ruff==0.15.22'
           cd /tmp/data01-overlay
+          python -m ruff format scripts/data01 tests/data01
           python -m ruff check scripts/data01 tests/data01 --fix
           python -m ruff format scripts/data01 tests/data01
           python -m ruff check scripts/data01 tests/data01
