@@ -1,0 +1,28 @@
+pp=c4root/'PB01_RELEASE_PROVENANCE.json'; p=json.load(open(pp)); p['candidate_filename']=C4NAME+'.zip'; p['c4_validation_harness_corrective']={'predecessor_candidate':'EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip','predecessor_sha256':C3SHA,'scope':'bounded execution and class-level observability only; no crypto/runtime/schema/migration/dependency semantic change','trigger':'C3 exact external full validation exceeded one hour without governed result','correction':'fail-closed per-class timeouts + stable progress markers; no class removed or weakened'}; pp.write_text(json.dumps(p,indent=2)+'\n')
+
+ev={'schema_version':'epd2.pb01.i10-c4-bounded-harness-validation/1','candidate':C4NAME+'.zip','predecessor_candidate':'EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip','predecessor_sha256':C3SHA,'classification':'VALIDATION_HARNESS_BOUNDED_EXECUTION_OBSERVABILITY_DEFECT','trigger':'C3 exact external run produced no governed result for >60 minutes','correction':'mandatory class-level progress markers and fail-closed timeouts; all I10 regression classes preserved','timeout_policy_ms':{'quick':120000,'unit':300000,'build':600000,'postgres_class':600000,'postgres_full':1200000,'scale':900000,'worker_total':2700000},'semantic_scope':'validation harness only; no crypto/runtime/profile drift','system_status':'NON_BINDING_PILOT','historical_provenance_exception_count':1,'historical_provenance_exception_stage':'I05','corrected_sources':{}}
+evpath=c4root/'evidence/i10/I10_C4_BOUNDED_HARNESS_VALIDATION.json'; evpath.write_text(json.dumps(ev,indent=2)+'\n')
+ev['corrected_sources']={x:sha(c4root/x) for x in ['scripts/i10_lib.mjs','scripts/i10_validate_current_run.mjs','scripts/i10_validate_worker.mjs','tests/i10-freeze-release.test.mjs']}; evpath.write_text(json.dumps(ev,indent=2)+'\n')
+
+# 6) Changed-file inventories, release manifest, SHA256SUMS.
+after_pre=files_map(c4root)
+inv_json='PB01_I10_C4_CHANGED_FILE_INVENTORY.json'; inv_csv='PB01_I10_C4_CHANGED_FILE_INVENTORY.csv'
+new_paths=set(after_pre)-set(before); mod_paths={x for x in set(after_pre)&set(before) if after_pre[x]!=before[x]}
+new_paths.update({inv_json,inv_csv}); mod_paths.update({'PB01_RELEASE_ARTIFACT_MANIFEST.json','SHA256SUMS.txt'})
+recursive={inv_json,inv_csv,'PB01_RELEASE_ARTIFACT_MANIFEST.json','SHA256SUMS.txt'}
+changes=[]
+for path in sorted(new_paths|mod_paths):
+    ct='ADDED' if path in new_paths and path not in before else 'MODIFIED'; sec=path.endswith('.json') or path.startswith('scripts/') or path.startswith('tests/') or path.startswith('evidence/'); changes.append({'path':path,'change_type':ct,'sha256_before':before.get(path),'sha256_after':None if path in recursive else after_pre.get(path),'reason':'recursive packaging metadata; exact final hash bound by release manifest/SHA256SUMS' if path in recursive else 'PB01-I10 C4 bounded validation-harness corrective','security_relevance':bool(sec)})
+counts={'added':sum(x['change_type']=='ADDED' for x in changes),'modified':sum(x['change_type']=='MODIFIED' for x in changes),'deleted':0}
+inv={'schema_version':'epd2.pb01.i10-c4-changed-file-inventory/1','predecessor_candidate':'EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip','predecessor_sha256':C3SHA,'counts':counts,'changes':changes,'semantic_scope':'bounded validation harness + current-candidate governance metadata only; no crypto/runtime/profile drift'}
+(c4root/inv_json).write_text(json.dumps(inv,indent=2)+'\n')
+with open(c4root/inv_csv,'w',newline='') as f:
+    w=csv.DictWriter(f,fieldnames=['path','change_type','sha256_before','sha256_after','reason','security_relevance']);w.writeheader();w.writerows(changes)
+
+rmp=c4root/'PB01_RELEASE_ARTIFACT_MANIFEST.json'; rmj=json.load(open(rmp)); arts={a['path']:a for a in rmj['artifacts']}; covered=[str(x.relative_to(c4root)).replace(os.sep,'/') for x in c4root.rglob('*') if x.is_file() and str(x.relative_to(c4root)).replace(os.sep,'/') not in {'PB01_RELEASE_ARTIFACT_MANIFEST.json','SHA256SUMS.txt'}]
+for path in covered:
+    h=sha(c4root/path)
+    if path in arts: arts[path]['sha256']=h
+    else: arts[path]={'path':path,'artifact_class':'validation-script' if path.startswith('scripts/') else ('test' if path.startswith('tests/') else 'release-metadata-or-documentation'),'sha256':h,'source_or_generated':'source','producer':'PB01 cumulative candidate / I10 C4 corrective assembler','profile':'epd2.belenios-homomorphic/1','version':'PB01-I10-C4','required':True,'security_relevance':True,'verification_relevance':True}
+arts={k:v for k,v in arts.items() if k in covered}; rmj['artifacts']=[arts[k] for k in sorted(arts)]; rmj['artifact_count']=len(rmj['artifacts']); rmj['c4_validation_harness_corrective']={'predecessor_candidate':'EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip','predecessor_sha256':C3SHA,'correction':'bounded fail-closed subprocess execution + class-level progress markers','semantic_drift':False}; rmp.write_text(json.dumps(rmj,indent=2)+'\n')
+
