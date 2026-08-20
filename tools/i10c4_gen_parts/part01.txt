@@ -1,0 +1,30 @@
+const node=process.version;req(node==='v24.19.0',`NODE_EXACT_REQUIRED:${node}`);const go=version('go',['version']);req(/go1\\.(2[3-9]|[3-9][0-9])\\./u.test(go),`GO_1_23_REQUIRED:${go}`);const rust=version('rustc',['--version']);req(/^rustc 1\\.97\\.1\\b/u.test(rust),`RUST_EXACT_REQUIRED:${rust}`);const cargo=version('cargo',['--version']);req(/^cargo 1\\.97\\.1\\b/u.test(cargo),`CARGO_EXACT_REQUIRED:${cargo}`);const pgBin=process.env.EPD2_I09_PG_BIN||process.env.EPD2_I10_PG_BIN;req(pgBin,'POSTGRESQL_BIN_REQUIRED');const pg=version(join(pgBin,'postgres'),['--version']);req(/PostgreSQL\\) 16\\./u.test(pg),`POSTGRESQL_16_REQUIRED:${pg}`);
+const shas=await readFile('SHA256SUMS.txt','utf8');req(shas.trim().length>0,'SHA256SUMS_EMPTY');run('sha256sum',['-c','SHA256SUMS.txt'],{label:'sha256sums',timeoutMs:I10_TIMEOUTS.quick});
+await rm('evidence/results/i10',{recursive:true,force:true});await mkdir('evidence/results/i10',{recursive:true});const currentNonce=nonce();
+const lockBefore={package_lock:await shaFile('package-lock.json'),cargo_lock:await shaFile('verifier/rust/Cargo.lock'),rust_toolchain:await shaFile('rust-toolchain.toml'),go_mod:await shaFile('verifier/reference-go/go.mod')};
+run(process.execPath,['scripts/i10_check_freeze.mjs'],{label:'check:i10:freeze',timeoutMs:I10_TIMEOUTS.quick});run('npm',['run','test:i10'],{label:'test:i10',timeoutMs:I10_TIMEOUTS.quick});
+for(const step of [
+ {label:'regression:i03-core',cmd:'npm',args:['test'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i04',cmd:'npm',args:['run','test:i04'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i04-verifier-b',cmd:'npm',args:['run','test:i04:verifier-b'],timeoutMs:I10_TIMEOUTS.quick},
+ {label:'regression:i05',cmd:'npm',args:['run','test:i05'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i06',cmd:'npm',args:['run','test:i06'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i07',cmd:'npm',args:['run','test:i07'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i08',cmd:'npm',args:['run','test:i08'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'regression:i09',cmd:'npm',args:['run','test:i09'],timeoutMs:I10_TIMEOUTS.unit},
+ {label:'build:rust-release',cmd:'cargo',args:['build','--locked','--offline','--release'],cwd:join(root,'verifier/rust'),timeoutMs:I10_TIMEOUTS.build},
+ {label:'verify:i08-rust-positive',cmd:'npm',args:['run','verify:i08:rust'],timeoutMs:I10_TIMEOUTS.quick},
+ {label:'verify:i08-rust-negatives',cmd:'npm',args:['run','verify:i08:rust:negatives'],timeoutMs:I10_TIMEOUTS.quick},
+ {label:'verify:i08-agreement',cmd:'npm',args:['run','verify:i08:agreement'],timeoutMs:I10_TIMEOUTS.quick},
+ {label:'i09:concurrency',cmd:'npm',args:['run','test:i09:concurrency'],timeoutMs:I10_TIMEOUTS.postgresClass},
+ {label:'i09:crash',cmd:'npm',args:['run','test:i09:crash'],timeoutMs:I10_TIMEOUTS.postgresClass},
+ {label:'i09:restart',cmd:'npm',args:['run','test:i09:restart'],timeoutMs:I10_TIMEOUTS.postgresClass},
+ {label:'i09:backup-restore',cmd:'npm',args:['run','test:i09:backup-restore'],timeoutMs:I10_TIMEOUTS.postgresClass},
+ {label:'i09:postgres-full',cmd:'npm',args:['run','test:i09:postgres'],timeoutMs:I10_TIMEOUTS.postgresFull},
+ {label:'i09:scale-100-1000-10000',cmd:'npm',args:['run','test:i09:scale'],timeoutMs:I10_TIMEOUTS.scale},
+ {label:'verify:i09-agreement',cmd:'npm',args:['run','verify:i09:agreement'],timeoutMs:I10_TIMEOUTS.quick}
+]){run(step.cmd,step.args,{cwd:step.cwd,timeoutMs:step.timeoutMs,label:step.label});}
+const lockAfter={package_lock:await shaFile('package-lock.json'),cargo_lock:await shaFile('verifier/rust/Cargo.lock'),rust_toolchain:await shaFile('rust-toolchain.toml'),go_mod:await shaFile('verifier/reference-go/go.mod')};req(JSON.stringify(lockBefore)===JSON.stringify(lockAfter),'DEPENDENCY_LOCK_MUTATED');
+const freshRust=join(root,'verifier/rust/target/release/epd2-i08-verifier-c');const freshRustSha=await shaFile(freshRust);
+const fm=await shaFile('PB01_PROFILE_FREEZE_MANIFEST.json'), lm=await shaFile('PB01_ACCEPTED_LINEAGE.json'), am=await shaFile('PB01_RELEASE_ARTIFACT_MANIFEST.json');const dep=(await json('PB01_RELEASE_DEPENDENCY_LOCK.json')).dependency_lock_digest;const corpus=await json('PB01_TEST_CORPUS_FREEZE.json');
+const scaleFixture=await shaFile('scripts/i09_scale_worker.mjs');const digest=shaText([candidateSha,EXPECTED_PRE,fm,lm,am,dep,freshRustSha,corpus.positive.digest,corpus.negative.digest,scaleFixture,currentNonce,'NON_BINDING_PILOT','RELEASE_READY'].join('\\n'));
