@@ -56,13 +56,16 @@ jobs:
           cd "$ROOT"
           sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/i10-c1-sha256sums.log"
           test "$(find . -type l | wc -l)" -eq 0
-      - name: Seed locked dependency caches
+      - name: Seed locked dependency caches without mutating candidate
         run: |
           set -euo pipefail
-          cd "$CANDIDATE_ROOT"
-          npm ci --ignore-scripts 2>&1 | tee "$GITHUB_WORKSPACE/i10-c1-npm-ci.log"
-          (cd verifier/rust && cargo fetch --locked)
-          (cd verifier/reference-go && go mod download)
+          SEED_DIR="$(mktemp -d)"
+          trap 'rm -rf "$SEED_DIR"' EXIT
+          cp "$CANDIDATE_ROOT/package.json" "$CANDIDATE_ROOT/package-lock.json" "$SEED_DIR/"
+          (cd "$SEED_DIR" && npm ci --ignore-scripts) 2>&1 | tee "$GITHUB_WORKSPACE/i10-c1-npm-ci.log"
+          (cd "$CANDIDATE_ROOT/verifier/rust" && cargo fetch --locked)
+          (cd "$CANDIDATE_ROOT/verifier/reference-go" && go mod download)
+          test ! -e "$CANDIDATE_ROOT/node_modules"
       - name: Untouched full fresh validate:i10
         id: validate
         continue-on-error: true
