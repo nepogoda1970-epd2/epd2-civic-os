@@ -21,7 +21,7 @@ env:
   C6_ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip
   C6_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
   TARGET: EPD2_DATA-01_CANONICAL_DATA_OWNERSHIP_PERSISTENCE_BOUNDARIES_AND_AUDIT_EVIDENCE_FOUNDATION_CANDIDATE_0.1.zip
-  EXPECTED_LOCAL_BUILD_SHA: d9def20ce800badc4a4955bfece75b1fea5e417e6194d9f5b5268b5ec402af37
+  EXPECTED_LOCAL_BUILD_SHA: d9caf29d550df12eda1fbc221e6626060e9e20159f2856843383e9565879c050
   EPD2_PILOT_DB_HOST: 127.0.0.1
   EPD2_PILOT_DB_PORT: '5432'
   EPD2_PILOT_DB_USER: postgres
@@ -82,6 +82,8 @@ jobs:
           test "$(find . -type l | wc -l)" -eq 0
           test ! -e .git
           test ! -e node_modules
+          test -x scripts/pilot/run-pilot-native.sh
+          test -x scripts/data01/validate_data01.py
 
       - uses: actions/setup-python@v5
         with:
