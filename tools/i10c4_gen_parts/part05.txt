@@ -1,0 +1,13 @@
+allfiles=sorted(str(x.relative_to(c4root)).replace(os.sep,'/') for x in c4root.rglob('*') if x.is_file() and x.name!='SHA256SUMS.txt')
+with open(c4root/'SHA256SUMS.txt','w') as f:
+    for path in allfiles: f.write(f"{sha(c4root/path)}  ./{path}\n")
+after=files_map(c4root); added=sorted(set(after)-set(before)); modified=sorted(x for x in set(after)&set(before) if after[x]!=before[x]); deleted=sorted(set(before)-set(after)); assert not deleted; assert sorted(x['path'] for x in changes)==sorted(added+modified); assert counts=={'added':len(added),'modified':len(modified),'deleted':0},(counts,len(added),len(modified))
+
+# deterministic ZIP
+if C4ZIP.exists(): C4ZIP.unlink()
+with zipfile.ZipFile(C4ZIP,'w',compression=zipfile.ZIP_STORED) as z:
+    for pth in sorted(c4root.rglob('*')):
+        if not pth.is_file(): continue
+        rel=C4NAME+'/'+str(pth.relative_to(c4root)).replace(os.sep,'/')
+        zi=zipfile.ZipInfo(rel,date_time=(1980,1,1,0,0,0)); zi.compress_type=zipfile.ZIP_STORED; zi.create_system=3; zi.external_attr=(0o100644<<16); z.writestr(zi,pth.read_bytes())
+print(json.dumps({'candidate':str(C4ZIP),'sha256':sha(C4ZIP),'counts':counts,'file_count':len(after),'root':str(c4root)},indent=2))
