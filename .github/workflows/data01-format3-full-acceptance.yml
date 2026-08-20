@@ -1,0 +1,183 @@
+name: DATA-01 Format3 Full Exact Acceptance
+
+on:
+  push:
+    branches: [tmp/data01-candidate-20260820]
+    paths:
+      - '.github/workflows/data01-format3-full-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: data01-format3-full-acceptance
+  cancel-in-progress: true
+
+env:
+  TARGET: EPD2_DATA-01_CANONICAL_DATA_OWNERSHIP_PERSISTENCE_BOUNDARIES_AND_AUDIT_EVIDENCE_FOUNDATION_CANDIDATE_0.1.zip
+  BASE_SHA: d067940fb6e7268a1eb36a94b1a73ed7088b3ccff7b51635f1a6fb181670313d
+  C3_SHA: 52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1
+  C6_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+  EPD2_PILOT_DB_HOST: 127.0.0.1
+  EPD2_PILOT_DB_PORT: '5432'
+  EPD2_PILOT_DB_USER: postgres
+  EPD2_PILOT_DB_PASSWORD: epd2data01
+  EPD2_TEST_DATABASE_URL: postgresql://postgres:epd2data01@127.0.0.1:5432/postgres
+  EPD2_PILOT_SEED_SECRET: data01-exact-acceptance-secret
+  EPD2_VOTING_SERVICE_TOKEN: 0123456789abcdef0123456789abcdef0123456789abcdef
+  NEXT_TELEMETRY_DISABLED: '1'
+  CI: '1'
+
+jobs:
+  validate-data01:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Recover exact Ruff9 candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/base-artifact
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/9421335863/zip > /tmp/base-outer.zip
+          unzip -q /tmp/base-outer.zip -d /tmp/base-artifact
+          BASE="$(find /tmp/base-artifact -type f -name "$TARGET" -print -quit)"
+          test -n "$BASE"
+          test "$(sha256sum "$BASE" | awk '{print $1}')" = "$BASE_SHA"
+          cp "$BASE" /tmp/data01-base.zip
+
+      - name: Apply canonical Ruff format and exact reseal
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'ruff==0.15.22'
+          rm -rf /tmp/data01-corrected && mkdir /tmp/data01-corrected
+          unzip -q /tmp/data01-base.zip -d /tmp/data01-corrected
+          mapfile -t ROOTS < <(find /tmp/data01-corrected -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          cd "$ROOT"
+          python -m ruff format scripts/data01/data01_lib.py scripts/data01/validate_data01.py tests/data01/test_static_contract.py
+          python -m ruff check scripts/data01 tests/data01
+          python -m ruff format --check scripts/data01 tests/data01
+          find . -type d -name '__pycache__' -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+          find . -type f ! -path './SHA256SUMS.txt' -printf '%P\n' | LC_ALL=C sort | while read -r f; do sha256sum "$f"; done > SHA256SUMS.txt
+          cd "$GITHUB_WORKSPACE"
+          python3 - /tmp/data01-base.zip "$ROOT" "$TARGET" <<'PY'
+          import sys, zipfile
+          from pathlib import Path
+          base, root, out = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+          work = root.parent
+          modes = {}
+          with zipfile.ZipFile(base) as z:
+              for i in z.infolist(): modes[i.filename.rstrip('/')]=(i.external_attr>>16)&0xffff
+          if out.exists(): out.unlink()
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,strict_timestamps=True) as z:
+              for p in [root,*sorted(root.rglob('*'),key=lambda x:x.relative_to(work).as_posix())]:
+                  rel=p.relative_to(work).as_posix(); key=rel.rstrip('/'); mode=modes.get(key,0o40755 if p.is_dir() else 0o100644)
+                  if p.is_dir():
+                      zi=zipfile.ZipInfo(key+'/',(2026,8,20,0,0,0)); zi.create_system=3; zi.external_attr=(mode<<16)|0x10; zi.extra=b''; z.writestr(zi,b'',compress_type=zipfile.ZIP_STORED)
+                  else:
+                      zi=zipfile.ZipInfo(rel,(2026,8,20,0,0,0)); zi.create_system=3; zi.external_attr=mode<<16; zi.extra=b''; z.writestr(zi,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=6)
+          PY
+          ACTUAL="$(sha256sum "$TARGET" | awk '{print $1}')"
+          echo "candidate_sha256=$ACTUAL"
+          echo "DATA01_SHA=$ACTUAL" >> "$GITHUB_ENV"
+          echo "DATA01_ROOT=$ROOT" >> "$GITHUB_ENV"
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/data01-sha256sums.log"
+          test "$(find . -type l | wc -l)" -eq 0
+          test ! -e node_modules
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+
+      - name: PostgreSQL 16 acceptance environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          sudo pg_ctlcluster 16 main start || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'epd2data01';"
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          test "$(node --version)" = 'v24.19.0'
+          echo "EPD2_DATA01_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+
+      - name: Locked dependencies and browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          uv sync --frozen --all-groups
+          npm ci
+          cd frontend/pilot-web
+          npx playwright install --with-deps chromium
+          BROWSER="$(node -e "const {chromium}=require('@playwright/test'); console.log(chromium.executablePath())")"
+          test -x "$BROWSER"
+          echo "EPD2_CHROMIUM=$BROWSER" >> "$GITHUB_ENV"
+
+      - name: Full exact-ZIP DATA-01 validation
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          DATA01_CANDIDATE_ZIP="$GITHUB_WORKSPACE/$TARGET" DATA01_REQUIRE_BROWSER=1 EPD2_DATA01_PG_BIN="$EPD2_DATA01_PG_BIN" npm run validate:data01 2>&1 | tee "$GITHUB_WORKSPACE/data01-validate.log"
+          python - <<'PY'
+          import json,os,pathlib
+          j=json.loads((pathlib.Path(os.environ['DATA01_ROOT'])/'DATA01_FINAL_VALIDATION.json').read_text())
+          assert j['status']=='PASS' and j['live_execution'] is True, j
+          assert j['candidate_sha256']==os.environ['DATA01_SHA']
+          assert j['predecessor_sha256']==os.environ['C3_SHA']
+          assert j['pb01_frozen_baseline_sha256']==os.environ['C6_SHA']
+          assert 'PostgreSQL 16' in j['postgresql_version']
+          assert j['test_counts']['pilot03_targeted']==119
+          assert j['test_counts']['pilot03_full']==2470
+          assert j['test_counts']['pilot03_browser']==8
+          pathlib.Path(os.environ['GITHUB_WORKSPACE'],'DATA01_ACCEPTANCE_SUMMARY.json').write_text(json.dumps(j,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Publish run id and verdict
+        if: always()
+        shell: bash
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_ACCEPTANCE_RUN_ID.txt
+          if [ "$VALIDATE_OUTCOME" = success ]; then VERDICT=PASS; else VERDICT=FAIL; fi
+          printf '# DATA-01 Exact Acceptance\n\n- Verdict: **%s**\n- Run: %s\n- Candidate SHA-256: `%s`\n' "$VERDICT" "$GITHUB_RUN_ID" "${DATA01_SHA:-UNKNOWN}" > DATA01_ACCEPTANCE_RESULT.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_ACCEPTANCE_RUN_ID.txt DATA01_ACCEPTANCE_RESULT.md
+          git commit -m 'record DATA-01 Format3 full acceptance [skip ci]' || true
+          git push origin HEAD:tmp/data01-candidate-20260820 || true
+
+      - name: Upload exact candidate and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-format3-full-exact-candidate
+          if-no-files-found: warn
+          compression-level: 0
+          path: |
+            ${{ env.TARGET }}
+            data01-sha256sums.log
+            data01-validate.log
+            DATA01_ACCEPTANCE_SUMMARY.json
+            DATA01_ACCEPTANCE_RESULT.md
