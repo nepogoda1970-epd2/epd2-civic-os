@@ -1,0 +1,31 @@
+name: DATA-01 C1 Ruff Tool
+
+on:
+  push:
+    branches: [tmp/data01-candidate-20260820]
+    paths:
+      - '.github/workflows/data01-c1-ruff-tool.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ruff-wheel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned Ruff wheel
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ruff
+          python -m pip download --no-deps --only-binary=:all: ruff==0.15.22 -d /tmp/ruff
+          sha256sum /tmp/ruff/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data01-c1-ruff-0.15.22
+          path: /tmp/ruff/*
+          compression-level: 0
