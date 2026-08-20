@@ -21,7 +21,7 @@ env:
   C6_ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip
   C6_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
   TARGET: EPD2_DATA-01_CANONICAL_DATA_OWNERSHIP_PERSISTENCE_BOUNDARIES_AND_AUDIT_EVIDENCE_FOUNDATION_CANDIDATE_0.1.zip
-  EXPECTED_LOCAL_BUILD_SHA: d9caf29d550df12eda1fbc221e6626060e9e20159f2856843383e9565879c050
+  EXPECTED_LOCAL_BUILD_SHA: 21bb52522f84f18f37cddbdb0e4b0fa724a07b44e5edd749553760cb11edd3c1
   EPD2_PILOT_DB_HOST: 127.0.0.1
   EPD2_PILOT_DB_PORT: '5432'
   EPD2_PILOT_DB_USER: postgres
@@ -39,14 +39,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstitute governed DATA-01 overlay
+      - name: Recover formatted corrective overlay and apply three lint-only fixes
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cat tools/data01/patch_parts/part*.txt > /tmp/data01-patch.tar.gz.b64
-          test "$(sha256sum /tmp/data01-patch.tar.gz.b64 | awk '{print $1}')" = '15324d6a35a4dc0cc4767ce926339051cff86b3ab06340a5961d64cf1533c988'
-          base64 -d /tmp/data01-patch.tar.gz.b64 > /tmp/data01-patch.tar.gz
-          test "$(sha256sum /tmp/data01-patch.tar.gz | awk '{print $1}')" = '6b9430cb71faa7fcf33c985829ebc693c76a2c94de516b51101d569076f4df88'
+          mkdir -p /tmp/data01-formatted-artifact /tmp/data01-fixed-overlay
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/9420682516/zip > /tmp/data01-formatted-artifact.zip
+          unzip -q /tmp/data01-formatted-artifact.zip -d /tmp/data01-formatted-artifact
+          FORMATTED=/tmp/data01-formatted-artifact/data01-formatted-overlay.tar.gz
+          test "$(sha256sum "$FORMATTED" | awk '{print $1}')" = '1e378160d29b62f0e218d61afb70222cb43ad52b15e220e05067fe28ec713be2'
+          tar -xzf "$FORMATTED" -C /tmp/data01-fixed-overlay
+          rm -rf /tmp/data01-fixed-overlay/.ruff_cache
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/data01-fixed-overlay/scripts/data01/validate_data01.py')
+          s=p.read_text()
+          old=s
+          s=s.replace('    targeted = run_command(\n', '    run_command(\n', 1)
+          s=s.replace('    full = run_command(\n', '    run_command(\n', 1)
+          s=s.replace('        browser = run_command(\n', '        run_command(\n', 1)
+          if s == old:
+              raise SystemExit('expected lint-only assignments not found')
+          p.write_text(s)
+          PY
+          cd /tmp/data01-fixed-overlay
+          find . -exec touch -t 202608200000.00 {} +
+          tar --sort=name --mtime='2026-08-20 00:00:00 UTC' --owner=0 --group=0 --numeric-owner -czf /tmp/data01-patch.tar.gz .
+          test "$(sha256sum /tmp/data01-patch.tar.gz | awk '{print $1}')" = 'ae7a5d5589cbcb452b70b789506eb8b505ad5b11171397da440c018905828ee5'
 
       - name: Recover exact frozen PB01 C6 artifact
         shell: bash
@@ -138,7 +159,7 @@ jobs:
           assert j['candidate_filename']==os.environ['TARGET']
           assert j['predecessor_sha256']==os.environ['C3_SHA']
           assert j['pb01_frozen_baseline_sha256']==os.environ['C6_SHA']
-          assert j['postgresql_version'].startswith('PostgreSQL 16') or 'PostgreSQL 16' in j['postgresql_version']
+          assert 'PostgreSQL 16' in j['postgresql_version']
           assert j['test_counts']['pilot03_targeted']==119
           assert j['test_counts']['pilot03_full']==2470
           assert j['test_counts']['pilot03_browser']==8
