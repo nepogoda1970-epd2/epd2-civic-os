@@ -1,0 +1,175 @@
+name: DATA-01 Exact Candidate Acceptance
+
+on:
+  push:
+    branches: [tmp/data01-candidate-20260820]
+    paths:
+      - '.github/workflows/data01-exact-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: data01-exact-acceptance
+  cancel-in-progress: true
+
+env:
+  C3_ZIP: EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
+  C3_SHA: 52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1
+  C6_ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip
+  C6_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+  TARGET: EPD2_DATA-01_CANONICAL_DATA_OWNERSHIP_PERSISTENCE_BOUNDARIES_AND_AUDIT_EVIDENCE_FOUNDATION_CANDIDATE_0.1.zip
+  EXPECTED_LOCAL_BUILD_SHA: d9def20ce800badc4a4955bfece75b1fea5e417e6194d9f5b5268b5ec402af37
+  EPD2_PILOT_DB_HOST: 127.0.0.1
+  EPD2_PILOT_DB_PORT: '5432'
+  EPD2_PILOT_DB_USER: postgres
+  EPD2_PILOT_DB_PASSWORD: epd2data01
+  EPD2_TEST_DATABASE_URL: postgresql://postgres:epd2data01@127.0.0.1:5432/postgres
+  EPD2_PILOT_SEED_SECRET: data01-exact-acceptance-secret
+  EPD2_VOTING_SERVICE_TOKEN: 0123456789abcdef0123456789abcdef0123456789abcdef
+  NEXT_TELEMETRY_DISABLED: '1'
+  CI: '1'
+
+jobs:
+  validate-data01:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reconstitute governed DATA-01 overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat tools/data01/patch_parts/part*.txt > /tmp/data01-patch.tar.gz.b64
+          test "$(sha256sum /tmp/data01-patch.tar.gz.b64 | awk '{print $1}')" = '15324d6a35a4dc0cc4767ce926339051cff86b3ab06340a5961d64cf1533c988'
+          base64 -d /tmp/data01-patch.tar.gz.b64 > /tmp/data01-patch.tar.gz
+          test "$(sha256sum /tmp/data01-patch.tar.gz | awk '{print $1}')" = '6b9430cb71faa7fcf33c985829ebc693c76a2c94de516b51101d569076f4df88'
+
+      - name: Recover exact frozen PB01 C6 artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/c6-artifact
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/9414338218/zip > /tmp/c6-outer.zip
+          unzip -q /tmp/c6-outer.zip -d /tmp/c6-artifact
+          C6_PATH="$(find /tmp/c6-artifact -type f -name "$C6_ZIP" -print -quit)"
+          test -n "$C6_PATH"
+          test "$(sha256sum "$C6_PATH" | awk '{print $1}')" = "$C6_SHA"
+          echo "C6_PATH=$C6_PATH" >> "$GITHUB_ENV"
+
+      - name: Build deterministic exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum "$C3_ZIP" | awk '{print $1}')" = "$C3_SHA"
+          python3 tools/data01/build_data01_candidate.py --c3 "$GITHUB_WORKSPACE/$C3_ZIP" --c6 "$C6_PATH" --patch /tmp/data01-patch.tar.gz --output "$GITHUB_WORKSPACE/$TARGET" --work /tmp/data01-build | tee data01-build.json
+          ACTUAL="$(sha256sum "$TARGET" | awk '{print $1}')"
+          echo "DATA01_SHA=$ACTUAL" >> "$GITHUB_ENV"
+          test "$ACTUAL" = "$EXPECTED_LOCAL_BUILD_SHA"
+          rm -rf /tmp/data01-exact && mkdir /tmp/data01-exact
+          unzip -q "$TARGET" -d /tmp/data01-exact
+          mapfile -t ROOTS < <(find /tmp/data01-exact -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          echo "DATA01_ROOT=$ROOT" >> "$GITHUB_ENV"
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/data01-sha256sums.log"
+          test "$(find . -type l | wc -l)" -eq 0
+          test ! -e .git
+          test ! -e node_modules
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+          cache: npm
+
+      - name: PostgreSQL 16 acceptance environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          sudo pg_ctlcluster 16 main start || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'epd2data01';"
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          test "$(node --version)" = 'v24.19.0'
+          echo "EPD2_DATA01_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+
+      - name: Locked dependencies and browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          uv sync --frozen --all-groups
+          npm ci
+          cd frontend/pilot-web
+          npx playwright install --with-deps chromium
+          BROWSER="$(node -e "const {chromium}=require('@playwright/test'); console.log(chromium.executablePath())")"
+          test -x "$BROWSER"
+          echo "EPD2_CHROMIUM=$BROWSER" >> "$GITHUB_ENV"
+
+      - name: Full exact-ZIP DATA-01 validation
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$DATA01_ROOT"
+          DATA01_CANDIDATE_ZIP="$GITHUB_WORKSPACE/$TARGET" DATA01_REQUIRE_BROWSER=1 EPD2_DATA01_PG_BIN="$EPD2_DATA01_PG_BIN" npm run validate:data01 2>&1 | tee "$GITHUB_WORKSPACE/data01-validate.log"
+          python - <<'PY'
+          import json, os, pathlib
+          p=pathlib.Path(os.environ['DATA01_ROOT'])/'DATA01_FINAL_VALIDATION.json'
+          j=json.loads(p.read_text())
+          assert j['status']=='PASS', j
+          assert j['live_execution'] is True
+          assert j['candidate_sha256']==os.environ['DATA01_SHA']
+          assert j['candidate_filename']==os.environ['TARGET']
+          assert j['predecessor_sha256']==os.environ['C3_SHA']
+          assert j['pb01_frozen_baseline_sha256']==os.environ['C6_SHA']
+          assert j['postgresql_version'].startswith('PostgreSQL 16') or 'PostgreSQL 16' in j['postgresql_version']
+          assert j['test_counts']['pilot03_targeted']==119
+          assert j['test_counts']['pilot03_full']==2470
+          assert j['test_counts']['pilot03_browser']==8
+          pathlib.Path('DATA01_ACCEPTANCE_SUMMARY.json').write_text(json.dumps(j,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Publish run id and verdict
+        if: always()
+        shell: bash
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_ACCEPTANCE_RUN_ID.txt
+          if [ "$VALIDATE_OUTCOME" = success ]; then VERDICT=PASS; else VERDICT=FAIL; fi
+          printf '# DATA-01 Exact Acceptance\n\n- Verdict: **%s**\n- Run: %s\n- Candidate SHA-256: `%s`\n' "$VERDICT" "$GITHUB_RUN_ID" "${DATA01_SHA:-UNKNOWN}" > DATA01_ACCEPTANCE_RESULT.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_ACCEPTANCE_RUN_ID.txt DATA01_ACCEPTANCE_RESULT.md
+          git commit -m 'record DATA-01 exact acceptance result [skip ci]' || true
+          git push origin HEAD:tmp/data01-candidate-20260820 || true
+
+      - name: Upload exact candidate and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-exact-candidate-and-evidence
+          if-no-files-found: warn
+          compression-level: 0
+          path: |
+            ${{ env.TARGET }}
+            data01-build.json
+            data01-sha256sums.log
+            data01-validate.log
+            DATA01_ACCEPTANCE_SUMMARY.json
+            DATA01_ACCEPTANCE_RESULT.md
