@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - tmp/data01-baseline-transfer-20260820
+    paths:
+      - '.github/workflows/data01-baseline-transfer.yml'
+      - 'DATA01_TRANSFER_TRIGGER.txt'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   transfer-pilot03:
@@ -28,3 +31,13 @@ jobs:
           path: EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
           if-no-files-found: error
           compression-level: 0
+      - name: Publish transfer run id
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_TRANSFER_RUN_ID.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_TRANSFER_RUN_ID.txt
+          git commit -m 'record DATA-01 baseline transfer run id [skip ci]'
+          git push origin HEAD:tmp/data01-baseline-transfer-20260820
