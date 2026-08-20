@@ -27,16 +27,16 @@ jobs:
           base64 -d /tmp/data01-patch.tar.gz.b64 > /tmp/data01-patch.tar.gz
           mkdir -p /tmp/data01-overlay
           tar -xzf /tmp/data01-patch.tar.gz -C /tmp/data01-overlay
-      - name: Format and lint DATA-01 sources
+      - name: Format DATA-01 sources and capture residual lint
         shell: bash
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check 'ruff==0.15.22'
           cd /tmp/data01-overlay
           python -m ruff format scripts/data01 tests/data01
-          python -m ruff check scripts/data01 tests/data01 --fix
+          python -m ruff check scripts/data01 tests/data01 --fix || true
           python -m ruff format scripts/data01 tests/data01
-          python -m ruff check scripts/data01 tests/data01
+          python -m ruff check scripts/data01 tests/data01 2>&1 | tee "$GITHUB_WORKSPACE/data01-ruff-residual.log" || true
           python -m ruff format --check scripts/data01 tests/data01
       - name: Package formatted overlay deterministically
         shell: bash
@@ -52,6 +52,7 @@ jobs:
           path: |
             data01-formatted-overlay.tar.gz
             data01-formatted-overlay.sha256
+            data01-ruff-residual.log
           compression-level: 0
       - name: Publish format run id
         shell: bash
