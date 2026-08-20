@@ -2,8 +2,8 @@
 
 **Verdict:** NOT VERIFIED — candidate integrity/extraction failed
 
-- Workflow run: 32365419355
-- Commit: dc95085f02115295f82b592e2acb7a101c12b9d6
+- Workflow run: 32366109237
+- Commit: 3c0777d97feeac2f6a2b01fb1746361e761944cb
 - Environment rc: 0
 - Integrity rc: 1
 - Smoke rc: 98
@@ -12,7 +12,7 @@
 ## Environment log
 ```text
 ## Environment
-Linux runnervmzvulz 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+Linux runnervm76f27 6.17.0-1022-azure #22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
 PRETTY_NAME="Ubuntu 24.04.4 LTS"
 NAME="Ubuntu"
 VERSION_ID="24.04"
@@ -28,7 +28,7 @@ UBUNTU_CODENAME=noble
 LOGO=ubuntu-logo
 Docker version 28.0.4, build b8034c0
 Docker Compose version v2.38.2
-lrwxrwxrwx 1 root root 13 Aug 20 11:45 /dev/fd -> /proc/self/fd
+lrwxrwxrwx 1 root root 13 Aug 20 11:51 /dev/fd -> /proc/self/fd
 process-substitution-ok
 ```
 
