@@ -1,0 +1,147 @@
+name: PB01-I10 C4 Final Acceptance
+on:
+  push:
+    branches: [pilot02-verify]
+    paths:
+      - 'tools/i10c4_gen_parts/**'
+      - '.github/workflows/pb01-i10-c4-final.yml'
+permissions:
+  contents: write
+jobs:
+  verify-i10-c4:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    env:
+      C2_ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C2.zip
+      C2_SHA256: edbb427cb8b7651ac1c351d9f3f8b8de46945152dcea82637a45d540cbbc49c6
+      C3_ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C3.zip
+      C3_SHA256: a185446dd4b7f004ac7c1513c66d1916e76616dd9a4df89e1f991cab9cf06c58
+      ZIP: EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C4.zip
+      EXPECTED_SHA256: 371262b0ff94c7cb51813168fcbe08cc1544e3661254855bf6b0b715d96c4fb2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct exact sealed C3 then C4
+        run: |
+          set -euo pipefail
+          test -f "$C2_ZIP"
+          test "$(sha256sum "$C2_ZIP" | awk '{print $1}')" = "$C2_SHA256"
+          I10_C2_ZIP="$GITHUB_WORKSPACE/$C2_ZIP" I10_C3_ZIP="$GITHUB_WORKSPACE/$C3_ZIP" I10_C3_WORK=/tmp/i10-c3-builder python3 tools/generate_pb01_i10_c3.py | tee i10-c3-generation.log
+          test "$(sha256sum "$C3_ZIP" | awk '{print $1}')" = "$C3_SHA256"
+          cat tools/i10c4_gen_parts/part*.txt > /tmp/generate_pb01_i10_c4.py
+          I10_C3_ZIP="$GITHUB_WORKSPACE/$C3_ZIP" I10_C4_ZIP="$GITHUB_WORKSPACE/$ZIP" I10_C4_WORK=/tmp/i10-c4-builder python3 /tmp/generate_pb01_i10_c4.py | tee i10-c4-generation.log
+          ACTUAL="$(sha256sum "$ZIP" | awk '{print $1}')"
+          echo "candidate_sha256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.2
+      - name: Exact Rust/Cargo 1.97.1
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          test "$(node --version)" = "v24.19.0"
+          test "$(go version | awk '{print $3}')" = "go1.23.2"
+          test "$(rustc --version)" = "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+          test "$(cargo --version)" = "cargo 1.97.1 (c980f4866 2026-06-30)"
+      - name: PostgreSQL 16
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/lib/postgresql/16/bin/postgres ]; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-16 postgresql-client-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          echo "EPD2_I10_PG_BIN=/usr/lib/postgresql/16/bin" >> "$GITHUB_ENV"
+      - name: Verify exact sealed C4 ZIP
+        run: |
+          set -euo pipefail
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          rm -rf /tmp/pb01-i10-c4
+          mkdir -p /tmp/pb01-i10-c4
+          unzip -q "$ZIP" -d /tmp/pb01-i10-c4
+          mapfile -t ROOTS < <(find /tmp/pb01-i10-c4 -mindepth 1 -maxdepth 1 -type d)
+          test "${#ROOTS[@]}" -eq 1
+          ROOT="${ROOTS[0]}"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "CANDIDATE_ZIP=$GITHUB_WORKSPACE/$ZIP" >> "$GITHUB_ENV"
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt > "$GITHUB_WORKSPACE/i10-c4-sha256sums.log"
+          test "$(find . -type l | wc -l)" -eq 0
+          test ! -e node_modules
+          test ! -e verifier/rust/target
+      - name: Untouched full fresh validate:i10
+        id: validate
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          I10_CANDIDATE_ZIP="$CANDIDATE_ZIP" EPD2_I10_PG_BIN="$EPD2_I10_PG_BIN" npm run validate:i10 2>&1 | tee "$GITHUB_WORKSPACE/i10-c4-validate.log"
+          RESULT="I10_FINAL_VALIDATION.json"
+          test -f "$RESULT"
+          node -e 'const fs=require("fs");const p=process.argv[1],expected=process.argv[2];const j=JSON.parse(fs.readFileSync(p,"utf8"));if(j.status!=="PASS"||j.live_execution!==true||j.release_readiness_decision!=="RELEASE_READY"||j.candidate_sha256!==expected||j.historical_provenance_exception_count!==1||j.historical_provenance_exception_stage!=="I05"||j.validation_timeout_policy?.fail_closed!==true)process.exit(1);console.log(JSON.stringify({status:j.status,live_execution:j.live_execution,release_readiness_decision:j.release_readiness_decision,candidate_sha256:j.candidate_sha256,current_run_nonce:j.current_run_nonce,verification_result_digest:j.verification_result_digest,historical_provenance_exception_count:j.historical_provenance_exception_count,historical_provenance_exception_stage:j.historical_provenance_exception_stage,validation_timeout_policy:j.validation_timeout_policy,node_version:j.node_version,go_version:j.go_version,rust_version:j.rust_version,cargo_version:j.cargo_version,postgresql_version:j.postgresql_version},null,2));' "$RESULT" "$EXPECTED_SHA256" | tee "$GITHUB_WORKSPACE/PB01_I10_C4_FINAL_SUMMARY.json"
+          cp "$RESULT" "$GITHUB_WORKSPACE/PB01_I10_C4_CURRENT_RUN.json"
+      - name: Record governed result in repository
+        if: always()
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: |
+          set -euo pipefail
+          if [ "$VALIDATE_OUTCOME" = "success" ] && [ -f PB01_I10_C4_FINAL_SUMMARY.json ]; then VERDICT=PASS; else VERDICT=FAIL; fi
+          {
+            echo '# PB01-I10 C4 Final Acceptance Result'
+            echo
+            echo "- Verdict: **$VERDICT**"
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Source C2 SHA-256: $C2_SHA256"
+            echo "- Reconstructed C3 SHA-256: $C3_SHA256"
+            echo "- Candidate: $ZIP"
+            echo "- Expected / reconstructed SHA-256: $EXPECTED_SHA256"
+            echo "- validate:i10 outcome: $VALIDATE_OUTCOME"
+            if [ -f PB01_I10_C4_FINAL_SUMMARY.json ]; then echo; echo '```json'; cat PB01_I10_C4_FINAL_SUMMARY.json; echo '```'; fi
+            if [ "$VERDICT" = FAIL ] && [ -f i10-c4-validate.log ]; then echo; echo '## Validation / progress tail'; echo '```text'; tail -n 220 i10-c4-validate.log; echo '```'; fi
+            if [ "$VERDICT" = FAIL ] && [ -f i10-c4-generation.log ]; then echo; echo '## Generation tail'; echo '```text'; tail -n 80 i10-c4-generation.log; echo '```'; fi
+          } > PB01_I10_C4_VERIFY_RESULT.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PB01_I10_C4_VERIFY_RESULT.md
+          git commit -m 'record PB01-I10 C4 final acceptance result' || true
+          pushed=0
+          for attempt in 1 2 3 4 5; do
+            git fetch origin pilot02-verify
+            if git rebase origin/pilot02-verify && git push origin HEAD:pilot02-verify; then pushed=1; break; fi
+            git rebase --abort >/dev/null 2>&1 || true
+            sleep 2
+          done
+          test "$pushed" = 1
+      - name: Upload final acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i10-c4-final-acceptance
+          if-no-files-found: warn
+          path: |
+            i10-c3-generation.log
+            i10-c4-generation.log
+            i10-c4-sha256sums.log
+            i10-c4-validate.log
+            PB01_I10_C4_FINAL_SUMMARY.json
+            PB01_I10_C4_CURRENT_RUN.json
+            PB01_I10_C4_VERIFY_RESULT.md
+      - name: Upload exact sealed C4 candidate artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i10-c4-exact-candidate
+          if-no-files-found: error
+          compression-level: 0
+          path: ${{ env.ZIP }}
+      - name: Enforce final outcome
+        if: always()
+        env:
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+        run: test "$VALIDATE_OUTCOME" = success
