@@ -1,0 +1,72 @@
+name: DATA01 C10 Frozen UV Cache
+
+on:
+  push:
+    branches: [tmp/data01-c10-toolchain-20260821]
+    paths:
+      - '.github/workflows/data01-c10-uv-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  C1_ARTIFACT_ID: '9421451498'
+  C1_SHA256: 'dbb988d6b96bc8c3351b83de779d6ba8a771eaa6eb660ffcf024c052ea868376'
+
+jobs:
+  build-cache:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.5'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+      - name: Recover exact DATA01 dependency snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/c1-outer /tmp/c1-root
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/${C1_ARTIFACT_ID}/zip > /tmp/c1-outer.zip
+          unzip -q /tmp/c1-outer.zip -d /tmp/c1-outer
+          C1="$(find /tmp/c1-outer -type f -name '*.zip' -size +20M -print -quit)"
+          test -n "$C1"
+          test "$(sha256sum "$C1" | awk '{print $1}')" = "$C1_SHA256"
+          unzip -q "$C1" -d /tmp/c1-root
+          ROOT="$(find /tmp/c1-root -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$ROOT"
+          echo "ROOT=$ROOT" >> "$GITHUB_ENV"
+          sha256sum "$ROOT/uv.lock" "$ROOT/pyproject.toml" > dependency-input-sha256.txt
+      - name: Populate frozen Python 3.13 cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          python --version | tee python-version.txt
+          uv --version | tee uv-version.txt
+          cd "$ROOT"
+          UV_PYTHON="$(command -v python)" uv sync --frozen --all-groups
+          UV_CACHE="$(uv cache dir)"
+          test -d "$UV_CACHE"
+          tar -C "$(dirname "$UV_CACHE")" -czf "$GITHUB_WORKSPACE/uv-cache-py313.tgz" "$(basename "$UV_CACHE")"
+          du -sh "$UV_CACHE" | tee "$GITHUB_WORKSPACE/uv-cache-size.txt"
+          sha256sum "$GITHUB_WORKSPACE/uv-cache-py313.tgz" > "$GITHUB_WORKSPACE/uv-cache-sha256.txt"
+      - name: Upload frozen cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c10-uv-cache-py313
+          compression-level: 0
+          retention-days: 2
+          path: |
+            uv-cache-py313.tgz
+            uv-cache-sha256.txt
+            uv-cache-size.txt
+            python-version.txt
+            uv-version.txt
+            dependency-input-sha256.txt
