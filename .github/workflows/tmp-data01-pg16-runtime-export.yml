@@ -7,20 +7,22 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   export-pg16:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - name: Verify PostgreSQL 16 runtime
+      - uses: actions/checkout@v4
+      - name: Verify and package PostgreSQL 16 runtime
         shell: bash
         run: |
           set -euo pipefail
           PG_BIN=/usr/lib/postgresql/16/bin
           test -x "$PG_BIN/postgres"
           "$PG_BIN/postgres" --version | grep -E '^postgres \(PostgreSQL\) 16\.'
+          rm -rf /tmp/pg16-runtime
           mkdir -p /tmp/pg16-runtime/bin /tmp/pg16-runtime/lib
           cp -a "$PG_BIN"/* /tmp/pg16-runtime/bin/
           {
@@ -36,11 +38,18 @@ jobs:
           printf '%s\n' "$($PG_BIN/postgres --version)" > /tmp/pg16-runtime/VERSION.txt
           tar -C /tmp -czf "$GITHUB_WORKSPACE/postgresql16-runtime-ubuntu2404.tar.gz" pg16-runtime
           sha256sum "$GITHUB_WORKSPACE/postgresql16-runtime-ubuntu2404.tar.gz" > "$GITHUB_WORKSPACE/postgresql16-runtime-ubuntu2404.tar.gz.sha256"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: data01-postgresql16-runtime
-          path: |
-            postgresql16-runtime-ubuntu2404.tar.gz
-            postgresql16-runtime-ubuntu2404.tar.gz.sha256
-          compression-level: 0
-          retention-days: 1
+      - name: Publish temporary runtime to branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add postgresql16-runtime-ubuntu2404.tar.gz postgresql16-runtime-ubuntu2404.tar.gz.sha256
+          git commit -m 'temporary DATA01 PostgreSQL16 runtime transport'
+          for attempt in 1 2 3 4 5; do
+            git fetch origin pilot02-verify
+            git rebase origin/pilot02-verify
+            if git push origin HEAD:pilot02-verify; then exit 0; fi
+            sleep 2
+          done
+          exit 1
