@@ -1,4 +1,4 @@
-name: DATA01 C10 Frozen UV Cache
+name: DATA01 C10 Offline Regression Toolchain
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 env:
@@ -18,7 +18,7 @@ env:
 jobs:
   build-cache:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,7 +27,11 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: false
-      - name: Recover exact DATA01 dependency snapshot
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Build exact-lock offline toolchain
+        id: cache
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -42,31 +46,55 @@ jobs:
           unzip -q "$C1" -d /tmp/c1-root
           ROOT="$(find /tmp/c1-root -mindepth 1 -maxdepth 1 -type d -print -quit)"
           test -n "$ROOT"
-          echo "ROOT=$ROOT" >> "$GITHUB_ENV"
-          sha256sum "$ROOT/uv.lock" "$ROOT/pyproject.toml" > dependency-input-sha256.txt
-      - name: Populate frozen Python 3.13 cache
-        shell: bash
-        run: |
-          set -euo pipefail
-          python --version | tee python-version.txt
-          uv --version | tee uv-version.txt
           cd "$ROOT"
+          sha256sum uv.lock pyproject.toml package-lock.json > "$GITHUB_WORKSPACE/dependency-input-sha256.txt"
+          python --version | tee "$GITHUB_WORKSPACE/python-version.txt"
+          uv --version | tee "$GITHUB_WORKSPACE/uv-version.txt"
+          node --version | tee "$GITHUB_WORKSPACE/node-version.txt"
+          npm --version | tee "$GITHUB_WORKSPACE/npm-version.txt"
           UV_PYTHON="$(command -v python)" uv sync --frozen --all-groups
           UV_CACHE="$(uv cache dir)"
-          test -d "$UV_CACHE"
           tar -C "$(dirname "$UV_CACHE")" -czf "$GITHUB_WORKSPACE/uv-cache-py313.tgz" "$(basename "$UV_CACHE")"
-          du -sh "$UV_CACHE" | tee "$GITHUB_WORKSPACE/uv-cache-size.txt"
-          sha256sum "$GITHUB_WORKSPACE/uv-cache-py313.tgz" > "$GITHUB_WORKSPACE/uv-cache-sha256.txt"
-      - name: Upload frozen cache
+          npm ci --ignore-scripts
+          tar -C "$HOME" -czf "$GITHUB_WORKSPACE/npm-cache.tgz" .npm
+          cd frontend/pilot-web
+          npx playwright install chromium
+          test -d "$HOME/.cache/ms-playwright"
+          tar -C "$HOME/.cache" -czf "$GITHUB_WORKSPACE/ms-playwright.tgz" ms-playwright
+          cd "$GITHUB_WORKSPACE"
+          sha256sum uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz > toolchain-sha256.txt
+          du -sh uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz | tee toolchain-size.txt
+      - name: Upload offline toolchain
+        id: upload
+        if: steps.cache.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: data01-c10-uv-cache-py313
+          name: data01-c10-offline-regression-toolchain
           compression-level: 0
           retention-days: 2
           path: |
             uv-cache-py313.tgz
-            uv-cache-sha256.txt
-            uv-cache-size.txt
+            npm-cache.tgz
+            ms-playwright.tgz
+            toolchain-sha256.txt
+            toolchain-size.txt
             python-version.txt
             uv-version.txt
+            node-version.txt
+            npm-version.txt
             dependency-input-sha256.txt
+      - name: Record toolchain run
+        if: always()
+        shell: bash
+        env:
+          CACHE_OUTCOME: ${{ steps.cache.outcome }}
+          UPLOAD_OUTCOME: ${{ steps.upload.outcome }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$GITHUB_RUN_ID" > DATA01_C10_TOOLCHAIN_RUN_ID.txt
+          printf 'cache=%s\nupload=%s\n' "$CACHE_OUTCOME" "$UPLOAD_OUTCOME" > DATA01_C10_TOOLCHAIN_STATUS.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add DATA01_C10_TOOLCHAIN_RUN_ID.txt DATA01_C10_TOOLCHAIN_STATUS.txt
+          git commit -m 'record DATA01 C10 toolchain run [skip ci]' || true
+          git push origin HEAD:tmp/data01-c10-toolchain-20260821 || true
