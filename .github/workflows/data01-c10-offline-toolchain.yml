@@ -63,20 +63,42 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           sha256sum uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz > toolchain-sha256.txt
           du -sh uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz | tee toolchain-size.txt
-      - name: Upload offline toolchain
+      - name: Upload Python cache
         uses: actions/upload-artifact@v4
         with:
-          name: data01-c10-offline-regression-toolchain
+          name: data01-c10-uv-cache-py313
           compression-level: 0
           retention-days: 2
           path: |
             uv-cache-py313.tgz
-            npm-cache.tgz
-            ms-playwright.tgz
-            toolchain-sha256.txt
-            toolchain-size.txt
             python-version.txt
             uv-version.txt
+            dependency-input-sha256.txt
+            toolchain-sha256.txt
+            toolchain-size.txt
+      - name: Upload npm cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c10-npm-cache
+          compression-level: 0
+          retention-days: 2
+          path: |
+            npm-cache.tgz
             node-version.txt
             npm-version.txt
             dependency-input-sha256.txt
+            toolchain-sha256.txt
+            toolchain-size.txt
+      - name: Upload Playwright cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c10-playwright-cache
+          compression-level: 0
+          retention-days: 2
+          path: |
+            ms-playwright.tgz
+            node-version.txt
+            npm-version.txt
+            dependency-input-sha256.txt
+            toolchain-sha256.txt
+            toolchain-size.txt
