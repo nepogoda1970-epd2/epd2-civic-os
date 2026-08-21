@@ -1,0 +1,82 @@
+name: DATA01 C10 Offline Regression Toolchain
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/data01-c10-offline-toolchain.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  C1_ARTIFACT_ID: '9421451498'
+  C1_SHA256: 'dbb988d6b96bc8c3351b83de779d6ba8a771eaa6eb660ffcf024c052ea868376'
+
+jobs:
+  build-cache:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.5'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Build exact-lock offline toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/c1-outer /tmp/c1-root
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/${C1_ARTIFACT_ID}/zip > /tmp/c1-outer.zip
+          unzip -q /tmp/c1-outer.zip -d /tmp/c1-outer
+          C1="$(find /tmp/c1-outer -type f -name '*.zip' -size +20M -print -quit)"
+          test -n "$C1"
+          test "$(sha256sum "$C1" | awk '{print $1}')" = "$C1_SHA256"
+          unzip -q "$C1" -d /tmp/c1-root
+          ROOT="$(find /tmp/c1-root -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$ROOT"
+          cd "$ROOT"
+          sha256sum uv.lock pyproject.toml package-lock.json > "$GITHUB_WORKSPACE/dependency-input-sha256.txt"
+          python --version | tee "$GITHUB_WORKSPACE/python-version.txt"
+          uv --version | tee "$GITHUB_WORKSPACE/uv-version.txt"
+          node --version | tee "$GITHUB_WORKSPACE/node-version.txt"
+          npm --version | tee "$GITHUB_WORKSPACE/npm-version.txt"
+          UV_PYTHON="$(command -v python)" uv sync --frozen --all-groups
+          UV_CACHE="$(uv cache dir)"
+          tar -C "$(dirname "$UV_CACHE")" -czf "$GITHUB_WORKSPACE/uv-cache-py313.tgz" "$(basename "$UV_CACHE")"
+          npm ci --ignore-scripts
+          tar -C "$HOME" -czf "$GITHUB_WORKSPACE/npm-cache.tgz" .npm
+          cd frontend/pilot-web
+          npx playwright install chromium
+          test -d "$HOME/.cache/ms-playwright"
+          tar -C "$HOME/.cache" -czf "$GITHUB_WORKSPACE/ms-playwright.tgz" ms-playwright
+          cd "$GITHUB_WORKSPACE"
+          sha256sum uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz > toolchain-sha256.txt
+          du -sh uv-cache-py313.tgz npm-cache.tgz ms-playwright.tgz | tee toolchain-size.txt
+      - name: Upload offline toolchain
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c10-offline-regression-toolchain
+          compression-level: 0
+          retention-days: 2
+          path: |
+            uv-cache-py313.tgz
+            npm-cache.tgz
+            ms-playwright.tgz
+            toolchain-sha256.txt
+            toolchain-size.txt
+            python-version.txt
+            uv-version.txt
+            node-version.txt
+            npm-version.txt
+            dependency-input-sha256.txt
