@@ -1,0 +1,38 @@
+name: DATA01 C10 UV Binary
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/data01-c10-uv-bin.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package-uv:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+          enable-cache: false
+      - name: Package exact uv binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv --version | tee uv-version.txt
+          cp "$(command -v uv)" uv-0.12.5
+          chmod +x uv-0.12.5
+          sha256sum uv-0.12.5 > uv-binary-sha256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data01-c10-uv-0.12.5
+          compression-level: 0
+          retention-days: 2
+          path: |
+            uv-0.12.5
+            uv-version.txt
+            uv-binary-sha256.txt
