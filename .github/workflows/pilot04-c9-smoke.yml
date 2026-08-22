@@ -1,11 +1,91 @@
-name: PILOT-04 C9 smoke
+name: PILOT-04 C9 exact-byte acceptance
 
 on:
   pull_request:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
-  smoke:
+  accept:
     runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      EPD2_LOCAL_CI_HOME: ${{ runner.temp }}/epd2-local-ci
+      PYTHONUNBUFFERED: '1'
+
     steps:
-      - uses: actions/checkout@v4
-      - run: echo PILOT04_C9_SMOKE_OK
+      - name: Checkout exact verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+
+      - name: Set up uv 0.10.0
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.10.0'
+          enable-cache: true
+
+      - name: Install PostgreSQL 16 client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Download frozen PB01 I10 C6 exact candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: pb01-i10-c6-exact-candidate
+          path: pb01
+          github-token: ${{ github.token }}
+          repository: nepogoda1970-epd2/epd2-civic-os
+          run-id: '32388797195'
+
+      - name: Run PILOT-04 C9 exact-byte authoritative acceptance
+        shell: bash
+        run: bash scripts/tmp_pilot04_c9_exact_accept.sh
+
+      - name: Upload authoritative C9 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot04-c9-authoritative-evidence
+          path: |
+            PILOT04_C9_ACCEPTANCE_EVIDENCE.json
+            PILOT04_C9_AUTHORITATIVE.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload exact accepted C9 candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot04-c9-exact-accepted-candidate
+          path: inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip
+          if-no-files-found: error
+          retention-days: 90
