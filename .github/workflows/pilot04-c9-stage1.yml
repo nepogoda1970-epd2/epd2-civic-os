@@ -1,0 +1,48 @@
+name: PILOT-04 C9 stage1
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  stage1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.19.0'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.10.0'
+          enable-cache: true
+      - name: Verify environment
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+          PGPASSWORD=postgres psql "$EPD2_TEST_DATABASE_URL" -Atc 'SHOW server_version'
+          echo PILOT04_C9_STAGE1_OK
