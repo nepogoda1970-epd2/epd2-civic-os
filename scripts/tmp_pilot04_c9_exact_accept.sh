@@ -10,8 +10,15 @@ echo 'df56b22c7d522e10652f060d925662ce6e1b3fc47252cf2644c4175706fa1b73  PILOT04_
 echo '27f3a7ae239ad9c3638ace3df6e3340dc263f4ea528ff10e17cbe715564b0d30  PILOT04_C9_01.part' | sha256sum -c -
 
 mkdir -p inputs anchors "$RUNNER_TEMP/d"
+C3=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C3.zip
+C4=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C4.zip
+C5=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C5.zip
+C6=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C6.zip
+C7=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C7.zip
 C8=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C8.zip
 C9=inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip
+P3=anchors/EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip
+PB=anchors/EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip
 cat PILOT04_C8_00.part PILOT04_C8_01.part > "$C8"
 cat PILOT04_C9_00.part PILOT04_C9_01.part > "$C9"
 echo 'd3f7ab7c7fbf87591bf476f21a56b19148fdb400cd6454c12df2377f40938446  '"$C8" | sha256sum -c -
@@ -23,31 +30,32 @@ DB=artifacts/PILOT04_C7_GITHUB_DELTA_BUNDLE.zip
 echo '8f750c7821462bbeef50686089353f62d5935f0669bede5e3e166e75f49aa201  '"$P0" | sha256sum -c -
 echo '074d33a0eb13ddba1ec54f5dd91d3c4586768c1cb24504ae8d836f5ade78749e  '"$P1" | sha256sum -c -
 echo '36cf6781d79394034c4047cff0e9a72abb6cbc14d3df19e4e99a7b2fc81b3c0a  '"$DB" | sha256sum -c -
-cat "$P0" "$P1" > inputs/C4.zip
+cat "$P0" "$P1" > "$C4"
 unzip -q "$DB" -d "$RUNNER_TEMP/d"
-python scripts/tmp_apply_zip_sparse_patch.py inputs/C4.zip "$RUNNER_TEMP/d/c4_to_pilot04c3.zsp" inputs/C3.zip
-python scripts/tmp_apply_zip_sparse_patch.py inputs/C4.zip "$RUNNER_TEMP/d/c4_to_pilot03c3.zsp" anchors/P3.zip
-python scripts/tmp_apply_zip_sparse_patch.py inputs/C4.zip "$RUNNER_TEMP/d/c4_to_c5.zsp" inputs/C5.zip
-python scripts/tmp_apply_zip_sparse_patch.py inputs/C5.zip "$RUNNER_TEMP/d/c5_to_c6.zsp" inputs/C6.zip
-python scripts/tmp_apply_zip_sparse_patch.py inputs/C6.zip "$RUNNER_TEMP/d/c6_to_c7.zsp" inputs/C7.zip
+python scripts/tmp_apply_zip_sparse_patch.py "$C4" "$RUNNER_TEMP/d/c4_to_pilot04c3.zsp" "$C3"
+python scripts/tmp_apply_zip_sparse_patch.py "$C4" "$RUNNER_TEMP/d/c4_to_pilot03c3.zsp" "$P3"
+python scripts/tmp_apply_zip_sparse_patch.py "$C4" "$RUNNER_TEMP/d/c4_to_c5.zsp" "$C5"
+python scripts/tmp_apply_zip_sparse_patch.py "$C5" "$RUNNER_TEMP/d/c5_to_c6.zsp" "$C6"
+python scripts/tmp_apply_zip_sparse_patch.py "$C6" "$RUNNER_TEMP/d/c6_to_c7.zsp" "$C7"
 
-echo '7d9dc40c6b935d2ca899e9c53cc5a1cddef202bc69aa23994871dab1dfa5c1ff  inputs/C3.zip' | sha256sum -c -
-echo '994f97c022e499b9847e8c36b48e04aa30b0da0b6e3b4741df13b8f1fcd083d1  inputs/C4.zip' | sha256sum -c -
-echo '6d63b8a05e369960e4ef2f691cf4cfb44cf2eae37ffa7cab9fa95064e214b495  inputs/C5.zip' | sha256sum -c -
-echo '4899c29a004112d38a33fce51e4e637ceb0951b49a47de71bac5b850e8f31b84  inputs/C6.zip' | sha256sum -c -
-echo '812652950e996bd7c781512e4bbc03488c58eb74ca0c652c2b830056d76c1f1d  inputs/C7.zip' | sha256sum -c -
-echo '52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1  anchors/P3.zip' | sha256sum -c -
+echo '7d9dc40c6b935d2ca899e9c53cc5a1cddef202bc69aa23994871dab1dfa5c1ff  '"$C3" | sha256sum -c -
+echo '994f97c022e499b9847e8c36b48e04aa30b0da0b6e3b4741df13b8f1fcd083d1  '"$C4" | sha256sum -c -
+echo '6d63b8a05e369960e4ef2f691cf4cfb44cf2eae37ffa7cab9fa95064e214b495  '"$C5" | sha256sum -c -
+echo '4899c29a004112d38a33fce51e4e637ceb0951b49a47de71bac5b850e8f31b84  '"$C6" | sha256sum -c -
+echo '812652950e996bd7c781512e4bbc03488c58eb74ca0c652c2b830056d76c1f1d  '"$C7" | sha256sum -c -
+echo '52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1  '"$P3" | sha256sum -c -
 
+export PB_OUT="$PB"
 python - <<'PY'
-import hashlib, shutil
+import hashlib, os, shutil
 from pathlib import Path
 exp='442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25'
 m=[p for p in Path('pb01').rglob('*') if p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==exp]
 assert len(m)==1, m
-shutil.copyfile(m[0], 'anchors/PB01.zip')
+shutil.copyfile(m[0], os.environ['PB_OUT'])
 PY
 
-echo '442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25  anchors/PB01.zip' | sha256sum -c -
+echo '442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25  '"$PB" | sha256sum -c -
 mkdir workspace
 unzip -q "$C9" -d workspace
 ROOT="$GITHUB_WORKSPACE/workspace/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9"
@@ -60,10 +68,10 @@ E="$GITHUB_WORKSPACE/PILOT04_C9_ACCEPTANCE_EVIDENCE.json"
 uv run python scripts/validate_pilot04_c9.py \
   --candidate "$GITHUB_WORKSPACE/$C9" \
   --predecessor "$GITHUB_WORKSPACE/$C8" \
-  --base "$GITHUB_WORKSPACE/inputs/C3.zip" \
-  --historical "$GITHUB_WORKSPACE/inputs/C4.zip" --historical "$GITHUB_WORKSPACE/inputs/C5.zip" \
-  --historical "$GITHUB_WORKSPACE/inputs/C6.zip" --historical "$GITHUB_WORKSPACE/inputs/C7.zip" \
-  --anchor "$GITHUB_WORKSPACE/anchors/P3.zip" --anchor "$GITHUB_WORKSPACE/anchors/PB01.zip" \
+  --base "$GITHUB_WORKSPACE/$C3" \
+  --historical "$GITHUB_WORKSPACE/$C4" --historical "$GITHUB_WORKSPACE/$C5" \
+  --historical "$GITHUB_WORKSPACE/$C6" --historical "$GITHUB_WORKSPACE/$C7" \
+  --anchor "$GITHUB_WORKSPACE/$P3" --anchor "$GITHUB_WORKSPACE/$PB" \
   --run-id "github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}" --json "$E" \
   2>&1 | tee "$GITHUB_WORKSPACE/PILOT04_C9_AUTHORITATIVE.log"
 NONCE=$(python -c "import json;d=json.load(open('$E'));print(d['freshness']['nonce'])")
