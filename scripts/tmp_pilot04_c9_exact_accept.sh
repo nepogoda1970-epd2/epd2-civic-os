@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PGPASSWORD=postgres psql "$EPD2_TEST_DATABASE_URL" -Atc 'SHOW server_version' | tee "$RUNNER_TEMP/pg.txt"
-grep -Fx '16.15' "$RUNNER_TEMP/pg.txt"
+PGPASSWORD=postgres psql "$EPD2_TEST_DATABASE_URL" -Atc 'SHOW server_version_num' | tee "$RUNNER_TEMP/pg-version-num.txt"
+grep -Fx '160015' "$RUNNER_TEMP/pg-version-num.txt"
 
 echo '5a7ac1f69dffcd5e785461fe02260664e5b9259af9857e6b9c463896a4d65bf8  PILOT04_C8_00.part' | sha256sum -c -
 echo 'c5e5b2090fa3dd1b753264455665b5bb49ad743cd8272b697b27175ac0210845  PILOT04_C8_01.part' | sha256sum -c -
