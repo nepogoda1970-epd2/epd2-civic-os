@@ -1,0 +1,37 @@
+name: DATA01 C13 Artifact Index
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/data01-c13-artifact-index.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  index-artifacts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Index repository artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | [.id,.name,.size_in_bytes,.created_at,.expired,.workflow_run.id,.workflow_run.head_branch,.workflow_run.head_sha] | @tsv' \
+            > artifact-index.tsv
+          wc -l artifact-index.tsv
+          grep -Ei 'data01|pb01|c12|c6|candidate|sealed' artifact-index.tsv > artifact-index-filtered.tsv || true
+          cat artifact-index-filtered.tsv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data01-c13-artifact-index
+          retention-days: 2
+          path: |
+            artifact-index.tsv
+            artifact-index-filtered.tsv
