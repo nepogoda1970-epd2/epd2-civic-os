@@ -22,6 +22,11 @@ jobs:
           repository: postgres/postgres
           ref: REL_16_15
           path: postgres-src
+      - name: Install pgcrypto build dependency
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev
       - name: Build and smoke-test PostgreSQL 16.15 runtime with pgcrypto
         shell: bash
         run: |
@@ -29,7 +34,7 @@ jobs:
           prefix="$RUNNER_TEMP/pg1615-runtime"
           data="$RUNNER_TEMP/pg1615-data"
           cd postgres-src
-          ./configure --prefix="$prefix" --without-icu --without-readline --without-zlib
+          ./configure --prefix="$prefix" --with-ssl=openssl --without-icu --without-readline --without-zlib
           make -j2
           make install
           make -C contrib/pgcrypto -j2
