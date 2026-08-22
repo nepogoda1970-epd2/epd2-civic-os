@@ -1,0 +1,28 @@
+name: Temporary PILOT-03 predecessor transport
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  transport:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify accepted PILOT-02 predecessor
+        shell: bash
+        run: |
+          set -euo pipefail
+          f='EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip'
+          test -f "$f"
+          echo '261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e  '"$f" | sha256sum -c -
+      - name: Upload accepted predecessor
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot02-c4-exact-predecessor
+          path: EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip
+          retention-days: 1
+          compression-level: 0
