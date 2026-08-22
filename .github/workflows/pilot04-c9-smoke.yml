@@ -1,0 +1,11 @@
+name: PILOT-04 C9 smoke
+
+on:
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo PILOT04_C9_SMOKE_OK
