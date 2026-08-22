@@ -22,7 +22,7 @@ jobs:
           repository: postgres/postgres
           ref: REL_16_15
           path: postgres-src
-      - name: Build and smoke-test PostgreSQL 16.15 runtime
+      - name: Build and smoke-test PostgreSQL 16.15 runtime with pgcrypto
         shell: bash
         run: |
           set -euxo pipefail
@@ -32,22 +32,30 @@ jobs:
           ./configure --prefix="$prefix" --without-icu --without-readline --without-zlib
           make -j2
           make install
+          make -C contrib/pgcrypto -j2
+          make -C contrib/pgcrypto install
+          test -f "$prefix/share/postgresql/extension/pgcrypto.control"
           test "$("$prefix/bin/postgres" --version)" = "postgres (PostgreSQL) 16.15"
           "$prefix/bin/postgres" --version | tee "$GITHUB_WORKSPACE/postgres-version.txt"
           "$prefix/bin/initdb" -D "$data" --no-locale --encoding=UTF8 --auth=trust
           "$prefix/bin/pg_ctl" -D "$data" -o "-h 127.0.0.1 -p 55432" -w start
           "$prefix/bin/psql" -h 127.0.0.1 -p 55432 -d postgres -Atc 'SHOW server_version;' | tee "$GITHUB_WORKSPACE/server-version.txt"
           test "$(cat "$GITHUB_WORKSPACE/server-version.txt")" = "16.15"
+          "$prefix/bin/psql" -h 127.0.0.1 -p 55432 -d postgres -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION pgcrypto;'
+          "$prefix/bin/psql" -h 127.0.0.1 -p 55432 -d postgres -Atc "SELECT extversion FROM pg_extension WHERE extname='pgcrypto';" | tee "$GITHUB_WORKSPACE/pgcrypto-version.txt"
+          test -s "$GITHUB_WORKSPACE/pgcrypto-version.txt"
           "$prefix/bin/pg_ctl" -D "$data" -m fast -w stop
+          rm -rf "$data"
           tar -C "$prefix" -czf "$GITHUB_WORKSPACE/postgresql-16.15-linux-x64-runtime.tgz" .
           sha256sum "$GITHUB_WORKSPACE/postgresql-16.15-linux-x64-runtime.tgz" > "$GITHUB_WORKSPACE/postgresql-runtime-sha256.txt"
       - uses: actions/upload-artifact@v4
         with:
-          name: data01-c13-postgresql-16.15-runtime
+          name: data01-c13-postgresql-16.15-pgcrypto-runtime
           compression-level: 0
           retention-days: 2
           path: |
             postgresql-16.15-linux-x64-runtime.tgz
             postgres-version.txt
             server-version.txt
+            pgcrypto-version.txt
             postgresql-runtime-sha256.txt
