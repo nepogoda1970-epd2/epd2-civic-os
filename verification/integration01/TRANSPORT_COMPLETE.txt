@@ -1,0 +1,4 @@
+INTEGRATION-01 C1 exact transport upload complete.
+Expected reconstructed candidate SHA-256: a7b136993c2ded2e0427286d93b9ab386b79f2ac8e3c0252eba47c5451e749cc
+Transport SHA-256: 56fda6726f2e73d53c3b05bd8e88af7f81e4f18bf2f31b905b8e4d957a1eadc
+Parts: transport.b64.part00 .. transport.b64.part04
