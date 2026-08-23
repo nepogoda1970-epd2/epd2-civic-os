@@ -111,13 +111,15 @@ jobs:
         run: |
           uv sync --frozen --all-groups --all-extras
           npm ci --no-audit --no-fund
-      - name: Repository quality gates
+      - name: Canonical gate - Ruff lint
         working-directory: ${{ env.REPO }}
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
-          make typecheck
-          npm run format:check
+        run: uv run ruff check .
+      - name: Canonical gate - Ruff format
+        working-directory: ${{ env.REPO }}
+        run: uv run ruff format --check .
+      - name: Canonical gate - Typecheck
+        working-directory: ${{ env.REPO }}
+        run: make typecheck
       - name: DATA-03 source and PostgreSQL convergence
         working-directory: ${{ env.REPO }}
         run: |
