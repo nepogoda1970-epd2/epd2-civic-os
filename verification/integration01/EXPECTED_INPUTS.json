@@ -1,0 +1,24 @@
+{
+  "schema": "epd2.integration01.inputs.v1",
+  "status": "PREPARED_FOR_EXACT_RECONSTRUCTION",
+  "pilot04_c9": {
+    "filename": "EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip",
+    "sha256": "7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664",
+    "accepted_run_id": 32601698352,
+    "accepted_artifact_id": 9483476323
+  },
+  "data04_c1": {
+    "filename": "EPD2_DATA-04_RETENTION_LEGAL_HOLD_ARCHIVAL_AND_CRYPTOGRAPHIC_HISTORY_CANDIDATE_0.1_C1.zip",
+    "sha256": "e5502772cbb4abe961ca46059fa02a9610dd243e86c31ece7b7e5148aeb5c3d3",
+    "accepted": true,
+    "result_digest": "4e4427464a61af54ea493fdf438117ae7edfbaeaec0154f75e5e96426ce27727"
+  },
+  "pb01_c6": {
+    "filename": "EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip",
+    "sha256": "442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25",
+    "frozen_run_id": 32388797195,
+    "frozen_artifact_id": 9414338218
+  },
+  "target": "EPD2_INTEGRATION-01_PILOT04_DATA04_PB01_BASELINE_CANDIDATE_0.1_C1.zip",
+  "acceptance_rule": "No ACCEPTED/FROZEN claim before exact candidate reconstruction, independent canonical GitHub PASS, evidence validation, artifact download, and independent SHA-256 verification."
+}
