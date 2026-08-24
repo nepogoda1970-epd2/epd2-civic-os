@@ -1,0 +1,73 @@
+name: INTEGRATION-01 C3 bootstrap exact C1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  reconstruct-c1:
+    if: startsWith(github.head_ref, 'tmp/integration01-c3-authoritative-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      C9_SHA: 7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664
+      PB01_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+      OLD_CONS_SHA: f8cc21c1701593c57ae9c069a7d61b57dd53ae7c60cf2b697062b67dcfd2981d
+      OLD_TRANSPORT_SHA: 523fd846c77b98716afd223ca965c1ad9450e3973cf23c5322ca4b82192ef01a
+      INT_C1_SHA: a7b136993c2ded2e0427286d93b9ab386b79f2ac8e3c0252eba47c5451e749cc
+      INT_C1_TRANSPORT_SHA: 56fda6726f2e73d53c3b05bd8e88af7f81e4f18bf2f31b905b8e4d957a1eadc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/integration01-c1-authoritative-20260823
+          path: c1src
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.12'
+      - name: Download accepted C9
+        uses: actions/download-artifact@v4
+        with:
+          name: pilot04-c9-exact-accepted-candidate
+          path: sources/c9
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '32601698352'
+      - name: Download frozen PB01
+        uses: actions/download-artifact@v4
+        with:
+          name: pb01-i10-c6-exact-candidate
+          path: sources/pb01
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '32388797195'
+      - name: Reconstruct exact C1
+        shell: bash
+        run: |
+          set -euo pipefail
+          C9=$(find sources/c9 -type f -name '*.zip' -print -quit)
+          PB=$(find sources/pb01 -type f -name '*.zip' -print -quit)
+          echo "$C9_SHA  $C9" | sha256sum -c -
+          echo "$PB01_SHA  $PB" | sha256sum -c -
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/tmp/consolidation-c1-authoritative-20260823/verification/consolidation-c1/transport.part00" -o "$RUNNER_TEMP/old_transport.tar.xz"
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/tmp/consolidation-c1-authoritative-20260823/verification/consolidation-c1/reconstruct.py" -o "$RUNNER_TEMP/old_reconstruct.py"
+          echo "$OLD_TRANSPORT_SHA  $RUNNER_TEMP/old_transport.tar.xz" | sha256sum -c -
+          python "$RUNNER_TEMP/old_reconstruct.py" --c9 "$C9" --pb01 "$PB" --bundle "$RUNNER_TEMP/old_transport.tar.xz" --work "$RUNNER_TEMP/oldcons-work" --out "$RUNNER_TEMP/OLD_CONSOLIDATION.zip"
+          echo "$OLD_CONS_SHA  $RUNNER_TEMP/OLD_CONSOLIDATION.zip" | sha256sum -c -
+          cat c1src/verification/integration01/transport.b64.part* | base64 -d > "$RUNNER_TEMP/integration01_c1_transport.tar.xz"
+          echo "$INT_C1_TRANSPORT_SHA  $RUNNER_TEMP/integration01_c1_transport.tar.xz" | sha256sum -c -
+          python c1src/verification/integration01/reconstruct.py --old-candidate "$RUNNER_TEMP/OLD_CONSOLIDATION.zip" --bundle "$RUNNER_TEMP/integration01_c1_transport.tar.xz" --work "$RUNNER_TEMP/int-c1-work" --out "$RUNNER_TEMP/INTEGRATION01_C1.zip"
+          echo "$INT_C1_SHA  $RUNNER_TEMP/INTEGRATION01_C1.zip" | sha256sum -c -
+          cp "$RUNNER_TEMP/INTEGRATION01_C1.zip" ./INTEGRATION01_C1.zip
+          echo INTEGRATION01_C1_EXACT_RECONSTRUCTION_PASS
+      - name: Upload exact C1 bootstrap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration01-c1-bootstrap-exact
+          path: INTEGRATION01_C1.zip
+          if-no-files-found: error
+          retention-days: 7
