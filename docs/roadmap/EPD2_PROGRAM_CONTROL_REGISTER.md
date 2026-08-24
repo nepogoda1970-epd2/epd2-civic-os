@@ -36,6 +36,14 @@ Future-requirement / governance authority:
 Current Master maintenance level established by the project governance work:
 **V16**, including `FIR-UX-012` and `FIR-UX-013`.
 
+**Repository reconciliation note:** the canonical Master Register already
+exists at the path above, but the GitHub copy inspected when this control
+register was introduced predates the V16 maintenance copy. It must be
+reconciled to V16 before a repository-only task may rely on V16-specific FIR
+content. Until that reconciliation is complete, the conflict rule in
+`EPD2_PROJECT_ENTRYPOINT.md` applies: do not silently infer or downgrade the
+Master state.
+
 ---
 
 ## 2. Program phase state
