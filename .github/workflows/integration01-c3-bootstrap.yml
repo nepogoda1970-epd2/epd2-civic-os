@@ -59,7 +59,15 @@ jobs:
           python "$RUNNER_TEMP/old_reconstruct.py" --c9 "$C9" --pb01 "$PB" --bundle "$RUNNER_TEMP/old_transport.tar.xz" --work "$RUNNER_TEMP/oldcons-work" --out "$RUNNER_TEMP/OLD_CONSOLIDATION.zip"
           echo "$OLD_CONS_SHA  $RUNNER_TEMP/OLD_CONSOLIDATION.zip" | sha256sum -c -
           cat c1src/verification/integration01/transport.b64.part* | base64 -d > "$RUNNER_TEMP/integration01_c1_transport.tar.xz"
-          echo "$INT_C1_TRANSPORT_SHA  $RUNNER_TEMP/integration01_c1_transport.tar.xz" | sha256sum -c -
+          python - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'integration01_c1_transport.tar.xz'
+          got=hashlib.sha256(p.read_bytes()).hexdigest()
+          exp=os.environ['INT_C1_TRANSPORT_SHA']
+          print('C1_TRANSPORT_SHA', got)
+          assert got == exp, (got, exp)
+          PY
           python c1src/verification/integration01/reconstruct.py --old-candidate "$RUNNER_TEMP/OLD_CONSOLIDATION.zip" --bundle "$RUNNER_TEMP/integration01_c1_transport.tar.xz" --work "$RUNNER_TEMP/int-c1-work" --out "$RUNNER_TEMP/INTEGRATION01_C1.zip"
           echo "$INT_C1_SHA  $RUNNER_TEMP/INTEGRATION01_C1.zip" | sha256sum -c -
           cp "$RUNNER_TEMP/INTEGRATION01_C1.zip" ./INTEGRATION01_C1.zip
