@@ -1,0 +1,40 @@
+name: DATA-06 PostgreSQL 16.15 runtime
+
+on:
+  push:
+    branches: [data06-pg16-15-runtime-20260824]
+
+permissions:
+  contents: read
+
+jobs:
+  build-pg16-15:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout official PostgreSQL 16.15 source
+        uses: actions/checkout@v4
+        with:
+          repository: postgres/postgres
+          ref: REL_16_15
+          path: postgres-src
+      - name: Build PostgreSQL 16.15 runtime
+        run: |
+          set -euxo pipefail
+          prefix="$RUNNER_TEMP/pg16-runtime"
+          cd postgres-src
+          ./configure --prefix="$prefix" --without-icu --without-readline --without-zlib
+          make -j2
+          make install
+          "$prefix/bin/postgres" --version | tee "$RUNNER_TEMP/postgres-version.txt"
+          test "$("$prefix/bin/postgres" --version)" = "postgres (PostgreSQL) 16.15"
+          tar -C "$prefix" -czf "$RUNNER_TEMP/postgresql-16.15-linux-x64-runtime.tgz" .
+          sha256sum "$RUNNER_TEMP/postgresql-16.15-linux-x64-runtime.tgz" > "$RUNNER_TEMP/postgresql-runtime-sha256.txt"
+      - name: Upload runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: data06-postgresql-16.15-linux-x64
+          path: |
+            ${{ runner.temp }}/postgresql-16.15-linux-x64-runtime.tgz
+            ${{ runner.temp }}/postgres-version.txt
+            ${{ runner.temp }}/postgresql-runtime-sha256.txt
+          retention-days: 1
