@@ -21,26 +21,29 @@ jobs:
           repository: postgres/postgres
           ref: REL_16_15
           path: postgres-src
-      - name: Build PostgreSQL 16.15 runtime with pgcrypto
+      - name: Build PostgreSQL 16.15 runtime with pgcrypto and OpenSSL
         run: |
           set -euxo pipefail
           prefix="$RUNNER_TEMP/pg16-runtime"
           cd postgres-src
-          ./configure --prefix="$prefix" --without-icu --without-readline --without-zlib
+          ./configure --prefix="$prefix" --with-openssl --without-icu --without-readline --without-zlib
           make -j2
           make install
           make -C contrib/pgcrypto install
           "$prefix/bin/postgres" --version | tee "$RUNNER_TEMP/postgres-version.txt"
           test "$("$prefix/bin/postgres" --version)" = "postgres (PostgreSQL) 16.15"
           test -f "$prefix/share/postgresql/extension/pgcrypto.control"
+          ldd "$prefix/lib/postgresql/pgcrypto.so" | tee "$RUNNER_TEMP/pgcrypto-ldd.txt"
+          grep -q 'libcrypto' "$RUNNER_TEMP/pgcrypto-ldd.txt"
           tar -C "$prefix" -czf "$RUNNER_TEMP/postgresql-16.15-linux-x64-runtime.tgz" .
           sha256sum "$RUNNER_TEMP/postgresql-16.15-linux-x64-runtime.tgz" > "$RUNNER_TEMP/postgresql-runtime-sha256.txt"
       - name: Upload runtime
         uses: actions/upload-artifact@v4
         with:
-          name: data06-postgresql-16.15-linux-x64-pgcrypto
+          name: data06-postgresql-16.15-linux-x64-pgcrypto-openssl
           path: |
             ${{ runner.temp }}/postgresql-16.15-linux-x64-runtime.tgz
             ${{ runner.temp }}/postgres-version.txt
             ${{ runner.temp }}/postgresql-runtime-sha256.txt
+            ${{ runner.temp }}/pgcrypto-ldd.txt
           retention-days: 1
