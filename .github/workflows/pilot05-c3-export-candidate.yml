@@ -1,3 +1,4 @@
+# Transport-only export of the exact C3 bytes proven by the prior authoritative run.
 name: PILOT-05 C3 immutable candidate export
 
 on:
