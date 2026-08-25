@@ -1,0 +1,28 @@
+name: PILOT-05 Export Frozen Wheelhouse 03
+
+on:
+  push:
+    branches:
+      - tmp/pilot05-c3-authoritative-20260825
+    paths:
+      - '.github/workflows/pilot05-export-wheelhouse-03.yml'
+
+jobs:
+  export-wheelhouse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download exact locked wheel
+        run: |
+          mkdir -p /tmp/wheelhouse
+          python -m pip download --only-binary=:all: --no-deps --dest /tmp/wheelhouse 'cryptography==46.0.7'
+          (cd /tmp/wheelhouse && sha256sum *.whl > SHA256SUMS.txt)
+          cat /tmp/wheelhouse/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot05-frozen-wheelhouse-03
+          path: /tmp/wheelhouse/
+          if-no-files-found: error
+          retention-days: 1
