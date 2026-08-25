@@ -111,8 +111,10 @@ jobs:
           set -euo pipefail
           cd "$ROOT"
           uv python install 3.12.14
-          rm -rf /tmp/pilot05-c3-env /mnt/data/python
-          mkdir -p /mnt/data
+          rm -rf /tmp/pilot05-c3-env
+          sudo rm -rf /mnt/data/python
+          sudo mkdir -p /mnt/data
+          sudo chown "$USER":"$(id -gn)" /mnt/data
           UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-env uv sync --all-groups --frozen --python 3.12.14
           UV_PROJECT_ENVIRONMENT=/mnt/data/python uv sync --all-groups --frozen --python 3.12.14
           /tmp/pilot05-c3-env/bin/python - <<'PY'
