@@ -1,213 +1,50 @@
-name: PILOT-05 C3 authoritative terminal acceptance
+name: PILOT-05 C3 immutable export transport
 
 on:
   push:
     branches:
-      - tmp/pilot05-c3-authoritative-20260825
+      - tmp/pilot05-c3-export-20260825
     paths:
       - '.github/workflows/pilot05-c3-terminal-authoritative.yml'
-      - 'tmp/PILOT05_C3_00.part'
-      - 'tmp/PILOT05_C3_01.part'
 
 permissions:
   contents: read
 
 env:
   EXPECTED_SHA256: fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb
-  DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  EPD2_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  PILOT05_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  EPD2_PILOT05_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  POSTGRES_DSN: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  POSTGRES_URL: postgresql://postgres:postgres@127.0.0.1:5432/pilot05_c3_acceptance
-  PYTHONDONTWRITEBYTECODE: '1'
 
 jobs:
-  authoritative-acceptance:
+  export:
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
-    services:
-      postgres:
-        image: postgres:16.15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: pilot05_c3_acceptance
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d pilot05_c3_acceptance"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 12
-
+    timeout-minutes: 15
     steps:
-      - name: Checkout transport branch
-        uses: actions/checkout@v4
-
-      - name: Reassemble immutable C3 and verify exact identity
+      - uses: actions/checkout@v4
+      - name: Reassemble exact C3
         shell: bash
         run: |
           set -euo pipefail
-          test -f tmp/PILOT05_C3_00.part
-          test -f tmp/PILOT05_C3_01.part
-          cat tmp/PILOT05_C3_00.part tmp/PILOT05_C3_01.part > /tmp/PILOT05_C3_REASSEMBLED.zip
-          ACTUAL="$(sha256sum /tmp/PILOT05_C3_REASSEMBLED.zip | awk '{print $1}')"
-          echo "C3_REASSEMBLED_SHA256=$ACTUAL"
-          echo "$EXPECTED_SHA256  /tmp/PILOT05_C3_REASSEMBLED.zip" | sha256sum -c -
+          ls -lh tmp/PILOT05_C3_00.part tmp/PILOT05_C3_01.part
+          OUT=/tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip
+          cat tmp/PILOT05_C3_00.part tmp/PILOT05_C3_01.part > "$OUT"
+          ACTUAL="$(sha256sum "$OUT" | awk '{print $1}')"
+          echo "C3_SHA256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
           python3 - <<'PY'
           import zipfile
-          p='/tmp/PILOT05_C3_REASSEMBLED.zip'
+          p='/tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip'
           with zipfile.ZipFile(p) as z:
-              bad=z.testzip()
-              if bad is not None:
-                  raise SystemExit(f'ZIP CRC failure: {bad}')
+              assert z.testzip() is None
               names=z.namelist()
               roots={n.split('/',1)[0] for n in names if n and not n.startswith('/')}
+              assert len(names)==3744, len(names)
+              assert roots=={'EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3'}, roots
               print('C3_MEMBER_COUNT', len(names))
               print('C3_ROOTS', sorted(roots))
-              if len(names) != 3744:
-                  raise SystemExit(f'expected 3744 members, got {len(names)}')
-              if roots != {'EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3'}:
-                  raise SystemExit(f'unexpected root(s): {roots}')
           PY
-          rm -rf /tmp/pilot05-c3-tree
-          mkdir -p /tmp/pilot05-c3-tree
-          unzip -q /tmp/PILOT05_C3_REASSEMBLED.zip -d /tmp/pilot05-c3-tree
-          echo "ROOT=/tmp/pilot05-c3-tree/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3" >> "$GITHUB_ENV"
-          echo "EVIDENCE=/tmp/pilot05-c3-authoritative-evidence" >> "$GITHUB_ENV"
-
-      - name: Read governed C3 entry contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f "$ROOT/docs/pilot/PILOT-05/PILOT05_C3_LINEAGE.json"
-          test -f "$ROOT/docs/pilot/PILOT-05/PILOT05_C3_MANDATORY_TESTS.json"
-          test -f "$ROOT/scripts/validate_pilot05_c3.py"
-          python3 - <<'PY'
-          import json, os
-          root=os.environ['ROOT']
-          for rel in [
-              'docs/pilot/PILOT-05/PILOT05_C3_LINEAGE.json',
-              'docs/pilot/PILOT-05/PILOT05_C3_MANDATORY_TESTS.json',
-          ]:
-              p=os.path.join(root, rel)
-              d=json.load(open(p, encoding='utf-8'))
-              print(rel)
-              print(json.dumps(d, indent=2, sort_keys=True)[:12000])
-          PY
-
-      - name: Install exact Python and frozen project environments
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: '0.12.5'
-          enable-cache: false
-
-      - name: Build exact Python 3.12.14 runtimes from frozen lock
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "$ROOT"
-          uv python install 3.12.14
-          rm -rf /tmp/pilot05-c3-env
-          sudo rm -rf /mnt/data/python
-          sudo mkdir -p /mnt/data
-          sudo chown "$USER":"$(id -gn)" /mnt/data
-          UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-env uv sync --all-groups --frozen --python 3.12.14
-          UV_PROJECT_ENVIRONMENT=/mnt/data/python uv sync --all-groups --frozen --python 3.12.14
-          /tmp/pilot05-c3-env/bin/python - <<'PY'
-          import sys, cryptography, psycopg
-          print('PRIMARY_PYTHON', sys.version)
-          print('CRYPTOGRAPHY', cryptography.__version__)
-          print('PSYCOPG', psycopg.__version__)
-          assert sys.version_info[:3] == (3,12,14)
-          assert cryptography.__version__ == '46.0.7'
-          assert psycopg.__version__ == '3.3.4'
-          PY
-          /mnt/data/python/bin/python - <<'PY'
-          import sys, cryptography, psycopg
-          print('VERIFIER_PYTHON', sys.version)
-          print('VERIFIER_CRYPTOGRAPHY', cryptography.__version__)
-          print('VERIFIER_PSYCOPG', psycopg.__version__)
-          assert sys.version_info[:3] == (3,12,14)
-          assert cryptography.__version__ == '46.0.7'
-          assert psycopg.__version__ == '3.3.4'
-          PY
-          echo "/tmp/pilot05-c3-env/bin" >> "$GITHUB_PATH"
-          echo "EPD2_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
-          echo "INDEPENDENT_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
-          echo "VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
-
-      - name: Verify PostgreSQL 16.15 and pgcrypto
-        shell: bash
-        env:
-          PGPASSWORD: postgres
-        run: |
-          set -euo pipefail
-          for i in $(seq 1 60); do
-            pg_isready -h 127.0.0.1 -p 5432 -U postgres -d pilot05_c3_acceptance && break
-            sleep 2
-          done
-          psql -h 127.0.0.1 -U postgres -d pilot05_c3_acceptance -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
-          psql -h 127.0.0.1 -U postgres -d pilot05_c3_acceptance -Atc 'SHOW server_version;'
-          psql -h 127.0.0.1 -U postgres -d pilot05_c3_acceptance -Atc "SELECT extversion FROM pg_extension WHERE extname='pgcrypto';"
-
-      - name: Run exact C3 validator to natural completion
-        id: validator
-        shell: bash
-        run: |
-          set -o pipefail
-          cd "$ROOT"
-          mkdir -p "$EVIDENCE"
-          python scripts/validate_pilot05_c3.py --tree "$ROOT" --evidence-out "$EVIDENCE" 2>&1 | tee "$EVIDENCE/00_TERMINAL_VALIDATOR.log"
-          STATUS=${PIPESTATUS[0]}
-          echo "VALIDATOR_EXIT=$STATUS" | tee -a "$EVIDENCE/00_TERMINAL_VALIDATOR.log"
-          exit "$STATUS"
-
-      - name: Summarize authoritative evidence
-        if: always()
-        shell: bash
-        run: |
-          set +e
-          echo '=== TERMINAL TOKENS ==='
-          grep -RhoE 'PILOT05_C3_RESULT:(PASS|FAIL):[^[:space:]]+' "$EVIDENCE" 2>/dev/null | tail -n 20 || true
-          echo '=== RESULT.txt ==='
-          cat "$EVIDENCE/RESULT.txt" 2>/dev/null || true
-          echo '=== REQUIRED EVIDENCE FILES ==='
-          for f in RESULT.txt 02_GOVERNANCE_CHECKS.json 03_INHERITED_AND_PILOT05_JUNIT.xml 03_pytest_tail.log 04_MANDATORY_EXECUTION.json 05_F01_ADVERSARIAL.json 06_F02_UNLINKABILITY.json; do
-            if test -f "$EVIDENCE/$f"; then
-              printf 'PRESENT %s %s bytes\n' "$f" "$(stat -c %s "$EVIDENCE/$f")"
-            else
-              printf 'MISSING %s\n' "$f"
-            fi
-          done
-          echo '=== JUNIT SUMMARY ==='
-          python3 - <<'PY'
-          import os, xml.etree.ElementTree as ET
-          p=os.path.join(os.environ['EVIDENCE'],'03_INHERITED_AND_PILOT05_JUNIT.xml')
-          if os.path.exists(p):
-              r=ET.parse(p).getroot()
-              print('root', r.tag, r.attrib)
-              suites=[r] if r.tag=='testsuite' else list(r.findall('.//testsuite'))
-              if suites:
-                  for s in suites[-10:]: print('suite', s.attrib)
-          PY
-          echo '=== MANDATORY EXECUTION ==='
-          cat "$EVIDENCE/04_MANDATORY_EXECUTION.json" 2>/dev/null || true
-          echo '=== F01 ==='
-          cat "$EVIDENCE/05_F01_ADVERSARIAL.json" 2>/dev/null || true
-          echo '=== F02 ==='
-          cat "$EVIDENCE/06_F02_UNLINKABILITY.json" 2>/dev/null || true
-          echo '=== PYTEST TAIL ==='
-          tail -n 120 "$EVIDENCE/03_pytest_tail.log" 2>/dev/null || true
-
-      - name: Upload authoritative evidence
-        if: always()
+      - name: Upload exact C3 ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: pilot05-c3-authoritative-evidence-${{ github.run_id }}
-          path: /tmp/pilot05-c3-authoritative-evidence
-          if-no-files-found: warn
+          name: pilot05-c3-immutable-candidate-${{ github.run_id }}
+          path: /tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip
+          if-no-files-found: error
           retention-days: 30
