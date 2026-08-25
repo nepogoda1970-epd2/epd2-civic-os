@@ -6,6 +6,7 @@ on:
       - tmp/pilot05-c3-authoritative-20260825
     paths:
       - '.github/workflows/pilot05-export-python312.yml'
+      - '.pilot05-python312-export-trigger'
   workflow_dispatch:
 
 jobs:
