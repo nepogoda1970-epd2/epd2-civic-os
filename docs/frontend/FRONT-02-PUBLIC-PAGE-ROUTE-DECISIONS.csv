@@ -1,0 +1,36 @@
+decision_id,route_or_alias,canonical_target,workspace,decision,status,reason
+F02-RD-001,/home,/,WS-01,REDIRECT,required,Target blueprint alias; accepted German public root remains canonical
+F02-RD-002,/principles,/grundsaetze,WS-01,REDIRECT,required,Target blueprint alias; German public route continuity
+F02-RD-003,/participate,/mitmachen,WS-01,REDIRECT,required,Target blueprint alias; German public route continuity
+F02-RD-004,/structure,/struktur,WS-01,REDIRECT,required,Target blueprint alias; German public route continuity
+F02-RD-005,/news,/aktuelles,WS-01,REDIRECT,required,Resolve target catalogue versus live/migration naming conflict in favor of German public IA
+F02-RD-006,/elections,/wahlen,WS-01,REDIRECT,required,Public election information route; not voting client
+F02-RD-007,/aktuelle-wahlen,/wahlen,WS-01,REDIRECT,required,Repair current dead/legacy election path
+F02-RD-008,/donate,/spenden,WS-01,REDIRECT,required,Public donation information route continuity
+F02-RD-009,/technology,/technologie,WS-01,REDIRECT,required,German public route continuity
+F02-RD-010,/roadmap,/status,WS-01,REDIRECT,required,Single public maturity/status destination
+F02-RD-011,/faq,/hilfe,WS-01,REDIRECT,required,Help Center is broader than a standalone FAQ
+F02-RD-012,/kandidieren,/kandidatur,WS-01,REDIRECT,required,Single public candidacy information route
+F02-RD-013,/mitglied-werden,/mitgliedschaft,WS-01,REDIRECT,required,Single membership information and WS-02 handoff entry
+F02-RD-014,/aktuelles,/aktuelles,WS-01,CANONICAL_PLANNED,required,Public news/update index
+F02-RD-015,/aktuelles/[slug],/aktuelles/[slug],WS-01,CANONICAL_PLANNED,required,Public article/detail rendition
+F02-RD-016,/presse,/presse,WS-01,CANONICAL_PLANNED,required,Press center index
+F02-RD-017,/presse/[slug],/presse/[slug],WS-01,CANONICAL_PLANNED,required,Press release/detail rendition
+F02-RD-018,/termine,/termine,WS-01,CANONICAL_PLANNED,required,Public event calendar/index
+F02-RD-019,/termine/[slug],/termine/[slug],WS-01,CANONICAL_PLANNED,required,Public event detail
+F02-RD-020,/regionen,/regionen,WS-01,CANONICAL_PLANNED,required,Region directory and Meine Region finden destination
+F02-RD-021,/regionen/[slug],/regionen/[slug],WS-01,CANONICAL_PLANNED,required,Approved public regional detail
+F02-RD-022,/personen,/personen,WS-01,CANONICAL_PLANNED,required,Approved public personas only; never member directory
+F02-RD-023,/personen/[slug],/personen/[slug],WS-01,CANONICAL_PLANNED,required,Approved public persona detail only
+F02-RD-024,/wahlen,/wahlen,WS-01,CANONICAL_PLANNED,required,Public elections/campaign information index
+F02-RD-025,/wahlen/[slug],/wahlen/[slug],WS-01,CANONICAL_PLANNED,required,Public election/campaign detail; no WS-03 ballot functionality
+F02-RD-026,/hilfe,/hilfe,WS-01,CANONICAL_PLANNED,required,Layered public help center entry
+F02-RD-027,/suche,/suche,WS-01,CANONICAL_PLANNED,required,Search approved public renditions only
+F02-RD-028,/satzung,/satzung,WS-01,PRESERVE,required,Governed public statute/document rendition
+F02-RD-029,/spenden,/spenden,WS-01,PRESERVE,required,Public donation/contribution information and safe handoff only
+F02-RD-030,/verifizierung,/verifizierung,WS-01,PRESERVE,required,Public verification explanation; not identity backend
+F02-RD-031,/nutzungsbedingungen,/nutzungsbedingungen,WS-01,PRESERVE,required,Public legal/usage information
+F02-RD-032,/impressum,/impressum,WS-01,PRESERVE,required,Public legal information
+F02-RD-033,/datenschutz,/datenschutz,WS-01,PRESERVE,required,Public privacy information
+F02-RD-034,/barrierefreiheit,/barrierefreiheit,WS-01,PRESERVE,required,Public accessibility information
+F02-RD-035,/kontakt,/kontakt,WS-01,PRESERVE,required,Public contact information
