@@ -1,0 +1,39 @@
+name: PILOT-05 C3 transport inspect
+on:
+  push:
+    branches: [tmp/pilot05-c3-authoritative-20260825]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 15b8f578c00233c1bf02252b3fea23c064213fcf
+      - name: Inspect transport bytes and overlaps
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          ps=sorted(Path('tmp/pilot05-c3-transport').glob('chunk*.txt'))
+          for p in ps:
+              b=p.read_bytes()
+              print(p.name, len(b), hashlib.sha256(b).hexdigest(), b[:16].hex(), b[-16:].hex())
+          print('FILES', [p.name for p in ps])
+          # overlap matrix: largest suffix(a)==prefix(b), capped exact
+          for a in ps:
+              A=a.read_bytes()
+              for b in ps:
+                  if a==b: continue
+                  B=b.read_bytes()
+                  m=0
+                  for k in range(min(len(A),len(B)),0,-1):
+                      if A[-k:]==B[:k]: m=k; break
+                  if m:
+                      print('OVERLAP',a.name,b.name,m)
+          PY
