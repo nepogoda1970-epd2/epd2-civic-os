@@ -1,0 +1,40 @@
+name: PILOT-05 Export Python 3.12 Runtime
+
+on:
+  push:
+    branches:
+      - tmp/pilot05-c3-authoritative-20260825
+    paths:
+      - '.github/workflows/pilot05-export-python312.yml'
+  workflow_dispatch:
+
+jobs:
+  export-python312:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          check-latest: false
+      - name: Record runtime
+        run: |
+          python --version
+          python - <<'PY'
+          import sys, pathlib
+          print(sys.executable)
+          print(sys.prefix)
+          pathlib.Path('/tmp/python-prefix.txt').write_text(sys.prefix)
+          PY
+      - name: Package Python 3.12 runtime
+        run: |
+          PREFIX="$(cat /tmp/python-prefix.txt)"
+          tar -C "$PREFIX" -czf /tmp/python312-runtime.tar.gz .
+          sha256sum /tmp/python312-runtime.tar.gz | tee /tmp/python312-runtime.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot05-python312-runtime
+          path: |
+            /tmp/python312-runtime.tar.gz
+            /tmp/python312-runtime.sha256
+          if-no-files-found: error
+          retention-days: 1
