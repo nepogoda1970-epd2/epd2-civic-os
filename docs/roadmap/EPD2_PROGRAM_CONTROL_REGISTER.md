@@ -20,9 +20,7 @@ Read first:
 
 Current execution state is governed here. Future requirements and hard invariants are governed by the Master Future Implementation Register.
 
-Current Master maintenance level established by project governance work: **V16**, including `FIR-UX-012` and `FIR-UX-013`.
-
-**Repository reconciliation note:** the GitHub Master Register inspected when this control register was introduced predates the V16 maintenance copy. Until the exact V16 repository reconciliation is completed, do not silently infer or downgrade V16-specific FIR state.
+Current Master maintenance level established by project governance work: **V17**, preserving V16 including `FIR-UX-012` and `FIR-UX-013` and recording the governed FRONT-02 specification/page-route reconciliation without creating a new FIR ID.
 
 ---
 
@@ -36,7 +34,7 @@ Current Master maintenance level established by project governance work: **V16**
 | INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |
 | OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |
 | CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |
-| FRONT | `NOT_STARTED_FINAL` | Shared/public frontend work may proceed; final integrated journeys follow runtime/control-plane dependencies. |
+| FRONT | `FRONT-02_SPECIFIED / NOT_STARTED_FINAL` | FRONT-02 specification is established and may be implemented in parallel within its governed scope; final integrated journeys follow runtime/control-plane dependencies. |
 | SEC | `NOT_STARTED_FINAL` | Threat/adversarial preparation may proceed; final challenge targets the integrated system. |
 | PILOT | `PARALLEL_DEVELOPMENT_EXISTS` | PILOT-01…05 have existing lineage/work. Exact stage state is governed below. |
 
@@ -53,7 +51,7 @@ DATA = CLOSED
 API = NEXT
 ```
 
-This does not prohibit already-existing or corrective parallel PILOT work.
+This does not prohibit already-existing or corrective parallel PILOT work or the governed parallel FRONT-02 implementation preparation described below.
 
 ---
 
@@ -64,7 +62,7 @@ While API is the next primary series, the following may proceed without changing
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
 - CTRL action/authority inventories, read models and control-console specifications;
-- FRONT shared design/application shells, public pages, accessibility/responsive baselines and non-misleading read-only surfaces;
+- FRONT shared design/application shells, public pages, accessibility/responsive baselines and non-misleading read-only surfaces, now governed by `docs/frontend/FRONT-02-SPECIFICATION.md`;
 - SEC threat-model consolidation, adversarial corpora and test-harness preparation;
 - governed correction/acceptance work on already-existing PILOT stages.
 
@@ -219,6 +217,26 @@ No production-readiness decision is implied by existing PILOT work.
 
 ## 5. Frontend governance notes
 
+### FRONT-02 — Design System, Application Shells & Page/Route Governance
+
+**Control state:** `SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`
+
+Governing specification:
+
+`docs/frontend/FRONT-02-SPECIFICATION.md`
+
+Route reconciliation:
+
+`docs/frontend/FRONT-02-PUBLIC-PAGE-ROUTE-DECISIONS.csv`
+
+The specification preserves the accepted FRONT-00/FRONT-01 visual baseline, the ten-workspace/ten-origin architecture and WS-03 voting isolation. It establishes the route-authority order and requires German public-route continuity for WS-01. It also records the required public page families for Presse, Termine, complete Aktuelles detail pages, Regionen, approved public Personen, Wahlen, Hilfe and public search, plus mandatory system/failure/recovery states.
+
+No new FIR ID is required: these obligations are governed by existing `FIR-UX-003…013`, `FIR-SEARCH-001…003`, `FIR-SUPPORT-001…003`, `FIR-FRONT-001/002` and related invariants.
+
+FRONT-02 implementation candidate must not start until the derived page catalogue, page sequence, navigation, content/action maps, screen-state matrix, permission/assurance matrix, responsive specification, accessibility flow and acceptance-screenshot inventory required by `FIR-UX-011` exist and are internally consistent.
+
+### V15/V16 carried requirements
+
 The current Master maintenance line includes:
 
 - `FIR-UX-012 — Public Transparency Information Architecture & Verification Surface`;
@@ -255,5 +273,7 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 ## 9. Immediate execution decision
 
 **Primary implementation:** `API = NEXT`.
+
+**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API = NEXT` and does not constitute FRONT acceptance or final closure.
 
 **Parallel PILOT action:** PILOT-05 C3 governance reconciliation is now materially complete and independently static-verified. The next legitimate PILOT-05 step is a full live independent acceptance run with its mandatory database/runtime prerequisites. Only after that PASS may C3 become the accepted application-line predecessor for `INTEGRATION-01 C5`.
