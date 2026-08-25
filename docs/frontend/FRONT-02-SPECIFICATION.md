@@ -190,6 +190,31 @@ Canonical family:
 
 Only approved public organization projections may be displayed. Internal member directories must not be exposed.
 
+The regional operating model is governed by:
+
+`docs/frontend/FRONT-02-REGIONAL-OPERATING-MODEL.md`
+
+Regional party bodies do **not** receive separate local products or independently designed mini-sites. The model is one EPD² platform with organization-scoped public and authenticated views.
+
+A public `/regionen/[slug]` page is a regional hub inside the common WS-01 site and must support, where approved public content exists:
+
+- `Übersicht`;
+- `Aktuelles`;
+- `Termine`;
+- `Initiativen`;
+- approved public `Personen`;
+- public `Wahlen` information;
+- `Dokumente & Transparenz`;
+- `Kontakt`.
+
+These views use centrally governed content families filtered/projected by authoritative organization scope; they must not create independent local copies of authoritative data.
+
+In WS-02 and scoped administrative workspaces, the active Bund/Land/Kreis/Orts/body scope must be visible whenever it changes authority or dataset meaning. Users may switch only among scopes they are authorized to access. Scope changes must re-evaluate authorization and invalidate incompatible stale context. No universal cross-regional visibility or universal regional admin may be inferred from workspace access.
+
+Regional binding votes use the same isolated WS-03 Voting Client with one-time purpose- and organization-scoped handoff. No regional voting engine is created, and the WS-02 session is never transferred into WS-03.
+
+FRONT-02 presents and navigates existing governed organization scopes; it does not itself establish, dissolve, merge or territorially redefine party bodies or change their legal/organizational authority.
+
 ### 6.5 Personen
 
 Canonical family:

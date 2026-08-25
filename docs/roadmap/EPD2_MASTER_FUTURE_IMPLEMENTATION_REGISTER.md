@@ -1760,6 +1760,20 @@ The only exception is a separate explicit governed **Design Change Decision** ap
 
 **Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`; final FRONT closure remains future.
 
+## 1.29 Documentation-only refinement — Regional/local frontend operating model (2026-08-25)
+
+**Round:** documentation/governance refinement only. No runtime, organization, membership, voting or administrative authority is activated by this round.
+
+**Governed decision:** Landes-, Kreis-, Orts- and other regional party bodies use one EPD² platform with organization-scoped public and authenticated views. They do not receive separate independently designed local products, separate identity systems or separate voting engines.
+
+Public regional hubs use `/regionen` and `/regionen/[slug]` and aggregate only approved public organization projections/renditions from centrally governed content families. Authenticated scope switching is limited to authorized Bund/Land/Kreis/Orts/body scopes and must re-evaluate authorization and invalidate incompatible stale context. Regional binding votes use the same isolated WS-03 Voting Client with one-time purpose- and organization-scoped handoff. Regional administration remains scoped; no universal admin is introduced.
+
+**FIR IDs refined:** `FIR-UX-004` and existing FRONT/organization-scope/voting-isolation obligations. **Status changes:** none. **New FIR IDs:** none.
+
+**Frontend evidence/specification:** `docs/frontend/FRONT-02-REGIONAL-OPERATING-MODEL.md` and the Regionen section of `docs/frontend/FRONT-02-SPECIFICATION.md`.
+
+**Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -6358,6 +6372,44 @@ Define governed information architecture for:
 - safe cross-workspace handoff;
 - isolated Voting Client navigation;
 - session and identity boundary visibility.
+
+### Regional and local organization operating model
+
+The frontend must implement one EPD² platform with organization-scoped views,
+not separate local products or independently designed mini-sites for Landes-,
+Kreis-, Orts- or other governed party bodies.
+
+Public regional discovery uses `/regionen` and `/regionen/[slug]`. A regional
+detail page is a hub within the common public site and, where approved public
+content exists, must be able to present `Übersicht`, `Aktuelles`, `Termine`,
+`Initiativen`, approved public `Personen`, public `Wahlen`, `Dokumente &
+Transparenz` and `Kontakt`. Only approved public organization projections and
+public renditions may appear. Internal member directories and protected
+operational data remain excluded.
+
+Regional public content must reuse centrally governed content families and be
+filtered/projected by authoritative organization scope. The frontend must not
+create independent regional copies of authoritative `Aktuelles`, `Termine`,
+initiative, election, person or document data merely to construct a local page.
+
+Authenticated member and administrative surfaces must make the active
+organization scope visible whenever it materially changes authority, dataset or
+procedural meaning. A scope selector may expose only authorized Bund/Land/Kreis/
+Orts/body scopes. Changing scope must re-evaluate authorization and purpose and
+clear or invalidate incompatible stale context. Workspace access does not create
+party-wide or cross-regional authority, and no universal regional administrator
+may be introduced.
+
+Binding regional votes use the same isolated Voting Client and the same voting
+trust boundary as Bund-level votes. The handoff is one-time, purpose-scoped and
+organization-scoped; the member session is not transferred into the Voting
+Client. Frontend scope selection alone never establishes eligibility.
+
+FRONT-02 may present and navigate approved existing organization projections but
+must not claim that frontend implementation itself establishes, dissolves,
+merges, reassigns members between, or changes the territorial/legal competence
+of party bodies. Those are governed organization-lifecycle actions owned by the
+relevant domain rules and authority.
 
 Navigation must not imply a shared session or shared identity where the
 architecture prohibits it. Critical functions must not become inaccessible
