@@ -1,0 +1,56 @@
+name: PILOT-05 C3 immutable candidate export
+
+on:
+  push:
+    branches:
+      - tmp/pilot05-c3-export-20260825
+    paths:
+      - '.github/workflows/pilot05-c3-export-candidate.yml'
+
+permissions:
+  contents: read
+
+env:
+  EXPECTED_SHA256: fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb
+
+jobs:
+  export-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact export branch
+        uses: actions/checkout@v4
+
+      - name: Reassemble and verify immutable C3
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh tmp/PILOT05_C3_00.part tmp/PILOT05_C3_01.part
+          cat tmp/PILOT05_C3_00.part tmp/PILOT05_C3_01.part > /tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip
+          ACTUAL="$(sha256sum /tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip | awk '{print $1}')"
+          echo "C3_SHA256=$ACTUAL"
+          test "$ACTUAL" = "$EXPECTED_SHA256"
+          python3 - <<'PY'
+          import zipfile
+          p='/tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip'
+          with zipfile.ZipFile(p) as z:
+              bad=z.testzip()
+              if bad is not None:
+                  raise SystemExit(f'ZIP CRC failure: {bad}')
+              names=z.namelist()
+              roots={n.split('/',1)[0] for n in names if n and not n.startswith('/')}
+              print('C3_MEMBER_COUNT', len(names))
+              print('C3_ROOTS', sorted(roots))
+              if len(names) != 3744:
+                  raise SystemExit(f'expected 3744 members, got {len(names)}')
+              if roots != {'EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3'}:
+                  raise SystemExit(f'unexpected root(s): {roots}')
+          PY
+
+      - name: Upload exact accepted C3 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot05-c3-immutable-candidate-${{ github.run_id }}
+          path: /tmp/EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip
+          if-no-files-found: error
+          retention-days: 30
