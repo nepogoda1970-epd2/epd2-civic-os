@@ -20,7 +20,9 @@ Read first:
 
 Current execution state is governed here. Future requirements and hard invariants are governed by the Master Future Implementation Register.
 
-Current Master maintenance level established by project governance work: **V17**, preserving V16 including `FIR-UX-012` and `FIR-UX-013` and recording the governed FRONT-02 specification/page-route reconciliation without creating a new FIR ID.
+Current Master maintenance level established by project governance work: **V16**, including `FIR-UX-012` and `FIR-UX-013`.
+
+**Repository reconciliation note:** the GitHub Master Register predates the exact V16 maintenance copy. FRONT-02 creates no new FIR ID and changes no FIR status, so this specification round does not create a competing V17 Master. Until the exact V16 repository reconciliation is completed, do not silently infer or downgrade V16-specific FIR state.
 
 ---
 
@@ -231,7 +233,7 @@ Route reconciliation:
 
 The specification preserves the accepted FRONT-00/FRONT-01 visual baseline, the ten-workspace/ten-origin architecture and WS-03 voting isolation. It establishes the route-authority order and requires German public-route continuity for WS-01. It also records the required public page families for Presse, Termine, complete Aktuelles detail pages, Regionen, approved public Personen, Wahlen, Hilfe and public search, plus mandatory system/failure/recovery states.
 
-No new FIR ID is required: these obligations are governed by existing `FIR-UX-003…013`, `FIR-SEARCH-001…003`, `FIR-SUPPORT-001…003`, `FIR-FRONT-001/002` and related invariants.
+No new FIR ID is required: these obligations are governed by existing `FIR-UX-003…013`, `FIR-SEARCH-001…003`, `FIR-SUPPORT-001…003`, `FIR-FRONT-001/002` and related invariants. Because this specification introduces no new future requirement and promotes no FIR status, the canonical Master Register is not changed by FRONT-02 itself.
 
 FRONT-02 implementation candidate must not start until the derived page catalogue, page sequence, navigation, content/action maps, screen-state matrix, permission/assurance matrix, responsive specification, accessibility flow and acceptance-screenshot inventory required by `FIR-UX-011` exist and are internally consistent.
 
