@@ -1,0 +1,100 @@
+name: Temporary canonical visual baseline lock
+
+on:
+  push:
+    branches:
+      - governance/canonical-visual-lock-2026-08-25
+
+permissions:
+  contents: write
+
+jobs:
+  patch-master:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: governance/canonical-visual-lock-2026-08-25
+          fetch-depth: 0
+      - name: Patch canonical Master register narrowly
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p = Path('docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md')
+          s = p.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  '''EPD² must preserve the restrained minimalist design already established in\nthe existing public pages and frontend foundation. Future workspaces must\nevolve from that baseline rather than replacing it with unrelated visual\nsystems.\n\nThe preserved direction includes:\n''',
+                  '''EPD² must preserve the exact visual implementation already established in\nthe accepted FRONT-00/FRONT-01 public pages and frontend foundation. That\nimplementation is the **canonical immutable visual baseline** for later\nfrontend work; ordinary FRONT-PACK scope does not include visual evolution,\nmodernization, refresh or restyling.\n\nThe canonical baseline includes:\n'''
+              ),
+              (
+                  '''- Inter or the approved successor typeface;''',
+                  '''- the exact accepted FRONT-00/FRONT-01 typeface configuration;'''
+              ),
+              (
+                  '''This is a governed direction, not a freeze of every current pixel. Future\nFRONT-PACKs may refine components and layouts where usability, accessibility\nor domain risk requires it, while preserving the common visual character.\n''',
+                  '''This is a governed visual freeze of the accepted implementation baseline.\nFunctional, usability, accessibility or domain-risk needs must first be\nsolved through existing canonical components and tokens. If a need genuinely\nrequires changing an established visual-baseline element, that change requires\na separate approved **Design Change Decision** before implementation, with the\nexact affected element, rationale, before/after screenshots, accessibility\nevidence and visual-regression impact.\n'''
+              ),
+              (
+                  '''Create and govern a shared EPD² design system based on the current minimalist\nfrontend baseline.\n\nThe approved FRONT-00 and FRONT-01 implementation is the authoritative visual\nreference baseline. This includes the current public pages, shared\ncomponents, actual typography, spacing, color, border, radius and layout\ntokens, and the accepted FRONT-00/FRONT-01 reference screenshots.\n\n“Minimalist EPD² design” must not be interpreted as a generic new minimalist\ndesign created independently from the existing pages. Future work must reuse\nor evolve the established visual language rather than recreate it from\nscratch.\n''',
+                  '''Create and govern the shared EPD² design system from the **canonical, immutable\nFRONT-00/FRONT-01 visual implementation baseline**.\n\nThe approved FRONT-00 and FRONT-01 implementation is not merely a visual\nreference. It is the canonical frontend design baseline. This includes the\ncurrent public pages, shared components, actual typography, spacing, color,\nborder, radius and layout tokens, header/footer and navigation geometry,\nresponsive behavior, interaction states and the accepted FRONT-00/FRONT-01\nreference screenshots.\n\n“Minimalist EPD² design” must not be interpreted as permission to produce a\nnew minimalist design, a visual refresh or an independently reinterpreted\nversion of the current pages. Future frontend work MUST reuse the existing\nvisual implementation. It MUST NOT evolve, modernize, restyle, reinterpret or\nreplace existing tokens, component styling, geometry or page composition for\naesthetic reasons.\n\nNew functionality may add content and components only by composing the\nexisting primitives and tokens. Where no existing component can express a\nrequired function, the new component must be derived from the nearest\ncanonical component pattern without introducing a new visual language.\n\nA change to any established visual-baseline element is permitted only through\na **separate explicit governed Design Change Decision** naming the exact\ntoken/component/page affected and carrying before/after screenshots,\naccessibility evidence and visual-regression impact. A feature requirement,\nimplementation convenience, developer preference, mockup or general claim of\n“modernization” is not design-change approval.\n\nAny frontend candidate that changes the canonical visual baseline without such\na Design Change Decision fails acceptance.\n'''
+              ),
+              (
+                  '''- changes to the established visual direction require explicit design review\n  and accessibility evidence.\n''',
+                  '''- changes to any established visual-baseline element require a separate approved\n  Design Change Decision; ordinary design review, accessibility evidence,\n  implementation convenience or a mockup does not authorize such a change.\n'''
+              ),
+              (
+                  '''- `reuse`, `extend` or `replace` classification for each affected pattern;\n- justification for every replacement based on usability, accessibility,\n  security or a domain-specific requirement;\n''',
+                  '''- `reuse` classification for every existing affected pattern, and\n  `extend-with-canonical-tokens` only where no existing component can express\n  required new functionality;\n- reference to an already approved Design Change Decision for any proposed\n  replacement or visual-baseline modification; without that decision the\n  replacement is prohibited;\n'''
+              ),
+              (
+                  '''### Visual continuity rule\n\nExisting pages are a reference baseline, not an immutable pixel freeze.\nImprovements are permitted where justified, but an unrelated redesign is not.\n\nA future FRONT-PACK must preserve recognizable continuity in:\n''',
+                  '''### Canonical visual-baseline rule\n\nExisting accepted FRONT-00/FRONT-01 pages, tokens, components and reference\nscreenshots are the **immutable visual baseline**, not merely a reference.\nOrdinary FRONT-PACK work may add governed functionality and content but may not\nvisually improve, evolve, modernize or reinterpret the existing baseline.\n\nA future FRONT-PACK must preserve exactly, where already established:\n'''
+              ),
+              (
+                  '''Any material departure requires explicit documentation, accessibility and\nusability evidence, and approval in the relevant FRONT-PACK.\n''',
+                  '''Any departure from an established baseline element requires a separate\napproved **Design Change Decision** before implementation. Documentation inside\nthe same implementation task, accessibility evidence alone, usability claims,\ndeveloper preference or a mockup do not authorize the departure. A candidate\nwith an unapproved visual-baseline change fails acceptance.\n'''
+              ),
+              (
+                  '''These entries:\n\n- preserve the established minimalist EPD² design direction;\n- do not freeze every current component or pixel;\n''',
+                  '''These entries:\n\n- preserve the accepted FRONT-00/FRONT-01 visual implementation as the\n  canonical immutable baseline;\n- freeze established visual tokens, component styling, geometry and page\n  treatment by default; only a separate approved Design Change Decision may\n  authorize a specific change;\n'''
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit('Expected governed text not found; refusing partial patch:\n' + old[:180])
+              s = s.replace(old, new, 1)
+
+          marker = '## FIR-BASE-001 — Current repository baseline\n'
+          if marker not in s:
+              raise SystemExit('FIR-BASE marker not found')
+
+          record = '''## 1.28 Documentation-only correction — Canonical frontend visual baseline lock (2026-08-25)\n\n**Round:** documentation/governance correction only. No frontend code, token, component or accepted reference screenshot is changed by this round.\n\n**Reason:** `FIR-UX-003` and `FIR-UX-010` previously described FRONT-00/FRONT-01 as an authoritative reference while still permitting ordinary frontend work to “evolve”, “replace” or improve it. That ambiguity is removed.\n\n**Governed rule:** accepted FRONT-00/FRONT-01 visual implementation is the **canonical immutable visual baseline**. Existing typography, spacing, colors, borders, radii, layout/grid geometry, header/footer/navigation treatment, component styling, responsive behavior, interaction states and accepted reference screenshots must be reused exactly where they already exist. New functionality may extend pages and compose existing primitives, but it may not restyle existing blocks.\n\nThe only exception is a separate explicit governed **Design Change Decision** approved before implementation and naming the exact affected baseline element, with rationale, before/after screenshots, accessibility evidence and visual-regression impact. A feature requirement, implementation convenience, developer preference, mockup or “modernization” is not such approval.\n\n**FIR IDs changed:** requirement wording of `FIR-UX-003` and the directly conflicting acceptance wording in `FIR-UX-010`; both statuses remain `approved`. No FIR status changes.\n\n**FIR IDs implemented:** none. **New FIR IDs:** none.\n\n**Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`; final FRONT closure remains future.\n\n'''
+          if '## 1.28 Documentation-only correction — Canonical frontend visual baseline lock' not in s:
+              s = s.replace(marker, record + marker, 1)
+
+          p.write_text(s, encoding='utf-8')
+
+          # Fail closed against the exact escape phrases this correction removes.
+          forbidden = [
+              'Future work must reuse\nor evolve the established visual language',
+              'Existing pages are a reference baseline, not an immutable pixel freeze.',
+              '- do not freeze every current component or pixel;',
+          ]
+          out = p.read_text(encoding='utf-8')
+          for phrase in forbidden:
+              if phrase in out:
+                  raise SystemExit('Visual-baseline escape phrase remains: ' + phrase)
+
+      - name: Commit patched Master register
+        shell: bash
+        run: |
+          git config user.name "epd2-governance-bot"
+          git config user.email "governance-bot@users.noreply.github.com"
+          git add docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          git commit -m "Lock canonical frontend visual baseline"
+          git push origin HEAD:governance/canonical-visual-lock-2026-08-25
