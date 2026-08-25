@@ -1744,6 +1744,22 @@ entry now fails rather than being tolerated.
 **PACK-17 is not started and must not start before independent acceptance of
 PACK-16D.**
 
+## 1.28 Documentation-only correction — Canonical frontend visual baseline lock (2026-08-25)
+
+**Round:** documentation/governance correction only. No frontend code, token, component or accepted reference screenshot is changed by this round.
+
+**Reason:** `FIR-UX-003` and `FIR-UX-010` previously described FRONT-00/FRONT-01 as an authoritative reference while still permitting ordinary frontend work to “evolve”, “replace” or improve it. That ambiguity is removed.
+
+**Governed rule:** accepted FRONT-00/FRONT-01 visual implementation is the **canonical immutable visual baseline**. Existing typography, spacing, colors, borders, radii, layout/grid geometry, header/footer/navigation treatment, component styling, responsive behavior, interaction states and accepted reference screenshots must be reused exactly where they already exist. New functionality may extend pages and compose existing primitives, but it may not restyle existing blocks.
+
+The only exception is a separate explicit governed **Design Change Decision** approved before implementation and naming the exact affected baseline element, with rationale, before/after screenshots, accessibility evidence and visual-regression impact. A feature requirement, implementation convenience, developer preference, mockup or “modernization” is not such approval.
+
+**FIR IDs changed:** requirement wording of `FIR-UX-003` and the directly conflicting acceptance wording in `FIR-UX-010`; both statuses remain `approved`. No FIR status changes.
+
+**FIR IDs implemented:** none. **New FIR IDs:** none.
+
+**Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`; final FRONT closure remains future.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -6212,15 +6228,16 @@ The entries in this section:
 
 # 28. Frontend design, visualization and interaction governance
 
-EPD² must preserve the restrained minimalist design already established in
-the existing public pages and frontend foundation. Future workspaces must
-evolve from that baseline rather than replacing it with unrelated visual
-systems.
+EPD² must preserve the exact visual implementation already established in
+the accepted FRONT-00/FRONT-01 public pages and frontend foundation. That
+implementation is the **canonical immutable visual baseline** for later
+frontend work; ordinary FRONT-PACK scope does not include visual evolution,
+modernization, refresh or restyling.
 
-The preserved direction includes:
+The canonical baseline includes:
 
 - clear, calm and institutional presentation;
-- Inter or the approved successor typeface;
+- the exact accepted FRONT-00/FRONT-01 typeface configuration;
 - restrained color usage;
 - generous spacing;
 - simple grids;
@@ -6232,9 +6249,13 @@ The preserved direction includes:
 - no advertising-style visual noise;
 - no gamification of consequential civic procedures.
 
-This is a governed direction, not a freeze of every current pixel. Future
-FRONT-PACKs may refine components and layouts where usability, accessibility
-or domain risk requires it, while preserving the common visual character.
+This is a governed visual freeze of the accepted implementation baseline.
+Functional, usability, accessibility or domain-risk needs must first be
+solved through existing canonical components and tokens. If a need genuinely
+requires changing an established visual-baseline element, that change requires
+a separate approved **Design Change Decision** before implementation, with the
+exact affected element, rationale, before/after screenshots, accessibility
+evidence and visual-regression impact.
 
 ## FIR-UX-003 — EPD² Design System and Component Governance
 
@@ -6243,18 +6264,37 @@ or domain risk requires it, while preserving the common visual character.
 - **Target:** future frontend foundation and every FRONT-PACK
 - **Dependencies:** FRONT-00, FRONT-01, PACK-11, FIR-FORM-001
 
-Create and govern a shared EPD² design system based on the current minimalist
-frontend baseline.
+Create and govern the shared EPD² design system from the **canonical, immutable
+FRONT-00/FRONT-01 visual implementation baseline**.
 
-The approved FRONT-00 and FRONT-01 implementation is the authoritative visual
-reference baseline. This includes the current public pages, shared
-components, actual typography, spacing, color, border, radius and layout
-tokens, and the accepted FRONT-00/FRONT-01 reference screenshots.
+The approved FRONT-00 and FRONT-01 implementation is not merely a visual
+reference. It is the canonical frontend design baseline. This includes the
+current public pages, shared components, actual typography, spacing, color,
+border, radius and layout tokens, header/footer and navigation geometry,
+responsive behavior, interaction states and the accepted FRONT-00/FRONT-01
+reference screenshots.
 
-“Minimalist EPD² design” must not be interpreted as a generic new minimalist
-design created independently from the existing pages. Future work must reuse
-or evolve the established visual language rather than recreate it from
-scratch.
+“Minimalist EPD² design” must not be interpreted as permission to produce a
+new minimalist design, a visual refresh or an independently reinterpreted
+version of the current pages. Future frontend work MUST reuse the existing
+visual implementation. It MUST NOT evolve, modernize, restyle, reinterpret or
+replace existing tokens, component styling, geometry or page composition for
+aesthetic reasons.
+
+New functionality may add content and components only by composing the
+existing primitives and tokens. Where no existing component can express a
+required function, the new component must be derived from the nearest
+canonical component pattern without introducing a new visual language.
+
+A change to any established visual-baseline element is permitted only through
+a **separate explicit governed Design Change Decision** naming the exact
+token/component/page affected and carrying before/after screenshots,
+accessibility evidence and visual-regression impact. A feature requirement,
+implementation convenience, developer preference, mockup or general claim of
+“modernization” is not design-change approval.
+
+Any frontend candidate that changes the canonical visual baseline without such
+a Design Change Decision fails acceptance.
 
 It must cover:
 
@@ -6293,8 +6333,9 @@ semantics.
 - institutional trust must not be simulated through ornamental complexity;
 - public and internal surfaces remain visibly related without becoming
   indistinguishable;
-- changes to the established visual direction require explicit design review
-  and accessibility evidence.
+- changes to any established visual-baseline element require a separate approved
+  Design Change Decision; ordinary design review, accessibility evidence,
+  implementation convenience or a mockup does not authorize such a change.
 
 ## FIR-UX-004 — Information Architecture and Navigation Governance
 
@@ -6472,9 +6513,12 @@ as applicable:
 - inventory of existing FRONT-00/FRONT-01 components and page patterns;
 - extraction of actual typography, spacing, color, border, radius and layout
   tokens;
-- `reuse`, `extend` or `replace` classification for each affected pattern;
-- justification for every replacement based on usability, accessibility,
-  security or a domain-specific requirement;
+- `reuse` classification for every existing affected pattern, and
+  `extend-with-canonical-tokens` only where no existing component can express
+  required new functionality;
+- reference to an already approved Design Change Decision for any proposed
+  replacement or visual-baseline modification; without that decision the
+  replacement is prohibited;
 - screenshot comparison against the approved FRONT-00/FRONT-01 baseline;
 - user-flow map;
 - information architecture;
@@ -6493,12 +6537,14 @@ as applicable:
 A FRONT-PACK cannot claim full journey completion if it implements only the
 successful desktop state.
 
-### Visual continuity rule
+### Canonical visual-baseline rule
 
-Existing pages are a reference baseline, not an immutable pixel freeze.
-Improvements are permitted where justified, but an unrelated redesign is not.
+Existing accepted FRONT-00/FRONT-01 pages, tokens, components and reference
+screenshots are the **immutable visual baseline**, not merely a reference.
+Ordinary FRONT-PACK work may add governed functionality and content but may not
+visually improve, evolve, modernize or reinterpret the existing baseline.
 
-A future FRONT-PACK must preserve recognizable continuity in:
+A future FRONT-PACK must preserve exactly, where already established:
 
 - typography hierarchy;
 - spacing rhythm;
@@ -6511,8 +6557,11 @@ A future FRONT-PACK must preserve recognizable continuity in:
 - status presentation;
 - interaction tone.
 
-Any material departure requires explicit documentation, accessibility and
-usability evidence, and approval in the relevant FRONT-PACK.
+Any departure from an established baseline element requires a separate
+approved **Design Change Decision** before implementation. Documentation inside
+the same implementation task, accessibility evidence alone, usability claims,
+developer preference or a mockup do not authorize the departure. A candidate
+with an unapproved visual-baseline change fails acceptance.
 
 ## FIR-UX-011 — Page Specification and Screen Content Governance
 
@@ -6623,8 +6672,11 @@ A claimed complete user journey is a PASS blocker when:
 
 These entries:
 
-- preserve the established minimalist EPD² design direction;
-- do not freeze every current component or pixel;
+- preserve the accepted FRONT-00/FRONT-01 visual implementation as the
+  canonical immutable baseline;
+- freeze established visual tokens, component styling, geometry and page
+  treatment by default; only a separate approved Design Change Decision may
+  authorize a specific change;
 - do not require implementation in PACK-13;
 - do not change `CANON_VERSION`;
 - are not covered by the external CI run for the PACK-13 implementation

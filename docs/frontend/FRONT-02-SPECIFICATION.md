@@ -355,24 +355,30 @@ Every shared component and shell must be specified and later tested for:
 
 No required action, evidence or status may disappear at a supported viewport.
 
-## 15. Visual continuity
+## 15. Canonical visual baseline — immutable by default
 
-FRONT-00 and FRONT-01 are the authoritative visual reference baseline.
+FRONT-00 and FRONT-01 are the **canonical and immutable visual baseline** for all FRONT-02 work. The existing public pages, shared components, actual design tokens, typography, spacing, page widths, grid geometry, navigation, header/footer geometry, cards, borders, radii, colors, interaction states and accepted reference screenshots are not merely inspiration or a style reference: they are the implementation baseline that must be reused.
 
-FRONT-02 may evolve that baseline but must preserve recognizable continuity in:
+FRONT-02 **MUST NOT evolve, reinterpret, modernize, refresh, restyle or redesign** that baseline. In particular, no FRONT-02 implementation may change existing:
 
-- typography hierarchy;
-- spacing rhythm;
-- page width and grid logic;
-- navigation character;
-- card and section treatment;
-- restrained use of color;
-- border/radius language;
-- density and whitespace;
-- status presentation;
-- interaction tone.
+- typography family, scale, weight hierarchy or line-height system;
+- spacing rhythm, container widths, gutters or grid logic;
+- header, footer or navigation geometry and visual treatment;
+- button, link, input, card, table, list, tab, badge, alert or dialog styling;
+- color palette or color roles;
+- border widths, radii, shadows or density;
+- icon language or decorative treatment;
+- hover, focus, disabled or active-state presentation;
+- responsive breakpoints or existing component geometry;
+- existing page composition solely for aesthetic reasons.
 
-An unrelated dashboard redesign, new ornamental status system or gamified civic interaction is out of scope.
+New FRONT-02 functionality must be composed from existing components and tokens. Where a genuinely new component is unavoidable, it must be derived from the canonical tokens and nearest existing component pattern, with no new visual language. Adding content may extend a page vertically or add governed blocks, but it must not restyle existing blocks.
+
+The only permitted visual-baseline change is a **separate, explicit governed Design Change Decision** that identifies the exact affected token/component/page, states the reason, provides before/after screenshots, accessibility evidence and visual-regression impact, and is approved before implementation. A feature requirement, developer preference, "modernization", convenience or a new mockup is not such approval.
+
+`FIR-UX-013` is a pre-existing governed content requirement for the exact identity line `Erste Partei Direkte Demokratie`; implementing that line through the shared header is permitted **only as that explicit requirement and without otherwise changing the header's visual design**.
+
+Any FRONT-02 candidate that changes the canonical visual baseline without such a Design Change Decision is an automatic **FAIL**.
 
 ## 16. Mandatory pre-implementation artefacts
 
@@ -399,7 +405,7 @@ A future FRONT-02 implementation candidate fails when any of the following is tr
 - it creates an eleventh workspace/origin or collapses workspace isolation;
 - it moves WS-03 voting into the member/public shell;
 - it introduces a universal admin or universal person profile;
-- it replaces the accepted visual baseline without governed justification;
+- it changes any canonical FRONT-00/FRONT-01 visual baseline element without a separate approved Design Change Decision;
 - it implements only happy-path desktop states;
 - failure/recovery states are missing;
 - mobile or accessibility flow is incomplete;
