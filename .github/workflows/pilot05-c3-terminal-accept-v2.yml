@@ -1,0 +1,218 @@
+name: PILOT-05 C3 Terminal Acceptance V2
+
+on:
+  push:
+    branches: [tmp/pilot05-c3-authoritative-20260825]
+    paths: ['.github/workflows/pilot05-c3-terminal-accept-v2.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUNBUFFERED: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  PYTEST_ADDOPTS: '-p no:cacheprovider'
+  C3_SHA256: fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb
+  C3_ROOT: EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3
+  PGHOST: localhost
+  PGPORT: '5432'
+  PGUSER: postgres
+  PGPASSWORD: postgres
+  PGDATABASE: pilot05_c3_acceptance
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  EPD2_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  PILOT05_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  EPD2_PILOT05_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  POSTGRES_DSN: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+
+jobs:
+  terminal-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pilot05_c3_acceptance
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pilot05_c3_acceptance"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: control
+          ref: tmp/pilot05-c3-authoritative-20260825
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          path: transport
+          ref: 15b8f578c00233c1bf02252b3fea23c064213fcf
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          check-latest: false
+      - uses: astral-sh/setup-uv@v3
+
+      - name: Reassemble exact immutable C3
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import gzip,lzma,itertools,hashlib,pathlib
+          root=pathlib.Path('transport/tmp/pilot05-c3-transport')
+          chunks={i:(root/f'chunk{i:02d}.txt').read_bytes() for i in range(8)}
+          expected='fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb'
+          def sha(b): return hashlib.sha256(b).hexdigest()
+          def streams(start,decoder):
+              rest=[i for i in chunks if i!=start]; hits=[]
+              for n in range(len(rest)+1):
+                  for tail in itertools.permutations(rest,n):
+                      order=(start,)+tail; data=b''.join(chunks[i] for i in order)
+                      try: out=decoder(data)
+                      except Exception: continue
+                      hits.append((order,out))
+              return hits
+          matches=[]
+          for go,gout in streams(0,gzip.decompress):
+              for xo,xout in streams(1,lzma.decompress):
+                  if set(go)&set(xo): continue
+                  for label,data in [('gzip',gout),('xz',xout),('gzip+xz',gout+xout),('xz+gzip',xout+gout)]:
+                      if sha(data)==expected: matches.append((label,go,xo,data))
+          print('MATCH_COUNT',len(matches))
+          if len(matches)!=1: raise SystemExit(41)
+          label,go,xo,data=matches[0]
+          pathlib.Path('/tmp/PILOT05_C3_REASSEMBLED.zip').write_bytes(data)
+          print('REASSEMBLY',label,go,xo)
+          print('SHA256',sha(data))
+          PY
+          echo "$C3_SHA256  /tmp/PILOT05_C3_REASSEMBLED.zip" | sha256sum -c -
+          test "$(unzip -Z -1 /tmp/PILOT05_C3_REASSEMBLED.zip | wc -l)" -eq 3744
+          rm -rf /tmp/pilot05-c3-tree && mkdir /tmp/pilot05-c3-tree
+          unzip -q /tmp/PILOT05_C3_REASSEMBLED.zip -d /tmp/pilot05-c3-tree
+          test -d "/tmp/pilot05-c3-tree/$C3_ROOT"
+          chmod -R a-w "/tmp/pilot05-c3-tree/$C3_ROOT"
+
+      - name: Install exact frozen environment outside candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="/tmp/pilot05-c3-tree/$C3_ROOT"
+          export UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-project-env
+          cd "$ROOT"
+          uv sync --all-groups --frozen
+          /tmp/pilot05-c3-project-env/bin/python - <<'PY'
+          import sys,cryptography,psycopg
+          print(sys.version)
+          print('cryptography',cryptography.__version__)
+          print('psycopg',psycopg.__version__)
+          assert sys.version_info[:2]==(3,12)
+          assert cryptography.__version__=='46.0.7'
+          assert psycopg.__version__=='3.3.4'
+          PY
+
+      - name: Prepare independent verifier runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="/tmp/pilot05-c3-tree/$C3_ROOT"
+          sudo mkdir -p /mnt/data && sudo chown "$USER:$USER" /mnt/data
+          rm -rf /mnt/data/python
+          uv venv --python "$(which python)" /mnt/data/python
+          if [ -d "$ROOT/packages/python/epd2-independent-verifier" ]; then
+            uv pip install --python /mnt/data/python/bin/python --no-deps "$ROOT/packages/python/epd2-independent-verifier"
+          fi
+          uv pip install --python /mnt/data/python/bin/python 'cryptography==46.0.7' 'cffi==2.1.0' 'pycparser==3.0'
+          /mnt/data/python/bin/python -c "import sys,cryptography; print(sys.version); print(cryptography.__version__)"
+          echo "EPD2_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+          echo "INDEPENDENT_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+          echo "VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+
+      - name: Prepare PostgreSQL and pgcrypto
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -d pilot05_c3_acceptance -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+          psql -v ON_ERROR_STOP=1 -d pilot05_c3_acceptance -Atc "SHOW server_version; SELECT extname||'='||extversion FROM pg_extension WHERE extname='pgcrypto';" | tee /tmp/postgres-version.txt
+          grep -q '^16.15' /tmp/postgres-version.txt
+
+      - name: Run validator to natural completion
+        id: validator
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          ROOT="/tmp/pilot05-c3-tree/$C3_ROOT"
+          EVIDENCE="$GITHUB_WORKSPACE/control/tmp/pilot05-c3-terminal-evidence/run-$GITHUB_RUN_ID"
+          rm -rf "$EVIDENCE"; mkdir -p "$EVIDENCE"
+          export UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-project-env
+          cd "$ROOT"
+          /tmp/pilot05-c3-project-env/bin/python scripts/validate_pilot05_c3.py --tree "$ROOT" --evidence-out "$EVIDENCE" 2>&1 | tee "$EVIDENCE/00_validator_terminal.log"
+          rc=${PIPESTATUS[0]}
+          echo "$rc" > "$EVIDENCE/VALIDATOR_EXIT_CODE.txt"
+          exit 0
+
+      - name: Inspect and persist terminal evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          E="$GITHUB_WORKSPACE/control/tmp/pilot05-c3-terminal-evidence/run-$GITHUB_RUN_ID"
+          mkdir -p "$E"
+          printf 'run_id=%s\nworkflow_sha=%s\n' "$GITHUB_RUN_ID" "$GITHUB_SHA" > "$E/GITHUB_EXECUTION.txt"
+          sha256sum /tmp/PILOT05_C3_REASSEMBLED.zip > "$E/CANDIDATE_SHA256.txt"
+          /tmp/pilot05-c3-project-env/bin/python --version > "$E/PYTHON_VERSION.txt" 2>&1
+          /tmp/pilot05-c3-project-env/bin/python -c "import psycopg,cryptography; print('psycopg='+psycopg.__version__); print('cryptography='+cryptography.__version__)" > "$E/RUNTIME_PACKAGES.txt"
+          cp /tmp/postgres-version.txt "$E/POSTGRESQL_VERSION.txt"
+          for f in RESULT.txt 02_GOVERNANCE_CHECKS.json 03_INHERITED_AND_PILOT05_JUNIT.xml 03_pytest_tail.log 04_MANDATORY_EXECUTION.json 05_F01_ADVERSARIAL.json 06_F02_UNLINKABILITY.json; do test -s "$E/$f"; done
+          export E
+          /tmp/pilot05-c3-project-env/bin/python - <<'PY'
+          import os,json,re,xml.etree.ElementTree as ET
+          from pathlib import Path
+          e=Path(os.environ['E'])
+          token=(e/'RESULT.txt').read_text().strip()
+          if not re.fullmatch(r'PILOT05_C3_RESULT:(PASS|FAIL):.+',token): raise SystemExit(45)
+          r=ET.parse(e/'03_INHERITED_AND_PILOT05_JUNIT.xml').getroot()
+          suites=[r] if r.tag=='testsuite' else list(r.findall('testsuite'))
+          tests=sum(int(s.get('tests','0')) for s in suites)
+          failures=sum(int(s.get('failures','0')) for s in suites)
+          errors=sum(int(s.get('errors','0')) for s in suites)
+          skipped=sum(int(s.get('skipped','0')) for s in suites)
+          summary={'terminal_token':token,'junit':{'tests':tests,'passed':tests-failures-errors-skipped,'failed':failures+errors,'failures':failures,'errors':errors,'skipped':skipped},'github_run_id':os.getenv('GITHUB_RUN_ID'),'github_sha':os.getenv('GITHUB_SHA')}
+          (e/'TERMINAL_SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+          cd control
+          git config user.name github-actions
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "tmp/pilot05-c3-terminal-evidence/run-$GITHUB_RUN_ID"
+          git commit -m "PILOT-05 C3 terminal evidence run $GITHUB_RUN_ID"
+          git push origin HEAD:tmp/pilot05-c3-authoritative-20260825
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot05-c3-terminal-evidence-${{ github.run_id }}
+          path: control/tmp/pilot05-c3-terminal-evidence/run-${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce terminal result
+        if: always()
+        shell: bash
+        run: |
+          E="$GITHUB_WORKSPACE/control/tmp/pilot05-c3-terminal-evidence/run-$GITHUB_RUN_ID"
+          token="$(cat "$E/RESULT.txt")"
+          rc="$(cat "$E/VALIDATOR_EXIT_CODE.txt")"
+          case "$token" in
+            PILOT05_C3_RESULT:PASS:*) test "$rc" -eq 0 ;;
+            PILOT05_C3_RESULT:FAIL:*) exit 1 ;;
+            *) exit 2 ;;
+          esac
