@@ -1,0 +1,241 @@
+name: PILOT-05 C3 Terminal V3
+
+on:
+  push:
+    branches:
+      - tmp/pilot05-c3-authoritative-20260825
+    paths:
+      - '.github/workflows/pilot05-c3-terminal-v3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  PYTEST_ADDOPTS: '-p no:cacheprovider'
+  C3_ROOT: EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3
+  C3_SHA256: fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb
+  PGHOST: localhost
+  PGPORT: '5432'
+  PGUSER: postgres
+  PGPASSWORD: postgres
+  PGDATABASE: pilot05_c3_acceptance
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  EPD2_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  PILOT05_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  EPD2_PILOT05_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  POSTGRES_DSN: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+  POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/pilot05_c3_acceptance
+
+jobs:
+  terminal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pilot05_c3_acceptance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pilot05_c3_acceptance"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout governed C3 transport snapshot
+        uses: actions/checkout@v4
+        with:
+          repository: nepogoda1970-epd2/epd2-civic-os
+          ref: d543d6c3412aa68581ed83ed2a9f7263293beefc
+          path: transport
+          fetch-depth: 1
+
+      - name: Materialize immutable C3 tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          parts=(transport/tmp/pilot05-c3-transport/chunk*.txt)
+          test "${#parts[@]}" -eq 8
+          cat "${parts[@]}" > /tmp/pilot05-c3-tree.tar.gz
+          gzip -t /tmp/pilot05-c3-tree.tar.gz
+          echo "TRANSPORT_SHA256=$(sha256sum /tmp/pilot05-c3-tree.tar.gz | awk '{print $1}')"
+          echo "TRANSPORT_MEMBERS=$(tar -tzf /tmp/pilot05-c3-tree.tar.gz | wc -l)"
+          tar -tzf /tmp/pilot05-c3-tree.tar.gz | head -40 || true
+          rm -rf /tmp/pilot05-c3
+          mkdir -p "/tmp/pilot05-c3/$C3_ROOT"
+          first="$(tar -tzf /tmp/pilot05-c3-tree.tar.gz | head -1)"
+          if [[ "$first" == "$C3_ROOT/"* || "$first" == "$C3_ROOT" ]]; then
+            tar -xzf /tmp/pilot05-c3-tree.tar.gz -C /tmp/pilot05-c3
+          else
+            tar -xzf /tmp/pilot05-c3-tree.tar.gz -C "/tmp/pilot05-c3/$C3_ROOT"
+          fi
+          ROOT="/tmp/pilot05-c3/$C3_ROOT"
+          test -f "$ROOT/scripts/validate_pilot05_c3.py"
+          test -f "$ROOT/uv.lock"
+          echo "TREE_FILES=$(find "$ROOT" -type f | wc -l)"
+          echo "TREE_DIRS=$(find "$ROOT" -type d | wc -l)"
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          r=Path('/tmp/pilot05-c3')/os.environ['C3_ROOT']
+          h=hashlib.sha256()
+          n=0
+          for p in sorted(x for x in r.rglob('*') if x.is_file()):
+              rel=p.relative_to(r).as_posix().encode()
+              data=p.read_bytes(); n+=1
+              h.update(len(rel).to_bytes(8,'big')); h.update(rel)
+              h.update(len(data).to_bytes(8,'big')); h.update(data)
+          print('TREE_BINDING_PRE='+h.hexdigest())
+          print('TREE_FILE_COUNT_PRE='+str(n))
+          Path('/tmp/tree-binding-pre.txt').write_text(h.hexdigest()+'\n'+str(n)+'\n')
+          PY
+
+      - name: Set up exact Python 3.12.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.14'
+          check-latest: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install exact frozen candidate dependencies externally
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="/tmp/pilot05-c3/$C3_ROOT"
+          export UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-env
+          cd "$ROOT"
+          uv sync --all-groups --frozen
+          /tmp/pilot05-c3-env/bin/python - <<'PY'
+          import sys, cryptography, psycopg
+          print('PYTHON='+sys.version.replace('\n',' '))
+          print('PYTHON_EXECUTABLE='+sys.executable)
+          print('CRYPTOGRAPHY='+cryptography.__version__)
+          print('PSYCOPG='+psycopg.__version__)
+          assert sys.version_info[:3] == (3,12,14)
+          assert cryptography.__version__ == '46.0.7'
+          assert psycopg.__version__ == '3.3.4'
+          PY
+
+      - name: Prepare independent verifier Python runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="/tmp/pilot05-c3/$C3_ROOT"
+          rm -rf /mnt/data/python /tmp/pilot05-verifier-req.txt
+          python -m venv /mnt/data/python
+          cd "$ROOT"
+          uv export --frozen --all-groups --no-emit-project --no-emit-workspace --format requirements-txt > /tmp/pilot05-verifier-req.txt
+          uv pip install --python /mnt/data/python/bin/python -r /tmp/pilot05-verifier-req.txt
+          if [ -d packages/python/epd2-independent-verifier ]; then
+            uv pip install --python /mnt/data/python/bin/python --no-deps packages/python/epd2-independent-verifier
+          fi
+          /mnt/data/python/bin/python - <<'PY'
+          import sys, cryptography, psycopg
+          print('VERIFIER_PYTHON='+sys.version.replace('\n',' '))
+          print('VERIFIER_CRYPTOGRAPHY='+cryptography.__version__)
+          print('VERIFIER_PSYCOPG='+psycopg.__version__)
+          assert sys.version_info[:3] == (3,12,14)
+          assert cryptography.__version__ == '46.0.7'
+          assert psycopg.__version__ == '3.3.4'
+          PY
+          echo "EPD2_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+          echo "INDEPENDENT_VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+          echo "VERIFIER_PYTHON=/mnt/data/python/bin/python" >> "$GITHUB_ENV"
+
+      - name: Verify PostgreSQL 16.15 and pgcrypto
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 -d pilot05_c3_acceptance -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+          psql -v ON_ERROR_STOP=1 -d pilot05_c3_acceptance -Atc "SHOW server_version; SELECT extname||'='||extversion FROM pg_extension WHERE extname='pgcrypto';" | tee /tmp/postgres-version.txt
+          grep -q '^16.15' /tmp/postgres-version.txt
+
+      - name: Run exact validator to natural completion
+        id: validate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          ROOT="/tmp/pilot05-c3/$C3_ROOT"
+          E="$GITHUB_WORKSPACE/PILOT05_C3_TERMINAL_EVIDENCE"
+          rm -rf "$E" && mkdir -p "$E"
+          export UV_PROJECT_ENVIRONMENT=/tmp/pilot05-c3-env
+          cd "$ROOT"
+          /tmp/pilot05-c3-env/bin/python scripts/validate_pilot05_c3.py --tree "$ROOT" --evidence-out "$E" 2>&1 | tee "$E/00_validator_terminal.log"
+          rc=${PIPESTATUS[0]}
+          echo "$rc" > "$E/VALIDATOR_EXIT_CODE.txt"
+          echo "VALIDATOR_EXIT_CODE=$rc"
+          exit 0
+
+      - name: Prove candidate tree unchanged and inspect evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="/tmp/pilot05-c3/$C3_ROOT"
+          E="$GITHUB_WORKSPACE/PILOT05_C3_TERMINAL_EVIDENCE"
+          export ROOT E
+          /tmp/pilot05-c3-env/bin/python - <<'PY'
+          import hashlib, json, os, re, xml.etree.ElementTree as ET
+          from pathlib import Path
+          r=Path(os.environ['ROOT']); e=Path(os.environ['E'])
+          h=hashlib.sha256(); n=0
+          for p in sorted(x for x in r.rglob('*') if x.is_file()):
+              rel=p.relative_to(r).as_posix().encode(); data=p.read_bytes(); n+=1
+              h.update(len(rel).to_bytes(8,'big')); h.update(rel); h.update(len(data).to_bytes(8,'big')); h.update(data)
+          before=Path('/tmp/tree-binding-pre.txt').read_text().splitlines()
+          print('TREE_BINDING_POST='+h.hexdigest()); print('TREE_FILE_COUNT_POST='+str(n))
+          if h.hexdigest()!=before[0] or str(n)!=before[1]: raise SystemExit('CANDIDATE_TREE_MUTATED')
+          req=['RESULT.txt','02_GOVERNANCE_CHECKS.json','03_INHERITED_AND_PILOT05_JUNIT.xml','03_pytest_tail.log','04_MANDATORY_EXECUTION.json','05_F01_ADVERSARIAL.json','06_F02_UNLINKABILITY.json']
+          for f in req:
+              p=e/f
+              if not p.is_file() or p.stat().st_size==0: raise SystemExit('MISSING_EVIDENCE:'+f)
+          token=(e/'RESULT.txt').read_text().strip(); print('TERMINAL_TOKEN='+token)
+          if not re.fullmatch(r'PILOT05_C3_RESULT:(PASS|FAIL):.+',token): raise SystemExit('NO_TERMINAL_TOKEN')
+          root=ET.parse(e/'03_INHERITED_AND_PILOT05_JUNIT.xml').getroot()
+          suites=[root] if root.tag=='testsuite' else list(root.findall('testsuite'))
+          tests=sum(int(s.get('tests','0')) for s in suites); failures=sum(int(s.get('failures','0')) for s in suites); errors=sum(int(s.get('errors','0')) for s in suites); skipped=sum(int(s.get('skipped','0')) for s in suites)
+          passed=tests-failures-errors-skipped
+          print(f'JUNIT tests={tests} passed={passed} failed={failures+errors} failures={failures} errors={errors} skipped={skipped}')
+          for f in ['02_GOVERNANCE_CHECKS.json','04_MANDATORY_EXECUTION.json','05_F01_ADVERSARIAL.json','06_F02_UNLINKABILITY.json']:
+              print('--- '+f+' ---'); print((e/f).read_text())
+          summary={'terminal_token':token,'junit':{'tests':tests,'passed':passed,'failed':failures+errors,'failures':failures,'errors':errors,'skipped':skipped},'tree_binding':h.hexdigest(),'tree_files':n,'github_run_id':os.environ.get('GITHUB_RUN_ID'),'github_sha':os.environ.get('GITHUB_SHA')}
+          (e/'TERMINAL_SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          PY
+          cp /tmp/postgres-version.txt "$E/POSTGRESQL_VERSION.txt"
+          /tmp/pilot05-c3-env/bin/python --version > "$E/PYTHON_VERSION.txt" 2>&1
+          /tmp/pilot05-c3-env/bin/python -c "import cryptography,psycopg; print('cryptography='+cryptography.__version__); print('psycopg='+psycopg.__version__)" > "$E/RUNTIME_PACKAGES.txt"
+          printf 'candidate=PILOT05_C3_REASSEMBLED.zip\nsha256=%s\nroot=%s\nmember_count=3744\n' "$C3_SHA256" "$C3_ROOT" > "$E/CANDIDATE_IDENTITY.txt"
+
+      - name: Upload terminal evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot05-c3-terminal-evidence-${{ github.run_id }}
+          path: PILOT05_C3_TERMINAL_EVIDENCE/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce governed terminal result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          E="$GITHUB_WORKSPACE/PILOT05_C3_TERMINAL_EVIDENCE"
+          token="$(cat "$E/RESULT.txt")"
+          rc="$(cat "$E/VALIDATOR_EXIT_CODE.txt")"
+          case "$token" in
+            PILOT05_C3_RESULT:PASS:*) test "$rc" -eq 0 ;;
+            PILOT05_C3_RESULT:FAIL:*) exit 1 ;;
+            *) exit 2 ;;
+          esac
