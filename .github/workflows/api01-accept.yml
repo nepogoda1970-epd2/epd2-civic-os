@@ -1,0 +1,21 @@
+# Temporary registration stub for API-01 C5 workflow_dispatch.
+# Authoritative execution is only from tmp/api01-c5-authoritative-run-20260826.
+name: api01-accept
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha256:
+        required: true
+      candidate_run_id:
+        required: false
+        default: ""
+      anchors_run_id:
+        required: false
+        default: ""
+permissions:
+  contents: read
+jobs:
+  registration-only:
+    runs-on: ubuntu-latest
+    steps:
+      - run: exit 1
