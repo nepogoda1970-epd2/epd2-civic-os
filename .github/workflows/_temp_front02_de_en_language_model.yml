@@ -1,0 +1,114 @@
+name: Temporary FRONT-02 DE EN language model patch
+
+on:
+  push:
+    branches:
+      - governance/front02-de-en-language-model-2026-08-26
+
+permissions:
+  contents: write
+
+jobs:
+  patch-governance:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: governance/front02-de-en-language-model-2026-08-26
+          fetch-depth: 0
+
+      - name: Patch FRONT-02 and Master narrowly
+        shell: python
+        run: |
+          from pathlib import Path
+
+          front = Path('docs/frontend/FRONT-02-SPECIFICATION.md')
+          s = front.read_text(encoding='utf-8')
+
+          # Add localization model to governing inputs.
+          anchor_inputs = '- `EPD2_Target_Frontend_Architecture_0.8.2_CORRECTED` and its workspace, page, route, navigation, component, state and migration catalogues;\n'
+          repl_inputs = anchor_inputs + '- `docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md`;\n'
+          if 'FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md' not in s:
+              if anchor_inputs not in s:
+                  raise SystemExit('FRONT-02 governing-input anchor not found')
+              s = s.replace(anchor_inputs, repl_inputs, 1)
+
+          # Add localization to implementation scope.
+          anchor_scope = '- content-status and exact-label governance hooks;\n'
+          repl_scope = anchor_scope + '- DE/EN localization presentation, language selection and governed translation/fallback states without creating a second route or authority model;\n'
+          if '- DE/EN localization presentation' not in s:
+              if anchor_scope not in s:
+                  raise SystemExit('FRONT-02 implementation-scope anchor not found')
+              s = s.replace(anchor_scope, repl_scope, 1)
+
+          # Add explicit language model after German route continuity.
+          anchor_route = 'Redirect/alias support must preserve external links and must not create duplicate canonical content.\n\n## 6. Required public information architecture additions\n'
+          language_section = '''Redirect/alias support must preserve external links and must not create duplicate canonical content.\n\n### 5.3 DE/EN language and localization model\n\nThe frontend language model is governed by:\n\n`docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md`\n\nEPD² frontend surfaces are designed for **German and English**. German (`de`) is the default frontend language and remains the authoritative language for legally, procedurally and institutionally material German party content unless an exact later governed decision states otherwise. English (`en`) is a supported governed translation rendition and must not silently acquire independent legal or procedural effect.\n\nLanguage does not create a second route authority. German canonical route paths remain canonical; English target-blueprint paths remain compatibility aliases/redirect inputs. The same governed route may render DE or EN content. A shareable allowlisted locale state such as `?lang=en` / `?lang=de`, or an equivalent later governed mechanism, may select the rendition without changing route identity, authorization, organization scope, eligibility, workflow state or legal effect.\n\nNormal shared shells that offer both languages must expose a visible, accessible `DE | EN` selector derived from the canonical FRONT-00/FRONT-01 visual language. For WS-01 it belongs in the shared public header; authenticated workspaces use the same principle in their own shell without implying shared sessions or identities.\n\nLanguage preference is non-authoritative display state. It may be stored only as a minimal host-local preference and must not encode identity, membership, political interest, organization scope, case identity, voting eligibility or cross-workspace correlation. A safe handoff may carry only a non-identifying locale hint; the target workspace re-authorizes independently.\n\nMaterial translations must remain linked to the exact German source/version and carry governed translation status/approval evidence. Missing, stale or unapproved English material must fall back explicitly to the current German authoritative rendition rather than being silently presented as current English authority.\n\n## 6. Required public information architecture additions\n'''
+          if '### 5.3 DE/EN language and localization model' not in s:
+              if anchor_route not in s:
+                  raise SystemExit('FRONT-02 route-section anchor not found')
+              s = s.replace(anchor_route, language_section, 1)
+
+          # Accessibility explicitly includes language state.
+          anchor_acc = '- non-color-only status meaning.\n\nNo required action, evidence or status may disappear at a supported viewport.\n'
+          repl_acc = '- non-color-only status meaning;\n- correct document-language metadata and accessible DE/EN language switching/fallback behavior.\n\nNo required action, evidence or status may disappear at a supported viewport or because a translation is unavailable.\n'
+          if 'correct document-language metadata' not in s:
+              if anchor_acc not in s:
+                  raise SystemExit('FRONT-02 accessibility anchor not found')
+              s = s.replace(anchor_acc, repl_acc, 1)
+
+          front.write_text(s, encoding='utf-8')
+
+          master = Path('docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md')
+          m = master.read_text(encoding='utf-8')
+
+          # Refine FIR-FORM-004 without changing status.
+          form_anchor = '''A translation must not silently alter legal or procedural meaning. Where\nmultiple languages are offered, the authoritative language and the\nrelationship between versions must be explicit.\n'''
+          form_repl = '''A translation must not silently alter legal or procedural meaning. Where\nmultiple languages are offered, the authoritative language and the\nrelationship between versions must be explicit.\n\nFor the frontend DE/EN baseline, German is the default and authoritative\nlanguage for legally, procedurally and institutionally material German party\ncontent unless an exact later governed decision states otherwise. English is a\ngoverned translation rendition. Material EN content must be linked to the exact\nDE source/version and carry translation status and approval evidence. Missing,\nstale or unapproved English material must not be silently presented as current\nauthoritative content; the current German authoritative rendition remains\navailable with an explicit translation-status/fallback notice.\n'''
+          if 'For the frontend DE/EN baseline' not in m:
+              if form_anchor not in m:
+                  raise SystemExit('Master FIR-FORM-004 anchor not found')
+              m = m.replace(form_anchor, form_repl, 1)
+
+          # Refine FIR-UX-007 with the cross-frontend language presentation rule.
+          ux_anchor = '''Button labels, warnings, errors and status text must not contradict official\nforms, rule sources or decision semantics. Important wording must not exist\nonly as hard-coded frontend copy.\n'''
+          ux_repl = '''Button labels, warnings, errors and status text must not contradict official\nforms, rule sources or decision semantics. Important wording must not exist\nonly as hard-coded frontend copy.\n\n### DE/EN frontend language presentation\n\nAll FRONT-PACKs must preserve DE/EN readiness. German (`de`) is the default\ninterface language and the semantic/authoritative reference for governed German\nterminology. English (`en`) is a supported translation layer, not an independent\naction taxonomy, route authority, identity context or legal/procedural authority.\n\nThe shared frontend shell must support a visible accessible `DE | EN` language\nselector where both languages are offered. German canonical route paths remain\ncanonical; language selection changes the rendition only. Language preference\nis non-authoritative host-local display state and must not be used for identity,\nauthorization, organization scope, eligibility or cross-workspace correlation.\n\nMaterial English translations must be version-linked to the authoritative German\nsource and fail visibly to the current German rendition when translation is\nmissing, stale or unapproved. Consequential-action semantics, deadlines, consent\nscope and legal effect must remain identical across language renditions.\n'''
+          if '### DE/EN frontend language presentation' not in m:
+              if ux_anchor not in m:
+                  raise SystemExit('Master FIR-UX-007 anchor not found')
+              m = m.replace(ux_anchor, ux_repl, 1)
+
+          # Add audit record before FIR baseline section.
+          record_marker = '## FIR-BASE-001 — Current repository baseline\n'
+          record = '''## 1.30 Documentation-only refinement — DE/EN frontend language model (2026-08-26)\n\n**Round:** documentation/governance refinement only. No runtime, legal, publication, membership, voting or administrative capability is activated by this round.\n\n**Governed decision:** EPD² frontend surfaces use a DE/EN localization model. German is the default interface language and authoritative reference for legally, procedurally and institutionally material German party content unless an exact later governed decision states otherwise. English is a governed translation rendition. German canonical route paths remain canonical; language selection changes rendition state and does not create a second English route authority.\n\nShared shells expose a canonical-style accessible `DE | EN` selector where both languages are offered. Language preference is minimal non-authoritative display state and must not encode or correlate identity, authorization, political interest, organization scope, case identity or voting eligibility. Material English content is version-linked to its German source, carries governed translation status/approval evidence, and fails explicitly to the current German authoritative rendition when missing, stale or unapproved.\n\n**FIR IDs refined:** `FIR-FORM-004`, `FIR-UX-004`, `FIR-UX-007`, `FIR-UX-008`, `FIR-UX-011` and existing privacy/session/accessibility obligations. **Status changes:** none. **New FIR IDs:** none.\n\n**Frontend evidence/specification:** `docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md` and §5.3 of `docs/frontend/FRONT-02-SPECIFICATION.md`.\n\n**Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`.\n\n'''
+          if '## 1.30 Documentation-only refinement — DE/EN frontend language model' not in m:
+              if record_marker not in m:
+                  raise SystemExit('Master round-record insertion marker not found')
+              m = m.replace(record_marker, record + record_marker, 1)
+
+          master.write_text(m, encoding='utf-8')
+
+          # Fail closed on required wording.
+          out_f = front.read_text(encoding='utf-8')
+          out_m = master.read_text(encoding='utf-8')
+          checks = [
+              ('FRONT-02', '### 5.3 DE/EN language and localization model', out_f),
+              ('FRONT-02', '`DE | EN` selector', out_f),
+              ('FRONT-02', 'German canonical route paths remain canonical', out_f),
+              ('Master', '### DE/EN frontend language presentation', out_m),
+              ('Master', 'For the frontend DE/EN baseline', out_m),
+              ('Master', '## 1.30 Documentation-only refinement — DE/EN frontend language model', out_m),
+          ]
+          for label, phrase, text in checks:
+              if phrase not in text:
+                  raise SystemExit(f'{label} missing required language rule: {phrase}')
+
+      - name: Commit governed refinement
+        shell: bash
+        run: |
+          git config user.name "epd2-governance-bot"
+          git config user.email "governance-bot@users.noreply.github.com"
+          git add docs/frontend/FRONT-02-SPECIFICATION.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          git commit -m "Govern DE/EN frontend language model"
+          git push origin HEAD:governance/front02-de-en-language-model-2026-08-26
