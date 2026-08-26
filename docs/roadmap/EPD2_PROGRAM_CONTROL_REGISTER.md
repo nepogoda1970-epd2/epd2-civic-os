@@ -26,6 +26,8 @@ Current Master maintenance level established by project governance work: **V16**
 
 On 2026-08-26 API-01 completed independent authoritative acceptance. Exact candidate `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`, sha256 `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`, passed GitHub Actions workflow `api01-accept`, authoritative run `32967210855`, conclusion `success`. API-01 is therefore `ACCEPTED / CLOSED`; API-02 is the next permitted primary API stage.
 
+On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its already-completed full live authoritative evidence: exact C3 sha256 `fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb` passed GitHub Actions run `32855264419`, conclusion `success`, with `3109 passed, 1 skipped, 0 failed`, F-01 `9/9 PASS` and F-02 `8/8 PASS`. PILOT-05 is therefore `ACCEPTED / ESTABLISHED`; this does not alter `API-02 = NEXT`.
+
 ---
 
 ## 2. Program phase state
@@ -172,9 +174,17 @@ That historical pin does not override the current frozen PILOT-04 C9 baseline an
 
 ### PILOT-05 — Representative Desk / Transparency Pilot
 
-**Control state:** `C3 CANDIDATE / GOVERNANCE-STATIC PASS / FULL LIVE ACCEPTANCE NOT YET PROVEN`
+**Control state:** `ACCEPTED / ESTABLISHED`
 
-PILOT-05 is substantial implemented product work. It must not be restarted from zero.
+PILOT-05 C3 is the accepted application-line baseline. The exact accepted candidate is:
+
+`EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip`
+
+SHA-256:
+
+`fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb`
+
+Archive member count: `3744`.
 
 #### Historical C2 working state
 
@@ -188,21 +198,9 @@ F-01: true two-principal publication approval, including migration `0015_pilot05
 
 F-02: constituent correlation boundary using external keyed pseudonym/HMAC handling, including migration `0016_pilot05_constituent_correlation_boundary.sql`.
 
-#### Current C3 candidate
+#### C3 lineage and governance reconciliation
 
-On 2026-08-25 the supplied two-part C3 was reassembled and independently inspected as:
-
-`EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip`
-
-Reassembled archive SHA-256:
-
-`fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb`
-
-Archive member count: `3744`
-
-ZIP integrity: `PASS` (single root, CRC/testzip clean).
-
-C3 now contains and correctly binds:
+C3 was reassembled and independently inspected as a single-root, CRC-clean cumulative candidate. It binds:
 
 - `docs/pilot/PILOT-05/PILOT05_C3_LINEAGE.json` as `CURRENT` authority;
 - `docs/pilot/PILOT-05/PILOT05_C2_LINEAGE.json` as historical working-state record;
@@ -223,33 +221,25 @@ modified    15
 removed      0
 ```
 
-The C3 validator's independent `--static-only` run passed all static/governance checks, including:
+An earlier independent full-validator attempt failed closed before live proof because its verification environment did not provide `EPD2_TEST_DATABASE_URL`. That historical environment blocker did not demonstrate a product defect and is superseded for acceptance purposes by the later successful full live authoritative run below.
 
-- correct root/stage identity;
-- exact roadmap-lock digests;
-- C3 CURRENT authority and C1/C2 historical status;
-- all 3744 tree paths bound by the exact inventory;
-- no unrelated drift outside the declared reconciliation allowlist;
-- 3743 SHA256SUMS entries verified in both directions;
-- F-01/F-02 migrations registered;
-- no committed correlation key material;
-- exact nine F-01 adversarial tests and eight F-02 unlinkability tests named.
+#### Full live authoritative acceptance
 
-Terminal result of that independent static run:
+GitHub Actions run `32855264419`, workflow `PILOT-05 C3 terminal acceptance`, completed with conclusion `success` on 2026-08-26. The authoritative job `97825564426` completed successfully with the database/runtime prerequisites, exact Playwright/Chromium preparation and full acceptance validator enabled.
 
-`PILOT05_C3_RESULT:STATIC_ONLY_PASS:<evidence-path>`
+The full validator ran in `FULL` mode (`static_only = false`) and emitted:
 
-A full independent validator run was also attempted. It failed closed at the mandatory database prerequisite because the verification environment did not provide `EPD2_TEST_DATABASE_URL`:
+`PILOT05_C3_RESULT:PASS:/tmp/pilot05-c3-authoritative-evidence`
 
-`B1.database = FAIL: EPD2_TEST_DATABASE_URL is not set — live proof is mandatory`
+Measured live test result: `3109 passed, 1 skipped, 0 failed`. Mandatory execution evidence passed; F-01 adversarial proof is `9/9 PASS`; F-02 unlinkability proof is `8/8 PASS`; all governance checks passed.
 
-Terminal result:
+Authoritative evidence artifact: `pilot05-c3-authoritative-evidence-32855264419`, artifact ID `9578226563`, GitHub artifact digest `sha256:b36c48cc4c9ef27ab2adb64a3cda7a94b48824b6c2688fb3f5d1c9bae3e5af2d`.
 
-`PILOT05_C3_RESULT:FAIL:<evidence-path>`
+Exact accepted-candidate artifact: `pilot05-c3-exact-accepted-candidate`, artifact ID `9578227300`, GitHub artifact digest `sha256:16194743369291fc0699640539283946822a56bca42f07c99eb02a8a76f731ee`.
 
-This is **not evidence of a product defect**, but it means full live acceptance has not yet been independently proven. Therefore C3 must not yet be promoted to `ACCEPTED` solely from the static PASS or from its bundled pre-seal evidence.
+The candidate's own `CANDIDATE_NOT_ACCEPTED` self-state remains a valid no-self-acceptance safeguard and is superseded only by this independent post-run governance decision. The canonical acceptance record is `docs/pilot/PILOT-05/PILOT05_C3_ACCEPTANCE_RECORD.json`. No open PILOT-05 blocker remains.
 
-The C3 lineage explicitly records the integration context: existing `INTEGRATION-01 C4` remains immutable and is not modified by PILOT-05 C3; an independently accepted PILOT-05 result may become the application-line predecessor for a later `INTEGRATION-01 C5`. This establishes predecessor eligibility only; it does **not** require immediate INTEGRATION-01 advancement after PILOT-05 acceptance. Further authoritative integration advancement is governed by §2.1 and is normally deferred to `FINAL INTEGRATION`, unless a concrete compatibility blocker requires an earlier targeted proof.
+PILOT-04 C7 remains the historical PILOT-05 stage-entry pin, while accepted/frozen PILOT-04 C9 remains the later application-line alignment baseline. PILOT-05 acceptance does not automatically open PILOT-06, promote PILOT-07, claim production readiness/legal activation, or require immediate INTEGRATION-01 advancement. Further authoritative integration is governed by §2.1.
 
 ### PILOT-06 — Pilot Findings & Corrections
 
@@ -325,6 +315,27 @@ No status may change merely because a conversation says it is convenient.
 - **Scope consequence:** PILOT-04 is frozen at C9; PILOT-05, PILOT-06, PILOT-07, production readiness, legal activation and integration acceptance are not promoted by this transition.
 - **Next permitted primary program stage remains:** `API-02 — Authentication & Authorization Runtime`.
 
+### PILOT-05 C3 authoritative transition — 2026-08-26
+
+- **Previous state:** `C3 CANDIDATE / GOVERNANCE-STATIC PASS / FULL LIVE ACCEPTANCE NOT YET PROVEN`.
+- **New state:** `PILOT-05 ACCEPTED / ESTABLISHED`.
+- **Governing candidate:** `EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip`.
+- **Candidate SHA-256:** `fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb`.
+- **Archive member count:** `3744`.
+- **Authoritative workflow:** `PILOT-05 C3 terminal acceptance` (`.github/workflows/pilot05-c3-terminal.yml` at the authoritative run lineage; no current-repository workflow-blob identity is asserted by this reconciliation).
+- **Authoritative run:** GitHub Actions `32855264419`, run attempt `1`, conclusion `success`, head SHA `126768f0ac66f809b93d96b215bc1b814592e364`.
+- **Authoritative job:** `97825564426`, conclusion `success`.
+- **Validator terminal result:** `PILOT05_C3_RESULT:PASS:/tmp/pilot05-c3-authoritative-evidence`.
+- **Execution mode:** `FULL`; `static_only = false`; mandatory database/runtime prerequisites were present.
+- **Live test evidence:** `3109 passed, 1 skipped, 0 failed`; mandatory execution PASS; F-01 adversarial `9/9 PASS`; F-02 unlinkability `8/8 PASS`; governance checks PASS.
+- **Authoritative evidence artifact:** `pilot05-c3-authoritative-evidence-32855264419`, artifact ID `9578226563`, GitHub artifact digest `sha256:b36c48cc4c9ef27ab2adb64a3cda7a94b48824b6c2688fb3f5d1c9bae3e5af2d`.
+- **Exact accepted candidate artifact:** `pilot05-c3-exact-accepted-candidate`, artifact ID `9578227300`, GitHub artifact digest `sha256:16194743369291fc0699640539283946822a56bca42f07c99eb02a8a76f731ee`.
+- **Acceptance record:** `docs/pilot/PILOT-05/PILOT05_C3_ACCEPTANCE_RECORD.json`.
+- **Historical environment blocker:** the earlier full-validator attempt without `EPD2_TEST_DATABASE_URL` is superseded by this successful full live run and is not an open blocker.
+- **Open blockers for PILOT-05:** none.
+- **Scope consequence:** PILOT-05 is accepted/established at C3; PILOT-06 and PILOT-07 are not automatically opened, and no production-readiness, legal-activation or integration-acceptance claim follows from this transition.
+- **Next permitted primary program stage remains:** `API-02 — Authentication & Authorization Runtime`.
+
 ### API-01 authoritative transition — 2026-08-26
 
 - **Previous state:** `API-01 C5 CANDIDATE / CANDIDATE_NOT_ACCEPTED`.
@@ -366,4 +377,4 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 **Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
 
-**Parallel PILOT action:** PILOT-04 C9 is now `ACCEPTED / FROZEN` by the recorded post-run governance decision; no PILOT-04 rerun is required. PILOT-05 C3 governance reconciliation remains materially complete and independently static-verified, but PILOT-05 is still a separate candidate. Its next legitimate step is a full live independent acceptance run with the mandatory database/runtime prerequisites. Only after that PASS may C3 become an accepted application-line predecessor eligible for later integration; PILOT-04 acceptance does not force immediate INTEGRATION-01 advancement.
+**Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage changes `API-02 = NEXT`, claims production readiness/legal activation, or forces immediate INTEGRATION-01 advancement.
