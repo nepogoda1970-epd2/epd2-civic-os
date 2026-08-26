@@ -1774,6 +1774,20 @@ Public regional hubs use `/regionen` and `/regionen/[slug]` and aggregate only a
 
 **Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`.
 
+## 1.30 Documentation-only refinement — DE/EN frontend language model (2026-08-26)
+
+**Round:** documentation/governance refinement only. No runtime, legal, publication, membership, voting or administrative capability is activated by this round.
+
+**Governed decision:** EPD² frontend surfaces use a DE/EN localization model. German is the default interface language and authoritative reference for legally, procedurally and institutionally material German party content unless an exact later governed decision states otherwise. English is a governed translation rendition. German canonical route paths remain canonical; language selection changes rendition state and does not create a second English route authority.
+
+Shared shells expose a canonical-style accessible `DE | EN` selector where both languages are offered. Language preference is minimal non-authoritative display state and must not encode or correlate identity, authorization, political interest, organization scope, case identity or voting eligibility. Material English content is version-linked to its German source, carries governed translation status/approval evidence, and fails explicitly to the current German authoritative rendition when missing, stale or unapproved.
+
+**FIR IDs refined:** `FIR-FORM-004`, `FIR-UX-004`, `FIR-UX-007`, `FIR-UX-008`, `FIR-UX-011` and existing privacy/session/accessibility obligations. **Status changes:** none. **New FIR IDs:** none.
+
+**Frontend evidence/specification:** `docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md` and §5.3 of `docs/frontend/FRONT-02-SPECIFICATION.md`.
+
+**Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -5680,6 +5694,15 @@ A translation must not silently alter legal or procedural meaning. Where
 multiple languages are offered, the authoritative language and the
 relationship between versions must be explicit.
 
+For the frontend DE/EN baseline, German is the default and authoritative
+language for legally, procedurally and institutionally material German party
+content unless an exact later governed decision states otherwise. English is a
+governed translation rendition. Material EN content must be linked to the exact
+DE source/version and carry translation status and approval evidence. Missing,
+stale or unapproved English material must not be silently presented as current
+authoritative content; the current German authoritative rendition remains
+available with an explicit translation-status/fallback notice.
+
 ## FIR-FORM-005 — Multi-Channel Official Renditions
 
 **Status:** approved  
@@ -6491,6 +6514,24 @@ including distinctions such as:
 Button labels, warnings, errors and status text must not contradict official
 forms, rule sources or decision semantics. Important wording must not exist
 only as hard-coded frontend copy.
+
+### DE/EN frontend language presentation
+
+All FRONT-PACKs must preserve DE/EN readiness. German (`de`) is the default
+interface language and the semantic/authoritative reference for governed German
+terminology. English (`en`) is a supported translation layer, not an independent
+action taxonomy, route authority, identity context or legal/procedural authority.
+
+The shared frontend shell must support a visible accessible `DE | EN` language
+selector where both languages are offered. German canonical route paths remain
+canonical; language selection changes the rendition only. Language preference
+is non-authoritative host-local display state and must not be used for identity,
+authorization, organization scope, eligibility or cross-workspace correlation.
+
+Material English translations must be version-linked to the authoritative German
+source and fail visibly to the current German rendition when translation is
+missing, stale or unapproved. Consequential-action semantics, deadlines, consent
+scope and legal effect must remain identical across language renditions.
 
 ## FIR-UX-008 — Responsive and Multi-Device Experience
 
