@@ -56,6 +56,44 @@ API-01 = ACCEPTED / CLOSED
 API-02 = NEXT
 ```
 
+### 2.1 Governed execution path with intermediate system trial
+
+The canonical layer order above is unchanged. The following checkpoint-aware execution path governs how the remaining work is to be exposed as a usable system while preserving independent layer acceptance:
+
+```text
+DATA CLOSED
+  → API-01 CLOSED
+  → API-02
+  → API-03
+  → API-04
+  → API-05
+  → API-06
+  → API CLOSED
+  → INFRA/OPS PREVIEW-READINESS MINIMUM
+  → SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK
+  → INFRA CLOSED
+  → OPS CLOSED
+  → CTRL CLOSED
+  → FRONT CLOSED
+  → FINAL INTEGRATION
+  → SEC
+  → FINAL READINESS DECISION
+```
+
+The checkpoint semantics are mandatory:
+
+1. **`SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK` is not a new architecture layer and is not a closure/acceptance state.** It is the first browser-accessible, end-to-end trial of EPD² on the real accepted API runtime and a minimally deployable INFRA/OPS environment.
+2. The trial may start only after **API-06 has authoritative acceptance and the API layer is `CLOSED`**, and after the minimum INFRA/OPS capabilities required to deploy, operate, observe, recover and reset the trial environment exist and are explicitly recorded as preview-readiness prerequisites.
+3. Preview-readiness does **not** mean `INFRA = CLOSED` or `OPS = CLOSED`. No layer status is promoted by the existence or success of the trial.
+4. The trial should exercise real browser journeys and real backend/runtime paths, including authentication/session behaviour, participation/application flows already supported by the accepted runtime, existing pilot functionality where lawfully and technically available, non-binding voting isolation, representative/transparency surfaces, failure states and recovery/operational handling. The exact trial scope is governed when the preview checkpoint is opened; unsupported future functionality must not be simulated as complete.
+5. Findings from the trial are routed back to the owning layer and corrected through normal governed candidate/acceptance lineage. Trial findings do not silently mutate accepted baselines.
+6. After the trial, the primary closure path resumes: **INFRA → OPS → CTRL → FRONT**. The trial does not replace any of these stages.
+7. **`FINAL INTEGRATION` is a cross-layer acceptance checkpoint, not a new architecture layer.** It occurs only after FRONT is closed and before final SEC. It proves the exact integrated baseline across accepted DATA/API/INFRA/OPS/CTRL/FRONT layers and the relevant accepted PILOT/application lineage.
+8. Final SEC challenges the **exact final integrated baseline**, not the earlier trial preview. If SEC finds a defect, correct it in the owning layer, re-run the affected integration gates, establish a new exact integrated baseline where necessary, and re-run the affected SEC gates before readiness can be decided.
+9. Existing `INTEGRATION-01` artifacts remain preserved historical/parallel lineage. They are not discarded, but further authoritative `INTEGRATION-01` advancement is **not required after every individual API or infrastructure stage**. A targeted integration proof may still be opened earlier if a concrete compatibility blocker requires it.
+10. Existing `PILOT-04` / `PILOT-05` work remains governed by its own lineage. The system trial neither renames those stages nor grants them acceptance automatically. `PILOT-06` retains its existing meaning (`Pilot Findings & Corrections`) and is **not** the name of the system-trial checkpoint.
+11. This execution-path decision creates no new FIR ID and changes no FIR status by itself. It is a Program Control execution decision; future requirements and invariants remain owned by the canonical Master Future Implementation Register.
+
 This does not prohibit already-existing or corrective parallel PILOT work or the governed parallel FRONT-02 implementation preparation described below.
 
 ---
@@ -204,7 +242,7 @@ Terminal result:
 
 This is **not evidence of a product defect**, but it means full live acceptance has not yet been independently proven. Therefore C3 must not yet be promoted to `ACCEPTED` solely from the static PASS or from its bundled pre-seal evidence.
 
-The C3 lineage explicitly records the integration context: existing `INTEGRATION-01 C4` remains immutable and is not modified by PILOT-05 C3; an independently accepted PILOT-05 result is intended to become the application-line predecessor for a later `INTEGRATION-01 C5`.
+The C3 lineage explicitly records the integration context: existing `INTEGRATION-01 C4` remains immutable and is not modified by PILOT-05 C3; an independently accepted PILOT-05 result may become the application-line predecessor for a later `INTEGRATION-01 C5`. This establishes predecessor eligibility only; it does **not** require immediate INTEGRATION-01 advancement after PILOT-05 acceptance. Further authoritative integration advancement is governed by §2.1 and is normally deferred to `FINAL INTEGRATION`, unless a concrete compatibility blocker requires an earlier targeted proof.
 
 ### PILOT-06 — Pilot Findings & Corrections
 
@@ -296,6 +334,10 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 **Primary implementation:** `API-02 = NEXT` (`API-01 = ACCEPTED / CLOSED`).
 
+**Governed forward path:** complete API-02 → API-03 → API-04 → API-05 → API-06 with independent authoritative acceptance at each stage; close API only after API-06. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
+
+**Integration scheduling:** existing INTEGRATION-01 lineage is preserved, but no automatic new INTEGRATION-01 candidate is required after each API stage. Full authoritative integration is normally deferred until FRONT is closed; earlier targeted integration work is permitted only when a concrete compatibility blocker or acceptance dependency requires it.
+
 **Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
 
-**Parallel PILOT action:** PILOT-05 C3 governance reconciliation is now materially complete and independently static-verified. The next legitimate PILOT-05 step is a full live independent acceptance run with its mandatory database/runtime prerequisites. Only after that PASS may C3 become the accepted application-line predecessor for `INTEGRATION-01 C5`.
+**Parallel PILOT action:** PILOT-05 C3 governance reconciliation is now materially complete and independently static-verified. The next legitimate PILOT-05 step is a full live independent acceptance run with its mandatory database/runtime prerequisites. Only after that PASS may C3 become an accepted application-line predecessor eligible for later integration; it does not force immediate INTEGRATION-01 advancement.
