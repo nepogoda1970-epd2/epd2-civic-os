@@ -1,0 +1,27 @@
+name: api01-c5-dispatch-bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/api01-c5-dispatch-bootstrap.yml]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch exact sealed API-01 C5 authoritative workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/api01-accept.yml/dispatches" \
+            -f ref='tmp/api01-c5-authoritative-run-20260826' \
+            -f 'inputs[candidate_sha256]=cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27' \
+            -f 'inputs[candidate_run_id]=32964804390' \
+            -f 'inputs[anchors_run_id]=32964804390'
+          echo 'API-01 C5 authoritative workflow_dispatch submitted.'
