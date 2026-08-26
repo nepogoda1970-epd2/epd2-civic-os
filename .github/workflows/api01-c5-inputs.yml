@@ -1,0 +1,44 @@
+name: api01-c5-inputs
+
+on:
+  push:
+    branches:
+      - tmp/api01-c5-authoritative-run-20260826
+    paths:
+      - .github/workflows/api01-c5-inputs.yml
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare exact C5 candidate and anchors
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/candidate out/anchors
+          C5='EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip'
+          cat candidates/${C5}.00.part candidates/${C5}.01.part > out/candidate/${C5}
+          cp candidates/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C4.zip out/anchors/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C4.zip
+          cp candidates/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C2.zip out/anchors/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C2.zip
+          cp 'candidates/EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL(2).zip' out/anchors/EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip
+          echo 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27  out/candidate/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip' | sha256sum -c -
+          echo '0e5a8310f80799778ddcc52b47b58c60afa55b945d9592b1ddd63fff6d067e72  out/anchors/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C4.zip' | sha256sum -c -
+          echo '80c02d6de378a8166acc5d581397e2016068f5c07c2ac748d7e0e37565a9c61f  out/anchors/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C2.zip' | sha256sum -c -
+          echo '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1  out/anchors/EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip' | sha256sum -c -
+          unzip -t out/candidate/${C5}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api01-candidate
+          path: out/candidate/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api01-anchors
+          path: out/anchors/
+          if-no-files-found: error
+          retention-days: 7
