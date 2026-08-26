@@ -13,10 +13,15 @@ jobs:
   retry:
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel stale API-01 C5 pending run holding concurrency
+      - name: Dispatch exact packaged API-01 C5 authoritative workflow from main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/runs/32966322534/cancel"
-          echo 'Stale C5 run 32966322534 cancelled; queued run 32966657208 may proceed.'
+          gh api --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/api01-accept.yml/dispatches" \
+            -f ref='main' \
+            -f 'inputs[candidate_sha256]=cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27' \
+            -f 'inputs[candidate_run_id]=32964804390' \
+            -f 'inputs[anchors_run_id]=32964804390'
+          echo 'Exact API-01 C5 authoritative workflow_dispatch submitted from main.'
