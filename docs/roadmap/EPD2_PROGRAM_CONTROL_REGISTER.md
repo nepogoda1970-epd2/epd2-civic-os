@@ -147,21 +147,28 @@ SHA-256: `52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1`
 
 ### PILOT-04 — Non-binding Digital Vote Pilot
 
-**Control state:** `DEVELOPED / NOT ACCEPTED_FROZEN`
+**Control state:** `ACCEPTED / FROZEN`
 
-The preserved corrective line reaches at least C9. Preserved C9 evidence records local PASS/readiness for independent GitHub acceptance, but not authoritative GitHub PASS and not `ACCEPTED_FROZEN`.
+The exact C9 candidate is the frozen PILOT-04 baseline:
 
-PILOT-05's stage-entry predecessor pin is exact PILOT-04 C7:
+`EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip`
+
+SHA-256: `7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664`  
+Size: `38,658,195` bytes.
+
+Independent GitHub Actions authoritative verification completed successfully in run `32601698352` using `.github/workflows/pilot04-c9-accept.yml` (workflow Git blob `59bdbffff589f23aa981d755d4d9ca628171f992`). The run concluded `success`; its governed evidence state is `GITHUB_AUTHORITATIVE_PASS`, overall status `PASS`, exit code `0`, result digest `42163788bbeac04522d525cee99e254c1baef98d9d2b1f8fa8fe4692373c4a23`. Mandatory properties passed A `29/29`, B `10/10`, C `8/8`, D `25/25`, E `PASS`, F `9/9`, G `494/494`.
+
+Authoritative evidence artifact: `pilot04-c9-authoritative-evidence`, artifact ID `9483475935`, artifact ZIP SHA-256 `5e7ac279069415fc7ff7007a59012f390ae16648abb46f25e8f0aebb63a4b3b4`. Exact accepted-candidate artifact: `pilot04-c9-exact-accepted-candidate`, artifact ID `9483476323`, artifact ZIP SHA-256 `8182abd5cf0f871475ab613f7e70b81ef5e3e1e2f2c17ed77004e5b75cb21cb0`. The exact candidate bytes were independently rehashed again on 2026-08-26 and matched the governed C9 SHA above.
+
+The authoritative runner deliberately labelled its own output `NOT_FROZEN` because an execution cannot issue its own acceptance decision. The post-run governance decision is now recorded in `docs/pilot/PILOT-04/PILOT04_C9_FROZEN_ACCEPTANCE_RECORD.json` (governance commit `49a1082fd3a46107b71deb4293308691bd1d306e`), which supplies the missing `ACCEPTED_FROZEN` decision without changing or re-running C9. No open PILOT-04 blocker remains.
+
+PILOT-05's original stage-entry predecessor pin to exact PILOT-04 C7 remains a historical lineage fact:
 
 `EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C7.zip`
 
 SHA-256: `812652950e996bd7c781512e4bbc03488c58eb74ca0c652c2b830056d76c1f1d`
 
-The PILOT-05 C3 lineage separately records PILOT-04 C9 as application-line alignment:
-
-`EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip`
-
-SHA-256: `7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664`
+That historical pin does not override the current frozen PILOT-04 C9 baseline and does not automatically promote PILOT-05.
 
 ### PILOT-05 — Representative Desk / Transparency Pilot
 
@@ -299,6 +306,25 @@ Every status transition must record previous/new state, governing artifact or co
 
 No status may change merely because a conversation says it is convenient.
 
+### PILOT-04 C9 authoritative transition — 2026-08-26
+
+- **Previous state:** `DEVELOPED / NOT ACCEPTED_FROZEN`.
+- **New state:** `PILOT-04 ACCEPTED / FROZEN`.
+- **Governing candidate:** `EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip`.
+- **Candidate SHA-256:** `7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664`.
+- **Candidate size:** `38,658,195` bytes.
+- **Authoritative workflow:** `.github/workflows/pilot04-c9-accept.yml`, Git blob `59bdbffff589f23aa981d755d4d9ca628171f992`.
+- **Authoritative run:** GitHub Actions `32601698352`, conclusion `success`, source head `5b49275818127ea7d4e3082ac1edc99c7a4d4755`, tested merge SHA `2504c2be709bad1189aeabc6ddd3058d27fad060`.
+- **Authoritative evidence state:** `GITHUB_AUTHORITATIVE_PASS`; overall `PASS`; exit code `0`; all governed phases PASS.
+- **Result digest:** `42163788bbeac04522d525cee99e254c1baef98d9d2b1f8fa8fe4692373c4a23`.
+- **Mandatory property evidence:** A `29/29`, B `10/10`, C `8/8`, D `25/25`, E `PASS`, F `9/9`, G `494/494`.
+- **Authoritative evidence artifact:** `pilot04-c9-authoritative-evidence`, artifact ID `9483475935`, artifact ZIP SHA-256 `5e7ac279069415fc7ff7007a59012f390ae16648abb46f25e8f0aebb63a4b3b4`.
+- **Exact candidate artifact:** `pilot04-c9-exact-accepted-candidate`, artifact ID `9483476323`, artifact ZIP SHA-256 `8182abd5cf0f871475ab613f7e70b81ef5e3e1e2f2c17ed77004e5b75cb21cb0`.
+- **Post-run freeze decision:** `docs/pilot/PILOT-04/PILOT04_C9_FROZEN_ACCEPTANCE_RECORD.json`, governance commit `49a1082fd3a46107b71deb4293308691bd1d306e`. The runner's `NOT_FROZEN` label was intentional self-acceptance prevention; this separate governance decision supplies the required freeze.
+- **Open blockers for PILOT-04:** none.
+- **Scope consequence:** PILOT-04 is frozen at C9; PILOT-05, PILOT-06, PILOT-07, production readiness, legal activation and integration acceptance are not promoted by this transition.
+- **Next permitted primary program stage remains:** `API-02 — Authentication & Authorization Runtime`.
+
 ### API-01 authoritative transition — 2026-08-26
 
 - **Previous state:** `API-01 C5 CANDIDATE / CANDIDATE_NOT_ACCEPTED`.
@@ -340,4 +366,4 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 **Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
 
-**Parallel PILOT action:** PILOT-05 C3 governance reconciliation is now materially complete and independently static-verified. The next legitimate PILOT-05 step is a full live independent acceptance run with its mandatory database/runtime prerequisites. Only after that PASS may C3 become an accepted application-line predecessor eligible for later integration; it does not force immediate INTEGRATION-01 advancement.
+**Parallel PILOT action:** PILOT-04 C9 is now `ACCEPTED / FROZEN` by the recorded post-run governance decision; no PILOT-04 rerun is required. PILOT-05 C3 governance reconciliation remains materially complete and independently static-verified, but PILOT-05 is still a separate candidate. Its next legitimate step is a full live independent acceptance run with the mandatory database/runtime prerequisites. Only after that PASS may C3 become an accepted application-line predecessor eligible for later integration; PILOT-04 acceptance does not force immediate INTEGRATION-01 advancement.
