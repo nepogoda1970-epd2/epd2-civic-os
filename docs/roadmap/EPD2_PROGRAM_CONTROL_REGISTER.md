@@ -2,7 +2,7 @@
 
 **Status:** Living canonical execution-state register  
 **Location:** `docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md`  
-**Updated:** 2026-08-25  
+**Updated:** 2026-08-26  
 **Purpose:** single authoritative source for the current execution state of the EPD² development program.
 
 This register answers what is closed, active, next, blocked, permitted in parallel, and which governed candidate/evidence currently controls each active line. It does not replace the Master Future Implementation Register.
@@ -22,7 +22,9 @@ Current execution state is governed here. Future requirements and hard invariant
 
 Current Master maintenance level established by project governance work: **V16**, including `FIR-UX-012` and `FIR-UX-013`.
 
-**Repository reconciliation note:** the GitHub Master Register predates the exact V16 maintenance copy. FRONT-02 creates no new FIR ID and changes no FIR status, so this specification round does not create a competing V17 Master. Until the exact V16 repository reconciliation is completed, do not silently infer or downgrade V16-specific FIR state.
+**Repository reconciliation note (superseded 2026-08-25, API-01 C3/C4 governance reconciliation):** the exact V16 repository reconciliation is **COMPLETED**. The Master Register inspected when this control register was introduced predated the V16 maintenance copy; that condition no longer holds. The canonical Master Future Implementation Register is the reconciled current repository Master (`docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`, maintenance copy **V16**, sha256 `0a6a97a3ed04e78b7d925e750c2b99954b7e2c04b143f48ed28be7572b809c14`): the V15/V16 maintenance additions (`FIR-UX-012`, `FIR-UX-013`, update records carried as sections 1.66/1.67) are integrated into the newer repository history, no newer repository state was downgraded, and no V16-specific FIR state was inferred or reduced (record: `docs/api/API-01/API01_MASTER_REGISTER_RECONCILIATION.json`; this register's own transition: `docs/api/API-01/API01_PROGRAM_CONTROL_RECONCILIATION.json`). Reconciliation state: **COMPLETE / CURRENT**.
+
+On 2026-08-26 API-01 completed independent authoritative acceptance. Exact candidate `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`, sha256 `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`, passed GitHub Actions workflow `api01-accept`, authoritative run `32967210855`, conclusion `success`. API-01 is therefore `ACCEPTED / CLOSED`; API-02 is the next permitted primary API stage.
 
 ---
 
@@ -32,7 +34,7 @@ Current Master maintenance level established by project governance work: **V16**
 | --- | --- | --- |
 | ARCH PACK-01…35 | `CLOSED` | Do not restart architecture PACK sequencing as current work. |
 | DATA | `CLOSED` | Do not describe DATA as still being finished unless a governed correction explicitly reopens it. |
-| API | `NEXT` | Next primary runtime/development series. |
+| API | `API-01 ACCEPTED / CLOSED; API-02 NEXT` | API-01 is closed by authoritative run `32967210855`; API-02 is the next primary API stage. |
 | INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |
 | OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |
 | CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |
@@ -50,7 +52,8 @@ Current primary position:
 
 ```text
 DATA = CLOSED
-API = NEXT
+API-01 = ACCEPTED / CLOSED
+API-02 = NEXT
 ```
 
 This does not prohibit already-existing or corrective parallel PILOT work or the governed parallel FRONT-02 implementation preparation described below.
@@ -59,7 +62,7 @@ This does not prohibit already-existing or corrective parallel PILOT work or the
 
 ## 3. Parallel work currently permitted
 
-While API is the next primary series, the following may proceed without changing `API = NEXT`:
+While API-02 is the next primary API stage, the following may proceed without changing `API-02 = NEXT`:
 
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
@@ -258,6 +261,23 @@ Every status transition must record previous/new state, governing artifact or co
 
 No status may change merely because a conversation says it is convenient.
 
+### API-01 authoritative transition — 2026-08-26
+
+- **Previous state:** `API-01 C5 CANDIDATE / CANDIDATE_NOT_ACCEPTED`.
+- **New state:** `API-01 ACCEPTED / CLOSED`.
+- **Governing candidate:** `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`.
+- **Candidate SHA-256:** `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`.
+- **Authoritative workflow:** `.github/workflows/api01-accept.yml`, exact packaged Git blob `123be8088812d772cb3c2ee138a56873934924cc`.
+- **Authoritative run:** GitHub Actions `32967210855`, conclusion `success`, provenance commit `565310344f1e8c67d725b721aad29d94a5f7f6f7`.
+- **Validator terminal result:** `API01_RESULT:PASS:validation/api01/validator_result.json`.
+- **Authoritative evidence artifact:** `api01-c5-acceptance-evidence-32967210855`, artifact ID `9606736122`, SHA-256 `88fdd20fc7239eb5dfc9f66b4d3ddd5aadae013e726269b24454605a557ba8bd`.
+- **Inherited DATA-06 semantics:** PostgreSQL 16.15 Phase B remains `3 failed, 203 passed, 32 skipped`; `new_failures = 0`; result semantics `NO_NEW_REGRESSION_AGAINST_ACCEPTED_DATA06_BASELINE`.
+- **Browser gate:** PASS with frozen Playwright `1.62.0`, mechanically resolved Chromium, fail-open suppression `false`.
+- **Runtime route truth:** 63 routes, runtime-derived and registry-consistent.
+- **Mutation suite:** 28/28 fixtures detected.
+- **Open blockers for API-01:** none.
+- **Next permitted primary stage:** `API-02 — Authentication & Authorization Runtime`.
+
 ---
 
 ## 7. Branch / reconciliation discipline
@@ -274,8 +294,8 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 ## 9. Immediate execution decision
 
-**Primary implementation:** `API = NEXT`.
+**Primary implementation:** `API-02 = NEXT` (`API-01 = ACCEPTED / CLOSED`).
 
-**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API = NEXT` and does not constitute FRONT acceptance or final closure.
+**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
 
 **Parallel PILOT action:** PILOT-05 C3 governance reconciliation is now materially complete and independently static-verified. The next legitimate PILOT-05 step is a full live independent acceptance run with its mandatory database/runtime prerequisites. Only after that PASS may C3 become the accepted application-line predecessor for `INTEGRATION-01 C5`.
