@@ -29,6 +29,7 @@ FRONT-02 is governed by, and must not silently supersede:
 - FRONT-00 accepted frontend foundation and visual regression baseline;
 - FRONT-01 public website implementation and route catalogue;
 - `EPD2_Target_Frontend_Architecture_0.8.2_CORRECTED` and its workspace, page, route, navigation, component, state and migration catalogues;
+- `docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md`;
 - `FIR-FRONT-001` and `FIR-FRONT-002`;
 - `FIR-UX-003` through `FIR-UX-013`;
 - `FIR-SEARCH-001` through `FIR-SEARCH-003`;
@@ -92,6 +93,7 @@ FRONT-02 implementation, when started, is limited to shared frontend foundation 
 - accessibility behaviors including keyboard, screen reader, focus, zoom/reflow and reduced motion;
 - visual regression fixtures and acceptance screenshot conventions;
 - content-status and exact-label governance hooks;
+- DE/EN localization presentation, language selection and governed translation/fallback states without creating a second route or authority model;
 - neutral support/help entry patterns;
 - scoped search input/result primitives that do not create search authorization.
 
@@ -140,6 +142,22 @@ Examples include:
 - `/faq` → `/hilfe`.
 
 Redirect/alias support must preserve external links and must not create duplicate canonical content.
+
+### 5.3 DE/EN language and localization model
+
+The frontend language model is governed by:
+
+`docs/frontend/FRONT-02-LANGUAGE-AND-LOCALIZATION-MODEL.md`
+
+EPD² frontend surfaces are designed for **German and English**. German (`de`) is the default frontend language and remains the authoritative language for legally, procedurally and institutionally material German party content unless an exact later governed decision states otherwise. English (`en`) is a supported governed translation rendition and must not silently acquire independent legal or procedural effect.
+
+Language does not create a second route authority. German canonical route paths remain canonical; English target-blueprint paths remain compatibility aliases/redirect inputs. The same governed route may render DE or EN content. A shareable allowlisted locale state such as `?lang=en` / `?lang=de`, or an equivalent later governed mechanism, may select the rendition without changing route identity, authorization, organization scope, eligibility, workflow state or legal effect.
+
+Normal shared shells that offer both languages must expose a visible, accessible `DE | EN` selector derived from the canonical FRONT-00/FRONT-01 visual language. For WS-01 it belongs in the shared public header; authenticated workspaces use the same principle in their own shell without implying shared sessions or identities.
+
+Language preference is non-authoritative display state. It may be stored only as a minimal host-local preference and must not encode identity, membership, political interest, organization scope, case identity, voting eligibility or cross-workspace correlation. A safe handoff may carry only a non-identifying locale hint; the target workspace re-authorizes independently.
+
+Material translations must remain linked to the exact German source/version and carry governed translation status/approval evidence. Missing, stale or unapproved English material must fall back explicitly to the current German authoritative rendition rather than being silently presented as current English authority.
 
 ## 6. Required public information architecture additions
 
@@ -376,9 +394,10 @@ Every shared component and shell must be specified and later tested for:
 - visible focus;
 - reduced motion;
 - adequate contrast;
-- non-color-only status meaning.
+- non-color-only status meaning;
+- correct document-language metadata and accessible DE/EN language switching/fallback behavior.
 
-No required action, evidence or status may disappear at a supported viewport.
+No required action, evidence or status may disappear at a supported viewport or because a translation is unavailable.
 
 ## 15. Canonical visual baseline — immutable by default
 
