@@ -1816,6 +1816,22 @@ Shared shells expose a canonical-style accessible `DE | EN` selector where both 
 
 **Execution state:** unchanged. `API-02 = NEXT` remains the primary implementation position. Exact allocation among API-02…API-06 remains governed by their stage contracts; this refinement does not pre-assign or pre-accept a specific API stage.
 
+## 1.33 Documentation-only update — Regional Authority Suspension & Intervention Control (2026-08-27)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT implementation stage is accepted or closed by this update, and no regional intervention capability is activated merely by recording it.
+
+**Purpose:** establish the mandatory technical control model for containing misuse of regional administrative authority without disabling the regional organization, ordinary member participation or the voting trust boundary.
+
+**New FIR ID created:** `FIR-GOV-004 — Regional Authority Suspension & Intervention Control` — status `approved`, priority `critical`.
+
+**Governed rule:** intervention acts on exact privileged sessions, exact `OrganizationalAuthority` assignments, exact administrative `action_code` classes and, where necessary, narrow time-bounded `temporary_supervision_by` authority. There is no unrestricted `region_disabled` switch, no implicit Bund takeover and no universal regional super-administrator.
+
+**Legal/governance boundary:** this round fixes the technical mechanism and safety invariants. The exact statutory/legal body competent to initiate, approve, review or overturn each intervention remains subject to later legal/Satzung refinement and must be supplied through governed authority/rule configuration; technical hierarchy position alone never supplies that competence.
+
+**FIR IDs implemented:** none. Existing ADR-034/ADR-036 regional-scope and authority foundations, PACK-12 privileged-access controls and audit/evidence mechanisms are dependencies, not evidence that the end-to-end intervention workflow already exists.
+
+**Execution state:** the FIR addition itself changes no implementation-stage acceptance state. API-02 execution-state reconciliation is recorded separately in Program Control; no API-02 PASS/ACCEPTED claim follows from this round.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -3772,6 +3788,205 @@ Must provide narrow, governed access for:
 
 ---
 
+## FIR-GOV-004 — Regional Authority Suspension & Intervention Control
+
+**Status:** approved
+**Priority:** critical
+**Domain:** organization governance / regional authority / oversight / privileged security
+**Target:** `organization-service` + governance/privileged-access integration + API + CTRL + FRONT + OPS + SEC
+
+EPD² must provide a governed mechanism for containing misuse, compromise or operational failure of regional administrative authority without turning the upper organizational level into a permanent universal administrator.
+
+Core rule:
+
+```text
+contain authority, not the region
+```
+
+A regional intervention must target the minimum necessary authority or action surface. The platform must not implement an unrestricted `region_disabled` switch, implicit Bund takeover, hierarchy-derived superuser or blanket cross-Land administration path.
+
+### Intervention levels
+
+The technical intervention model has four distinct levels. Permanent revocation is a possible final authority-lifecycle outcome after review, not a temporary intervention level.
+
+1. **`SESSION_QUARANTINE` — immediate technical containment.** Security operations may terminate or quarantine the affected actor's privileged sessions and prevent new privileged sessions where the security policy authorizes it. This does not itself remove party membership, remove a person from office, decide a disciplinary matter or grant the security operator domain authority.
+2. **`AUTHORITY_SUSPENSION` — temporary suspension of an exact `OrganizationalAuthority`.** The future authority lifecycle must support `ACTIVE -> SUSPENDED -> ACTIVE | REVOKED`, with normal expiry remaining possible. A suspended authority fails authorization at the moment of every affected act, including requests made from a browser page, token or session established before suspension.
+3. **`REGIONAL_ACTION_RESTRICTION` — temporary freeze of exact administrative action classes in an exact organizational scope.** A governed `RegionalAdministrationRestriction` (or an explicitly equivalent later canonical contract) blocks only named state-changing `action_code` values for the target scope. It must not disable the regional organization as a whole.
+4. **`TEMPORARY_SUPERVISION` — narrow external operational substitution when containment alone would leave the organization unable to function.** It reuses the governed `temporary_supervision_by` model and may grant only the specific functions required for restoration. Open-ended supervision remains forbidden; the existing 90-day default maximum and new-decision-on-extension rule remain binding unless a later governed legal rule narrows them.
+
+A final `REVOKED` authority state uses the ordinary governed authority-revocation lifecycle and preserves the complete prior record.
+
+### `RegionalAdministrationRestriction` minimum contract
+
+The governed restriction record must preserve at least:
+
+- stable restriction ID;
+- exact `target_scope`;
+- exact affected authority IDs where the restriction is authority-specific;
+- closed/registered affected `action_code` set;
+- intervention type;
+- `valid_from`;
+- mandatory `valid_until` for every temporary Level 2–4 intervention;
+- reason code;
+- evidence references;
+- governing rule/policy version;
+- initiating authority reference;
+- approving authority reference where dual control applies;
+- decision reference;
+- notification evidence;
+- review deadline;
+- restoration, revocation or supersession reference;
+- immutable audit/evidence references.
+
+Free-text action classes, indefinite temporary restrictions and silent extension of an existing restriction are prohibited. Extension requires a new governed decision and new audit evidence.
+
+### What may be restricted
+
+Subject to the owning domain's own stricter rules, Level 3 may restrict exact regional administrative actions such as:
+
+- assignment, activation, suspension or revocation of organizational authorities;
+- membership-administration mutations;
+- scoped finance-administration mutations;
+- official correspondence/send actions;
+- official document publication, supersession or revocation actions;
+- governed data exports;
+- organization configuration and relationship mutations;
+- candidacy/election-administration actions only where the election domain separately permits that intervention.
+
+A consuming domain may narrow or refuse an intervention capability. It may never broaden the regional intervention into data or actions that the actor could not otherwise govern.
+
+### Regional continuity and ordinary member rights
+
+An intervention against regional administration must not automatically suspend the regional body, its public presence or the ordinary rights of unaffected members.
+
+Absent a separate, independently authorized domain/legal decision, the intervention must preserve:
+
+- ordinary public read access to approved public material;
+- ordinary member access within their existing lawful scope;
+- discussion and initiative participation not implicated by the restriction;
+- existing meetings, documents and decisions as historical records;
+- audit and evidence visibility according to their existing access rules;
+- case/correspondence history;
+- the ability to restore lawful regional self-administration.
+
+A broader restriction of member rights requires its own competent legal/procedural authority and is not granted by `FIR-GOV-004`.
+
+### Voting and election trust-boundary carve-out
+
+`FIR-GOV-004` must not become a generic path into WS-03 or the voting trust domain.
+
+Regional intervention must not by itself:
+
+- read ballot content;
+- reveal identity-vote linkage;
+- reveal or compute an intermediate tally;
+- alter or delete accepted ballots;
+- cancel or finalize a voting process;
+- mass-revoke voting credentials;
+- bypass election-specific governance, trustee, credential or challenge controls;
+- transfer the ordinary member/admin session into the Voting Client.
+
+Any intervention affecting a voting/election process must be separately authorized by that domain's own governed rules and trust boundaries. A generic regional action restriction is insufficient.
+
+### Authorization and upper-level intervention
+
+Upper organizational levels may intervene only through explicit governed authority. Being Bund-level, being an ancestor in the organization graph, holding a familiar title or operating the platform is never sufficient.
+
+Mandatory rules:
+
+- exact actor, purpose, target scope and action are evaluated at execution time;
+- Levels 2–4 require two distinct authorized human actors unless a later stricter domain rule requires more;
+- proposer and approver must differ;
+- the affected actor cannot approve their own suspension, restoration or revocation;
+- hierarchy-derived implicit intervention authority is prohibited;
+- data access is never implied by procedural oversight or supervision title;
+- temporary intervention has a hard expiry and review deadline;
+- unknown, unavailable, expired or unverifiable intervention/authority state fails closed for the affected privileged mutation;
+- ordinary break-glass is not a substitute for this workflow.
+
+`temporary_supervision_by` is an organizational intervention mechanism. PACK-12 break-glass remains a separate emergency privileged-access mechanism with its own dual control, notification and independent post-hoc review obligations.
+
+### Enforcement order
+
+Every affected privileged state-changing request must be evaluated server-side at the moment of the act. Frontend state, an old role claim, an already-open page or a token issued before suspension must never be treated as sufficient authorization.
+
+Minimum decision chain:
+
+```text
+REQUEST
+-> authentication and current session state
+-> current actor authority state
+-> regional scope authorization
+-> active authority suspension / RegionalAdministrationRestriction
+-> owning-domain rule and purpose
+-> separation of duties / required approvals / assurance
+-> ALLOW or reason-coded DENY
+```
+
+The frontend may display the result but is never the security boundary.
+
+### Evidence, review and restoration
+
+Every Level 1–4 action must create durable reason-coded evidence appropriate to its class. Levels 2–4 must preserve the exact governing decision, scope, affected authority/action set, proposer, approver, evidence basis, start/end time, notification state and review deadline.
+
+Historical records must not be rewritten or hidden because an intervention occurred. In particular, intervention authority must not delete or alter prior decisions, correspondence, documents, audit events or evidence. Corrections and reversals use new restoration/revocation/superseding records.
+
+The implementation must support a governed path to:
+
+```text
+SUSPEND / RESTRICT
+-> REVIEW
+-> RESTORE | REVOKE | SUPERSEDE
+```
+
+A contested intervention must have a review/appeal path supplied by the competent later legal/governance rule. The technical system must preserve the records needed for that review even before the final legal role allocation is fixed.
+
+### Implementation placement
+
+| Layer / owner | Mandatory responsibility | Must not do |
+| --- | --- | --- |
+| `organization-service` | Own current organizational scope, `OrganizationalAuthority` suspension state, regional restriction state and `temporary_supervision_by` relationship/effective dates. | Must not infer intervention authority from hierarchy position or become a universal admin service. |
+| Identity / Security / privileged access | Terminate/quarantine privileged sessions and enforce privileged-session/JIT/break-glass controls. | Must not decide membership, office removal, regional policy or substantive domain outcomes. |
+| Governance / oversight | Own the governed human decision and rule references authorizing suspension, restriction, restoration, revocation or supervision. | Must not gain implicit data access from an oversight title. |
+| API | Re-evaluate current session, authority, scope, restriction and domain authorization on every affected mutation and expose reason-coded outcomes. | Must not trust stale frontend/token scope or provide an upper-level bypass endpoint. Exact API-stage allocation remains stage-contract governed. |
+| CTRL | Provide scoped proposal, approval, review, restoration/revocation and supervision control surfaces with separation of duties. | Must not expose a one-click universal `disable region` / `take over region` control. |
+| FRONT | Show the exact restriction/suspension state, affected scope/actions, reason/reference, review/expiry state and available remedy to authorized users. Preserve ordinary unaffected regional/member journeys. | Must not present the entire region or all members as suspended when only administrative authority is contained. |
+| OPS | Provide incident containment, monitoring, expiry/review alerts, recovery and evidence handling. | Must not silently extend intervention or convert an outage into permanent governance state. |
+| SEC / FINAL INTEGRATION | Prove that stale sessions/tokens, cross-Land calls, hierarchy tricks, approval bypass, expired restrictions, supervision overreach and voting-boundary attacks fail on the exact integrated baseline. | Must not infer safety from isolated service tests only. |
+
+### Dependencies
+
+At minimum:
+
+- `FIR-INV-013` — Bund/Land/Kreis isolation;
+- `FIR-INV-014` — no universal administration;
+- `FIR-INV-009` — JIT and break-glass governance;
+- `FIR-GOV-001` — Emergency Governance;
+- `FIR-RULE-001` — governed rules and competent authority;
+- ADR-034 regional scope authorization/inheritance;
+- ADR-036 institutional authority lifecycle and separation of duties;
+- PACK-12 privileged-access/break-glass controls;
+- applicable audit, evidence, retention, notification and domain-specific voting/finance/communications controls.
+
+### Acceptance criteria
+
+The requirement is not complete until the integrated system demonstrates at least that:
+
+1. suspending an exact authority immediately prevents its affected mutations even through a session/token/page opened before suspension;
+2. an unrelated actor, authority, organization and Land remain unaffected;
+3. ordinary unaffected member participation remains available during an administrative restriction;
+4. Level 3 blocks only registered exact `action_code` values in the target scope and cannot become a blanket `region_disabled` state;
+5. Bund/ancestor hierarchy position or role-name reuse alone cannot initiate, approve or execute an intervention;
+6. Levels 2–4 enforce two-distinct-actor approval and reject self-approval;
+7. temporary suspension/restriction/supervision expires and cannot be silently extended;
+8. `temporary_supervision_by` grants only explicitly permitted functions and no blanket read/export access;
+9. restriction/authority state that cannot be verified fails closed for the affected privileged mutation;
+10. every intervention, restoration, revocation and supersession preserves immutable reason-coded audit/evidence history;
+11. intervention cannot rewrite or erase prior decisions, correspondence, documents, audit events or evidence;
+12. generic regional intervention cannot access ballots, identity-vote linkage, intermediate tally or bypass WS-03/election governance;
+13. no universal administrator or cross-Land bypass path is introduced;
+14. the exact integrated CTRL/FRONT flow can suspend, review and restore or revoke authority while preserving the regional body's unaffected operation.
+
 # 16. Representative and public interface
 
 ## FIR-REP-001 — Open Representative Desk
@@ -4917,6 +5132,7 @@ HTTP surface and no production gateway; and it builds no frontend, so
 - the FIR-PROG-002 pre-adoption gate (PACK-11 provides the opinion-document
   foundation only);
 - emergency governance;
+- regional authority suspension and intervention control;
 - representative desk;
 - lobbying disclosure;
 - applicant and member cabinets, identity and session model, communication

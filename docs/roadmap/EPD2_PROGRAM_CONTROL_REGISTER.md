@@ -20,13 +20,17 @@ Read first:
 
 Current execution state is governed here. Future requirements and hard invariants are governed by the Master Future Implementation Register.
 
-Current Master maintenance level established by project governance work: **V18**, including `FIR-UX-012`, `FIR-UX-013` and `FIR-AI-003` with its governed implementation-placement matrix.
+Current Master maintenance level established by project governance work: **V19**, including `FIR-UX-012`, `FIR-UX-013`, `FIR-AI-003` with its governed implementation-placement matrix, and `FIR-GOV-004` Regional Authority Suspension & Intervention Control.
 
 **Repository reconciliation note (superseded 2026-08-25, API-01 C3/C4 governance reconciliation):** the exact V16 repository reconciliation is **COMPLETED**. The Master Register inspected when this control register was introduced predated the V16 maintenance copy; that condition no longer holds. At that reconciliation point, the canonical Master Future Implementation Register was the reconciled repository Master (`docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`, maintenance copy **V16**, sha256 `0a6a97a3ed04e78b7d925e750c2b99954b7e2c04b143f48ed28be7572b809c14`): the V15/V16 maintenance additions (`FIR-UX-012`, `FIR-UX-013`, update records carried as sections 1.66/1.67) are integrated into the newer repository history, no newer repository state was downgraded, and no V16-specific FIR state was inferred or reduced (record: `docs/api/API-01/API01_MASTER_REGISTER_RECONCILIATION.json`; this register's own transition: `docs/api/API-01/API01_PROGRAM_CONTROL_RECONCILIATION.json`). V16 reconciliation state: **COMPLETE**.
 
 **Documentation-only V17 governance update (2026-08-27):** `FIR-AI-003 — Governed Correspondence Analysis & Reply Drafting` is now recorded in the canonical Master Future Implementation Register. Canonical Master SHA-256 after this update: `fe6b9c63088865ea1af4bce1fb8371c6abc6c0f21174c50ee52cce86c80b849a`. This update changes no execution-stage status, does not implement or activate the capability, and does not alter the primary position: **`API-02 = NEXT`**.
 
 **Documentation-only V18 governance refinement (2026-08-27):** `FIR-AI-003` now contains a mandatory cross-layer Implementation Placement Matrix covering authoritative correspondence/casework ownership, AI processing, documents/evidence, API, INFRA, OPS, CTRL, FRONT, FINAL INTEGRATION and SEC. Canonical Master SHA-256 after this refinement: `5776d8bc49ad3b8c076a057d072c02abe7ad77203b5258ecf4770963ca6eba56`. No execution-stage status changes; **`API-02 = NEXT`** remains unchanged, and exact allocation among API-02…API-06 remains stage-contract governed.
+
+**Documentation-only V19 governance update (2026-08-27):** `FIR-GOV-004 — Regional Authority Suspension & Intervention Control` is now recorded as an approved critical future requirement. It defines four bounded intervention levels — session quarantine, authority suspension, exact regional action restriction and narrow time-bounded temporary supervision — while prohibiting a universal `region_disabled` switch, implicit Bund takeover, voting-domain bypass and rewriting of historical evidence. Canonical Master SHA-256 after this update: `49d9be302bf027c6cda72805f67a9066d8dd5b7453ffab499b75ec1da34797ce`. This documentation update implements or activates no intervention capability and accepts/closes no implementation stage.
+
+**API-02 execution-state reconciliation (2026-08-27):** the project owner confirms that `API-02 — Authentication & Authorization Runtime` implementation is already underway. The current control state is therefore **`API-02 = ACTIVE / IN DEVELOPMENT`**, not `NEXT`. The existing `handoff/api-02` branch is intentionally reserved as a clean future candidate-verification/upload slot and is not the development branch, candidate evidence, PASS or acceptance record. Historical dated statements that API-02 was `NEXT` remain preserved as history and are superseded only for current-state interpretation. No API-02 PASS/ACCEPTED/CLOSED claim is made. `API-03` may proceed only as **`PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`** and may not be accepted or closed before authoritative API-02 acceptance.
 
 
 On 2026-08-26 API-01 completed independent authoritative acceptance. Exact candidate `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`, sha256 `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`, passed GitHub Actions workflow `api01-accept`, authoritative run `32967210855`, conclusion `success`. API-01 is therefore `ACCEPTED / CLOSED`; API-02 is the next permitted primary API stage.
@@ -41,7 +45,7 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 | --- | --- | --- |
 | ARCH PACK-01…35 | `CLOSED` | Do not restart architecture PACK sequencing as current work. |
 | DATA | `CLOSED` | Do not describe DATA as still being finished unless a governed correction explicitly reopens it. |
-| API | `API-01 ACCEPTED / CLOSED; API-02 NEXT` | API-01 is closed by authoritative run `32967210855`; API-02 is the next primary API stage. |
+| API | `API-01 ACCEPTED / CLOSED; API-02 ACTIVE / IN DEVELOPMENT; API-03 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` | API-02 implementation is active. API-03 may proceed only as parallel PRE-SEAL and cannot be accepted/closed before authoritative API-02 acceptance. |
 | INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |
 | OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |
 | CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |
@@ -60,7 +64,8 @@ Current primary position:
 ```text
 DATA = CLOSED
 API-01 = ACCEPTED / CLOSED
-API-02 = NEXT
+API-02 = ACTIVE / IN DEVELOPMENT
+API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED
 ```
 
 ### 2.1 Governed execution path with intermediate system trial
@@ -107,7 +112,7 @@ This does not prohibit already-existing or corrective parallel PILOT work or the
 
 ## 3. Parallel work currently permitted
 
-While API-02 is the next primary API stage, the following may proceed without changing `API-02 = NEXT`:
+While API-02 is the active primary API stage, the following may proceed without changing `API-02 = ACTIVE / IN DEVELOPMENT`; API-03 is additionally permitted only as `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` and cannot be accepted/closed before API-02:
 
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
@@ -374,9 +379,9 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 ## 9. Immediate execution decision
 
-**Primary implementation:** `API-02 = NEXT` (`API-01 = ACCEPTED / CLOSED`).
+**Primary implementation:** `API-02 = ACTIVE / IN DEVELOPMENT` (`API-01 = ACCEPTED / CLOSED`). `API-03` may advance only as `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`; exact accepted API-02 bytes must precede API-03 reconciliation/rebase, C1 seal and independent acceptance.
 
-**Governed forward path:** complete API-02 → API-03 → API-04 → API-05 → API-06 with independent authoritative acceptance at each stage; close API only after API-06. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
+**Governed forward path:** complete active API-02 with independent authoritative acceptance; then reconcile/rebase API-03 to the exact accepted API-02 bytes, seal and independently verify API-03 before any acceptance/closure claim; then continue API-04 → API-05 → API-06 with independent authoritative acceptance at each stage; close API only after API-06. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
 
 **Integration scheduling:** existing INTEGRATION-01 lineage is preserved, but no automatic new INTEGRATION-01 candidate is required after each API stage. Full authoritative integration is normally deferred until FRONT is closed; earlier targeted integration work is permitted only when a concrete compatibility blocker or acceptance dependency requires it.
 
