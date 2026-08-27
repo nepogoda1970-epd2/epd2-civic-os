@@ -2,7 +2,7 @@
 
 **Status:** Living canonical execution-state register  
 **Location:** `docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md`  
-**Updated:** 2026-08-26  
+**Updated:** 2026-08-27  
 **Purpose:** single authoritative source for the current execution state of the EPD² development program.
 
 This register answers what is closed, active, next, blocked, permitted in parallel, and which governed candidate/evidence currently controls each active line. It does not replace the Master Future Implementation Register.
@@ -378,3 +378,27 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 **Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
 
 **Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage changes `API-02 = NEXT`, claims production readiness/legal activation, or forces immediate INTEGRATION-01 advancement.
+
+---
+
+## 10. Mobile client execution decision — 2026-08-27
+
+Governing execution record:
+
+`docs/frontend/EPD2_MOBILE_CLIENT_EXECUTION_DECISION.md`
+
+The following decision is now part of Program Control:
+
+1. **MOBILE is not a new architecture layer.** Native iOS/Android clients are governed inside `FRONT` and do not alter the canonical sequence `DATA → API → INFRA → OPS → CTRL → FRONT → SEC`.
+2. **MOBILE-READINESS specification may proceed before API closure** without changing the current primary stage. It may define mobile journeys, API-contract mapping, passkey/step-up UX, secure storage, device/session lifecycle, push/deep-link boundaries, offline behaviour, accessibility, privacy/telemetry boundaries, release/signing requirements and a web/mobile feature matrix. This work must not invent unaccepted API behaviour or claim runtime acceptance.
+3. **Full mobile runtime implementation normally opens only after `API = CLOSED` and the first System Trial Preview has exercised the accepted API runtime sufficiently to stabilize client-facing assumptions.** Preview findings affecting client contracts must be reconciled by the owning layer first. The browser-first System Trial Preview is not blocked by the absence of native mobile.
+4. The governed FRONT mobile sub-line is:
+   - `FRONT-MOBILE-01 — Mobile Client Architecture & Security Boundaries`: `PLANNED / SPECIFICATION MAY PROCEED`;
+   - `FRONT-MOBILE-02 — Mobile Application Runtime`: `NOT_STARTED`;
+   - `FRONT-MOBILE-03 — Mobile E2E & Release Readiness`: `NOT_STARTED`.
+5. Mobile remains a controlled client of accepted server-side authority. It may not access databases directly, own a separate AuthN/AuthZ domain, bypass Gateway/BFF/API boundaries, create a global user identifier, make authoritative domain/procedural decisions client-side, or move authoritative voting logic into the general mobile client. Human auth/session/assurance remains API-02-owned; S2S identity remains API-03-owned; WS-03 voting isolation and purpose-scoped handoff remain mandatory.
+6. No framework is canonically locked now. `React Native + Expo` is the preferred candidate because the frontend line is TypeScript/React-oriented, but the choice must be verified and governed in FRONT-MOBILE-01.
+7. Mobile feature parity is governed by an explicit feature matrix; complex administrative surfaces may remain web-only where justified. Required mobile journeys, optional journeys, prohibited mobile functions and safe cross-client handoffs must be explicit.
+8. If native mobile is part of the target production release, FRONT cannot close merely because the web client is complete. The governed mobile target scope must be accepted before `FRONT CLOSED`, included in the exact `FINAL INTEGRATION` baseline and challenged by final `SEC` together with the rest of the integrated system.
+9. **Master Register disposition:** no new FIR is created by this decision. Existing requirements already govern the substantive obligations, including `FIR-UX-003`, `FIR-UX-004` (explicit mobile navigation/deep-link scope), `FIR-UX-005`, `FIR-UX-006`, `FIR-ID-001`, `FIR-ID-002`, `FIR-INCLUSION-001` and existing privacy/security/voting-isolation requirements. If FRONT-MOBILE-01 discovers a genuinely new normative invariant not covered by the current Master, a new FIR ID must be created through normal Master change discipline before implementation relies on it.
+10. This decision changes no current stage status. `API-02 = NEXT` remains the primary implementation position; FRONT-MOBILE-02 is not started, FRONT is not closed, and no mobile/production/security readiness is claimed.
