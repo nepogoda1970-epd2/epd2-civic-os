@@ -1804,6 +1804,18 @@ Shared shells expose a canonical-style accessible `DE | EN` selector where both 
 
 **Execution state:** unchanged. `API-02 = NEXT` remains the primary implementation position. No current stage status is promoted or reopened.
 
+## 1.32 Documentation-only refinement — FIR-AI-003 Implementation Placement Matrix (2026-08-27)
+
+**Round:** documentation/governance refinement only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT implementation stage is started, accepted or closed by this update.
+
+**Purpose:** remove implementation-placement ambiguity for `FIR-AI-003` by assigning mandatory responsibility across authoritative correspondence/casework ownership, `ai-processing-service`, document/evidence ownership, API, INFRA, OPS, CTRL, FRONT, FINAL INTEGRATION and SEC.
+
+**FIR IDs refined:** `FIR-AI-003`. **Status changes:** none. **New FIR IDs:** none.
+
+**Governed rule:** no single service, layer, generic chatbot, provider integration or frontend surface may claim `FIR-AI-003` complete in isolation. Each stage owns only its scoped obligations; whole-FIR completion requires the governed end-to-end path and acceptance evidence.
+
+**Execution state:** unchanged. `API-02 = NEXT` remains the primary implementation position. Exact allocation among API-02…API-06 remains governed by their stage contracts; this refinement does not pre-assign or pre-accept a specific API stage.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -4722,6 +4734,41 @@ Original correspondence
 ```
 
 The UI must make clear which content is original source material, which is AI-generated, which was changed/approved by a human and which exact version was actually sent.
+
+### Implementation placement matrix
+
+`FIR-AI-003` is a cross-layer capability. No single implementation stage, service, generic chatbot, frontend component or AI-provider integration may claim this FIR complete in isolation.
+
+The following placement is mandatory unless a later governed architecture decision explicitly reallocates ownership without weakening the boundaries below.
+
+| Layer / owner | Mandatory responsibility for `FIR-AI-003` | Must not own / claim |
+| --- | --- | --- |
+| Existing domain services / Communications and Casework ownership | Own the authoritative incoming correspondence/thread/case state, sender/recipient routing context, attachment references, procedural status, final authorized reply and delivery linkage. Assemble only the case/domain context the acting principal is already authorized to access. | Must not delegate authoritative correspondence/case ownership to the AI service or treat AI output as the case decision. |
+| `ai-processing-service` | Perform governed summarization, classification, recommendation, drafting, verification flags and structured correspondence analysis; enforce redaction/provenance, model/configuration identity, staleness, human-review state and fail-closed prohibited-input controls. | Must not become the authoritative message/document store, widen authorization, close a case, establish organizational position or send/mutate Civic OS state. |
+| Document / evidence ownership | Preserve immutable/versioned attachment and document references, governed renditions, exact sent-response versions and applicable retention/legal-hold evidence. | Must not duplicate source ownership inside the AI-processing record. |
+| API | Expose governed production contracts/BFF composition for requesting analysis, reading structured results and provenance, generating/revising drafts, submitting required human review/approval state and invoking the owning correspondence delivery path after authorization. API contracts must preserve actor, purpose, scope, correlation and version identifiers. | Must not introduce a direct AI-provider-to-send shortcut or an endpoint that bypasses owning-domain authorization/human approval. Exact allocation among API stages is governed by their stage contracts; this FIR does not pre-accept any API stage. |
+| INFRA | Provide the deployable AI runtime/provider path, credentials and secret handling, network and region isolation, queue/execution substrate, approved retention modes, model endpoint configuration and provider availability controls required by the accepted API/runtime design. | Must not activate a provider or data route outside approved region/retention/policy boundaries or claim application-level completion. |
+| OPS | Define and operate monitoring, timeout/retry/cancellation policy, degraded-mode behavior, escalation to humans, provider outage handling, incident response, recovery and operational evidence for correspondence AI processing. | Must not silently auto-send when AI/provider processing fails or substitute retries for human review. |
+| CTRL | Provide governed control-plane surfaces for reviewer queues, reviewer authority/scope, model/prompt/policy version visibility, approval/rejection/supersession, audit inspection, configuration controls and separation-of-duties enforcement for consequential outputs. | Must not allow AI self-approval, universal admin access or configuration that bypasses the owning workflow's authority model. |
+| FRONT | Provide the staff-facing workflow `Original correspondence -> AI analysis -> authorized context -> open questions/verification flags -> reply draft -> human edit/review/approval -> authorized send -> history`, with clear provenance/staleness and source-vs-AI-vs-human distinctions. | Must not present AI output as already approved, hide stale/ungrounded state, or simulate unsupported backend capability as complete. |
+| SEC | Adversarially verify prompt-injection resistance, poisoned attachments/context, prohibited-input handling, authorization/correlation boundaries, data exfiltration attempts, provider/tool escape attempts, human-approval bypasses and exact-send integrity on the integrated baseline. | Must not test only the model in isolation; the target is the complete accepted cross-layer path. |
+| FINAL INTEGRATION | Prove the exact end-to-end path from authorized intake through AI processing/context grounding and human approval to the exact delivered version and durable audit/evidence history on the accepted integrated baseline. | Must not infer completion from isolated unit/service tests or from the existence of `ai-processing-service`. |
+
+### Stage-completion rule
+
+Implementation is cumulative across the canonical execution sequence:
+
+```text
+API contracts and runtime boundaries
+-> INFRA provider/runtime substrate
+-> OPS operational behavior
+-> CTRL review/control surfaces
+-> FRONT staff workflow
+-> FINAL INTEGRATION proof
+-> SEC adversarial verification of the exact integrated baseline
+```
+
+A stage may satisfy its own scoped obligations without satisfying `FIR-AI-003` as a whole. The FIR remains unimplemented until the end-to-end acceptance criteria below are demonstrated against the governed integrated baseline.
 
 ### Dependencies
 
