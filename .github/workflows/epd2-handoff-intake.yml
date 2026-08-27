@@ -1,0 +1,114 @@
+name: EPD2 Handoff Intake
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Governed block label, e.g. API-02 or FINAL-INTEGRATION"
+        required: true
+        type: string
+      source_ref:
+        description: "Transport branch, e.g. handoff/api-02"
+        required: true
+        type: string
+      candidate_path:
+        description: "Exact repository path to the sealed candidate ZIP"
+        required: true
+        type: string
+      expected_sha256:
+        description: "Expected SHA-256; leave empty only if not yet independently supplied"
+        required: false
+        default: ""
+        type: string
+      expected_size:
+        description: "Expected byte size; leave empty only if not yet independently supplied"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  intake:
+    name: Exact-byte transport verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout transport branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 1
+
+      - name: Verify candidate bytes and generate intake metadata
+        id: verify
+        shell: bash
+        env:
+          EPD2_STAGE: ${{ inputs.stage }}
+          EPD2_SOURCE_REF: ${{ inputs.source_ref }}
+          EPD2_CANDIDATE_PATH: ${{ inputs.candidate_path }}
+          EPD2_EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
+          EPD2_EXPECTED_SIZE: ${{ inputs.expected_size }}
+        run: |
+          set -euo pipefail
+
+          candidate="$EPD2_CANDIDATE_PATH"
+          test -f "$candidate" || { echo "candidate not found: $candidate" >&2; exit 20; }
+
+          actual_sha256="$(sha256sum "$candidate" | awk '{print $1}')"
+          actual_size="$(stat -c '%s' "$candidate")"
+
+          if [[ -n "$EPD2_EXPECTED_SHA256" && "$actual_sha256" != "$EPD2_EXPECTED_SHA256" ]]; then
+            echo "SHA-256 mismatch" >&2
+            echo "expected=$EPD2_EXPECTED_SHA256" >&2
+            echo "actual=$actual_sha256" >&2
+            exit 21
+          fi
+
+          if [[ -n "$EPD2_EXPECTED_SIZE" && "$actual_size" != "$EPD2_EXPECTED_SIZE" ]]; then
+            echo "size mismatch" >&2
+            echo "expected=$EPD2_EXPECTED_SIZE" >&2
+            echo "actual=$actual_size" >&2
+            exit 22
+          fi
+
+          mkdir -p _handoff_out
+          cp -- "$candidate" "_handoff_out/$(basename "$candidate")"
+
+          export EPD2_ACTUAL_SHA256="$actual_sha256"
+          export EPD2_ACTUAL_SIZE="$actual_size"
+          export EPD2_HEAD_SHA="$(git rev-parse HEAD)"
+          export EPD2_FILE_NAME="$(basename "$candidate")"
+          python - <<'PY'
+          import json, os
+          payload = {
+              "schema": "epd2.github-handoff-intake/1",
+              "state": "EXACT_BYTES_TRANSPORTED",
+              "stage": os.environ["EPD2_STAGE"],
+              "source_ref": os.environ["EPD2_SOURCE_REF"],
+              "source_head_sha": os.environ["EPD2_HEAD_SHA"],
+              "candidate_path": os.environ["EPD2_CANDIDATE_PATH"],
+              "candidate_filename": os.environ["EPD2_FILE_NAME"],
+              "sha256": os.environ["EPD2_ACTUAL_SHA256"],
+              "size_bytes": int(os.environ["EPD2_ACTUAL_SIZE"]),
+              "expected_sha256_supplied": bool(os.environ.get("EPD2_EXPECTED_SHA256")),
+              "expected_size_supplied": bool(os.environ.get("EPD2_EXPECTED_SIZE")),
+              "acceptance": "NOT_PERFORMED",
+              "note": "Transport verification only; this record is not acceptance evidence."
+          }
+          with open("_handoff_out/HANDOFF_INTAKE_METADATA.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, indent=2, sort_keys=True)
+              f.write("\n")
+          PY
+
+          echo "sha256=$actual_sha256" >> "$GITHUB_OUTPUT"
+          echo "size=$actual_size" >> "$GITHUB_OUTPUT"
+          echo "EPD2_HANDOFF_EXACT_BYTES_TRANSPORTED stage=$EPD2_STAGE sha256=$actual_sha256 size=$actual_size"
+
+      - name: Upload exact transported bytes
+        uses: actions/upload-artifact@v4
+        with:
+          name: epd2-handoff-${{ inputs.stage }}-${{ github.run_id }}
+          path: _handoff_out/
+          if-no-files-found: error
+          retention-days: 30
