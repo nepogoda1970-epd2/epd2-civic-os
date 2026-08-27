@@ -1,0 +1,9 @@
+# API-04 handoff upload slot
+
+Purpose: transport only. Do not treat this branch as an acceptance branch.
+
+Upload the exact sealed API-04 candidate ZIP here when ready, together with the developer report, inventory/manifest, and SHA-256 text if available.
+
+Do not unpack, rename, regenerate, or re-pack the candidate after sealing.
+
+Authoritative acceptance will be performed independently from exact uploaded bytes on a separate acceptance lineage.
