@@ -1788,6 +1788,22 @@ Shared shells expose a canonical-style accessible `DE | EN` selector where both 
 
 **Execution state:** unchanged. `API = NEXT`; `FRONT-02 = SPECIFICATION ESTABLISHED / IMPLEMENTATION NOT STARTED`.
 
+## 1.31 Documentation-only update — Governed AI Correspondence Analysis & Reply Drafting (2026-08-27)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT implementation stage is started or closed by this update.
+
+**Purpose:** record the approved EPD² requirement for governed AI-assisted analysis of incoming correspondence and preparation of reply drafts across authorized correspondence, casework, member-support and representative-desk workflows.
+
+**New FIR ID created:**
+
+- `FIR-AI-003 — Governed Correspondence Analysis & Reply Drafting` — status `approved`, priority `high`.
+
+**FIR IDs implemented:** none. The existing `ai-processing-service` already provides reference-level use classes including summarization, classification, recommendation and drafting, together with provenance/redaction/human-review boundaries. This update does not claim an end-to-end correspondence copilot, a live AI provider, automatic sending, production readiness or legal activation.
+
+**Human-authority boundary:** AI output remains advisory. The AI layer may analyze authorized correspondence and prepare drafts, but may not establish the organization's political/legal position, issue a consequential decision, finalize or close a governed case, or send an official consequential response without the owning workflow's required human authorization. Automated transmission is prohibited by default; any future narrowly defined non-substantive acknowledgement requires a separate governed decision.
+
+**Execution state:** unchanged. `API-02 = NEXT` remains the primary implementation position. No current stage status is promoted or reopened.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -4594,6 +4610,146 @@ AI analysis remains:
 ### Acceptance criteria
 
 No AI analysis is displayed without provenance, immutable snapshot reference, digest and staleness status.
+
+## FIR-AI-003 — Governed Correspondence Analysis & Reply Drafting
+
+**Status:** approved  
+**Priority:** high  
+**Domain:** AI accountability / correspondence / casework / member support / representative desk  
+**Target:** AI processing services, owning correspondence/casework services and all relevant staff-facing frontend surfaces
+
+EPD² must provide governed AI assistance for the analysis of incoming written correspondence and the preparation of reply drafts where the acting user is authorized to access the underlying material.
+
+The capability applies, as permitted by the owning domain, to e-mail, contact-form submissions, member and citizen inquiries, complaints and petitions, representative-desk intake, routed internal correspondence and governed document/attachment references.
+
+### Required analysis capabilities
+
+For an authorized correspondence item or thread, the AI assistance layer must be able to:
+
+- produce a concise structured summary without dropping material requests or qualifications;
+- identify the sender context available to the authorized workflow without creating a new global person identifier;
+- classify the subject, intent and owning procedural/domain context as an advisory classification;
+- extract explicit questions, requests, allegations, commitments, deadlines, dates, references and attachment dependencies;
+- distinguish answered, partially answered and still-open points;
+- identify contradictions or material changes against prior authorized correspondence and case history;
+- retrieve and cite only authorized relevant context from the same thread/case and, where permitted, governed decisions, programme provisions, Satzung/internal rules, published material and other approved sources;
+- flag factual assertions that require verification rather than presenting them as established truth;
+- flag possible legal, procedural, privacy, security or political-risk questions for human review without making the final determination;
+- identify missing information required for a complete answer;
+- prepare a complete reply draft addressing the open points;
+- offer alternative drafting modes where useful, including concise, detailed, formal and plain-language variants;
+- revise the draft after human edits or instructions while preserving the source/provenance boundary.
+
+### Authorization and context boundary
+
+AI assistance must never expand access.
+
+Every source supplied to the analysis must already be accessible to the acting principal for the stated purpose and organizational scope. Context assembly and retrieval must enforce the same authorization, purpose, classification, retention, legal-hold, DLP and cross-domain correlation rules as direct access to the source.
+
+The correspondence AI path must not receive prohibited material merely because it could improve a draft. In particular, secret-ballot content, voting-linkability data, credential secrets, unrestricted identity records, protected evidence outside the actor's scope, live operational secrets and unrestricted audit exports remain outside the AI input boundary.
+
+Attachments and source documents remain owned by their source/document domains. AI processing may reference or process an authorized rendition according to policy; it does not become a second authoritative document store.
+
+### Grounding and provenance
+
+Every analysis and reply draft must use the `FIR-AI-002` provenance and staleness contract and the AI accountability context's governed processing record.
+
+The record must bind the output to the exact correspondence/thread/case snapshot and relevant source-set versions used to generate it. A material change to the incoming item, thread, attachments, cited decision, policy, programme provision or other relied-upon source must make the prior analysis/draft stale where the governed staleness policy so requires.
+
+User-facing/staff-facing presentation must distinguish:
+
+- source-supported facts;
+- extracted requests/questions;
+- AI inference or recommendation;
+- unresolved or unverifiable claims;
+- missing sources/evidence;
+- the current draft version and its provenance/staleness state.
+
+Hidden chain-of-thought is not a governed evidence artifact and must not be stored or exposed. The durable accountability record consists of the permitted structured analysis, source/provenance references, model/configuration identity, output digest, human-review state and audit evidence.
+
+### Human authority and sending boundary
+
+Core rule:
+
+```text
+AI analysis / draft != organizational decision != authorized send
+```
+
+AI may analyze, summarize, recommend and draft. It must not autonomously:
+
+- establish or change an official political, legal, disciplinary, financial, membership, candidacy, voting or procedural position;
+- approve its own consequential output;
+- finalize a governed decision or close a case;
+- alter the source correspondence or authoritative case record;
+- impersonate the sender, member, representative or staff actor;
+- send an official consequential reply;
+- invoke a provider callback/tool/command path that mutates EPD² state.
+
+A consequential or official reply must pass the owning domain's required human review/approval, authority, scope, assurance and separation-of-duties controls before the normal correspondence/delivery path sends it. The final send action and its authoritative content/version must be separately auditable from the AI draft.
+
+Automated transmission is prohibited by default. A future narrowly defined non-substantive acknowledgement may be enabled only by a separate governed decision with explicit template/content limits, routing, audit and opt-out/error handling; it must not silently become a substantive AI-generated answer.
+
+### Audit and correction
+
+The system must preserve, according to policy:
+
+- the incoming correspondence reference and governed snapshot/version;
+- AI processing/provenance reference;
+- structured analysis result;
+- draft version and digest;
+- human edits or superseding draft references where retained by policy;
+- reviewer/approver outcome for consequential use;
+- the final authorized reply version;
+- delivery/send evidence from the owning communication/delivery domain;
+- reason-coded failure, rejection and escalation states.
+
+Corrections create a new governed version or superseding AI processing record; they do not rewrite historical analysis or a previously sent official reply.
+
+### Required staff interaction model
+
+Relevant workspaces must support the governed flow:
+
+```text
+Original correspondence
+-> AI analysis
+-> authorized history/context
+-> open questions and verification flags
+-> recommended response structure
+-> reply draft
+-> human review/edit/approval
+-> authorized send
+-> governed case/correspondence history
+```
+
+The UI must make clear which content is original source material, which is AI-generated, which was changed/approved by a human and which exact version was actually sent.
+
+### Dependencies
+
+At minimum:
+
+- `FIR-AI-002` — AI Analysis Provenance and Staleness Contract;
+- `FIR-SUPPORT-002` — AI Assistance Boundary;
+- applicable correspondence/document/delivery governance;
+- `FIR-AUTH-001` — consequential commit reauthorization where applicable;
+- `FIR-ID-001` — cross-domain identifier and correlation governance;
+- applicable privacy, retention, legal-hold, DLP and audit requirements.
+
+### Acceptance criteria
+
+The requirement is not satisfied merely because a generic chatbot or text-generation endpoint exists.
+
+Acceptance requires an end-to-end governed correspondence workflow demonstrating that:
+
+1. an authorized incoming item/thread can be analyzed into the required structured result;
+2. relevant prior context is retrieved without expanding source authorization;
+3. unanswered points, deadlines, verification needs and source gaps are visible;
+4. a grounded reply draft can be generated and revised;
+5. provenance, exact source snapshot/version and staleness are visible and auditable;
+6. consequential output cannot be approved or sent by the AI itself;
+7. the exact human-authorized version sent through the owning delivery path is recorded separately from the AI draft;
+8. prohibited inputs and cross-domain correlation attempts fail closed;
+9. correction/supersession preserves history rather than rewriting it;
+10. no production, legal-effect or autonomous-authority claim is made without the corresponding governed activation evidence.
 
 ---
 
