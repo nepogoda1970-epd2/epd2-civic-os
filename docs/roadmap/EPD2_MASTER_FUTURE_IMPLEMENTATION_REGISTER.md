@@ -4415,6 +4415,199 @@ All external providers require:
 - audit;
 - provider replacement strategy.
 
+## V21 governance maintenance record — Party-organ competence and digital authority binding (2026-08-28)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT implementation stage is accepted or closed by this update. No Satzung provision or party-organ competence becomes legally effective merely because this project requirement is recorded.
+
+**New FIR ID created:** `FIR-GOV-005 — Statutory Party-Organ Competence & Digital Authority Binding` — status `approved`, priority `critical`.
+
+**Governed proposal artifacts:**
+
+- `docs/governance/EPD2_PARTY_ORGAN_COMPETENCE_AND_DIGITAL_AUTHORITY_MODEL_0.1.md`;
+- `docs/governance/EPD2_SATZUNG_AMENDMENT_PROPOSAL_REGIONAL_COMPETENCE_0.3.md`.
+
+**Boundary:** the Civic OS target model is approved as a future implementation/governance requirement. The accompanying Satzung text remains a non-adopted legal draft until the competent party founding/party congress process adopts it after legal review. Software must not treat the draft as a legally active RuleVersion before that event.
+
+**Execution state:** unchanged. `API-02 = ACTIVE / IN DEVELOPMENT`; `API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`. Exact allocation among API-02…API-06 and later INFRA/OPS/CTRL/FRONT/SEC remains stage-contract governed.
+
+## FIR-GOV-005 — Statutory Party-Organ Competence & Digital Authority Binding
+
+**Status:** approved
+**Priority:** critical
+**Domain:** party governance / organizational competence / rules / authorization / regional autonomy
+**Target:** Satzung and governed Nebenordnung proposals + rules registry + `organization-service` + API + CTRL + FRONT + OPS + SEC + FINAL INTEGRATION
+
+### Purpose
+
+EPD² must bind every consequential digital organizational authority to the exact lawful and satzungsmäßige competence of the party organ that created or controls it. Civic OS must represent the federated party structure without converting organizational hierarchy into inherited access or universal administration.
+
+Core invariant:
+
+```text
+organizational hierarchy
+!= legal/political competence
+!= OrganizationalAuthority
+!= data access
+!= technical administration
+!= security authority
+!= voting authority
+```
+
+### Required organizational competence model
+
+The target model must support at least:
+
+- Bundesverband;
+- Landesverbände;
+- Kreis-/Bezirksverbände;
+- Ortsverbände;
+- non-Gebietsverband local working groups where adopted.
+
+Every formal Gebietsverband must have the democratically required assembly and Vorstand according to the adopted Satzung and mandatory law. Land-level and other required party courts/review bodies must remain independent from the boards they review.
+
+The highest assembly of each Gebietsverband owns the matters reserved to that level by law/Satzung. Its Vorstand executes lawful decisions and conducts ordinary business within the exact scope assigned to that Verband. A higher Verband receives no lower-scope office, data access, finance authority or technical permission from hierarchy alone.
+
+### Competence provenance
+
+Every consequential `OrganizationalAuthority` must be resolvable to:
+
+- exact subject/office holder;
+- exact role/office code;
+- exact organization and territorial/institutional scope;
+- exact capability set;
+- exact governing Satzung/Ordnung/RuleVersion;
+- exact source election, appointment or governed decision;
+- appointing/deciding organ;
+- validity interval and current lifecycle state;
+- applicable SoD/approval requirement;
+- audit/evidence references;
+- review/appeal route where applicable.
+
+Role display text, hierarchy position or possession of a login/credential is never sufficient proof of organizational competence.
+
+### Bund / Land / Kreis / Ort boundary
+
+At minimum the future rules must distinguish:
+
+- Bundessatzung and Bund-wide programme decisions from Land/Kreis/Ort positions;
+- Land programme/budget/organization from Bund and other Länder;
+- Kreis/Bezirks and Orts matters from higher-level reserved matters;
+- the right to propose to a higher organ from the right to decide the higher organ's matter;
+- candidate nomination/Aufstellung from Wahlvorschlag filing/signature authority;
+- party office from public mandate;
+- political/organizational authority from technical/security/key authority.
+
+### Membership territorial assignment
+
+Membership is membership in EPD² as one party. Territorial organizational assignment may determine the competent Land/Kreis/Ort participation scope but must not create separate memberships or duplicate voting rights.
+
+Assignment changes are effective-dated and may not rewrite historical participation, decisions, candidacies or audit evidence. A territorial assignment alone never grants administrative authority.
+
+### Financial competence
+
+Financial authority is scope-bound. The Beitrags- und Finanzordnung must remain the governing place for contribution allocation and detailed Bund/Land/Kreis/Ort financial rules.
+
+The digital model must support separation at least between preparation/request, approval, execution, booking/reconciliation and independent review. A finance role in one scope does not inherit another scope.
+
+### Intervention chain
+
+`FIR-GOV-004` remains the technical intervention contract. `FIR-GOV-005` requires the adopted Satzung/Ordnung to supply the competent political-organ chain that authorizes Levels 2–4.
+
+The target normative proposal is:
+
+- Land target: Bundesvorstand temporary measure where authorized -> confirmation by next Bundesparteitag -> Bundesschiedsgericht remedy;
+- Kreis/Bezirk target: Landesvorstand temporary measure where authorized -> confirmation by next Landesparteitag -> competent Land/Bund court route;
+- Orts target: competent Kreis-/Bezirksvorstand, or Landesvorstand where no competent Kreis exists -> confirmation by next competent higher Parteitag -> competent court route.
+
+No such mapping is legally activated by this FIR alone. Until an adopted RuleVersion exists, runtime must fail closed rather than infer competence from hierarchy.
+
+Technical security containment of a compromised session/credential remains distinct from political/organizational intervention and does not remove an office by itself.
+
+### Digital-permission constitutional rule
+
+The adopted Satzung/Ordnung and the implementation must preserve:
+
+```text
+technical permission does not create legal competence
+recovery of authentication does not restore suspended office
+security containment does not create disciplinary authority
+party office does not create credential/key authority
+platform operation does not create party-organ authority
+oversight does not automatically create data access
+```
+
+No universal `Bund admin`, `regional superadmin`, `root party admin` or equivalent may be introduced as a shortcut around this rule.
+
+### Voting carve-out
+
+Ordinary political, organizational, identity, platform, security, key-custody and temporary-supervision roles must not obtain voting trust-domain authority from this FIR. Voting/election credentials, trustee keys, ballot secrecy and identity-vote unlinkability remain governed by the isolated voting domain and its own lawful roles.
+
+### EPD Plattform e.V. boundary
+
+Technical operation by EPD Plattform e.V. must remain contractually and technically separate from party-organ competence. Technical capability does not create membership, candidacy, programme, finance, disciplinary, publication or voting authority.
+
+### Required companion normative documents
+
+Before legal activation of the target model, EPD² must establish and legally review at least:
+
+- consolidated Satzung provisions for regional structure, organs, competence, member assignment and intervention;
+- `Organisations-, Zuständigkeits- und Kompetenzordnung (OZKO)`;
+- reconciled Schiedsgerichtsordnung;
+- reconciled Beitrags- und Finanzordnung;
+- reconciled Wahl- und Kandidaturenordnung;
+- machine-readable RuleVersion mapping compatible with those adopted texts.
+
+The governed proposal artifacts for this FIR are:
+
+- `docs/governance/EPD2_PARTY_ORGAN_COMPETENCE_AND_DIGITAL_AUTHORITY_MODEL_0.1.md`;
+- `docs/governance/EPD2_SATZUNG_AMENDMENT_PROPOSAL_REGIONAL_COMPETENCE_0.3.md`.
+
+### Implementation placement
+
+| Layer / owner | Mandatory responsibility | Must not do |
+| --- | --- | --- |
+| Satzung / OZKO / rules governance | Define legally competent organs, scope, delegation, intervention, review and exact RuleVersions. | Must not be replaced by software defaults or hierarchy inference. |
+| `organization-service` | Represent organizations, relations, scopes and `OrganizationalAuthority` lifecycle bound to source decisions/rules. | Must not create competence from role labels or parent relation alone. |
+| API/runtime | Re-evaluate current actor + scope + capability + active restrictions + assurance at action time. | Must not trust stale token/profile role claims as final authority. |
+| CTRL | Provide governed request/approval/intervention/review queues, SoD and evidence. | Must not expose universal takeover/admin controls. |
+| FRONT | Show office, scope, source authority, restrictions and remedy accurately. | Must not imply a technical role is a political office or vice versa. |
+| OPS | Operate lawful administrative/security procedures and escalation. | Must not convert emergency containment into permanent political intervention. |
+| SEC | Test cross-scope escalation, self-grant, stale authority, approval bypass, court/audit tampering and voting escape. | Must not accept hierarchy-based authorization as a shortcut. |
+| FINAL INTEGRATION | Prove exact adopted rule -> organ decision/election -> OrganizationalAuthority -> allowed/denied action -> immutable evidence -> review chain. | Must not infer completion from documentation or isolated service tests. |
+
+### Dependencies
+
+At minimum:
+
+- `FIR-GOV-004` — Regional Authority Suspension & Intervention Control;
+- `FIR-SEC-004` — Governed Access, Credential & Key Authority Lifecycle Control;
+- `FIR-RULE-001` — governed procedural rules / RuleVersion semantics;
+- `FIR-INV-013` — Bund/Land/Kreis isolation;
+- `FIR-INV-014` — no universal administration;
+- applicable party-court, finance, candidacy, membership, audit, privacy and voting requirements.
+
+### Acceptance criteria
+
+This FIR is not implemented merely because the proposal documents exist.
+
+Acceptance requires an adopted legally reviewed competence baseline and integrated proof that:
+
+1. hierarchy alone cannot grant lower-scope access;
+2. every consequential `OrganizationalAuthority` resolves to exact adopted rule + competent source decision/election + scope;
+3. Bund, Land, Kreis/Bezirk and Ort reserved competences cannot be silently substituted by another level;
+4. regional programme authority cannot mutate the Bund programme outside the Bund procedure;
+5. member territorial reassignment does not create duplicate rights or rewrite history;
+6. nomination and filing/signature authority are separate where law requires;
+7. public mandate and party office remain separate;
+8. finance authority and audit can be separated by scope and act;
+9. Levels 2–4 regional intervention can execute only from the adopted competent-organ chain and remains reviewable;
+10. identity/security/key operators cannot grant or restore party-organ competence;
+11. party officers cannot self-mint privileged technical/key authority;
+12. EPD Plattform e.V. technical control cannot become party-organ authority;
+13. voting trust-domain authority cannot be obtained through ordinary organization/platform roles;
+14. invalid, stale, expired, suspended or legally unactivated competence fails closed;
+15. immutable decision/audit/court evidence survives intervention, reorganization and restoration.
+
 ## FIR-SEC-004 — Governed Access, Credential & Key Authority Lifecycle Control
 
 **Status:** approved  
