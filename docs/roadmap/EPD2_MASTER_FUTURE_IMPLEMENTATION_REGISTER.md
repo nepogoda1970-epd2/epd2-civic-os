@@ -1832,6 +1832,22 @@ Shared shells expose a canonical-style accessible `DE | EN` selector where both 
 
 **Execution state:** the FIR addition itself changes no implementation-stage acceptance state. API-02 execution-state reconciliation is recorded separately in Program Control; no API-02 PASS/ACCEPTED claim follows from this round.
 
+## 1.34 Documentation-only update — Governed Access, Credential & Key Authority Lifecycle Control (2026-08-28)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT implementation stage is accepted or closed by this update, and no credential/key-management capability is activated merely by recording it.
+
+**Purpose:** establish the mandatory end-to-end authority model for blocking access, recovering or replacing human credentials, issuing service credentials, generating/activating/rotating/revoking cryptographic keys, emergency compromise handling and independent evidence/review.
+
+**New FIR ID created:** `FIR-SEC-004 — Governed Access, Credential & Key Authority Lifecycle Control` — status `approved`, priority `critical`.
+
+**Governed rule:** authentication credential, session, organizational authority, privileged grant, service credential and cryptographic key are different control objects. The rights to request, approve, execute/generate, see secret material, activate, revoke, restore, rotate, destroy and audit are separate authorities and must not collapse into a universal administrator.
+
+**Dependencies preserved:** PACK-14 authentication/recovery controls, PACK-12 JIT/break-glass separation, FIR-GOV-004 regional authority intervention controls, voting trust-domain isolation and audit/evidence rules remain controlling boundaries. This round does not reopen any closed architecture PACK.
+
+**FIR IDs implemented:** none. Exact allocation among API-02…API-06 and later INFRA/OPS/CTRL/FRONT/SEC stages remains governed by their stage contracts and acceptance gates.
+
+**Execution state:** unchanged. `API-02 = ACTIVE / IN DEVELOPMENT`; `API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`. No API-02 PASS/ACCEPTED/CLOSED claim follows from this round.
+
 ## FIR-BASE-001 — Current repository baseline
 
 **Status:** implemented  
@@ -4398,6 +4414,486 @@ All external providers require:
 - failure handling;
 - audit;
 - provider replacement strategy.
+
+## FIR-SEC-004 — Governed Access, Credential & Key Authority Lifecycle Control
+
+**Status:** approved  
+**Priority:** critical  
+**Domain:** authentication / authorization / privileged access / credential lifecycle / cryptographic key management / security operations  
+**Target:** identity and credential services + privileged-access service + organization/governance integration + service identity + API + INFRA + OPS + CTRL + FRONT + SEC, with a separate voting trust-domain boundary
+
+EPD² must implement one governed authority model for access blocking, credential recovery/replacement, service credential issuance and cryptographic key lifecycle management without turning any human, organizational level, infrastructure operator or security function into a universal administrator.
+
+Core rule:
+
+```text
+authentication credential != session != organizational authority != privileged grant != service credential != cryptographic key
+```
+
+A second mandatory rule is:
+
+```text
+request != approve != execute/custody != audit
+```
+
+The implementation may automate low-risk mechanical steps after an authorized decision, but it must preserve the authority split, purpose, scope and evidence of the decision. A technical ability to generate, store, revoke or rotate a credential/key does not itself grant legal, political, organizational or business authority.
+
+### Control-object classes
+
+The system must distinguish at least the following classes. A later accepted implementation may refine names and schemas but must not collapse their authority semantics.
+
+1. **Human authentication credentials.** Passkey/WebAuthn credentials are the preferred target where supported. Any governed fallback authentication factor is a separate credential class. A server/operator must not manufacture and hand a user a passkey private key; the authenticator/device generates the key pair and the platform registers the public credential after the governed enrollment/recovery gate.
+2. **Recovery factors and recovery decisions.** Recovery is proof-and-approval workflow, not an ordinary login method and not a universal administrator override. Recovery may restore the ability to authenticate; it does not prove membership/eligibility and does not grant or reactivate an `OrganizationalAuthority`.
+3. **Sessions and session-renewal artifacts.** Browser/session state, refresh/renewal artifacts and equivalent runtime sessions are independently quarantinable/revocable. Session invalidation is not the same act as credential revocation.
+4. **`OrganizationalAuthority`.** This is an authorization/governance object, not a cryptographic key. Assignment, activation, suspension, restoration, expiry and revocation remain governed by organization/governance rules and `FIR-GOV-004` where regional intervention applies.
+5. **Privileged JIT and break-glass grants.** These are short-lived, purpose/scoped privilege elevations controlled by the privileged-access plane. They are neither permanent roles nor substitute authentication credentials.
+6. **Service-to-service / workload credentials.** Workload identity, mTLS/certificate credentials, signed service assertions or an accepted equivalent must be scoped to a service/workload and purpose. Static long-lived shared secrets are disfavoured and may exist only where a later accepted design explicitly governs them.
+7. **Platform cryptographic keys and certificates.** This includes signing keys, encryption/wrapping keys, TLS/certificate private keys and equivalent key material selected by accepted INFRA/runtime architecture. Root/master/KEK/HSM-backed classes are governed only if the accepted architecture actually adopts them.
+8. **Provider/API/client secrets where unavoidable.** Human-shared long-lived API keys are prohibited as a normal access model. Any unavoidable client/provider secret must have an owning service, exact scope, lifecycle, expiry/rotation policy, secret-storage boundary and revocation evidence.
+9. **Voting/election credentials and keys.** These remain in the voting trust domain. Generic identity administrators, regional administrators, platform operators, security operators and ordinary key custodians do not obtain voting-key authority from this FIR.
+
+### Authority roles
+
+The implementation must represent responsibilities explicitly. One natural person may hold more than one organizational role only where the applicable risk/SoD policy permits it; a single consequential operation must still satisfy its required separation.
+
+- **Subject / principal:** person or workload whose credential/access is affected.
+- **Requester:** initiates the governed change and states purpose/scope.
+- **Identity/Credential operator:** executes allowed human-credential lifecycle operations after the required proof/decision; cannot grant organizational authority merely because they can manage credentials.
+- **Security operator:** performs incident containment such as session quarantine and emergency credential/key revocation within explicit incident authority; cannot silently issue replacement authority or close substantive governance cases.
+- **Privileged-access operator/control plane:** administers JIT and break-glass mechanics; cannot become a universal business/data administrator.
+- **Service owner:** owns the operational need for a workload credential/key and requests changes for that service; does not obtain unilateral cryptographic custody by ownership alone.
+- **Key custodian / KMS-HSM or certificate operator:** generates/stages/rotates/destroys cryptographic material within authorized policy; possession/custody does not grant business authority.
+- **Governance/domain approver:** confirms competent purpose, scope and authorization for consequential changes; approval does not require access to plaintext private material.
+- **Recovery approver:** evaluates recovery evidence at the assurance required for the affected account/workspace; privileged recovery requires stronger controls than ordinary self-service recovery.
+- **Independent reviewer/auditor:** verifies evidence, SoD, timing and outcome; must not need plaintext private keys/secrets to perform review.
+- **Voting trustee/quorum:** separate domain-specific key authority where the voting architecture requires it; not inherited from other roles.
+
+### Rights are separate capabilities
+
+For every managed credential/key class, the authorization model must be able to distinguish:
+
+- `REQUEST`;
+- `APPROVE`;
+- `GENERATE_OR_ENROLL`;
+- `READ_METADATA`;
+- `VIEW_OR_EXPORT_SECRET` where technically possible and explicitly allowed;
+- `ACTIVATE`;
+- `SUSPEND_OR_QUARANTINE`;
+- `REVOKE`;
+- `RESTORE` where restoration is legally/technically permitted;
+- `ROTATE_OR_REPLACE`;
+- `DESTROY`;
+- `REVIEW_OR_AUDIT`.
+
+No broad role label such as `admin`, `security`, `Bund`, `platform operator` or `key manager` implicitly grants all of those capabilities.
+
+### Canonical authority matrix
+
+The following is the minimum planning matrix. A later domain policy may require stronger controls but must not weaken the listed separation for consequential operations.
+
+| Operation | Request / initiate | Approve | Execute / custody | Secret/private-material visibility | Independent evidence/review |
+| --- | --- | --- | --- | --- | --- |
+| Enrol ordinary passkey | subject after authenticated/enrollment gate | policy/self-service gate; additional approval only where risk requires | authenticator generates private key; credential service registers public credential | subject authenticator only; operator never receives private key | automated immutable audit; anomaly review as governed |
+| High-assurance lost-device/account recovery | subject or authorized support intake | recovery approver; privileged accounts require distinct stronger approval/dual control | credential service enables bounded re-enrollment; subject creates replacement credential | no operator-created passkey private key; recovery evidence is separately protected | mandatory reason/evidence; privileged recovery independently reviewed |
+| Quarantine/revoke active sessions | subject self-service where applicable or security operator under incident policy | immediate containment may be pre-authorized by policy; broader/continued intervention follows governed approval | session/security service | no credential private-key access implied | reason-coded incident/audit record; review proportional to impact |
+| Revoke compromised human authenticator | subject or security/credential operator under explicit scope | ordinary self-revoke may be self-service; administrative/high-impact revoke follows governed approval | credential service | operator sees credential metadata/public material only | revocation and replacement linkage preserved |
+| Suspend/restore/revoke `OrganizationalAuthority` | competent governance/security process | `FIR-GOV-004`/owning governance rule; Levels 2–4 require two distinct authorized humans | organization/governance service enforces state | no credential/key secret access implied | immutable decision/evidence/review/appeal chain |
+| Grant JIT privileged access | authorized requester | separate authorized approver | privileged-access service activates scope + TTL | only task-required data/secret access; no generic secret export | mandatory grant/use/expiry evidence; post-review by risk class |
+| Activate break-glass | authorized emergency requester | distinct controller under PACK-12 policy unless a stricter emergency rule applies | privileged-access service activates bounded emergency grant | only explicitly approved emergency scope | auto-expiry/revoke + mandatory independent post-use review |
+| Issue/replace service credential | service owner/requester | service/security/platform authority according to risk class | workload identity/certificate/key platform generates or enrols; delivery is machine-bound where possible | service receives only what its protocol requires; custodians should use handles/non-exportable keys where possible | issuance, scope, expiry and consumer evidence reviewed |
+| Generate platform cryptographic key | service/domain owner requests purpose | governance/security/platform approver according to key class; high-impact/root classes require dual control or stronger quorum | KMS/HSM/certificate/key custodian | private material non-exportable where supported; approver/auditor need no plaintext | generation attestation/metadata and policy version preserved |
+| Activate/scheduled-rotate signing, encryption or TLS key | service owner/key lifecycle controller | class-specific approval; high-impact rotation requires distinct approver | key platform/custodian stages and activates | no broader plaintext visibility than technically unavoidable | cutover, verifier convergence and old-key retirement evidence |
+| Emergency revoke compromised service/platform key | security incident authority | immediate containment may be pre-authorized; replacement activation follows required SoD; root/high-impact exceptions require governed break-glass/quorum | key/cert/workload platform revokes and propagates new trust state | containment does not grant right to inspect unrelated secrets | incident evidence + mandatory post-action review and replacement linkage |
+| Destroy retired cryptographic key | lifecycle controller/service owner after retention/decryption dependency check | class-specific approver; high-impact classes require dual control/quorum | KMS/HSM/key custodian destroys or cryptographically erases | no export before destruction | destruction attestation/evidence retained without secret material |
+| Root/master/KEK ceremony, if adopted | designated key-governance authority | governed quorum stronger than a single operator; exact threshold defined by accepted INFRA/SEC policy | HSM/KMS custodians under ceremony | split/quorum/non-exportable handling; no single plaintext custodian | independent witness/evidence mandatory |
+| Voting-domain key change | voting-domain governed actor/trustee | voting-specific trustee/quorum/governance only | voting trust-domain components | generic platform/regional/security admins excluded | voting-domain evidence/challenge rules only |
+
+### Human credential lifecycle
+
+Minimum lifecycle semantics:
+
+```text
+PENDING_ENROLLMENT
+-> ACTIVE
+-> SUSPENDED | RECOVERY_REQUIRED
+-> ACTIVE (only through a valid recovery/restoration decision where allowed)
+   | REVOKED
+   | REPLACED
+```
+
+Exact database enum names remain implementation-stage governed. Required semantics are:
+
+- credential IDs/versions are stable and audit referenced;
+- a revoked/replaced credential is never silently resurrected under the same credential ID/version;
+- replacement creates new credential identity and links to the superseded/revoked credential;
+- recovery status does not restore a separately suspended `OrganizationalAuthority`;
+- an administrative authority suspension does not automatically revoke an ordinary member's authentication credential unless a separate security/recovery decision requires that containment.
+
+### Session lifecycle
+
+Minimum semantics:
+
+```text
+ACTIVE
+-> QUARANTINED | REVOKED | EXPIRED
+```
+
+A credential or authority change that requires runtime invalidation must define which existing sessions/tokens are invalidated, quarantined or allowed to expire. Every privileged mutation re-evaluates current session/credential/authority/restriction state at use time; an old token or open page is never an authorization guarantee.
+
+### Organizational-authority lifecycle
+
+The existing governed semantics remain controlling:
+
+```text
+ACTIVE
+-> SUSPENDED
+-> ACTIVE | REVOKED
+```
+
+with expiry where applicable. Authentication recovery, passkey replacement, service-key rotation and break-glass do not themselves assign/reactivate organizational authority.
+
+### JIT and break-glass lifecycle
+
+Minimum JIT semantics:
+
+```text
+REQUESTED
+-> APPROVED
+-> ACTIVE (exact scope + purpose + TTL)
+-> EXPIRED | REVOKED
+-> REVIEWED where required
+```
+
+Minimum break-glass semantics:
+
+```text
+DECLARED
+-> DUAL-CONTROLLED / GOVERNED ACTIVATION
+-> BOUNDED EMERGENCY USE
+-> AUTO-EXPIRE OR REVOKE
+-> MANDATORY POST-USE REVIEW
+```
+
+Break-glass must not become the routine path for credential recovery, key replacement, region takeover or voting-domain access.
+
+### Service credential / cryptographic key lifecycle
+
+Minimum semantics:
+
+```text
+REQUESTED
+-> APPROVED
+-> GENERATED
+-> STAGED
+-> ACTIVE
+-> RETIRING
+-> REVOKED
+-> DESTROYED when retention/decryption obligations permit
+```
+
+Compromise path:
+
+```text
+ACTIVE
+-> COMPROMISED
+-> REVOKED
+-> NEW KEY/CREDENTIAL ID + governed replacement
+```
+
+A compromised or revoked key version is never returned to `ACTIVE`. Planned rollovers use a new version/ID.
+
+### Key generation and custody rules
+
+- Private key material must be generated in the endpoint authenticator, workload identity boundary, KMS/HSM/certificate system or other accepted protected execution boundary appropriate to its class.
+- Passkey private keys remain in the user's authenticator/device boundary; support staff do not issue or email them.
+- Platform signing/encryption/private certificate keys should be non-exportable when the accepted KMS/HSM/runtime technology supports it.
+- Private keys, API secrets and recovery secrets must not be distributed through email, chat, tickets, ordinary document stores or ad-hoc downloadable bundles.
+- Approvers and auditors receive metadata, policy/evidence and public material, not plaintext private keys merely because they approve/review.
+- Backup/escrow is class-specific. The system must not assume every private key is escrowed or recoverable. Any escrow capability requires its own access, quorum, retention and restore evidence.
+- Where secret export is technically unavoidable, it must be an explicit capability with reason, target, one-time/short-lived delivery, recipient binding and audit; export must not be the default key-management path.
+
+### Planned rotation protocol
+
+Every key/credential class that supports rotation must have a governed class policy defining its maximum age or renewal condition, `rotate_before` window where applicable, overlap rules, verifier/consumer convergence target, revocation cutoff and retention/destruction rule. This FIR intentionally does not invent one universal number of days for all key classes.
+
+Minimum planned rollover:
+
+```text
+1. INVENTORY / OWNERSHIP CHECK
+2. REQUEST ROTATION with reason, class, scope, consumers and target time
+3. REQUIRED APPROVAL / SoD CHECK
+4. GENERATE NEW key/credential version in protected boundary
+5. STAGE NEW PUBLIC/TRUST/CONSUMER MATERIAL
+6. VALIDATE consumers/verifiers before cutover
+7. ACTIVATE NEW version
+8. BOUNDED OVERLAP only where protocol requires it
+9. OBSERVE convergence and failures
+10. RETIRE OLD version
+11. REVOKE OLD version at governed cutoff
+12. DESTROY/ARCHIVE only according to retention/decryption obligations
+13. CLOSE with exact evidence and independent review where required
+```
+
+Overlap is permitted only for a bounded planned rollover or explicitly governed compatibility window. It must not become indefinite dual validity.
+
+### Emergency compromise protocol
+
+A suspected/confirmed credential/key compromise must support rapid containment without allowing the incident responder to self-grant replacement business authority.
+
+Minimum sequence:
+
+```text
+DETECT / REPORT
+-> CLASSIFY affected credential/key + consumers + scope
+-> CONTAIN sessions/workloads/key use
+-> REVOKE or disable compromised material as quickly as the protocol safely permits
+-> GENERATE a new ID/version through the governed replacement path
+-> UPDATE trust sets/consumers
+-> INVALIDATE dependent sessions/tokens where required by the affected signing/authentication key
+-> VERIFY old material is rejected
+-> RESTORE only required service/user capability
+-> PRESERVE evidence
+-> INDEPENDENT POST-INCIDENT REVIEW
+```
+
+Emergency policy may pre-authorize one qualified security actor to perform immediate containment/revocation when delay would worsen exposure. It must not thereby authorize that actor alone to approve and grant a new high-impact organizational authority, root/master key or voting key. Any emergency bypass must be the separately governed break-glass path and must receive mandatory post-use review.
+
+### Signing-key / verifier trust-set rollover
+
+Where the accepted runtime uses token/document signing keys and a JWKS or equivalent trust-set publication mechanism:
+
+1. generate a new signing key/version in the approved protected boundary;
+2. publish/stage its public verification material before first use where the protocol permits;
+3. confirm verifier discovery/cache health;
+4. begin signing with the new active version;
+5. keep the old public verification material only for the bounded lifetime/cache window needed to verify already-issued artifacts;
+6. stop new signing with the old key;
+7. after governed verifier convergence/artifact lifetime, mark old key revoked/retired and remove it from active trust according to protocol;
+8. prove that new artifacts use the new version and old material can no longer create accepted new artifacts.
+
+A key compromise may require accelerated removal and explicit revocation/deny handling instead of normal overlap.
+
+### Encryption-key rotation / rewrap protocol
+
+Where the accepted architecture uses versioned encryption or envelope keys:
+
+- new writes use the new active key/version after cutover;
+- retained ciphertext must remain decryptable only for as long as its retention/legal purpose requires;
+- rewrap/re-encryption is performed according to the accepted data/key architecture, not by silently deleting an old key before dependent data is migrated or expired;
+- migration progress and decryptability verification are observable;
+- old decrypt authority is retired only after dependency and retention checks;
+- destruction produces evidence and must not erase required audit/history.
+
+No key-management operator gains a general right to browse decrypted business data merely because the platform can decrypt it.
+
+### TLS/certificate rotation protocol
+
+For service/server/client certificates where adopted:
+
+```text
+REQUEST/RENEW
+-> ISSUE new certificate/key under approved identity
+-> STAGE
+-> VALIDATE chain, SAN/identity, expiry and consumer trust
+-> DEPLOY/CUT OVER
+-> MONITOR handshake/authentication health
+-> REMOVE/REVOKE old certificate/key
+-> VERIFY no stale endpoint/consumer depends on old identity
+```
+
+Private key reuse across renewal is prohibited by default unless a later accepted certificate policy explicitly justifies an exception.
+
+### Service credential protocol
+
+Service credentials must bind at minimum:
+
+- workload/service identity;
+- environment;
+- audience/peer or permitted consumer where protocol supports it;
+- purpose/scope;
+- issuer;
+- issuance time;
+- expiry/renewal condition;
+- credential/key version;
+- revocation status;
+- owning service/team/function;
+- audit/correlation reference.
+
+Prefer automatically renewed short-lived workload identity or certificates over manually distributed long-lived static secrets where the accepted architecture supports it. Automated renewal is not automated expansion of business authority: the renewed credential inherits only the already-approved service identity/scope and must fail if that authority has been revoked.
+
+### Human recovery and replacement protocol
+
+A lost device/passkey does not allow support staff to create a replacement private key for the user.
+
+Minimum path:
+
+```text
+RECOVERY REQUEST
+-> identify account/workspace and risk class
+-> verify governed recovery evidence at required assurance
+-> check account/authority/security restrictions
+-> approve recovery according to risk/SoD
+-> invalidate/quarantine affected old sessions/credentials as required
+-> create a bounded re-enrollment window
+-> subject enrolls a NEW authenticator/passkey
+-> credential service records new credential ID and supersession link
+-> re-establish only the assurance/access actually proved
+-> notify subject through governed channel
+-> preserve evidence and review privileged recoveries
+```
+
+Recovery must not silently restore a suspended office, privileged role, candidacy, voting eligibility or other separately governed authorization.
+
+### Blocking and restoration rules
+
+Blocking actions are scoped to the affected control object:
+
+- session quarantine blocks sessions, not membership;
+- credential revocation blocks that authenticator/credential, not automatically organizational membership;
+- authority suspension blocks governed administrative/political authority, not automatically ordinary login;
+- service credential revocation blocks that workload credential, not all services in the organization;
+- key revocation blocks that key version/cryptographic use, not unrelated business authority;
+- regional intervention follows `FIR-GOV-004` and must contain authority rather than disable the region;
+- voting-domain suspension/revocation requires its own voting-specific governance.
+
+Restoration must re-evaluate the current state. A previous grant or credential does not automatically spring back merely because an incident ticket is closed.
+
+### Root/master/KEK ceremony, if later adopted
+
+If accepted INFRA architecture introduces HSM/KMS root, master or key-encryption-key classes with material organizational impact, their lifecycle must use a separately defined ceremony/profile that includes at least:
+
+- named key class/purpose;
+- governed quorum stronger than a single actor;
+- separate proposer/approver/custodian responsibilities;
+- protected generation inside the approved HSM/KMS boundary where supported;
+- non-exportability or explicitly governed split/backup handling;
+- witness/attestation evidence;
+- activation/cutover plan;
+- recovery/backup test where recoverability is intended;
+- emergency revocation/rotation plan;
+- destruction/retirement evidence.
+
+The exact quorum threshold and cryptoperiod are deliberately left to the accepted INFRA/SEC key-class profile; recording this FIR does not prematurely choose a cloud KMS/HSM vendor or root-key topology.
+
+### Voting-domain isolation
+
+Generic access/key governance must not create a back door into WS-03 or voting cryptography.
+
+In particular, generic identity/credential/security/key administrators must not by this authority:
+
+- mint voting credentials;
+- recover or export voting private/trustee key material;
+- reveal identity-vote linkage;
+- decrypt ballots;
+- reveal an intermediate tally;
+- rotate voting keys outside the election/trustee ceremony;
+- revoke voting credentials in bulk;
+- bypass trustee/quorum/challenge controls;
+- convert an ordinary member/admin session into Voting Client authority.
+
+Voting key/credential lifecycle is governed by the voting domain's own accepted contracts, trustees/quorum and evidence rules.
+
+### Common operation record
+
+Every consequential credential/key lifecycle action must preserve enough structured evidence to reconstruct what was authorized and what actually occurred, including as applicable:
+
+- operation ID;
+- control-object class;
+- credential/key ID and version without storing unnecessary secret material;
+- subject/workload/service;
+- requester;
+- approver(s);
+- executor/custodian;
+- reviewer where required;
+- exact scope/purpose/action;
+- reason code;
+- governing policy/rule version;
+- assurance level/evidence references;
+- source incident/recovery/decision reference;
+- generation/enrollment method;
+- `valid_from`, expiry/TTL/rotation target;
+- activation time;
+- old/new version linkage;
+- overlap window if any;
+- trust-set/consumer propagation evidence;
+- session/token invalidation consequence where applicable;
+- revoke/retire/destroy time and reason;
+- notifications;
+- rollback/failback reference where used;
+- immutable audit/evidence correlation.
+
+Audit records contain metadata/evidence, not plaintext private keys or recovery secrets.
+
+### Failure and fail-closed rules
+
+For privileged or consequential mutations:
+
+- unverifiable current session/credential status fails closed;
+- unverifiable `OrganizationalAuthority` or active restriction state fails closed;
+- unverifiable service credential/key revocation state fails closed where accepting the request would create privileged/consequential effect;
+- expired credentials/keys/grants are not accepted because a cache or frontend still shows them;
+- key/trust-set propagation failures surface as operational incidents and may block cutover rather than silently extending unsafe validity;
+- an inability to perform rotation does not authorize ad-hoc secret sharing;
+- a failed recovery does not authorize manual role assignment;
+- a revoked key/credential version must be rejected after its governed cutoff.
+
+### Implementation placement
+
+| Layer / owner | Mandatory responsibility | Must not do |
+| --- | --- | --- |
+| Identity / credential services | Human credential enrollment, public-credential metadata, revocation/replacement, governed recovery state/evidence and assurance outcome. | Must not manufacture passkey private keys, grant organizational authority or use recovery as universal bypass. |
+| Session/authentication runtime | Issue, validate, quarantine, revoke and expire sessions/tokens according to current credential/security state. | Must not trust stale authority claims after governing state has changed. |
+| `organization-service` + governance | Own `OrganizationalAuthority` assignment/suspension/restoration/revocation and FIR-GOV-004 relationships. | Must not equate possession of a login/key with office or organizational authority. |
+| `privileged-access-service` | JIT and break-glass grants, exact purpose/scope/TTL, dual control and post-use evidence. | Must not become permanent superadmin or routine credential-recovery path. |
+| Service identity / API runtime | Bind workload credentials to exact service/environment/audience/purpose and re-evaluate current credential/authority state at use time. | Must not turn a valid machine credential into unrestricted cross-service business authority. Exact API-stage allocation remains stage-contract governed. |
+| INFRA | Provide accepted KMS/HSM/certificate/secret/workload-identity substrate, protected generation/storage, non-exportability where supported, trust-set publication and key-version mechanics. | Must not select/activate a provider or expose secret material outside accepted region/policy merely because the FIR exists. |
+| OPS | Inventory/ownership, rotation/expiry monitoring, compromise response, convergence monitoring, recovery runbooks, notification and destruction/retirement operations. | Must not silently extend expired keys, bypass approval or distribute secrets through ad-hoc channels. |
+| CTRL | Request/approval/custody/review workflows, SoD enforcement, key/credential status, expiry/rotation queues, evidence inspection and ceremony controls. | Must not expose one-click universal `reset all access`, `mint admin key` or cross-domain bypass controls. |
+| FRONT | Safe enrollment/recovery/status UX; show blocked/recovery/expiry state and available remedy to authorized users. | Must not display private key material unnecessarily, claim a blocked authority is restored from login alone or become the authorization boundary. |
+| SEC / FINAL INTEGRATION | Adversarially prove stale credential/session/key rejection, rotation correctness, compromise containment, secret non-disclosure, SoD, cross-scope isolation and exact integrated recovery paths. | Must not infer safety from the existence of KMS/HSM or isolated unit tests. |
+| Voting trust domain | Own voting-specific credentials/keys, trustee/quorum ceremonies and election-specific revocation/rotation. | Must not inherit generic platform/regional/security key-admin authority. |
+
+### Dependencies
+
+At minimum:
+
+- PACK-14 authentication-method and recovery-control matrices;
+- PACK-12 privileged-access / JIT / break-glass controls;
+- `FIR-GOV-004` Regional Authority Suspension & Intervention Control;
+- `FIR-INV-009` JIT and break-glass governance;
+- `FIR-INV-013` Bund/Land/Kreis isolation;
+- `FIR-INV-014` no universal administration;
+- applicable identity/session/authorization and service-to-service API stage contracts;
+- audit, evidence, retention, legal-hold, notification and DLP controls;
+- voting-domain trust-boundary, credential and trustee/quorum rules;
+- accepted INFRA key/secret/certificate technology decisions when those stages are opened.
+
+### Acceptance criteria
+
+This requirement is not complete until the exact integrated baseline demonstrates at least that:
+
+1. a user can enrol a new passkey without any operator receiving or generating the passkey private key;
+2. lost-device recovery proves/approves recovery and creates a new credential ID without silently restoring separately suspended organizational authority;
+3. session quarantine immediately prevents affected privileged use while leaving unrelated credentials/ordinary rights unchanged unless separately governed;
+4. revoking a human credential does not itself grant a replacement credential or organizational authority;
+5. `OrganizationalAuthority` suspension remains separately governed under `FIR-GOV-004` and survives login/passkey recovery until explicitly restored;
+6. JIT access is exact-purpose/scope/TTL and cannot become a permanent role;
+7. break-glass requires its governed control path, automatically expires/revokes and receives mandatory post-use review;
+8. a service owner can request but cannot unilaterally mint/activate an unrestricted production credential outside the accepted risk/approval policy;
+9. platform private key material is non-exportable where the selected technology supports it, and approvers/auditors can perform their jobs without plaintext secret access;
+10. a planned rotation stages a new version, performs bounded cutover/overlap where required, proves consumer/verifier convergence and rejects the retired version after cutoff;
+11. a compromised key/credential can be rapidly revoked and replaced under a new ID/version without resurrecting the compromised version;
+12. signing/trust-set rollover does not create an indefinite window in which both old and new keys can mint accepted new artifacts;
+13. encryption-key retirement does not destroy decryptability before governed migration/retention dependencies are satisfied;
+14. certificate rotation validates identity/chain and removes stale certificate dependence after cutover;
+15. expired/revoked credentials, sessions, grants and keys are rejected despite stale frontend state, cache state or old tokens;
+16. no actor can perform request + consequential approval + unrestricted secret custody/export + evidence deletion as one universal-admin path;
+17. every consequential issue/recovery/activation/rotation/revocation/destruction action has durable reason-coded evidence linking requester, approver, executor/custodian, scope, policy, old/new version and outcome;
+18. audit/review can be completed without storing plaintext private keys/recovery secrets in audit records;
+19. no generic key-management capability creates cross-Land, cross-service or universal business authority;
+20. generic credential/security/key administrators cannot mint, recover, decrypt, rotate or bulk-revoke voting-domain credentials/keys outside the voting domain's own trustee/quorum governance;
+21. any root/master/KEK class actually adopted by INFRA is operated under a separately accepted quorum ceremony/profile rather than single-operator control;
+22. exact CTRL/FRONT workflows clearly distinguish blocking, recovery, replacement, authority restoration and key rotation instead of presenting them as one generic administrator action.
 
 ---
 
