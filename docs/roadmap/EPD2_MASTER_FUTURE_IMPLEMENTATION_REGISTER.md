@@ -8164,3 +8164,116 @@ The detailed governed placement and acceptance matrix is defined by `docs/govern
 ### Acceptance criteria
 
 The FIR is complete only when the exact integrated accepted baseline proves bounded regional issuance without scope escape; safe degraded regional operation with tested autonomy/freshness limits; current-state refusal of stale/suspended authority; rapid technical containment without political takeover; threshold custody and rehearsed quorum-loss recovery; key/issuer compromise rotation with old-material rejection; independently anchored immutable audit; durable recovery evidence and post-review; and continued voting-domain isolation.
+
+---
+
+## V23 governance maintenance record — Cryptographic key classes, algorithm profiles and crypto-agility (2026-08-28)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT stage is accepted or closed by this update. No HSM/KMS/PKI provider is selected or activated and no voting cryptographic profile is changed.
+
+**New FIR ID created:** `FIR-TRUST-003 — Cryptographic Key Classes, Algorithm Profiles & Crypto-Agility` — status `approved`, priority `critical`.
+
+**Governed profile artifacts:**
+
+- `docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.md`;
+- `docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json`.
+
+**Scope:** the generic EPD² platform now has a governed target crypto profile before API-02/API-03 closure: ES384/P-384 for generic root/intermediate/regional trust and high-impact audit signing; ES256/P-256 for short-lived authority and service JWS assertions; X.509/mTLS for workload identity; WebAuthn ES256 as the mandatory offered passkey baseline with scoped compatibility options; AES-256-GCM for EPD²-owned application/envelope data encryption; strict JOSE/JWKS typing/allow-list/key-ID/trust-location rules; explicit crypto-agility; and ML-KEM-768/ML-DSA-65 as inactive migration candidates rather than current defaults. Provider selection remains INFRA-owned.
+
+**API sequencing refinement:** API-02 is already active and must reconcile the final accepted candidate with this profile before acceptance. API-03 PRE-SEAL development may continue, but API-03 C1 seal is blocked until its exact service-to-service credential/trust mechanism is reconciled with this V23 profile and onto the exact independently accepted API-02 bytes required by Program Control.
+
+**Voting boundary:** PACK-16 voting cryptography, trustee/quorum rules and voting key ceremonies remain governed by the isolated voting domain and are not replaced by this generic profile.
+
+**Execution state:** unchanged. `API-02 = ACTIVE / IN DEVELOPMENT`; `API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`.
+
+## FIR-TRUST-003 — Cryptographic Key Classes, Algorithm Profiles & Crypto-Agility
+
+**Status:** approved
+**Priority:** critical
+**Domain:** cryptographic trust / key classes / algorithm policy / runtime assertions / workload identity / data encryption / crypto-agility
+**Target:** API + identity/session runtime + service identity + organization/governance + INFRA + OPS + CTRL + SEC + FINAL INTEGRATION; voting remains a separate domain profile
+
+EPD² must use an explicit cryptographic class/profile registry rather than allowing each service, token, certificate or operator to choose algorithms ad hoc.
+
+Core invariant:
+
+```text
+key class -> one purpose family -> one approved algorithm profile -> one custody profile
+```
+
+A key or valid cryptographic signature proves only the cryptographic statement defined by its profile. It never creates political, legal or organizational competence by itself.
+
+### Generic platform baseline
+
+- generic root/intermediate/regional trust: ECDSA P-384 + SHA-384 / `ES384`, X.509 v3 where PKI applies;
+- short-lived `OrganizationalAuthority` runtime projections: JWS `ES256`, explicit `typ`, `iss`, `aud`, `exp`, `jti`, `kid`, authority/state freshness and exact scope/capability binding;
+- short-lived service assertions where used: JWS `ES256` with exact service issuer/audience/environment/purpose and replay controls;
+- workload identity: short-lived X.509 v3 mTLS leaf credentials, ECDSA P-256 baseline, TLS 1.3 preferred;
+- human authentication: WebAuthn/passkey with ES256 as the mandatory offered baseline; EdDSA allowed where explicitly supported; RS256 compatibility-only;
+- EPD²-owned data encryption: AES-256-GCM with unique nonce per key and versioned envelope keys; KEK held in HSM/KMS;
+- high-impact audit/evidence signing: P-384/SHA-384 plus the V22 external anchor/timestamp/countersignature requirement;
+- legal advanced/qualified signatures, seals and trusted timestamps: separately governed provider/eIDAS profile, not silently equated to the internal platform root;
+- voting cryptography: excluded and unchanged under PACK-16/voting governance.
+
+### Algorithm controls
+
+Implementations must classify algorithms as `MANDATORY_BASELINE`, `ALLOWED_SCOPED`, `COMPATIBILITY_ONLY`, `MIGRATION_CANDIDATE` or `PROHIBITED` per use class.
+
+At minimum:
+
+- `alg=none` is prohibited for EPD² authorization/service/security assertions;
+- generic HS* JWT authorization is prohibited;
+- SHA-1/MD5, DSA, DES/3DES, RC4, ECB and new unauthenticated application CBC are prohibited;
+- RSA-PKCS1-v1_5 signature profiles are compatibility/verify-only, not new generic issuer defaults;
+- a key is bound to one algorithm and one purpose family;
+- verifiers use exact allow-lists and never accept an algorithm because the untrusted artifact requested it;
+- untrusted `jku`/`x5u` cannot select verifier trust locations;
+- unknown `kid` fails closed after at most one refresh from the configured trusted issuer location.
+
+### Key identifiers and lifecycle
+
+Every new key version gets a new opaque `kid` with at least 128 bits of CSPRNG entropy. `kid` is never reused after rotation/revocation. RFC 7638 SHA-256 JWK thumbprint is stored separately as public-key fingerprint where JWK is used.
+
+The registry must represent at least `GENERATED`, `STAGED`, `ACTIVE_SIGNING`, `VERIFY_ONLY`, `COMPROMISED`, `REVOKED`, `RETIRED` and `DESTROYED`. A compromised/revoked/retired/destroyed key never returns to signing-active state under the same ID.
+
+### Initial generic cryptoperiod constraints
+
+The governed profile artifact sets initial ceilings/targets by key class, including root <= 5 years, platform intermediate <= 12 months, regional issuer <= 90 days, runtime authority/service signer <= 30 days, authority assertion default 5 minutes/hard max 10 minutes, service assertion default 5 minutes/hard max 15 minutes, workload mTLS target <= 24 hours, audit signer <= 90 days and data KEK target <= 180 days. INFRA/SEC may shorten these. Lengthening a stated ceiling requires a governed profile revision/exception with security review.
+
+Human passkeys are not force-rotated solely because of age; compromise, loss, assurance or policy events drive replacement.
+
+### Crypto-agility and PQC
+
+Consumers must support the governed migration sequence:
+
+```text
+CURRENT -> STAGED_NEXT -> DUAL_VERIFY -> NEW_ACTIVE -> OLD_VERIFY_ONLY -> RETIRED
+```
+
+Dual verification is bounded. Dual signing is prohibited by default unless a migration profile explicitly requires it. Downgrade to compatibility/prohibited algorithms fails closed.
+
+`ML-KEM-768` and `ML-DSA-65` are recorded as `MIGRATION_CANDIDATE` only. No pure-PQ or hybrid activation is authorized by this FIR. The data model/trust registry must nevertheless be able to represent successor/hybrid profiles without architectural redesign.
+
+### API gates
+
+Before API-02 acceptance, its final candidate must reconcile passkey algorithm negotiation, any JWT/JWS helper/runtime artifacts, key ID handling, issuer/audience/expiry validation and current-state authorization with the V23 profile.
+
+API-03 PRE-SEAL work may continue. API-03 C1 seal MUST NOT occur until:
+
+1. authoritative API-02 is independently accepted;
+2. API-03 is reconciled onto those exact accepted API-02 bytes;
+3. the exact S2S mechanism selects only V23-approved workload mTLS and/or short-lived ES256 service assertion profiles;
+4. trust generation, audience, replay, expiry, revocation and key-rotation behavior are demonstrated against the V23 profile.
+
+### Provider boundary
+
+V23 selects algorithms, formats and class semantics. INFRA selects concrete HSM/KMS/PKI/secret-manager/timestamp providers later and must prove non-exportability, generation, attestation, regional isolation, automation, revocation and recovery properties. Product branding is not acceptance evidence.
+
+### Governing artifacts and acceptance
+
+Detailed requirements, class table, format rules, JOSE/JWKS/X.509 profile, cryptoperiods, prohibited patterns, PQ migration boundary and acceptance criteria are governed by:
+
+- `docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.md`;
+- `docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json`.
+
+This FIR is not complete until the integrated baseline proves class registration, algorithm allow-listing, custody/non-exportability, bounded cryptoperiod and rotation, stale/revoked rejection, regional scope confinement, data-encryption nonce/key safety, crypto-agile migration, audit independence and the API-02/API-03 gates without weakening the isolated voting domain.
