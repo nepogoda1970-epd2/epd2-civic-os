@@ -1,0 +1,45 @@
+name: V23 cryptographic profile patch
+
+on:
+  push:
+    branches:
+      - governance/v23-crypto-profile
+    paths:
+      - '.github/workflows/_v23-crypto-profile.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-v23:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: governance/v23-crypto-profile
+          fetch-depth: 0
+
+      - name: Apply governed V23 patch
+        run: python .github/scripts/_v23_crypto_profile_patch.py
+
+      - name: Verify governed files and status
+        run: |
+          grep -q 'FIR-TRUST-003' docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          grep -q 'Current Master maintenance level established by project governance work: \*\*V23\*\*' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -q 'API-02 = ACTIVE / IN DEVELOPMENT' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -q 'API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -q 'API-03 C1 seal is blocked' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          test -f docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.md
+          test -f docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json
+          python -m json.tool docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json >/dev/null
+          git diff --check
+
+      - name: Commit V23 governed result without helper files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/scripts/_v23_crypto_profile_patch.py .github/workflows/_v23-crypto-profile.yml
+          git add -A
+          git commit -m 'governance: add cryptographic key classes and algorithm profile'
+          git push origin HEAD:governance/v23-crypto-profile
