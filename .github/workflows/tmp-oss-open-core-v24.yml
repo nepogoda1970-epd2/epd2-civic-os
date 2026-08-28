@@ -38,3 +38,4 @@ jobs:
           git add docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/governance/EPD2_OPEN_TRUST_CORE_COMMERCIAL_OPERATIONS_BOUNDARY_0.1.md
           git commit -m 'governance: add open trust core commercial boundary'
           git push origin HEAD:tmp/oss-open-core-v24
+# trigger fixed workflow
