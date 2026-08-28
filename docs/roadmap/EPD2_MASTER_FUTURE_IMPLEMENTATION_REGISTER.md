@@ -8277,3 +8277,62 @@ Detailed requirements, class table, format rules, JOSE/JWKS/X.509 profile, crypt
 - `docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json`.
 
 This FIR is not complete until the integrated baseline proves class registration, algorithm allow-listing, custody/non-exportability, bounded cryptoperiod and rotation, stale/revoked rejection, regional scope confinement, data-encryption nonce/key safety, crypto-agile migration, audit independence and the API-02/API-03 gates without weakening the isolated voting domain.
+
+---
+
+## V24 governance maintenance record — Open Trust Core & Commercial Operations Boundary (2026-08-29)
+
+**Round:** documentation/governance only. No software is relicensed, published, privatized, deployed, certified or legally activated by this update. No API, INFRA, OPS, CTRL, FRONT, SEC, PILOT, PACK-16 or PACK-17 status is accepted or closed.
+
+**New FIR ID created:** `FIR-OSS-007 — Open Trust Core & Commercial Operations Boundary` — status `approved`, priority `critical`.
+
+**Governed model artifact:** `docs/governance/EPD2_OPEN_TRUST_CORE_COMMERCIAL_OPERATIONS_BOUNDARY_0.1.md`.
+
+**Core decision:** EPD² adopts an Open Trust Core boundary. Protocol specifications, verification-relevant cryptography/reference code, canonical encoding/test vectors, minimal reference voting client, independent verifier, key/guardian ceremony protocol and reference tooling, election-record/finalization semantics, public audit-evidence integrity semantics and reproducible verification remain publicly inspectable. Commercial value may be created around managed deployment, orchestration, enterprise/admin/guardian UX, HA/resilience, HSM/KMS and government integrations, observability, compliance operations, hardened/certified distributions, SLA and professional services only where those components are not required to establish cryptographic truth or independent verification.
+
+**Licensing:** `FIR-OSS-001` remains controlling: the intended original-project software licence baseline is `EUPL-1.2`, subject to the existing legal-review gate. This update does not select Apache-2.0, does not relicense existing source and does not declare any EUPL-covered code proprietary. Any future proprietary/separately licensed enterprise component or dual-licensing model requires a separate governed decision plus legal/copyright/derivative-work/network-communication review and may not evade applicable EUPL source-availability obligations.
+
+**Voting boundary:** PACK-15/16 isolation and PACK-16 cryptography/guardian/quorum/ceremony governance remain unchanged. Generic `FIR-TRUST-003` crypto profiles do not replace voting-domain cryptography. This update adds an openness/verification boundary, not a new voting protocol.
+
+**Execution state:** unchanged. `API-02 = ACTIVE / IN DEVELOPMENT`; `API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`. Existing API-02 V23 reconciliation and API-03 C1 gate remain unchanged.
+
+## FIR-OSS-007 — Open Trust Core & Commercial Operations Boundary
+
+- **Status:** `approved`
+- **Priority:** `critical`
+- **Domain:** open source / voting trust / independent verification / audit transparency / commercial operations
+- **Target:** PACK-15/16 lineage + API + INFRA + OPS + CTRL + FRONT + SEC + FINAL INTEGRATION + release/licensing governance
+- **Dependencies:** `FIR-OSS-001` through `FIR-OSS-006`, `FIR-INV-002`, `FIR-INV-010`, `FIR-SEC-002`, `FIR-TRUST-001`, `FIR-TRUST-002`, PACK-15/16 voting isolation and verifier/election-record lineage
+
+EPD² must preserve a public trust boundary in which no proprietary or operator-only component is necessary to independently establish whether a published election result and its verification-relevant evidence conform to the governed protocol.
+
+### Mandatory public trust surface
+
+At minimum, where applicable to the implemented profile, keep public and independently reviewable:
+
+- protocol specifications, threat model, formal/security claims, limitations and residual risks;
+- verification-relevant cryptographic core/reference implementation, canonical encoding and test vectors;
+- client crypto/core SDK plus a minimal reference voting client sufficient to exercise the public protocol;
+- an independent verifier using public election artefacts only, with reproducible/independently verifiable build/run instructions;
+- key/guardian ceremony specification, transcript/evidence format and reference ceremony tooling;
+- ballot acceptance, election lifecycle, tally/finalization, publication commitment and election-record semantics needed for independent verification;
+- public audit-evidence integrity format, chain/anchor verification semantics and independent verification tooling;
+- public protocol/schema versioning and vulnerability/security disclosure process.
+
+### Permitted commercial operations surface
+
+Subject to all applicable licence/copyright/dependency obligations, commercial value may be delivered through managed hosting/SaaS, deployment/orchestration, HA/multi-region resilience, enterprise administration UX, guardian operational UX, HSM/KMS integrations, government/enterprise connectors, observability, WORM/audit storage infrastructure, compliance workflow tooling, hardened/certified distributions, SLA/support/maintenance and professional services.
+
+### Hard boundary
+
+A commercial/closed component must not be required for independent verification and must not be able to introduce an undetectable alternate ballot-acceptance, tally, finalization, decrypt, quorum-bypass, result-signing or audit-integrity path.
+
+If removal or malicious behavior of a proposed closed component would make a false result indistinguishable from a conforming result to an independent verifier using the public trust artefacts, the trust-critical portion of that component belongs in the Public Trust Core.
+
+### Licence compatibility
+
+This FIR does not alter `FIR-OSS-001`: EUPL-1.2 remains the intended baseline for original EPD² software subject to final legal review. It does not itself authorize dual licensing or proprietary relicensing. Separate commercial code/services are allowed only where the legal/licence boundary permits them; applicable EUPL source-availability, derivative-work and network-communication obligations must be honored rather than bypassed.
+
+### Acceptance
+
+This FIR is not complete until an exact release/deployment proves that an independent party can rebuild/run the public verification path, verify the governed election record and verification-relevant audit evidence without private EPD² infrastructure, while every commercial component is shown non-authoritative for cryptographic truth and unable to create an undetectable alternate outcome path. Official-instance status, certification, legal activation and production readiness remain separate claims.
