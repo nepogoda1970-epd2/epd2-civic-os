@@ -8108,3 +8108,59 @@ These entries:
 - do not change `CANON_VERSION`;
 - require implementation, legal review and release evidence before a public
   source release may claim full compliance.
+---
+
+## V22 governance maintenance record — Resilient trust, delegated regional issuance, recovery and immutable audit (2026-08-28)
+
+**Round:** documentation/governance only. No API, INFRA, OPS, CTRL, FRONT, SEC or PILOT stage is accepted or closed by this update. No provider, HSM/KMS, DID framework, distributed ledger or production trust topology is selected or activated.
+
+**New FIR ID created:** `FIR-TRUST-002 — Resilient Trust, Delegated Regional Issuance, Recovery & Immutable Audit` — status `approved`, priority `critical`.
+
+**Governed proposal artifact:**
+
+- `docs/governance/EPD2_RESILIENT_TRUST_DELEGATED_REGIONAL_RECOVERY_AUDIT_MODEL_0.1.md`.
+
+**Scope:** this update establishes a technology-neutral trust and resilience contract: central root/master keys remain protected and outside political/regional administration; bounded regional issuers may support continuity without receiving master keys or authority to escape scope; `OrganizationalAuthority` remains the authoritative source while signed runtime projections are short-lived derivatives; Security containment remains technical and cannot decide political office; quorum-loss/root recovery uses separate governance authorization, recovery custody, execution and independent review; immutable/WORM audit is externally anchored for high-impact evidence; RTO/RPO and regional autonomy windows must be explicitly adopted and rehearsed later rather than guessed now.
+
+**Dependencies preserved:** `FIR-GOV-004`, `FIR-GOV-005`, `FIR-SEC-004`, `FIR-TRUST-001`, `FIR-INV-010`/OD-20 and `FIR-ROADMAP-007` remain in force and are not closed or superseded.
+
+**Execution state:** unchanged. `API-02 = ACTIVE / IN DEVELOPMENT`; `API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`. Exact allocation among API-02…API-06 and later INFRA/OPS/CTRL/FRONT/SEC remains stage-contract governed.
+
+## FIR-TRUST-002 — Resilient Trust, Delegated Regional Issuance, Recovery & Immutable Audit
+
+**Status:** approved
+**Priority:** critical
+**Domain:** trust / authorization / regional resilience / key custody / recovery / audit
+**Target:** organization/governance + API + service identity + INFRA + OPS + CTRL + FRONT + SEC + FINAL INTEGRATION
+
+EPD² must provide a resilient trust architecture in which central root/master material is strongly protected without becoming the hot-path dependency for every ordinary regional action, while regional continuity cannot turn into autonomous privilege escalation.
+
+### Hard invariants
+
+- no political office, Bund role, Land role, regional admin or generic platform admin receives the central root/master key by organizational status;
+- regional delegated trust is bounded by exact scope, purpose/audience, credential/assertion class, TTL, delegation depth and policy version;
+- a Land/Kreis/Ort trust component cannot mint Bund, cross-Land, platform-root or voting authority;
+- `OrganizationalAuthority` remains authoritative; a signed token/assertion is a short-lived runtime projection and cannot resurrect suspended/revoked authority;
+- Security containment is technically capable of rapid quarantine/revoke but cannot appoint/remove political office, create organizational authority or take over a region;
+- Identity/recovery cannot silently undo active security containment or restore separately suspended organizational authority;
+- root/critical key custody uses key-class-specific threshold policy, not a universal superadmin and not a single hard-coded quorum for every key class;
+- loss of ordinary key-custodian quorum has a separate governed recovery ceremony with post-recovery rotation and independent review;
+- a Parteischiedsgericht may authorize/review recovery only where legally competent; it does not become a platform key custodian or HSM operator;
+- high-impact audit/evidence is append-only/immutable and independently verifiable against an external anchor/trusted timestamp/countersignature; blockchain is not required;
+- regional disconnected operation is time/freshness bounded and cannot silently become indefinite trust;
+- RTO, RPO, autonomy and revocation/recovery objectives are required before production readiness but are not numerically invented by this FIR;
+- voting-domain credentials/keys/trustees remain outside generic regional delegation and generic recovery.
+
+### Required failure/recovery coverage
+
+At minimum cover central HSM/KMS outage, network isolation/DDoS, key-custodian quorum loss, root/intermediate/regional issuer compromise, mass human-credential compromise, compromised Security operator, Identity outage, regional isolation, audit-pipeline/storage outage, trust-store corruption/rollback and stale distributed authority state.
+
+Each runbook must identify detection, containment, permitted degraded operations, prohibited operations, recovery authority, technical recovery execution/ceremony, convergence, rotation/invalidation, evidence and independent post-review.
+
+### Implementation placement
+
+The detailed governed placement and acceptance matrix is defined by `docs/governance/EPD2_RESILIENT_TRUST_DELEGATED_REGIONAL_RECOVERY_AUDIT_MODEL_0.1.md`. Exact API-stage allocation remains stage-contract governed and this FIR does not pre-accept any API stage or select a production provider.
+
+### Acceptance criteria
+
+The FIR is complete only when the exact integrated accepted baseline proves bounded regional issuance without scope escape; safe degraded regional operation with tested autonomy/freshness limits; current-state refusal of stale/suspended authority; rapid technical containment without political takeover; threshold custody and rehearsed quorum-loss recovery; key/issuer compromise rotation with old-material rejection; independently anchored immutable audit; durable recovery evidence and post-review; and continued voting-domain isolation.
