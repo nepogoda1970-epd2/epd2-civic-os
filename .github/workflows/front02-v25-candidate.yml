@@ -43,18 +43,9 @@ jobs:
           test "$(sha256sum docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | cut -d' ' -f1)" = "9dce1aafdeac73ea1140a901ffc86e65bb51d628311ba121bfc5c711fb3eeccf"
           test "$(sha256sum docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md | cut -d' ' -f1)" = "895cf4186b88da74721f95d07ccdd6102a339a80d95ed19701e1695f5f7b4934"
 
-      - name: Apply final source reconciliation and format frontend
+      - name: npm ci and formatting
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('frontend/web-shell/components/public-site.tsx')
-          s=p.read_text()
-          s=s.replace('function KindSpecific({ kind }: Pick<PublicPage, "kind">) {', 'function KindSpecific({ kind, id }: Pick<PublicPage, "kind" | "id">) {')
-          s=s.replace('if (kind === "regional-hub") {', 'if (id === "FRONT02-REGION-FIXTURE") {')
-          s=s.replace('<KindSpecific kind={page.kind} />', '<KindSpecific kind={page.kind} id={page.id} />')
-          p.write_text(s)
-          PY
           npm ci 2>&1 | tee verification/front02/01-npm-ci.log
           npm run format --workspace=frontend/web-shell 2>&1 | tee verification/front02/02-format.log
           npm run format:check --workspace=frontend/web-shell 2>&1 | tee verification/front02/03-prettier-check.log
@@ -62,14 +53,20 @@ jobs:
       - name: ESLint
         run: npm run lint --workspace=frontend/web-shell 2>&1 | tee verification/front02/04-eslint.log
 
-      - name: TypeScript
-        run: npm run typecheck --workspace=frontend/web-shell 2>&1 | tee verification/front02/05-typecheck.log
+      - name: TypeScript clean
+        shell: bash
+        run: |
+          rm -f frontend/web-shell/tsconfig.tsbuildinfo
+          npm run typecheck --workspace=frontend/web-shell 2>&1 | tee verification/front02/05-typecheck.log
 
       - name: Unit and render tests
         run: npm run test --workspace=frontend/web-shell 2>&1 | tee verification/front02/06-unit-render.log
 
-      - name: Production build
-        run: npm run build --workspace=frontend/web-shell 2>&1 | tee verification/front02/07-build.log
+      - name: Production build clean
+        shell: bash
+        run: |
+          rm -rf frontend/web-shell/.next
+          npm run build --workspace=frontend/web-shell 2>&1 | tee verification/front02/07-build.log
 
       - name: Generate FRONT-02 acceptance screenshots
         run: |
@@ -103,7 +100,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import hashlib, json, os
+          import hashlib, json
           root=Path('.')
           ev=Path('verification/front02')
           ev.mkdir(parents=True, exist_ok=True)
@@ -113,9 +110,8 @@ jobs:
           files=[]
           for p in sorted(root.rglob('*')):
             if not p.is_file(): continue
-            s=p.as_posix()
             if any(part in p.parts for part in ['.git','node_modules','.next','test-results','playwright-report','.ruff_cache','__pycache__']): continue
-            files.append({'path':s,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'size':p.stat().st_size})
+            files.append({'path':p.as_posix(),'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'size':p.stat().st_size})
           (ev/'17-evidence-inventory.json').write_text(json.dumps({'status':status,'files':files},indent=2))
           PY
 
@@ -152,6 +148,7 @@ jobs:
           path: |
             verification/front02/**
             frontend/web-shell/tests/browser/front02.browser.spec.ts-snapshots/**
+            frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/**
           if-no-files-found: warn
 
       - name: Upload corrected candidate
