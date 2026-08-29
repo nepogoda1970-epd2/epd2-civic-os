@@ -1,0 +1,50 @@
+name: v25-canonical-build
+
+on:
+  push:
+    branches: [tmp/v25-reconcile-20260829]
+    paths:
+      - .github/workflows/v25-canonical-build.yml
+      - .v25build/**
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Build and verify V25 from exact lineages
+        run: |
+          set -euo pipefail
+          python .v25build/build_v25.py | tee /tmp/v25-build.log
+          grep -qx 'V25_RECONCILIATION=PASS' /tmp/v25-build.log
+          mkdir -p /tmp/v25out
+          cp docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md /tmp/v25out/master.md
+          cp docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md /tmp/v25out/pcr.md
+          cp docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json /tmp/v25out/reconciliation.json
+
+      - name: Create clean one-commit V25 branch directly from current main
+        run: |
+          set -euo pipefail
+          BASE=007b5d71cf5a54e417cbd5647a35a57098ead186
+          git checkout --detach "$BASE"
+          git switch -C tmp/v25-canonical-20260829
+          cp /tmp/v25out/master.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          cp /tmp/v25out/pcr.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          cp /tmp/v25out/reconciliation.json docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json
+          git add docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+                  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+                  docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 3
+          git config user.name 'epd2-governance-bot'
+          git config user.email 'governance@epd2.invalid'
+          git commit -m 'governance: reconcile master lineage as V25'
+          test "$(git rev-parse HEAD^)" = "$BASE"
+          git push --force origin HEAD:tmp/v25-canonical-20260829
