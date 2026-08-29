@@ -61,7 +61,7 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 | INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |
 | OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |
 | CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |
-| FRONT | `FRONT-02_SPECIFIED / NOT_STARTED_FINAL` | FRONT-02 specification is established and may be implemented in parallel within its governed scope; final integrated journeys follow runtime/control-plane dependencies. |
+| FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL` | The exact C2.1 implementation candidate is accepted as a governed frontend baseline. Final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |
 | SEC | `NOT_STARTED_FINAL` | Threat/adversarial preparation may proceed; final challenge targets the integrated system. |
 | PILOT | `PARALLEL_DEVELOPMENT_EXISTS` | PILOT-01…05 have existing lineage/work. Exact stage state is governed below. |
 
@@ -317,6 +317,18 @@ A layer or PILOT stage may move to `CLOSED`, `ACCEPTED` or `ESTABLISHED` only wh
 Every status transition must record previous/new state, governing artifact or commit, immutable identity where applicable, verification evidence, open blockers, and next permitted primary stage.
 
 No status may change merely because a conversation says it is convenient.
+
+### FRONT-02 C2.1 authoritative acceptance transition — 2026-08-29
+
+- **Previous state:** `FRONT-02_SPECIFIED / NOT_STARTED_FINAL`.
+- **New state:** `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL`.
+- **Governing candidate:** `EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip`.
+- **Candidate SHA-256:** `aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179`.
+- **Independent authoritative review:** GitHub Actions `front02-governed-review`, run `33280335794`, conclusion `success`; exact-byte verification, safe extraction, clean dependency install, catalogue validation, formatting, typecheck, lint, unit tests, FRONT-02 browser gates, FRONT-00 visual regression and FRONT-01 browser regression all passed.
+- **Acceptance decision:** Project Owner decision recorded in `docs/frontend/FRONT-02-C2.1-ACCEPTANCE-RECORD.json`.
+- **Final-closure predecessor status:** ARCH and DATA are closed; API remains active, and INFRA, OPS and CTRL are not started. These do not invalidate this bounded implementation-baseline acceptance; they prevent `FRONT CLOSED`.
+- **Open blockers for this acceptance:** none.
+- **Next permitted primary stage:** unchanged — `API-02 = ACTIVE / IN DEVELOPMENT`.
 
 ### PILOT-04 C9 authoritative transition — 2026-08-26
 
