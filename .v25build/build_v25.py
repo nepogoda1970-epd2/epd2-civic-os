@@ -39,15 +39,15 @@ def assert_unique(ids: list[str], label: str) -> None:
         raise SystemExit(f'{label}: duplicate FIR headings: {dup}')
 
 
-head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-if head != CURRENT_MAIN_COMMIT:
-    raise SystemExit(f'wrong HEAD: {head}; expected {CURRENT_MAIN_COMMIT}')
-parent = subprocess.check_output(['git', 'rev-parse', 'HEAD^'], text=True).strip()
+# The staging branch may have helper-file commits on top. The authority input is still
+# the exact main commit below, and all canonical bytes are read from that commit object.
+subprocess.run(['git', 'merge-base', '--is-ancestor', CURRENT_MAIN_COMMIT, 'HEAD'], check=True)
+parent = subprocess.check_output(['git', 'rev-parse', f'{CURRENT_MAIN_COMMIT}^'], text=True).strip()
 if parent != V23_COMMIT:
-    raise SystemExit(f'wrong parent: {parent}; expected {V23_COMMIT}')
+    raise SystemExit(f'wrong current-main parent: {parent}; expected {V23_COMMIT}')
 
-current_master_bytes = MASTER.read_bytes()
-current_pcr_bytes = PCR.read_bytes()
+current_master_bytes = subprocess.check_output(['git', 'show', f'{CURRENT_MAIN_COMMIT}:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'])
+current_pcr_bytes = subprocess.check_output(['git', 'show', f'{CURRENT_MAIN_COMMIT}:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'])
 current_master_sha = sha(current_master_bytes)
 current_pcr_sha = sha(current_pcr_bytes)
 current_master = current_master_bytes.decode('utf-8')
