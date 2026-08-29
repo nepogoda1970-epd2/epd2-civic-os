@@ -1,0 +1,50 @@
+name: v25-authority-transport
+
+on:
+  push:
+    branches:
+      - transport/v25-api02-c6-authority
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize exact canonical V25 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANON=8dfd0dbea6056fef4e3a446e348e062afd4c4137
+          OUT=transport/docs/roadmap
+          mkdir -p "$OUT"
+          git show "$CANON:docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md" > "$OUT/EPD2_PROJECT_ENTRYPOINT.md"
+          git show "$CANON:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" > "$OUT/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          git show "$CANON:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md" > "$OUT/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"
+          {
+            echo "canonical_commit  $CANON"
+            sha256sum "$OUT/EPD2_PROJECT_ENTRYPOINT.md"
+            sha256sum "$OUT/EPD2_PROGRAM_CONTROL_REGISTER.md"
+            sha256sum "$OUT/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"
+          } | tee transport/CANONICAL_SHA256SUMS.txt
+          test "$(sha256sum "$OUT/EPD2_PROGRAM_CONTROL_REGISTER.md" | awk '{print $1}')" = "9dce1aafdeac73ea1140a901ffc86e65bb51d628311ba121bfc5c711fb3eeccf"
+          test "$(sha256sum "$OUT/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md" | awk '{print $1}')" = "895cf4186b88da74721f95d07ccdd6102a339a80d95ed19701e1695f5f7b4934"
+          (cd transport && zip -X -r EPD2_V25_API02_C6_CANONICAL_AUTHORITY_TRANSPORT_8dfd0dbe.zip docs CANONICAL_SHA256SUMS.txt)
+          sha256sum transport/EPD2_V25_API02_C6_CANONICAL_AUTHORITY_TRANSPORT_8dfd0dbe.zip | tee transport/TRANSPORT_ZIP_SHA256.txt
+
+      - name: Upload authority transport
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_V25_API02_C6_CANONICAL_AUTHORITY_TRANSPORT_8dfd0dbe
+          path: |
+            transport/EPD2_V25_API02_C6_CANONICAL_AUTHORITY_TRANSPORT_8dfd0dbe.zip
+            transport/CANONICAL_SHA256SUMS.txt
+            transport/TRANSPORT_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 7
