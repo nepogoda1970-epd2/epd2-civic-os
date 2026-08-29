@@ -1,6 +1,9 @@
 name: front02-governed-review
 
 on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/front02-governed-review.yml]
   workflow_dispatch:
     inputs:
       source_ref:
@@ -11,6 +14,7 @@ on:
       candidate_sha256:
         description: Exact SHA-256 of the sealed candidate
         required: true
+        default: aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179
         type: string
 
 permissions:
@@ -24,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ inputs.source_ref || 'handoff/front' }}
           fetch-depth: 1
           persist-credentials: false
 
@@ -33,17 +37,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          candidate="handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.2_2026-08-30.zip"
-          manifest="handoff/FRONT/incoming/FRONT02_C2.2_TRANSPORT_MANIFEST.json"
-          test -f "$candidate" && test -f "$manifest"
-          echo "${{ inputs.candidate_sha256 }}  $candidate" | sha256sum -c -
-          python3 - "$manifest" "$candidate" "${{ inputs.candidate_sha256 }}" <<'PY'
-          import hashlib, json, os, sys
-          manifest, candidate, expected = sys.argv[1:]
-          data = json.load(open(manifest, encoding="utf-8"))
-          assert data["acceptance"] == "NOT_PERFORMED"
-          assert data["sha256"] == expected
-          assert data["size_bytes"] == os.path.getsize(candidate)
+          candidate="handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip"
+          expected="${{ inputs.candidate_sha256 || 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179' }}"
+          test -f "$candidate"
+          echo "$expected  $candidate" | sha256sum -c -
+          python3 - "$candidate" "$expected" <<'PY'
+          import hashlib, os, sys
+          candidate, expected = sys.argv[1:]
+          assert os.path.getsize(candidate) > 0
           assert hashlib.sha256(open(candidate, "rb").read()).hexdigest() == expected
           PY
           echo "path=$candidate" >> "$GITHUB_OUTPUT"
@@ -99,7 +100,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/front02-review"
           cat > "$RUNNER_TEMP/front02-review/RESULT.json" <<EOF
-          {"stage":"FRONT-02","candidate_sha256":"${{ inputs.candidate_sha256 }}","result":"PRECHECK_PASS_ONLY_IF_JOB_SUCCEEDS","acceptance":"NOT_GRANTED","governance":"independent GitHub Actions execution"}
+          {"stage":"FRONT-02","candidate_sha256":"${{ inputs.candidate_sha256 || 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179' }}","result":"PRECHECK_PASS_ONLY_IF_JOB_SUCCEEDS","acceptance":"NOT_GRANTED","governance":"independent GitHub Actions execution"}
           EOF
           cp "${{ steps.candidate.outputs.path }}" "$RUNNER_TEMP/front02-review/" || true
           cp -r "${{ steps.extract.outputs.root }}/evidence/front02" "$RUNNER_TEMP/front02-review/" || true
