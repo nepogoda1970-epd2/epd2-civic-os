@@ -25,27 +25,15 @@ jobs:
           python - <<'PY'
           import hashlib, pathlib
           root=pathlib.Path('.v25build/patchparts20k')
-          pre=b''.join((root/f'part{i:02d}').read_bytes() for i in range(6))
-          bad=(root/'part06').read_bytes()
-          suffix=(root/'part07').read_bytes()
+          parts=[(root/f'part{i:02d}').read_bytes() for i in range(8)]
+          assert [len(x) for x in parts] == [20000,20000,20000,20000,20000,20000,20000,12812], [len(x) for x in parts]
+          candidate=b''.join(parts)
           expect='0fa3ce6842a2a7c54de68ccf51439744c4bc7ac8724c0e2931b157f73f9f2faf'
-          assert len(pre)==120000, len(pre)
-          assert len(bad)==20698, len(bad)
-          assert len(suffix)==12812, len(suffix)
-          found=None
-          # part06 should be 20,000 bytes; locate a single 698-byte accidental insertion by checksum.
-          for i in range(20001):
-              p6=bad[:i]+bad[i+698:]
-              candidate=pre+p6+suffix
-              if hashlib.sha256(candidate).hexdigest()==expect:
-                  found=(i,candidate)
-                  break
-          if found is None:
-              raise SystemExit('No contiguous 698-byte deletion reconstructs the expected exact C5 delta transport')
-          i,candidate=found
+          got=hashlib.sha256(candidate).hexdigest()
+          assert len(candidate)==152812, len(candidate)
+          assert got==expect, (got, expect)
           pathlib.Path('.v25build/v23_to_c5.patch.xz.b64').write_bytes(candidate)
-          print(f'PATCH_REPAIR_DELETE_OFFSET={i}')
-          print('PATCH_TRANSPORT_SHA256='+hashlib.sha256(candidate).hexdigest())
+          print('PATCH_TRANSPORT_SHA256='+got)
           print('PATCH_TRANSPORT_LENGTH='+str(len(candidate)))
           PY
           python .v25build/build_v25.py | tee /tmp/v25-build.log
@@ -57,10 +45,10 @@ jobs:
           python - <<'PY'
           import hashlib, json, pathlib, re
           m=pathlib.Path('/tmp/v25out/master.md').read_bytes()
-          p=pathlib.Path('/tmp/v25out/pcr.md').read_text()
+          pb=pathlib.Path('/tmp/v25out/pcr.md').read_bytes()
+          p=pb.decode()
           r=json.loads(pathlib.Path('/tmp/v25out/reconciliation.json').read_text())
-          mh=hashlib.sha256(m).hexdigest()
-          ph=hashlib.sha256(pathlib.Path('/tmp/v25out/pcr.md').read_bytes()).hexdigest()
+          mh=hashlib.sha256(m).hexdigest(); ph=hashlib.sha256(pb).hexdigest()
           assert r['status']=='PASS'
           assert r['result']['master_sha256']==mh
           assert r['result']['pcr_sha256']==ph
