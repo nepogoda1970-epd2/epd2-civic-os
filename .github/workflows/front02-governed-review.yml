@@ -70,8 +70,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.16.0
-          cache: npm
-          cache-dependency-path: ${{ steps.extract.outputs.root }}/package-lock.json
 
       - name: Verify governed evidence and frozen dependencies
         working-directory: ${{ steps.extract.outputs.root }}
