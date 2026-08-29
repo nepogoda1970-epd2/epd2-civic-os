@@ -1,0 +1,38 @@
+{
+  "schema": "epd2.front02.acceptance-record/1",
+  "stage": "FRONT-02",
+  "decision": "ACCEPTED_IMPLEMENTATION_BASELINE",
+  "decision_date": "2026-08-29",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Project Owner decision communicated to the governed developer after independent GitHub review.",
+  "candidate": {
+    "filename": "EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip",
+    "source_ref": "handoff/front",
+    "sha256": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179"
+  },
+  "independent_review": {
+    "workflow": "front02-governed-review",
+    "run_id": 33280335794,
+    "run_url": "https://github.com/nepogoda1970-epd2/epd2-civic-os/actions/runs/33280335794",
+    "conclusion": "success",
+    "workflow_commit": "96ba6351ed845bb34b6f24a7b2e7db3aca16bdad"
+  },
+  "accepted_scope": [
+    "FRONT-02 C2.1 implementation baseline",
+    "public-page, accessibility, responsive and browser-regression scope covered by the successful governed review"
+  ],
+  "predecessor_status_for_final_front_closure": {
+    "ARCH": "CLOSED",
+    "DATA": "CLOSED",
+    "API": "API-02 ACTIVE / IN DEVELOPMENT",
+    "INFRA": "NOT_STARTED",
+    "OPS": "NOT_STARTED",
+    "CTRL": "NOT_STARTED"
+  },
+  "exclusions": [
+    "This decision does not close the FRONT layer.",
+    "This decision does not declare production readiness, legal activation, or final integration.",
+    "FRONT final closure remains governed by the program sequence API → INFRA → OPS → CTRL → FRONT."
+  ],
+  "next_permitted_status": "FRONT-02 accepted baseline may be used for governed subsequent integration work; no final FRONT closure is implied."
+}
