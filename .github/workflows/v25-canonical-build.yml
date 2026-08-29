@@ -22,12 +22,34 @@ jobs:
       - name: Build and verify V25 from exact lineages
         run: |
           set -euo pipefail
+          cat .v25build/patchparts20k/part* > .v25build/v23_to_c5.patch.xz.b64
+          test "$(wc -c < .v25build/v23_to_c5.patch.xz.b64)" -eq 152812
+          echo "0fa3ce6842a2a7c54de68ccf51439744c4bc7ac8724c0e2931b157f73f9f2faf  .v25build/v23_to_c5.patch.xz.b64" | sha256sum -c -
           python .v25build/build_v25.py | tee /tmp/v25-build.log
           grep -qx 'V25_RECONCILIATION=PASS' /tmp/v25-build.log
           mkdir -p /tmp/v25out
           cp docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md /tmp/v25out/master.md
           cp docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md /tmp/v25out/pcr.md
           cp docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json /tmp/v25out/reconciliation.json
+          python - <<'PY'
+          import hashlib, json, pathlib, re
+          m=pathlib.Path('/tmp/v25out/master.md').read_bytes()
+          p=pathlib.Path('/tmp/v25out/pcr.md').read_text()
+          r=json.loads(pathlib.Path('/tmp/v25out/reconciliation.json').read_text())
+          mh=hashlib.sha256(m).hexdigest()
+          assert r['status']=='PASS'
+          assert r['result']['master_sha256']==mh
+          assert mh in p
+          assert r['result']['missing_after_merge']==[]
+          assert r['result']['extra_after_merge']==[]
+          assert r['result']['duplicate_active_ids']==[]
+          assert r['result']['v25_unique_firs']==241
+          assert all(r['result']['required_presence'].values())
+          ids=re.findall(rb'^##\s+(FIR-[A-Z0-9_*.-]+)\b',m,flags=re.M)
+          assert len(ids)==len(set(ids))==241
+          print('PRECOMMIT_MASTER_SHA256='+mh)
+          print('PRECOMMIT_PCR_SHA256='+hashlib.sha256(pathlib.Path('/tmp/v25out/pcr.md').read_bytes()).hexdigest())
+          PY
 
       - name: Create clean one-commit V25 branch directly from current main
         run: |
@@ -47,4 +69,10 @@ jobs:
           git config user.email 'governance@epd2.invalid'
           git commit -m 'governance: reconcile master lineage as V25'
           test "$(git rev-parse HEAD^)" = "$BASE"
+          MASTER_SHA="$(sha256sum docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md | awk '{print $1}')"
+          PCR_SHA="$(sha256sum docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | awk '{print $1}')"
+          grep -Fq "$MASTER_SHA" docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          echo "CANONICAL_V25_COMMIT=$(git rev-parse HEAD)"
+          echo "CANONICAL_V25_MASTER_SHA256=$MASTER_SHA"
+          echo "CANONICAL_V25_PCR_SHA256=$PCR_SHA"
           git push --force origin HEAD:tmp/v25-canonical-20260829
