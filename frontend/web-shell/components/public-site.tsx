@@ -47,9 +47,18 @@ export function CapabilityStatusBanner({ page }: { page: PublicPage }) {
         <strong>{statusLabels[page.status]}</strong>
       </div>
       <dl>
-        <div><dt>Verantwortlicher PACK</dt><dd>{page.pack}</dd></div>
-        <div><dt>Aktivierung</dt><dd>{page.prerequisites}</dd></div>
-        <div><dt>Zuletzt geprüft</dt><dd>{reviewed}</dd></div>
+        <div>
+          <dt>Verantwortlicher PACK</dt>
+          <dd>{page.pack}</dd>
+        </div>
+        <div>
+          <dt>Aktivierung</dt>
+          <dd>{page.prerequisites}</dd>
+        </div>
+        <div>
+          <dt>Zuletzt geprüft</dt>
+          <dd>{reviewed}</dd>
+        </div>
       </dl>
       <Link href="/status">Statussystem verstehen</Link>
     </section>
@@ -59,7 +68,9 @@ export function CapabilityStatusBanner({ page }: { page: PublicPage }) {
 function PublicHeader() {
   return (
     <>
-      <a className="skip-link" href="#main">Zum Inhalt springen</a>
+      <a className="skip-link" href="#main">
+        Zum Inhalt springen
+      </a>
       <div className="candidate-banner" role="status">
         <strong>FRONT-02 Implementation Candidate</strong>
         <span>Keine produktive oder rechtlich aktivierte Plattform</span>
@@ -70,7 +81,11 @@ function PublicHeader() {
           <span>Erste Partei Direkte Demokratie</span>
         </Link>
         <nav aria-label="Hauptnavigation">
-          {topNavigation.map((item) => <Link href={item.href} key={item.href}>{item.label}</Link>)}
+          {topNavigation.map((item) => (
+            <Link href={item.href} key={item.href}>
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <Suspense fallback={<span className="language-selector">DE | EN</span>}>
           <LanguageSelector />
@@ -83,25 +98,101 @@ function PublicHeader() {
 function PublicFooter() {
   return (
     <footer className="public-footer">
-      <div><strong>EPD²</strong><p>Politisches Projekt · Beteiligungsplattform · Civic-OS-Architektur</p></div>
+      <div>
+        <strong>EPD²</strong>
+        <p>Politisches Projekt · Beteiligungsplattform · Civic-OS-Architektur</p>
+      </div>
       <nav aria-label="Fußnavigation">
-        <Link href="/datenschutz">Datenschutz</Link><Link href="/barrierefreiheit">Barrierefreiheit</Link><Link href="/kontakt">Kontakt</Link><Link href="/impressum">Impressum</Link>
+        <Link href="/datenschutz">Datenschutz</Link>
+        <Link href="/barrierefreiheit">Barrierefreiheit</Link>
+        <Link href="/kontakt">Kontakt</Link>
+        <Link href="/impressum">Impressum</Link>
       </nav>
     </footer>
   );
 }
 
 function ProgramSkeleton() {
-  return <section className="public-section" aria-labelledby="program-skeleton"><p className="section-kicker">Read-only Prototyp</p><h2 id="program-skeleton">Offenes Programmskelett</h2><div className="program-grid">{programStates.map(([state, description], index) => <article className="program-card" data-program-state={state} key={state}><span>{String(index + 1).padStart(2, "0")}</span><h3>{state.replaceAll("_", " ")}</h3><p>{description}</p></article>)}</div><p className="public-note">Keine Eingabe, Unterstützung, Begutachtung, Abstimmung oder Programmbearbeitung ist auf dieser Seite möglich.</p></section>;
+  return (
+    <section className="public-section" aria-labelledby="program-skeleton">
+      <p className="section-kicker">Read-only Prototyp</p>
+      <h2 id="program-skeleton">Offenes Programmskelett</h2>
+      <div className="program-grid">
+        {programStates.map(([state, description], index) => (
+          <article className="program-card" data-program-state={state} key={state}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <h3>{state.replaceAll("_", " ")}</h3>
+            <p>{description}</p>
+          </article>
+        ))}
+      </div>
+      <p className="public-note">
+        Keine Eingabe, Unterstützung, Begutachtung, Abstimmung oder
+        Programmbearbeitung ist auf dieser Seite möglich.
+      </p>
+    </section>
+  );
 }
 
 function InitiativeLifecycle() {
-  return <section className="public-section" aria-labelledby="initiative-lifecycle"><p className="section-kicker">Künftiger Lifecycle</p><h2 id="initiative-lifecycle">Vom Entwurf zum Fortschrittsnachweis</h2><ol className="lifecycle">{lifecycle.map((step) => <li key={step}>{step}</li>)}</ol><div className="guardrail-grid"><article><h3>KI ist advisory</h3><p>Sie markiert Fragen und Risiken, entscheidet aber nicht endgültig.</p></article><article><h3>Prüfung folgt der Version</h3><p>Rechts- und Fachgutachten sind an die exakte Fassung gebunden.</p></article><article><h3>Archive bleiben sichtbar</h3><p>Abgelehnte oder abgelaufene Initiativen werden nachvollziehbar archiviert.</p></article></div></section>;
+  return (
+    <section className="public-section" aria-labelledby="initiative-lifecycle">
+      <p className="section-kicker">Künftiger Lifecycle</p>
+      <h2 id="initiative-lifecycle">Vom Entwurf zum Fortschrittsnachweis</h2>
+      <ol className="lifecycle">
+        {lifecycle.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+      <div className="guardrail-grid">
+        <article>
+          <h3>KI ist advisory</h3>
+          <p>Sie markiert Fragen und Risiken, entscheidet aber nicht endgültig.</p>
+        </article>
+        <article>
+          <h3>Prüfung folgt der Version</h3>
+          <p>Rechts- und Fachgutachten sind an die exakte Fassung gebunden.</p>
+        </article>
+        <article>
+          <h3>Archive bleiben sichtbar</h3>
+          <p>
+            Abgelehnte oder abgelaufene Initiativen werden nachvollziehbar
+            archiviert.
+          </p>
+        </article>
+      </div>
+    </section>
+  );
 }
 
 function VotingBoundary() {
-  const rules = ["eigener Origin für WS-03","keine gemeinsamen Cookies","kein gemeinsamer localStorage oder IndexedDB","keine gemeinsame Identity Session","keine Analytics und kein Fingerprinting","einmaliger, zweckgebundener Handoff","keine dauerhafte Mitgliedskennung","keine Stimmzetteldaten im Rückweg","keine Zwischenauszählung","mobil ausschließlich im Systembrowser"];
-  return <section className="public-section boundary-section" aria-labelledby="voting-boundary"><p className="section-kicker">NOT ACTIVATED</p><h2 id="voting-boundary">Voting Client Isolation</h2><ul className="boundary-list">{rules.map((rule) => <li key={rule}>{rule}</li>)}</ul><p className="public-note">Erfordert PACK-15, PACK-16, PACK-17 sowie Rechts-, Sicherheits- und Infrastrukturfreigaben. Es gibt hier keinen Stimmzettel.</p></section>;
+  const rules = [
+    "eigener Origin für WS-03",
+    "keine gemeinsamen Cookies",
+    "kein gemeinsamer localStorage oder IndexedDB",
+    "keine gemeinsame Identity Session",
+    "keine Analytics und kein Fingerprinting",
+    "einmaliger, zweckgebundener Handoff",
+    "keine dauerhafte Mitgliedskennung",
+    "keine Stimmzetteldaten im Rückweg",
+    "keine Zwischenauszählung",
+    "mobil ausschließlich im Systembrowser",
+  ];
+  return (
+    <section className="public-section boundary-section" aria-labelledby="voting-boundary">
+      <p className="section-kicker">NOT ACTIVATED</p>
+      <h2 id="voting-boundary">Voting Client Isolation</h2>
+      <ul className="boundary-list">
+        {rules.map((rule) => (
+          <li key={rule}>{rule}</li>
+        ))}
+      </ul>
+      <p className="public-note">
+        Erfordert PACK-15, PACK-16, PACK-17 sowie Rechts-, Sicherheits- und
+        Infrastrukturfreigaben. Es gibt hier keinen Stimmzettel.
+      </p>
+    </section>
+  );
 }
 
 function TransparencyFlow() {
@@ -109,29 +200,134 @@ function TransparencyFlow() {
     <section className="public-section" aria-labelledby="publication-flow">
       <p className="section-kicker">Governed publication</p>
       <h2 id="publication-flow">Von der Quelle zur öffentlichen Projektion</h2>
-      <ol aria-label="Schritte der kontrollierten Veröffentlichung" className="publication-flow" tabIndex={0}>{["Autoritative Quelle","Prüfung","Schwärzung","Freigabe","Publikationsprojektion","Korrektur oder Ersetzung"].map((step) => <li key={step}>{step}</li>)}</ol>
+      <ol
+        aria-label="Schritte der kontrollierten Veröffentlichung"
+        className="publication-flow"
+        tabIndex={0}
+      >
+        {[
+          "Autoritative Quelle",
+          "Prüfung",
+          "Schwärzung",
+          "Freigabe",
+          "Publikationsprojektion",
+          "Korrektur oder Ersetzung",
+        ].map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
       <div className="board-grid" aria-label="Transparenzbereiche">
-        <article><h3>Politik &amp; Entscheidungen</h3><p>Beschlüsse, Initiativen und öffentliche Entscheidungsnachweise erscheinen ausschließlich als freigegebene Projektionen.</p></article>
-        <article><h3>Finanzen &amp; Dokumente</h3><p>Nur geprüfte, gegebenenfalls geschwärzte und versionierte öffentliche Renditionen werden dargestellt.</p></article>
-        <article><h3>Technologie &amp; Civic OS</h3><p>Verifikationsrelevante Nachweise bleiben prüfbar; Betriebs- oder Sicherheitsreife wird nicht aus einer Projektion abgeleitet.</p></article>
+        <article>
+          <h3>Politik &amp; Entscheidungen</h3>
+          <p>
+            Beschlüsse, Initiativen und öffentliche Entscheidungsnachweise erscheinen
+            ausschließlich als freigegebene Projektionen.
+          </p>
+        </article>
+        <article>
+          <h3>Finanzen &amp; Dokumente</h3>
+          <p>
+            Nur geprüfte, gegebenenfalls geschwärzte und versionierte öffentliche
+            Renditionen werden dargestellt.
+          </p>
+        </article>
+        <article>
+          <h3>Technologie &amp; Civic OS</h3>
+          <p>
+            Verifikationsrelevante Nachweise bleiben prüfbar; Betriebs- oder
+            Sicherheitsreife wird nicht aus einer Projektion abgeleitet.
+          </p>
+        </article>
       </div>
-      <article className="sample-card" data-projection-state="stale"><strong>Beispielzustand: Projektion veraltet</strong><p>Die letzte freigegebene Rendition bleibt als veraltet markiert, bis eine neue geprüfte Version veröffentlicht wird.</p></article>
+      <article className="sample-card" data-projection-state="stale">
+        <strong>Beispielzustand: Projektion veraltet</strong>
+        <p>
+          Die letzte freigegebene Rendition bleibt als veraltet markiert, bis eine
+          neue geprüfte Version veröffentlicht wird.
+        </p>
+      </article>
     </section>
   );
 }
 
 function Boards() {
-  const initiativeStatuses = ["accepted","awaiting_assignment","planned","in_progress","partially_completed","blocked","delayed","completed","verified","closed","not_implemented"];
-  return <section className="public-section" aria-labelledby="boards"><p className="section-kicker">Read-only Erklärung</p><h2 id="boards">Öffentliche Fortschrittsboards</h2><div className="board-grid"><article><h3>Accepted Initiatives Board</h3><p>Verantwortung, Maßnahmen, Termine, Hindernisse, Nachweise und Historie.</p><div className="tag-cloud">{initiativeStatuses.map((status) => <span key={status}>{status}</span>)}</div></article><article><h3>Program Progress Board</h3><p>Programmzusage, politische Aktivitäten, Fortschritt, Nachweise und Abweichungen zwischen Programm und tatsächlichem Handeln.</p></article></div></section>;
+  const initiativeStatuses = [
+    "accepted",
+    "awaiting_assignment",
+    "planned",
+    "in_progress",
+    "partially_completed",
+    "blocked",
+    "delayed",
+    "completed",
+    "verified",
+    "closed",
+    "not_implemented",
+  ];
+  return (
+    <section className="public-section" aria-labelledby="boards">
+      <p className="section-kicker">Read-only Erklärung</p>
+      <h2 id="boards">Öffentliche Fortschrittsboards</h2>
+      <div className="board-grid">
+        <article>
+          <h3>Accepted Initiatives Board</h3>
+          <p>Verantwortung, Maßnahmen, Termine, Hindernisse, Nachweise und Historie.</p>
+          <div className="tag-cloud">
+            {initiativeStatuses.map((status) => (
+              <span key={status}>{status}</span>
+            ))}
+          </div>
+        </article>
+        <article>
+          <h3>Program Progress Board</h3>
+          <p>
+            Programmzusage, politische Aktivitäten, Fortschritt, Nachweise und
+            Abweichungen zwischen Programm und tatsächlichem Handeln.
+          </p>
+        </article>
+      </div>
+    </section>
+  );
 }
 
-function KindSpecific({ kind }: Pick<PublicPage, "kind">) {
+function RegionalHub() {
+  return (
+    <section className="public-section" aria-labelledby="regional-hub">
+      <p className="section-kicker">
+        Strukturbeispiel · keine autoritative Regionalprojektion
+      </p>
+      <h2 id="regional-hub">Regionaler Hub</h2>
+      <nav aria-label="Regionale Bereiche" className="tabs">
+        {[
+          "Übersicht",
+          "Aktuelles",
+          "Termine",
+          "Initiativen",
+          "Personen",
+          "Wahlen",
+          "Dokumente & Transparenz",
+          "Kontakt",
+        ].map((label) => (
+          <a href="#regional-hub" key={label}>
+            {label}
+          </a>
+        ))}
+      </nav>
+      <div className="public-note" role="status">
+        Organisation-Scope: Beispielregion. Dieser Fixture setzt keine Mitgliedschaft,
+        Zuständigkeit oder Berechtigung.
+      </div>
+    </section>
+  );
+}
+
+function KindSpecific({ kind, id }: Pick<PublicPage, "kind" | "id">) {
   if (kind === "program" || kind === "program-section") return <ProgramSkeleton />;
   if (kind === "initiative") return <InitiativeLifecycle />;
   if (kind === "voting") return <VotingBoundary />;
   if (kind === "transparency") return <TransparencyFlow />;
   if (kind === "boards") return <Boards />;
-  if (kind === "regional-hub") return <section className="public-section" aria-labelledby="regional-hub"><p className="section-kicker">Strukturbeispiel · keine autoritative Regionalprojektion</p><h2 id="regional-hub">Regionaler Hub</h2><nav aria-label="Regionale Bereiche" className="tabs">{["Übersicht","Aktuelles","Termine","Initiativen","Personen","Wahlen","Dokumente & Transparenz","Kontakt"].map((label) => <a href="#regional-hub" key={label}>{label}</a>)}</nav><div className="public-note" role="status">Organisation-Scope: Beispielregion. Dieser Fixture setzt keine Mitgliedschaft, Zuständigkeit oder Berechtigung.</div></section>;
+  if (id === "FRONT02-REGION-FIXTURE") return <RegionalHub />;
   return null;
 }
 
@@ -141,14 +337,59 @@ export function PublicPageView({ page }: { page: PublicPage }) {
       <PublicHeader />
       <main id="main" tabIndex={-1}>
         <section className="public-hero">
-          <p className="public-eyebrow">{page.eyebrow}</p><h1>{page.title}</h1><p className="public-lead">{page.lead}</p><TranslationStatusNotice />
-          {page.kind === "home" ? <div className="hero-actions"><Link className="button button--primary" href="/programm">Programm verstehen</Link><Link className="button button--secondary" href="/status">Entwicklungsstand</Link></div> : null}
+          <p className="public-eyebrow">{page.eyebrow}</p>
+          <h1>{page.title}</h1>
+          <p className="public-lead">{page.lead}</p>
+          <TranslationStatusNotice />
+          {page.kind === "home" ? (
+            <div className="hero-actions">
+              <Link className="button button--primary" href="/programm">
+                Programm verstehen
+              </Link>
+              <Link className="button button--secondary" href="/status">
+                Entwicklungsstand
+              </Link>
+            </div>
+          ) : null}
         </section>
         <CapabilityStatusBanner page={page} />
         <div className="public-content">
-          {page.sections.map((section) => <section className="public-section" key={section.title}><h2>{section.title}</h2><p>{section.text}</p>{section.items ? <ul>{section.items.map((item) => <li key={item}>{item}</li>)}</ul> : null}</section>)}
-          <KindSpecific kind={page.kind} />
-          {page.kind === "home" ? <section className="capability-index" aria-labelledby="capability-index"><p className="section-kicker">So funktioniert es</p><h2 id="capability-index">Künftige Fähigkeiten, klar gekennzeichnet</h2><div>{[["/initiativen","Initiativen"],["/beratung","Beratung"],["/abstimmungen","Abstimmungen"],["/buergerbuero","Bürgerbüro"],["/abgeordnetentisch","Abgeordnetentisch"],["/finanzen","Finanzen"],["/fortschritt","Fortschritt"]].map(([href,label]) => <Link href={href} key={href}>{label}<span>Konzept ansehen →</span></Link>)}</div></section> : null}
+          {page.sections.map((section) => (
+            <section className="public-section" key={section.title}>
+              <h2>{section.title}</h2>
+              <p>{section.text}</p>
+              {section.items ? (
+                <ul>
+                  {section.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ))}
+          <KindSpecific kind={page.kind} id={page.id} />
+          {page.kind === "home" ? (
+            <section className="capability-index" aria-labelledby="capability-index">
+              <p className="section-kicker">So funktioniert es</p>
+              <h2 id="capability-index">Künftige Fähigkeiten, klar gekennzeichnet</h2>
+              <div>
+                {[
+                  ["/initiativen", "Initiativen"],
+                  ["/beratung", "Beratung"],
+                  ["/abstimmungen", "Abstimmungen"],
+                  ["/buergerbuero", "Bürgerbüro"],
+                  ["/abgeordnetentisch", "Abgeordnetentisch"],
+                  ["/finanzen", "Finanzen"],
+                  ["/fortschritt", "Fortschritt"],
+                ].map(([href, label]) => (
+                  <Link href={href} key={href}>
+                    {label}
+                    <span>Konzept ansehen →</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
       <PublicFooter />
