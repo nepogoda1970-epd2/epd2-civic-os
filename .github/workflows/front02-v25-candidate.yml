@@ -1,0 +1,164 @@
+name: FRONT02 V25 Candidate Verification
+
+on:
+  push:
+    branches:
+      - work/front02-v25-correction-20260829
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare evidence and exact V25 bootstrap
+        shell: bash
+        run: |
+          mkdir -p verification/front02
+          {
+            echo "HEAD=$(git rev-parse HEAD)"
+            echo "V25_BASE=8dfd0dbea6056fef4e3a446e348e062afd4c4137"
+            node --version
+            npm --version
+            python --version
+            sha256sum docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
+            sha256sum docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+            sha256sum docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          } | tee verification/front02/00-bootstrap.log
+          test "$(sha256sum docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | cut -d' ' -f1)" = "9dce1aafdeac73ea1140a901ffc86e65bb51d628311ba121bfc5c711fb3eeccf"
+          test "$(sha256sum docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md | cut -d' ' -f1)" = "895cf4186b88da74721f95d07ccdd6102a339a80d95ed19701e1695f5f7b4934"
+
+      - name: Apply final source reconciliation and format frontend
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/web-shell/components/public-site.tsx')
+          s=p.read_text()
+          s=s.replace('function KindSpecific({ kind }: Pick<PublicPage, "kind">) {', 'function KindSpecific({ kind, id }: Pick<PublicPage, "kind" | "id">) {')
+          s=s.replace('if (kind === "regional-hub") {', 'if (id === "FRONT02-REGION-FIXTURE") {')
+          s=s.replace('<KindSpecific kind={page.kind} />', '<KindSpecific kind={page.kind} id={page.id} />')
+          p.write_text(s)
+          PY
+          npm ci 2>&1 | tee verification/front02/01-npm-ci.log
+          npm run format --workspace=frontend/web-shell 2>&1 | tee verification/front02/02-format.log
+          npm run format:check --workspace=frontend/web-shell 2>&1 | tee verification/front02/03-prettier-check.log
+
+      - name: ESLint
+        run: npm run lint --workspace=frontend/web-shell 2>&1 | tee verification/front02/04-eslint.log
+
+      - name: TypeScript
+        run: npm run typecheck --workspace=frontend/web-shell 2>&1 | tee verification/front02/05-typecheck.log
+
+      - name: Unit and render tests
+        run: npm run test --workspace=frontend/web-shell 2>&1 | tee verification/front02/06-unit-render.log
+
+      - name: Production build
+        run: npm run build --workspace=frontend/web-shell 2>&1 | tee verification/front02/07-build.log
+
+      - name: Generate FRONT-02 acceptance screenshots
+        run: |
+          npm exec --workspace=frontend/web-shell -- playwright test tests/browser/front02.browser.spec.ts --grep @visual --update-snapshots 2>&1 | tee verification/front02/08-front02-screenshot-generation.log
+
+      - name: Re-render FRONT-01 baselines and compare with candidate 0.1 immutable hashes
+        shell: bash
+        run: |
+          npm exec --workspace=frontend/web-shell -- playwright test tests/browser/front01.browser.spec.ts --grep @visual --update-snapshots 2>&1 | tee verification/front02/09-front01-regenerate.log
+          sha256sum -c docs/handover/FRONT-02-CANDIDATE-0.1-FRONT01-SNAPSHOT-SHA256.txt 2>&1 | tee verification/front02/10-front01-regression-hashes.log
+
+      - name: Dedicated FRONT-02 browser acceptance
+        run: npm exec --workspace=frontend/web-shell -- playwright test tests/browser/front02.browser.spec.ts 2>&1 | tee verification/front02/11-front02-browser.log
+
+      - name: Accessibility gate
+        run: npm run test:a11y --workspace=frontend/web-shell 2>&1 | tee verification/front02/12-accessibility.log
+
+      - name: Full browser and visual regression
+        run: npm run test:browser --workspace=frontend/web-shell 2>&1 | tee verification/front02/13-full-browser.log
+
+      - name: Repository governance checks
+        shell: bash
+        run: |
+          python scripts/check_repository.py 2>&1 | tee verification/front02/14-check-repository.log
+          python scripts/check_forbidden_files.py 2>&1 | tee verification/front02/15-check-forbidden.log
+          python scripts/verify_versions.py 2>&1 | tee verification/front02/16-verify-versions.log
+
+      - name: Candidate report and inventory
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, os
+          root=Path('.')
+          ev=Path('verification/front02')
+          ev.mkdir(parents=True, exist_ok=True)
+          status='FRONT-02 IMPLEMENTATION CANDIDATE / NOT ACCEPTED'
+          report=f'''# EPD² FRONT-02 Corrected Implementation Candidate Report\n\n**Status:** `{status}`  \n**Independent acceptance:** required; not claimed.  \n**V25 base:** `8dfd0dbea6056fef4e3a446e348e062afd4c4137`  \n**PCR SHA-256:** `9dce1aafdeac73ea1140a901ffc86e65bb51d628311ba121bfc5c711fb3eeccf`  \n**Master V25 SHA-256:** `895cf4186b88da74721f95d07ccdd6102a339a80d95ed19701e1695f5f7b4934`\n\nThe candidate preserves the existing FRONT-02 implementation, reconciles it losslessly onto V25, adds dedicated FRONT-02 browser/accessibility/visual acceptance coverage, and keeps FRONT-00/01 as the visual baseline. Raw command logs are in `verification/front02/`. A successful self-verification does not constitute independent acceptance.\n'''
+          Path('docs/handover/FRONT-02-IMPLEMENTATION-CANDIDATE-REPORT.md').write_text(report)
+          files=[]
+          for p in sorted(root.rglob('*')):
+            if not p.is_file(): continue
+            s=p.as_posix()
+            if any(part in p.parts for part in ['.git','node_modules','.next','test-results','playwright-report','.ruff_cache','__pycache__']): continue
+            files.append({'path':s,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'size':p.stat().st_size})
+          (ev/'17-evidence-inventory.json').write_text(json.dumps({'status':status,'files':files},indent=2))
+          PY
+
+      - name: Package exact corrected candidate
+        if: success()
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil, zipfile, hashlib
+          src=Path('.')
+          stage=Path('/tmp/front02-package/repo')
+          if stage.parent.exists(): shutil.rmtree(stage.parent)
+          excludes={'.git','node_modules','.next','test-results','playwright-report','.ruff_cache','__pycache__'}
+          for p in src.rglob('*'):
+            if not p.is_file() or any(x in p.parts for x in excludes): continue
+            q=stage/p
+            q.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(p,q)
+          out=Path('EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.2_V25_2026-08-29.zip')
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for p in sorted(stage.parent.rglob('*')):
+              if p.is_file(): z.write(p,p.relative_to(stage.parent).as_posix())
+          digest=hashlib.sha256(out.read_bytes()).hexdigest()
+          Path(str(out)+'.sha256').write_text(f'{digest}  {out.name}\n')
+          print(digest, out)
+          PY
+
+      - name: Upload evidence on every run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: front02-v25-verification-evidence
+          path: |
+            verification/front02/**
+            frontend/web-shell/tests/browser/front02.browser.spec.ts-snapshots/**
+          if-no-files-found: warn
+
+      - name: Upload corrected candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: front02-v25-corrected-candidate
+          path: |
+            EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.2_V25_2026-08-29.zip
+            EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.2_V25_2026-08-29.zip.sha256
