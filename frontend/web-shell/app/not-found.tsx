@@ -9,7 +9,7 @@ export default function NotFound() {
         title="Seite nicht gefunden"
         description="Die angeforderte öffentliche Seite ist nicht verfügbar."
       />
-      <Notice kind="info" title="Keine Datensatzaussage">
+      <Notice kind="information" title="Keine Datensatzaussage">
         Dieser 404-Zustand bestätigt nicht, ob ein geschützter Datensatz existiert.
       </Notice>
       <p>
