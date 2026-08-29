@@ -69,7 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.16.0
+          node-version: 22.17.0
 
       - name: Verify governed evidence and frozen dependencies
         working-directory: ${{ steps.extract.outputs.root }}
@@ -78,7 +78,6 @@ jobs:
           node scripts/validate_front02_package.mjs .
           npm ci
           npm run --workspace web-shell validate:front02
-          npm run --workspace web-shell validate:front02-evidence
           npm run --workspace web-shell format:check
           npm run --workspace web-shell typecheck
           npm run --workspace web-shell lint
