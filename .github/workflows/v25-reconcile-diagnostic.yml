@@ -1,0 +1,14 @@
+name: v25-reconcile-diagnostic
+on:
+  push:
+    branches: [tmp/v25-reconcile-20260829]
+permissions:
+  contents: read
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python .v25build/build_v25.py
