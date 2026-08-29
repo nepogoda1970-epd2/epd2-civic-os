@@ -1,0 +1,36 @@
+.logo strong {
+  display: block;
+  line-height: 1;
+}
+.logo span {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+}
+.language-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.language-selector a {
+  min-height: 2.1rem;
+  padding: 0.25rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+.language-selector a[aria-current="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+}

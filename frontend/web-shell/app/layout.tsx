@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import "./front02.css";
 
 export const metadata: Metadata = {
   title: "EPD² — politische Beteiligung nachvollziehbar aufgebaut",
