@@ -61,7 +61,7 @@ export function WorkspaceAcceptancePage({
         </RestrictedContentNotice>
       ) : null}
       {workspaceId === "WS-10" ? (
-        <Notice kind="info" title="Publikationsprojektion">
+        <Notice kind="information" title="Publikationsprojektion">
           WS-10 zeigt ausschließlich freigegebene öffentliche Renditionen mit
           Herkunft, Version, Korrektur- und Ersetzungszustand.
         </Notice>
@@ -114,7 +114,7 @@ export function SystemStateAcceptancePage({
     <WorkspaceShell workspaceId="WS-01">
       <PageHeader title={item.title} description={item.description} />
       <Notice
-        kind={state === "error" ? "warning" : "info"}
+        kind={state === "error" ? "warning" : "information"}
         title="FRONT-02 Systemzustand"
       >
         {item.body}
