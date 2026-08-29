@@ -1,0 +1,88 @@
+name: API-03 R13 external governed review
+
+on:
+  push:
+    branches:
+      - review/api03-r13-external
+    paths:
+      - ".github/workflows/api03-r13-external-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-review:
+    name: Fresh-extract governed verification
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPYCACHEPREFIX: /tmp/epd2-api03-pycache
+    steps:
+      - name: Checkout review baseline
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Locate exactly one incoming candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t archives < <(find handoff/API-03/incoming -maxdepth 1 -type f -name '*.zip' -print | sort)
+          test "${#archives[@]}" -eq 1 || { echo "expected exactly one API-03 incoming ZIP; found ${#archives[@]}" >&2; printf '%s\n' "${archives[@]}" >&2; exit 20; }
+          echo "zip=${archives[0]}" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "${archives[0]}" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: ZIP integrity and forbidden-member gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip="${{ steps.candidate.outputs.zip }}"
+          unzip -t "$zip"
+          ! unzip -Z1 "$zip" | grep -E '(^|/)(\.pytest_cache|__pycache__)(/|$)|\.pyc$'
+
+      - name: Fresh extraction
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir extracted
+          unzip -q "${{ steps.candidate.outputs.zip }}" -d extracted
+          test "$(find extracted -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
+          echo "ROOT=$(find extracted -mindepth 1 -maxdepth 1 -type d)" >> "$GITHUB_ENV"
+
+      - name: Archive hygiene and Windows extraction safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$ROOT/scripts/check_archive_hygiene.py" "${{ steps.candidate.outputs.zip }}"
+          python "$ROOT/scripts/check_windows_path_safety.py" "${{ steps.candidate.outputs.zip }}"
+
+      - name: Exact checksums and cache-free source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ROOT"
+          sha256sum -c SHA256SUMS.txt
+          python scripts/check_forbidden_files.py
+          python scripts/check_repository.py
+          python scripts/verify_versions.py
+
+      - name: API-03 full V24 governed validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$ROOT"
+          python scripts/validate_api03.py --output /tmp/api03-r13-validator.json
+          python scripts/api03_verify_r12_v24.py
+
+      - name: Publish independent review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api03-r13-external-review-${{ github.run_id }}
+          path: |
+            /tmp/api03-r13-validator.json
+            extracted/*/validation/api03/validator_result.json
+          if-no-files-found: warn
+          retention-days: 30
