@@ -1,0 +1,60 @@
+name: v25-reconcile-build
+
+on:
+  push:
+    branches:
+      - tmp/v25-reconcile-20260829
+
+permissions:
+  contents: write
+
+jobs:
+  build-v25:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staging branch with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build and verify lossless V25 governance
+        run: |
+          set -euo pipefail
+          python .v25build/build_v25.py | tee /tmp/v25-build.txt
+          grep -q '^V25_RECONCILIATION=PASS$' /tmp/v25-build.txt
+          python - <<'PY'
+          import hashlib, json, pathlib, re
+          master = pathlib.Path('docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md').read_bytes()
+          pcr = pathlib.Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          rec = json.loads(pathlib.Path('docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json').read_text())
+          h = hashlib.sha256(master).hexdigest()
+          assert rec['status'] == 'PASS'
+          assert rec['result']['master_sha256'] == h
+          assert h in pcr
+          assert rec['result']['missing_after_merge'] == []
+          assert rec['result']['duplicate_active_ids'] == []
+          assert rec['result']['extra_after_merge'] == []
+          assert all(rec['result']['required_presence'].values())
+          assert pcr.count('Current Master maintenance level established by project governance work: **V25**') == 1
+          assert pcr.count('**Governance reconciliation V25 (2026-08-29):**') == 1
+          ids = re.findall(rb'^##\s+(FIR-[A-Z0-9_*.-]+)\b', master, flags=re.M)
+          assert len(ids) == len(set(ids)) == rec['result']['v25_unique_firs']
+          print('V25_POSTBUILD_VERIFY=PASS')
+          print('V25_MASTER_SHA256=' + h)
+          PY
+
+      - name: Commit only canonical governance outputs
+        run: |
+          set -euo pipefail
+          git config user.name 'epd2-governance-bot'
+          git config user.email 'governance@epd2.invalid'
+          rm -rf .v25build
+          rm -f .github/workflows/v25-reconcile-build.yml
+          git add docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+                  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+                  docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json
+          git add -u .v25build .github/workflows/v25-reconcile-build.yml || true
+          git diff --cached --check
+          git status --short
+          git commit -m 'governance: reconcile master lineage as V25'
+          git push origin HEAD:tmp/v25-reconcile-20260829
