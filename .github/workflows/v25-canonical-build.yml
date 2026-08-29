@@ -22,7 +22,17 @@ jobs:
       - name: Build and verify V25 from exact lineages
         run: |
           set -euo pipefail
-          cat .v25build/patchparts20k/part* > .v25build/v23_to_c5.patch.xz.b64
+          head -c 20000 .v25build/patchparts20k/part06 > /tmp/part06.exact
+          cat .v25build/patchparts20k/part00 \
+              .v25build/patchparts20k/part01 \
+              .v25build/patchparts20k/part02 \
+              .v25build/patchparts20k/part03 \
+              .v25build/patchparts20k/part04 \
+              .v25build/patchparts20k/part05 \
+              /tmp/part06.exact \
+              .v25build/patchparts20k/part07 > .v25build/v23_to_c5.patch.xz.b64
+          test "$(wc -c < .v25build/v23_to_c5.patch.xz.b64)" -eq 152812
+          echo "0fa3ce6842a2a7c54de68ccf51439744c4bc7ac8724c0e2931b157f73f9f2faf  .v25build/v23_to_c5.patch.xz.b64" | sha256sum -c -
           python .v25build/build_v25.py | tee /tmp/v25-build.log
           grep -qx 'V25_RECONCILIATION=PASS' /tmp/v25-build.log
           mkdir -p /tmp/v25out
