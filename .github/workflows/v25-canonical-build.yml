@@ -19,30 +19,35 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Build and verify V25 from exact lineages
+      - name: Reconstruct exact C5 delta and build V25
         run: |
           set -euo pipefail
-          EXPECT=0fa3ce6842a2a7c54de68ccf51439744c4bc7ac8724c0e2931b157f73f9f2faf
-          PREFIX=/tmp/v25-prefix
-          cat .v25build/patchparts20k/part00 \
-              .v25build/patchparts20k/part01 \
-              .v25build/patchparts20k/part02 \
-              .v25build/patchparts20k/part03 \
-              .v25build/patchparts20k/part04 \
-              .v25build/patchparts20k/part05 > "$PREFIX"
-          head -c 20000 .v25build/patchparts20k/part06 > /tmp/part06.head
-          tail -c 20000 .v25build/patchparts20k/part06 > /tmp/part06.tail
-          cat "$PREFIX" /tmp/part06.head .v25build/patchparts20k/part07 > /tmp/candidate.head
-          cat "$PREFIX" /tmp/part06.tail .v25build/patchparts20k/part07 > /tmp/candidate.tail
-          H1="$(sha256sum /tmp/candidate.head | awk '{print $1}')"
-          H2="$(sha256sum /tmp/candidate.tail | awk '{print $1}')"
-          echo "HEAD_CANDIDATE_SHA256=$H1"
-          echo "TAIL_CANDIDATE_SHA256=$H2"
-          if [ "$H1" = "$EXPECT" ]; then cp /tmp/candidate.head .v25build/v23_to_c5.patch.xz.b64; 
-          elif [ "$H2" = "$EXPECT" ]; then cp /tmp/candidate.tail .v25build/v23_to_c5.patch.xz.b64; 
-          else echo 'No exact transport candidate matched expected SHA-256' >&2; exit 1; fi
-          test "$(wc -c < .v25build/v23_to_c5.patch.xz.b64)" -eq 152812
-          echo "$EXPECT  .v25build/v23_to_c5.patch.xz.b64" | sha256sum -c -
+          python - <<'PY'
+          import hashlib, pathlib
+          root=pathlib.Path('.v25build/patchparts20k')
+          pre=b''.join((root/f'part{i:02d}').read_bytes() for i in range(6))
+          bad=(root/'part06').read_bytes()
+          suffix=(root/'part07').read_bytes()
+          expect='0fa3ce6842a2a7c54de68ccf51439744c4bc7ac8724c0e2931b157f73f9f2faf'
+          assert len(pre)==120000, len(pre)
+          assert len(bad)==20698, len(bad)
+          assert len(suffix)==12812, len(suffix)
+          found=None
+          # part06 should be 20,000 bytes; locate a single 698-byte accidental insertion by checksum.
+          for i in range(20001):
+              p6=bad[:i]+bad[i+698:]
+              candidate=pre+p6+suffix
+              if hashlib.sha256(candidate).hexdigest()==expect:
+                  found=(i,candidate)
+                  break
+          if found is None:
+              raise SystemExit('No contiguous 698-byte deletion reconstructs the expected exact C5 delta transport')
+          i,candidate=found
+          pathlib.Path('.v25build/v23_to_c5.patch.xz.b64').write_bytes(candidate)
+          print(f'PATCH_REPAIR_DELETE_OFFSET={i}')
+          print('PATCH_TRANSPORT_SHA256='+hashlib.sha256(candidate).hexdigest())
+          print('PATCH_TRANSPORT_LENGTH='+str(len(candidate)))
+          PY
           python .v25build/build_v25.py | tee /tmp/v25-build.log
           grep -qx 'V25_RECONCILIATION=PASS' /tmp/v25-build.log
           mkdir -p /tmp/v25out
@@ -55,8 +60,10 @@ jobs:
           p=pathlib.Path('/tmp/v25out/pcr.md').read_text()
           r=json.loads(pathlib.Path('/tmp/v25out/reconciliation.json').read_text())
           mh=hashlib.sha256(m).hexdigest()
+          ph=hashlib.sha256(pathlib.Path('/tmp/v25out/pcr.md').read_bytes()).hexdigest()
           assert r['status']=='PASS'
           assert r['result']['master_sha256']==mh
+          assert r['result']['pcr_sha256']==ph
           assert mh in p
           assert r['result']['missing_after_merge']==[]
           assert r['result']['extra_after_merge']==[]
@@ -65,14 +72,18 @@ jobs:
           assert all(r['result']['required_presence'].values())
           ids=re.findall(rb'^##\s+(FIR-[A-Z0-9_*.-]+)\b',m,flags=re.M)
           assert len(ids)==len(set(ids))==241
+          for x in [b'FIR-OSS-007',b'FIR-UX-012',b'FIR-UX-013',b'FIR-AI-003',b'FIR-GOV-004',b'FIR-GOV-005',b'FIR-SEC-004',b'FIR-TRUST-002',b'FIR-TRUST-003']:
+              assert x in m
           print('PRECOMMIT_MASTER_SHA256='+mh)
-          print('PRECOMMIT_PCR_SHA256='+hashlib.sha256(pathlib.Path('/tmp/v25out/pcr.md').read_bytes()).hexdigest())
+          print('PRECOMMIT_PCR_SHA256='+ph)
+          print('PRECOMMIT_V25_FIRS=241')
           PY
 
       - name: Create clean one-commit V25 branch directly from current main
         run: |
           set -euo pipefail
           BASE=007b5d71cf5a54e417cbd5647a35a57098ead186
+          test "$(git rev-parse origin/main)" = "$BASE"
           git checkout --detach "$BASE"
           git switch -C tmp/v25-canonical-20260829
           cp /tmp/v25out/master.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
