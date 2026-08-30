@@ -16,9 +16,8 @@ jobs:
           set -euo pipefail
           ROOT=/tmp/front03-r2
           rm -rf "$ROOT" /tmp/front02.zip
-          curl --fail --location --retry 4 --retry-delay 2 \
-            'https://raw.githubusercontent.com/nepogoda1970-epd2/epd2-civic-os/handoff/front/handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip' \
-            -o /tmp/front02.zip
+          git fetch --depth=1 origin refs/heads/handoff/front
+          git show FETCH_HEAD:handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip > /tmp/front02.zip
           echo 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179  /tmp/front02.zip' | sha256sum -c -
           test "$(stat -c %s /tmp/front02.zip)" = '15504858'
           mkdir -p "$ROOT"
