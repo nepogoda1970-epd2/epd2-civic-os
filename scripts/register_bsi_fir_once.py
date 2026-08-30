@@ -147,7 +147,7 @@ def main() -> None:
         raise SystemExit("REFUSE: duplicate FIR-BSI-001 already exists")
 
     if MARKER not in text:
-        text = text.rstrip() + BLOCK + "\n"
+        text = text.rstrip() + BLOCK.rstrip() + "\n"
         MASTER.write_text(text, encoding="utf-8", newline="\n")
 
     after = MASTER.read_bytes()
