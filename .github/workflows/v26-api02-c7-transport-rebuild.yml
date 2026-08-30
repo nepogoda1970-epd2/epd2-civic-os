@@ -1,0 +1,103 @@
+name: v26-api02-c7-transport-rebuild
+
+on:
+  push:
+    branches:
+      - tmp/v26-api02-c7-transport-rebuild
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract exact V26 authority bytes and build transport variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          AUTH=8ff32c3e9ed654768ae86ac569a9c498f78c5aa2
+          OUT="$RUNNER_TEMP/v26transport"
+          rm -rf "$OUT" && mkdir -p "$OUT/root/docs/roadmap" "$OUT/root/docs/security/bsi" "$OUT/zips"
+
+          paths=(
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+            docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md
+            docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md
+            docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md
+          )
+          for p in "${paths[@]}"; do
+            git show "$AUTH:$p" > "$OUT/root/$p"
+          done
+
+          test ! -e "$OUT/root/docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md"
+          echo '=== EXACT FILE SHA256 ==='
+          (cd "$OUT/root" && sha256sum "${paths[@]}")
+          echo '=== FILE SIZES ==='
+          (cd "$OUT/root" && wc -c "${paths[@]}")
+
+          python - "$OUT" <<'PY'
+          from __future__ import annotations
+          import hashlib, os, pathlib, shutil, subprocess, sys, zipfile
+          out=pathlib.Path(sys.argv[1]); root=out/'root'; zdir=out/'zips'
+          paths=[
+            'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md',
+            'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',
+            'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md',
+            'docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json',
+            'docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md',
+            'docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md',
+            'docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md',
+          ]
+          name='EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip'
+          target='9ab287e078cda548dc2a16697f7423d98c93d61ed185b6957054c8577665cc17'
+          def digest(p): return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+          def build_py(filename, prefix='', compression=zipfile.ZIP_DEFLATED, level=9, dt=(1980,1,1,0,0,0), unix=True):
+              p=zdir/filename
+              with zipfile.ZipFile(p,'w',compression=compression,compresslevel=level if compression==zipfile.ZIP_DEFLATED else None,strict_timestamps=True) as z:
+                  for rel in paths:
+                      zi=zipfile.ZipInfo(prefix+rel,dt)
+                      zi.compress_type=compression
+                      if unix:
+                          zi.create_system=3; zi.external_attr=(0o100644 << 16)
+                      z.writestr(zi,(root/rel).read_bytes(),compress_type=compression,compresslevel=level if compression==zipfile.ZIP_DEFLATED else None)
+              return p
+          variants=[]
+          variants.append(build_py('v_py_deflate9_flat_1980.zip'))
+          variants.append(build_py('v_py_store_flat_1980.zip',compression=zipfile.ZIP_STORED,level=0))
+          variants.append(build_py('v_py_deflate9_root_1980.zip',prefix='EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e/'))
+          variants.append(build_py('v_py_deflate9_flat_commitdt.zip',dt=(2026,8,30,1,27,34)))
+          variants.append(build_py('v_py_deflate9_root_commitdt.zip',prefix='EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e/',dt=(2026,8,30,1,27,34)))
+          # System zip variants. -X strips extra attributes. Normalize mtimes before each.
+          for stamp,label,prefix in [('198001010000','1980',''),('202608300127.34','commitdt','')]:
+              subprocess.run(['find',str(root),'-type','f','-exec','touch','-t',stamp,'{}','+'],check=True)
+              p=zdir/f'v_zipX9_flat_{label}.zip'
+              cmd=['zip','-X','-9',str(p),*paths]
+              subprocess.run(cmd,cwd=root,check=True,stdout=subprocess.DEVNULL)
+              variants.append(p)
+          for p in variants:
+              h=digest(p); print(f'VARIANT {p.name} {p.stat().st_size} {h}'+(' MATCH' if h==target else ''))
+              if h==target:
+                  shutil.copy2(p,zdir/name)
+          if not (zdir/name).exists():
+              # Still publish a clean deterministic transport for diagnosis; exact expected match remains separately enforced by consumer.
+              shutil.copy2(zdir/'v_py_deflate9_flat_1980.zip',zdir/'REBUILT_NONMATCHING_'+name)
+          PY
+
+          echo '=== ZIP SHA256 ==='
+          sha256sum "$OUT"/zips/*.zip
+
+      - name: Upload transport rebuilds
+        uses: actions/upload-artifact@v4
+        with:
+          name: v26-api02-c7-transport-rebuilds
+          path: ${{ runner.temp }}/v26transport/zips/*.zip
+          if-no-files-found: error
+          compression-level: 0
