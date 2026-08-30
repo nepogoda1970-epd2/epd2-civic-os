@@ -1,0 +1,40 @@
+name: BSI V26 PCR date correction
+
+on:
+  push:
+    branches:
+      - governance/bsi-vote-readiness-final
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: governance/bsi-vote-readiness-final
+      - name: Correct PCR update date
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          text = p.read_text(encoding='utf-8')
+          old = '**Updated:** 2026-08-29'
+          new = '**Updated:** 2026-08-30'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one PCR date marker, got {text.count(old)}')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          grep -F '**Updated:** 2026-08-30' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+      - name: Commit correction
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m 'governance(bsi): correct V26 PCR update date'
+          git push origin HEAD:governance/bsi-vote-readiness-final
