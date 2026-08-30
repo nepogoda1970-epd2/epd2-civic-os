@@ -2,7 +2,7 @@
 
 **Status:** Living canonical execution-state register  
 **Location:** `docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md`  
-**Updated:** 2026-08-29  
+**Updated:** 2026-08-30  
 **Purpose:** single authoritative source for the current execution state of the EPD² development program.
 
 This register answers what is closed, active, next, blocked, permitted in parallel, and which governed candidate/evidence currently controls each active line. It does not replace the Master Future Implementation Register.
