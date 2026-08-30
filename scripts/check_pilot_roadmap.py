@@ -39,12 +39,9 @@ PILOT03_REQUIRED_CAPABILITIES = {
 }
 
 PILOT02_C4_FILENAME = (
-    "EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_"
-    "CANDIDATE_0.51.2_C4.zip"
+    "EPD2_PILOT02_PUBLIC_SITE_INTEGRATION_AND_UNIFIED_PILOT_PRODUCT_CANDIDATE_0.51.2_C4.zip"
 )
-PILOT02_C4_SHA256 = (
-    "261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e"
-)
+PILOT02_C4_SHA256 = "261ab0996659f453d3d6d3cf43e12ad105fa6dbacd5035de40ca949029cbfc3e"
 SCOPE_MANIFEST = "docs/roadmap/PILOT_STAGE_SCOPE.json"
 LOCK_SCHEMA = "epd2.pilot-roadmap-lock/1"
 
@@ -86,8 +83,7 @@ def validate_lock(lock: dict) -> None:
 
     superseded = lock.get("superseded_guidance") or []
     if not any(
-        x.get("path_inside_artifact")
-        == "docs/pilot/PILOT-02/25_NEXT_GATE_RECOMMENDATION.md"
+        x.get("path_inside_artifact") == "docs/pilot/PILOT-02/25_NEXT_GATE_RECOMMENDATION.md"
         and x.get("source_artifact_sha256") == PILOT02_C4_SHA256
         for x in superseded
     ):
@@ -146,10 +142,7 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
     stage_title = manifest.get("stage_title")
 
     if stage_id != filename_stage:
-        fail(
-            f"filename/manifest stage mismatch: filename={filename_stage}, "
-            f"manifest={stage_id}"
-        )
+        fail(f"filename/manifest stage mismatch: filename={filename_stage}, manifest={stage_id}")
     if stage_id not in FROZEN_STAGES:
         fail(f"unknown or unlocked stage: {stage_id}")
     if stage_title != FROZEN_STAGES[stage_id]:
@@ -188,9 +181,7 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
         )
         active_stage_prefix = f"{root}/docs/pilot/{stage_id}/"
         relevant_docs = [
-            n
-            for n in names
-            if n.startswith(active_stage_prefix) and n.lower().endswith(".md")
+            n for n in names if n.startswith(active_stage_prefix) and n.lower().endswith(".md")
         ]
         with zipfile.ZipFile(zip_path) as zf:
             for name in relevant_docs:
@@ -200,13 +191,9 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
                     continue
                 for marker in stale_markers:
                     if marker in text:
-                        fail(
-                            f"stale/wrong PILOT-03 scope marker {marker!r} found in {name}"
-                        )
+                        fail(f"stale/wrong PILOT-03 scope marker {marker!r} found in {name}")
 
-    print(
-        f"PILOT roadmap scope PASS: {zip_path.name} -> {stage_id} / {stage_title}"
-    )
+    print(f"PILOT roadmap scope PASS: {zip_path.name} -> {stage_id} / {stage_title}")
 
 
 def main() -> int:
