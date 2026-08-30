@@ -1,27 +1,145 @@
-name: front03-r2-governance-export
+name: front03-r2-developer-ci
 on:
   push:
     branches: [work/front03-r2-ci]
+permissions:
+  contents: read
 jobs:
-  export:
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Verify head and governance
+      - name: Reconstruct exact FRONT-03 R2 candidate tree
+        shell: bash
         run: |
-          git rev-parse HEAD
-          sha256sum docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
-            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
-            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
-            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md \
-            docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md
-      - uses: actions/upload-artifact@v4
+          set -euo pipefail
+          ROOT=/tmp/front03-r2
+          rm -rf "$ROOT" /tmp/front02.zip
+          curl --fail --location --retry 4 --retry-delay 2 \
+            'https://raw.githubusercontent.com/nepogoda1970-epd2/epd2-civic-os/handoff/front/handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip' \
+            -o /tmp/front02.zip
+          echo 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179  /tmp/front02.zip' | sha256sum -c -
+          test "$(stat -c %s /tmp/front02.zip)" = '15504858'
+          mkdir -p "$ROOT"
+          unzip -q /tmp/front02.zip -d "$ROOT"
+          unzip -q handoff/FRONT/r2-dev/front03-r2-ci-overlay.zip -d "$ROOT"
+          cp docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md "$ROOT/docs/roadmap/"
+          cp docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "$ROOT/docs/roadmap/"
+          cp docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md "$ROOT/docs/roadmap/"
+          cp docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md "$ROOT/docs/roadmap/"
+          cp docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md "$ROOT/docs/roadmap/"
+          cp docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json "$ROOT/docs/roadmap/"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/front03-r2/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          s=p.read_text()
+          lines=s.splitlines()
+          for i,line in enumerate(lines):
+              if line.startswith('| FRONT |'):
+                  lines[i]='| FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE; FRONT-03 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED / NOT_STARTED_FINAL` | FRONT-02 C2.1 is the accepted technical predecessor. FRONT-03 WS-02 may proceed only as parallel PRE-SEAL work; final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |'
+                  break
+          s='\n'.join(lines)+'\n'
+          marker='### PILOT-04 C9 authoritative transition — 2026-08-26'
+          block='''### FRONT-03 PRE-SEAL opening transition — 2026-08-30\n\n- **Technical predecessor:** `FRONT-02 C2.1 = ACCEPTED_IMPLEMENTATION_BASELINE`, exact ZIP SHA-256 `aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179`.\n- **FRONT-03 state:** `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`.\n- **API-02 state:** `ACTIVE / IN DEVELOPMENT`; API-02 remains the primary program position.\n- **FRONT layer:** `NOT CLOSED`; this opening record does not imply acceptance, finalization, production readiness or legal activation.\n- **Execution rule:** FRONT-03 may implement production-shaped WS-02 presentation and typed ports now, but unresolved human authentication/session/assurance runtime remains API-02-owned and fail-closed until exact accepted API-02 reconciliation.\n- **Route governance:** canonical WS-02 prefix for new routes is lowercase `/member`; `/Member/...` may exist only as redirect/compatibility input.\n\n'''
+          if '### FRONT-03 PRE-SEAL opening transition' not in s:
+              s=s.replace(marker, block+marker)
+          p.write_text(s)
+          PY
+          cd "$ROOT"
+          sha256sum docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md
+          python scripts/validate_front03.py --source-only
+          python scripts/run_front03_mutations.py .
+      - name: Clean dependency install and inherited/source quality gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2
+          npm ci
+          npm run --workspace web-shell validate:package
+          npm run --workspace web-shell validate:front02
+          npm run --workspace web-shell format:check
+          npm run --workspace web-shell typecheck
+          npm run --workspace web-shell lint
+          npm run --workspace web-shell test
+      - name: Prove production-like fixture exclusion
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2/frontend/web-shell
+          set +e
+          NODE_ENV=production \
+          EPD2_FRONT03_ADAPTER=fixture-test \
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT=1 \
+          npx tsx -e 'import { resolveFront03AdapterMode } from "./member/adapters.ts"; console.log(resolveFront03AdapterMode(process.env));' \
+            >/tmp/front03-fixture-out.log 2>/tmp/front03-fixture-err.log
+          rc=$?
+          set -e
+          cat /tmp/front03-fixture-out.log || true
+          cat /tmp/front03-fixture-err.log || true
+          test "$rc" -ne 0
+          grep -q 'FRONT03_FIXTURE_NOT_ALLOWED_OUTSIDE_GOVERNED_TEST' /tmp/front03-fixture-err.log
+      - name: Build governed browser runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2
+          EPD2_FRONT03_ADAPTER=fixture-test \
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT=1 \
+          EPD2_FRONT03_TEST_RUNTIME_ID=front03-browser-ci \
+          npm run --workspace web-shell build
+          cd frontend/web-shell
+          EPD2_FRONT03_ADAPTER=fixture-test \
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT=1 \
+          EPD2_FRONT03_TEST_RUNTIME_ID=front03-browser-ci \
+          node tests/start-next.mjs >/tmp/front03-server.log 2>&1 &
+          echo $! >/tmp/front03-server.pid
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3100/member/application >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/front03-server.log
+          exit 1
+      - name: Inherited FRONT browser regression floor
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2/frontend/web-shell
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test \
+            tests/browser/front00.browser.spec.ts \
+            tests/browser/front01.browser.spec.ts \
+            tests/browser/front02.browser.spec.ts \
+            --reporter=line
+      - name: Generate and verify FRONT-03 visual baselines
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2/frontend/web-shell
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test tests/browser/front03.browser.spec.ts \
+            --grep '@visual' --update-snapshots --reporter=line
+          count=$(find tests/browser/front03.browser.spec.ts-snapshots -type f -name 'front03-*.png' | wc -l)
+          echo "FRONT03 visual baseline count=$count"
+          test "$count" -ge 39
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test tests/browser/front03.browser.spec.ts \
+            --grep '@visual' --reporter=line
+      - name: FRONT-03 browser, a11y, keyboard and reflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front03-r2/frontend/web-shell
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test tests/browser/front03.browser.spec.ts --reporter=line
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test tests/browser/front03.browser.spec.ts --grep '@a11y' --reporter=line
+          FRONT00_EXTERNAL_SERVER=1 npx playwright test tests/browser/front03.browser.spec.ts --grep 'keyboard|reflow' --reporter=line
+      - name: Upload probe evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: front03-r2-canonical-governance
+          name: front03-r2-probe-evidence
+          if-no-files-found: warn
           path: |
-            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
-            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
-            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
-            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md
-            docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md
-            docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json
+            /tmp/front03-r2/validation/front03
+            /tmp/front03-r2/frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+            /tmp/front03-r2/frontend/web-shell/test-results
+            /tmp/front03-server.log
+            /tmp/front03-fixture-out.log
+            /tmp/front03-fixture-err.log
