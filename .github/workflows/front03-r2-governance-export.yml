@@ -1,0 +1,27 @@
+name: front03-r2-governance-export
+on:
+  push:
+    branches: [work/front03-r2-ci]
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify head and governance
+        run: |
+          git rev-parse HEAD
+          sha256sum docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md \
+            docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: front03-r2-canonical-governance
+          path: |
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md
+            docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md
+            docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json
