@@ -3,9 +3,7 @@
   "date": "2026-08-29",
   "execution_state_changed": false,
   "result": {
-    "added_from_current_main_vs_c5_merge": [
-      "FIR-OSS-007"
-    ],
+    "added_from_current_main_vs_c5_merge": ["FIR-OSS-007"],
     "c5_merged_unique_firs": 240,
     "carried_only_from_c5_merge_vs_current_main": [
       "FIR-API-001",

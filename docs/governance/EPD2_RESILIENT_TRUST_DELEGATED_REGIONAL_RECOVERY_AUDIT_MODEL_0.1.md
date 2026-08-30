@@ -327,17 +327,17 @@ Regional administration surfaces should also show scoped separation for finance,
 
 ## 16. Implementation placement
 
-| Layer / owner | Required responsibility |
-| --- | --- |
-| Organization/governance | authoritative `OrganizationalAuthority`, exact scope, status, source decision/rule, suspension/revocation/restoration semantics |
-| API | current-state authorization, bounded signed projections where adopted, stale/revoked assertion refusal; exact API-02…06 placement remains stage-contract governed |
-| Service identity/API-03 lineage | compatible trust generations/revocation/replay/audience semantics without allowing service identity to become human/organizational authority |
-| INFRA | HSM/KMS/PKI/trust-store topology, regional trust substrate, redundancy, offline recovery material protection, immutable/WORM audit substrate, external anchor integration |
-| OPS | key/custodian rotation, incident response, quorum-loss recovery, regional isolation operation, RTO/RPO/autonomy policy and rehearsals |
-| CTRL | separate request/approve/execute/review consoles, trust/key status, recovery ceremonies, degraded-mode visibility, audit verification |
-| FRONT | clear authority/session/restriction/degraded-state presentation and no misleading implication that a valid login equals active office |
-| SEC | adversarial testing of issuer escape, stale assertion use, rollback, quorum bypass, containment bypass, recovery abuse, audit deletion/tamper and voting-boundary escape |
-| FINAL INTEGRATION | prove central outage/degraded regional operation, recovery, convergence, revocation and external audit verification on the exact integrated baseline |
+| Layer / owner                   | Required responsibility                                                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Organization/governance         | authoritative `OrganizationalAuthority`, exact scope, status, source decision/rule, suspension/revocation/restoration semantics                                           |
+| API                             | current-state authorization, bounded signed projections where adopted, stale/revoked assertion refusal; exact API-02…06 placement remains stage-contract governed         |
+| Service identity/API-03 lineage | compatible trust generations/revocation/replay/audience semantics without allowing service identity to become human/organizational authority                              |
+| INFRA                           | HSM/KMS/PKI/trust-store topology, regional trust substrate, redundancy, offline recovery material protection, immutable/WORM audit substrate, external anchor integration |
+| OPS                             | key/custodian rotation, incident response, quorum-loss recovery, regional isolation operation, RTO/RPO/autonomy policy and rehearsals                                     |
+| CTRL                            | separate request/approve/execute/review consoles, trust/key status, recovery ceremonies, degraded-mode visibility, audit verification                                     |
+| FRONT                           | clear authority/session/restriction/degraded-state presentation and no misleading implication that a valid login equals active office                                     |
+| SEC                             | adversarial testing of issuer escape, stale assertion use, rollback, quorum bypass, containment bypass, recovery abuse, audit deletion/tamper and voting-boundary escape  |
+| FINAL INTEGRATION               | prove central outage/degraded regional operation, recovery, convergence, revocation and external audit verification on the exact integrated baseline                      |
 
 ## 17. Relationship to existing requirements
 

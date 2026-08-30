@@ -26,8 +26,8 @@ found has an identifier rather than living only in an audit transcript.
 All three are now closed, and two entries — `OD-P16D-16` and `-17` — recorded
 what the previous correction could not finish. Neither was a decision somebody
 else owed: `-16` was one command on a networked machine, and `-17` a fetch that
-sandbox blocked. They were open because they were *undone*, which is a different
-and more uncomfortable category than *deferred*, and they were filed under their
+sandbox blocked. They were open because they were _undone_, which is a different
+and more uncomfortable category than _deferred_, and they were filed under their
 real name.
 
 **Both are now `CLOSED`** — the commands were run on a network-enabled host and
@@ -142,7 +142,7 @@ only production blocker.
 **What did not close.** Two things, and they are now their own entries:
 who authorised the registry (`OD-P16D-12`), and whether the board showed
 one view to everyone (`OD-P16D-06` — a valid signature is not evidence of a
-single view, and a dedicated test constructs two *genuinely signed*
+single view, and a dedicated test constructs two _genuinely signed_
 conflicting checkpoints to make the point).
 
 ### `OD-P16D-13` — the signature primitive was written here — **CLOSED**
@@ -233,7 +233,7 @@ Timings are recorded per operation in
 `PACK-16D-TARGET-PROFILE-TIMINGS.json` rather than used as an argument for a
 smaller group.
 
-**What did not close.** Comparison against a *complete* independent
+**What did not close.** Comparison against a _complete_ independent
 implementation — `OD-P16D-02`, unchanged.
 
 ## 2. Decisions this correction narrowed but did not close
@@ -254,7 +254,7 @@ the producer:
   directions. If no such interpreter exists the test **fails loudly**
   rather than skipping.
 - **A Node.js verifier** that re-derives the canonical encoding from the
-  *written grammar* and implements its own square-and-multiply modular
+  _written grammar_ and implements its own square-and-multiply modular
   exponentiation, importing only `node:` builtins. It cross-checks nine
   operations, three of them on `EPD2-CRYPTO-1` itself.
 
@@ -418,7 +418,7 @@ authenticates the sender or protects the share in transit. No hardware
 security module. No air gap. No key custody, escrow policy or attestation.
 No ceremony witnesses, no recorded procedure, no separation of duties.
 
-**What is present, and why that is not the same thing.** The *protocol* is
+**What is present, and why that is not the same thing.** The _protocol_ is
 right: shares are verifiable against published commitments, a corrupt share
 aborts the ceremony rather than silently degrading the key, no party ever
 holds the joint secret, and no secret reaches the transcript — a test
@@ -445,7 +445,7 @@ one the Election Board authorised.
 **Why this is genuinely open rather than a bug.** The alternative — reading
 the key out of the artefact under verification — is worse, and is
 structurally prohibited here: anyone could then mint their own board. The
-registry has to arrive out of band. Establishing *which* out-of-band
+registry has to arrive out of band. Establishing _which_ out-of-band
 registry is authentic is a governance and PKI question, not one a verifier
 can answer from bytes.
 
@@ -485,7 +485,7 @@ closed by someone who forgot to convert the tests.
 **State.** The nine §42 races run real OS threads against `ReferenceStore`,
 whose transaction boundary is a re-entrant lock.
 
-**What that proves.** The *logic* is race-free under the serialisation this
+**What that proves.** The _logic_ is race-free under the serialisation this
 store provides: no double acceptance, no double entitlement consumption, no
 lost obligation, no orphan slot, no capability-to-ballot leakage.
 
@@ -506,12 +506,12 @@ per invariant.
 constant-time, and nothing here is written to be. This correction made the
 statement **more precise rather than milder**, by separating four surfaces:
 
-| Surface | Secret-bearing? | Status |
-| --- | --- | --- |
-| public verification (proof, signature, Merkle) | no | timing carries no secret |
-| guardian secret operations (DKG, share computation) | **yes** | pure Python; not constant-time |
-| secret nonce generation | **yes** | OS CSPRNG; the *use* is pure Python and not constant-time |
-| Ed25519 private-key signing | **yes** | now OpenSSL, which pursues side-channel resistance as a design goal — **narrowed, not assured** |
+| Surface                                             | Secret-bearing? | Status                                                                                          |
+| --------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------- |
+| public verification (proof, signature, Merkle)      | no              | timing carries no secret                                                                        |
+| guardian secret operations (DKG, share computation) | **yes**         | pure Python; not constant-time                                                                  |
+| secret nonce generation                             | **yes**         | OS CSPRNG; the _use_ is pure Python and not constant-time                                       |
+| Ed25519 private-key signing                         | **yes**         | now OpenSSL, which pursues side-channel resistance as a design goal — **narrowed, not assured** |
 
 The first correction **widened** this entry: threshold guardian operations
 and Ed25519 signing were new secret-bearing surfaces. The final correction
@@ -566,28 +566,28 @@ one style.
 These are not PACK-16D's to close and are listed so that no reader mistakes
 this round's silence for resolution.
 
-| ID | Decision | Owner | PACK-16D's effect |
-| -- | --- | --- | --- |
-| `VO-08` | BSI conformity of the cryptographic parameter family | PACK-16B external cryptographic review, independently confirmed in PACK-17 | **OPEN.** The parameters are now present and arithmetically checked, which is a precondition for the assessment and not the assessment. Named in `NOT_CHECKED`; no BSI conformity is claimed |
-| `OD-P16A-07` | Encrypted-ballot retention period | PACK-09 / PACK-17 | Untouched |
-| `OD-P16C-04` | Serialization of board entries | Governance | This round proposes `EPD2-ENC-1` as an implementation, **corrected this pass** so that sequences and structs length-prefix their members; the decision itself remains with governance |
-| `OD-P16C-09` | Verification-report governance | Governance | Untouched |
-| `OD-P16C-10` | Batch interval, capacity and checkpoint interval | Governance | The implementation takes them as declared inputs and validates them; it does not choose them |
-| `OD-P16C-14` | Commitment construction | Review | This round implements one; review owns confirming it |
-| `OD-P16C-16` | Opening and reconciliation format | Review | This round implements one; review owns confirming it |
+| ID           | Decision                                             | Owner                                                                      | PACK-16D's effect                                                                                                                                                                            |
+| ------------ | ---------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VO-08`      | BSI conformity of the cryptographic parameter family | PACK-16B external cryptographic review, independently confirmed in PACK-17 | **OPEN.** The parameters are now present and arithmetically checked, which is a precondition for the assessment and not the assessment. Named in `NOT_CHECKED`; no BSI conformity is claimed |
+| `OD-P16A-07` | Encrypted-ballot retention period                    | PACK-09 / PACK-17                                                          | Untouched                                                                                                                                                                                    |
+| `OD-P16C-04` | Serialization of board entries                       | Governance                                                                 | This round proposes `EPD2-ENC-1` as an implementation, **corrected this pass** so that sequences and structs length-prefix their members; the decision itself remains with governance        |
+| `OD-P16C-09` | Verification-report governance                       | Governance                                                                 | Untouched                                                                                                                                                                                    |
+| `OD-P16C-10` | Batch interval, capacity and checkpoint interval     | Governance                                                                 | The implementation takes them as declared inputs and validates them; it does not choose them                                                                                                 |
+| `OD-P16C-14` | Commitment construction                              | Review                                                                     | This round implements one; review owns confirming it                                                                                                                                         |
+| `OD-P16C-16` | Opening and reconciliation format                    | Review                                                                     | This round implements one; review owns confirming it                                                                                                                                         |
 
 ## 6. Rules that govern this list
 
-| ID | Rule |
-| -- | ---- |
-| `OD-01` | **Across three corrections, eight entries closed and four opened.** The first closed `OD-P16D-01`, `-07`, `-09` and opened `-11`, `-12`. The second closed `-13`, `-14`, `-15` and opened `-16`, `-17`. This finalization closed `-16` and `-17` and opened nothing. **Nine entries remain open**, and no inherited decision was closed by any of the three |
-| `OD-02` | **An entry is closed by evidence, not by a later round asserting it.** Each open entry names the evidence that would do it, and each closed entry names the artefact and the test that did |
-| `OD-03` | **`OD-P16D-05` is the round's production blocker**, narrowed to three surfaces rather than four. `OD-P16D-09`'s blocker status was discharged earlier. `OD-P16D-11` is a production *prerequisite*: procedure that does not exist, rather than a property the language cannot supply |
-| `OD-06` | **`OD-P16D-16` and `-17` were a third category, and naming it is what made them closable.** They were not deferred and not blocked by another party — they were work that had been attempted and that the environment prevented. Because each named the exact command that would close it, closing them required running those commands and recording the output, not re-deciding anything. Both are now `CLOSED` |
+| ID      | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `OD-01` | **Across three corrections, eight entries closed and four opened.** The first closed `OD-P16D-01`, `-07`, `-09` and opened `-11`, `-12`. The second closed `-13`, `-14`, `-15` and opened `-16`, `-17`. This finalization closed `-16` and `-17` and opened nothing. **Nine entries remain open**, and no inherited decision was closed by any of the three                                                                                                                                                                                |
+| `OD-02` | **An entry is closed by evidence, not by a later round asserting it.** Each open entry names the evidence that would do it, and each closed entry names the artefact and the test that did                                                                                                                                                                                                                                                                                                                                                 |
+| `OD-03` | **`OD-P16D-05` is the round's production blocker**, narrowed to three surfaces rather than four. `OD-P16D-09`'s blocker status was discharged earlier. `OD-P16D-11` is a production _prerequisite_: procedure that does not exist, rather than a property the language cannot supply                                                                                                                                                                                                                                                       |
+| `OD-06` | **`OD-P16D-16` and `-17` were a third category, and naming it is what made them closable.** They were not deferred and not blocked by another party — they were work that had been attempted and that the environment prevented. Because each named the exact command that would close it, closing them required running those commands and recording the output, not re-deciding anything. Both are now `CLOSED`                                                                                                                          |
 | `OD-07` | **The blocked state was re-probed each round rather than carried forward, and that is what proved it environmental.** A blocker asserted once and then quoted from memory is indistinguishable from an excuse. Every command and every error string stayed reproduced verbatim in `PACK-16D-ENVIRONMENT-BLOCKED-EVIDENCE.md` so that a reviewer with network access could run the same commands and see a different result. That is exactly what then happened, and the resolving outputs sit beside the failing ones in the same document |
-| `OD-08` | **Neither was ever closed early, downgraded in importance, or absorbed into another entry.** While they were open the acceptance matrix was corrected *downward* to match them (`AM-79`), rather than the entries being softened to match the matrix. They are closed now on recorded command output, and `AM-79` and `AM-89` were promoted against the five stated conditions rather than on the blockers' disappearance |
-| `OD-04` | **`OD-P16D-02` no longer depends on `OD-P16D-01`.** The parameter family is present, so interoperability work is unblocked and is simply not done |
-| `OD-05` | **A closed entry stays closed only while its test does.** Every closure above names a test that fails if the artefact is removed or weakened; none is closed by narrative |
+| `OD-08` | **Neither was ever closed early, downgraded in importance, or absorbed into another entry.** While they were open the acceptance matrix was corrected _downward_ to match them (`AM-79`), rather than the entries being softened to match the matrix. They are closed now on recorded command output, and `AM-79` and `AM-89` were promoted against the five stated conditions rather than on the blockers' disappearance                                                                                                                  |
+| `OD-04` | **`OD-P16D-02` no longer depends on `OD-P16D-01`.** The parameter family is present, so interoperability work is unblocked and is simply not done                                                                                                                                                                                                                                                                                                                                                                                          |
+| `OD-05` | **A closed entry stays closed only while its test does.** Every closure above names a test that fails if the artefact is removed or weakened; none is closed by narrative                                                                                                                                                                                                                                                                                                                                                                  |
 
 **REFERENCE IMPLEMENTATION. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY.
 NOT LEGALLY ACTIVATED.**

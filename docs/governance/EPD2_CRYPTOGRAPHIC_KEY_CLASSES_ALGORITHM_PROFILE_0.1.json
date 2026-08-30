@@ -9,18 +9,11 @@
   "algorithms": {
     "AES_256_GCM": {
       "status": "MANDATORY_BASELINE",
-      "uses": [
-        "application_data_encryption",
-        "envelope_data_encryption"
-      ]
+      "uses": ["application_data_encryption", "envelope_data_encryption"]
     },
     "ES256": {
       "status": "MANDATORY_BASELINE",
-      "uses": [
-        "authority_assertion",
-        "service_assertion",
-        "passkey_preferred"
-      ]
+      "uses": ["authority_assertion", "service_assertion", "passkey_preferred"]
     },
     "ES384": {
       "status": "MANDATORY_BASELINE",
@@ -41,9 +34,7 @@
     },
     "HKDF_SHA256_SHA384": {
       "status": "MANDATORY_BASELINE",
-      "uses": [
-        "approved_protocol_kdf"
-      ]
+      "uses": ["approved_protocol_kdf"]
     },
     "JOSE_HS_FOR_AUTHORITY": {
       "status": "PROHIBITED",
@@ -55,28 +46,19 @@
     },
     "ML_DSA_65": {
       "status": "MIGRATION_CANDIDATE",
-      "uses": [
-        "future_pq_signatures"
-      ]
+      "uses": ["future_pq_signatures"]
     },
     "ML_KEM_768": {
       "status": "MIGRATION_CANDIDATE",
-      "uses": [
-        "future_pq_key_establishment"
-      ]
+      "uses": ["future_pq_key_establishment"]
     },
     "PS256_PS384": {
       "status": "COMPATIBILITY_ONLY",
-      "uses": [
-        "approved_external_integration"
-      ]
+      "uses": ["approved_external_integration"]
     },
     "RS256": {
       "status": "COMPATIBILITY_ONLY",
-      "uses": [
-        "legacy_external_verify",
-        "webauthn_fallback_if_required"
-      ]
+      "uses": ["legacy_external_verify", "webauthn_fallback_if_required"]
     },
     "SHA1_MD5": {
       "status": "PROHIBITED",
@@ -84,18 +66,11 @@
     },
     "SHA256": {
       "status": "MANDATORY_BASELINE",
-      "uses": [
-        "digest",
-        "jwk_thumbprint",
-        "p256"
-      ]
+      "uses": ["digest", "jwk_thumbprint", "p256"]
     },
     "SHA384": {
       "status": "MANDATORY_BASELINE",
-      "uses": [
-        "p384",
-        "high_impact_audit"
-      ]
+      "uses": ["p384", "high_impact_audit"]
     }
   },
   "api_gates": {
@@ -245,12 +220,7 @@
   "tls": {
     "compatibility_only": "TLS1.2_CURRENT_BSI_PROFILE",
     "preferred": "TLS1.3",
-    "prohibited": [
-      "TLS1.0",
-      "TLS1.1",
-      "SSLv2",
-      "SSLv3"
-    ]
+    "prohibited": ["TLS1.0", "TLS1.1", "SSLv2", "SSLv3"]
   },
   "voting_domain_excluded": true
 }

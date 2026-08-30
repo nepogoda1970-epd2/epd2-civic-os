@@ -87,17 +87,17 @@ their governed defaults and hard lower bounds.
 
 Nine families were assessed against primary sources.
 
-| Family                   | Verdict                                    |
-| ------------------------ | ------------------------------------------ |
-| **ElectionGuard 2.1.0**  | **SUITABLE WITH A FORMAL EPD² PROFILE**    |
-| Belenios 3.0/3.1         | SUITABLE ONLY AS REFERENCE                 |
-| Helios v3                | NOT SUITABLE                               |
-| Estonian IVXV 1.8.0      | NOT SUITABLE                               |
-| Verificatum VMN 3.1.0    | SUITABLE ONLY AS REFERENCE                 |
-| JCJ / Civitas            | NOT SUITABLE                               |
-| Selene                   | REQUIRES FURTHER RESEARCH                  |
-| BeleniosRF               | REQUIRES FURTHER RESEARCH                  |
-| VoteAgain                | NOT SUITABLE                               |
+| Family                  | Verdict                                 |
+| ----------------------- | --------------------------------------- |
+| **ElectionGuard 2.1.0** | **SUITABLE WITH A FORMAL EPD² PROFILE** |
+| Belenios 3.0/3.1        | SUITABLE ONLY AS REFERENCE              |
+| Helios v3               | NOT SUITABLE                            |
+| Estonian IVXV 1.8.0     | NOT SUITABLE                            |
+| Verificatum VMN 3.1.0   | SUITABLE ONLY AS REFERENCE              |
+| JCJ / Civitas           | NOT SUITABLE                            |
+| Selene                  | REQUIRES FURTHER RESEARCH               |
+| BeleniosRF              | REQUIRES FURTHER RESEARCH               |
+| VoteAgain               | NOT SUITABLE                            |
 
 `docs/packs/PACK-16/PACK-16A-PROTOCOL-COMPARISON.md` is the assessment.
 
@@ -200,14 +200,14 @@ and severs the link in a **trusted offline procedure** `[E-24]`.
 
 ## Verifiability model
 
-| Property                 | Mechanism                                              | Claim status                                        |
-| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------- |
-| Cast as intended         | Benaloh cast-or-challenge, required, non-disablable    | **specified**; probabilistic; depends on take-up    |
-| Recorded as cast         | Confirmation code + board presence check + checkpoint  | **specified**; take-up 9.9 % at best `[E-29]`       |
-| Tallied as recorded      | Published aggregate, shares and proofs                 | **specified**; needs an independent verifier        |
-| Universal verifiability  | Full record published at closure; mirrors              | **specified**; the board is unbuilt                 |
-| Software independence    | Verify without trusting any EPD² component             | **objective specified, not demonstrated**           |
-| Eligibility verifiability| Aggregate count check only                             | **weaker than CoE Standard 18, and said so**        |
+| Property                  | Mechanism                                             | Claim status                                     |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| Cast as intended          | Benaloh cast-or-challenge, required, non-disablable   | **specified**; probabilistic; depends on take-up |
+| Recorded as cast          | Confirmation code + board presence check + checkpoint | **specified**; take-up 9.9 % at best `[E-29]`    |
+| Tallied as recorded       | Published aggregate, shares and proofs                | **specified**; needs an independent verifier     |
+| Universal verifiability   | Full record published at closure; mirrors             | **specified**; the board is unbuilt              |
+| Software independence     | Verify without trusting any EPD² component            | **objective specified, not demonstrated**        |
+| Eligibility verifiability | Aggregate count check only                            | **weaker than CoE Standard 18, and said so**     |
 
 ## Receipt model
 
@@ -222,8 +222,8 @@ that residual cannot be removed without removing verifiability
 
 **Coercion resistance is not claimed and is not achievable for remote
 voting.** It is a conditional property depending on the voter having an
-unobserved interval: *"if the coercer can monitor the voter throughout the
-vote casting period, then resistance is futile"* `[E-46]`. Every
+unobserved interval: _"if the coercer can monitor the voter throughout the
+vote casting period, then resistance is futile"_ `[E-46]`. Every
 coercion-resistant scheme relocates that assumption rather than removing it.
 
 Two threats are recorded as **unmitigated**: coercion during casting
@@ -323,7 +323,7 @@ secret paper ballots `[E-50]`, `[E-51]`. Public political elections have no
 legal basis, no BSI framework — the entire current German technical
 framework is scoped to **non-political** elections by construction `[E-54]`
 — and face a constitutional standard requiring citizens to scrutinise the
-key steps *"zuverlässig und ohne besondere Sachkenntnis"* `[E-41]`, on which
+key steps _"zuverlässig und ohne besondere Sachkenntnis"_ `[E-41]`, on which
 the Court has never ruled for cryptographic verifiability.
 
 ```text
@@ -372,7 +372,7 @@ identity with a public credential `[E-13]` — the row PACK-15 §3 forbids —
 and the signature that list supports is what prevents server-side stuffing,
 so the mechanism cannot be subtracted without subtracting the property. Its
 mixnet mode publishes decrypted individual ballots `[E-12]`. Its own FAQ
-states that *"Belenios fails to achieve coercion resistance"* `[E-14]`.
+states that _"Belenios fails to achieve coercion resistance"_ `[E-14]`.
 Retained as the model for honest limitation documentation.
 
 **Helios as base.** Rejected: weak Fiat–Shamir remains in shipping code
@@ -430,7 +430,7 @@ implementation selection · `OD-P16A-05` specification stewardship ·
 `OD-P16A-06` formal proof of the composed profile · `OD-P16A-07` retention
 of the published record · `OD-P16A-08` licensing interaction ·
 `OD-P16A-09` scope-level channel reconciliation · `OD-P16A-10`
-lay-comprehensible verifiability · `OD-P16A-11` what *Stand der Technik*
+lay-comprehensible verifiability · `OD-P16A-11` what _Stand der Technik_
 requires · `OD-P16A-12` the canon repository-compatibility bound.
 
 **None blocks acceptance of this specification. None may be closed by an
@@ -483,8 +483,8 @@ proposed.
 
 ## FIR impact
 
-`FIR-ROADMAP-006` — **status unchanged at `approved`**, treatment *selected
-for architectural review*; not implemented, target version `0.16.0`
+`FIR-ROADMAP-006` — **status unchanged at `approved`**, treatment _selected
+for architectural review_; not implemented, target version `0.16.0`
 unchanged. `FIR-INV-002` — **partially addressed; the architecture of the
 second half is specified and is not proven, and this round does not close
 the invariant.** Twenty entries specified, eight deferred with named

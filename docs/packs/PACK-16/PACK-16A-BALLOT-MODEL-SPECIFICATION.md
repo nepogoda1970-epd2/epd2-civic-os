@@ -80,10 +80,10 @@ refuse. **Two profiles are defined. Exactly one is selected for
 architectural review. The other is defined so that it cannot be reached by
 accident.**
 
-| Profile      | Purpose                                                                | Tally             | Status after PACK-16A                          | Activation rule                                                  |
-| ------------ | ---------------------------------------------------------------------- | ----------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
-| `EPD2-HOM-1` | Cardinal ballots — yes/no, single choice, n-of-m, approval, multi-seat | **Homomorphic**   | **SELECTED FOR ARCHITECTURAL REVIEW**          | Governance gate (`PACK-16A-GERMAN-LEGAL-BOUNDARY.md` §8)         |
-| `EPD2-MIX-1` | Ordinal ballots — ranked choice, STV, Condorcet, Majority Judgment     | **Mixnet**        | **DEFINED, NOT SELECTED, PROHIBITED PENDING RESEARCH** | May not be activated; requires its own ADR and its own round |
+| Profile      | Purpose                                                                | Tally           | Status after PACK-16A                                  | Activation rule                                              |
+| ------------ | ---------------------------------------------------------------------- | --------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| `EPD2-HOM-1` | Cardinal ballots — yes/no, single choice, n-of-m, approval, multi-seat | **Homomorphic** | **SELECTED FOR ARCHITECTURAL REVIEW**                  | Governance gate (`PACK-16A-GERMAN-LEGAL-BOUNDARY.md` §8)     |
+| `EPD2-MIX-1` | Ordinal ballots — ranked choice, STV, Condorcet, Majority Judgment     | **Mixnet**      | **DEFINED, NOT SELECTED, PROHIBITED PENDING RESEARCH** | May not be activated; requires its own ADR and its own round |
 
 ### 2.1 The separation rule
 
@@ -116,11 +116,11 @@ the problem, and it is worse for EPD² than for a national election:
    orderings. A published set of nineteen distinct orderings, in a group
    whose members know each other's opinions, is not anonymous. PACK-15
    §19.4 already recognises the class; `disclosure_min_cell = 5` cannot
-   protect a ranked ballot because the ballot *is* the cell.
+   protect a ranked ballot because the ballot _is_ the cell.
 2. **It creates a signature channel usable for coercion.** A coercer who
    dictates an unusual full ranking can look for it in the published
    output. This is the classic Italian attack, and a mixnet does not
-   prevent it — the mixnet hides *who*, and the ranking supplies it back.
+   prevent it — the mixnet hides _who_, and the ranking supplies it back.
 3. **Mixnet risk in practice is parameter-generation and integration
    risk** (`F-INF-3`, `[E-33]`), which is precisely the risk EPD² is least
    equipped to carry today.
@@ -136,14 +136,14 @@ be activated.** Its owning stage is a future round, and
 Should a later round consider it, these are the minimum conditions
 established now, so that they cannot be softened later:
 
-| ID       | Condition                                                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `MX-01`  | A published, independently reproducible provenance for every commitment and group parameter, with a proof of how it arose (`F-INF-3`) |
-| `MX-02`  | A proof of knowledge of the plaintext on submission — mixnets provide no ballot independence on their own `[E-32]`                    |
-| `MX-03`  | k-of-n independent mix servers under distinct organisational control, with a standalone verifier specification                        |
-| `MX-04`  | A minimum electorate size below which the profile is refused, derived from the ballot's cardinality, not a fixed constant             |
-| `MX-05`  | An explicit assessment of the pattern-signature channel for the specific ballot type, published with the context                      |
-| `MX-06`  | Its own ADR, its own threat model and its own acceptance matrix                                                                       |
+| ID      | Condition                                                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `MX-01` | A published, independently reproducible provenance for every commitment and group parameter, with a proof of how it arose (`F-INF-3`) |
+| `MX-02` | A proof of knowledge of the plaintext on submission — mixnets provide no ballot independence on their own `[E-32]`                    |
+| `MX-03` | k-of-n independent mix servers under distinct organisational control, with a standalone verifier specification                        |
+| `MX-04` | A minimum electorate size below which the profile is refused, derived from the ballot's cardinality, not a fixed constant             |
+| `MX-05` | An explicit assessment of the pattern-signature channel for the specific ballot type, published with the context                      |
+| `MX-06` | Its own ADR, its own threat model and its own acceptance matrix                                                                       |
 
 ---
 
@@ -194,14 +194,14 @@ credential identifier.
 
 ### 3.3 The identifier rules that discharge the inherited invariants
 
-| ID      | Rule                                                                                                                                    | Discharges                            |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `BM-01` | `BallotId` is generated **inside the Voting Client**, from client-side randomness, independently of any value received from the identity side | `NO CREDENTIAL ID AS BALLOT ID`, `NO CONTINUATION REFERENCE AS BALLOT ID` |
-| `BM-02` | No component may compute `BallotId` from, or verify it against, a continuation reference or credential identifier                        | `CC-03`, `CC-04`                      |
-| `BM-03` | `ConfirmationCode` is derived **only** from the ballot's own encryptions and the election's extended base hash                           | `NO RECEIPT THAT REVEALS CHOICE`      |
-| `BM-04` | No store, log, metric, backup, export or audit stream holds a `BallotId` and any identity-side reference together                        | PACK-15 §3 structural rule            |
-| `BM-05` | `BallotId` uniqueness is enforced on the board; a duplicate is **rejected**, never silently overwritten                                  | `NO SILENT BALLOT REPLACEMENT`        |
-| `BM-06` | The order of ballots on the board is **canonical by board sequence**, not by arrival time, and the board publishes no arrival timestamp finer than the context's `timestamp_granularity` | order-of-arrival correlation      |
+| ID      | Rule                                                                                                                                                                                     | Discharges                                                                |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `BM-01` | `BallotId` is generated **inside the Voting Client**, from client-side randomness, independently of any value received from the identity side                                            | `NO CREDENTIAL ID AS BALLOT ID`, `NO CONTINUATION REFERENCE AS BALLOT ID` |
+| `BM-02` | No component may compute `BallotId` from, or verify it against, a continuation reference or credential identifier                                                                        | `CC-03`, `CC-04`                                                          |
+| `BM-03` | `ConfirmationCode` is derived **only** from the ballot's own encryptions and the election's extended base hash                                                                           | `NO RECEIPT THAT REVEALS CHOICE`                                          |
+| `BM-04` | No store, log, metric, backup, export or audit stream holds a `BallotId` and any identity-side reference together                                                                        | PACK-15 §3 structural rule                                                |
+| `BM-05` | `BallotId` uniqueness is enforced on the board; a duplicate is **rejected**, never silently overwritten                                                                                  | `NO SILENT BALLOT REPLACEMENT`                                            |
+| `BM-06` | The order of ballots on the board is **canonical by board sequence**, not by arrival time, and the board publishes no arrival timestamp finer than the context's `timestamp_granularity` | order-of-arrival correlation                                              |
 
 ### 3.4 Ballot secrecy — what is claimed and under which assumptions
 
@@ -213,14 +213,14 @@ after closure, and only by a quorum of trustees.
 **Assumptions this rests on, stated because a claim without its assumptions
 is a marketing statement:**
 
-| # | Assumption                                                                                 | If it fails                                                        | Owner    |
-| - | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ | -------- |
-| 1 | Fewer than the quorum of trustees collude                                                  | Individual ballots become decryptable                              | PACK-16B |
-| 2 | The voting client encrypts what the voter selected                                         | Cast-as-intended fails; challenge is the detection mechanism       | PACK-16C |
-| 3 | The cryptographic parameters are correctly generated and published                         | The construction can be silently subverted (`F-INF-3`)             | PACK-16B |
-| 4 | The board does not present divergent views                                                 | Recorded-as-cast fails; mirrors are the detection mechanism        | PACK-16C |
-| 5 | The electorate is large enough that an aggregate is not a per-person statement             | Small-cell disclosure                                              | Governance |
-| 6 | The voter's device is not compromised                                                      | Choice may leak locally; **no cryptography addresses this**        | out of scope |
+| #   | Assumption                                                                     | If it fails                                                  | Owner        |
+| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ | ------------ |
+| 1   | Fewer than the quorum of trustees collude                                      | Individual ballots become decryptable                        | PACK-16B     |
+| 2   | The voting client encrypts what the voter selected                             | Cast-as-intended fails; challenge is the detection mechanism | PACK-16C     |
+| 3   | The cryptographic parameters are correctly generated and published             | The construction can be silently subverted (`F-INF-3`)       | PACK-16B     |
+| 4   | The board does not present divergent views                                     | Recorded-as-cast fails; mirrors are the detection mechanism  | PACK-16C     |
+| 5   | The electorate is large enough that an aggregate is not a per-person statement | Small-cell disclosure                                        | Governance   |
+| 6   | The voter's device is not compromised                                          | Choice may leak locally; **no cryptography addresses this**  | out of scope |
 
 Assumption 6 is stated flatly because every system in the comparison has
 the same limit and two of them say so in their own documentation `[E-17]`,
@@ -243,17 +243,17 @@ A challenged ballot is spoiled by the act of challenging it.
 After a challenge the voter prepares a fresh ballot.
 ```
 
-| ID      | Requirement                                                                                                                                  |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BM-07` | The commitment to the confirmation code precedes the cast/challenge choice; a client that learns the choice first can cheat undetectably      |
-| `BM-08` | Cast and challenge are mutually exclusive and irreversible; there is no "challenge after casting"                                             |
-| `BM-09` | A spoiled ballot is published with its opening, is marked `spoiled` on the board, and is **excluded from the tally by construction**          |
-| `BM-10` | The number of challenges is not published before closure, and per-context challenge counts are subject to disclosure control                  |
-| `BM-11` | Challenging must be **as easy as casting** in the interface, must not be presented as an error path, and must not warn or discourage          |
-| `BM-12` | A voter may challenge more than once; a per-voter challenge limit is prohibited, because a limit is a ceiling on the device check             |
-| `BM-13` | The challenge explanation must be comprehensible without cryptographic knowledge (`PACK-16A-ACCESSIBILITY-REQUIREMENTS.md` §4)                |
+| ID      | Requirement                                                                                                                              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `BM-07` | The commitment to the confirmation code precedes the cast/challenge choice; a client that learns the choice first can cheat undetectably |
+| `BM-08` | Cast and challenge are mutually exclusive and irreversible; there is no "challenge after casting"                                        |
+| `BM-09` | A spoiled ballot is published with its opening, is marked `spoiled` on the board, and is **excluded from the tally by construction**     |
+| `BM-10` | The number of challenges is not published before closure, and per-context challenge counts are subject to disclosure control             |
+| `BM-11` | Challenging must be **as easy as casting** in the interface, must not be presented as an error path, and must not warn or discourage     |
+| `BM-12` | A voter may challenge more than once; a per-voter challenge limit is prohibited, because a limit is a ceiling on the device check        |
+| `BM-13` | The challenge explanation must be comprehensible without cryptographic knowledge (`PACK-16A-ACCESSIBILITY-REQUIREMENTS.md` §4)           |
 
-`BM-11` and `BM-12` exist because challenge is the *only* cast-as-intended
+`BM-11` and `BM-12` exist because challenge is the _only_ cast-as-intended
 mechanism in this profile, and a mechanism that is discouraged or capped is
 a mechanism that is not used. `BM-10` exists because a live challenge rate
 is operational data that correlates with a specific context's activity, and
@@ -271,10 +271,10 @@ should be told.
 
 ## 5. Recorded as cast
 
-| ID      | Requirement                                                                                                                                     |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BM-14` | **Every submitted ballot carries a non-interactive proof of knowledge of its plaintext and randomness.** A bare ciphertext is not accepted        |
-| `BM-15` | Every contest carries well-formedness proofs: per-selection range proofs and a contest-sum proof against the declared selection limit             |
+| ID      | Requirement                                                                                                                                      |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BM-14` | **Every submitted ballot carries a non-interactive proof of knowledge of its plaintext and randomness.** A bare ciphertext is not accepted       |
+| `BM-15` | Every contest carries well-formedness proofs: per-selection range proofs and a contest-sum proof against the declared selection limit            |
 | `BM-16` | Proof verification is performed **before acceptance**, and a ballot failing any proof is rejected with a distinct reason code, never repaired    |
 | `BM-17` | An accepted ballot is published on the board with its proofs and its confirmation code, within the board's stated publication bound              |
 | `BM-18` | The voter can confirm the presence of their confirmation code on the board through a **Verification Client on a separate origin**                |
@@ -306,26 +306,26 @@ Ballots on the board  →  homomorphic aggregation per contest
 
 No individual ballot is decrypted at any point in this path.
 
-| ID      | Requirement                                                                                                                                      |
+| ID      | Requirement                                                                                                                                        |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BM-20` | Aggregation is over the **published, accepted** ballot set only, and the set is fixed by a signed board checkpoint at closure                     |
-| `BM-21` | Decryption is bound to context status `voting_closed`; there is no operation that decrypts before it, and none may be added                       |
-| `BM-22` | Decryption requires a quorum of trustees; **no single principal may hold a quorum**, and no break-glass, incident or emergency path may create one|
-| `BM-23` | Every decryption share carries a verifiable proof; a share failing verification halts the tally rather than being excluded silently               |
-| `BM-24` | The published tally artifacts are sufficient for an **independent verifier written by a party other than EPD²** to check the result end to end   |
-| `BM-25` | A ballot excluded from the tally is excluded with a **published privacy-safe reason code**, and the exclusion is visible in append-only evidence  |
+| `BM-20` | Aggregation is over the **published, accepted** ballot set only, and the set is fixed by a signed board checkpoint at closure                      |
+| `BM-21` | Decryption is bound to context status `voting_closed`; there is no operation that decrypts before it, and none may be added                        |
+| `BM-22` | Decryption requires a quorum of trustees; **no single principal may hold a quorum**, and no break-glass, incident or emergency path may create one |
+| `BM-23` | Every decryption share carries a verifiable proof; a share failing verification halts the tally rather than being excluded silently                |
+| `BM-24` | The published tally artifacts are sufficient for an **independent verifier written by a party other than EPD²** to check the result end to end     |
+| `BM-25` | A ballot excluded from the tally is excluded with a **published privacy-safe reason code**, and the exclusion is visible in append-only evidence   |
 
 ### 6.1 Discharging `NIT-01` … `NIT-07`
 
-| Requirement from scope §6.1 | Discharged by                                                                                             |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `NIT-01`                    | `BM-15`, `BM-16` — proofs verify against ciphertext and yield a boolean, not a count                       |
-| `NIT-02`                    | Same; verification is per-ballot and per-contest and produces no aggregate                                 |
-| `NIT-03`                    | `BM-21` — no partial decryption exists before closure; the decryption ceremony has no pre-closure entry     |
-| `NIT-04`                    | Permitted-signal list; PACK-12 disclosure control at `disclosure_min_cell = 5`; `BM-10`                    |
-| `NIT-05`                    | `BM-22` — threshold, not access control                                                                    |
-| `NIT-06`                    | `FIR-INV-006`; a flag capable of relaxing `BM-21` or `BM-22` may not exist                                 |
-| `NIT-07`                    | `BM-09` — a spoiled ballot carries no participation and no outcome, and `spoiled` is absorbing             |
+| Requirement from scope §6.1 | Discharged by                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `NIT-01`                    | `BM-15`, `BM-16` — proofs verify against ciphertext and yield a boolean, not a count                    |
+| `NIT-02`                    | Same; verification is per-ballot and per-contest and produces no aggregate                              |
+| `NIT-03`                    | `BM-21` — no partial decryption exists before closure; the decryption ceremony has no pre-closure entry |
+| `NIT-04`                    | Permitted-signal list; PACK-12 disclosure control at `disclosure_min_cell = 5`; `BM-10`                 |
+| `NIT-05`                    | `BM-22` — threshold, not access control                                                                 |
+| `NIT-06`                    | `FIR-INV-006`; a flag capable of relaxing `BM-21` or `BM-22` may not exist                              |
+| `NIT-07`                    | `BM-09` — a spoiled ballot carries no participation and no outcome, and `spoiled` is absorbing          |
 
 ---
 
@@ -335,11 +335,11 @@ No individual ballot is decrypted at any point in this path.
 when an undetected change or error in its software cannot cause an
 undetectable change or error in the outcome.
 
-| ID      | Requirement                                                                                                                            |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| ID      | Requirement                                                                                                                             |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `BM-26` | The published election record must be sufficient to verify the outcome **without trusting any EPD² component**                          |
 | `BM-27` | The verifier's checks must be specified in prose sufficient to write an independent verifier, following the model of `[E-09]`, `[E-30]` |
-| `BM-28` | At least one verifier not written or commissioned by EPD² must verify a real context before any binding use                            |
+| `BM-28` | At least one verifier not written or commissioned by EPD² must verify a real context before any binding use                             |
 | `BM-29` | Where a property cannot be verified from the record — notably cast-as-intended for a compromised device — that limit is published       |
 
 `BM-28` is a governance gate, not a technical requirement, and it appears in
@@ -349,14 +349,14 @@ undetectable change or error in the outcome.
 
 ## 8. Cryptographic agility
 
-| ID      | Requirement                                                                                                                                   |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BM-30` | Every context binds a **cryptographic parameter set identifier**, published in the manifest and reproduced in the record                       |
-| `BM-31` | A parameter set is **immutable** once a context reaches `issuance_open`; changing it is a new context, never an in-place edit                  |
-| `BM-32` | **Downgrade is refused, not warned**: a context whose declared parameter set is below the governed minimum fails configuration validation      |
-| `BM-33` | Parameter provenance is published: how the parameters arose, by whom, verifiable independently (`F-INF-3`)                                     |
-| `BM-34` | The record states the specification version it conforms to, so an old record stays interpretable after a parameter migration                   |
-| `BM-35` | A migration path to a different group or a post-quantum construction must not require re-opening a past election's record                      |
+| ID      | Requirement                                                                                                                               |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `BM-30` | Every context binds a **cryptographic parameter set identifier**, published in the manifest and reproduced in the record                  |
+| `BM-31` | A parameter set is **immutable** once a context reaches `issuance_open`; changing it is a new context, never an in-place edit             |
+| `BM-32` | **Downgrade is refused, not warned**: a context whose declared parameter set is below the governed minimum fails configuration validation |
+| `BM-33` | Parameter provenance is published: how the parameters arose, by whom, verifiable independently (`F-INF-3`)                                |
+| `BM-34` | The record states the specification version it conforms to, so an old record stays interpretable after a parameter migration              |
+| `BM-35` | A migration path to a different group or a post-quantum construction must not require re-opening a past election's record                 |
 
 ### 8.1 Parameters are deferred
 
@@ -386,17 +386,17 @@ criteria and not as expectations:
 
 ## 9. Compatibility checks against the inherited architecture
 
-| Check                                                                                          | Result           | Basis                                                                         |
-| ---------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------- |
-| Does the profile require identity on the voting side?                                          | **No**           | Eligibility is out of the protocol's scope `[E-06]`                            |
-| Does it require a per-participant persistent voting-side identifier?                           | **No**           | No voter object exists in the construction                                     |
-| Does it require any party to hold both an eligibility-side and a voting-side reference?        | **No**           | The only shared figure is an aggregate count `[E-06]`                          |
-| Does it require a reusable voting session or client persistence?                               | **No**           | Ballot preparation is a single act; `CC-07` forbids persistence                |
-| Does it decrypt individual ballots?                                                            | **No** (`EPD2-HOM-1`) | Homomorphic tally only `[E-08]`                                         |
-| Does it create an intermediate tally?                                                          | **No**           | `BM-21`, `BM-22`                                                               |
-| Does it create a receipt revealing choice?                                                     | **No**           | `BM-03` — the code derives from encryptions only `[E-05]`                      |
-| **Does it create a hidden individual dispute link?**                                           | **No**           | §9.1                                                                           |
-| Does it satisfy PACK-15's continuation-capability constraints?                                 | **Yes**, subject to `CC-01`…`CC-10` | Scope §3.2                                              |
+| Check                                                                                   | Result                              | Basis                                                           |
+| --------------------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------- |
+| Does the profile require identity on the voting side?                                   | **No**                              | Eligibility is out of the protocol's scope `[E-06]`             |
+| Does it require a per-participant persistent voting-side identifier?                    | **No**                              | No voter object exists in the construction                      |
+| Does it require any party to hold both an eligibility-side and a voting-side reference? | **No**                              | The only shared figure is an aggregate count `[E-06]`           |
+| Does it require a reusable voting session or client persistence?                        | **No**                              | Ballot preparation is a single act; `CC-07` forbids persistence |
+| Does it decrypt individual ballots?                                                     | **No** (`EPD2-HOM-1`)               | Homomorphic tally only `[E-08]`                                 |
+| Does it create an intermediate tally?                                                   | **No**                              | `BM-21`, `BM-22`                                                |
+| Does it create a receipt revealing choice?                                              | **No**                              | `BM-03` — the code derives from encryptions only `[E-05]`       |
+| **Does it create a hidden individual dispute link?**                                    | **No**                              | §9.1                                                            |
+| Does it satisfy PACK-15's continuation-capability constraints?                          | **Yes**, subject to `CC-01`…`CC-10` | Scope §3.2                                                      |
 
 ### 9.1 The dispute-link check, performed explicitly
 
@@ -404,16 +404,16 @@ criteria and not as expectations:
 with consent. The selected profile is checked against the ways such a link
 could appear:
 
-| Possible link                                            | Present? | Why not                                                                              |
-| -------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------- |
-| A voter roll published beside ciphertexts                | No       | Helios's design `[E-21]`; not adopted, and `BM-04` forbids it                        |
-| A signature over the ballot binding an identity          | No       | IVXV's design `[E-24]`; not adopted, and §3.2 forbids it                              |
-| A credential list pairing identity with a public credential | No    | Belenios's design `[E-13]`; not adopted, and §3.2 forbids it                          |
-| A confirmation code resolvable to a participant          | No       | `BM-03` — derived from encryptions only; no lookup table exists                       |
-| A "show me how my ballot was counted" operation          | No       | No individual ballot is decrypted; the operation is not expressible                   |
-| A trustee-assisted individual decryption for a dispute   | **Prohibited** | `BM-21`, `BM-22`; and `PACK-16A-ROLE-SEPARATION-MATRIX.md` §4 forbids it as an act |
+| Possible link                                               | Present?       | Why not                                                                            |
+| ----------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------- |
+| A voter roll published beside ciphertexts                   | No             | Helios's design `[E-21]`; not adopted, and `BM-04` forbids it                      |
+| A signature over the ballot binding an identity             | No             | IVXV's design `[E-24]`; not adopted, and §3.2 forbids it                           |
+| A credential list pairing identity with a public credential | No             | Belenios's design `[E-13]`; not adopted, and §3.2 forbids it                       |
+| A confirmation code resolvable to a participant             | No             | `BM-03` — derived from encryptions only; no lookup table exists                    |
+| A "show me how my ballot was counted" operation             | No             | No individual ballot is decrypted; the operation is not expressible                |
+| A trustee-assisted individual decryption for a dispute      | **Prohibited** | `BM-21`, `BM-22`; and `PACK-16A-ROLE-SEPARATION-MATRIX.md` §4 forbids it as an act |
 
-The last row is the one to watch. The construction *could* decrypt a single
+The last row is the one to watch. The construction _could_ decrypt a single
 ballot if a trustee quorum chose to, and that is exactly the capability a
 sympathetic dispute process would ask for. It is prohibited as an act, it
 has no operation, and `PACK-16A-THREAT-MODEL.md` `T-P16A-33` treats the
@@ -446,21 +446,21 @@ type for a public political office (§8 of the legal boundary); write-ins.
 Named here so that they appear in the decision rather than only in the
 threat model.
 
-| ID       | Residual risk                                                                                                         | Severity | Owner              |
-| -------- | ----------------------------------------------------------------------------------------------------------------------- | -------- | ------------------ |
-| `RR-01`  | **No production-grade implementation of the selected specification version exists** `[E-10a]`                          | high     | PACK-16D           |
-| `RR-02`  | Ranked ballots are unsupported; bodies that use them today must change method or stay on the existing process           | medium   | Governance         |
-| `RR-03`  | Cast-as-intended relies on challenge, which is probabilistic and depends on take-up                                    | medium   | PACK-16C, FRONT    |
-| `RR-04`  | Individual verifiability take-up is empirically low — 9.9 % at best in the most mature deployment `[E-29]`             | medium   | PACK-16C, FRONT    |
-| `RR-05`  | Device compromise is out of scope for every candidate assessed                                                         | high     | out of scope; stated |
-| `RR-06`  | Timing correlation is reduced and bounded, not eliminated (PACK-15 `T-P15-13`)                                         | medium   | PACK-16C, PACK-17  |
-| `RR-07`  | Small electorates weaken every unlinkability property, and no cryptography changes this                                | high     | Governance         |
-| `RR-08`  | Specification stewardship is not formally documented `[E-10a]`                                                         | medium   | `OD-P16A-05`       |
-| `RR-09`  | No symbolic or cryptographic proof of protocol compliance exists for the EPD² profile as composed                      | high     | `OD-P16A-06`       |
-| `RR-10`  | The bulletin board is not provided by the selected family and is entirely EPD²'s to build `[E-07]`                     | high     | PACK-16C           |
+| ID      | Residual risk                                                                                                 | Severity | Owner                |
+| ------- | ------------------------------------------------------------------------------------------------------------- | -------- | -------------------- |
+| `RR-01` | **No production-grade implementation of the selected specification version exists** `[E-10a]`                 | high     | PACK-16D             |
+| `RR-02` | Ranked ballots are unsupported; bodies that use them today must change method or stay on the existing process | medium   | Governance           |
+| `RR-03` | Cast-as-intended relies on challenge, which is probabilistic and depends on take-up                           | medium   | PACK-16C, FRONT      |
+| `RR-04` | Individual verifiability take-up is empirically low — 9.9 % at best in the most mature deployment `[E-29]`    | medium   | PACK-16C, FRONT      |
+| `RR-05` | Device compromise is out of scope for every candidate assessed                                                | high     | out of scope; stated |
+| `RR-06` | Timing correlation is reduced and bounded, not eliminated (PACK-15 `T-P15-13`)                                | medium   | PACK-16C, PACK-17    |
+| `RR-07` | Small electorates weaken every unlinkability property, and no cryptography changes this                       | high     | Governance           |
+| `RR-08` | Specification stewardship is not formally documented `[E-10a]`                                                | medium   | `OD-P16A-05`         |
+| `RR-09` | No symbolic or cryptographic proof of protocol compliance exists for the EPD² profile as composed             | high     | `OD-P16A-06`         |
+| `RR-10` | The bulletin board is not provided by the selected family and is entirely EPD²'s to build `[E-07]`            | high     | PACK-16C             |
 
-`RR-09` deserves emphasis. The Swiss ordinance requires *"a symbolic and a
-cryptographic proof of compliance"* `[E-45]`. EPD² has neither, for the
+`RR-09` deserves emphasis. The Swiss ordinance requires _"a symbolic and a
+cryptographic proof of compliance"_ `[E-45]`. EPD² has neither, for the
 profile as composed, and **does not claim to**. That is the single largest
 gap between this architecture and the most demanding regulatory framework
 located.

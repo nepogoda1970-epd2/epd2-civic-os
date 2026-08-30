@@ -76,16 +76,16 @@ Master Register ............................. BYTE-IDENTICAL
 
 ## 1. Archive
 
-| Item                             | Value                                                                                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **New archive filename**         | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CORRECTED_CANDIDATE.zip`          |
-| **New archive SHA-256**          | Computed at packaging and published with the delivery message; recomputable by the recipient with `sha256sum` over the delivered file |
-| **New archive file count**       | **1195** files in one repository root — **unchanged**                                                 |
-| **Corrected from**               | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CANDIDATE.zip`                    |
-| **Source candidate SHA-256**     | `c31b7e326d795470cad55a9b17b9ff2f34d4e6dcd9bfc12b4f7542546201e76b` — **verified before use**           |
-| **Baseline**                     | `EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_FINAL_PASS.zip`          |
-| **Baseline SHA-256**             | `38697c0a0bca9d211bf9f44ec5c2f7b475d86bd38eb1ccc10bc9521c3f2f087a`                                    |
-| **Baseline file count**          | 1172                                                                                                  |
+| Item                         | Value                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **New archive filename**     | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CORRECTED_CANDIDATE.zip`                                          |
+| **New archive SHA-256**      | Computed at packaging and published with the delivery message; recomputable by the recipient with `sha256sum` over the delivered file |
+| **New archive file count**   | **1195** files in one repository root — **unchanged**                                                                                 |
+| **Corrected from**           | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CANDIDATE.zip`                                                    |
+| **Source candidate SHA-256** | `c31b7e326d795470cad55a9b17b9ff2f34d4e6dcd9bfc12b4f7542546201e76b` — **verified before use**                                          |
+| **Baseline**                 | `EPD2_PACK-15_VOTING_TRUST_BOUNDARY_ELIGIBILITY_CREDENTIAL_SEPARATION_0.15.0_FINAL_PASS.zip`                                          |
+| **Baseline SHA-256**         | `38697c0a0bca9d211bf9f44ec5c2f7b475d86bd38eb1ccc10bc9521c3f2f087a`                                                                    |
+| **Baseline file count**      | 1172                                                                                                                                  |
 
 The archive is the confirmed PACK-15 FINAL PASS tree plus twenty-three
 added documentation files and one modified register — the same set as the
@@ -99,14 +99,14 @@ ZIP is not included inside this archive**.
 
 **Added — 0 files. Deleted — 0 files. Modified — 5 files.**
 
-| File                                                    | What changed                                                                                                   |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `PACK-16A-ACCEPTANCE-MATRIX.md`                         | §13 summary replaced with the recomputed counts; §13.1 arithmetic check added. **No row status changed**       |
-| `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md`                  | Restructured as the **single canonical Evidence Registry**: eleven fields per entry; the nine legal entries consolidated in; `E-48` recorded as reserved; §2 and §13 counts added |
-| `PACK-16A-GERMAN-LEGAL-BOUNDARY.md`                     | §9 converted from a definition table to a **pointer table** that defines nothing. **No legal content, mode, verdict or conclusion changed** |
-| `ADR-099-VERIFIABLE-VOTING-PROTOCOL-AND-BALLOT-MODEL.md`| *Evidence standard* section: single-registry statement and corrected counts. **No decision, driver, consequence, residual risk or status changed** |
-| `PACK-16A-SPECIFICATION-REPORT.md`                       | Two evidence-count claims corrected                                                                            |
-| `PACK-16A-HANDOVER.md`                                  | This document: correction record, corrected archive facts, verification of both defects                        |
+| File                                                     | What changed                                                                                                                                                                      |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PACK-16A-ACCEPTANCE-MATRIX.md`                          | §13 summary replaced with the recomputed counts; §13.1 arithmetic check added. **No row status changed**                                                                          |
+| `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md`                   | Restructured as the **single canonical Evidence Registry**: eleven fields per entry; the nine legal entries consolidated in; `E-48` recorded as reserved; §2 and §13 counts added |
+| `PACK-16A-GERMAN-LEGAL-BOUNDARY.md`                      | §9 converted from a definition table to a **pointer table** that defines nothing. **No legal content, mode, verdict or conclusion changed**                                       |
+| `ADR-099-VERIFIABLE-VOTING-PROTOCOL-AND-BALLOT-MODEL.md` | _Evidence standard_ section: single-registry statement and corrected counts. **No decision, driver, consequence, residual risk or status changed**                                |
+| `PACK-16A-SPECIFICATION-REPORT.md`                       | Two evidence-count claims corrected                                                                                                                                               |
+| `PACK-16A-HANDOVER.md`                                   | This document: correction record, corrected archive facts, verification of both defects                                                                                           |
 
 **No file outside the set permitted by the correction task was touched.**
 `PACK-16A-HANDOVER.md` is listed in that set. **The Master Register is
@@ -156,8 +156,8 @@ docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
 Two changes, both additive:
 
 1. **New section `1.20 Round record — PACK-16A specification and ADR
-   (2026-08-01)`**, inserted immediately before `# 2. Current confirmed
-   baseline` and after section 1.19. It records the baseline and its
+(2026-08-01)`**, inserted immediately before `# 2. Current confirmed
+baseline` and after section 1.19. It records the baseline and its
    verified digest, what the round did, the selection, the documents
    added, the FIR treatment, the canon verdict and the prohibitions.
 2. **A sequencing note appended inside `FIR-ROADMAP-006`**, after its
@@ -208,17 +208,17 @@ designed independently and meet without either being bent.
 
 ## 4. Rejected alternatives
 
-| Family                | Verdict                                 | Recorded reason                                                                                                   |
-| --------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Belenios 3.0/3.1      | **SUITABLE ONLY AS REFERENCE**          | Its credential list pairs voter identity with a voting-side reference — the row PACK-15 §3 forbids; mixnet mode publishes decrypted individual ballots; coercion resistance officially disclaimed |
-| Helios v3             | **NOT SUITABLE**                        | Weak Fiat–Shamir still in shipping code; no ballot weeding; n-of-n trustees; voter names beside ciphertexts; authors disclaim high-stakes use |
-| Estonian IVXV 1.8.0   | **NOT SUITABLE**                        | Identity↔ciphertext binding stored for the whole period and severed by a trusted offline procedure; no plaintext-knowledge proof; revoting defeats individual verifiability |
-| Verificatum VMN 3.1.0 | **SUITABLE ONLY AS REFERENCE**          | Not a voting system; provides no ballot independence on its own; component candidate for the deferred mixnet profile |
-| JCJ / Civitas         | **NOT SUITABLE**                        | Untappable-channel assumption; quadratic tallying; fake-credential usability; never deployed; the property itself contested |
-| Selene                | **REQUIRES FURTHER RESEARCH**           | Coercion *mitigation* with a collision problem; but lay-comprehensible verifiability is the closest published answer to the German standard |
-| BeleniosRF            | **REQUIRES FURTHER RESEARCH**           | Strong receipt-freeness with no voter strategy required; research prototype, not shipped                          |
-| VoteAgain             | **NOT SUITABLE**                        | Broken by third-party analysis with no fix proposed; all authorities must be trusted for coercion resistance       |
-| A bespoke protocol    | **REFUSED**                             | No cryptographic research capacity; the one risk process cannot mitigate                                          |
+| Family                | Verdict                        | Recorded reason                                                                                                                                                                                   |
+| --------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Belenios 3.0/3.1      | **SUITABLE ONLY AS REFERENCE** | Its credential list pairs voter identity with a voting-side reference — the row PACK-15 §3 forbids; mixnet mode publishes decrypted individual ballots; coercion resistance officially disclaimed |
+| Helios v3             | **NOT SUITABLE**               | Weak Fiat–Shamir still in shipping code; no ballot weeding; n-of-n trustees; voter names beside ciphertexts; authors disclaim high-stakes use                                                     |
+| Estonian IVXV 1.8.0   | **NOT SUITABLE**               | Identity↔ciphertext binding stored for the whole period and severed by a trusted offline procedure; no plaintext-knowledge proof; revoting defeats individual verifiability                       |
+| Verificatum VMN 3.1.0 | **SUITABLE ONLY AS REFERENCE** | Not a voting system; provides no ballot independence on its own; component candidate for the deferred mixnet profile                                                                              |
+| JCJ / Civitas         | **NOT SUITABLE**               | Untappable-channel assumption; quadratic tallying; fake-credential usability; never deployed; the property itself contested                                                                       |
+| Selene                | **REQUIRES FURTHER RESEARCH**  | Coercion _mitigation_ with a collision problem; but lay-comprehensible verifiability is the closest published answer to the German standard                                                       |
+| BeleniosRF            | **REQUIRES FURTHER RESEARCH**  | Strong receipt-freeness with no voter strategy required; research prototype, not shipped                                                                                                          |
+| VoteAgain             | **NOT SUITABLE**               | Broken by third-party analysis with no fix proposed; all authorities must be trusted for coercion resistance                                                                                      |
+| A bespoke protocol    | **REFUSED**                    | No cryptographic research capacity; the one risk process cannot mitigate                                                                                                                          |
 
 ---
 
@@ -226,38 +226,38 @@ designed independently and meet without either being bent.
 
 Performed on the assembled candidate tree.
 
-| Check                                                   | Result                                                                                  |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Baseline archive SHA-256 matches the declared digest    | **PASS** — `38697c0a…f087a`                                                             |
-| Baseline: one repository root                           | **PASS**                                                                                |
-| Baseline: 1172 files, one `uv.lock`, one `package-lock.json`, one Master Register, 0 duplicate paths, 0 nested ZIPs | **PASS**                                     |
-| All 22 required PACK-16A documents present              | **PASS**                                                                                |
-| `docs/adr/ADR-099-VERIFIABLE-VOTING-PROTOCOL-AND-BALLOT-MODEL.md` path correct | **PASS**                                                          |
-| ADR-099 status is `proposed`                            | **PASS**                                                                                |
-| One canonical Master Register, at the canonical path    | **PASS**                                                                                |
-| Master Register prior content preserved                 | **PASS** — additive only; verified by diff                                              |
-| `FIR-UX-011` preserved                                  | **PASS**                                                                                |
-| `FIR-OSS-001` … `FIR-OSS-006` preserved                 | **PASS**                                                                                |
-| `REPOSITORY_VERSION` unchanged at `0.15.0`              | **PASS** — Python, TypeScript, CHANGELOG                                                |
-| `CANON_VERSION` unchanged at `0.8.0`                    | **PASS** — Python, TypeScript, `canon-version.json`                                     |
-| `scripts/verify_versions.py`                            | **PASS**                                                                                |
-| `scripts/check_repository.py` required and forbidden paths | **PASS**                                                                             |
-| No source changes (Python, TypeScript, frontend)        | **PASS** — 0 files                                                                      |
-| No test changes                                         | **PASS** — 0 files                                                                      |
-| No migration changes                                    | **PASS** — 0 files                                                                      |
-| No contract or fixture changes                          | **PASS** — 0 files                                                                      |
-| No CI workflow changes                                  | **PASS** — 0 files                                                                      |
-| No lock-file changes (`uv.lock`, `package-lock.json`)   | **PASS** — byte-identical                                                               |
-| No dependency-graph changes                             | **PASS** — `pyproject.toml`, `package.json` byte-identical                              |
-| No duplicate archive paths                              | **PASS**                                                                                |
-| No nested ZIP files                                     | **PASS**                                                                                |
-| No nested repository                                    | **PASS**                                                                                |
-| No forbidden generated directories                      | **PASS** — no `.git`, `.venv`, `node_modules`, `.next`, `__pycache__`, caches           |
-| No false implementation claims                          | **PASS** — prohibited-phrase scan over the added documents                              |
-| No false legal claims                                   | **PASS** — same scan                                                                    |
-| External evidence references resolvable                 | **PASS** — every `[E-nn]` used resolves in the evidence matrix                          |
-| Markdown formatting / link checks                       | **PARTIAL** — internal cross-references verified; no Markdown linter or link checker is provisioned in this repository |
-| Application test suite                                  | **NOT RUN** — the application tree is unchanged, so it is not required for this round   |
+| Check                                                                                                               | Result                                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Baseline archive SHA-256 matches the declared digest                                                                | **PASS** — `38697c0a…f087a`                                                                                            |
+| Baseline: one repository root                                                                                       | **PASS**                                                                                                               |
+| Baseline: 1172 files, one `uv.lock`, one `package-lock.json`, one Master Register, 0 duplicate paths, 0 nested ZIPs | **PASS**                                                                                                               |
+| All 22 required PACK-16A documents present                                                                          | **PASS**                                                                                                               |
+| `docs/adr/ADR-099-VERIFIABLE-VOTING-PROTOCOL-AND-BALLOT-MODEL.md` path correct                                      | **PASS**                                                                                                               |
+| ADR-099 status is `proposed`                                                                                        | **PASS**                                                                                                               |
+| One canonical Master Register, at the canonical path                                                                | **PASS**                                                                                                               |
+| Master Register prior content preserved                                                                             | **PASS** — additive only; verified by diff                                                                             |
+| `FIR-UX-011` preserved                                                                                              | **PASS**                                                                                                               |
+| `FIR-OSS-001` … `FIR-OSS-006` preserved                                                                             | **PASS**                                                                                                               |
+| `REPOSITORY_VERSION` unchanged at `0.15.0`                                                                          | **PASS** — Python, TypeScript, CHANGELOG                                                                               |
+| `CANON_VERSION` unchanged at `0.8.0`                                                                                | **PASS** — Python, TypeScript, `canon-version.json`                                                                    |
+| `scripts/verify_versions.py`                                                                                        | **PASS**                                                                                                               |
+| `scripts/check_repository.py` required and forbidden paths                                                          | **PASS**                                                                                                               |
+| No source changes (Python, TypeScript, frontend)                                                                    | **PASS** — 0 files                                                                                                     |
+| No test changes                                                                                                     | **PASS** — 0 files                                                                                                     |
+| No migration changes                                                                                                | **PASS** — 0 files                                                                                                     |
+| No contract or fixture changes                                                                                      | **PASS** — 0 files                                                                                                     |
+| No CI workflow changes                                                                                              | **PASS** — 0 files                                                                                                     |
+| No lock-file changes (`uv.lock`, `package-lock.json`)                                                               | **PASS** — byte-identical                                                                                              |
+| No dependency-graph changes                                                                                         | **PASS** — `pyproject.toml`, `package.json` byte-identical                                                             |
+| No duplicate archive paths                                                                                          | **PASS**                                                                                                               |
+| No nested ZIP files                                                                                                 | **PASS**                                                                                                               |
+| No nested repository                                                                                                | **PASS**                                                                                                               |
+| No forbidden generated directories                                                                                  | **PASS** — no `.git`, `.venv`, `node_modules`, `.next`, `__pycache__`, caches                                          |
+| No false implementation claims                                                                                      | **PASS** — prohibited-phrase scan over the added documents                                                             |
+| No false legal claims                                                                                               | **PASS** — same scan                                                                                                   |
+| External evidence references resolvable                                                                             | **PASS** — every `[E-nn]` used resolves in the evidence matrix                                                         |
+| Markdown formatting / link checks                                                                                   | **PARTIAL** — internal cross-references verified; no Markdown linter or link checker is provisioned in this repository |
+| Application test suite                                                                                              | **NOT RUN** — the application tree is unchanged, so it is not required for this round                                  |
 
 ```text
 PARTIAL LOCAL VERIFICATION ONLY
@@ -318,16 +318,16 @@ sum: 96
 
 **Result — Variant A applied.**
 
-| Check                                             | Result                                  |
-| ------------------------------------------------- | ----------------------------------------- |
-| Requirement rows                                  | **96** — unchanged                      |
-| `sum(status counts) == requirement rows`          | **96 == 96 ✓**                          |
-| Status values outside the permitted vocabulary    | **0**                                   |
-| Duplicate Requirement IDs                         | **0**                                   |
-| Missing Requirement IDs in `AC-P16A-001…096`      | **0**                                   |
-| Summary matches row-level statuses exactly        | **yes**                                 |
-| Previously published summary                      | 62/16/4/5/4/0/1, summing to **92 ≠ 96** |
-| **Row statuses changed**                          | **none — 0 rows**                       |
+| Check                                          | Result                                  |
+| ---------------------------------------------- | --------------------------------------- |
+| Requirement rows                               | **96** — unchanged                      |
+| `sum(status counts) == requirement rows`       | **96 == 96 ✓**                          |
+| Status values outside the permitted vocabulary | **0**                                   |
+| Duplicate Requirement IDs                      | **0**                                   |
+| Missing Requirement IDs in `AC-P16A-001…096`   | **0**                                   |
+| Summary matches row-level statuses exactly     | **yes**                                 |
+| Previously published summary                   | 62/16/4/5/4/0/1, summing to **92 ≠ 96** |
+| **Row statuses changed**                       | **none — 0 rows**                       |
 
 **Rows whose status was corrected: none.** The row-level statuses were
 independently recounted and found correct, so no `requirement ID / old
@@ -407,19 +407,19 @@ defined, never referenced: ['E-47', 'E-48']
 
 **Result.**
 
-| Check                                          | Result                                                                 |
-| ---------------------------------------------- | ------------------------------------------------------------------------ |
-| Canonical evidence registries                  | **1**                                                                  |
-| Duplicate Evidence definitions                 | **0**                                                                  |
-| Conflicting Evidence definitions               | **0**                                                                  |
-| Evidence IDs with two different sources        | **0**                                                                  |
-| Evidence IDs defined outside the registry      | **0**                                                                  |
-| Unresolved Evidence references                 | **0**                                                                  |
-| Orphaned references                            | **0**                                                                  |
-| `E-49` … `E-56` canonically defined            | **yes** — registry §9                                                  |
-| `E-48` explicitly resolved                     | **yes** — `RESERVED / INTENTIONALLY UNUSED`, registry §10               |
-| Reserved IDs explicitly marked                 | **yes**                                                                |
-| Definitions not cited elsewhere                | **2** — `E-47` (deliberate context, registry §8) and `E-48` (reserved) |
+| Check                                     | Result                                                                 |
+| ----------------------------------------- | ---------------------------------------------------------------------- |
+| Canonical evidence registries             | **1**                                                                  |
+| Duplicate Evidence definitions            | **0**                                                                  |
+| Conflicting Evidence definitions          | **0**                                                                  |
+| Evidence IDs with two different sources   | **0**                                                                  |
+| Evidence IDs defined outside the registry | **0**                                                                  |
+| Unresolved Evidence references            | **0**                                                                  |
+| Orphaned references                       | **0**                                                                  |
+| `E-49` … `E-56` canonically defined       | **yes** — registry §9                                                  |
+| `E-48` explicitly resolved                | **yes** — `RESERVED / INTENTIONALLY UNUSED`, registry §10              |
+| Reserved IDs explicitly marked            | **yes**                                                                |
+| Definitions not cited elsewhere           | **2** — `E-47` (deliberate context, registry §8) and `E-48` (reserved) |
 
 **Counts, stated so that the arithmetic is checkable:**
 
@@ -447,23 +447,23 @@ slot. `58 = 59 − 1` because `E-47` is deliberately uncited.
 
 ### 5.3 Repository integrity after the correction
 
-| Check                                                | Result                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------- |
-| `REPOSITORY_VERSION` unchanged at `0.15.0`           | **PASS**                                                     |
-| `CANON_VERSION` unchanged at `0.8.0`                 | **PASS**                                                     |
-| `ADR-099` remains `proposed`                         | **PASS**                                                     |
-| Source changes                                       | **0**                                                        |
-| Test changes                                         | **0**                                                        |
-| Migration changes                                    | **0**                                                        |
-| CI workflow changes                                  | **0**                                                        |
-| `uv.lock` unchanged                                  | **PASS** — byte-identical                                    |
-| `package-lock.json` unchanged                        | **PASS** — byte-identical                                    |
-| Dependency graph unchanged                           | **PASS** — `pyproject.toml`, `package.json` byte-identical   |
-| **Master Register preserved**                        | **PASS** — byte-identical; no correction was required        |
-| Canon files unchanged                                | **PASS** — byte-identical                                    |
-| Files changed outside the permitted set              | **0**                                                        |
-| `scripts/verify_versions.py`                         | **PASS**                                                     |
-| `scripts/check_repository.py`                        | **PASS** — 983 / 983 required paths                          |
+| Check                                      | Result                                                     |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| `REPOSITORY_VERSION` unchanged at `0.15.0` | **PASS**                                                   |
+| `CANON_VERSION` unchanged at `0.8.0`       | **PASS**                                                   |
+| `ADR-099` remains `proposed`               | **PASS**                                                   |
+| Source changes                             | **0**                                                      |
+| Test changes                               | **0**                                                      |
+| Migration changes                          | **0**                                                      |
+| CI workflow changes                        | **0**                                                      |
+| `uv.lock` unchanged                        | **PASS** — byte-identical                                  |
+| `package-lock.json` unchanged              | **PASS** — byte-identical                                  |
+| Dependency graph unchanged                 | **PASS** — `pyproject.toml`, `package.json` byte-identical |
+| **Master Register preserved**              | **PASS** — byte-identical; no correction was required      |
+| Canon files unchanged                      | **PASS** — byte-identical                                  |
+| Files changed outside the permitted set    | **0**                                                      |
+| `scripts/verify_versions.py`               | **PASS**                                                   |
+| `scripts/check_repository.py`              | **PASS** — 983 / 983 required paths                        |
 
 ---
 
@@ -485,18 +485,18 @@ registry. Owning rounds: PACK-16B and PACK-16C.
 
 ## 7. FIR summary
 
-| Measure                                            | Value                                          |
-| -------------------------------------------------- | ---------------------------------------------- |
-| Marked `implemented`                               | **0**                                          |
-| Created                                            | **0**                                          |
-| Removed, renamed or downgraded                     | **0**                                          |
-| Specified                                          | 20                                             |
-| Deferred with a named owner                        | 8                                              |
-| Blocked pending legal assessment                   | 1 — `FIR-CAND-001`                             |
-| `FIR-ROADMAP-006` status                           | **unchanged `approved`**, target `0.16.0`      |
-| `FIR-INV-002`                                      | **not closed; cannot be closed by this round** |
-| `FIR-UX-011`, `FIR-OSS-001` … `FIR-OSS-006`        | **preserved unchanged**                        |
-| Master Register copies in the archive              | **1**                                          |
+| Measure                                     | Value                                          |
+| ------------------------------------------- | ---------------------------------------------- |
+| Marked `implemented`                        | **0**                                          |
+| Created                                     | **0**                                          |
+| Removed, renamed or downgraded              | **0**                                          |
+| Specified                                   | 20                                             |
+| Deferred with a named owner                 | 8                                              |
+| Blocked pending legal assessment            | 1 — `FIR-CAND-001`                             |
+| `FIR-ROADMAP-006` status                    | **unchanged `approved`**, target `0.16.0`      |
+| `FIR-INV-002`                               | **not closed; cannot be closed by this round** |
+| `FIR-UX-011`, `FIR-OSS-001` … `FIR-OSS-006` | **preserved unchanged**                        |
+| Master Register copies in the archive       | **1**                                          |
 
 ---
 
@@ -509,7 +509,7 @@ against BSI TR-02102-1 (2026-01) · `OD-P16A-04` implementation selection ·
 composed profile · `OD-P16A-07` retention of the published record ·
 `OD-P16A-08` licensing interaction · `OD-P16A-09` scope-level channel
 reconciliation · `OD-P16A-10` lay-comprehensible verifiability ·
-`OD-P16A-11` what *Stand der Technik* requires · `OD-P16A-12` the canon
+`OD-P16A-11` what _Stand der Technik_ requires · `OD-P16A-12` the canon
 repository-compatibility bound.
 
 Inherited and still open: `OD-P15-05` (re-owned to PACK-16B),

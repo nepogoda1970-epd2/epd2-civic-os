@@ -71,26 +71,26 @@ VO-08                      OPEN. Owned by PACK-16B external cryptographic
 
 ## Decision drivers
 
-| Driver | Consequence |
-| ------ | ----------- |
-| A voter must never lose a participation to a system fault | Nothing is consumed until every check has passed |
-| A voter must never be able to vote twice | Consumption is exactly-once, inside the boundary |
-| Nobody may learn who voted for what | The two halves of the boundary share no key, no trace, no timestamp |
-| A stranger must be able to check the result | Everything needed is published, in bulk, without an account |
-| A publication failure must be impossible to hide | Signed commitment, published deadline, public dispute state |
-| Nothing may be claimed that is not true | The prohibited-claims registry is enforced over published text |
-| The record is permanent and cannot be unpublished | Every field is decided before publication exists |
+| Driver                                                    | Consequence                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------------- |
+| A voter must never lose a participation to a system fault | Nothing is consumed until every check has passed                    |
+| A voter must never be able to vote twice                  | Consumption is exactly-once, inside the boundary                    |
+| Nobody may learn who voted for what                       | The two halves of the boundary share no key, no trace, no timestamp |
+| A stranger must be able to check the result               | Everything needed is published, in bulk, without an account         |
+| A publication failure must be impossible to hide          | Signed commitment, published deadline, public dispute state         |
+| Nothing may be claimed that is not true                   | The prohibited-claims registry is enforced over published text      |
+| The record is permanent and cannot be unpublished         | Every field is decided before publication exists                    |
 
 ---
 
 ## Consumption-point candidates
 
-| Option | Consume at | Failure cost to the voter | Double-vote risk | Verdict |
-| ------ | ---------- | ------------------------- | ---------------- | ------- |
-| A | Statement of intent, before encryption | **A client defect costs the voter their vote** | none | rejected |
-| B | On receipt of the envelope, before validation | A malformed ballot costs the vote | none | rejected |
-| C | **Inside an atomic boundary, after all checks, before durable acceptance** | **none — a failed check costs a retry** | none | **selected** |
-| D | After publication, two-phase with compensation | none | **A crash between accept and consume permits a second ballot** | rejected |
+| Option | Consume at                                                                 | Failure cost to the voter                      | Double-vote risk                                               | Verdict      |
+| ------ | -------------------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------- | ------------ |
+| A      | Statement of intent, before encryption                                     | **A client defect costs the voter their vote** | none                                                           | rejected     |
+| B      | On receipt of the envelope, before validation                              | A malformed ballot costs the vote              | none                                                           | rejected     |
+| C      | **Inside an atomic boundary, after all checks, before durable acceptance** | **none — a failed check costs a retry**        | none                                                           | **selected** |
+| D      | After publication, two-phase with compensation                             | none                                           | **A crash between accept and consume permits a second ballot** | rejected     |
 
 Option D was rejected not because compensation is impossible but because a
 compensating transaction across the capability store and the ballot store
@@ -170,7 +170,7 @@ selection. The wire container — JSON, CBOR or other — is `OD-P16C-04`.
 ## Cast-or-challenge policy — CORRECTED
 
 **Commitment before choice.** The confirmation code is committed and shown
-*before* the voter chooses, so a dishonest client cannot decide what to
+_before_ the voter chooses, so a dishonest client cannot decide what to
 encrypt after learning which path the voter took. Unchanged.
 
 **The correction: unlimited challenge semantics apply only to LOCAL
@@ -179,8 +179,8 @@ diagnostic challenge repetitions.**
 The previous candidate offered one challenge action, repeatable without
 limit, and every repetition produced a **published** spoiled ballot. Against
 a sealed batch of finite capacity `C`, an unbounded number of
-publication-bearing artefacts is not a bound at all. *"C exceeds the maximum
-plausible load"* was a hope, not a bound, and the audit was right to reject
+publication-bearing artefacts is not a bound at all. _"C exceeds the maximum
+plausible load"_ was a hope, not a bound, and the audit was right to reject
 it.
 
 Benaloh cast-or-challenge is **not** weakened. It is split into the two
@@ -211,10 +211,10 @@ device, per session, by turnout, or during an election, and changing `K`
 requires a new governed profile version, an architectural review, a
 recomputed capacity plan and a privacy review (`CH-37`, `CH-38`).
 
-**The honest limitation, stated in the interface and in the record:** *a
+**The honest limitation, stated in the interface and in the record:** _a
 malicious client can fake a purely local diagnostic challenge. Public
 evidentiary challenges and independent verification remain necessary for
-evidence against client misbehaviour* (`CH-40`, `CH-41`, `T-P16C-62`).
+evidence against client misbehaviour_ (`CH-40`, `CH-41`, `T-P16C-62`).
 
 **No detection guarantee is claimed.** Detection is probabilistic and
 depends on take-up, which is empirically low `[E-29]`.
@@ -423,9 +423,9 @@ Publication inside the atomic boundary was rejected because it makes the
 board's availability a precondition for accepting a ballot; publish-then-
 accept was rejected because it publishes unverified ballots.
 
-The construction is adapted from RFC 6962's **Maximum Merge Delay** — *"the
+The construction is adapted from RFC 6962's **Maximum Merge Delay** — _"the
 log's promise to incorporate the certificate in the Merkle Tree within a
-fixed amount of time"* `[G-02]` — with the consequences of a broken promise
+fixed amount of time"_ `[G-02]` — with the consequences of a broken promise
 being entirely different, and treated as such.
 
 **There is no permitted terminal state "accepted but never published".**
@@ -478,7 +478,7 @@ because the openings that make them possible are what make occupancy public
 (`EC-14`).
 
 Seven questions can never be served by any artefact, and adding one to close
-the first — *did each ballot come from a distinct entitled person* — is
+the first — _did each ballot come from a distinct entitled person_ — is
 **prohibited**, because any such artefact would by construction create a
 person-to-ballot link.
 
@@ -549,7 +549,7 @@ is either a hiding commitment or a uniform random value, so the proof
 **reveals nothing about occupancy** (`TC-36`…`TC-40`, `API-20`).
 
 **This is strictly stronger than the rejected model offered.** Because the
-publication commitment names a *specific* batch window, a voter can detect
+publication commitment names a _specific_ batch window, a voter can detect
 non-publication **at that window, during voting** — where the first
 candidate's model gave them no definite moment to check (`PA-12`,
 `FM-16C-20`, `DP-19`).
@@ -738,55 +738,55 @@ and are marked as reasoned rather than evidenced.
 
 ## Rejected alternatives
 
-| Rejected | Why |
-| -------- | --- |
-| Consume the capability before validation | A client defect would cost a voter their vote |
-| Two-phase consumption with compensation | Compensation requires the join the architecture removes |
-| One reused ballot identifier | Collapses four observability domains into one join |
-| Fixed challenge probability | Makes detection a lottery the voter does not control |
-| System-forced challenge | Removes agency; trains voters to click through |
-| Signed flat log | Cannot prove non-insertion |
-| Database with an audit table | The audit table is under the same authority as the data |
-| Blockchain | Adds a consensus problem EPD² does not have and a governance problem it cannot solve |
-| Publish inside the atomic boundary | Makes board availability a precondition for accepting a ballot |
-| Publish before validation | Publishes unverified ballots |
-| Withhold the board until closure | Destroys voter verification during voting |
-| **Unlimited publicly committed challenge artefacts per capability** | **No finite capacity bound exists**; one capability can exhaust the board; DoS by a single capability; incompatible with a fixed-shape turnout-hiding publication model that requires a computable maximum. **Rejected on audit** (`CH-36`, §1A.4) |
-| Bounding public challenges by rate rather than by entitlement | A rate limit bounds speed, not total. `L_max` must be computable before the election opens |
-| Bounding public challenges globally rather than per capability | A race: the first voters to check exhaust the budget and the rest cannot |
-| Adaptive overflow batches created under load | A batch that appears only when busy announces that it is busy (`T-P16C-54`) |
-| A hidden overflow queue for artefacts with no slot | Accepted-but-unscheduled is the state `PA-07` exists to forbid |
-| Unpadded batches | Batch size is exact turnout per interval |
+| Rejected                                                                      | Why                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Consume the capability before validation                                      | A client defect would cost a voter their vote                                                                                                                                                                                                                                                                        |
+| Two-phase consumption with compensation                                       | Compensation requires the join the architecture removes                                                                                                                                                                                                                                                              |
+| One reused ballot identifier                                                  | Collapses four observability domains into one join                                                                                                                                                                                                                                                                   |
+| Fixed challenge probability                                                   | Makes detection a lottery the voter does not control                                                                                                                                                                                                                                                                 |
+| System-forced challenge                                                       | Removes agency; trains voters to click through                                                                                                                                                                                                                                                                       |
+| Signed flat log                                                               | Cannot prove non-insertion                                                                                                                                                                                                                                                                                           |
+| Database with an audit table                                                  | The audit table is under the same authority as the data                                                                                                                                                                                                                                                              |
+| Blockchain                                                                    | Adds a consensus problem EPD² does not have and a governance problem it cannot solve                                                                                                                                                                                                                                 |
+| Publish inside the atomic boundary                                            | Makes board availability a precondition for accepting a ballot                                                                                                                                                                                                                                                       |
+| Publish before validation                                                     | Publishes unverified ballots                                                                                                                                                                                                                                                                                         |
+| Withhold the board until closure                                              | Destroys voter verification during voting                                                                                                                                                                                                                                                                            |
+| **Unlimited publicly committed challenge artefacts per capability**           | **No finite capacity bound exists**; one capability can exhaust the board; DoS by a single capability; incompatible with a fixed-shape turnout-hiding publication model that requires a computable maximum. **Rejected on audit** (`CH-36`, §1A.4)                                                                   |
+| Bounding public challenges by rate rather than by entitlement                 | A rate limit bounds speed, not total. `L_max` must be computable before the election opens                                                                                                                                                                                                                           |
+| Bounding public challenges globally rather than per capability                | A race: the first voters to check exhaust the budget and the rest cannot                                                                                                                                                                                                                                             |
+| Adaptive overflow batches created under load                                  | A batch that appears only when busy announces that it is busy (`T-P16C-54`)                                                                                                                                                                                                                                          |
+| A hidden overflow queue for artefacts with no slot                            | Accepted-but-unscheduled is the state `PA-07` exists to forbid                                                                                                                                                                                                                                                       |
+| Unpadded batches                                                              | Batch size is exact turnout per interval                                                                                                                                                                                                                                                                             |
 | **Public real-time ballot entries with structurally distinguishable padding** | **Leaks live turnout** — an observer counts the ciphertext-bearing entries; **creates a catalogue inconsistency** — the padding type was asserted in prose and never catalogued; and **does not satisfy the inherited invariant** `NO TURNOUT DISCLOSURE BEFORE CLOSURE`. Rejected on audit and superseded (`TC-21`) |
-| Adaptive batch cadence | A cadence that reacts to turnout is a turnout channel (`TC-24`, `T-P16C-43`) |
-| Withholding the board entirely until closure | Destroys individual verification during voting, which the sealed commitment preserves |
-| Publishing occupancy counts per window | That is the turnout figure |
-| Same-origin Verification Client | A compromised origin verifies itself |
-| Camera-only verification | Excludes voters and adds a substitution surface |
-| Restoring a spent capability after a publication failure | Permits a second ballot from a voter who may already have one on the board |
+| Adaptive batch cadence                                                        | A cadence that reacts to turnout is a turnout channel (`TC-24`, `T-P16C-43`)                                                                                                                                                                                                                                         |
+| Withholding the board entirely until closure                                  | Destroys individual verification during voting, which the sealed commitment preserves                                                                                                                                                                                                                                |
+| Publishing occupancy counts per window                                        | That is the turnout figure                                                                                                                                                                                                                                                                                           |
+| Same-origin Verification Client                                               | A compromised origin verifies itself                                                                                                                                                                                                                                                                                 |
+| Camera-only verification                                                      | Excludes voters and adds a substitution surface                                                                                                                                                                                                                                                                      |
+| Restoring a spent capability after a publication failure                      | Permits a second ballot from a voter who may already have one on the board                                                                                                                                                                                                                                           |
 
 ---
 
 ## Residual risks
 
-| ID | Risk | Severity | Owner |
-| -- | ---- | -------- | ----- |
-| `RB-16C-01` | **Issuance-to-submission timing correlation is reduced and bounded, not eliminated.** A global observer of both sides retains signal | high | PACK-17 |
-| `RB-16C-02` | Split-view resistance rests on **organisational** mirror independence until witnesses exist | high | `OD-P16C-12`, PACK-17 |
-| `RB-16C-03` | An operator with database access to **both** boundary stores plus precise timing could correlate | high | PACK-16D, governance |
-| `RB-16C-04` | Challenge take-up is empirically low; detection is probabilistic across the electorate | medium | governance, front end |
-| `RB-16C-05` | A publication failure past every window **loses a participation** | medium | `PA-08`, governance |
-| `RB-16C-06` | Turnout is public at closure by design; the sealed batch layer bounds pre-closure disclosure to nothing, not to less | medium | `OD-P16C-10` |
-| `RB-16C-07` | Ballot stuffing is not checkable from the record; the controls are PACK-15's | high | PACK-15, PACK-17 |
-| `RB-16C-08` | The atomic boundary's mechanism is unproven | high | `OD-P16C-01`, PACK-16D |
-| `RB-16C-09` | Six central decisions rest on no external source; the sealed batch layer is `INF`-grade throughout (`G-R09`) | medium | external review |
-| `RB-16C-10` | **A weak cover-leaf generator would break leaf indistinguishability silently before closure**, and nothing published would reveal it | high | PACK-16D, `T-P16C-45` |
-| `RB-16C-11` | At closure, leaf index and batch membership localise a ballot's acceptance to one interval | medium | `OD-P16C-10`, `T-P16C-46` |
-| `RB-16C-12` | **`L_max` scales with `E`.** An issuance policy that over-issues capabilities inflates the capacity plan and the published record with it | medium | governance, `T-P16C-51` |
-| `RB-16C-13` | **A leaked leaf reservation shrinks real capacity with no public sign** until the closure reconciliation | medium | PACK-16D, `T-P16C-57`, `FM-16C-33` |
-| `RB-16C-14` | **A capacity incident's existence is itself a signal** that the election is busier than planned; it is published anyway, because concealing a capacity failure is worse | low | accepted, `T-P16C-58` |
-| `RB-16C-15` | **The per-capability bound is publicly checkable only in aggregate.** The privacy-preserving per-capability proof is not specified by this round | high | `OD-P16C-19`, PACK-16D, PACK-17 |
-| `RB-16C-16` | **A malicious client can fake a local diagnostic challenge**, and moving unlimited checking to the local tier returns exactly that to the attacker | medium | accepted and stated, `T-P16C-62` |
+| ID          | Risk                                                                                                                                                                    | Severity | Owner                              |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------- |
+| `RB-16C-01` | **Issuance-to-submission timing correlation is reduced and bounded, not eliminated.** A global observer of both sides retains signal                                    | high     | PACK-17                            |
+| `RB-16C-02` | Split-view resistance rests on **organisational** mirror independence until witnesses exist                                                                             | high     | `OD-P16C-12`, PACK-17              |
+| `RB-16C-03` | An operator with database access to **both** boundary stores plus precise timing could correlate                                                                        | high     | PACK-16D, governance               |
+| `RB-16C-04` | Challenge take-up is empirically low; detection is probabilistic across the electorate                                                                                  | medium   | governance, front end              |
+| `RB-16C-05` | A publication failure past every window **loses a participation**                                                                                                       | medium   | `PA-08`, governance                |
+| `RB-16C-06` | Turnout is public at closure by design; the sealed batch layer bounds pre-closure disclosure to nothing, not to less                                                    | medium   | `OD-P16C-10`                       |
+| `RB-16C-07` | Ballot stuffing is not checkable from the record; the controls are PACK-15's                                                                                            | high     | PACK-15, PACK-17                   |
+| `RB-16C-08` | The atomic boundary's mechanism is unproven                                                                                                                             | high     | `OD-P16C-01`, PACK-16D             |
+| `RB-16C-09` | Six central decisions rest on no external source; the sealed batch layer is `INF`-grade throughout (`G-R09`)                                                            | medium   | external review                    |
+| `RB-16C-10` | **A weak cover-leaf generator would break leaf indistinguishability silently before closure**, and nothing published would reveal it                                    | high     | PACK-16D, `T-P16C-45`              |
+| `RB-16C-11` | At closure, leaf index and batch membership localise a ballot's acceptance to one interval                                                                              | medium   | `OD-P16C-10`, `T-P16C-46`          |
+| `RB-16C-12` | **`L_max` scales with `E`.** An issuance policy that over-issues capabilities inflates the capacity plan and the published record with it                               | medium   | governance, `T-P16C-51`            |
+| `RB-16C-13` | **A leaked leaf reservation shrinks real capacity with no public sign** until the closure reconciliation                                                                | medium   | PACK-16D, `T-P16C-57`, `FM-16C-33` |
+| `RB-16C-14` | **A capacity incident's existence is itself a signal** that the election is busier than planned; it is published anyway, because concealing a capacity failure is worse | low      | accepted, `T-P16C-58`              |
+| `RB-16C-15` | **The per-capability bound is publicly checkable only in aggregate.** The privacy-preserving per-capability proof is not specified by this round                        | high     | `OD-P16C-19`, PACK-16D, PACK-17    |
+| `RB-16C-16` | **A malicious client can fake a local diagnostic challenge**, and moving unlimited checking to the local tier returns exactly that to the attacker                      | medium   | accepted and stated, `T-P16C-62`   |
 
 **`RB-16C-01` is the residual this ADR would most like to have closed and
 could not.**

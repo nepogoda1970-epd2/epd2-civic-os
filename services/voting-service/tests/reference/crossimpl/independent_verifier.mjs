@@ -145,7 +145,8 @@ function checkEncoding(c) {
   const g = BigInt("0x" + c.g);
   return {
     group_element_hex: groupElement(g, pBytes).toString("hex"),
-    matches: groupElement(g, pBytes).toString("hex") === c.expected_group_element,
+    matches:
+      groupElement(g, pBytes).toString("hex") === c.expected_group_element,
     width_bytes: pBytes,
   };
 }
@@ -183,8 +184,12 @@ function checkSelectionProof(c) {
   const alpha = BigInt("0x" + c.alpha);
   const beta = BigInt("0x" + c.beta);
   const P = c.proof;
-  const [a0, b0, a1, b1] = ["a0", "b0", "a1", "b1"].map((k) => BigInt("0x" + P[k]));
-  const [c0, c1, v0, v1] = ["c0", "c1", "v0", "v1"].map((k) => BigInt("0x" + P[k]));
+  const [a0, b0, a1, b1] = ["a0", "b0", "a1", "b1"].map((k) =>
+    BigInt("0x" + P[k]),
+  );
+  const [c0, c1, v0, v1] = ["c0", "c1", "v0", "v1"].map((k) =>
+    BigInt("0x" + P[k]),
+  );
 
   const pBytes = Math.ceil(p.toString(2).length / 8);
   const payload = encodeStruct([
@@ -235,7 +240,8 @@ function checkConfirmationCode(c) {
     value /= BigInt(alphabet.length);
   }
   const groups = [];
-  for (let i = 0; i < 5; i += 1) groups.push(chars.slice(i * 5, i * 5 + 5).join(""));
+  for (let i = 0; i < 5; i += 1)
+    groups.push(chars.slice(i * 5, i * 5 + 5).join(""));
   const code = groups.join("-");
   return { code, matches: code === c.expected_code };
 }
@@ -272,7 +278,8 @@ function checkDecryptionShare(c) {
   const response = BigInt("0x" + c.proof.response);
   const checks = {
     eq_g: modPow(g, response, p) === (a * modPow(pub, challenge, p)) % p,
-    eq_base: modPow(base, response, p) === (b * modPow(share, challenge, p)) % p,
+    eq_base:
+      modPow(base, response, p) === (b * modPow(share, challenge, p)) % p,
   };
   checks.verifies = checks.eq_g && checks.eq_base;
   return checks;
@@ -335,7 +342,10 @@ function encodeDisjunctiveProof(pr) {
 
 function encodeChaumPedersen(pr) {
   return encodeStruct(
-    ["a", "b", "challenge", "response"].map((k) => [k, Buffer.from(pr[k], "hex")]),
+    ["a", "b", "challenge", "response"].map((k) => [
+      k,
+      Buffer.from(pr[k], "hex"),
+    ]),
   );
 }
 
@@ -380,7 +390,9 @@ function checkBallotStructural(c) {
     ["base_hash", encodeUint(BigInt("0x" + c.base_hash), 32)],
     ["ballot", rebuilt],
   ]);
-  let value = BigInt("0x" + h("EPD2/v1/confirmation_code", [codeInput]).toString("hex"));
+  let value = BigInt(
+    "0x" + h("EPD2/v1/confirmation_code", [codeInput]).toString("hex"),
+  );
   const alphabet = c.alphabet;
   const chars = [];
   for (let i = 0; i < 25; i += 1) {
@@ -388,7 +400,8 @@ function checkBallotStructural(c) {
     value /= BigInt(alphabet.length);
   }
   const groups = [];
-  for (let i = 0; i < 5; i += 1) groups.push(chars.slice(i * 5, i * 5 + 5).join(""));
+  for (let i = 0; i < 5; i += 1)
+    groups.push(chars.slice(i * 5, i * 5 + 5).join(""));
   const code = groups.join("-");
 
   return {
@@ -398,14 +411,16 @@ function checkBallotStructural(c) {
     confirmation_code: code,
     ballot_hash_matches: digest === c.expected_digest,
     canonical_bytes_match: c.expected_canonical_sha256
-      ? createHash("sha256").update(rebuilt).digest("hex") === c.expected_canonical_sha256
+      ? createHash("sha256").update(rebuilt).digest("hex") ===
+        c.expected_canonical_sha256
       : true,
     confirmation_code_matches: code === c.expected_code,
     matches:
       digest === c.expected_digest &&
       code === c.expected_code &&
       (!c.expected_canonical_sha256 ||
-        createHash("sha256").update(rebuilt).digest("hex") === c.expected_canonical_sha256),
+        createHash("sha256").update(rebuilt).digest("hex") ===
+          c.expected_canonical_sha256),
   };
 }
 
@@ -437,7 +452,8 @@ function checkGuardianCommitment(c) {
     let perGuardian = 1n;
     let power = 1n; // l^j mod q
     for (const commitment of guardian) {
-      perGuardian = (perGuardian * modPow(BigInt("0x" + commitment), power, p)) % p;
+      perGuardian =
+        (perGuardian * modPow(BigInt("0x" + commitment), power, p)) % p;
       power = (power * l) % q;
     }
     product = (product * perGuardian) % p;
@@ -485,7 +501,10 @@ const ORACLE_VERSION = "epd2-independent-verifier-2";
 function envelope(name, payload, result) {
   const match =
     result.error === undefined &&
-    (result.matches ?? result.verifies ?? result.all_relations_hold ?? false) === true;
+    (result.matches ??
+      result.verifies ??
+      result.all_relations_hold ??
+      false) === true;
   return {
     vector_id: name,
     operation: payload.kind,

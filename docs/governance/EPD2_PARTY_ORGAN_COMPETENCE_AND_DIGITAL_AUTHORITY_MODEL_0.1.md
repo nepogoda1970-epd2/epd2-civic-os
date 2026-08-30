@@ -67,24 +67,24 @@ Each formal Gebietsverband has its own organizational scope. Reorganization, mer
 
 ## 4. Competence matrix
 
-| Subject | Bund | Land | Kreis/Bezirk | Ort |
-| --- | --- | --- | --- | --- |
-| Bundessatzung | Bundesparteitag decides | may propose | may propose | may propose |
-| Grundsatzprogramm of EPD² | Bundesparteitag decides | may initiate/propose | may initiate/propose | may initiate/propose |
-| Landesprogramm / Landtagswahlprogramm | federal law/Satzung limits only | Landesparteitag decides | may propose | may propose |
-| Kreis-/Kommunalprogramm | framework only | framework/oversight only | competent Kreis assembly decides | may propose or decide own local scope where assigned |
-| Election of own Vorstand | Bundesparteitag | Landesparteitag | Kreisparteitag | Hauptversammlung |
-| Removal of own elected Vorstand member | competent own assembly under Satzung | competent own assembly | competent own assembly | competent own assembly |
-| Own budget | Bund scope | Land scope | Kreis scope | Orts scope if financially constituted |
-| Own financial execution | Bund roles | Land roles | Kreis roles | Orts roles if assigned |
-| Membership administration | only if competent/no lower body or reserved rule | exact Land competence | exact Kreis competence if assigned | exact local competence if assigned |
-| Candidate filing/signature | federal proposals where legally competent | Land proposals where legally competent | local proposals where legally competent | local proposals where legally competent |
-| Political initiative intake | Bund scope | Land scope | Kreis scope | Orts scope |
-| Citizen-office/casework | Bund cases | Land cases | Kreis cases | local cases if service exists |
-| Publication authority | own official scope only | own official scope only | own official scope only | own official scope only |
-| Oversight of lower branch | only as Satzung/Ordnung explicitly grants | only as Satzung/Ordnung explicitly grants | only as Satzung/Ordnung explicitly grants | none over higher scopes |
-| Voting-domain authority | only voting-specific law/rules | only voting-specific law/rules | only voting-specific law/rules | only voting-specific law/rules |
-| Technical identity/security/key administration | never by political hierarchy alone | never by political hierarchy alone | never by political hierarchy alone | never by political hierarchy alone |
+| Subject                                        | Bund                                             | Land                                      | Kreis/Bezirk                              | Ort                                                  |
+| ---------------------------------------------- | ------------------------------------------------ | ----------------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
+| Bundessatzung                                  | Bundesparteitag decides                          | may propose                               | may propose                               | may propose                                          |
+| Grundsatzprogramm of EPD²                      | Bundesparteitag decides                          | may initiate/propose                      | may initiate/propose                      | may initiate/propose                                 |
+| Landesprogramm / Landtagswahlprogramm          | federal law/Satzung limits only                  | Landesparteitag decides                   | may propose                               | may propose                                          |
+| Kreis-/Kommunalprogramm                        | framework only                                   | framework/oversight only                  | competent Kreis assembly decides          | may propose or decide own local scope where assigned |
+| Election of own Vorstand                       | Bundesparteitag                                  | Landesparteitag                           | Kreisparteitag                            | Hauptversammlung                                     |
+| Removal of own elected Vorstand member         | competent own assembly under Satzung             | competent own assembly                    | competent own assembly                    | competent own assembly                               |
+| Own budget                                     | Bund scope                                       | Land scope                                | Kreis scope                               | Orts scope if financially constituted                |
+| Own financial execution                        | Bund roles                                       | Land roles                                | Kreis roles                               | Orts roles if assigned                               |
+| Membership administration                      | only if competent/no lower body or reserved rule | exact Land competence                     | exact Kreis competence if assigned        | exact local competence if assigned                   |
+| Candidate filing/signature                     | federal proposals where legally competent        | Land proposals where legally competent    | local proposals where legally competent   | local proposals where legally competent              |
+| Political initiative intake                    | Bund scope                                       | Land scope                                | Kreis scope                               | Orts scope                                           |
+| Citizen-office/casework                        | Bund cases                                       | Land cases                                | Kreis cases                               | local cases if service exists                        |
+| Publication authority                          | own official scope only                          | own official scope only                   | own official scope only                   | own official scope only                              |
+| Oversight of lower branch                      | only as Satzung/Ordnung explicitly grants        | only as Satzung/Ordnung explicitly grants | only as Satzung/Ordnung explicitly grants | none over higher scopes                              |
+| Voting-domain authority                        | only voting-specific law/rules                   | only voting-specific law/rules            | only voting-specific law/rules            | only voting-specific law/rules                       |
+| Technical identity/security/key administration | never by political hierarchy alone               | never by political hierarchy alone        | never by political hierarchy alone        | never by political hierarchy alone                   |
 
 ## 5. Bundesparteitag reserved competences
 
@@ -206,11 +206,11 @@ Consequential intervention requires a competent party-organ decision and the dig
 
 Proposed default chain:
 
-| Target | Temporary initiating/acting organ | Required confirmation | Judicial/remedy route |
-| --- | --- | --- | --- |
-| Landesverband / whole Landesorgan | Bundesvorstand where Satzung permits | next Bundesparteitag / competent higher Bund organ required by Satzung | Bundesschiedsgericht |
-| Kreis-/Bezirksverband / whole Kreisorgan | Landesvorstand where Land/Bund rules permit | next Landesparteitag | Landesschiedsgericht, with further remedy as provided |
-| Ortsverband / whole Ortsorgan | Kreisvorstand; if no competent Kreis exists, Landesvorstand | next competent higher Parteitag | competent Parteischiedsgericht |
+| Target                                   | Temporary initiating/acting organ                           | Required confirmation                                                  | Judicial/remedy route                                 |
+| ---------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- |
+| Landesverband / whole Landesorgan        | Bundesvorstand where Satzung permits                        | next Bundesparteitag / competent higher Bund organ required by Satzung | Bundesschiedsgericht                                  |
+| Kreis-/Bezirksverband / whole Kreisorgan | Landesvorstand where Land/Bund rules permit                 | next Landesparteitag                                                   | Landesschiedsgericht, with further remedy as provided |
+| Ortsverband / whole Ortsorgan            | Kreisvorstand; if no competent Kreis exists, Landesvorstand | next competent higher Parteitag                                        | competent Parteischiedsgericht                        |
 
 A technical operator never decides the political merits of the intervention.
 
@@ -237,16 +237,16 @@ The runtime must not grant authority solely because a profile says `Vorsitzender
 
 Political/organizational roles and technical control roles are independent.
 
-| Technical role | May | Must not derive |
-| --- | --- | --- |
-| Identity/Credential Operator | governed credential lifecycle | party office or political competence |
-| Recovery Approver | approve governed recovery | restoration of suspended party office |
-| Security Operator | contain sessions/credentials/incidents | political/disciplinary decision authority |
-| Privileged Access Operator | activate approved JIT/break-glass | permanent universal admin |
-| Service Owner | request service identity/credential | key custody or unrestricted platform access |
-| Key Custodian | execute approved KMS/HSM/certificate lifecycle | party-organ competence |
-| Auditor/Reviewer | inspect evidence | power to approve/execute own audited act |
-| Voting Trustee | voting-specific trust authority | general party/platform administration |
+| Technical role               | May                                            | Must not derive                             |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| Identity/Credential Operator | governed credential lifecycle                  | party office or political competence        |
+| Recovery Approver            | approve governed recovery                      | restoration of suspended party office       |
+| Security Operator            | contain sessions/credentials/incidents         | political/disciplinary decision authority   |
+| Privileged Access Operator   | activate approved JIT/break-glass              | permanent universal admin                   |
+| Service Owner                | request service identity/credential            | key custody or unrestricted platform access |
+| Key Custodian                | execute approved KMS/HSM/certificate lifecycle | party-organ competence                      |
+| Auditor/Reviewer             | inspect evidence                               | power to approve/execute own audited act    |
+| Voting Trustee               | voting-specific trust authority                | general party/platform administration       |
 
 ## 18. Request / approval / execution / review split
 

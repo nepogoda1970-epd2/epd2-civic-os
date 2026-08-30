@@ -25,11 +25,11 @@ provenance into the parameter artefact, converted every dual-state test into a
 real check, and aligned the documentation and the acceptance matrix to the new
 facts.
 
-| Finding | Outcome this round |
-| --- | --- |
-| `DEPENDENCY LOCK / FROZEN INSTALL: FAIL` | **RESOLVED.** `uv.lock` regenerated; `cryptography 46.0.7` resolves from `https://pypi.org/simple` with hashes on all 43 artefacts, inside the `epd2-voting-service` graph. `uv sync --all-groups --frozen` → `Checked 61 packages`, on the network-enabled host |
-| `IMMUTABLE PARAMETER PROVENANCE: FAIL` | **RESOLVED.** `microsoft/electionguard-rust` at `520651138110a13f777409e96606454df928ceac`, `src/eg/src/standard_parameters.rs`, SHA-256 `ad38bfa6…5770`, retrieved 2026-08-03 — all recorded in the artefact beside the already-pinned normative specification |
-| `ACCEPTANCE MATRIX: NARROW CORRECTION REQUIRED` | **ALIGNED.** `AM-79` and `AM-89` promoted to `SATISFIED` against the five stated conditions each, with the two remaining limits stated in their residual-risk columns |
+| Finding                                         | Outcome this round                                                                                                                                                                                                                                               |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEPENDENCY LOCK / FROZEN INSTALL: FAIL`        | **RESOLVED.** `uv.lock` regenerated; `cryptography 46.0.7` resolves from `https://pypi.org/simple` with hashes on all 43 artefacts, inside the `epd2-voting-service` graph. `uv sync --all-groups --frozen` → `Checked 61 packages`, on the network-enabled host |
+| `IMMUTABLE PARAMETER PROVENANCE: FAIL`          | **RESOLVED.** `microsoft/electionguard-rust` at `520651138110a13f777409e96606454df928ceac`, `src/eg/src/standard_parameters.rs`, SHA-256 `ad38bfa6…5770`, retrieved 2026-08-03 — all recorded in the artefact beside the already-pinned normative specification  |
+| `ACCEPTANCE MATRIX: NARROW CORRECTION REQUIRED` | **ALIGNED.** `AM-79` and `AM-89` promoted to `SATISFIED` against the five stated conditions each, with the two remaining limits stated in their residual-risk columns                                                                                            |
 
 ### 0.1 What was verified rather than accepted, and what was not
 
@@ -90,23 +90,23 @@ PACK-17:                                  DO NOT START
 **Every cryptographic finding passed. Nothing cryptographic was touched by
 this round.**
 
-| Finding | Outcome this round |
-| --- | --- |
-| `DEPENDENCY LOCK / FROZEN INSTALL: FAIL` | **NOT RESOLVED — `BLOCKED BY ENVIRONMENT`.** Re-attempted and refused; `FROZEN CLEAN INSTALL: NOT EXECUTED` |
-| `IMMUTABLE PARAMETER PROVENANCE: FAIL` | **PARTIALLY SATISFIED.** The normative half was already pinned; the implementation half could not be pinned — re-attempted and refused by two distinct mechanisms |
-| `ACCEPTANCE MATRIX: NARROW CORRECTION REQUIRED` | **RESOLVED.** `AM-79` corrected from `SATISFIED` to `PARTIALLY SATISFIED` |
+| Finding                                         | Outcome this round                                                                                                                                                |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEPENDENCY LOCK / FROZEN INSTALL: FAIL`        | **NOT RESOLVED — `BLOCKED BY ENVIRONMENT`.** Re-attempted and refused; `FROZEN CLEAN INSTALL: NOT EXECUTED`                                                       |
+| `IMMUTABLE PARAMETER PROVENANCE: FAIL`          | **PARTIALLY SATISFIED.** The normative half was already pinned; the implementation half could not be pinned — re-attempted and refused by two distinct mechanisms |
+| `ACCEPTANCE MATRIX: NARROW CORRECTION REQUIRED` | **RESOLVED.** `AM-79` corrected from `SATISFIED` to `PARTIALLY SATISFIED`                                                                                         |
 
 ### 0.2.1 The matrix defect was real, and it is the one worth dwelling on
 
 The audit's third finding was that `AM-79` claimed the parameter set was
-*immutably provenanced* with status `SATISFIED`, while the row's own
+_immutably provenanced_ with status `SATISFIED`, while the row's own
 evidence column recorded that the commit, the pinned URL and the source
 digest were all absent. A row cannot assert a property and document its
 absence in the same sentence.
 
 Nothing new was learned to force that downgrade. The facts were already in
 the parameter artefact, already in the evidence registry, and already in the
-previous handover. What was wrong was the *status placed on top of them* —
+previous handover. What was wrong was the _status placed on top of them_ —
 the evidence stayed honest while the summary drifted optimistic. That is the
 failure mode a matrix is most prone to, it is invisible to anyone who reads
 only the status column, and it is exactly what an audit that reads both
@@ -146,11 +146,11 @@ had optimised for **"add no dependency"** when the property that mattered was
 opposite directions and the round did not notice it had chosen the weaker
 one.
 
-| Audit finding | State now | Evidence |
-| --- | --- | --- |
-| `CHECKPOINT SIGNATURE PRIMITIVE POLICY: FAIL` | **Vetted provider.** `cryptography` 46.0.7 over OpenSSL; `crypto/ed25519.py` deleted; no fallback | `test_checkpoint_signatures.py`, 44 tests |
-| `PARAMETER SOURCE REPRODUCIBILITY: PARTIAL` | **Versioned authoritative reference, digest in the artefact, and full offline reconstruction** | `test_epd2_crypto_1.py`, 25 tests |
-| `CROSS-IMPLEMENTATION ON TARGET PROFILE: PARTIAL` | **All twelve core operations on `EPD2-CRYPTO-1`**, plus two invalid fixtures | `test_target_conformance.py`, 15 tests |
+| Audit finding                                     | State now                                                                                         | Evidence                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `CHECKPOINT SIGNATURE PRIMITIVE POLICY: FAIL`     | **Vetted provider.** `cryptography` 46.0.7 over OpenSSL; `crypto/ed25519.py` deleted; no fallback | `test_checkpoint_signatures.py`, 44 tests |
+| `PARAMETER SOURCE REPRODUCIBILITY: PARTIAL`       | **Versioned authoritative reference, digest in the artefact, and full offline reconstruction**    | `test_epd2_crypto_1.py`, 25 tests         |
+| `CROSS-IMPLEMENTATION ON TARGET PROFILE: PARTIAL` | **All twelve core operations on `EPD2-CRYPTO-1`**, plus two invalid fixtures                      | `test_target_conformance.py`, 15 tests    |
 
 Everything the audit passed was preserved without architectural change:
 the guardian model, both atomic transactions, sealed batches, the checkpoint
@@ -191,12 +191,12 @@ both atomic transactions, idempotency, the concurrency and fault-injection
 harnesses, sealed batches, Merkle mechanics, the negative corpus, the
 election-record scaffolding, the verifier boundary and archive hygiene.
 
-| Audit finding | State now | Evidence |
-| --- | --- | --- |
-| `ACTUAL EPD2-CRYPTO-1 PROFILE: FAIL` | **Implemented** — the real parameters load and the whole stack runs on them | `test_epd2_crypto_1.py`, 18 tests |
-| `THRESHOLD GUARDIAN MODEL: FAIL` | **Implemented** — Feldman-VSS DKG, generic `k`-of-`n`, 3-of-5 and 4-of-7 | `test_guardians.py`, 28 tests |
-| `CHECKPOINT AUTHENTICITY: FAIL` | **Implemented** — Ed25519 signing and verification with a declared trust anchor | `test_checkpoint_signatures.py`, 32 tests |
-| `EXTERNAL CONFORMANCE: FAIL` | **Implemented** — primary-source and cross-implementation evidence, two oracles | `test_conformance.py`, 18 tests |
+| Audit finding                        | State now                                                                       | Evidence                                  |
+| ------------------------------------ | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| `ACTUAL EPD2-CRYPTO-1 PROFILE: FAIL` | **Implemented** — the real parameters load and the whole stack runs on them     | `test_epd2_crypto_1.py`, 18 tests         |
+| `THRESHOLD GUARDIAN MODEL: FAIL`     | **Implemented** — Feldman-VSS DKG, generic `k`-of-`n`, 3-of-5 and 4-of-7        | `test_guardians.py`, 28 tests             |
+| `CHECKPOINT AUTHENTICITY: FAIL`      | **Implemented** — Ed25519 signing and verification with a declared trust anchor | `test_checkpoint_signatures.py`, 32 tests |
+| `EXTERNAL CONFORMANCE: FAIL`         | **Implemented** — primary-source and cross-implementation evidence, two oracles | `test_conformance.py`, 18 tests           |
 
 ## 1. What was built
 
@@ -228,10 +228,10 @@ sealed-batch code was modified.** The change is `uv.lock`, one parameter
 artefact's provenance metadata, two test modules that stopped tolerating the
 blocked state, and the documentation set.
 
-| Class | Count | Detail |
-| --- | --- | --- |
-| Added | **0** | — |
-| Deleted | **0** | — |
+| Class    | Count  | Detail                                                                              |
+| -------- | ------ | ----------------------------------------------------------------------------------- |
+| Added    | **0**  | —                                                                                   |
+| Deleted  | **0**  | —                                                                                   |
 | Modified | **24** | `uv.lock`, 1 artefact, 2 test modules, 1 regenerated timings artefact, 19 documents |
 
 ```text
@@ -307,35 +307,35 @@ modified.**
 
 ## 3. Commands — executed, with real output
 
-| Command | Output |
-| --- | --- |
-| `ruff check .` | `All checks passed!` |
-| `ruff format --check .` | `498 files already formatted` |
-| `mypy services/voting-service` | `Success: no issues found in 70 source files` |
-| `pytest` (whole repository, **no `--ignore`**) | `5851 passed, 5 skipped, 3 warnings` in 138.56 s |
-| `pytest services/voting-service/tests/reference/` | `506 passed` in 76.41 s |
-| `pytest -m slow_conformance .../tests/reference/` | `15 passed, 491 deselected` in 9.82 s |
-| `pytest -m "not slow_conformance" .../tests/reference/` | `491 passed, 15 deselected` in 71.32 s |
-| `pytest .../test_epd2_crypto_1.py` | `32 passed in 29.54s` |
-| `pytest .../test_guardians.py` | `28 passed in 3.10s` |
-| `pytest .../test_checkpoint_signatures.py` | `44 passed in 0.79s` |
-| `pytest .../test_conformance.py` | `19 passed in 5.84s` |
-| `pytest .../test_target_conformance.py` | `15 passed in 9.00s` |
-| `pytest .../test_concurrency.py` | `87 passed in 11.25s` |
-| `pytest .../test_fault_injection.py` | `22 passed in 2.26s` |
-| `pytest .../test_negative_corpus.py` | `41 passed in 2.30s` |
-| `pytest .../test_casting_units.py` | `28 passed in 1.83s` |
-| `pytest .../test_e2e.py` | `24 passed in 4.60s` |
-| `pytest .../test_verifier_branches.py` | `33 passed in 2.15s` |
-| `pytest .../test_invariants.py` | `61 passed in 0.65s` |
-| `pytest .../test_vectors.py` | `31 passed in 1.44s` |
-| `pytest .../test_crypto_units.py` | `24 passed in 4.58s` |
-| `pytest .../test_property.py` | `17 passed in 7.45s` |
-| `pytest tests/repository/test_pack16d_signature_dependency.py` | `9 passed` |
-| `python scripts/verify_versions.py` | `OK: all version sources are consistent.` |
-| `python scripts/check_canon_0_8_0.py` | `OK: all 18 canon 0.8.0 amendment checks passed.` |
-| `python scripts/check_repository.py` | `OK: all 983 required paths are present.` |
-| `python scripts/check_forbidden_files.py` | `OK: no forbidden paths found.` |
+| Command                                                        | Output                                            |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| `ruff check .`                                                 | `All checks passed!`                              |
+| `ruff format --check .`                                        | `498 files already formatted`                     |
+| `mypy services/voting-service`                                 | `Success: no issues found in 70 source files`     |
+| `pytest` (whole repository, **no `--ignore`**)                 | `5851 passed, 5 skipped, 3 warnings` in 138.56 s  |
+| `pytest services/voting-service/tests/reference/`              | `506 passed` in 76.41 s                           |
+| `pytest -m slow_conformance .../tests/reference/`              | `15 passed, 491 deselected` in 9.82 s             |
+| `pytest -m "not slow_conformance" .../tests/reference/`        | `491 passed, 15 deselected` in 71.32 s            |
+| `pytest .../test_epd2_crypto_1.py`                             | `32 passed in 29.54s`                             |
+| `pytest .../test_guardians.py`                                 | `28 passed in 3.10s`                              |
+| `pytest .../test_checkpoint_signatures.py`                     | `44 passed in 0.79s`                              |
+| `pytest .../test_conformance.py`                               | `19 passed in 5.84s`                              |
+| `pytest .../test_target_conformance.py`                        | `15 passed in 9.00s`                              |
+| `pytest .../test_concurrency.py`                               | `87 passed in 11.25s`                             |
+| `pytest .../test_fault_injection.py`                           | `22 passed in 2.26s`                              |
+| `pytest .../test_negative_corpus.py`                           | `41 passed in 2.30s`                              |
+| `pytest .../test_casting_units.py`                             | `28 passed in 1.83s`                              |
+| `pytest .../test_e2e.py`                                       | `24 passed in 4.60s`                              |
+| `pytest .../test_verifier_branches.py`                         | `33 passed in 2.15s`                              |
+| `pytest .../test_invariants.py`                                | `61 passed in 0.65s`                              |
+| `pytest .../test_vectors.py`                                   | `31 passed in 1.44s`                              |
+| `pytest .../test_crypto_units.py`                              | `24 passed in 4.58s`                              |
+| `pytest .../test_property.py`                                  | `17 passed in 7.45s`                              |
+| `pytest tests/repository/test_pack16d_signature_dependency.py` | `9 passed`                                        |
+| `python scripts/verify_versions.py`                            | `OK: all version sources are consistent.`         |
+| `python scripts/check_canon_0_8_0.py`                          | `OK: all 18 canon 0.8.0 amendment checks passed.` |
+| `python scripts/check_repository.py`                           | `OK: all 983 required paths are present.`         |
+| `python scripts/check_forbidden_files.py`                      | `OK: no forbidden paths found.`                   |
 
 The whole-repository run needs no `--ignore`, and the 5 remaining skips are
 4 documented NOT-APPLICABLE contract tests and 1 hypothesis property test.
@@ -419,15 +419,15 @@ used everywhere in this round because it is the one anybody can reproduce.
 
 **None of the following is claimed as a PASS.**
 
-| Command | Why it did not run |
-| --- | --- |
-| `uv lock`, `uv sync --all-groups --frozen` **in this session** | The build session's egress allowlist still refuses `pypi.org`. Both ran on the network-enabled host — §3.1 — and this session verified the resulting lock's contents rather than re-running them. "The tests are green" and "the frozen install passes" are separate claims and are recorded separately |
-| `curl <pinned-url> \| sha256sum` **in this session** | No route to `raw.githubusercontent.com`. The digest was computed on the network-enabled host; `source_sha256_verification_scope` records that in the artefact, and this command settles it on any networked machine |
-| `uv lock --check` | Also requires re-resolving against the index, so it cannot run here either |
-| `npm ci` | npm registry returns **HTTP 403**; `node_modules` cannot be installed |
-| `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` | Depend on `npm ci`. **The entire Node and frontend side of this repository was not executed.** Unrelated to the Node.js *conformance oracle*, which is a standalone script run directly by the Node binary and needs no `node_modules` |
-| Hypothesis-based property tests | `hypothesis` not installable. The 15 §41 properties ran as deterministic seeded loops instead (`OD-P16D-03`) |
-| `pytest --cov` / branch coverage | Neither `pytest-cov` nor `coverage` is installable. Line coverage was measured with the standard library's `trace` module; **branch coverage was not measured** |
+| Command                                                          | Why it did not run                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uv lock`, `uv sync --all-groups --frozen` **in this session**   | The build session's egress allowlist still refuses `pypi.org`. Both ran on the network-enabled host — §3.1 — and this session verified the resulting lock's contents rather than re-running them. "The tests are green" and "the frozen install passes" are separate claims and are recorded separately |
+| `curl <pinned-url> \| sha256sum` **in this session**             | No route to `raw.githubusercontent.com`. The digest was computed on the network-enabled host; `source_sha256_verification_scope` records that in the artefact, and this command settles it on any networked machine                                                                                     |
+| `uv lock --check`                                                | Also requires re-resolving against the index, so it cannot run here either                                                                                                                                                                                                                              |
+| `npm ci`                                                         | npm registry returns **HTTP 403**; `node_modules` cannot be installed                                                                                                                                                                                                                                   |
+| `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` | Depend on `npm ci`. **The entire Node and frontend side of this repository was not executed.** Unrelated to the Node.js _conformance oracle_, which is a standalone script run directly by the Node binary and needs no `node_modules`                                                                  |
+| Hypothesis-based property tests                                  | `hypothesis` not installable. The 15 §41 properties ran as deterministic seeded loops instead (`OD-P16D-03`)                                                                                                                                                                                            |
+| `pytest --cov` / branch coverage                                 | Neither `pytest-cov` nor `coverage` is installable. Line coverage was measured with the standard library's `trace` module; **branch coverage was not measured**                                                                                                                                         |
 
 A further honesty note. Because `ruff`, `mypy` and `pytest` ran from a
 standalone toolchain rather than through `uv run`, the versions used may
@@ -437,31 +437,31 @@ through `uv run` to confirm.**
 
 ## 5. Test evidence
 
-| Suite | Tests | Seconds | Covers |
-| --- | --- | --- | --- |
-| `test_concurrency.py` | 87 | 11.25 | §42 — 9 named races × 12 repeats |
-| `test_invariants.py` | 61 | 0.65 | §44, §45, §46, §47, §50, §36 |
-| `test_checkpoint_signatures.py` | 44 | 0.79 | the vetted provider, RFC 8032, signer trust model, verifier integration |
-| `test_negative_corpus.py` | 41 | 2.30 | §40 — 39 cases + two index guards |
-| `test_verifier_branches.py` | 33 | 2.15 | §37 result-code coverage, closed gaps |
-| `test_vectors.py` | 31 | 1.44 | §38 — 23 stability vectors |
-| `test_guardians.py` | 28 | 3.10 | DKG, quorum, threshold decryption, prohibitions |
-| `test_casting_units.py` | 28 | 1.83 | ballot, capacity, sealing, board, record, API |
-| `test_epd2_crypto_1.py` | 32 | 29.54 | the real profile end to end, and its provenance |
-| `test_e2e.py` | 24 | 4.60 | §58 — E2E-01 … E2E-14 |
-| `test_crypto_units.py` | 24 | 4.58 | parameters, encoding, domain separation, randomness |
-| `test_fault_injection.py` | 22 | 2.26 | §43 — 11 fault points |
-| `test_conformance.py` | 19 | 5.84 | five evidence classes, catalogue completeness |
-| `test_property.py` | 17 | 7.45 | §41 — 15 named properties |
-| `test_target_conformance.py` | 15 | 9.00 | **the target-profile cross-implementation core** |
-| **Total** | **506** | ~76 | |
+| Suite                           | Tests   | Seconds | Covers                                                                  |
+| ------------------------------- | ------- | ------- | ----------------------------------------------------------------------- |
+| `test_concurrency.py`           | 87      | 11.25   | §42 — 9 named races × 12 repeats                                        |
+| `test_invariants.py`            | 61      | 0.65    | §44, §45, §46, §47, §50, §36                                            |
+| `test_checkpoint_signatures.py` | 44      | 0.79    | the vetted provider, RFC 8032, signer trust model, verifier integration |
+| `test_negative_corpus.py`       | 41      | 2.30    | §40 — 39 cases + two index guards                                       |
+| `test_verifier_branches.py`     | 33      | 2.15    | §37 result-code coverage, closed gaps                                   |
+| `test_vectors.py`               | 31      | 1.44    | §38 — 23 stability vectors                                              |
+| `test_guardians.py`             | 28      | 3.10    | DKG, quorum, threshold decryption, prohibitions                         |
+| `test_casting_units.py`         | 28      | 1.83    | ballot, capacity, sealing, board, record, API                           |
+| `test_epd2_crypto_1.py`         | 32      | 29.54   | the real profile end to end, and its provenance                         |
+| `test_e2e.py`                   | 24      | 4.60    | §58 — E2E-01 … E2E-14                                                   |
+| `test_crypto_units.py`          | 24      | 4.58    | parameters, encoding, domain separation, randomness                     |
+| `test_fault_injection.py`       | 22      | 2.26    | §43 — 11 fault points                                                   |
+| `test_conformance.py`           | 19      | 5.84    | five evidence classes, catalogue completeness                           |
+| `test_property.py`              | 17      | 7.45    | §41 — 15 named properties                                               |
+| `test_target_conformance.py`    | 15      | 9.00    | **the target-profile cross-implementation core**                        |
+| **Total**                       | **506** | ~76     |                                                                         |
 
 Plus **9** tests in `tests/repository/test_pack16d_signature_dependency.py`,
 which live with the repository checks rather than the reference suite
 because the property they hold — the declared cryptographic dependency is
 locked, in the right graph, and from a registry — is a packaging property.
 They parse `uv.lock` with `tomllib` rather than searching it as text: a
-string search for `cryptography` matches the name inside *other* packages'
+string search for `cryptography` matches the name inside _other_ packages'
 dependency lists and would report a lock entry that does not exist.
 
 **Every dual-state branch in those tests is gone.** While the lock could not
@@ -488,14 +488,14 @@ percentage fell slightly from the first candidate's 91.8 % because the
 package grew by roughly a third; the absolute number of covered lines rose
 by more than 900.
 
-| §59 dimension | Result |
-| --- | --- |
-| Line coverage | **90.9 %**, measured |
-| Branch coverage | **NOT MEASURED** — no tool installable |
-| Critical-path coverage | Every cryptographic and transactional branch named in the acceptance matrix has explicit test evidence; the matrix's Test evidence column is the record |
-| Reason-code coverage | 49 typed error classes; two are abstract bases by design (`SchemaError`, `ReservationUnavailableError`). `SignatureProviderUnavailableError` is new and is raised at **import** time, so it stops the process rather than reaching a caller. All **26** verification result codes are enumerated; 19 are reachable through `verify_record`, and the 7 that are not are named with reasons in `test_verifier_branches.UNREACHABLE_IN_REFERENCE_VERIFIER` |
-| Negative-vector coverage | 39 of 39 §40 cases present, each asserting its declared reason code, with a guard test that fails if any weakens to a type-only assertion |
-| State-transition coverage | Both continuation transitions, both submission outcomes, all three obligation states, both board phases, all three leaf classes and both quorum configurations are exercised |
+| §59 dimension             | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Line coverage             | **90.9 %**, measured                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Branch coverage           | **NOT MEASURED** — no tool installable                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Critical-path coverage    | Every cryptographic and transactional branch named in the acceptance matrix has explicit test evidence; the matrix's Test evidence column is the record                                                                                                                                                                                                                                                                                                 |
+| Reason-code coverage      | 49 typed error classes; two are abstract bases by design (`SchemaError`, `ReservationUnavailableError`). `SignatureProviderUnavailableError` is new and is raised at **import** time, so it stops the process rather than reaching a caller. All **26** verification result codes are enumerated; 19 are reachable through `verify_record`, and the 7 that are not are named with reasons in `test_verifier_branches.UNREACHABLE_IN_REFERENCE_VERIFIER` |
+| Negative-vector coverage  | 39 of 39 §40 cases present, each asserting its declared reason code, with a guard test that fails if any weakens to a type-only assertion                                                                                                                                                                                                                                                                                                               |
+| State-transition coverage | Both continuation transitions, both submission outcomes, all three obligation states, both board phases, all three leaf classes and both quorum configurations are exercised                                                                                                                                                                                                                                                                            |
 
 The `0.0 %` rows the raw tool prints for `__init__.py` files and
 `testing/fixtures.py` are a tracing artefact — those modules are imported
@@ -509,7 +509,7 @@ executed says nothing about whether the 9.1 % that did not matter.
 ### 7.1 A pre-existing repository defect, unmasked by running more of the suite
 
 **`tests/contract/test_reason_codes_registry.py::test_every_reason_code_literal_used_in_services_is_registered[pack-03]`
-failed on the unmodified source archive.** It had been *skipping*, not
+failed on the unmodified source archive.** It had been _skipping_, not
 passing, since PACK-16D first landed, because it needs PyYAML and PyYAML was
 not importable. Roughly sixty-five reason-code-shaped literals introduced by
 the reference package had therefore never been checked against
@@ -539,20 +539,20 @@ reported eighteen; the first correction found eight more; this one is
 smaller because its scope was narrower, and **every one was fixed in the
 implementation rather than documented around**.
 
-| Defect | How it was found | Fix |
-| --- | --- | --- |
-| **`encode_seq` and `encode_struct` were ambiguous** — items were concatenated raw after a count, so `SEQ([b"ab", b"c"])` and `SEQ([b"a", b"bc"])` produced identical bytes. Two different structures could share a protocol digest | **The independent Node.js oracle**, written from the documented grammar rather than from the code, disagreed with the code | Both encoders now length-prefix every member. Every digest in the round changed; the stability vectors caught the change, and the docstring records why it must not be "simplified" back |
-| The threshold-tally fixture verified decryption-share proofs against the pre-ceremony public key | `test_guardians.py` failures once a real ceremony existed | The fixture derives the joint key from the roster and replaces the runtime's key with it |
-| `verify_record` ran the ceremony check too late, so a tampered transcript surfaced as `INVALID_BALLOT_PROOF` | `test_e2e_14` | The ceremony block moved to immediately after the joint-key subgroup check, before anything uses the key |
-| The chain digest silently weakened when an export carried checkpoint tuples but no signed checkpoints | Review of `board_export_from` | `_chain_digest()` prefers `signed_checkpoints`; an export with tuples but no signed checkpoints returns `INCOMPLETE_RECORD` rather than falling back |
-| The OpenSSL cross-check **skipped** rather than failed, because pytest runs under an interpreter without `cryptography` | Reading the test output rather than its summary line | Restructured to run out-of-process under a located interpreter, and to **fail loudly** if none exists. A conformance test that skips is a conformance test that lies |
-| A share-tampering test passed for the wrong reason — doubling a share left the subgroup, so it hit the cheaper check first and never reached the proof | Reading the assertion | Split into two: an out-of-subgroup case and a multiply-by-`g` case that stays in the subgroup and does reach the proof |
-| `pytest.raises(match=…)` treats its argument as a regex, so `"g^q != 1"` never matched | A test that passed when it should not have | `re.escape()` on every expected substring |
-| A helper named `test_source` was collected as a test and returned a value | `PytestReturnNotNoneWarning` | Renamed to `deterministic_source` throughout |
-| **`test_missing_provider_fails_closed` passed for the wrong reason.** It ran a subprocess with `cryptography` blocked and asserted the import failed — but the subprocess interpreter could not import `cryptography` in the first place, so the blocker was doing nothing | Reading the test rather than its result | A **control run** was added: the same subprocess must import the provider successfully *without* the blocker, or the test fails with "this test proves nothing about the fallback" |
-| The same test used the legacy `find_module`/`load_module` finder protocol, removed in Python 3.12. On 3.12+ the blocker would silently not block | Reading the test | Rewritten to `find_spec` |
-| `CV-01` in the conformance catalogue still carried the withdrawn `3afa2962…` digest and the mutable `/main/` URL after the parameter artefact had moved on | A subagent reviewing documents against source | Catalogue entry rewritten to the versioned specification reference, with the withdrawal stated in its `limitations` |
-| `testing/conformance.py` still said "three classes" in its docstring and emitted `catalog_version EPD2-CONFORMANCE-1` while the committed catalogue was `-2`; regenerating from code would have silently downgraded it | The same review | Both corrected |
+| Defect                                                                                                                                                                                                                                                                     | How it was found                                                                                                           | Fix                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`encode_seq` and `encode_struct` were ambiguous** — items were concatenated raw after a count, so `SEQ([b"ab", b"c"])` and `SEQ([b"a", b"bc"])` produced identical bytes. Two different structures could share a protocol digest                                         | **The independent Node.js oracle**, written from the documented grammar rather than from the code, disagreed with the code | Both encoders now length-prefix every member. Every digest in the round changed; the stability vectors caught the change, and the docstring records why it must not be "simplified" back |
+| The threshold-tally fixture verified decryption-share proofs against the pre-ceremony public key                                                                                                                                                                           | `test_guardians.py` failures once a real ceremony existed                                                                  | The fixture derives the joint key from the roster and replaces the runtime's key with it                                                                                                 |
+| `verify_record` ran the ceremony check too late, so a tampered transcript surfaced as `INVALID_BALLOT_PROOF`                                                                                                                                                               | `test_e2e_14`                                                                                                              | The ceremony block moved to immediately after the joint-key subgroup check, before anything uses the key                                                                                 |
+| The chain digest silently weakened when an export carried checkpoint tuples but no signed checkpoints                                                                                                                                                                      | Review of `board_export_from`                                                                                              | `_chain_digest()` prefers `signed_checkpoints`; an export with tuples but no signed checkpoints returns `INCOMPLETE_RECORD` rather than falling back                                     |
+| The OpenSSL cross-check **skipped** rather than failed, because pytest runs under an interpreter without `cryptography`                                                                                                                                                    | Reading the test output rather than its summary line                                                                       | Restructured to run out-of-process under a located interpreter, and to **fail loudly** if none exists. A conformance test that skips is a conformance test that lies                     |
+| A share-tampering test passed for the wrong reason — doubling a share left the subgroup, so it hit the cheaper check first and never reached the proof                                                                                                                     | Reading the assertion                                                                                                      | Split into two: an out-of-subgroup case and a multiply-by-`g` case that stays in the subgroup and does reach the proof                                                                   |
+| `pytest.raises(match=…)` treats its argument as a regex, so `"g^q != 1"` never matched                                                                                                                                                                                     | A test that passed when it should not have                                                                                 | `re.escape()` on every expected substring                                                                                                                                                |
+| A helper named `test_source` was collected as a test and returned a value                                                                                                                                                                                                  | `PytestReturnNotNoneWarning`                                                                                               | Renamed to `deterministic_source` throughout                                                                                                                                             |
+| **`test_missing_provider_fails_closed` passed for the wrong reason.** It ran a subprocess with `cryptography` blocked and asserted the import failed — but the subprocess interpreter could not import `cryptography` in the first place, so the blocker was doing nothing | Reading the test rather than its result                                                                                    | A **control run** was added: the same subprocess must import the provider successfully _without_ the blocker, or the test fails with "this test proves nothing about the fallback"       |
+| The same test used the legacy `find_module`/`load_module` finder protocol, removed in Python 3.12. On 3.12+ the blocker would silently not block                                                                                                                           | Reading the test                                                                                                           | Rewritten to `find_spec`                                                                                                                                                                 |
+| `CV-01` in the conformance catalogue still carried the withdrawn `3afa2962…` digest and the mutable `/main/` URL after the parameter artefact had moved on                                                                                                                 | A subagent reviewing documents against source                                                                              | Catalogue entry rewritten to the versioned specification reference, with the withdrawal stated in its `limitations`                                                                      |
+| `testing/conformance.py` still said "three classes" in its docstring and emitted `catalog_version EPD2-CONFORMANCE-1` while the committed catalogue was `-2`; regenerating from code would have silently downgraded it                                                     | The same review                                                                                                            | Both corrected                                                                                                                                                                           |
 
 ## 8. Security review (§60)
 
@@ -593,16 +593,16 @@ fails on it.
 
 ## 9. Secret scan (§61)
 
-| Category | Result |
-| --- | --- |
-| Real private keys | **none** — no production private key material of any kind exists in the tree |
-| Guardian secrets | **none** — guardian polynomials and shares are generated at test time from a seeded deterministic source and are never written to a file. A test searches the ceremony transcript's canonical bytes for every share and coefficient |
-| Production credentials, API secrets, database passwords | **none** |
-| Real member or voter data | **none** — every fixture identifier is `cap-<fixture>-<n>` or `opt-<n>` |
-| Test parameter files present | Two `.params` files containing **public group parameters only** — `p`, `q`, `g`. Both are named `EPD2-TESTONLY-NOTCONFORMANT-*`, both open with `# TEST ONLY / # NOT EPD2-CRYPTO-1 / # NOT ELECTIONGUARD 2.1 CONFORMANCE / # NOT PRODUCTION`, both are deterministic and reproducible, and `production_use_permitted` is `False` on both |
-| Real parameter artefact | `EPD2-CRYPTO-1.json` contains **public group parameters only** — the published ElectionGuard 2.1 standard baseline constants. Public parameters are not secrets |
-| Board signing key | The literal `b"test-board-key"`, appearing only inside `testing/fixtures.py`, and `b"TEST-ONLY-board-seed"` inside the checkpoint tests. Each is hashed to a 32-byte **TEST-ONLY** Ed25519 private key by `BulletinBoard._seed()`. Deterministic, fixture-scoped, named for what they are, and signing nothing outside a test. The provider's method for deriving them is called `generate_test_keypair` rather than `generate_keypair`, so the restriction is in the call site and not only in a comment |
-| Exported target-profile fixtures | `PACK-16D-TARGET-PROFILE-FIXTURES.json` carries `contains_secret_material: false`, and a test greps it for `secret_key_share`, `coefficients` and `private`. The encryption **nonces** are present deliberately: a fixed nonce is what makes an independently computed ciphertext comparable, and it belongs to a test fixture with no election behind it |
+| Category                                                | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Real private keys                                       | **none** — no production private key material of any kind exists in the tree                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Guardian secrets                                        | **none** — guardian polynomials and shares are generated at test time from a seeded deterministic source and are never written to a file. A test searches the ceremony transcript's canonical bytes for every share and coefficient                                                                                                                                                                                                                                                                       |
+| Production credentials, API secrets, database passwords | **none**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Real member or voter data                               | **none** — every fixture identifier is `cap-<fixture>-<n>` or `opt-<n>`                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Test parameter files present                            | Two `.params` files containing **public group parameters only** — `p`, `q`, `g`. Both are named `EPD2-TESTONLY-NOTCONFORMANT-*`, both open with `# TEST ONLY / # NOT EPD2-CRYPTO-1 / # NOT ELECTIONGUARD 2.1 CONFORMANCE / # NOT PRODUCTION`, both are deterministic and reproducible, and `production_use_permitted` is `False` on both                                                                                                                                                                  |
+| Real parameter artefact                                 | `EPD2-CRYPTO-1.json` contains **public group parameters only** — the published ElectionGuard 2.1 standard baseline constants. Public parameters are not secrets                                                                                                                                                                                                                                                                                                                                           |
+| Board signing key                                       | The literal `b"test-board-key"`, appearing only inside `testing/fixtures.py`, and `b"TEST-ONLY-board-seed"` inside the checkpoint tests. Each is hashed to a 32-byte **TEST-ONLY** Ed25519 private key by `BulletinBoard._seed()`. Deterministic, fixture-scoped, named for what they are, and signing nothing outside a test. The provider's method for deriving them is called `generate_test_keypair` rather than `generate_keypair`, so the restriction is in the call site and not only in a comment |
+| Exported target-profile fixtures                        | `PACK-16D-TARGET-PROFILE-FIXTURES.json` carries `contains_secret_material: false`, and a test greps it for `secret_key_share`, `coefficients` and `private`. The encryption **nonces** are present deliberately: a fixed nonce is what makes an independently computed ciphertext comparable, and it belongs to a test fixture with no election behind it                                                                                                                                                 |
 
 `scripts/check_forbidden_files.py` reports `OK: no forbidden paths found.`
 

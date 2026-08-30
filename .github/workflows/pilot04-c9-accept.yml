@@ -28,18 +28,18 @@ jobs:
     env:
       EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
       EPD2_LOCAL_CI_HOME: /tmp/epd2-local-ci
-      PYTHONUNBUFFERED: '1'
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - uses: actions/setup-node@v4
         with:
-          node-version: '24.19.0'
+          node-version: "24.19.0"
       - uses: astral-sh/setup-uv@v6
         with:
-          version: '0.10.0'
+          version: "0.10.0"
           enable-cache: true
       - name: Install PostgreSQL client
         run: |
@@ -52,7 +52,7 @@ jobs:
           path: pb01
           github-token: ${{ github.token }}
           repository: nepogoda1970-epd2/epd2-civic-os
-          run-id: '32388797195'
+          run-id: "32388797195"
       - name: Run exact-byte C9 acceptance
         run: bash scripts/tmp_pilot04_c9_exact_accept.sh
       - name: Upload C9 evidence

@@ -4,20 +4,20 @@ Purpose: pre-created transport locations for future governed blocks. These branc
 
 Created from main baseline `d2595263fdc95d193dca9d45fed170d5058051f1` on 2026-08-27. Their age relative to later accepted baselines is irrelevant because authoritative acceptance must use a separately constructed exact lineage.
 
-| Block | Transport branch | Upload folder |
-|---|---|---|
-| API-02 | `handoff/api-02` | `handoff/API-02/incoming/` |
-| API-03 | `handoff/api-03` | `handoff/API-03/incoming/` |
-| API-04 | `handoff/api-04` | `handoff/API-04/incoming/` |
-| API-05 | `handoff/api-05` | `handoff/API-05/incoming/` |
-| API-06 | `handoff/api-06` | `handoff/API-06/incoming/` |
-| INFRA | `handoff/infra` | `handoff/INFRA/incoming/` |
-| OPS | `handoff/ops` | `handoff/OPS/incoming/` |
+| Block                | Transport branch               | Upload folder                            |
+| -------------------- | ------------------------------ | ---------------------------------------- |
+| API-02               | `handoff/api-02`               | `handoff/API-02/incoming/`               |
+| API-03               | `handoff/api-03`               | `handoff/API-03/incoming/`               |
+| API-04               | `handoff/api-04`               | `handoff/API-04/incoming/`               |
+| API-05               | `handoff/api-05`               | `handoff/API-05/incoming/`               |
+| API-06               | `handoff/api-06`               | `handoff/API-06/incoming/`               |
+| INFRA                | `handoff/infra`                | `handoff/INFRA/incoming/`                |
+| OPS                  | `handoff/ops`                  | `handoff/OPS/incoming/`                  |
 | SYSTEM TRIAL PREVIEW | `handoff/system-trial-preview` | `handoff/SYSTEM_TRIAL_PREVIEW/incoming/` |
-| CTRL | `handoff/ctrl` | `handoff/CTRL/incoming/` |
-| FRONT | `handoff/front` | `handoff/FRONT/incoming/` |
-| FINAL INTEGRATION | `handoff/final-integration` | `handoff/FINAL_INTEGRATION/incoming/` |
-| SEC | `handoff/sec` | `handoff/SEC/incoming/` |
+| CTRL                 | `handoff/ctrl`                 | `handoff/CTRL/incoming/`                 |
+| FRONT                | `handoff/front`                | `handoff/FRONT/incoming/`                |
+| FINAL INTEGRATION    | `handoff/final-integration`    | `handoff/FINAL_INTEGRATION/incoming/`    |
+| SEC                  | `handoff/sec`                  | `handoff/SEC/incoming/`                  |
 
 ## User upload rule
 

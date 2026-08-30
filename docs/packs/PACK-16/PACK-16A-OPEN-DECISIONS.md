@@ -14,11 +14,11 @@ set and this round keeps.
 
 ## 1. Inherited from PACK-15
 
-| ID          | Question                                                                                            | Owner       | Status after PACK-16A                                                                                             |
-| ----------- | --------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `OD-P15-05` | Whether PACK-16 replaces the spent-nonce set with a cryptographic issuance construction, and the migration | **PACK-16** | **Still open, and deliberately not closed here.** PACK-16A selects a ballot model; the issuance construction is a credential-side question that PACK-16B is better placed to answer alongside the parameter decisions. Re-owned to **PACK-16B** |
-| `OD-P15-06` | Retention periods per artifact class                                                                | **PACK-09** | Still open; PACK-16A adds the ballot-domain tension as `OD-P16A-07`                                                |
-| `OD-P15-08` | Whether `advisory_consultation` may extend beyond members                                           | **Governance** | Still open; mode A of the legal boundary records it                                                             |
+| ID          | Question                                                                                                   | Owner          | Status after PACK-16A                                                                                                                                                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OD-P15-05` | Whether PACK-16 replaces the spent-nonce set with a cryptographic issuance construction, and the migration | **PACK-16**    | **Still open, and deliberately not closed here.** PACK-16A selects a ballot model; the issuance construction is a credential-side question that PACK-16B is better placed to answer alongside the parameter decisions. Re-owned to **PACK-16B** |
+| `OD-P15-06` | Retention periods per artifact class                                                                       | **PACK-09**    | Still open; PACK-16A adds the ballot-domain tension as `OD-P16A-07`                                                                                                                                                                             |
+| `OD-P15-08` | Whether `advisory_consultation` may extend beyond members                                                  | **Governance** | Still open; mode A of the legal boundary records it                                                                                                                                                                                             |
 
 ---
 
@@ -55,8 +55,8 @@ that need them use another channel.
 
 **Question.** Are the selected specification's fixed parameters — a
 4096-bit integer group with a 256-bit subgroup, chosen deliberately over
-elliptic curves *"in order to make construction of election verifiers as
-simple as possible"* `[E-02]` — acceptable under **BSI TR-02102-1 (2026-01)**
+elliptic curves _"in order to make construction of election verifiers as
+simple as possible"_ `[E-02]` — acceptable under **BSI TR-02102-1 (2026-01)**
 `[E-52]`, and if not, what divergence must be declared?
 
 **Why open.** It is a substantive cryptographic-policy question that this
@@ -171,9 +171,9 @@ demandable — that is the difficulty, and it is not a detail.
 `AX-21`…`AX-27` doing the comprehension work in language rather than in
 mechanism.
 
-### `OD-P16A-11` — What *"Stand der Technik"* requires
+### `OD-P16A-11` — What _"Stand der Technik"_ requires
 
-**Question.** Does § 15 Abs. 2a PartG's *Stand der Technik* condition
+**Question.** Does § 15 Abs. 2a PartG's _Stand der Technik_ condition
 `[E-49]` map to BSI TR-03169, PP-0121 and TR-02102-1, and if so, how
 closely?
 
@@ -205,15 +205,15 @@ packaging, which is a late and avoidable failure.
 
 ## 3. Which of these block acceptance of PACK-16A
 
-| Blocks acceptance of **this specification**?             | Entries                                              |
-| -------------------------------------------------------- | ---------------------------------------------------- |
-| **No**                                                   | All twelve                                           |
-| Blocks the start of **PACK-16B**                         | None                                                 |
-| Blocks the start of **PACK-16C**                         | `OD-P16A-03`, `OD-P16A-05`                           |
-| Blocks the start of **PACK-16D**                         | `OD-P16A-04`, `OD-P16A-06`                           |
-| Blocks **any activation of any context**                 | `OD-P16A-03`, `OD-P16A-04`, `OD-P16A-06`, `OD-P16A-11` |
-| Blocks **release**                                       | `OD-P16A-08`                                         |
-| Blocks **archiving a context**                           | `OD-P16A-07`                                         |
+| Blocks acceptance of **this specification**? | Entries                                                |
+| -------------------------------------------- | ------------------------------------------------------ |
+| **No**                                       | All twelve                                             |
+| Blocks the start of **PACK-16B**             | None                                                   |
+| Blocks the start of **PACK-16C**             | `OD-P16A-03`, `OD-P16A-05`                             |
+| Blocks the start of **PACK-16D**             | `OD-P16A-04`, `OD-P16A-06`                             |
+| Blocks **any activation of any context**     | `OD-P16A-03`, `OD-P16A-04`, `OD-P16A-06`, `OD-P16A-11` |
+| Blocks **release**                           | `OD-P16A-08`                                           |
+| Blocks **archiving a context**               | `OD-P16A-07`                                           |
 
 **None of the twelve blocks the architectural acceptance of this
 specification**, and none may be closed by an implementation making a

@@ -93,7 +93,7 @@ plaintext.**
 fix.** Found in Helios in 2012, found again in Swiss Post/Scytl in 2019,
 and still present in Helios master in 2026 despite a version-4
 specification that corrects it. → **`AC-P16A-039`: the chosen
-implementation must be *shown by test* to use strong Fiat–Shamir. Not
+implementation must be _shown by test_ to use strong Fiat–Shamir. Not
 assumed.**
 
 **Mixnet risk in practice is parameter-generation and integration risk, not
@@ -108,48 +108,48 @@ parameter provenance — and no mixnet profile is activated in this round.**
 
 ## 4. What was refused
 
-| Refused                                                            | Because                                                                                                 |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| Inventing a voting protocol                                        | No cryptographic research capacity; the one risk process cannot mitigate                                 |
-| Belenios as base                                                   | Its credential list pairs voter identity with a voting-side reference — the row PACK-15 §3 forbids       |
-| Helios as base                                                     | Weak Fiat–Shamir in shipping code; no ballot weeding; n-of-n trustees; names beside ciphertexts          |
-| Estonian IVXV as base                                              | The identity↔ciphertext binding is stored and severed by a trusted offline procedure                     |
-| A mixnet profile now                                               | Individual-ballot decryption is a preference-pattern channel small-cell control cannot close             |
-| Revoting                                                           | It requires a persistent voting-side per-participant handle, and it costs verifiability                  |
-| A recovery path for a lost trustee quorum                          | A recoverable secret is worse than an unrecoverable election                                             |
-| A dispute mechanism that decrypts one ballot                       | Consent does not make a linkage capability safe; a capability that exists can be compelled               |
-| Claiming coercion resistance                                       | It is not achievable for remote voting, and no assessed system claims it                                 |
-| Claiming BSI or BVerfG compliance                                  | Nothing is certified; the Court has never ruled on cryptographic verifiability                           |
+| Refused                                      | Because                                                                                            |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Inventing a voting protocol                  | No cryptographic research capacity; the one risk process cannot mitigate                           |
+| Belenios as base                             | Its credential list pairs voter identity with a voting-side reference — the row PACK-15 §3 forbids |
+| Helios as base                               | Weak Fiat–Shamir in shipping code; no ballot weeding; n-of-n trustees; names beside ciphertexts    |
+| Estonian IVXV as base                        | The identity↔ciphertext binding is stored and severed by a trusted offline procedure               |
+| A mixnet profile now                         | Individual-ballot decryption is a preference-pattern channel small-cell control cannot close       |
+| Revoting                                     | It requires a persistent voting-side per-participant handle, and it costs verifiability            |
+| A recovery path for a lost trustee quorum    | A recoverable secret is worse than an unrecoverable election                                       |
+| A dispute mechanism that decrypts one ballot | Consent does not make a linkage capability safe; a capability that exists can be compelled         |
+| Claiming coercion resistance                 | It is not achievable for remote voting, and no assessed system claims it                           |
+| Claiming BSI or BVerfG compliance            | Nothing is certified; the Court has never ruled on cryptographic verifiability                     |
 
 ---
 
 ## 5. Documents produced
 
-| Document                                            | What it settles                                                              |
-| --------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `PACK-16A-SCOPE-AND-BOUNDARY.md`                    | The inherited boundary as obligations; `CC-01`…`CC-10`; `NIT-01`…`NIT-07`     |
-| `PACK-16A-PROTOCOL-COMPARISON.md`                   | Nine families assessed; five structural filters; verdicts                     |
-| `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md`              | **The single canonical Evidence Registry** — 59 substantive entries, 1 reserved ID, 60 allocated; three findings; contradictions shown |
-| `PACK-16A-THREAT-MODEL.md`                          | Forty-two threats continuing PACK-15's thirty-nine                            |
-| `PACK-16A-BALLOT-MODEL-SPECIFICATION.md`            | The profile; `BM-01`…`BM-35`; ten residual risks; six invalidating conditions |
-| `PACK-16A-ELECTION-PROFILE-MATRIX.md`               | Fourteen election types; `MS-01`…`MS-05`; `SD-01`…`SD-09`                     |
-| `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md`         | The revoting decision and its proof attempt; fourteen states; `EX-01`…`EX-07` |
-| `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md`         | Six layers; permitted and prohibited claims registries                        |
-| `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md`           | `BB-01`…`BB-37`; the layered publication model and its justification          |
-| `PACK-16A-TRUSTEE-AND-CEREMONY-REQUIREMENTS.md`     | `KC-01`…`KC-27`; `TP-01`…`TP-07`; the no-escrow trade                         |
-| `PACK-16A-ROLE-SEPARATION-MATRIX.md`                | Sixteen roles; eleven prohibitions; ten dangerous collusion combinations      |
-| `PACK-16A-GERMAN-LEGAL-BOUNDARY.md`                 | Nine modes; the ten-item governance gate; the legal source list               |
-| `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md`              | Twelve flows; seven correlation channels; eight mechanisms assessed           |
-| `PACK-16A-FAILURE-AND-ABORT-MODEL.md`               | `FM-P16A-01`…`25`; uncertifiable results                                      |
-| `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`            | `AX-01`…`AX-43`; seven named security conflicts                               |
-| `PACK-16A-REASON-CODE-SPECIFICATION.md`             | Eleven namespaces; `RC-01`…`RC-10`; codes deliberately absent                 |
-| `PACK-16A-FIR-COVERAGE-MATRIX.md`                   | Register assessment; zero closures; zero creations                            |
-| `PACK-16A-CANON-ASSESSMENT.md`                      | `CQ-01`…`CQ-06`; `CA-01`…`CA-03`; no canon change                             |
-| `PACK-16A-ACCEPTANCE-MATRIX.md`                     | Ninety-six criteria; zero met by a running system                             |
-| `PACK-16A-OPEN-DECISIONS.md`                        | Twelve open decisions with owners and closing rounds                          |
-| `PACK-16A-SPECIFICATION-REPORT.md`                  | This document                                                                 |
-| `PACK-16A-HANDOVER.md`                              | The handover and archive facts                                                |
-| `docs/adr/ADR-099-…`                                | The decision record, status `proposed`                                        |
+| Document                                        | What it settles                                                                                                                        |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `PACK-16A-SCOPE-AND-BOUNDARY.md`                | The inherited boundary as obligations; `CC-01`…`CC-10`; `NIT-01`…`NIT-07`                                                              |
+| `PACK-16A-PROTOCOL-COMPARISON.md`               | Nine families assessed; five structural filters; verdicts                                                                              |
+| `PACK-16A-PROTOCOL-EVIDENCE-MATRIX.md`          | **The single canonical Evidence Registry** — 59 substantive entries, 1 reserved ID, 60 allocated; three findings; contradictions shown |
+| `PACK-16A-THREAT-MODEL.md`                      | Forty-two threats continuing PACK-15's thirty-nine                                                                                     |
+| `PACK-16A-BALLOT-MODEL-SPECIFICATION.md`        | The profile; `BM-01`…`BM-35`; ten residual risks; six invalidating conditions                                                          |
+| `PACK-16A-ELECTION-PROFILE-MATRIX.md`           | Fourteen election types; `MS-01`…`MS-05`; `SD-01`…`SD-09`                                                                              |
+| `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md`     | The revoting decision and its proof attempt; fourteen states; `EX-01`…`EX-07`                                                          |
+| `PACK-16A-COERCION-AND-RECEIPT-BOUNDARY.md`     | Six layers; permitted and prohibited claims registries                                                                                 |
+| `PACK-16A-BULLETIN-BOARD-REQUIREMENTS.md`       | `BB-01`…`BB-37`; the layered publication model and its justification                                                                   |
+| `PACK-16A-TRUSTEE-AND-CEREMONY-REQUIREMENTS.md` | `KC-01`…`KC-27`; `TP-01`…`TP-07`; the no-escrow trade                                                                                  |
+| `PACK-16A-ROLE-SEPARATION-MATRIX.md`            | Sixteen roles; eleven prohibitions; ten dangerous collusion combinations                                                               |
+| `PACK-16A-GERMAN-LEGAL-BOUNDARY.md`             | Nine modes; the ten-item governance gate; the legal source list                                                                        |
+| `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md`          | Twelve flows; seven correlation channels; eight mechanisms assessed                                                                    |
+| `PACK-16A-FAILURE-AND-ABORT-MODEL.md`           | `FM-P16A-01`…`25`; uncertifiable results                                                                                               |
+| `PACK-16A-ACCESSIBILITY-REQUIREMENTS.md`        | `AX-01`…`AX-43`; seven named security conflicts                                                                                        |
+| `PACK-16A-REASON-CODE-SPECIFICATION.md`         | Eleven namespaces; `RC-01`…`RC-10`; codes deliberately absent                                                                          |
+| `PACK-16A-FIR-COVERAGE-MATRIX.md`               | Register assessment; zero closures; zero creations                                                                                     |
+| `PACK-16A-CANON-ASSESSMENT.md`                  | `CQ-01`…`CQ-06`; `CA-01`…`CA-03`; no canon change                                                                                      |
+| `PACK-16A-ACCEPTANCE-MATRIX.md`                 | Ninety-six criteria; zero met by a running system                                                                                      |
+| `PACK-16A-OPEN-DECISIONS.md`                    | Twelve open decisions with owners and closing rounds                                                                                   |
+| `PACK-16A-SPECIFICATION-REPORT.md`              | This document                                                                                                                          |
+| `PACK-16A-HANDOVER.md`                          | The handover and archive facts                                                                                                         |
+| `docs/adr/ADR-099-…`                            | The decision record, status `proposed`                                                                                                 |
 
 ---
 

@@ -38,8 +38,8 @@ model executable, and then to attack it.
 appended to.** An independent audit of the first candidate passed the
 harness and failed four things: the actual `EPD2-CRYPTO-1` profile, the
 threshold guardian model, checkpoint authenticity, and external
-conformance. Each was a case of this ADR describing a *gap* in language that
-made it sound like a *decision*. "The constants could not be obtained" is a
+conformance. Each was a case of this ADR describing a _gap_ in language that
+made it sound like a _decision_. "The constants could not be obtained" is a
 report; "a profile that fails closed is a visible gap" is a rationalisation
 of it. The four are now implemented, and the sections that argued for their
 absence are replaced rather than annotated — an architecture decision record
@@ -48,7 +48,7 @@ nothing about what the system is.
 
 One further consequence deserves the top of the document. The independent
 Node.js oracle written to satisfy the conformance finding was written from
-the *documented grammar* rather than from the code, and it disagreed with
+the _documented grammar_ rather than from the code, and it disagreed with
 the code: `encode_seq` concatenated its items raw after a count, so
 `SEQ([b"ab", b"c"])` and `SEQ([b"a", b"bc"])` produced identical bytes. Two
 different sequences shared a digest, in a function every protocol digest
@@ -71,7 +71,7 @@ the Merkle mechanics, the election record, the verifier boundary, the
 negative corpus, and the concurrency and fault-injection harnesses.
 
 The first of the three cost this ADR an argument it had made at length and
-made wrongly. *Dependency decision* below is **replaced**, not appended to,
+made wrongly. _Dependency decision_ below is **replaced**, not appended to,
 for the same reason the earlier sections were: an ADR that carries both a
 claim and its refutation teaches a reader nothing about what the system is
 or why.
@@ -104,8 +104,8 @@ candidate treated the parameter profile, the guardian quorum and checkpoint
 authenticity as surface it could defer, and each deferral was written up as
 a considered trade-off. They were not trade-offs: without them the reference
 implementation was not exercising the model PACK-16A/16B/16C specified. The
-boundary that matters is between *making the specified model executable* and
-*making it deployable*, and only the second is out of scope.
+boundary that matters is between _making the specified model executable_ and
+_making it deployable_, and only the second is out of scope.
 
 ## Language decision
 
@@ -114,7 +114,7 @@ alternative — a separate cryptographic core in a systems language — was
 rejected for this round because it would have made the reference
 implementation harder to read than the specification it implements, which
 defeats the purpose. That decision has a real cost, recorded under
-*Constant-time limitations*, and it is not the right decision for
+_Constant-time limitations_, and it is not the right decision for
 production.
 
 ## Dependency decision
@@ -138,7 +138,7 @@ next reader to make it again.
 The error was to treat "no exposure was created" as equivalent to "the
 exposure was assessed and is acceptable". Those are different claims about
 different risks. Not adding a library removes supply-chain exposure. It does
-not remove cryptographic-implementation exposure; it *relocates* it, from a
+not remove cryptographic-implementation exposure; it _relocates_ it, from a
 library with years of adversarial attention on it into a file in this
 repository with none. The previous round then wrote Edwards-curve point
 arithmetic, point compression, scalar multiplication and private-key
@@ -243,7 +243,7 @@ sites deliberately bypass the registry because none computes a protocol
 digest: the idempotency request digest, counter-mode block generation in
 the deterministic test source, and the board fixture's derivation of a
 32-byte Ed25519 seed from a short human-readable test key. The checkpoint
-*signing input* is not among them — it goes through `h()` under the
+_signing input_ is not among them — it goes through `h()` under the
 `BOARD_CHECKPOINT` label, so a signature over some other EPD2 structure can
 never be presented as a checkpoint signature.
 
@@ -262,7 +262,7 @@ a parameter set is the last thing that should point at one. The artefact
 now distinguishes three things that were previously one.
 
 **Authoritative — the specification, not an implementation of it.**
-`source.authoritative` names the *ElectionGuard Design Specification*
+`source.authoritative` names the _ElectionGuard Design Specification_
 **2.1.0**, §3.1.1 page 14, at
 `https://github.com/microsoft/electionguard/releases/download/v2.1/EG_Spec_2_1.pdf`
 — a **versioned release asset under the tag `v2.1`**, which is the property
@@ -362,7 +362,7 @@ The two fast profiles are renamed to say what they are —
 ONLY / # NOT EPD2-CRYPTO-1 / # NOT ELECTIONGUARD 2.1 CONFORMANCE / # NOT
 PRODUCTION`. A test asserts every non-target profile id contains the marker
 `TESTONLY-NOTCONFORMANT`. The old names invited exactly the substitution
-this section forbids: `EPD2-TEST-P4096-Q256` has `EPD2-CRYPTO-1`'s *shape*
+this section forbids: `EPD2-TEST-P4096-Q256` has `EPD2-CRYPTO-1`'s _shape_
 and neither its `r/2`-prime property nor its `ln(2)` derivation, and a name
 that differs only by the word `TEST` is not a safeguard.
 
@@ -427,7 +427,7 @@ design**: a cover leaf is uniform random bytes and is never hashed.
 Production randomness is the OS CSPRNG with no seed, no reseed hook and no
 fallback; a failure raises rather than degrades, on both `random_bytes` and
 `random_below`. The deterministic test source requires **two** independent
-guards — an explicit keyword *and* an environment marker — so that neither a
+guards — an explicit keyword _and_ an environment marker — so that neither a
 stray argument nor a stray environment variable is sufficient.
 `select_source()` accepts only the literal string `"production"` and has no
 code path that returns a deterministic source. That last property is
@@ -494,7 +494,7 @@ check the result. A signature nobody can verify is decoration, and the audit
 was right to call it that.
 
 The second candidate fixed that with a hand-written Ed25519, and the second
-audit was right to fail *that*. **The primitive is now
+audit was right to fail _that_. **The primitive is now
 `crypto/signature_provider.py`**, a narrow port over `cryptography` 46.0.7,
 linked against OpenSSL 3.5.6. `CheckpointSignatureProvider` is a
 `@runtime_checkable` Protocol with six operations — `generate_test_keypair`,
@@ -503,7 +503,7 @@ linked against OpenSSL 3.5.6. `CheckpointSignatureProvider` is a
 the single active implementation, exposed as one module-level `PROVIDER`
 with no selection mechanism, because a provider chosen by configuration is a
 provider an operator can get wrong. `crypto/ed25519.py` is deleted. The
-reasoning is in *Dependency decision*; the consequences are here.
+reasoning is in _Dependency decision_; the consequences are here.
 
 **Encodings are strict and singular.** A public key is exactly 32 raw bytes
 and a signature exactly 64: no PEM, no DER, no base64. Accepting several
@@ -511,7 +511,7 @@ encodings would mean two byte strings naming one key, and a signer registry
 keyed on bytes would then hold two entries for one signer.
 `verify_checkpoint` returns `False` on **every** defect — malformed key,
 malformed signature, genuine mismatch — and never raises. It says nothing
-about *which* defect, deliberately: the distinction a reader needs (unknown
+about _which_ defect, deliberately: the distinction a reader needs (unknown
 signer, unauthorised signer, altered bytes) is drawn one layer up by
 `publication.checkpoint_signing`, which has the registry to draw it with. A
 primitive that also reported on trust would be two mechanisms wearing one
@@ -528,8 +528,8 @@ imports no cryptographic Python library at all, and it accepts the three RFC
 vectors and rejects three mutated-message variants. Its limitation is
 stated rather than buried — the CLI and the library the provider links share
 an upstream project, so a defect present in both builds would be invisible.
-The previous in-process oracle, which called OpenSSL *through
-`cryptography`*, was **deleted** once `cryptography` became the provider: it
+The previous in-process oracle, which called OpenSSL _through
+`cryptography`_, was **deleted** once `cryptography` became the provider: it
 had become a library compared against itself in one process, which is
 agreement by construction and not an oracle at all.
 
@@ -542,7 +542,7 @@ narrowed to exclude the signing surface and stays open.
 **The trust anchor is the election context, not the artefact.** A verifier
 that accepted a key carried inside the thing it is verifying would let
 anyone mint their own board. The authorised signer set is a `SignerRegistry`
-fixed before the first checkpoint and supplied *alongside* the export; the
+fixed before the first checkpoint and supplied _alongside_ the export; the
 checkpoint carries only a key identifier that must resolve inside it.
 `CheckpointPayload` has no `public_key` field at all, and a structural test
 asserts no path reads one out of a checkpoint. Rotation is expressed by
@@ -575,7 +575,7 @@ hide behind one on the group it will:
 - **primary-source** — a value published externally and reproduced here.
 - **rfc-conformance** — a published RFC test vector reproduced by the
   primitive. Split out because an RFC's vectors are the strongest evidence a
-  *primitive* can have, and conflating them with protocol-parameter
+  _primitive_ can have, and conflating them with protocol-parameter
   provenance made both harder to audit.
 - **cross-implementation-test-profile** — computed independently, on
   `EPD2-TESTONLY-NOTCONFORMANT-P1024-Q160`.
@@ -636,12 +636,12 @@ The earlier correction **widened** this rather than softening it. Four
 surfaces are distinguished, because one blanket statement let the
 secret-bearing paths hide inside it:
 
-| Surface | Secret-bearing? | Status |
-| --- | --- | --- |
-| public verification (proof, signature, Merkle) | no | timing carries no secret |
-| guardian secret operations (DKG, share computation) | **yes** | not constant-time; pure Python |
-| secret nonce generation | **yes** | OS CSPRNG; the *use* is not constant-time |
-| Ed25519 private-key signing | **yes** | moved to a vetted provider; **risk reduced, nothing measured** |
+| Surface                                             | Secret-bearing? | Status                                                         |
+| --------------------------------------------------- | --------------- | -------------------------------------------------------------- |
+| public verification (proof, signature, Merkle)      | no              | timing carries no secret                                       |
+| guardian secret operations (DKG, share computation) | **yes**         | not constant-time; pure Python                                 |
+| secret nonce generation                             | **yes**         | OS CSPRNG; the _use_ is not constant-time                      |
+| Ed25519 private-key signing                         | **yes**         | moved to a vetted provider; **risk reduced, nothing measured** |
 
 **The fourth row is the one this round changed, and the change is narrowing,
 not closing.** The hand-written scalar multiplication that branched on key
@@ -669,7 +669,7 @@ from the maximum number of valid continuation capabilities and never from
 turnout.
 
 A consequence worth stating because a test got it wrong first: a public
-challenge published *after* the final cast is not evidence of anything, so a
+challenge published _after_ the final cast is not evidence of anything, so a
 capability consumed by a cast can no longer challenge. When a cast and a
 challenge race, the outcome is therefore order-dependent, and that is
 correct rather than a defect.
@@ -812,9 +812,9 @@ fail if a vector's provenance is softened or a production profile is
 claimed.
 
 The first candidate presented these as this round's conformance evidence.
-They are not, they never were, and the classification in *External
-conformance* above exists so the distinction survives the next reader.
-`OD-P16D-02` — comparison against a *complete* independent implementation —
+They are not, they never were, and the classification in _External
+conformance_ above exists so the distinction survives the next reader.
+`OD-P16D-02` — comparison against a _complete_ independent implementation —
 remains open and is owned by PACK-17. It no longer depends on
 `OD-P16D-01`.
 
@@ -830,7 +830,7 @@ Three cases are new this correction: `ambiguous_sequence_encoding`,
 ## Concurrency testing
 
 Nine races, twelve repeats each, real OS threads released from a barrier.
-The five §42 expectations are asserted directly. This proves the *logic* is
+The five §42 expectations are asserted directly. This proves the _logic_ is
 race-free under the reference store's re-entrant lock; it proves nothing
 about a production datastore, where the same invariants must come from
 row-level locking or a serialisable isolation level. That is `OD-P16D-04`.
@@ -858,27 +858,27 @@ implemented**.
 
 ## Rejected alternatives
 
-| Alternative | Why rejected |
-| --- | --- |
-| A vetted native cryptographic library **for the group arithmetic** | Would give a constant-time bignum path for the guardian and proof surfaces, and would require widening the dependency policy again for a library this round could not assess. Deferred deliberately rather than taken quietly. **This row no longer covers signatures**: one vetted provider was adopted for that primitive, assessed in `PACK-16D-LANGUAGE-AND-DEPENDENCY-ASSESSMENT.md` §2.1 and §3 |
-| A new `uv` workspace member for the reference package | Would require a workspace-level manifest change on top of the lock regeneration. The reference package therefore lives inside `epd2-voting-service`, and adding a dependency to that package's own `pyproject.toml` was the smaller change. That dependency is now resolved in `uv.lock`; the workspace shape is unchanged |
-| Canonical JSON as the wire encoding | Canonical JSON specifies how to avoid a format's ambiguities. A format without them is simpler to verify |
-| Duplicating the last node on odd Merkle levels | The shape where two different leaf sequences share a root. Replaced with RFC 6962, not patched |
-| Substituting a same-size test group for `EPD2-CRYPTO-1` | Would make every test green and every result meaningless. `EPD2-TEST-P4096-Q256` had the right *shape* and neither the family's `r/2`-prime property nor its `ln(2)` derivation. Renamed to `EPD2-TESTONLY-NOTCONFORMANT-P4096-Q256` so the name cannot invite the substitution the code forbids |
-| A fallback when `EPD2-CRYPTO-1` fails to load | Any fallback — `except`, default argument, environment variable, feature flag — converts a loud failure into a silent downgrade. `load_profile` has none, proved structurally rather than by review |
-| Replacing the profile with a reduced group because the real one is slow | 28.12 s for `test_epd2_crypto_1` and 8.06 s for the target-profile core is the honest cost of 4096-bit arithmetic in Python. The runtime is recorded, exported next to the fixtures, and the test partitioning optimised; the group is not touched |
+| Alternative                                                                                         | Why rejected                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A vetted native cryptographic library **for the group arithmetic**                                  | Would give a constant-time bignum path for the guardian and proof surfaces, and would require widening the dependency policy again for a library this round could not assess. Deferred deliberately rather than taken quietly. **This row no longer covers signatures**: one vetted provider was adopted for that primitive, assessed in `PACK-16D-LANGUAGE-AND-DEPENDENCY-ASSESSMENT.md` §2.1 and §3                                                                                                                                                                                                  |
+| A new `uv` workspace member for the reference package                                               | Would require a workspace-level manifest change on top of the lock regeneration. The reference package therefore lives inside `epd2-voting-service`, and adding a dependency to that package's own `pyproject.toml` was the smaller change. That dependency is now resolved in `uv.lock`; the workspace shape is unchanged                                                                                                                                                                                                                                                                             |
+| Canonical JSON as the wire encoding                                                                 | Canonical JSON specifies how to avoid a format's ambiguities. A format without them is simpler to verify                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Duplicating the last node on odd Merkle levels                                                      | The shape where two different leaf sequences share a root. Replaced with RFC 6962, not patched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Substituting a same-size test group for `EPD2-CRYPTO-1`                                             | Would make every test green and every result meaningless. `EPD2-TEST-P4096-Q256` had the right _shape_ and neither the family's `r/2`-prime property nor its `ln(2)` derivation. Renamed to `EPD2-TESTONLY-NOTCONFORMANT-P4096-Q256` so the name cannot invite the substitution the code forbids                                                                                                                                                                                                                                                                                                       |
+| A fallback when `EPD2-CRYPTO-1` fails to load                                                       | Any fallback — `except`, default argument, environment variable, feature flag — converts a loud failure into a silent downgrade. `load_profile` has none, proved structurally rather than by review                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Replacing the profile with a reduced group because the real one is slow                             | 28.12 s for `test_epd2_crypto_1` and 8.06 s for the target-profile core is the honest cost of 4096-bit arithmetic in Python. The runtime is recorded, exported next to the fixtures, and the test partitioning optimised; the group is not touched                                                                                                                                                                                                                                                                                                                                                     |
 | **Keeping the hand-written Ed25519** because it passed the RFC 8032 vectors and agreed with OpenSSL | This is the argument the previous round made, and it is wrong. Passing the vectors an author thought to write says nothing about the vulnerability class the author did not think of — a missing subgroup check, a branch that leaks a key bit, a non-canonical encoding accepted on an untried input. Those are found by years of adversarial attention on one widely deployed implementation and cannot be found by the author of a fresh one. `crypto/ed25519.py` is deleted, not kept "for reference": a file one import away from being active is still from-scratch curve code in the repository |
-| **A `try: import cryptography / except: use our own` fallback** | It would silently reinstate the removed implementation on whichever machine lacked the dependency — and that is precisely the machine you would least want running hand-rolled cryptography. The provider imports at module scope and raises `SignatureProviderUnavailableError` if the library is absent. Failing closed at import is the whole point, and a test runs a subprocess with the library blocked to prove it, with a control run first so the test cannot pass by accident |
-| **Hand-editing `uv.lock` to add the provider** | Prohibited, and for a concrete reason rather than a stylistic one: a `[[package]]` entry needs a registry source and distribution hashes for artefacts that were never downloaded. Typing plausible hashes produces a file that looks resolved and is not, and the failure surfaces at the worst possible moment. The gap was left declared and open for two rounds instead, and was closed by the resolver — `test_uv_lock_was_not_hand_edited_to_fake_the_provider` asserts the entry has the shape a resolver produces |
-| **Pinning the parameter source to the `/main/` URL** and calling it provenance | A branch reference is a moving target, and the audit was right to call it `PARTIAL`. The authoritative reference is now a versioned release asset with its digest in the artefact, the Rust file is demoted to corroborating with `human_readable_url_is_authoritative: false`, and the values are established independently of both by offline reconstruction. The digest previously recorded for that file was withdrawn rather than relabelled, because it was computed over a markdown rendering |
-| Carrying the signing public key inside the checkpoint | Then anyone can mint their own board. The trust anchor must arrive out of band, which is why `CheckpointPayload` has no key field at all |
-| Compensated decryption for a missing guardian | Prohibited by the PACK-16B baseline. The function exists only to refuse, so the prohibition is discoverable in code rather than only in a document |
-| Letting the caller supply the quorum to `combine_shares` | A caller-supplied `k` is threshold reduction with extra steps. The quorum comes from the ceremony transcript, and a rewritten transcript fails verification |
-| Reusing the internal-stability vectors as conformance evidence | The first candidate did this and the audit was right to fail it. A self-generated vector cannot detect a consistent error — as `encode_seq` proved |
-| Calling the same Python functions through a second wrapper as a "cross-check" | Agreement by construction. The oracle had to re-derive the encoding from the grammar, which is precisely why it disagreed and found a real defect |
-| Inferring the shared reserve from leftover batch capacity | Silently reintroduces adaptive overflow whenever a batch grows |
-| Redacting forbidden fields in logs instead of refusing them | Redaction turns a caller defect into a passing test |
-| Verifying consistency proofs by re-running the prover's recursion | A verifier that mirrors the prover agrees with it by construction and proves nothing |
+| **A `try: import cryptography / except: use our own` fallback**                                     | It would silently reinstate the removed implementation on whichever machine lacked the dependency — and that is precisely the machine you would least want running hand-rolled cryptography. The provider imports at module scope and raises `SignatureProviderUnavailableError` if the library is absent. Failing closed at import is the whole point, and a test runs a subprocess with the library blocked to prove it, with a control run first so the test cannot pass by accident                                                                                                                |
+| **Hand-editing `uv.lock` to add the provider**                                                      | Prohibited, and for a concrete reason rather than a stylistic one: a `[[package]]` entry needs a registry source and distribution hashes for artefacts that were never downloaded. Typing plausible hashes produces a file that looks resolved and is not, and the failure surfaces at the worst possible moment. The gap was left declared and open for two rounds instead, and was closed by the resolver — `test_uv_lock_was_not_hand_edited_to_fake_the_provider` asserts the entry has the shape a resolver produces                                                                              |
+| **Pinning the parameter source to the `/main/` URL** and calling it provenance                      | A branch reference is a moving target, and the audit was right to call it `PARTIAL`. The authoritative reference is now a versioned release asset with its digest in the artefact, the Rust file is demoted to corroborating with `human_readable_url_is_authoritative: false`, and the values are established independently of both by offline reconstruction. The digest previously recorded for that file was withdrawn rather than relabelled, because it was computed over a markdown rendering                                                                                                   |
+| Carrying the signing public key inside the checkpoint                                               | Then anyone can mint their own board. The trust anchor must arrive out of band, which is why `CheckpointPayload` has no key field at all                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Compensated decryption for a missing guardian                                                       | Prohibited by the PACK-16B baseline. The function exists only to refuse, so the prohibition is discoverable in code rather than only in a document                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Letting the caller supply the quorum to `combine_shares`                                            | A caller-supplied `k` is threshold reduction with extra steps. The quorum comes from the ceremony transcript, and a rewritten transcript fails verification                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Reusing the internal-stability vectors as conformance evidence                                      | The first candidate did this and the audit was right to fail it. A self-generated vector cannot detect a consistent error — as `encode_seq` proved                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Calling the same Python functions through a second wrapper as a "cross-check"                       | Agreement by construction. The oracle had to re-derive the encoding from the grammar, which is precisely why it disagreed and found a real defect                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Inferring the shared reserve from leftover batch capacity                                           | Silently reintroduces adaptive overflow whenever a batch grows                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Redacting forbidden fields in logs instead of refusing them                                         | Redaction turns a caller defect into a passing test                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Verifying consistency proofs by re-running the prover's recursion                                   | A verifier that mirrors the prover agrees with it by construction and proves nothing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## Residual risks
 
@@ -914,7 +914,7 @@ output rather than on assertion:
    process, no authenticated channel, no HSM, no air gap, no witnesses.
 2. The signer registry's own authorisation is outside the verifier's reach
    (`OD-P16D-12`).
-3. No comparison against a *complete* independent implementation
+3. No comparison against a _complete_ independent implementation
    (`OD-P16D-02`). Two single-purpose oracles are not one, and one of them
    now shares an upstream with the primitive it checks.
 4. Concurrency evidence covers one in-memory store (`OD-P16D-04`).
@@ -931,7 +931,7 @@ output rather than on assertion:
 11. `is_probable_prime()` is Miller–Rabin, not a proof of primality — which
     matters more now that it is applied to the real `p`, `q` and `r/2`.
 12. A compiled native artefact is now in the runtime path. Its resolution is
-    hash-pinned in `uv.lock`, which fixes *which* bytes are installed; it says
+    hash-pinned in `uv.lock`, which fixes _which_ bytes are installed; it says
     nothing about how that implementation behaves under timing observation, and
     a libcrypto advisory remains an EPD² concern.
 13. Branch coverage was not measured; no tool is installable here.

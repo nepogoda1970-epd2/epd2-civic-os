@@ -126,23 +126,23 @@ docs/canonical/ ................................................. byte-identical
 docs/roadmap/ Master Register ................................... byte-identical
 ```
 
-| # | File | Why it changed |
-| - | ---- | -------------- |
-| 1 | `PACK-16C-EVENT-CATALOG.md` | **Defect 1, primary.** `EV-15` and `EV-19b` deleted; `EV-05` and `EV-71` rewritten; `EV-74`…`EV-78` added; retention table and must-not-exist list updated |
-| 2 | `PACK-16C-OPEN-DECISIONS.md` | **Defect 2, primary.** `OD-P16C-10` rewritten as §1.1; `OD-R13`…`OD-R17` added; §2.0.1 architectural-versus-numeric split |
-| 3 | `PACK-16C-API-CATALOG.md` | **Stale reference.** The Audit-evidence field of `API-15` and `API-17` described the capability-side half as a separate event stream |
-| 4 | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | **Stale reference.** `CN-44` added so the entitlement transition's non-event status is stated where the boundary is specified |
-| 5 | `PACK-16C-THREAT-MODEL-EXTENSION.md` | **Stale reference.** `T-P16C-28`'s mitigation cited two event streams; it now cites the stronger fact that one side is not an event |
-| 6 | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md` | **Stale reference.** `TC-26` pointed its supersession at `TC-58` (local challenges occupy no leaf) instead of `TC-59`/`TC-60`, and referred to concrete values without pointing at the rewritten `OD-P16C-10` |
-| 7 | `PACK-16C-ACCEPTANCE-MATRIX.md` | **Consistency.** Eight decisions adjusted in place; **no rows added**; counts recomputed |
-| 8 | `PACK-16C-FIR-COVERAGE-MATRIX.md` | **Consistency.** `FIR-INV-007` treatment strengthened by the event-payload prohibition |
-| 9 | `PACK-16C-CANON-ASSESSMENT.md` | **Consistency.** `CAN-P16C-09` records that removing event-bus propagation needs no canon amendment |
-| 10 | `PACK-16C-SPECIFICATION-REPORT.md` | **Consistency.** Correction 3 recorded; event count; two findings; one decision row |
-| 11 | `PACK-16C-HANDOVER.md` | This file |
-| 12 | `docs/adr/ADR-101-…md` | **Consistency.** Events section corrected; capacity section notes the architecture/numbers split; three PACK-16D obligations added |
+| #   | File                                                  | Why it changed                                                                                                                                                                                                |
+| --- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `PACK-16C-EVENT-CATALOG.md`                           | **Defect 1, primary.** `EV-15` and `EV-19b` deleted; `EV-05` and `EV-71` rewritten; `EV-74`…`EV-78` added; retention table and must-not-exist list updated                                                    |
+| 2   | `PACK-16C-OPEN-DECISIONS.md`                          | **Defect 2, primary.** `OD-P16C-10` rewritten as §1.1; `OD-R13`…`OD-R17` added; §2.0.1 architectural-versus-numeric split                                                                                     |
+| 3   | `PACK-16C-API-CATALOG.md`                             | **Stale reference.** The Audit-evidence field of `API-15` and `API-17` described the capability-side half as a separate event stream                                                                          |
+| 4   | `PACK-16C-CONTINUATION-CONSUMPTION-AND-ACCEPTANCE.md` | **Stale reference.** `CN-44` added so the entitlement transition's non-event status is stated where the boundary is specified                                                                                 |
+| 5   | `PACK-16C-THREAT-MODEL-EXTENSION.md`                  | **Stale reference.** `T-P16C-28`'s mitigation cited two event streams; it now cites the stronger fact that one side is not an event                                                                           |
+| 6   | `PACK-16C-TURNOUT-CONFIDENTIALITY-MODEL.md`           | **Stale reference.** `TC-26` pointed its supersession at `TC-58` (local challenges occupy no leaf) instead of `TC-59`/`TC-60`, and referred to concrete values without pointing at the rewritten `OD-P16C-10` |
+| 7   | `PACK-16C-ACCEPTANCE-MATRIX.md`                       | **Consistency.** Eight decisions adjusted in place; **no rows added**; counts recomputed                                                                                                                      |
+| 8   | `PACK-16C-FIR-COVERAGE-MATRIX.md`                     | **Consistency.** `FIR-INV-007` treatment strengthened by the event-payload prohibition                                                                                                                        |
+| 9   | `PACK-16C-CANON-ASSESSMENT.md`                        | **Consistency.** `CAN-P16C-09` records that removing event-bus propagation needs no canon amendment                                                                                                           |
+| 10  | `PACK-16C-SPECIFICATION-REPORT.md`                    | **Consistency.** Correction 3 recorded; event count; two findings; one decision row                                                                                                                           |
+| 11  | `PACK-16C-HANDOVER.md`                                | This file                                                                                                                                                                                                     |
+| 12  | `docs/adr/ADR-101-…md`                                | **Consistency.** Events section corrected; capacity section notes the architecture/numbers split; three PACK-16D obligations added                                                                            |
 
 **Files 3–6, 8, 9 are the "related stale references" the task permits.**
-Each carried an *active* statement that the two named fixes contradict;
+Each carried an _active_ statement that the two named fixes contradict;
 leaving any of them would have left the pack self-contradictory.
 
 ---
@@ -163,8 +163,8 @@ REMOVED   EV-15    capability.consumed
 
 **`EV-15` was removed as well, and this is the one change beyond the named
 defect.** The audit named `EV-19b`; `EV-15` was the identical defect on the
-cast path, and §10 of the correction task requires *`capability reference in
-event payloads = 0`*. Leaving `EV-15` would have failed that check, and
+cast path, and §10 of the correction task requires _`capability reference in
+event payloads = 0`_. Leaving `EV-15` would have failed that check, and
 stripping only its capability reference would have left a bare
 "a capability was spent" tick — an internal live-participation counter,
 which is worse than the field it removed.
@@ -468,8 +468,8 @@ candidate ZIPs inside archive ............................. 0
 external PDFs ............................................. 0
 ```
 
-| ID | Rule |
-| -- | ---- |
+| ID      | Rule                                                                                                                                                                                                                              |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `HO-01` | **No verification result in this document is asserted.** Each is the recorded output of a command or a mechanical check run against this tree, and where a script emitted a warning the warning is reproduced rather than trimmed |
 
 ---
@@ -484,7 +484,7 @@ activation effect is now stated explicitly rather than implied.
 **Residual risks: unchanged.** `RB-16C-01`…`RB-16C-16` stand as written.
 
 **One residual is sharpened rather than added.** The event-privacy
-correction removes a *published* correlation surface; it does not remove
+correction removes a _published_ correlation surface; it does not remove
 `T-P16C-28`, the operator with database-level access to both stores and
 precise timing. **That threat is now the only remaining path to the
 boundary's two halves**, because neither half is on an event bus. The
@@ -544,24 +544,24 @@ NOT authorisation to start PACK-16D.
 
 ## 11. Decision history of this correction
 
-| # | Event |
-| - | ----- |
-| 1 | Source SHA-256 `6ca16ae2…` recomputed and matched before extraction; no other tree used |
-| 2 | Both defects inventoried across all 33 documents, `ADR-101` and the Master Register before any edit |
-| 3 | **`EV-19b` deleted rather than reshaped**, per the task's preferred fix, and `EV-76` added so a renamed bus message cannot return |
-| 4 | **`EV-15` deleted as well** — the identical defect on the cast path. Stripping its capability reference alone would have left a bare consumption tick, an internal live-participation counter, which is worse than the field removed |
-| 5 | **Identifiers retired, not renumbered** (`EV-78`), so the gap is documented rather than read as a missing event |
-| 6 | **`TC-26`'s cross-reference corrected** — it pointed its own supersession at `TC-58` (local challenges occupy no leaf) instead of `TC-59`/`TC-60`. A wrong pointer in the rule that withdraws the plausible-load criterion would have undermined the fix |
-| 7 | **`OD-P16C-10` rewritten in full**, with the architectural derivation stated as closed and only the numbers open |
-| 8 | **§2.0.1 added** so that architectural closure and numeric configuration cannot be conflated again |
-| 9 | **No Requirement IDs added.** Eight decisions were adjusted in place; the task asked for no new rows without necessity, and there was none |
-| 10 | Master Register checked for both stale patterns and **left byte-identical**, because neither appears in it |
-| 11 | Canon, lockfiles and every untouched document verified byte-identical |
+| #   | Event                                                                                                                                                                                                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Source SHA-256 `6ca16ae2…` recomputed and matched before extraction; no other tree used                                                                                                                                                                  |
+| 2   | Both defects inventoried across all 33 documents, `ADR-101` and the Master Register before any edit                                                                                                                                                      |
+| 3   | **`EV-19b` deleted rather than reshaped**, per the task's preferred fix, and `EV-76` added so a renamed bus message cannot return                                                                                                                        |
+| 4   | **`EV-15` deleted as well** — the identical defect on the cast path. Stripping its capability reference alone would have left a bare consumption tick, an internal live-participation counter, which is worse than the field removed                     |
+| 5   | **Identifiers retired, not renumbered** (`EV-78`), so the gap is documented rather than read as a missing event                                                                                                                                          |
+| 6   | **`TC-26`'s cross-reference corrected** — it pointed its own supersession at `TC-58` (local challenges occupy no leaf) instead of `TC-59`/`TC-60`. A wrong pointer in the rule that withdraws the plausible-load criterion would have undermined the fix |
+| 7   | **`OD-P16C-10` rewritten in full**, with the architectural derivation stated as closed and only the numbers open                                                                                                                                         |
+| 8   | **§2.0.1 added** so that architectural closure and numeric configuration cannot be conflated again                                                                                                                                                       |
+| 9   | **No Requirement IDs added.** Eight decisions were adjusted in place; the task asked for no new rows without necessity, and there was none                                                                                                               |
+| 10  | Master Register checked for both stale patterns and **left byte-identical**, because neither appears in it                                                                                                                                               |
+| 11  | Canon, lockfiles and every untouched document verified byte-identical                                                                                                                                                                                    |
 
-| ID | Rule |
-| -- | ---- |
+| ID      | Rule                                                                                                                                                                                                                                      |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `HO-02` | **Rows 4 and 6 are the changes beyond the two named defects, and both are recorded rather than folded in silently.** One is the same defect on the other path; the other is a wrong cross-reference inside the rule that performs the fix |
-| `HO-03` | **Row 9 is a refusal.** A correction that grows the acceptance matrix every round stops being a correction |
+| `HO-03` | **Row 9 is a refusal.** A correction that grows the acceptance matrix every round stops being a correction                                                                                                                                |
 
 ---
 

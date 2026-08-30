@@ -25,14 +25,14 @@ thereafter.** There is no other place where it can be made.
 
 Conflating these is how downgrade paths get built.
 
-| Kind                              | Question it answers                                        | Mechanism                                                   |
-| --------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
-| **New-context agility**           | What may a *new* election use?                             | Parameter-set `status` = `active` at configuration time      |
-| **Historical-verification compatibility** | Can a 2030 record still be verified in 2045?         | `PS-10` — verification capability is never withdrawn         |
-| **Emergency prohibition**         | How is a broken set stopped?                                | `PS-08`, `PS-14`; parameter-set specification §5              |
-| **Algorithm migration**           | How does the construction itself change?                    | A new profile, a new ADR — §5                                 |
-| **Parameter migration**           | How do values change within one construction?               | **Not applicable** — the values are fixed upstream `[F-04]`   |
-| **Protocol migration**            | How does the protocol family change?                        | Re-opens `ADR-099`; outside every later PACK-16 stage         |
+| Kind                                      | Question it answers                           | Mechanism                                                   |
+| ----------------------------------------- | --------------------------------------------- | ----------------------------------------------------------- |
+| **New-context agility**                   | What may a _new_ election use?                | Parameter-set `status` = `active` at configuration time     |
+| **Historical-verification compatibility** | Can a 2030 record still be verified in 2045?  | `PS-10` — verification capability is never withdrawn        |
+| **Emergency prohibition**                 | How is a broken set stopped?                  | `PS-08`, `PS-14`; parameter-set specification §5            |
+| **Algorithm migration**                   | How does the construction itself change?      | A new profile, a new ADR — §5                               |
+| **Parameter migration**                   | How do values change within one construction? | **Not applicable** — the values are fixed upstream `[F-04]` |
+| **Protocol migration**                    | How does the protocol family change?          | Re-opens `ADR-099`; outside every later PACK-16 stage       |
 
 **Parameter migration does not exist in `EPD2-CRYPTO-1`**, because the
 upstream specification fixes the values and a conforming verifier requires
@@ -55,15 +55,15 @@ NO per-tenant, per-scope or per-device parameter variation.
 NO "try the new one, fall back to the old one" retry.
 ```
 
-| ID       | Rule                                                                                                                     |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `CA-01`  | The parameter set is a **manifest field**, decided before `issuance_open` and immutable thereafter (`PS-03`, `PS-11`)     |
-| `CA-02`  | Every participant — client, service, board, verifier — reads the set **from the manifest**, and refuses if it cannot     |
-| `CA-03`  | A mismatch between an expected and a presented parameter set is a **refusal**, never a renegotiation                     |
-| `CA-04`  | An unrecognised parameter set is a **refusal**, never a default (`PS-07`)                                                |
-| `CA-05`  | A verifier that does not support the record's declared set **reports that it cannot verify**; it never verifies partially or approximately |
-| `CA-06`  | There is **no protocol message** in which a parameter set is proposed, offered, requested or agreed                       |
-| `CA-07`  | No flag may relax `CA-01`…`CA-06` (`FIR-INV-006`)                                                                        |
+| ID      | Rule                                                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CA-01` | The parameter set is a **manifest field**, decided before `issuance_open` and immutable thereafter (`PS-03`, `PS-11`)                      |
+| `CA-02` | Every participant — client, service, board, verifier — reads the set **from the manifest**, and refuses if it cannot                       |
+| `CA-03` | A mismatch between an expected and a presented parameter set is a **refusal**, never a renegotiation                                       |
+| `CA-04` | An unrecognised parameter set is a **refusal**, never a default (`PS-07`)                                                                  |
+| `CA-05` | A verifier that does not support the record's declared set **reports that it cannot verify**; it never verifies partially or approximately |
+| `CA-06` | There is **no protocol message** in which a parameter set is proposed, offered, requested or agreed                                        |
+| `CA-07` | No flag may relax `CA-01`…`CA-06` (`FIR-INV-006`)                                                                                          |
 
 `CA-05` matters more than it looks. A verifier that silently skips checks
 it does not understand is worse than one that refuses, because it converts
@@ -85,13 +85,13 @@ German guidance recommends classical key agreement **only until the end of
 2032-12-31   prohibition_date
 ```
 
-| ID       | Obligation                                                                                                                            |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `CA-08`  | A successor profile must exist and be `active` **before** the deprecation date, or **no new context may be opened after it**            |
-| `CA-09`  | The successor is expected to be **hybrid** — quantum-safe combined with classical — because the guidance states quantum-safe mechanisms are *"generally not yet trusted to the same extent as the established classical mechanisms"* `[F-25]` |
-| `CA-10`  | Successor work is **`OD-P16B-06`**, owned by a future round, and is **not started here**                                               |
-| `CA-11`  | The deprecation date is a **registry field**, surfaced in configuration validation, not a note in a document                            |
-| `CA-12`  | Approaching deprecation produces a governed notification at 24, 12 and 3 months (`PACK-16B-INCIDENT-AND-NOTIFICATION-MODEL.md` §6)     |
+| ID      | Obligation                                                                                                                                                                                                                                    |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CA-08` | A successor profile must exist and be `active` **before** the deprecation date, or **no new context may be opened after it**                                                                                                                  |
+| `CA-09` | The successor is expected to be **hybrid** — quantum-safe combined with classical — because the guidance states quantum-safe mechanisms are _"generally not yet trusted to the same extent as the established classical mechanisms"_ `[F-25]` |
+| `CA-10` | Successor work is **`OD-P16B-06`**, owned by a future round, and is **not started here**                                                                                                                                                      |
+| `CA-11` | The deprecation date is a **registry field**, surfaced in configuration validation, not a note in a document                                                                                                                                  |
+| `CA-12` | Approaching deprecation produces a governed notification at 24, 12 and 3 months (`PACK-16B-INCIDENT-AND-NOTIFICATION-MODEL.md` §6)                                                                                                            |
 
 **The successor is not a parameter change.** A hybrid construction is a
 different protocol: different ciphertexts, different proofs, different
@@ -118,29 +118,29 @@ wrote down is a cliff somebody walks off.**
 7. Verification capability for the predecessor is retained indefinitely.
 ```
 
-| ID       | Rule                                                                                                         |
-| -------- | -------------------------------------------------------------------------------------------------------------- |
-| `CA-13`  | Two parameter sets may be `active` simultaneously; a **context** still binds exactly one (`PS-02`)             |
-| `CA-14`  | A running context **never migrates**. There is no in-place upgrade of an open election                        |
-| `CA-15`  | A configured-but-unopened context may be **discarded and reconstituted** under the successor — never re-keyed  |
-| `CA-16`  | Migration never re-opens, re-signs, re-encrypts or re-tallies an archived record                              |
-| `CA-17`  | The successor's arrival does not invalidate a completed election, and no completed result is re-characterised as unverified because a newer profile exists |
+| ID      | Rule                                                                                                                                                       |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CA-13` | Two parameter sets may be `active` simultaneously; a **context** still binds exactly one (`PS-02`)                                                         |
+| `CA-14` | A running context **never migrates**. There is no in-place upgrade of an open election                                                                     |
+| `CA-15` | A configured-but-unopened context may be **discarded and reconstituted** under the successor — never re-keyed                                              |
+| `CA-16` | Migration never re-opens, re-signs, re-encrypts or re-tallies an archived record                                                                           |
+| `CA-17` | The successor's arrival does not invalidate a completed election, and no completed result is re-characterised as unverified because a newer profile exists |
 
 `CA-17` exists because it is the natural thing to get wrong. A result
 produced correctly under the guidance of its time remains correctly
-produced; what changes is what may be *started* afterwards.
+produced; what changes is what may be _started_ afterwards.
 
 ---
 
 ## 6. Historical verification
 
-| ID       | Requirement                                                                                                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `CA-18`  | Every archived record carries its `parameter_set_id`, its `specification_version` and its `specification_digest` |
-| `CA-19`  | The parameter values and their derivation rule are archived **with** the record, not by reference alone           |
-| `CA-20`  | An archived record verifies with **an unmodified conforming verifier** and no live EPD² service (`BB-20`)         |
-| `CA-21`  | Retiring a parameter set never removes the ability to verify records made under it                                |
-| `CA-22`  | Where a set is `prohibited` for a security reason, archived verification continues **with a published notice** stating what was found and when |
+| ID      | Requirement                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CA-18` | Every archived record carries its `parameter_set_id`, its `specification_version` and its `specification_digest`                               |
+| `CA-19` | The parameter values and their derivation rule are archived **with** the record, not by reference alone                                        |
+| `CA-20` | An archived record verifies with **an unmodified conforming verifier** and no live EPD² service (`BB-20`)                                      |
+| `CA-21` | Retiring a parameter set never removes the ability to verify records made under it                                                             |
+| `CA-22` | Where a set is `prohibited` for a security reason, archived verification continues **with a published notice** stating what was found and when |
 
 `CA-22` is the honest handling of the uncomfortable case: an election
 verified under a construction later found weak. The record still verifies
@@ -152,18 +152,18 @@ would give them.
 
 ## 7. Who may do what
 
-| Act                                           | Decider                    | Concurrence         | Published |
-| --------------------------------------------- | -------------------------- | ------------------- | --------- |
-| Propose a parameter set (`draft`)             | Cryptographic Reviewer     | —                   | yes       |
-| Move to `under_review`                        | Election Board             | —                   | yes       |
-| Move to `approved`                            | Election Board             | **Independent Auditor** + Cryptographic Reviewer sign-off | yes |
-| Move to `active`                              | **Legal Activation Authority** + Election Board, through the governance gate | Independent Auditor | yes |
-| Bind a set to a context                       | Election Board, in the manifest | —              | yes       |
-| Publish the set with the manifest             | Bulletin-Board Operator    | —                   | yes       |
-| Verify the set is as published                | **anyone**                 | —                   | n/a       |
-| Move to `deprecated`                          | automatic on date, or Election Board earlier | —   | yes       |
-| Move to `prohibited`                          | Election Board             | **Independent Auditor** | yes   |
-| Emergency advisory intake                     | Cryptographic Reviewer     | —                   | yes       |
+| Act                               | Decider                                                                      | Concurrence                                               | Published |
+| --------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------- | --------- |
+| Propose a parameter set (`draft`) | Cryptographic Reviewer                                                       | —                                                         | yes       |
+| Move to `under_review`            | Election Board                                                               | —                                                         | yes       |
+| Move to `approved`                | Election Board                                                               | **Independent Auditor** + Cryptographic Reviewer sign-off | yes       |
+| Move to `active`                  | **Legal Activation Authority** + Election Board, through the governance gate | Independent Auditor                                       | yes       |
+| Bind a set to a context           | Election Board, in the manifest                                              | —                                                         | yes       |
+| Publish the set with the manifest | Bulletin-Board Operator                                                      | —                                                         | yes       |
+| Verify the set is as published    | **anyone**                                                                   | —                                                         | n/a       |
+| Move to `deprecated`              | automatic on date, or Election Board earlier                                 | —                                                         | yes       |
+| Move to `prohibited`              | Election Board                                                               | **Independent Auditor**                                   | yes       |
+| Emergency advisory intake         | Cryptographic Reviewer                                                       | —                                                         | yes       |
 
 **Who cannot:**
 
@@ -185,13 +185,13 @@ The upstream specification has **no errata document, no specification-level
 security-reporting path, and marks two versions simultaneously
 "Recommended"** `[F-30]`. EPD² therefore cannot rely on being told.
 
-| ID       | Requirement                                                                                                        |
-| -------- | -------------------------------------------------------------------------------------------------------------------- |
-| `CA-23`  | The Cryptographic Reviewer role holds a standing obligation to monitor the upstream repository, release notes and the cryptographic literature for defects affecting the pinned specification |
-| `CA-24`  | An advisory is assessed within a governed period and produces one of: no action · clarification in the EPD² profile · deprecation · **prohibition** |
-| `CA-25`  | The assessment and its outcome are **published**, including "no action" and its reasoning                          |
-| `CA-26`  | An advisory arriving **during a running election** follows `PACK-16B-PARAMETER-SET-SPECIFICATION.md` §5, whose options are bounded and do not include re-keying |
-| `CA-27`  | EPD² maintains its **own errata record** for the pinned specification, including the two internal inconsistencies already identified (`PACK-16B-FIAT-SHAMIR-AND-DOMAIN-SEPARATION.md` §7) |
+| ID      | Requirement                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CA-23` | The Cryptographic Reviewer role holds a standing obligation to monitor the upstream repository, release notes and the cryptographic literature for defects affecting the pinned specification |
+| `CA-24` | An advisory is assessed within a governed period and produces one of: no action · clarification in the EPD² profile · deprecation · **prohibition**                                           |
+| `CA-25` | The assessment and its outcome are **published**, including "no action" and its reasoning                                                                                                     |
+| `CA-26` | An advisory arriving **during a running election** follows `PACK-16B-PARAMETER-SET-SPECIFICATION.md` §5, whose options are bounded and do not include re-keying                               |
+| `CA-27` | EPD² maintains its **own errata record** for the pinned specification, including the two internal inconsistencies already identified (`PACK-16B-FIAT-SHAMIR-AND-DOMAIN-SEPARATION.md` §7)     |
 
 `CA-27` is not optional politeness. Two inconsistencies were found in the
 specification's hash section by a single reading pass `[F-19]`; a project

@@ -99,21 +99,21 @@ turnout guarantee expressed as a limit on verification (`EC-14`).
 
 ## 2. Decisions taken
 
-| Decision | Selected | Alternatives rejected |
-| -------- | -------- | --------------------- |
-| Consumption point | **Atomic validation + consumption + acceptance** | Consume on issue of intent; consume after publication; two-phase with compensation |
-| Ballot identity | **Four separated values** — `ballot_id`, `confirmation_code`, `board_sequence`, `internal_object_id` | One identifier reused; server-assigned `ballot_id`; hash-derived `ballot_id` |
-| Challenge policy | **Two-tier: unlimited local diagnostic checks + one public evidentiary challenge per capability (`K = 1`)** | Fixed probability; system-forced; **unlimited *published* challenges — rejected on audit, no finite capacity bound**; rate-bounding instead of entitlement-bounding; a global rather than per-capability cap |
-| Capacity planning | **`L_max = E × (K + A) = E × 2`, from maximum valid continuations** | Planning from plausible turnout; adaptive overflow batches; a hidden overflow queue |
-| Capability-side observability | **Not an event.** Internal transactional state change with privacy-restricted audit evidence | A `capability.consumed` event; a renamed `…_transition_completed` event that still crosses a bus |
-| Board structure | **Merkle transparency log with chained signed checkpoints, mirror co-signing, published gossip** | Signed flat log; database with audit table; blockchain |
-| Pre-closure publication | **One constant-size sealed batch commitment per fixed window** | Individual ballot entries; padding entries; nothing at all until closure |
-| Publication | **Durable acceptance + signed commitment naming a batch window + closure opening** | Publish-then-accept; accept-and-hope; synchronous publication inside the boundary; an unbounded asynchronous deadline |
-| Verification origin | **Separate published origin** | Same origin as the voting client; a native application |
-| Turnout confidentiality | **Fixed-cadence sealed fixed-capacity batch commitments, opened in full at closure** | Unpadded batches; **padding entries — rejected on audit**; withholding the board until closure; adaptive cadence; publishing per-window occupancy |
+| Decision                      | Selected                                                                                                    | Alternatives rejected                                                                                                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Consumption point             | **Atomic validation + consumption + acceptance**                                                            | Consume on issue of intent; consume after publication; two-phase with compensation                                                                                                                           |
+| Ballot identity               | **Four separated values** — `ballot_id`, `confirmation_code`, `board_sequence`, `internal_object_id`        | One identifier reused; server-assigned `ballot_id`; hash-derived `ballot_id`                                                                                                                                 |
+| Challenge policy              | **Two-tier: unlimited local diagnostic checks + one public evidentiary challenge per capability (`K = 1`)** | Fixed probability; system-forced; **unlimited _published_ challenges — rejected on audit, no finite capacity bound**; rate-bounding instead of entitlement-bounding; a global rather than per-capability cap |
+| Capacity planning             | **`L_max = E × (K + A) = E × 2`, from maximum valid continuations**                                         | Planning from plausible turnout; adaptive overflow batches; a hidden overflow queue                                                                                                                          |
+| Capability-side observability | **Not an event.** Internal transactional state change with privacy-restricted audit evidence                | A `capability.consumed` event; a renamed `…_transition_completed` event that still crosses a bus                                                                                                             |
+| Board structure               | **Merkle transparency log with chained signed checkpoints, mirror co-signing, published gossip**            | Signed flat log; database with audit table; blockchain                                                                                                                                                       |
+| Pre-closure publication       | **One constant-size sealed batch commitment per fixed window**                                              | Individual ballot entries; padding entries; nothing at all until closure                                                                                                                                     |
+| Publication                   | **Durable acceptance + signed commitment naming a batch window + closure opening**                          | Publish-then-accept; accept-and-hope; synchronous publication inside the boundary; an unbounded asynchronous deadline                                                                                        |
+| Verification origin           | **Separate published origin**                                                                               | Same origin as the voting client; a native application                                                                                                                                                       |
+| Turnout confidentiality       | **Fixed-cadence sealed fixed-capacity batch commitments, opened in full at closure**                        | Unpadded batches; **padding entries — rejected on audit**; withholding the board until closure; adaptive cadence; publishing per-window occupancy                                                            |
 
-| ID | Rule |
-| -- | ---- |
+| ID       | Rule                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `REP-01` | **Every rejected alternative is recorded with the reason it was rejected**, in the document that owns the decision. A selection with no visible alternatives is not a decision |
 
 ---
@@ -191,32 +191,32 @@ turnout guarantee expressed as a limit on verification (`EC-14`).
     (T-P16C-51, RB-16C-12).
 ```
 
-| ID | Rule |
-| -- | ---- |
+| ID       | Rule                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `REP-02` | **None of the eight is softened anywhere in the pack.** Each appears in the document that owns it, in the threat model, in the acceptance matrix, and — where a voter is affected — in participant-facing text before the irreversible step |
 
 ---
 
 ## 4. What was found while writing
 
-| Finding | Where it went |
-| ------- | ------------- |
-| **A public append-only board is a live turnout feed by construction.** Removing a counter endpoint does not remove the number | `TC-01`, `TC-02`; fixed-cadence sealed batch commitments |
-| **A padding entry that carries no ciphertext does not hide occupancy — it labels it.** The first candidate's model was structurally, not numerically, wrong | `TC-21` — the correction; rejected and superseded |
-| **Absence of a scheduled publication is itself a disclosure**, so empty windows must publish too | `TC-25`, `FM-16C-18` |
-| **A named batch window turns an unbounded publication promise into a bounded one**, and lets a voter detect non-publication *during* voting | `PA-10`, `PA-12`, `DP-19` |
-| **A fixed capacity is not a bound unless the number of publication-bearing artefacts is provably finite.** Unlimited published challenges against finite `C` is not a bound at all | `CH-36`, `TC-59` — the capacity correction |
-| **Benaloh's repeatability and public evidence were doing two different jobs in one action.** Separating them keeps unlimited checking *and* yields a finite bound | `CH-36`, §1A |
-| **A reserve batch that appears only under load announces that the interval was busy**, so reserves must publish on schedule whether used or not | `TC-67`, `T-P16C-54` |
-| **Accept-then-find-room is the same class of error as accept-now-verify-later**, and is prohibited for the same reason | `TC-70`, `VP-00` |
-| **The canon has no primitive for a public ballot-bearing board**, because its only append-only public primitive correctly prohibits touching vote envelopes | `CQ-P16C-01`, `CAM-P16C-01` — recorded as a gap, not filled by analogy |
-| **Certificate Transparency — the most deployed transparency-log ecosystem — has never standardised split-view detection.** RFC 6962 deferred it in 2013, RFC 9162 declared it out of scope in 2021, and the IETF gossip draft died in 2020 | `G-03`, `G-05`, `AO-13`, `OD-P16C-12` |
-| **RFC 6962's Maximum Merge Delay is a decade-old precedent for a signed promise to publish by a deadline** | `G-02`; `PA-*` is adapted from it, not invented |
-| **A distributed trace spanning the atomic boundary reconstructs exactly the link the architecture removes** | `EV-06` — tracing prohibited across the boundary |
-| **An event that names the capability it just spent is a correlation identifier wearing a domain name.** The capability-side half of an atomic boundary should never have been an event | `EV-71`, `EV-74` — the event-privacy correction |
-| **"Capacity must exceed the plausible load" is a preference, not a criterion**, and leaving it in an open decision quietly reopened a closed architectural question | `OD-R13`, `OD-R16` — the open-decision correction |
-| **A spoiled ballot's opening and a cast ballot's absence of one must be separated at the data-model level**, not by a conditional | `DM-11`, `ER-08` |
-| **Six of this round's central decisions rest on no external source at all** | `G-R04` — stated, not disguised as evidenced |
+| Finding                                                                                                                                                                                                                                    | Where it went                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **A public append-only board is a live turnout feed by construction.** Removing a counter endpoint does not remove the number                                                                                                              | `TC-01`, `TC-02`; fixed-cadence sealed batch commitments               |
+| **A padding entry that carries no ciphertext does not hide occupancy — it labels it.** The first candidate's model was structurally, not numerically, wrong                                                                                | `TC-21` — the correction; rejected and superseded                      |
+| **Absence of a scheduled publication is itself a disclosure**, so empty windows must publish too                                                                                                                                           | `TC-25`, `FM-16C-18`                                                   |
+| **A named batch window turns an unbounded publication promise into a bounded one**, and lets a voter detect non-publication _during_ voting                                                                                                | `PA-10`, `PA-12`, `DP-19`                                              |
+| **A fixed capacity is not a bound unless the number of publication-bearing artefacts is provably finite.** Unlimited published challenges against finite `C` is not a bound at all                                                         | `CH-36`, `TC-59` — the capacity correction                             |
+| **Benaloh's repeatability and public evidence were doing two different jobs in one action.** Separating them keeps unlimited checking _and_ yields a finite bound                                                                          | `CH-36`, §1A                                                           |
+| **A reserve batch that appears only under load announces that the interval was busy**, so reserves must publish on schedule whether used or not                                                                                            | `TC-67`, `T-P16C-54`                                                   |
+| **Accept-then-find-room is the same class of error as accept-now-verify-later**, and is prohibited for the same reason                                                                                                                     | `TC-70`, `VP-00`                                                       |
+| **The canon has no primitive for a public ballot-bearing board**, because its only append-only public primitive correctly prohibits touching vote envelopes                                                                                | `CQ-P16C-01`, `CAM-P16C-01` — recorded as a gap, not filled by analogy |
+| **Certificate Transparency — the most deployed transparency-log ecosystem — has never standardised split-view detection.** RFC 6962 deferred it in 2013, RFC 9162 declared it out of scope in 2021, and the IETF gossip draft died in 2020 | `G-03`, `G-05`, `AO-13`, `OD-P16C-12`                                  |
+| **RFC 6962's Maximum Merge Delay is a decade-old precedent for a signed promise to publish by a deadline**                                                                                                                                 | `G-02`; `PA-*` is adapted from it, not invented                        |
+| **A distributed trace spanning the atomic boundary reconstructs exactly the link the architecture removes**                                                                                                                                | `EV-06` — tracing prohibited across the boundary                       |
+| **An event that names the capability it just spent is a correlation identifier wearing a domain name.** The capability-side half of an atomic boundary should never have been an event                                                     | `EV-71`, `EV-74` — the event-privacy correction                        |
+| **"Capacity must exceed the plausible load" is a preference, not a criterion**, and leaving it in an open decision quietly reopened a closed architectural question                                                                        | `OD-R13`, `OD-R16` — the open-decision correction                      |
+| **A spoiled ballot's opening and a cast ballot's absence of one must be separated at the data-model level**, not by a conditional                                                                                                          | `DM-11`, `ER-08`                                                       |
+| **Six of this round's central decisions rest on no external source at all**                                                                                                                                                                | `G-R04` — stated, not disguised as evidenced                           |
 
 ---
 

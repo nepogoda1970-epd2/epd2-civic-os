@@ -39,18 +39,18 @@ jobs:
       DATA02_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
       DATA03_BOOTSTRAP_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
       DATA03_UPGRADE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_upgrade
-      PYTHONUNBUFFERED: '1'
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12.12'
+          python-version: "3.12.12"
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.16.0'
+          node-version: "22.16.0"
       - uses: astral-sh/setup-uv@v6
         with:
-          version: '0.12.5'
+          version: "0.12.5"
           enable-cache: true
       - name: Install PostgreSQL client
         run: |
@@ -63,7 +63,7 @@ jobs:
           path: sources/c9
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: '32601698352'
+          run-id: "32601698352"
       - name: Download frozen PB01 exact artifact
         uses: actions/download-artifact@v4
         with:
@@ -71,7 +71,7 @@ jobs:
           path: sources/pb01
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: '32388797195'
+          run-id: "32388797195"
       - name: Reconstruct exact consolidated candidate
         run: |
           cat verification/consolidation-c1/transport.part* > verification/consolidation-c1/transport.tar.xz

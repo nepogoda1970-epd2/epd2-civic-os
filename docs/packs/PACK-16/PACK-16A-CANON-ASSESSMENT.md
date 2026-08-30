@@ -29,18 +29,18 @@ amendment gets made by an implementation instead of by a decision.
 Nothing structurally. But the selected ballot model must eventually be
 expressed in canonical terms, and this round is where the fit is checked.
 
-| Canon section                            | What PACK-16A relies on                                                        | What PACK-16A does **not** do                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| **5.9 Tally Context**                    | Ballot-set verification, counting, repeatability, invalid-record handling, a signed result | Redefine the context or move its owner                    |
-| **15.1 `Ballot`**                        | `ballot_method`, `secrecy_mode`, `eligibility_rule_version`, `quorum_rule`, `threshold_rule`, `configuration_hash`, the status lifecycle | Add a field, add a status, change a status meaning |
-| **15.2 `BallotOption`**                  | Options locked after opening                                                   | Change the locking rule                                          |
-| **15.3 `VoteEnvelope`**                  | `credential_proof`, `encrypted_or_encoded_choice`, `integrity_hash`, `validation_status`, `included_in_tally`, the forbidden-field set | Add an identity field, weaken the prohibition |
-| **15.4 `VoteReceipt`**                   | *"Receipt должен позволять проверить включение бюллетеня без публичного раскрытия выбранного варианта"* | Change the receipt's obligation                  |
-| **15.5 `Tally`**                         | `input_set_hash`, `algorithm_version`, `result_data`, `tally_signature`         | Change the aggregate's shape                                     |
-| **15.6 `ResultPublication`**             | `eligible_count`, `credential_count`, `accepted_vote_count`, `rejected_vote_count`, `challenge_deadline_at` and its non-finality rule | Make the result final on a deadline alone |
-| **19a.1 `PublicLedgerEntry`**            | The append-only chained-publication primitive                                  | **Use it for the bulletin board — canon forbids it** (§3.1)      |
-| **§21 canonical event envelope**         | Unchanged, as PACK-13 and PACK-15 leave it                                     | Add transport metadata or a second envelope                      |
-| **19d.18, 19e.22, 19f.23 prohibitions**  | Every prohibited edge into `VoteEnvelope` / `Tally` / `Ballot`                  | Create any of them                                               |
+| Canon section                           | What PACK-16A relies on                                                                                                                  | What PACK-16A does **not** do                               |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **5.9 Tally Context**                   | Ballot-set verification, counting, repeatability, invalid-record handling, a signed result                                               | Redefine the context or move its owner                      |
+| **15.1 `Ballot`**                       | `ballot_method`, `secrecy_mode`, `eligibility_rule_version`, `quorum_rule`, `threshold_rule`, `configuration_hash`, the status lifecycle | Add a field, add a status, change a status meaning          |
+| **15.2 `BallotOption`**                 | Options locked after opening                                                                                                             | Change the locking rule                                     |
+| **15.3 `VoteEnvelope`**                 | `credential_proof`, `encrypted_or_encoded_choice`, `integrity_hash`, `validation_status`, `included_in_tally`, the forbidden-field set   | Add an identity field, weaken the prohibition               |
+| **15.4 `VoteReceipt`**                  | _"Receipt должен позволять проверить включение бюллетеня без публичного раскрытия выбранного варианта"_                                  | Change the receipt's obligation                             |
+| **15.5 `Tally`**                        | `input_set_hash`, `algorithm_version`, `result_data`, `tally_signature`                                                                  | Change the aggregate's shape                                |
+| **15.6 `ResultPublication`**            | `eligible_count`, `credential_count`, `accepted_vote_count`, `rejected_vote_count`, `challenge_deadline_at` and its non-finality rule    | Make the result final on a deadline alone                   |
+| **19a.1 `PublicLedgerEntry`**           | The append-only chained-publication primitive                                                                                            | **Use it for the bulletin board — canon forbids it** (§3.1) |
+| **§21 canonical event envelope**        | Unchanged, as PACK-13 and PACK-15 leave it                                                                                               | Add transport metadata or a second envelope                 |
+| **19d.18, 19e.22, 19f.23 prohibitions** | Every prohibited edge into `VoteEnvelope` / `Tally` / `Ballot`                                                                           | Create any of them                                          |
 
 **Nothing above is modified by this round.**
 
@@ -59,13 +59,13 @@ identifier, because canon 10.1 already forbids identity fields on
 `ParticipationCredential` and the two prohibitions were written for
 different purposes.
 
-PACK-15 closed this on its side: `VotingCredentialId` is *"never used as,
-derived into, or stored beside a ballot identifier"* (PACK-15 §11), and the
+PACK-15 closed this on its side: `VotingCredentialId` is _"never used as,
+derived into, or stored beside a ballot identifier"_ (PACK-15 §11), and the
 consumption record is a **set, not a map** (ADR-093). PACK-16A restates it
 as `BM-02` and `CC-04`.
 
-**Clarification required:** that `credential_proof` is a *proof that a
-valid authorisation was consumed*, carrying no credential identifier, no
+**Clarification required:** that `credential_proof` is a _proof that a
+valid authorisation was consumed_, carrying no credential identifier, no
 continuation reference and nothing from which either is derivable — and
 that this reading is normative rather than merely conventional.
 
@@ -117,13 +117,13 @@ merge.
 ### `CQ-04` — Is the confirmation code a `VoteReceipt`?
 
 **Structurally yes; the obligation is already canonical.** Canon 15.4
-requires that a receipt permit checking inclusion *without publicly
-disclosing the chosen option*, which is exactly `BM-03`.
+requires that a receipt permit checking inclusion _without publicly
+disclosing the chosen option_, which is exactly `BM-03`.
 
 Two clarifications:
 
 1. `VoteReceipt.vote_envelope_reference` must not be a value that a third
-   party can use to *locate the voter*; it locates the **envelope**. The
+   party can use to _locate the voter_; it locates the **envelope**. The
    selected construction satisfies this because the confirmation code
    derives only from the ballot's own encryptions `[E-05]`.
 2. Canon 15.4 does not say a receipt must not prove **participation**. It
@@ -158,7 +158,7 @@ turnout figure or derivable from one, and each is prohibited before closure
 by `ADR-094` and `IT-11`.
 
 Canon does not state when they may be populated, because canon 15.6
-describes a *publication*, which by definition follows the tally.
+describes a _publication_, which by definition follows the tally.
 
 **Clarification required:** that these counts exist **only** in a
 `ResultPublication`, that a `ResultPublication` exists only after
@@ -167,8 +167,8 @@ compute them earlier, and that they are subject to `SD-01` … `SD-09`
 disclosure control on publication.
 
 Also noted and **not** changed: canon 15.6's rule that the passing of
-`challenge_deadline_at` is *"необходимое, но не достаточное условие
-окончательности результата"* — a necessary but not sufficient condition for
+`challenge_deadline_at` is _"необходимое, но не достаточное условие
+окончательности результата"_ — a necessary but not sufficient condition for
 finality — aligns exactly with `PACK-16A-FAILURE-AND-ABORT-MODEL.md` §5's
 uncertifiable-result path, and PACK-16A relies on it.
 
@@ -176,15 +176,15 @@ uncertifiable-result path, and PACK-16A relies on it.
 
 ## 3. What is **not** a canonical question
 
-| Not a canon issue                                             | Why                                                                          |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| The choice of protocol family                                 | Canon describes domain structure, not cryptographic construction              |
-| Challenge/spoil                                               | `Ballot` already carries `challenge_window_hours` (15.1) and ADR-010 added it |
-| The no-revoting decision                                      | A profile property; canon permits both (`CQ-02`)                              |
-| `disclosure_min_cell`                                         | PACK-12/`FIR-INV-011`; unchanged, and no change proposed                      |
-| Role separation                                               | `FIR-ROLE-005`; a register and matrix concern, not a canonical one            |
-| Reason-code namespaces                                        | The Canonical Schema Registry is a registry, not the canon                    |
-| The legal boundary                                            | Governance, not canon                                                         |
+| Not a canon issue             | Why                                                                           |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| The choice of protocol family | Canon describes domain structure, not cryptographic construction              |
+| Challenge/spoil               | `Ballot` already carries `challenge_window_hours` (15.1) and ADR-010 added it |
+| The no-revoting decision      | A profile property; canon permits both (`CQ-02`)                              |
+| `disclosure_min_cell`         | PACK-12/`FIR-INV-011`; unchanged, and no change proposed                      |
+| Role separation               | `FIR-ROLE-005`; a register and matrix concern, not a canonical one            |
+| Reason-code namespaces        | The Canonical Schema Registry is a registry, not the canon                    |
+| The legal boundary            | Governance, not canon                                                         |
 
 ---
 
@@ -215,11 +215,11 @@ canonical home:**
 
 **What is recorded instead**, so that it cannot be discovered late:
 
-| ID       | Amendment candidate                                        | Owning round        | Affected canon clauses                             |
-| -------- | ---------------------------------------------------------- | ------------------- | -------------------------------------------------- |
-| `CA-01`  | A bulletin-board publication aggregate and checkpoint chain| **PACK-16C**        | new section under 15; 19a.1 prohibition preserved   |
-| `CA-02`  | A trustee / key-ceremony evidence aggregate                | **PACK-16B or 16C** | new section under 15; 5.9 Tally Context             |
-| `CA-03`  | A mirror registry and divergence-evidence record           | **PACK-16C**        | new section; 18.1 `AuditEvent` interaction          |
+| ID      | Amendment candidate                                         | Owning round        | Affected canon clauses                            |
+| ------- | ----------------------------------------------------------- | ------------------- | ------------------------------------------------- |
+| `CA-01` | A bulletin-board publication aggregate and checkpoint chain | **PACK-16C**        | new section under 15; 19a.1 prohibition preserved |
+| `CA-02` | A trustee / key-ceremony evidence aggregate                 | **PACK-16B or 16C** | new section under 15; 5.9 Tally Context           |
+| `CA-03` | A mirror registry and divergence-evidence record            | **PACK-16C**        | new section; 18.1 `AuditEvent` interaction        |
 
 If an amendment is proposed, it must carry — as PACK-10's amendment
 material did — affected clauses, rationale, compatibility consequences,
@@ -230,19 +230,19 @@ security consequences, migration consequences and the required approval.
 
 ## 5. Compatibility statement
 
-| Check                                                       | Result                                                                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Does PACK-16A add a canonical aggregate?                    | **No**                                                                     |
-| Does it add a field to an existing aggregate?               | **No**                                                                     |
-| Does it add or change a status?                             | **No**                                                                     |
-| Does it change an owner?                                    | **No**                                                                     |
-| Does it create a prohibited edge?                           | **No** — §1 and §3 check every relevant prohibition                        |
-| Does it weaken any canonical prohibition?                   | **No** — every clarification narrows rather than relaxes                   |
-| Does it modify `TZ-00-domain-event-canon.md`?               | **No**                                                                     |
-| Does it modify `canon-version.json`?                        | **No**                                                                     |
-| Does it change `CANON_VERSION`?                             | **No — it stays `0.8.0`**                                                  |
-| Does it require a canon amendment **now**?                   | **No**                                                                     |
-| Does it identify amendment candidates for later rounds?     | **Yes — `CA-01`, `CA-02`, `CA-03`, recorded and not proposed**             |
+| Check                                                   | Result                                                         |
+| ------------------------------------------------------- | -------------------------------------------------------------- |
+| Does PACK-16A add a canonical aggregate?                | **No**                                                         |
+| Does it add a field to an existing aggregate?           | **No**                                                         |
+| Does it add or change a status?                         | **No**                                                         |
+| Does it change an owner?                                | **No**                                                         |
+| Does it create a prohibited edge?                       | **No** — §1 and §3 check every relevant prohibition            |
+| Does it weaken any canonical prohibition?               | **No** — every clarification narrows rather than relaxes       |
+| Does it modify `TZ-00-domain-event-canon.md`?           | **No**                                                         |
+| Does it modify `canon-version.json`?                    | **No**                                                         |
+| Does it change `CANON_VERSION`?                         | **No — it stays `0.8.0`**                                      |
+| Does it require a canon amendment **now**?              | **No**                                                         |
+| Does it identify amendment candidates for later rounds? | **Yes — `CA-01`, `CA-02`, `CA-03`, recorded and not proposed** |
 
 Note for completeness: `docs/canonical/canon-version.json` declares
 `repository_compatibility: ">=0.1.0 <0.16.0"`. This round leaves

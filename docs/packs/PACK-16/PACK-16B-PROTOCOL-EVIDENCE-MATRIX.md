@@ -34,9 +34,9 @@ Classification
 
 ### 1.2 Classification vocabulary
 
-| Code | Meaning                                                                                  |
+| Code | Meaning                                                                                    |
 | ---- | ------------------------------------------------------------------------------------------ |
-| `P`  | **Protocol** — the normative construction as its own specification states it                |
+| `P`  | **Protocol** — the normative construction as its own specification states it               |
 | `A`  | **Analysis** — peer-reviewed or published cryptographic analysis                           |
 | `N`  | **Normative standard or guidance** — BSI, NIST, ISO                                        |
 | `G`  | **Governance / stewardship** — how the upstream artefact is maintained                     |
@@ -47,16 +47,16 @@ external corroboration.**
 
 ### 1.2a Evidence weight — direct, supporting, historical
 
-Classification says *what kind* of source an entry is. **Weight** says how
+Classification says _what kind_ of source an entry is. **Weight** says how
 much a conclusion may lean on it, and it is stated per entry wherever a
 normative conclusion depends on it:
 
-| Weight                    | Meaning                                                                              |
-| ------------------------- | -------------------------------------------------------------------------------------- |
-| **direct primary**        | The current, applicable edition of the document the conclusion names                  |
-| **supporting contextual** | A different edition of that document, or an adjacent normative source                  |
-| **historical**            | A superseded regime, cited for corroboration of a requirement class only                |
-| **direct primary, reviewer-attested** | The current, applicable edition — read by the reviewer and attested to EPD², not opened by EPD² itself. Always labelled. **No entry currently carries this weight:** `F-36` was upgraded to *read first-hand* when the official PDF was supplied locally |
+| Weight                                | Meaning                                                                                                                                                                                                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **direct primary**                    | The current, applicable edition of the document the conclusion names                                                                                                                                                                                     |
+| **supporting contextual**             | A different edition of that document, or an adjacent normative source                                                                                                                                                                                    |
+| **historical**                        | A superseded regime, cited for corroboration of a requirement class only                                                                                                                                                                                 |
+| **direct primary, reviewer-attested** | The current, applicable edition — read by the reviewer and attested to EPD², not opened by EPD² itself. Always labelled. **No entry currently carries this weight:** `F-36` was upgraded to _read first-hand_ when the official PDF was supplied locally |
 
 **A supporting or historical source may corroborate a conclusion; it may not
 stand in for the direct primary source.** This distinction exists because a
@@ -84,14 +84,14 @@ trustworthy; the correction is additive and traceable.
 
 ## 2. Registry summary
 
-| Classification            | Entries | IDs                                                                                     |
-| ------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| `P` Protocol              | 15      | `F-01`, `F-02`, `F-04`…`F-13`, `F-16`, `F-17`, `F-18`                                    |
-| `A` Analysis              | 3       | `F-14`, `F-15`, `F-32`                                                                   |
-| `N` Normative             | 13      | `F-20`, `F-21`, `F-23`…`F-29`, `F-33`, `F-34`, `F-35`, `F-36`                            |
-| `G` Governance            | 1       | `F-30`                                                                                   |
-| `X` EPD²-generated        | 4       | `F-03`, `F-19`, `F-22`, `F-31`                                                           |
-| **Total**                 | **36**  | `F-01` … `F-36`, contiguous                                                              |
+| Classification     | Entries | IDs                                                           |
+| ------------------ | ------- | ------------------------------------------------------------- |
+| `P` Protocol       | 15      | `F-01`, `F-02`, `F-04`…`F-13`, `F-16`, `F-17`, `F-18`         |
+| `A` Analysis       | 3       | `F-14`, `F-15`, `F-32`                                        |
+| `N` Normative      | 13      | `F-20`, `F-21`, `F-23`…`F-29`, `F-33`, `F-34`, `F-35`, `F-36` |
+| `G` Governance     | 1       | `F-30`                                                        |
+| `X` EPD²-generated | 4       | `F-03`, `F-19`, `F-22`, `F-31`                                |
+| **Total**          | **36**  | `F-01` … `F-36`, contiguous                                   |
 
 **Each entry is counted once, under its primary classification.** Two
 entries carry a secondary one — `F-10` (`P` / `N`) and `F-12` (`P` / `A`) —
@@ -113,7 +113,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-01` · Subgroup order, and the absence of any stated security level — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Josh Benaloh, Michael Naehrig, Olivier Pereira — Microsoft Research
 - **Version / date:** 2.1.0, 12 August 2024, 110 pp.
 - **Source type:** official protocol specification
@@ -127,7 +127,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-02` · Parameter derivation and provenance — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira — Microsoft Research
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -155,21 +155,21 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-04` · Parameters are fixed; alternatives are out of scope — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
 - **Stable reference:** as `F-01`
 - **Relevant section / page:** §3.1.1 Note 3.1, p. 16
-- **Property supported:** the standard baseline parameters are **fixed by the specification**; reduced parameters are described only as offering *"better performance at a lower security level"* and are not a conforming production option
-- **Scope:** this is the finding that converts options B and C of the finite-field/elliptic-curve decision from *parameter choices* into *verifier-forking protocol adaptations*, and so decides `PSS` §2 in favour of Option A
+- **Property supported:** the standard baseline parameters are **fixed by the specification**; reduced parameters are described only as offering _"better performance at a lower security level"_ and are not a conforming production option
+- **Scope:** this is the finding that converts options B and C of the finite-field/elliptic-curve decision from _parameter choices_ into _verifier-forking protocol adaptations_, and so decides `PSS` §2 in favour of Option A
 - **Limitations:** the note fixes parameters; it does not prohibit a fork. What a fork costs is `F-05`'s subject
 - **Documents using evidence:** `CPA` §2 · `PSS` §2 · `AGIL` §1 · `SCOPE`
 - **Classification:** `P`
 
 ##### `F-05` · Verifier bit-equality and mandatory membership validation — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -177,13 +177,13 @@ establishes. No identifier was reused, renumbered or removed.
 - **Relevant section / page:** §3.1.4 p. 20 = §6.2.1 p. 80 (Verification 1.B–1.D); §6 membership checks
 - **Property supported:** a conforming verifier checks the parameters for **bit-equality** with the fixed values; every received group element must satisfy `0 ≤ x < p` and `x^q mod p = 1` before use
 - **Scope:** establishes that a parameter change breaks every conforming verifier — the load-bearing fact behind `PS-01`…`PS-04`, `CA-01` and `BM-28` — and that subgroup validation is mandatory rather than defensive
-- **Limitations:** says nothing about whether the fixed values are *adequate*; that is `F-20`…`F-25`
+- **Limitations:** says nothing about whether the fixed values are _adequate_; that is `F-20`…`F-25`
 - **Documents using evidence:** `CPA` §2, §7 · `PSS` §2 · `FSDS` · `AGIL` §1
 - **Classification:** `P`
 
 ##### `F-06` · `H` as HMAC-SHA-256 with a fixed key slot — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -197,13 +197,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-07` · `H_q` and its non-portability — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
 - **Stable reference:** as `F-01`
 - **Relevant section / page:** §5.4 and its footnote on reduction bias
-- **Property supported:** `H_q(B₀,B₁) = H(B₀,B₁) mod q`, whose near-uniformity depends on `q` lying within `189/2²⁵⁶` of `2²⁵⁶`; the reduction is *"tailored to the specific choice of `q = 2²⁵⁶ − 189`"*
+- **Property supported:** `H_q(B₀,B₁) = H(B₀,B₁) mod q`, whose near-uniformity depends on `q` lying within `189/2²⁵⁶` of `2²⁵⁶`; the reduction is _"tailored to the specific choice of `q = 2²⁵⁶ − 189`"_
 - **Scope:** shows that changing the group order requires redesigning challenge derivation — a second independent reason Option A is not merely convenient
 - **Limitations:** a different `q` is not insecure; it requires a different, re-analysed derivation
 - **Documents using evidence:** `CPA` §1, §7 · `PSS` §2 · `FSDS` §2
@@ -211,7 +211,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-08` · Strong Fiat–Shamir in all three proof families — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -225,13 +225,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-09` · Canonical fixed-length encoding — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
 - **Stable reference:** as `F-01`
 - **Relevant section / page:** §5.1 pp. 69–71; §5.3
-- **Property supported:** fixed-length big-endian encoding — 512 bytes for values mod `p`, 32 bytes for values mod `q`, 4 bytes for small integers — with *"no separator byte or character"*
+- **Property supported:** fixed-length big-endian encoding — 512 bytes for values mod `p`, 32 bytes for values mod `q`, 4 bytes for small integers — with _"no separator byte or character"_
 - **Scope:** makes hash inputs unambiguous without delimiters; the basis of `DS-01`…`DS-06` and of the rejection requirement `IM-06`
 - **Limitations:** the absence of separators makes correct fixed-length encoding **load-bearing for domain separation**; a lenient decoder silently breaks it
 - **Documents using evidence:** `CPA` §7 · `PSS` §3 · `FSDS` §4
@@ -239,7 +239,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-10` · Key derivation — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -253,13 +253,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-11` · Decryption in 2.1, and the absence of compensated decryption — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
 - **Stable reference:** as `F-01`
 - **Relevant section / page:** §3.6
-- **Property supported:** each available guardian `i ∈ U` computes `M_i = A^{z_i}`; `|U| = h ≥ k`; Lagrange coefficients are computed over `U`; **the word "compensated" does not appear in version 2.1**, and the specification states: *"a missing secret `s_j` could be computed directly … However, it is preferable to not release any missing secret `s_j` (or the secret `s`) and instead only release the partial decryptions that the secret would have produced. This prevents the secret from being used for additional decryptions without the cooperation of at least `k` guardians."*
+- **Property supported:** each available guardian `i ∈ U` computes `M_i = A^{z_i}`; `|U| = h ≥ k`; Lagrange coefficients are computed over `U`; **the word "compensated" does not appear in version 2.1**, and the specification states: _"a missing secret `s_j` could be computed directly … However, it is preferable to not release any missing secret `s_j` (or the secret `s`) and instead only release the partial decryptions that the secret would have produced. This prevents the secret from being used for additional decryptions without the cooperation of at least `k` guardians."_
 - **Scope:** the evidential basis of the narrow factual correction to PACK-16A `KC-11`; of `BR-13`…`BR-16`; and of absence tolerance being exactly `n − k`
 - **Limitations:** this is a version-specific finding. It is true of the **pinned** specification and was not true of the 1.x lineage, which is why `CA-*` pinning matters
 - **Documents using evidence:** `BRC` §5, §6 · `CQL` §5, §7 · `GL` · `SCOPE` §5
@@ -267,27 +267,27 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-12` · Bad shares: abort, investigate out of band, restart from scratch — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*; *ElectionGuard: a Cryptographic Toolkit to Enable Verifiable Elections*
+- **Source title:** _ElectionGuard Design Specification_; _ElectionGuard: a Cryptographic Toolkit to Enable Verifiable Elections_
 - **Institution / author:** Benaloh, Naehrig, Pereira (spec); Benaloh, Naehrig, Pereira, Wallach (paper)
 - **Version / date:** spec 2.1.0, 12 August 2024; paper USENIX Security 2024, pp. 5485–5502
 - **Source type:** official protocol specification + peer-reviewed paper
 - **Stable reference:** as `F-01`; `https://www.usenix.org/system/files/usenixsecurity24-benaloh.pdf`
 - **Relevant section / page:** spec §3.2.2 (bad-share handling); paper §2.5
-- **Property supported:** the specification's complete treatment of misbehaviour is that guardians abort, investigate **out of band**, and restart from scratch, *"After possibly excluding or replacing a misbehaving guardian"*; the paper's justification is that key generation *"runs between publicly identified parties, and there is little benefit for a malicious participant in introducing errors … if these errors are detected before the keys are actually used"*. The specification also suggests, for forensic purposes, that **all** guardians release their secret information
+- **Property supported:** the specification's complete treatment of misbehaviour is that guardians abort, investigate **out of band**, and restart from scratch, _"After possibly excluding or replacing a misbehaving guardian"_; the paper's justification is that key generation _"runs between publicly identified parties, and there is little benefit for a malicious participant in introducing errors … if these errors are detected before the keys are actually used"_. The specification also suggests, for forensic purposes, that **all** guardians release their secret information
 - **Scope:** identifies the gap `PACK-16B-COMPLAINT-AND-DISQUALIFICATION-MODEL.md` fills at the orchestration layer, and the source of `GL-19`'s prohibition after activation and `CD-18`'s prohibition of the broad release
-- **Limitations:** *"investigate out of band"* is not a protocol. It assigns no roles, no deadlines, no evidence standard and no adjudicator, which is why EPD² had to specify one
+- **Limitations:** _"investigate out of band"_ is not a protocol. It assigns no roles, no deadlines, no evidence standard and no adjudicator, which is why EPD² had to specify one
 - **Documents using evidence:** `CDM` §1, §5 · `CTS` §1 · `GL` `GL-19` · `KCS` · `SCOPE` §4
 - **Classification:** `P` / `A`
 
 ##### `F-13` · Share encryption, key sets, and what may be discarded — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
 - **Stable reference:** as `F-01`
 - **Relevant section / page:** §3.2, §3.2.2 pp. 25–27 (Eqs. 28–29)
-- **Property supported:** three key sets per guardian in 2.1 (vote, ballot-data, communication); coefficient commitments with Schnorr proofs; share encryption whose integrity rests on a proof of knowledge of the encryption nonce, **with no MAC on the payload** and with the sender's index as a *hash input rather than a signed identity*; the share-verification equation; and that **initial secrets "may be discarded"** once shares are formed. Parameter and construction facts are read from the pinned specification, never from its changelog, which disclaims completeness
+- **Property supported:** three key sets per guardian in 2.1 (vote, ballot-data, communication); coefficient commitments with Schnorr proofs; share encryption whose integrity rests on a proof of knowledge of the encryption nonce, **with no MAC on the payload** and with the sender's index as a _hash input rather than a signed identity_; the share-verification equation; and that **initial secrets "may be discarded"** once shares are formed. Parameter and construction facts are read from the pinned specification, never from its changelog, which disclaims completeness
 - **Scope:** the most-used entry in this round — it underlies `GL-16` (destroy initial secrets), `KU-01`…`KU-03` (only `z_i`, `ẑ_i` survive), `CT-11`'s honest limit, `GQ-09`, and the randomness architecture's per-consumer table
 - **Limitations:** **guardian-to-guardian authenticity is not cryptographic identity.** It rests on the record-comparison step, and EPD² states this rather than implying signatures exist
 - **Documents using evidence:** `CTS` §2 · `CQL` · `CPA` · `FSDS` · `GIM` · `GL` · `KCS` · `KCR` §1 · `RND` · `SCOPE`
@@ -295,13 +295,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-14` · Record comparison in place of signed key shares — Kind `A`
 
-- **Source title:** *ElectionGuard: a Cryptographic Toolkit to Enable Verifiable Elections*
+- **Source title:** _ElectionGuard: a Cryptographic Toolkit to Enable Verifiable Elections_
 - **Institution / author:** Josh Benaloh, Michael Naehrig, Olivier Pereira, Dan S. Wallach
 - **Version / date:** 33rd USENIX Security Symposium, August 2024, pp. 5485–5502
 - **Source type:** peer-reviewed conference paper
 - **Stable reference:** `https://www.usenix.org/system/files/usenixsecurity24-benaloh.pdf`
 - **Relevant section / page:** §2.5
-- **Property supported:** *"ElectionGuard relies on guardians checking authentic election records instead of signing their key shares."* The paper also describes only **two** key sets, the third (communication) key being a 2.1 addition
+- **Property supported:** _"ElectionGuard relies on guardians checking authentic election records instead of signing their key shares."_ The paper also describes only **two** key sets, the third (communication) key being a 2.1 addition
 - **Scope:** confirms `F-13`'s limitation as a deliberate design choice rather than an omission, and is why `CT-11`'s non-repudiation limit is stated explicitly and why the transcript's comparison step is mandatory rather than advisory
 - **Limitations:** **the paper must not be cited for the three-key structure**, which post-dates it. Section numbers were obtained by text extraction rather than local PDF parsing and are marked `[UNVERIFIED]` at character level in the underlying research, though the quoted sentence reproduced consistently across independent fetches
 - **Documents using evidence:** `CTS` §2 · `KCS` · `SCOPE`
@@ -309,7 +309,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-15` · Distributed-key-generation bias without a commit-then-open round — Kind `A`
 
-- **Source title:** *Secure Distributed Key Generation for Discrete-Log Based Cryptosystems*
+- **Source title:** _Secure Distributed Key Generation for Discrete-Log Based Cryptosystems_
 - **Institution / author:** Rosario Gennaro, Stanislaw Jarecki, Hugo Krawczyk, Tal Rabin
 - **Version / date:** Journal of Cryptology, Vol. 20, No. 1 (2007), pp. 51–83; earlier version EUROCRYPT '99, LNCS 1592, pp. 295–310
 - **Source type:** peer-reviewed journal article
@@ -317,13 +317,13 @@ establishes. No identifier was reused, renumbered or removed.
 - **Relevant section / page:** §3 (the attack on Pedersen-style DKG)
 - **Property supported:** a distributed key generation without a commit-then-open round permits a party acting last to bias the joint public key — a two-party adversary can force a chosen predicate with probability **3/4 rather than 1/2**
 - **Scope:** the evidential basis of EPD²'s pre-publication commitment round (`KY-07`…`KY-12`), which is added at the orchestration layer and changes no hash input
-- **Limitations:** the result concerns key **distribution uniformity**, which is orthogonal to the specification's own IND-CPA secrecy theorem `[F-17]`; the practical exploit path in an ElGamal *encryption* setting is far less direct than in a signature setting. `F-32` is the counterweight and must be read with this entry
+- **Limitations:** the result concerns key **distribution uniformity**, which is orthogonal to the specification's own IND-CPA secrecy theorem `[F-17]`; the practical exploit path in an ElGamal _encryption_ setting is far less direct than in a signature setting. `F-32` is the counterweight and must be read with this entry
 - **Documents using evidence:** `KCS` §4 · `SCOPE` §4
 - **Classification:** `A`
 
 ##### `F-16` · The countermeasure exists upstream — in decryption only — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -337,7 +337,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-17` · The published security theorem — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -351,7 +351,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-18` · The only upstream constraint on `k` and `n` — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Benaloh, Naehrig, Pereira
 - **Version / date:** 2.1.0, 12 August 2024
 - **Source type:** official protocol specification
@@ -379,13 +379,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-20` · German guidance — security target and horizon — Kind `N`
 
-- **Source title:** *BSI TR-02102-1: Cryptographic Mechanisms: Recommendations and Key Lengths*
+- **Source title:** _BSI TR-02102-1: Cryptographic Mechanisms: Recommendations and Key Lengths_
 - **Institution / author:** Bundesamt für Sicherheit in der Informationstechnik
 - **Version / date:** Version 2026-01, published 23 January 2026
 - **Source type:** national normative technical guideline
 - **Stable reference:** `https://www.bsi.bund.de/` → TR-02102-1
 - **Relevant section / page:** Chapter 1
-- **Property supported:** *"all cryptographic mechanisms specified in this Technical Guideline achieve a security level of at least 120 bits"*; *"The information provided in this Technical Guideline is therefore only limited to a period until the end of 2032."*
+- **Property supported:** _"all cryptographic mechanisms specified in this Technical Guideline achieve a security level of at least 120 bits"_; _"The information provided in this Technical Guideline is therefore only limited to a period until the end of 2032."_
 - **Scope:** the target `EPD2-CRYPTO-1` must meet, and the horizon beyond which no current recommendation speaks
 - **Limitations:** a technical guideline, **not a legal requirement for a party-internal vote**; conformance is evidence of diligence, not of legality
 - **Documents using evidence:** `CPA` §3 · `PSS` §2
@@ -393,7 +393,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-21` · German guidance — recommended key lengths — Kind `N`
 
-- **Source title:** *BSI TR-02102-1*
+- **Source title:** _BSI TR-02102-1_
 - **Institution / author:** BSI
 - **Version / date:** Version 2026-01, 23 January 2026
 - **Source type:** national normative technical guideline
@@ -416,23 +416,24 @@ establishes. No identifier was reused, renumbered or removed.
 - **Relevant section / page:** BSI TR-02102-1 Version 2026-01 — the finite-field subgroup-order sentence
 - **Property supported:** **The body of BSI TR-02102-1 Version 2026-01 was not retrievable over any network route available to this environment** — the document was ultimately obtained by direct local supply instead. Attempt log, each performed and recorded:
 
-  | Route                                                                              | Result                                    |
-  | ------------------------------------------------------------------------------------ | ------------------------------------------- |
-  | `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=7`                                  | HTML landing page                          |
-  | `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=10` (the 2026-01 file)              | HTML landing page                          |
-  | `bsi.bund.de` EN PDF, no query string                                                | HTML landing page                          |
-  | `bsi.bund.de` DE PDF                                                                 | HTML landing page                          |
-  | `bsi.bund.de` TR-03111 PDF (control)                                                 | HTML landing page                          |
-  | `bsi.bund.de` signature-catalogue PDF (control)                                      | HTML landing page                          |
-  | `allianz-fuer-cybersicherheit.de` EN PDF — BSI's second official host                | HTML landing page (same CMS)               |
-  | Text-extraction proxy                                                                | HTTP 403                                    |
-  | Web-archive snapshot                                                                 | rejected by the fetch proxy                 |
-  | Search for a third-party mirror of the **2026-01** edition                           | none found                                  |
-  | Interactive browser session                                                          | not available in this environment           |
-  | **Control — third-party mirror of TR-02102-1 2025-01**                               | **PDF body extracted normally** (`F-35`)    |
-  | **Control — Bundesnetzagentur PDF on a non-BSI government host**                     | **PDF body extracted normally** (`F-34`)    |
+  | Route                                                                   | Result                                   |
+  | ----------------------------------------------------------------------- | ---------------------------------------- |
+  | `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=7`                     | HTML landing page                        |
+  | `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=10` (the 2026-01 file) | HTML landing page                        |
+  | `bsi.bund.de` EN PDF, no query string                                   | HTML landing page                        |
+  | `bsi.bund.de` DE PDF                                                    | HTML landing page                        |
+  | `bsi.bund.de` TR-03111 PDF (control)                                    | HTML landing page                        |
+  | `bsi.bund.de` signature-catalogue PDF (control)                         | HTML landing page                        |
+  | `allianz-fuer-cybersicherheit.de` EN PDF — BSI's second official host   | HTML landing page (same CMS)             |
+  | Text-extraction proxy                                                   | HTTP 403                                 |
+  | Web-archive snapshot                                                    | rejected by the fetch proxy              |
+  | Search for a third-party mirror of the **2026-01** edition              | none found                               |
+  | Interactive browser session                                             | not available in this environment        |
+  | **Control — third-party mirror of TR-02102-1 2025-01**                  | **PDF body extracted normally** (`F-35`) |
+  | **Control — Bundesnetzagentur PDF on a non-BSI government host**        | **PDF body extracted normally** (`F-34`) |
 
-  The two controls establish that PDF extraction works in general, and that the limitation lies in the publisher's delivery rather than in the tooling. The **existence** of the finite-field sentence is corroborated — the phrase *"the order of the subgroup generated by g"* is indexed inside the current English PDF — but **its value, chapter, subsection, table and page were not read**
+  The two controls establish that PDF extraction works in general, and that the limitation lies in the publisher's delivery rather than in the tooling. The **existence** of the finite-field sentence is corroborated — the phrase _"the order of the subgroup generated by g"_ is indexed inside the current English PDF — but **its value, chapter, subsection, table and page were not read**
+
 - **Scope:** the record of why four rounds could not obtain the document from its publisher. **The limitation was resolved outside the network path**: the reviewer supplied the official PDF locally, and `[F-36]` is a first-hand reading of it. This entry stands as the retrieval history, not as a live constraint
 - **Limitations:** **this entry establishes a retrieval limitation, not a cryptographic one, and it is not a substitute for the reading it describes.** It does not show that the sentence is unobtainable generally — only that it was not obtainable here. Anyone with the official PDF closes `VO-01` in one reading
 - **Documents using evidence:** `CPA` §3.2 · `OD` §3 · `SCOPE` · `ADR-100` · `HANDOVER`
@@ -440,7 +441,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-23` · German guidance — recommended elliptic curves — Kind `N`
 
-- **Source title:** *BSI TR-02102-1*
+- **Source title:** _BSI TR-02102-1_
 - **Institution / author:** BSI
 - **Version / date:** Version 2026-01, 23 January 2026
 - **Source type:** national normative technical guideline
@@ -454,7 +455,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-24` · Domain-parameter and key validation — Kind `N`
 
-- **Source title:** *NIST SP 800-56A Rev. 3: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography*
+- **Source title:** _NIST SP 800-56A Rev. 3: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography_
 - **Institution / author:** National Institute of Standards and Technology
 - **Version / date:** Revision 3, April 2018
 - **Source type:** international normative standard
@@ -468,13 +469,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-25` · The classical-cryptography horizon — Kind `N`
 
-- **Source title:** *BSI TR-02102-1*
+- **Source title:** _BSI TR-02102-1_
 - **Institution / author:** BSI
 - **Version / date:** Version 2026-01, 23 January 2026
 - **Source type:** national normative technical guideline
 - **Stable reference:** as `F-20`
 - **Relevant section / page:** Chapter 2
-- **Property supported:** classical key agreement is recommended **only until the end of 2031**, and **until the end of 2030** for very high protection requirements; classical signatures until the end of 2035; hybrid post-quantum schemes are recommended, while quantum-safe mechanisms are *"generally not yet trusted to the same extent as the established classical mechanisms"*
+- **Property supported:** classical key agreement is recommended **only until the end of 2031**, and **until the end of 2030** for very high protection requirements; classical signatures until the end of 2035; hybrid post-quantum schemes are recommended, while quantum-safe mechanisms are _"generally not yet trusted to the same extent as the established classical mechanisms"_
 - **Scope:** converted into registry fields rather than a risk-register note — `deprecation_date` 2030-12-31/2031-12-31 and `prohibition_date` 2032-12-31 in `PS-*`, with the notification obligations in `CA-14`…`CA-18` and the successor question carried as `OD-P16B-06`
 - **Limitations:** a recommendation with a date is not a prohibition on that date; EPD²'s dates are its own, chosen to sit at or inside the guidance
 - **Documents using evidence:** `CPA` §5 · `PSS` §3 · `AGIL` §3 · `SCOPE`
@@ -482,13 +483,13 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-26` · Random number generator functionality classes — Kind `N`
 
-- **Source title:** *AIS 20/31 — A proposal for: Functionality classes for random number generators*
+- **Source title:** _AIS 20/31 — A proposal for: Functionality classes for random number generators_
 - **Institution / author:** BSI
 - **Version / date:** **Version 3.0, 17 September 2024**
 - **Source type:** national normative guidance
 - **Stable reference:** `https://www.bsi.bund.de/` → AIS 20/31
 - **Relevant section / page:** class definitions `PTG.2`, `PTG.3`, `DRG.3`, `DRG.4`, `DRT.1`, `NTG.1`; the recommendation against direct use of a PTG.2 source
-- **Property supported:** *"It is thus recommended not to use a PTG.2-compliant PTRNG 'directly' to generate sensitive data like keys, signature parameters, nonces, etc."*; `DRT.1` for DRNG trees is new in v3.0
+- **Property supported:** _"It is thus recommended not to use a PTG.2-compliant PTRNG 'directly' to generate sensitive data like keys, signature parameters, nonces, etc."_; `DRT.1` for DRNG trees is new in v3.0
 - **Scope:** the rule that governs the whole randomness architecture — `RN-01`, `RN-02` — and the reason a physical source seeds a DRNG rather than producing key material
 - **Limitations:** **which class current German guidance actually requires for this application is `VO-02` and is not assumed here**
 - **Documents using evidence:** `RND` §1 · `CPA` §7
@@ -496,7 +497,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-27` · DRBG mechanisms — Kind `N`
 
-- **Source title:** *NIST SP 800-90A Rev. 1: Recommendation for Random Number Generation Using Deterministic Random Bit Generators*
+- **Source title:** _NIST SP 800-90A Rev. 1: Recommendation for Random Number Generation Using Deterministic Random Bit Generators_
 - **Institution / author:** NIST
 - **Version / date:** Revision 1, June 2015
 - **Source type:** international normative standard
@@ -510,7 +511,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-28` · Entropy sources — Kind `N`
 
-- **Source title:** *NIST SP 800-90B: Recommendation for the Entropy Sources Used for Random Bit Generation*
+- **Source title:** _NIST SP 800-90B: Recommendation for the Entropy Sources Used for Random Bit Generation_
 - **Institution / author:** NIST
 - **Version / date:** January 2018
 - **Source type:** international normative standard
@@ -524,7 +525,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-29` · RBG constructions — Kind `N`
 
-- **Source title:** *NIST SP 800-90C: Recommendation for Random Bit Generator (RBG) Constructions*
+- **Source title:** _NIST SP 800-90C: Recommendation for Random Bit Generator (RBG) Constructions_
 - **Institution / author:** NIST
 - **Version / date:** **final, 24 September 2025**
 - **Source type:** international normative standard
@@ -566,41 +567,41 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-32` · The counterweight to `F-15` — Kind `A`
 
-- **Source title:** *Secure Applications of Pedersen's Distributed Key Generation Protocol*
+- **Source title:** _Secure Applications of Pedersen's Distributed Key Generation Protocol_
 - **Institution / author:** Rosario Gennaro, Stanislaw Jarecki, Hugo Krawczyk, Tal Rabin
 - **Version / date:** CT-RSA 2003, LNCS 2612, pp. 373–390
 - **Source type:** peer-reviewed conference paper
 - **Stable reference:** DOI `10.1007/3-540-36563-X_26`
 - **Relevant section / page:** main result
-- **Property supported:** *"We show that threshold versions of some schemes whose security reduces to the hardness of the discrete logarithm problem, remain secure when implemented with Pedersen DKG."* The stated cost is a **larger modulus** for equivalent security, the reduction being loose
+- **Property supported:** _"We show that threshold versions of some schemes whose security reduces to the hardness of the discrete logarithm problem, remain secure when implemented with Pedersen DKG."_ The stated cost is a **larger modulus** for equivalent security, the reduction being loose
 - **Scope:** the fairness counterweight to `F-15` — Pedersen-DKG bias is a proof-quality problem and for some schemes provably survivable, and the selected profile uses a 4096-bit modulus with a 256-bit `q`. Cited here so that `F-15` is never used one-sidedly
-- **Limitations:** *"some schemes"* is not *"this scheme"*. The result does not cover the specification's construction specifically, and `F-31` is why nobody has said whether it does
+- **Limitations:** _"some schemes"_ is not _"this scheme"_. The result does not cover the specification's construction specifically, and `F-31` is why nobody has said whether it does
 - **Documents using evidence:** this document §1.3, §5 · `TVR` §5
 - **Classification:** `A`
 
 ##### `F-33` · The European agreed minimum for finite-field subgroup order — Kind `N`
 
-- **Source title:** *Agreed Cryptographic Mechanisms*
+- **Source title:** _Agreed Cryptographic Mechanisms_
 - **Institution / author:** European Cybersecurity Certification Group (ECCG), Sub-group on Cryptography
 - **Version / date:** **Version 2.0, April 2025**
 - **Source type:** European normative agreement on cryptographic mechanisms
-- **Stable reference:** `https://certification.enisa.europa.eu/` — *ECCG Agreed Cryptographic Mechanisms version 2*
+- **Stable reference:** `https://certification.enisa.europa.eu/` — _ECCG Agreed Cryptographic Mechanisms version 2_
 - **Relevant section / page:** **§4.2 "Agreed FF-DLOG Parameters"**
 - **Property supported:** for finite-field discrete-logarithm mechanisms the agreed parameter table requires **`log₂(q) ≥ 250`** for recommended mechanisms and `log₂(q) ≥ 200` for legacy mechanisms (deadline `L[2025]`); for all agreed subgroups `r = q = (p − 1)/2`
 - **Scope:** the current European normative minimum for **exactly the parameter dimension** `OD-P16B-01` asked about. `EPD2-CRYPTO-1`'s `|q| = 256` satisfies it
-- **Limitations:** this is the ECCG's agreement, **not BSI TR-02102-1**. It cites TR-02102-1 in its related-documents section as having *"partly inspired some of the concepts, definitions, recommendations, or caveats"*, and is **not** cited as BSI's own wording. It establishes a European agreed minimum, not German certification, and nothing here is a conformity assessment
+- **Limitations:** this is the ECCG's agreement, **not BSI TR-02102-1**. It cites TR-02102-1 in its related-documents section as having _"partly inspired some of the concepts, definitions, recommendations, or caveats"_, and is **not** cited as BSI's own wording. It establishes a European agreed minimum, not German certification, and nothing here is a conformity assessment
 - **Documents using evidence:** `CPA` §3.2 · `OD` §3 · `ACC` · `HANDOVER` · `ADR-100`
 - **Classification:** `N` · **Weight: direct primary** — the current European normative agreement, read in its applicable edition
 
 ##### `F-34` · The German signature algorithm catalogue's finite-field requirement — Kind `N`
 
-- **Source title:** *Bekanntmachung zur elektronischen Signatur nach dem Signaturgesetz und der Signaturverordnung (Übersicht über geeignete Algorithmen)*
+- **Source title:** _Bekanntmachung zur elektronischen Signatur nach dem Signaturgesetz und der Signaturverordnung (Übersicht über geeignete Algorithmen)_
 - **Institution / author:** Bundesnetzagentur für Elektrizität, Gas, Telekommunikation, Post und Eisenbahnen, prepared with BSI
 - **Version / date:** **9 December 2015**, published in the Bundesanzeiger (the 2016 catalogue)
 - **Source type:** German official normative algorithm catalogue
 - **Stable reference:** `https://www.bundesnetzagentur.de/EVD/SharedDocuments/Downloads/QES/Algorithmen/2016Algorithmenkatalog.pdf`
 - **Relevant section / page:** **§3.2 "DSA", pp. 9–10, Table 2**; and §3.2.a, p. 9, Table 3
-- **Property supported:** for DSA in the multiplicative group of a prime field, **`p ≥ 2048` bits and `q ≥ 256` bits from 2016 onward** (Table 2). For the elliptic-curve variant, verbatim: *"Die Länge von q muss mindestens 224 Bit betragen, und ab Anfang 2016 sind für q mindestens 250 Bit erforderlich."*
+- **Property supported:** for DSA in the multiplicative group of a prime field, **`p ≥ 2048` bits and `q ≥ 256` bits from 2016 onward** (Table 2). For the elliptic-curve variant, verbatim: _"Die Länge von q muss mindestens 224 Bit betragen, und ab Anfang 2016 sind für q mindestens 250 Bit erforderlich."_
 - **Scope:** a German official source stating a **finite-field** subgroup-order minimum explicitly — the requirement class `OD-P16B-01` asked about — at a value `EPD2-CRYPTO-1`'s `|q| = 256` exactly meets
 - **Limitations:** **this catalogue is historical.** It belongs to the Signaturgesetz regime, is superseded by the eIDAS framework, and is scoped to qualified electronic signatures rather than to voting. It is cited as corroboration of the requirement class and its order of magnitude, **not** as the currently applicable rule, and it supports no certification claim. Section, table and page numbers are as reported by an automated text extractor over the published PDF
 - **Documents using evidence:** `CPA` §3.2 · `OD` §3 · `ACC` · `HANDOVER` · `ADR-100`
@@ -608,7 +609,7 @@ establishes. No identifier was reused, renumbered or removed.
 
 ##### `F-35` · BSI TR-02102-1 (2025-01), read first-hand via an institutional mirror — Kind `N`
 
-- **Source title:** *BSI TR-02102-1: Kryptographische Verfahren: Empfehlungen und Schlüssellängen*
+- **Source title:** _BSI TR-02102-1: Kryptographische Verfahren: Empfehlungen und Schlüssellängen_
 - **Institution / author:** Bundesamt für Sicherheit in der Informationstechnik
 - **Version / date:** **Version 2025-01, Stand 31. Januar 2025**
 - **Source type:** national normative technical guideline, retrieved from an institutional mirror because the publisher's own endpoints are not retrievable here `[F-22]`
@@ -620,33 +621,36 @@ establishes. No identifier was reused, renumbered or removed.
 - **Documents using evidence:** `CPA` §3.2, §3.3 · `OD` §3 · `HANDOVER` · `ADR-100`
 - **Classification:** `N` · **Weight: supporting contextual** — BSI's own document, previous edition, adjacent tables only
 
-
 ##### `F-36` · The current BSI subgroup-order requirement, read first-hand — Kind `N`
 
 - **Evidence ID:** `F-36`
-- **Source title:** *BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths*
+- **Source title:** _BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths_
 - **Issuing institution:** Bundesamt für Sicherheit in der Informationstechnik (BSI)
-- **Document version:** **2026-01** (title page: *"Version: 2026-01"*)
-- **Publication date:** **23 January 2026** (title page: *"As of: January 23, 2026"*)
+- **Document version:** **2026-01** (title page: _"Version: 2026-01"_)
+- **Publication date:** **23 January 2026** (title page: _"As of: January 23, 2026"_)
 - **Language:** English edition · 92 pages
 - **Official URL:** `https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=10`
 - **Source type:** **direct primary source — national normative technical guideline**
 - **Weight:** **direct primary, READ FIRST-HAND.** The official PDF was supplied to EPD² locally by the project's reviewer and read directly; file SHA-256 `f601cdf25c000b431573a307a3c125f3c51d301897089e7e63dde0449367a62a`
-- **Exact chapter:** 2.3 *Classical Asymmetric Mechanisms*
+- **Exact chapter:** 2.3 _Classical Asymmetric Mechanisms_
 - **Exact subsections:** **§2.3.3 DLIES Encryption Scheme** and **§2.3.5 Diffie-Hellman Key Agreement**
-- **Exact table / equation:** the *Key Length* paragraph of §2.3.3; step 2 of *System Parameters* in §2.3.5. Corroborating: Table 1.1 (p. 18), Table 1.2 (p. 19), Table 2.2 (p. 33)
+- **Exact table / equation:** the _Key Length_ paragraph of §2.3.3; step 2 of _System Parameters_ in §2.3.5. Corroborating: Table 1.1 (p. 18), Table 1.2 (p. 19), Table 2.2 (p. 33)
 - **Exact PDF page:** **34** (§2.3.3) and **36** (§2.3.5)
 - **Exact printed page:** **34** and **36** — the printed folios match the PDF page numbers
 - **Applicable requirement, verbatim:**
 
-  §2.3.3, p. 34, *Key Length*:
-  > *"The length of the prime number p should be at least 3000 bits. The length of the prime q should be at least 250 bits in both cases."*
+  §2.3.3, p. 34, _Key Length_:
 
-  §2.3.5, p. 36, *System Parameters*, step 2:
-  > *"Choose an element g ∈ F∗p with ord(g) prime and q := ord(g) ≥ 2²⁵⁰."*
+  > _"The length of the prime number p should be at least 3000 bits. The length of the prime q should be at least 250 bits in both cases."_
 
-  §2.3.5, p. 36, *Key Length*:
-  > *"The length of p should be at least 3000 bits."*
+  §2.3.5, p. 36, _System Parameters_, step 2:
+
+  > _"Choose an element g ∈ F∗p with ord(g) prime and q := ord(g) ≥ 2²⁵⁰."_
+
+  §2.3.5, p. 36, _Key Length_:
+
+  > _"The length of p should be at least 3000 bits."_
+
 - **Parameter dimension assessed:** subgroup order `|q|` for finite-field discrete-logarithm mechanisms
 - **EPD² value compared:** `q = 2²⁵⁶ − 189` — bit length **256**, value `> 2²⁵⁵` (`[F-01]`); `p` = **4096** bits; `q` prime and `g` of order `q` (`[F-02]`, `[F-03]`)
 - **Comparison:**
@@ -657,12 +661,13 @@ establishes. No identifier was reused, renumbered or removed.
   §2.3.5   ord(g) prime                     SATISFIED   ([F-02], [F-03])
   §2.3.3 / §2.3.5   |p| = 4096  >=  3000    SATISFIED
   ```
-- **Conclusion:** *The selected 256-bit subgroup order satisfies the reviewed BSI TR-02102-1 Version 2026-01 minimum for this specific parameter dimension.*
+
+- **Conclusion:** _The selected 256-bit subgroup order satisfies the reviewed BSI TR-02102-1 Version 2026-01 minimum for this specific parameter dimension._
 - **Scope:** **limited to the subgroup-order dimension** (with the `p` length recorded alongside it because the same paragraphs state both). It establishes none of the following: complete BSI conformity of `EPD2-CRYPTO-1`; BSI certification; approval for political-election use; implementation security; side-channel resistance; protocol-composition security; legal activation
 - **Limitations, and one correction and one divergence found on reading:**
-  - **The requirement is 250 bits, not 240.** An earlier round recorded 240 on an attestation. First-hand reading shows **240 is a different figure in this document**: in **Table 1.1, p. 18** it is the ECDSA/ECIES key length at which a 120-bit security level *"is just achieved"*, and separately p. 18 gives 240 bits as the general minimum **hash digest** length. Neither is the finite-field subgroup-order minimum. **`q = 256` satisfies the true requirement of 250 with 6 bits of margin**, so the conclusion is unchanged — but the figure is corrected everywhere
-  - **A recommendation-level divergence, recorded rather than glossed.** Remark 2.12, p. 34, states that where published parameters are used the guideline *"recommends using the MODP groups from [78] or the ffdhe groups from [60]"*, in which *"q = (p − 1)/2 and g = 2"*, and that a common `p` is recommended *"only when log₂(p) ≥ 3000"*. `EPD2-CRYPTO-1` uses published parameters that are **neither MODP nor ffdhe**, and its `q` is a 256-bit prime rather than `(p−1)/2`. The `log₂(p) ≥ 3000` condition **is** met (4096). The construction shape is explicitly contemplated by §2.3.5 step 2, which permits any `g` of prime order `≥ 2²⁵⁰`; the divergence is from a **recommendation about which published family to prefer**, not from a stated requirement. It is classified as a **published-parameter-family preference**, not as a numerical minimum, and is carried as `VO-08` — owned by the **PACK-16B external cryptographic review** with independent confirmation in **PACK-17**, **not by PACK-16C** — and as `RB-09`
-  - **The classical-mechanism horizon is confirmed from the same chapter:** §2.3 states the sole use of these mechanisms is *"only recommended until the end of 2031"*, and beyond 2031 only in combination with a quantum-safe KEM and a key derivation. This corroborates `[F-25]` and `OD-P16B-06`
+  - **The requirement is 250 bits, not 240.** An earlier round recorded 240 on an attestation. First-hand reading shows **240 is a different figure in this document**: in **Table 1.1, p. 18** it is the ECDSA/ECIES key length at which a 120-bit security level _"is just achieved"_, and separately p. 18 gives 240 bits as the general minimum **hash digest** length. Neither is the finite-field subgroup-order minimum. **`q = 256` satisfies the true requirement of 250 with 6 bits of margin**, so the conclusion is unchanged — but the figure is corrected everywhere
+  - **A recommendation-level divergence, recorded rather than glossed.** Remark 2.12, p. 34, states that where published parameters are used the guideline _"recommends using the MODP groups from [78] or the ffdhe groups from [60]"_, in which _"q = (p − 1)/2 and g = 2"_, and that a common `p` is recommended _"only when log₂(p) ≥ 3000"_. `EPD2-CRYPTO-1` uses published parameters that are **neither MODP nor ffdhe**, and its `q` is a 256-bit prime rather than `(p−1)/2`. The `log₂(p) ≥ 3000` condition **is** met (4096). The construction shape is explicitly contemplated by §2.3.5 step 2, which permits any `g` of prime order `≥ 2²⁵⁰`; the divergence is from a **recommendation about which published family to prefer**, not from a stated requirement. It is classified as a **published-parameter-family preference**, not as a numerical minimum, and is carried as `VO-08` — owned by the **PACK-16B external cryptographic review** with independent confirmation in **PACK-17**, **not by PACK-16C** — and as `RB-09`
+  - **The classical-mechanism horizon is confirmed from the same chapter:** §2.3 states the sole use of these mechanisms is _"only recommended until the end of 2031"_, and beyond 2031 only in combination with a quantum-safe KEM and a key derivation. This corroborates `[F-25]` and `OD-P16B-06`
   - This entry assesses one parameter dimension. It is **not** a conformity assessment of the profile
 - **Documents using the evidence:** `CPA` §3.2 · `OD` §3 · `ACC` `AC-P16B-021` · `HANDOVER` §0.5 · `ADR-100`
 - **Classification:** `N`
@@ -697,10 +702,10 @@ sum                  36   ==  entries defined (36)   ✓
 
 **Secondary classifications, recorded and not counted:**
 
-| Entry  | Primary | Secondary | Reason                                                              |
+| Entry  | Primary | Secondary | Reason                                                                 |
 | ------ | ------- | --------- | ---------------------------------------------------------------------- |
-| `F-10` | `P`     | `N`       | The construction is protocol text; the KDF it names is a NIST standard  |
-| `F-12` | `P`     | `A`       | The specification text and the peer-reviewed paper state it jointly     |
+| `F-10` | `P`     | `N`       | The construction is protocol text; the KDF it names is a NIST standard |
+| `F-12` | `P`     | `A`       | The specification text and the peer-reviewed paper state it jointly    |
 
 **Coverage check:** every `[F-nn]` reference appearing in any PACK-16B
 document is defined above. `F-32` is cited by this document and by
@@ -713,28 +718,28 @@ because `F-15` must never be read without it.
 
 Stated here so that no reader has to reconstruct it from thirty-two entries.
 
-| Claim EPD² does **not** make                                          | Why not                                                                    |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| That the selected construction is proved secure                        | `F-17` is IND-CPA under stated hypotheses; `F-31` is the review gap          |
-| That the key ceremony has been independently analysed                  | `F-31` — and equally, that no such analysis exists anywhere is **not** claimed |
-| That **complete BSI conformity** of the composed voting profile is established | Only the subgroup-order dimension is assessed, and only against sources other than the edition named by the decision; conformity of the whole profile is neither assessed nor claimed |
-| That the profile conforms to **all** of TR-02102-1 | `F-36` assesses the subgroup-order dimension only. Remark 2.12's published-parameter **preference** is a recorded divergence (`VO-08`, which blocks any complete-conformity claim), and `VO-02`/`VO-03` remain open |
-| That the DKG produces a uniformly distributed joint key                | `F-15`; `F-32` softens it and does not settle it                            |
-| That EPD²'s commitment round fixes the GJKR issue                      | It mitigates the analogous exposure at the orchestration layer, and `TV-08` must assess it |
-| That reproducing the parameters proves them safe                       | `F-03` proves provenance, not adequacy                                       |
-| That an independent conforming verifier accepts an EPD² record         | No verifier-consumed field is changed, and **that has not been demonstrated by test** — `TV-07`, `TV-19` |
-| That BSI or NIST conformance is legal compliance                       | `F-20`'s limitation; `OD-P16A-12` is where legal assessment lives           |
-| That the upstream project will notify EPD² of a problem                | `F-30` — there is no errata process to notify through                        |
+| Claim EPD² does **not** make                                                   | Why not                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| That the selected construction is proved secure                                | `F-17` is IND-CPA under stated hypotheses; `F-31` is the review gap                                                                                                                                                 |
+| That the key ceremony has been independently analysed                          | `F-31` — and equally, that no such analysis exists anywhere is **not** claimed                                                                                                                                      |
+| That **complete BSI conformity** of the composed voting profile is established | Only the subgroup-order dimension is assessed, and only against sources other than the edition named by the decision; conformity of the whole profile is neither assessed nor claimed                               |
+| That the profile conforms to **all** of TR-02102-1                             | `F-36` assesses the subgroup-order dimension only. Remark 2.12's published-parameter **preference** is a recorded divergence (`VO-08`, which blocks any complete-conformity claim), and `VO-02`/`VO-03` remain open |
+| That the DKG produces a uniformly distributed joint key                        | `F-15`; `F-32` softens it and does not settle it                                                                                                                                                                    |
+| That EPD²'s commitment round fixes the GJKR issue                              | It mitigates the analogous exposure at the orchestration layer, and `TV-08` must assess it                                                                                                                          |
+| That reproducing the parameters proves them safe                               | `F-03` proves provenance, not adequacy                                                                                                                                                                              |
+| That an independent conforming verifier accepts an EPD² record                 | No verifier-consumed field is changed, and **that has not been demonstrated by test** — `TV-07`, `TV-19`                                                                                                            |
+| That BSI or NIST conformance is legal compliance                               | `F-20`'s limitation; `OD-P16A-12` is where legal assessment lives                                                                                                                                                   |
+| That the upstream project will notify EPD² of a problem                        | `F-30` — there is no errata process to notify through                                                                                                                                                               |
 
 ---
 
 ## 6. Maintenance
 
-| Rule                                                                                                            |
-| ------------------------------------------------------------------------------------------------------------------ |
-| A new evidence item gets the **next free `F-nn`**; identifiers are never reused and never renumbered              |
-| An entry whose source is superseded gains a **superseded-by note**; the original text stays                       |
-| **No other document may define an `F-nn`.** A future round adding evidence adds it here                           |
+| Rule                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new evidence item gets the **next free `F-nn`**; identifiers are never reused and never renumbered                                                                                            |
+| An entry whose source is superseded gains a **superseded-by note**; the original text stays                                                                                                     |
+| **No other document may define an `F-nn`.** A future round adding evidence adds it here                                                                                                         |
 | An `X` entry that is later confirmed externally **keeps its `X` classification** and gains a note naming the external source — EPD²'s own work does not become independent by being agreed with |
 
 **SPECIFIED. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY. NOT LEGALLY

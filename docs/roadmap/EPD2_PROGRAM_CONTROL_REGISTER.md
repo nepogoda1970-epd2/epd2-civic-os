@@ -44,7 +44,6 @@ Current Master maintenance level established by project governance work: **V25**
 
 **API-02 execution-state reconciliation (2026-08-27):** the project owner confirms that `API-02 — Authentication & Authorization Runtime` implementation is already underway. The current control state is therefore **`API-02 = ACTIVE / IN DEVELOPMENT`**, not `NEXT`. The existing `handoff/api-02` branch is intentionally reserved as a clean future candidate-verification/upload slot and is not the development branch, candidate evidence, PASS or acceptance record. Historical dated statements that API-02 was `NEXT` remain preserved as history and are superseded only for current-state interpretation. No API-02 PASS/ACCEPTED/CLOSED claim is made. `API-03` may proceed only as **`PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`** and may not be accepted or closed before authoritative API-02 acceptance.
 
-
 On 2026-08-26 API-01 completed independent authoritative acceptance. Exact candidate `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`, sha256 `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`, passed GitHub Actions workflow `api01-accept`, authoritative run `32967210855`, conclusion `success`. API-01 is therefore `ACCEPTED / CLOSED`; API-02 is the next permitted primary API stage.
 
 On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its already-completed full live authoritative evidence: exact C3 sha256 `fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb` passed GitHub Actions run `32855264419`, conclusion `success`, with `3109 passed, 1 skipped, 0 failed`, F-01 `9/9 PASS` and F-02 `8/8 PASS`. PILOT-05 is therefore `ACCEPTED / ESTABLISHED`; this does not alter `API-02 = NEXT`.
@@ -53,17 +52,17 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 
 ## 2. Program phase state
 
-| Program layer | Current control state | Execution rule |
-| --- | --- | --- |
-| ARCH PACK-01…35 | `CLOSED` | Do not restart architecture PACK sequencing as current work. |
-| DATA | `CLOSED` | Do not describe DATA as still being finished unless a governed correction explicitly reopens it. |
-| API | `API-01 ACCEPTED / CLOSED; API-02 ACTIVE / IN DEVELOPMENT; API-03 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` | API-02 implementation is active. API-03 may proceed only as parallel PRE-SEAL and cannot be accepted/closed before authoritative API-02 acceptance. |
-| INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |
-| OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |
-| CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |
-| FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL` | The exact C2.1 implementation candidate is accepted as a governed frontend baseline. Final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |
-| SEC | `NOT_STARTED_FINAL` | Threat/adversarial preparation may proceed; final challenge targets the integrated system. |
-| PILOT | `PARALLEL_DEVELOPMENT_EXISTS` | PILOT-01…05 have existing lineage/work. Exact stage state is governed below. |
+| Program layer   | Current control state                                                                                    | Execution rule                                                                                                                                                                       |
+| --------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ARCH PACK-01…35 | `CLOSED`                                                                                                 | Do not restart architecture PACK sequencing as current work.                                                                                                                         |
+| DATA            | `CLOSED`                                                                                                 | Do not describe DATA as still being finished unless a governed correction explicitly reopens it.                                                                                     |
+| API             | `API-01 ACCEPTED / CLOSED; API-02 ACTIVE / IN DEVELOPMENT; API-03 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` | API-02 implementation is active. API-03 may proceed only as parallel PRE-SEAL and cannot be accepted/closed before authoritative API-02 acceptance.                                  |
+| INFRA           | `NOT_STARTED`                                                                                            | Preparation/specification may proceed; final closure follows API dependencies.                                                                                                       |
+| OPS             | `NOT_STARTED`                                                                                            | Procedures/runbooks may be prepared; runtime closure follows INFRA.                                                                                                                  |
+| CTRL            | `NOT_STARTED`                                                                                            | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA.                                                                                                  |
+| FRONT           | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL`                                     | The exact C2.1 implementation candidate is accepted as a governed frontend baseline. Final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |
+| SEC             | `NOT_STARTED_FINAL`                                                                                      | Threat/adversarial preparation may proceed; final challenge targets the integrated system.                                                                                           |
+| PILOT           | `PARALLEL_DEVELOPMENT_EXISTS`                                                                            | PILOT-01…05 have existing lineage/work. Exact stage state is governed below.                                                                                                         |
 
 Canonical primary closure sequence:
 
