@@ -1,7 +1,7 @@
 # EPD² Master Future Implementation Register
 
 **Status:** Living master register
-**Maintenance copy:** V25 — canonical lossless lineage reconciliation (2026-08-29): the independently reviewed accepted-maintenance + V23 union is preserved whole; the exact current-main V24 `FIR-OSS-007` addition is carried from commit `007b5d71cf5a54e417cbd5647a35a57098ead186`; no existing FIR is deleted, downgraded or renumbered by this maintenance repair. See the V25 governance maintenance record and `docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json`.
+**Maintenance copy:** V26 — BSI CC PP-0121 certification-readiness governance refinement (2026-08-30), layered losslessly on the V25 canonical reconciliation. V25 lineage and all existing FIRs remain preserved; V26 adds/refines only `FIR-VOTE-BSI-001` and its governed certification-readiness references.
 **Repository filename remains canonical and unversioned:** `EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`.
 
 **Purpose:** Single authoritative repository document for all captured future requirements, proposed normative profiles, roadmap items, hard invariants, frontend obligations, institutional roles, trust boundaries and implementation conditions that are not yet fully completed.
@@ -17018,12 +17018,12 @@ This FIR is not complete until an exact release/deployment proves that an indepe
 SEC, PACK-15, PACK-16, PACK-17 or other implementation stage is accepted,
 closed, reopened, certified or legally activated by this update.
 
-**New FIR ID created:** `FIR-BSI-001 — BSI CC PP-0121 Certification Readiness`
+**New FIR ID created:** `FIR-VOTE-BSI-001 — BSI CC PP-0121 Certification Readiness`
 — status `approved`, priority `critical`.
 
 **Governed readiness artifacts:**
 
-- `docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md`;
+- `docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md`;
 - `docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md`.
 
 **Core decision:** EPD² Voting is to be developed with future certification
@@ -17035,93 +17035,59 @@ certification-readiness obligation, not a certification or conformance claim.
 **Execution state:** unchanged. The Program Control Register remains the sole
 authority for current stage state.
 
-## FIR-BSI-001 — BSI CC PP-0121 Certification Readiness
+## FIR-VOTE-BSI-001 — BSI CC PP-0121 Certification Readiness
 
 - **Status:** `approved`
 - **Priority:** `critical`
 - **Domain:** voting security / Common Criteria / BSI certification readiness / assurance evidence
-- **Target:** PACK-15/16/17 voting lineage + every future Voting-affecting API, INFRA, OPS, CTRL, FRONT and SEC change + final certification workstream
-- **External target:** `BSI-CC-PP-0121`, Version 1.0, CC:2022 Revision 1; target assurance package `EAL4 + ALC_FLR.2`
-- **Governed matrix:** `docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md`
-- **Bootstrap rule:** `docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md`
+- **Target:** bounded EPD² Voting TOE and every future Voting-affecting API, INFRA, OPS, CTRL, FRONT and SEC change
+- **Governed matrix:** `docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md`
+- **P0 questionnaire:** `docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md`
 
-### Requirement
+### Normative requirement
 
-All future EPD² Voting implementation and material changes SHALL preserve a
-traceable certification-readiness chain:
+EPD² Voting must preserve an architecture capable of becoming a bounded Common Criteria TOE conformant to the then-current applicable BSI online-voting Protection Profile, presently BSI-CC-PP-0121, without weakening existing voting privacy, unlinkability or WS-03 isolation invariants.
+
+This FIR is a certification-readiness obligation, not a certification or conformance claim. It does not make EPD² Voting `BSI-certified`, `BSI compliant`, `CC compliant`, `EAL4`, production ready or legally activated.
+
+### Hard P0 architectural freeze
+
+Until a recognised Common Criteria evaluation facility provides a written P0 position on the PP-0121 identity model, EPD² must not weaken the invariant `no persistent member/person identifier inside voting domain` merely to match PP terminology. In particular, civil identity, member identity, account identity, persistent member/person identifiers and reverse-resolvable identity references remain prohibited inside the voting domain.
+
+A negative evaluator answer does not itself authorize weakening that invariant. It triggers a governed TOE/certification-strategy decision.
+
+EPD² must not assume that internal party elections are either in-scope or out-of-scope without written BSI/ITSEF classification.
+
+### Mandatory certification-readiness gates
 
 ```text
-BSI PP requirement / SAR
-→ EPD² requirement
-→ architecture / trust boundary
-→ implementation
-→ test
-→ evidence
-→ disposition
+ITSEF P0 feasibility
+→ TOE boundary
+→ Security Target
+→ P1 closure
+→ EAL4 + ALC_FLR.2 evidence
+→ independent evaluation
+→ BSI decision
 ```
 
-A Voting-affecting change SHALL identify the matrix rows it touches and SHALL
-NOT silently introduce or hide a known blocker to future certification. A
-known blocker may remain only when it is explicitly recorded as deferred with
-a unique reference, technical rationale, responsible owner/workstream,
-required closure stage/gate and required evidence.
+The gates are ordered. Preparatory work may proceed in parallel where it does not pre-judge an unresolved earlier gate, but no later gate may be claimed complete on internal evidence alone where external evaluation is required.
 
-### Stronger-invariant rule
+### Required P0 questions
 
-Certification-readiness work SHALL NOT silently weaken a stronger established
-EPD² invariant merely to imitate a conventional e-voting deployment. In
-particular, identity↔ballot unlinkability, Voting Client isolation,
-no-intermediate-tally and independent public verification remain hard project
-properties. A suspected strict-conformance conflict is escalated to the
-TOE/Security-Target decision and evaluator pre-assessment rather than resolved
-by implementation convenience.
-
-### P0 gates
-
-Before freezing certification-oriented production architecture:
-
-1. define the exact Target of Evaluation (TOE), including whether it is a
-   single central voting-server TOE or a multi-component TOE;
-2. obtain an evaluator/pre-assessment position on whether the PP voter identity,
-   voters' register and voting-record concepts can be represented by EPD²'s
-   non-identifying, election-scoped, single-use eligibility model while
-   preserving strict conformance;
-3. create a draft Security Target and exact PP/SFR/SAR traceability.
-
-### Required production closures
-
-The certifiable path must close, with evidence appropriate to the final TOE:
-trusted endpoint and inter-component channels; production access control;
-cryptographic secret handling and key custody; entropy/RNG policy; defensible
-key destruction/zeroization; side-channel-resistant secret operations;
-protected audit and reliable time without recreating identity↔ballot
-correlation; self-tests, secure states and recovery; controlled import/export
-and archival verification; production management controls; hardened deployment;
-configuration/release integrity; flaw remediation; operational/preparative
-guidance; SFR test coverage and vulnerability-analysis inputs.
+1. Can PP-0121 `User Identity`, `voters' register` and individual `voting record` be represented by a non-identifying, election-scoped, single-use eligibility representation that cannot be correlated to the ballot or to civil/member identity while preserving strict conformance?
+2. For EPD², should the evaluation target be a central/single-component Voting TOE or a multi-component Voting TOE using the PP multi-component package?
+3. How should internal party election use cases be classified against the stated `non-political elections` scope before any product-scope claim is made?
 
 ### Acceptance criteria
 
-`FIR-BSI-001` is not implemented merely because the matrix or documents exist.
-It may advance only on explicit evidence that:
+`FIR-VOTE-BSI-001` is not implemented merely because this FIR, the readiness matrix or the questionnaire exists. It may advance only on explicit evidence that:
 
-- the TOE and Security Target are defined for the intended certification target;
-- every claimed PP SFR/SAR has a maintained trace to design, implementation,
-  test and evidence;
-- every known blocker is closed or remains explicitly governed as a
-  pre-certification blocker with owner and closure gate;
-- the certification evidence package is evaluation-ready for the fixed
-  product/version/configuration.
+- the written P0 evaluator position is recorded;
+- the exact TOE boundary is frozen;
+- a Security Target maps the applicable PP requirements under strict conformance;
+- every claimed SFR/SAR has maintained design/implementation/test/evidence traceability;
+- P1 production gaps are closed for the candidate TOE;
+- the required EAL4 + ALC_FLR.2 assurance evidence exists;
+- independent testing/vulnerability analysis findings are closed as required; and
+- a BSI certification decision exists for a fixed product/version/configuration before any certification claim is made.
 
-Formal `BSI-certified`, `BSI compliant`, `CC compliant`, `EAL4 certified` or
-successful-evaluation claims remain prohibited until supported by the actual
-independent Common Criteria evaluation and BSI certification decision for the
-specific product/version/configuration.
-
-### Historical-status rule
-
-This FIR is forward-looking. Its introduction does not by itself reopen or
-invalidate historical PACK/stage acceptance. A historical implementation that
-creates a gap for the future certifiable TOE becomes a governed future
-remediation obligation and must be closed before the relevant certification
-gate.

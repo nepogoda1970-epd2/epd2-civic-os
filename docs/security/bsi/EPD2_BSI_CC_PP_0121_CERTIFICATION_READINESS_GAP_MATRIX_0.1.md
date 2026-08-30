@@ -1,4 +1,4 @@
-# EPD² — BSI-CC-PP-0121 Certification-Readiness Matrix
+# EPD² — BSI-CC-PP-0121 Certification Readiness / Gap Matrix
 
 **Status:** governed pre-evaluation readiness control — **NOT a BSI/CC conformance claim**  
 **Introduced:** 2026-08-30  
@@ -71,7 +71,7 @@ A known certification blocker may remain open only when it is explicitly recorde
 | M-28 | Developer testing / coverage (`ATE`) | **YELLOW** | Formal SFR↔test coverage and final TOE test evidence. |
 | M-29 | Independent testing / vulnerability analysis | **BLUE** | Recognised CC evaluation facility performs independent testing and `AVA_VAN.3` work; close findings. |
 | M-30 | Operational environment / BSI TR-03169 | **RED** | Hardened deployment, network segmentation, reliable time, monitoring, admin controls, availability, incident and recovery evidence. |
-| M-31 | Product/legal scope | **ORANGE** | Define in-scope certification product/use case. PP-0121 certification must not be marketed as general approval for statutory political elections. |
+| M-31 | Product/legal scope | **ORANGE** | EPD² must not assume that internal party elections are either in-scope or out-of-scope without written BSI/ITSEF classification. PP-0121 certification must not be marketed as general approval for statutory political elections. |
 
 ## 4. Mandatory P0 decisions
 
@@ -88,6 +88,8 @@ identity / membership
 ```
 
 The voting domain must not receive civil identity, member identity, account identity, a persistent member identifier or a reverse-resolvable identifier, and identity-side and ballot-side records must not become pairable through ordinary application/infrastructure metadata.
+
+**Hard architectural freeze gate:** until that written ITSEF position is obtained, no implementation, certification-readiness change or governance update may introduce a persistent member/person identifier into the voting domain, or otherwise weaken the `no persistent member/person identifier inside voting domain` invariant merely to match PP terminology.
 
 Before changing that invariant for certification purposes, obtain a written pre-evaluation position from a recognised Common Criteria evaluation facility on this question:
 

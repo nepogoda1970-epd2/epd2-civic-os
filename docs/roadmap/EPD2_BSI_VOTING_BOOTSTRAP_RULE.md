@@ -23,9 +23,9 @@ This rule applies whenever a task, stage, correction, handover, implementation, 
 
 After the normal project bootstrap documents and before changing a Voting-affecting artifact, read:
 
-1. `docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md`;
+1. `docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md`;
 2. the current PACK-15/PACK-16/PACK-17 or successor voting contract/evidence relevant to the change;
-3. the applicable `FIR-BSI-001` entry in the Master Future Implementation Register.
+3. the applicable `FIR-VOTE-BSI-001` entry in the Master Future Implementation Register.
 
 ## 3. Mandatory change classification
 
@@ -56,7 +56,7 @@ This rule does not independently prevent normal bounded implementation acceptanc
 BSI-readiness work must not silently weaken established EPD² guarantees merely to imitate a conventional e-voting deployment. In particular:
 
 - identity↔ballot unlinkability remains a hard project invariant;
-- no civil/member/account identity or persistent member identifier may be introduced into the voting domain without an explicit governed architecture decision;
+- no civil/member/account identity or persistent member/person identifier may be introduced into the voting domain; before a written ITSEF P0 position exists, this is a hard architectural freeze gate and cannot be relaxed merely for PP alignment;
 - no intermediate tally remains a hard EPD² invariant;
 - independent verification and the Open Trust Core boundary remain mandatory;
 - certification evidence is not a substitute for cryptographic/public verifiability.
@@ -77,4 +77,4 @@ Allowed wording is limited to factual statements such as `BSI certification-read
 
 ## 7. Historical-status rule
 
-Introduction of `FIR-BSI-001` is forward-looking governance. It does not by itself reopen or invalidate historical acceptance/closure records. If a historical implementation creates a gap for the future certifiable TOE, that gap is registered as future remediation and must be closed before the corresponding certification gate.
+Introduction of `FIR-VOTE-BSI-001` is forward-looking governance. It does not by itself reopen or invalidate historical acceptance/closure records. If a historical implementation creates a gap for the future certifiable TOE, that gap is registered as future remediation and must be closed before the corresponding certification gate.
