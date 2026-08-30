@@ -59,13 +59,13 @@ INF inference by this round          reasoning, never quoted as a source
 
 ## 1. Registry summary
 
-| Kind | Count | IDs |
-| --- | --- | --- |
-| `P` protocol / standards text | 3 | `H-02`, `H-06`, `H-08` |
-| `S` source artefact | 2 | `H-01`, `H-10` |
-| `X` cross-implementation | 3 | `H-03`, `H-04`, `H-05` |
-| `INF` inference | 2 | `H-07`, `H-09` |
-| **Total** | **10** | `H-01` … `H-10`, contiguous |
+| Kind                          | Count  | IDs                         |
+| ----------------------------- | ------ | --------------------------- |
+| `P` protocol / standards text | 3      | `H-02`, `H-06`, `H-08`      |
+| `S` source artefact           | 2      | `H-01`, `H-10`              |
+| `X` cross-implementation      | 3      | `H-03`, `H-04`, `H-05`      |
+| `INF` inference               | 2      | `H-07`, `H-09`              |
+| **Total**                     | **10** | `H-01` … `H-10`, contiguous |
 
 **Added by this correction:** `H-08` (the specification, as the authoritative
 parameter reference), `H-09` (the offline reconstruction of the parameter
@@ -94,8 +94,8 @@ is explicitly inherited from PACK-16B. §4 counts them.
 - **Institution / author:** Microsoft
 - **Version / date:** **no version is pinned.** No commit SHA and no
   byte-exact digest of this file could be obtained in this environment. The
-  file states that it implements the *ElectionGuard Design Specification
-  v2.1.0*, §3.1.1 p. 14, "Standard Baseline Cryptographic Parameters"
+  file states that it implements the _ElectionGuard Design Specification
+  v2.1.0_, §3.1.1 p. 14, "Standard Baseline Cryptographic Parameters"
 - **Source type:** published reference-implementation source code
 - **Stable reference:**
   `https://raw.githubusercontent.com/microsoft/electionguard-rust/520651138110a13f777409e96606454df928ceac/src/eg/src/standard_parameters.rs`
@@ -159,7 +159,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
 
 ##### `H-02` · RFC 8032 — the checkpoint signature scheme, normatively — Kind `P`
 
-- **Source title:** *Edwards-Curve Digital Signature Algorithm (EdDSA)*
+- **Source title:** _Edwards-Curve Digital Signature Algorithm (EdDSA)_
 - **Institution / author:** S. Josefsson, I. Liusvaara — IRTF CFRG
 - **Version / date:** RFC 8032, January 2017, Informational
 - **Source type:** published standards-track-adjacent specification (IRTF stream)
@@ -216,17 +216,17 @@ is explicitly inherited from PACK-16B. §4 counts them.
     binary is libcrypto with a command-line front end. A defect in OpenSSL's
     Ed25519 that survived across both builds would be invisible to this
     comparison. **This is the honest weak point of the round's signature
-    evidence**, and the evidence that does *not* share a lineage is `H-02`
+    evidence**, and the evidence that does _not_ share a lineage is `H-02`
   - **This entry replaced an in-process oracle that was deleted, not
     retired quietly.** The previous round's
     `tests/reference/crossimpl/openssl_ed25519_oracle.py` called OpenSSL
     through `python-cryptography`. When the primitive was hand-written that
     was a genuine cross-implementation comparison. Once `cryptography`
-    became the *provider*, the same script was comparing a library against
+    became the _provider_, the same script was comparing a library against
     itself in one process — agreement by construction. It was deleted rather
     than kept, because a cross-check that cannot disagree is not evidence
   - **Empty messages are reported `skipped`, never passed.** `openssl
-    pkeyutl -rawin` refuses a zero-length input file; that is a tool
+pkeyutl -rawin` refuses a zero-length input file; that is a tool
     limitation, not a verification result, and the oracle says so with a
     reason. TEST 1 is covered by `H-02` directly instead
   - Both sides follow RFC 8032. Agreement rules out an implementation error
@@ -238,7 +238,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
 ##### `H-04` · The independent Node.js verifier — Kind `X`
 
 - **Source title:** `tests/reference/crossimpl/independent_verifier.mjs` — an independent re-derivation of EPD²'s own protocol arithmetic
-- **Institution / author:** **EPD² — this round's own work**, written from the *written grammar and specification documents* rather than from the Python implementation
+- **Institution / author:** **EPD² — this round's own work**, written from the _written grammar and specification documents_ rather than from the Python implementation
 - **Version / date:** `oracle_version = "epd2-independent-verifier-2"`, executed 2026-08-02 under Node.js
 - **Source type:** cross-implementation oracle, executed
 - **Stable reference:** in-repository at the path above, 521 lines, importing only `node:` builtins
@@ -251,13 +251,13 @@ is explicitly inherited from PACK-16B. §4 counts them.
   which are kept rather than discarded. Version 2 added the
   `scalar_encoding`, `guardian_commitment` and `ballot_structural` handlers
 - **Scope:** the only evidence in this round capable of catching an error
-  the Python implementation makes *consistently* — and it caught one. See
+  the Python implementation makes _consistently_ — and it caught one. See
   `H-07`. Two properties of version 2 carry most of its weight:
   - **Every result now carries a machine-readable envelope**: `vector_id`,
     `operation`, `profile_id`, `expected`, `actual`, `match` and
     `oracle_version`. A verdict is evidence a re-audit can diff, not prose a
     human has to interpret
-  - **`ballot_structural` is handed the ballot's *fields* and rebuilds the
+  - **`ballot_structural` is handed the ballot's _fields_ and rebuilds the
     canonical bytes itself** before hashing them. Handing the oracle the
     producer's canonical encoding would test the hash function and not the
     encoding — and the encoding is exactly where the previous round's real
@@ -303,6 +303,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
   expected output, comparison result and limitations.
   `PRIMARY_SOURCE_UNAVAILABLE` names six operations with no published
   external vector, each with a reason
+
 - **Scope:** the machine-readable record behind every conformance claim in
   this round, and the artefact a re-audit should diff first. The
   `internal-stability` count of zero is the structural half of the
@@ -325,7 +326,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
 
 ##### `H-06` · No published vector exists for six EPD²-specific operations — Kind `P` (negative finding)
 
-- **Source title:** *ElectionGuard Design Specification* v2.1.0, and the absence of any accompanying worked-example corpus
+- **Source title:** _ElectionGuard Design Specification_ v2.1.0, and the absence of any accompanying worked-example corpus
 - **Institution / author:** Microsoft Research; searched 2026-08-02
 - **Source type:** negative finding against a protocol specification
 - **Stable reference:** as `F-01`; the finding is the absence of a published artefact
@@ -347,17 +348,17 @@ is explicitly inherited from PACK-16B. §4 counts them.
 - **Version / date:** 2026-08-02
 - **Source type:** inference
 - **Property supported:** `encode_seq` concatenated its items raw after a count, so `SEQ([b"ab", b"c"])` and `SEQ([b"a", b"bc"])` produced identical bytes — two different sequences sharing a digest, in a function every protocol digest runs through. `encode_struct` appended field values raw for the same reason. Both now length-prefix every member
-- **Scope:** the round's strongest argument that the audit's `EXTERNAL CONFORMANCE: FAIL` was correct. The defect was invisible to 23 self-generated stability vectors — they encoded and decoded it consistently — and became visible the moment an implementation written from the *grammar* was asked to agree. It is also why `H-04`'s `ballot_structural` handler rebuilds the canonical bytes from fields rather than accepting the producer's encoding
+- **Scope:** the round's strongest argument that the audit's `EXTERNAL CONFORMANCE: FAIL` was correct. The defect was invisible to 23 self-generated stability vectors — they encoded and decoded it consistently — and became visible the moment an implementation written from the _grammar_ was asked to agree. It is also why `H-04`'s `ballot_structural` handler rebuilds the canonical bytes from fields rather than accepting the producer's encoding
 - **Limitations:**
   - **This is an inference, not a source's statement.** No external party has confirmed the analysis, and it must never be quoted as though one had
   - One defect found is not a measure of how many remain
   - Every digest in the round changed as a consequence, which the stability vectors did catch — that is the one thing they are for
-- **Documents / tests using evidence:** `ADR-102` *Context* and *Canonical encoding* · `PACK-16D-IMPLEMENTATION-REPORT.md` §7 · `PACK-16D-CANONICAL-ENCODING-SPECIFICATION.md` · `tests/reference/test_negative_corpus.py::test_neg_ambiguous_sequence_encoding`
+- **Documents / tests using evidence:** `ADR-102` _Context_ and _Canonical encoding_ · `PACK-16D-IMPLEMENTATION-REPORT.md` §7 · `PACK-16D-CANONICAL-ENCODING-SPECIFICATION.md` · `tests/reference/test_negative_corpus.py::test_neg_ambiguous_sequence_encoding`
 - **Classification:** `INF`
 
 ##### `H-08` · The ElectionGuard Design Specification, as the authoritative parameter reference — Kind `P`
 
-- **Source title:** *ElectionGuard Design Specification*
+- **Source title:** _ElectionGuard Design Specification_
 - **Institution / author:** Josh Benaloh, Michael Naehrig, Olivier Pereira — Microsoft Research
 - **Version / date:** **2.1.0**
 - **Source type:** official protocol specification — a released document, not a branch
@@ -375,7 +376,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
   `human_readable_url_is_authoritative: false`. The round's provenance claim
   rests on a specification and a derivation, not on a branch
 - **Scope:** closes the audit's `PARAMETER SOURCE REPRODUCIBILITY: PARTIAL —
-  MUTABLE URL` half, together with `H-09`. `OD-P16D-14` is closed on this
+MUTABLE URL` half, together with `H-09`. `OD-P16D-14` is closed on this
   entry and `H-09`; `OD-P16D-17` is closed on `H-01`'s commit pin. Pinning the
   implementation source does **not** make it normative — the specification
   here remains the authoritative reference and `H-01` remains corroborating
@@ -395,7 +396,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
     **OPEN**, no BSI conformity is claimed, and the artefact carries
     `specification_review_status: "VO-08 OPEN"` so the gap travels with the
     parameters
-- **Documents / tests using evidence:** `PACK-16D-PARAMETER-PROFILE-IMPLEMENTATION.md` · `PACK-16D-EXTERNAL-CONFORMANCE-REPORT.md` `EC-19`…`EC-31` · `ADR-102` *Parameter profile* · `crypto/profiles/EPD2-CRYPTO-1.json`
+- **Documents / tests using evidence:** `PACK-16D-PARAMETER-PROFILE-IMPLEMENTATION.md` · `PACK-16D-EXTERNAL-CONFORMANCE-REPORT.md` `EC-19`…`EC-31` · `ADR-102` _Parameter profile_ · `crypto/profiles/EPD2-CRYPTO-1.json`
 - **Classification:** `P`
 
 ##### `H-09` · The parameter set reconstructed offline from the published rule — Kind `INF`
@@ -422,6 +423,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
   fetched. All four constants reconstruct exactly, and the artefact records
   `p_reconstructs_from_ln2_rule_and_delta`, `g_equals_2_pow_r_mod_p` and
   `r_equals_p_minus_1_over_q` as verified
+
 - **Scope:** **this is the strongest provenance evidence in the round, and
   it is the one that needs no network at all.** A URL says where bytes came
   from; a derivation says the bytes are the ones the published rule
@@ -442,7 +444,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
     chosen upstream — `delta_low` is recorded, not derived
   - `is_probable_prime()` is Miller–Rabin over 24 small-prime bases, not a
     proof of primality
-- **Documents / tests using evidence:** `PACK-16D-PARAMETER-PROFILE-IMPLEMENTATION.md` · `ADR-102` *Parameter profile* · `crypto/profiles/EPD2-CRYPTO-1.json` `derivation` · `tests/reference/test_epd2_crypto_1.py`
+- **Documents / tests using evidence:** `PACK-16D-PARAMETER-PROFILE-IMPLEMENTATION.md` · `ADR-102` _Parameter profile_ · `crypto/profiles/EPD2-CRYPTO-1.json` `derivation` · `tests/reference/test_epd2_crypto_1.py`
 - **Classification:** `INF`
 
 ##### `H-10` · `cryptography`, the vetted signature provider now in the runtime path — Kind `S`
@@ -463,7 +465,7 @@ is explicitly inherited from PACK-16B. §4 counts them.
   `backend = "cryptography (OpenSSL Ed25519)"`. Six library calls, all in
   that one module
 - **Scope:** closes `OD-P16D-13`, the audit's `CHECKPOINT SIGNATURE
-  PRIMITIVE POLICY: FAIL — HANDWRITTEN ED25519`. `crypto/ed25519.py` is
+PRIMITIVE POLICY: FAIL — HANDWRITTEN ED25519`. `crypto/ed25519.py` is
   **deleted**, not deprecated and not relocated, and an `ast` test asserts
   no module under `reference/` imports a hand-written `ed25519` module or
   imports `cryptography` outside the provider
@@ -488,20 +490,20 @@ is explicitly inherited from PACK-16B. §4 counts them.
     measured nothing, and `OD-P16D-05` stays open
   - **A tool's output is evidence about the tool.** That the provider agrees
     with RFC 8032's vectors is `H-02`'s claim, not this entry's
-- **Documents / tests using evidence:** `PACK-16D-LANGUAGE-AND-DEPENDENCY-ASSESSMENT.md` §2.1, §4 · `PACK-16D-CHECKPOINT-SIGNATURE-AND-SIGNER-TRUST-MODEL.md` · `PACK-16D-SECURITY-AND-SIDE-CHANNEL-LIMITATIONS.md` §4 · `ADR-102` *Dependency decision*, *Checkpoint authenticity* · `tests/reference/test_checkpoint_signatures.py` · `tests/repository/test_pack16d_signature_dependency.py`
+- **Documents / tests using evidence:** `PACK-16D-LANGUAGE-AND-DEPENDENCY-ASSESSMENT.md` §2.1, §4 · `PACK-16D-CHECKPOINT-SIGNATURE-AND-SIGNER-TRUST-MODEL.md` · `PACK-16D-SECURITY-AND-SIDE-CHANNEL-LIMITATIONS.md` §4 · `ADR-102` _Dependency decision_, _Checkpoint authenticity_ · `tests/reference/test_checkpoint_signatures.py` · `tests/repository/test_pack16d_signature_dependency.py`
 - **Classification:** `S`
 
 ## 3. Inherited evidence this round relies on and does not redefine
 
-| Inherited ID | Round | Source | What this round uses it for |
-| --- | --- | --- | --- |
-| `E-19`, `E-22` | PACK-16A | the weak-Fiat–Shamir failure class | why every challenge binds the statement and the context |
-| `F-01` | PACK-16B | *ElectionGuard Design Specification* v2.1.0 §3.1.1, PDF digest `a263ab3c…b936` | the digest `H-08` carries. **PACK-16B read that document first-hand; this round did not**, and `H-08` inherits the digest rather than re-attesting it |
-| `F-02` | PACK-16B | the same specification, §3.1 parameter derivation | the documented `r/2`-prime and `ln 2` structure that `H-09` reconstructs from and that `H-01`'s arithmetic check tests for |
-| `F-08` | PACK-16B | strong Fiat–Shamir in all three proof families | the proof transcripts the Node.js oracle re-derives |
-| `F-15`, and its counterweight | PACK-16B | Pedersen-DKG bias, and the paper showing it survivable for discrete-log schemes | why the ceremony publishes coefficient commitments and a proof of possession, and why `2k ≤ n` is refused |
-| `G-01` … `G-05` | PACK-16C | RFC 9162 §11.3, RFC 6962 §5, `draft-ietf-trans-gossip-05`, C2SP `tlog-witness`, and the inference from them | why cross-mirror split-view detection is still unimplemented (`OD-P16D-06`) even now that checkpoints are signed |
-| `G-02` | PACK-16C | RFC 6962 | the Merkle tree, inclusion and consistency proof shapes |
+| Inherited ID                  | Round    | Source                                                                                                      | What this round uses it for                                                                                                                           |
+| ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `E-19`, `E-22`                | PACK-16A | the weak-Fiat–Shamir failure class                                                                          | why every challenge binds the statement and the context                                                                                               |
+| `F-01`                        | PACK-16B | _ElectionGuard Design Specification_ v2.1.0 §3.1.1, PDF digest `a263ab3c…b936`                              | the digest `H-08` carries. **PACK-16B read that document first-hand; this round did not**, and `H-08` inherits the digest rather than re-attesting it |
+| `F-02`                        | PACK-16B | the same specification, §3.1 parameter derivation                                                           | the documented `r/2`-prime and `ln 2` structure that `H-09` reconstructs from and that `H-01`'s arithmetic check tests for                            |
+| `F-08`                        | PACK-16B | strong Fiat–Shamir in all three proof families                                                              | the proof transcripts the Node.js oracle re-derives                                                                                                   |
+| `F-15`, and its counterweight | PACK-16B | Pedersen-DKG bias, and the paper showing it survivable for discrete-log schemes                             | why the ceremony publishes coefficient commitments and a proof of possession, and why `2k ≤ n` is refused                                             |
+| `G-01` … `G-05`               | PACK-16C | RFC 9162 §11.3, RFC 6962 §5, `draft-ietf-trans-gossip-05`, C2SP `tlog-witness`, and the inference from them | why cross-mirror split-view detection is still unimplemented (`OD-P16D-06`) even now that checkpoints are signed                                      |
+| `G-02`                        | PACK-16C | RFC 6962                                                                                                    | the Merkle tree, inclusion and consistency proof shapes                                                                                               |
 
 ## 4. Integrity block — computed, not asserted
 
@@ -537,12 +539,12 @@ and backend, read from the installed library. The two counted as **cited
 without a first-hand digest** name documents this environment could not
 retrieve, and say so in their own text.
 
-| ID | Rule |
-| -- | ---- |
-| `H-R01` | **This registry no longer claims "sources cited but not read = 0", because it would be false.** Two entries name documents that could not be retrieved here, and both say so: `H-01` carries no digest at all after `3afa2962…` was withdrawn, and `H-08` carries a digest inherited from `F-01`. A registry that quietly kept the old count would be the exact defect this file exists to prevent |
-| `H-R02` | **A tool's output is evidence about the tool.** `H-03` establishes that the provider and the `openssl` binary agree; it establishes nothing about whether RFC 8032 is the right choice, which is a decision, not a fact — and, since both are OpenSSL underneath, rather less about the primitive than the same comparison established last round |
-| `H-R03` | **`H-07` and `H-09` are inferences and are marked as such.** They may be cited for what this round observed and computed; they may never be presented as an external party's finding. `H-09` in particular is EPD²'s reading of a published structural rule, not a statement by its authors |
-| `H-R09` | **`H-08` is the registry's one same-document overlap with an earlier round, and it is deliberate.** `H-R07` forbids re-minting an inherited source, and the rule is right. The exception is admitted because the *property supported* is new: PACK-16B cited the specification for the subgroup order and the derivation; this round cites it as the **authoritative provenance field of a committed artefact**, a role that did not exist before. `H-08` is bounded by two conditions — it re-attests nothing, and its digest is explicitly `F-01`'s. If a future round finds `H-08` making a first-hand claim about that PDF, the entry is wrong, not the rule |
+| ID      | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `H-R01` | **This registry no longer claims "sources cited but not read = 0", because it would be false.** Two entries name documents that could not be retrieved here, and both say so: `H-01` carries no digest at all after `3afa2962…` was withdrawn, and `H-08` carries a digest inherited from `F-01`. A registry that quietly kept the old count would be the exact defect this file exists to prevent                                                                                                                                                                                                                                                               |
+| `H-R02` | **A tool's output is evidence about the tool.** `H-03` establishes that the provider and the `openssl` binary agree; it establishes nothing about whether RFC 8032 is the right choice, which is a decision, not a fact — and, since both are OpenSSL underneath, rather less about the primitive than the same comparison established last round                                                                                                                                                                                                                                                                                                                |
+| `H-R03` | **`H-07` and `H-09` are inferences and are marked as such.** They may be cited for what this round observed and computed; they may never be presented as an external party's finding. `H-09` in particular is EPD²'s reading of a published structural rule, not a statement by its authors                                                                                                                                                                                                                                                                                                                                                                      |
+| `H-R09` | **`H-08` is the registry's one same-document overlap with an earlier round, and it is deliberate.** `H-R07` forbids re-minting an inherited source, and the rule is right. The exception is admitted because the _property supported_ is new: PACK-16B cited the specification for the subgroup order and the derivation; this round cites it as the **authoritative provenance field of a committed artefact**, a role that did not exist before. `H-08` is bounded by two conditions — it re-attests nothing, and its digest is explicitly `F-01`'s. If a future round finds `H-08` making a first-hand claim about that PDF, the entry is wrong, not the rule |
 
 ## 5. What this evidence does **not** establish
 
@@ -572,15 +574,15 @@ registry exists partly so that distance stays visible.
 
 ## 6. Maintenance
 
-| ID | Rule |
-| -- | ---- |
-| `H-R05` | A new PACK-16D source is added **here**, with the next contiguous `H-*` ID and every field in §2's shape. It is never introduced in a prose document |
-| `H-R06` | An `H-*` entry is never edited to point at a different source. A superseded source gets a new ID and the old entry records what superseded it. `H-01`…`H-05` were rewritten in place this round because each still names **the same source**, with a corrected role, a corrected version or a withdrawn digest; `H-03`'s script changed but its source — the OpenSSL Project's Ed25519 — did not |
-| `H-R07` | An earlier round's source is cited in §3 as inherited, never re-minted as an `H-*`. The same source under two IDs is how a registry starts disagreeing with itself. The one admitted exception is `H-08`, bounded by `H-R09` |
-| `H-R08` | If a later round obtains a primary-source vector for one of `H-06`'s six operations, `H-06` is **narrowed by a new entry**, and `PRIMARY_SOURCE_UNAVAILABLE` in code must lose that operation in the same change |
+| ID      | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `H-R05` | A new PACK-16D source is added **here**, with the next contiguous `H-*` ID and every field in §2's shape. It is never introduced in a prose document                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `H-R06` | An `H-*` entry is never edited to point at a different source. A superseded source gets a new ID and the old entry records what superseded it. `H-01`…`H-05` were rewritten in place this round because each still names **the same source**, with a corrected role, a corrected version or a withdrawn digest; `H-03`'s script changed but its source — the OpenSSL Project's Ed25519 — did not                                                                                                                                                                                                                                                               |
+| `H-R07` | An earlier round's source is cited in §3 as inherited, never re-minted as an `H-*`. The same source under two IDs is how a registry starts disagreeing with itself. The one admitted exception is `H-08`, bounded by `H-R09`                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `H-R08` | If a later round obtains a primary-source vector for one of `H-06`'s six operations, `H-06` is **narrowed by a new entry**, and `PRIMARY_SOURCE_UNAVAILABLE` in code must lose that operation in the same change                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `H-R11` | **A blocked entry is re-attempted, not quoted from memory, and that is what eventually cleared these two.** `H-01`'s access paths and `H-10`'s lock regeneration were re-run every round and failed every time, with verbatim transcripts kept in `PACK-16D-ENVIRONMENT-BLOCKED-EVIDENCE.md` rather than summarised. Because the failing commands were on record, running them on a network-enabled host produced evidence that sits beside the failures in the same document. A blocker asserted once and thereafter carried forward on a previous round's word is indistinguishable from an excuse — and, unlike this one, would never have become checkable |
-| `H-R12` | **An entry's `provenance_status` and the acceptance matrix must agree.** `H-01` says `SATISFIED` and `AM-79` says `SATISFIED`, on the same commit pin and the same digest. The rule exists because these two once drifted apart — a registry admitting a gap while a matrix row claimed a pass — and an audit caught it. The drift is as possible in this direction as in the other, so the agreement is on the recorded evidence, not on the round's sense that the matter is now settled |
-| `H-R10` | **A withdrawn digest is never restored by editing this file.** `H-01`'s `source_sha256` is filled in by running the commands in the artefact's `auditor_action` on a machine with network access and recording the commit SHA alongside it. A digest that appears here without a commit pin is a defect |
+| `H-R12` | **An entry's `provenance_status` and the acceptance matrix must agree.** `H-01` says `SATISFIED` and `AM-79` says `SATISFIED`, on the same commit pin and the same digest. The rule exists because these two once drifted apart — a registry admitting a gap while a matrix row claimed a pass — and an audit caught it. The drift is as possible in this direction as in the other, so the agreement is on the recorded evidence, not on the round's sense that the matter is now settled                                                                                                                                                                     |
+| `H-R10` | **A withdrawn digest is never restored by editing this file.** `H-01`'s `source_sha256` is filled in by running the commands in the artefact's `auditor_action` on a machine with network access and recording the commit SHA alongside it. A digest that appears here without a commit pin is a defect                                                                                                                                                                                                                                                                                                                                                        |
 
 **REFERENCE IMPLEMENTATION. REQUIRES EXTERNAL REVIEW. NOT PRODUCTION READY.
 NOT LEGALLY ACTIVATED.**

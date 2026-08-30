@@ -16,14 +16,14 @@ PACK-16C specified fixed-capacity sealed batches (`TC-27`…`TC-45`,
 opening format and the capacity arithmetic to PACK-16D. This document
 states what the reference implementation actually does.
 
-| ID | Module (under `services/voting-service/src/epd2_voting_service/reference/`) | Role |
-| -- | ---- | ---- |
-| `SE-01` | `publication/sealed_batches.py` | `LeafClass`, `LeafOpening`, `real_leaf()`, `cover_leaf()`, `new_salt()`, `SealedBatch`, `BatchOpening` |
-| `SE-02` | `publication/sealing.py` | `seal_batch()` — turns committed reservations into a full batch |
-| `SE-03` | `publication/capacity.py` | `CapacityPlan`, `SlotClass`, `K`, `A`, `l_max`, `validate()` |
-| `SE-04` | `casting/store.py` | `reserve_leaf()` compare-and-set, the two exhaustion errors |
-| `SE-05` | `casting/transactions.py` | `_candidate_slots()` — which slots a cast or a challenge may take |
-| `SE-06` | `crypto/merkle.py` | The RFC 6962 tree the commitment root is computed over |
+| ID      | Module (under `services/voting-service/src/epd2_voting_service/reference/`) | Role                                                                                                   |
+| ------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `SE-01` | `publication/sealed_batches.py`                                             | `LeafClass`, `LeafOpening`, `real_leaf()`, `cover_leaf()`, `new_salt()`, `SealedBatch`, `BatchOpening` |
+| `SE-02` | `publication/sealing.py`                                                    | `seal_batch()` — turns committed reservations into a full batch                                        |
+| `SE-03` | `publication/capacity.py`                                                   | `CapacityPlan`, `SlotClass`, `K`, `A`, `l_max`, `validate()`                                           |
+| `SE-04` | `casting/store.py`                                                          | `reserve_leaf()` compare-and-set, the two exhaustion errors                                            |
+| `SE-05` | `casting/transactions.py`                                                   | `_candidate_slots()` — which slots a cast or a challenge may take                                      |
+| `SE-06` | `crypto/merkle.py`                                                          | The RFC 6962 tree the commitment root is computed over                                                 |
 
 This is reference code. It is not production code and has not been
 externally reviewed.
@@ -33,16 +33,16 @@ externally reviewed.
 `LeafClass` is a `StrEnum` with exactly three members. There is no fourth
 class, and no class that exists only under load.
 
-| ID | Leaf class | Value | Committed to | Opened at closure |
-| -- | ---------- | ----- | ------------ | ----------------- |
-| `SE-07` | `ACCEPTED_CAST` | `"accepted_cast"` | An accepted encrypted ballot's canonical digest | Yes — salt, reference and digest |
-| `SE-08` | `PUBLIC_CHALLENGED_SPOILED` | `"public_challenged_spoiled"` | A publicly challenged, spoiled ballot's canonical digest | Yes — salt, reference and digest |
-| `SE-09` | `COVER` | `"cover"` | Nothing | Yes, as its value — there is nothing else to reveal |
+| ID      | Leaf class                  | Value                         | Committed to                                             | Opened at closure                                   |
+| ------- | --------------------------- | ----------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| `SE-07` | `ACCEPTED_CAST`             | `"accepted_cast"`             | An accepted encrypted ballot's canonical digest          | Yes — salt, reference and digest                    |
+| `SE-08` | `PUBLIC_CHALLENGED_SPOILED` | `"public_challenged_spoiled"` | A publicly challenged, spoiled ballot's canonical digest | Yes — salt, reference and digest                    |
+| `SE-09` | `COVER`                     | `"cover"`                     | Nothing                                                  | Yes, as its value — there is nothing else to reveal |
 
-| ID | Rule |
-| -- | ---- |
+| ID      | Rule                                                                                                                                                                                                                                                                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SE-10` | **A cast leaf and a challenge leaf are constructed by the same function with the same shape.** `real_leaf()` takes the leaf class inside the opening struct, so the two differ only in a field that is not public until closure. Nothing in the published commitment distinguishes them (`TC-57`) |
-| `SE-11` | **Leaf class is decided by which artefact map holds the reservation's `submission_reference`**, not by any caller-supplied label: `seal_batch()` reads `store.accepted_ballots` first and falls through to `store.spoiled_ballots` |
+| `SE-11` | **Leaf class is decided by which artefact map holds the reservation's `submission_reference`**, not by any caller-supplied label: `seal_batch()` reads `store.accepted_ballots` first and falls through to `store.spoiled_ballots`                                                                |
 
 ## 3. The real leaf is a hiding commitment under a 32-byte salt
 
@@ -69,12 +69,12 @@ LeafOpening.canonical_bytes() = STRUCT(
 )
 ```
 
-| ID | Rule |
-| -- | ---- |
+| ID      | Rule                                                                                                                                                                                                                                                                          |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `SE-12` | **The salt is `SALT_BYTES = 32` bytes drawn from the injected `RandomSource`** (`new_salt()`). It is the hiding term: without it, a leaf would be a deterministic function of a ballot digest and an observer holding a candidate digest could test membership before closure |
-| `SE-13` | **The leaf digest is `DIGEST_BYTES = 32` bytes and is never truncated.** `crypto/hashing.py` has no truncation path |
-| `SE-14` | **The commitment is bound to its position and its election.** `election_context_id`, `batch_sequence` and `leaf_index` are inside the preimage, so a leaf lifted from one batch, one index or one election does not recompute in another |
-| `SE-15` | **The salt is published only in the closure opening.** Before closure the salt exists only in the sealing step's output, which is not a pre-closure board entry |
+| `SE-13` | **The leaf digest is `DIGEST_BYTES = 32` bytes and is never truncated.** `crypto/hashing.py` has no truncation path                                                                                                                                                           |
+| `SE-14` | **The commitment is bound to its position and its election.** `election_context_id`, `batch_sequence` and `leaf_index` are inside the preimage, so a leaf lifted from one batch, one index or one election does not recompute in another                                      |
+| `SE-15` | **The salt is published only in the closure opening.** Before closure the salt exists only in the sealing step's output, which is not a pre-closure board entry                                                                                                               |
 
 Hiding is claimed at the level of construction: a 32-byte uniform salt
 inside an HMAC-SHA-256 preimage. **No formal indistinguishability proof
@@ -88,12 +88,12 @@ def cover_leaf(source: RandomSource) -> bytes:
     return source.random_bytes(DIGEST_BYTES)
 ```
 
-| ID | Rule |
-| -- | ---- |
-| `SE-16` | **A cover leaf is 32 uniform random bytes. It is not a hash of anything** — not of a null artefact, not of a padding constant, not of its index. There is therefore no preimage anyone can be compelled to produce, and no oracle that distinguishes "cover" from "real" by testing a guess |
+| ID      | Rule                                                                                                                                                                                                                                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-16` | **A cover leaf is 32 uniform random bytes. It is not a hash of anything** — not of a null artefact, not of a padding constant, not of its index. There is therefore no preimage anyone can be compelled to produce, and no oracle that distinguishes "cover" from "real" by testing a guess           |
 | `SE-17` | **A cover leaf has no opening.** `seal_batch()` records it as `LeafOpening(leaf_class=COVER, salt=b"", artifact_reference="", artifact_digest=b"")` — an empty salt, an empty reference and an empty digest. The struct exists so that the opening covers every index in order; it commits to nothing |
-| `SE-18` | **The verifier skips cover leaves when recomputing leaves and re-proving inclusion.** `verify_batches()` `continue`s on `LeafClass.COVER` in both loops. A cover leaf is checked only by the root recomputation over the full leaf vector |
-| `SE-19` | **A cover leaf never enters the tally.** `reconcile()` counts it and then `continue`s before the artefact-mapping checks; `cover_leaf_in_tally` is a named negative-corpus case |
+| `SE-18` | **The verifier skips cover leaves when recomputing leaves and re-proving inclusion.** `verify_batches()` `continue`s on `LeafClass.COVER` in both loops. A cover leaf is checked only by the root recomputation over the full leaf vector                                                             |
+| `SE-19` | **A cover leaf never enters the tally.** `reconcile()` counts it and then `continue`s before the artefact-mapping checks; `cover_leaf_in_tally` is a named negative-corpus case                                                                                                                       |
 
 Because a cover leaf is drawn from the same `RandomSource` as the salts,
 a randomness failure during sealing surfaces through the same fail-closed
@@ -103,14 +103,14 @@ to a weaker source.
 ## 5. Fill to capacity
 
 `seal_batch()` iterates `range(capacity)` — not over the reservations —
-and asks, for each index, whether a *committed* reservation claims it:
+and asks, for each index, whether a _committed_ reservation claims it:
 
-| ID | Rule |
-| -- | ---- |
-| `SE-20` | **Every unused slot becomes a cover leaf.** A batch is always exactly `capacity` leaves, whatever the occupancy |
-| `SE-21` | **Only committed reservations produce a real leaf.** The filter is `r.batch_sequence == batch_sequence and r.committed`; a reservation taken by a transaction that did not commit contributes nothing and its slot is covered |
-| `SE-22` | **Leaves are emitted in leaf-index order**, so the opening and the commitment agree on order by construction rather than by a sort |
-| `SE-23` | **The commitment root is `merkle_root(leaves)` over exactly `capacity` leaves**, and an empty leaf list is refused (`BatchIntegrityError`, "a batch must have at least one leaf") |
+| ID      | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-20` | **Every unused slot becomes a cover leaf.** A batch is always exactly `capacity` leaves, whatever the occupancy                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `SE-21` | **Only committed reservations produce a real leaf.** The filter is `r.batch_sequence == batch_sequence and r.committed`; a reservation taken by a transaction that did not commit contributes nothing and its slot is covered                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `SE-22` | **Leaves are emitted in leaf-index order**, so the opening and the commitment agree on order by construction rather than by a sort                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `SE-23` | **The commitment root is `merkle_root(leaves)` over exactly `capacity` leaves**, and an empty leaf list is refused (`BatchIntegrityError`, "a batch must have at least one leaf")                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `SE-46` | **An over-full batch is refused before it is sealed.** Before building any leaf, `seal_batch()` compares the committed reservations for this batch against `capacity` and raises `CapacityExhaustedError` (`BULLETIN_BOARD_BATCH_CAPACITY_EXHAUSTED`) if there are more of them than there are leaves, or if any claims a leaf index at or above `capacity`. Reaching this is a defect upstream, not a condition to absorb: sealing is the last point at which the alternative — quietly dropping a committed reservation, and with it an accepted ballot — could still happen. `test_verifier_branches::test_capacity_exhaustion_is_caught_at_sealing_time` pins it |
 
 `SealedBatch` — the published commitment — carries six fields:
@@ -139,9 +139,9 @@ it rather than asserting it. The test:
    `len({len(leaf) for leaf in (*empty_opening.leaves, *busy_opening.leaves)}) == 1`;
 6. asserts the two roots **differ**, so equal size is not equal content.
 
-| ID | Rule |
-| -- | ---- |
-| `SE-24` | **The size test compares an empty batch against a four-ballot batch, not two empty ones.** A size-invariance test that never varies occupancy proves nothing |
+| ID      | Rule                                                                                                                                                                                                             |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-24` | **The size test compares an empty batch against a four-ballot batch, not two empty ones.** A size-invariance test that never varies occupancy proves nothing                                                     |
 | `SE-25` | `test_cover_leaves_fill_every_unused_slot` separately asserts that one cast ballot yields exactly one `ACCEPTED_CAST` leaf and `capacity - 1` `COVER` leaves, and that the opening recomputes the published root |
 
 What this does **not** show: it does not measure the size of a serialised
@@ -156,15 +156,15 @@ A_ACCEPTED_CASTS_PER_CONTINUATION    = 1
 L_max = E * (K + A)          # E = max_valid_continuations
 ```
 
-| ID | Rule |
-| -- | ---- |
-| `SE-26` | **`L_max` is derived from the maximum number of valid continuation capabilities, never from turnout.** `CapacityPlan.l_max` is `max_valid_continuations * (k + a)`. There is no expected-turnout input to the plan, and no code path that reads one |
-| `SE-27` | **The plan is capability-shaped, so it is fixed before the election opens.** A capacity that responded to observed demand would be an adaptive channel: batch sizes would then carry turnout |
-| `SE-28` | `SlotClass` has three members — `CAST_RESERVED`, `CHALLENGE_RESERVED`, `SHARED_RESERVE` — and every slot in a primary batch belongs to exactly one of them |
-| `SE-29` | **`validate()` requires `cast + challenge + shared == primary_capacity` exactly.** A partition that does not cover the batch raises `CapacityPlanInvalidError` with the message *"an unclassified slot is an adaptive-overflow hole"* |
-| `SE-30` | **`validate()` also requires `total_capacity >= L_max + safety_reserve`**, where `total_capacity = (primary_capacity + reserve_commitments * reserve_capacity) * interval_count`. A plan that cannot cover `L_max` is not activated |
-| `SE-31` | `validate()` fails closed on the first violation and returns the plan otherwise; `E`, the interval count and the primary capacity must each be positive |
-| `SE-32` | **`slot_capacity()` returns the declared shared reserve and explicitly discards the batch capacity argument** (`del batch_capacity  # the shared reserve is declared, never inferred`) |
+| ID      | Rule                                                                                                                                                                                                                                                      |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-26` | **`L_max` is derived from the maximum number of valid continuation capabilities, never from turnout.** `CapacityPlan.l_max` is `max_valid_continuations * (k + a)`. There is no expected-turnout input to the plan, and no code path that reads one       |
+| `SE-27` | **The plan is capability-shaped, so it is fixed before the election opens.** A capacity that responded to observed demand would be an adaptive channel: batch sizes would then carry turnout                                                              |
+| `SE-28` | `SlotClass` has three members — `CAST_RESERVED`, `CHALLENGE_RESERVED`, `SHARED_RESERVE` — and every slot in a primary batch belongs to exactly one of them                                                                                                |
+| `SE-29` | **`validate()` requires `cast + challenge + shared == primary_capacity` exactly.** A partition that does not cover the batch raises `CapacityPlanInvalidError` with the message _"an unclassified slot is an adaptive-overflow hole"_                     |
+| `SE-30` | **`validate()` also requires `total_capacity >= L_max + safety_reserve`**, where `total_capacity = (primary_capacity + reserve_commitments * reserve_capacity) * interval_count`. A plan that cannot cover `L_max` is not activated                       |
+| `SE-31` | `validate()` fails closed on the first violation and returns the plan otherwise; `E`, the interval count and the primary capacity must each be positive                                                                                                   |
+| `SE-32` | **`slot_capacity()` returns the declared shared reserve and explicitly discards the batch capacity argument** (`del batch_capacity  # the shared reserve is declared, never inferred`)                                                                    |
 | `SE-33` | Every `CapacityPlan` carries `profile_label`, defaulting to `"TEST PROFILE ONLY - NOT A PRODUCTION DEFAULT"`. `test_capacity_profile_is_marked_test_only` asserts the fixture's plan carries it. **No production capacity profile is shipped this round** |
 
 ### 7.1 A real defect the tests found here
@@ -191,16 +191,16 @@ harness works, not because it is decoration.
 first index not already in `slot_owner` (compare-and-set inside the
 transaction lock).
 
-| ID | Requesting | Candidate order | May never take |
-| -- | ---------- | --------------- | -------------- |
-| `SE-34` | Cast | `[0, cast_n)` then the declared shared reserve | — |
+| ID      | Requesting       | Candidate order                                              | May never take                       |
+| ------- | ---------------- | ------------------------------------------------------------ | ------------------------------------ |
+| `SE-34` | Cast             | `[0, cast_n)` then the declared shared reserve               | —                                    |
 | `SE-35` | Public challenge | `[cast_n, cast_n + chal_n)` then the declared shared reserve | **Any cast-reserved slot** (`TC-75`) |
 
-| ID | Rule |
-| -- | ---- |
-| `SE-36` | **`requested_class` selects the exhaustion reason code and is not used to widen the candidate list.** The caller has already decided which slots the submission may take; `reserve_leaf()` cannot grant more |
+| ID      | Rule                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-36` | **`requested_class` selects the exhaustion reason code and is not used to widen the candidate list.** The caller has already decided which slots the submission may take; `reserve_leaf()` cannot grant more                                                                                                                                                                                      |
 | `SE-37` | `TC-75` is verified sequentially by `test_candidate_slots_never_offer_a_cast_slot_to_a_challenge` and under a real thread race by `test_c03_cast_and_public_challenge_concurrently`, which asserts the challenge's leaf index is `>= plan.cast_reserved_per_batch` whenever the challenge wins the race — and that it reserved nothing at all when the cast won and consumed the capability first |
-| `SE-38` | **Reservation precedes durable acceptance.** There is no path that accepts an artefact and then looks for a slot; a transaction that fails restores a full snapshot including `slot_owner` and `reservations` |
+| `SE-38` | **Reservation precedes durable acceptance.** There is no path that accepts an artefact and then looks for a slot; a transaction that fails restores a full snapshot including `slot_owner` and `reservations`                                                                                                                                                                                     |
 
 ## 9. Exhaustion fails closed, with two distinct reason codes
 
@@ -209,21 +209,21 @@ distinct exception types on a common base that is never raised directly,
 because a cast and a public challenge exhaust different capacity and a
 caller must be able to tell them apart.
 
-| ID | Condition | Exception | Reason code |
-| -- | --------- | --------- | ----------- |
-| `SE-39` | No cast-eligible slot | `CastCapacityUnavailableError` | `SUBMISSION_CAST_CAPACITY_UNAVAILABLE` |
-| `SE-40` | No challenge-eligible slot | `PublicChallengeReservationUnavailableError` | `CHALLENGE_PUBLIC_RESERVATION_UNAVAILABLE` |
-| `SE-41` | (base, never raised directly) | `ReservationUnavailableError` | `RESERVATION_UNAVAILABLE` |
+| ID      | Condition                     | Exception                                    | Reason code                                |
+| ------- | ----------------------------- | -------------------------------------------- | ------------------------------------------ |
+| `SE-39` | No cast-eligible slot         | `CastCapacityUnavailableError`               | `SUBMISSION_CAST_CAPACITY_UNAVAILABLE`     |
+| `SE-40` | No challenge-eligible slot    | `PublicChallengeReservationUnavailableError` | `CHALLENGE_PUBLIC_RESERVATION_UNAVAILABLE` |
+| `SE-41` | (base, never raised directly) | `ReservationUnavailableError`                | `RESERVATION_UNAVAILABLE`                  |
 
 `test_e2e_07_capacity_exhaustion` runs this on fixture C, whose plan has
 one cast-reserved slot and no shared reserve, and asserts:
 
-| ID | Asserted on exhaustion |
-| -- | ---------------------- |
-| `SE-42` | The second ballot is **not** in `store.accepted_ballots` — no acceptance without a reservation |
-| `SE-43` | The outbox holds exactly one row — **no hidden queue and no retry buffer** |
+| ID      | Asserted on exhaustion                                                                                                                                                                         |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SE-42` | The second ballot is **not** in `store.accepted_ballots` — no acceptance without a reservation                                                                                                 |
+| `SE-43` | The outbox holds exactly one row — **no hidden queue and no retry buffer**                                                                                                                     |
 | `SE-44` | The rejected submitter's continuation still has `cast_entitlement_available is True` and `capability_consumed is False` — **a capability is never spent by a submission that does not commit** |
-| `SE-45` | The incident is publishable before closure as an `INCIDENT_NOTICE` whose payload is the constant `b"election.capacity_exhausted"` — it names no capability, no ballot and no count |
+| `SE-45` | The incident is publishable before closure as an `INCIDENT_NOTICE` whose payload is the constant `b"election.capacity_exhausted"` — it names no capability, no ballot and no count             |
 
 ## 10. What is not implemented
 

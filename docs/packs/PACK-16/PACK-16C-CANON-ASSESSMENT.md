@@ -26,8 +26,8 @@ owns the canon can decide them without re-deriving the analysis.
 PACK-16C is the first round to specify artefacts that are **published,
 permanent, ballot-bearing and public**. The canon has an append-only public
 publication primitive — `PublicLedgerEntry` (19a.1) — and that primitive
-**explicitly prohibits a link to `VoteEnvelope`** (19a.1, *Запрещённые
-связи*).
+**explicitly prohibits a link to `VoteEnvelope`** (19a.1, _Запрещённые
+связи_).
 
 ```text
 That prohibition is CORRECT and this round does not challenge it.
@@ -41,20 +41,20 @@ finding — CQ-P16C-01 and CAM-P16C-01.
 
 ## 1. What PACK-16C touches in the canon
 
-| Canon section | What PACK-16C relies on | What PACK-16C does **not** do |
-| ------------- | ----------------------- | ----------------------------- |
-| **5.9 Tally Context** | Ownership of ballot-set verification and a signed result | Redefine it; move tally artefacts out of it |
-| **5.11 Transparency Context** | Public publication as a bounded context | Extend its scope to ballots |
-| **15.1 `Ballot`, 15.2 `BallotOption`** | Manifest-side shapes | Modify either |
-| **15.3 `VoteEnvelope`** | Its forbidden-field set (`account ID`, name, email, membership ID, IdP reference) — **all of which PACK-16C also forbids** | Add a field, remove a field, or reach a prohibited value — §2.2, §2.3 |
-| **15.4 `VoteReceipt`** | Inclusion-checkable without revealing the choice | Change what a receipt proves |
-| **15.5 `Tally`** | `input_set_hash`, `algorithm_version`, `tally_signature` | Add a guardian, share or proof field — §2.5 |
-| **15.6 `ResultPublication`** | Its count set and non-finality rule | Publish any count before closure |
-| **18.1 `AuditEvent`** | The audit primitive as it stands | Route board evidence through it — §3.2 |
-| **19a.1 `PublicLedgerEntry`** | The append-only chained-publication primitive, its immutability rule and **its prohibition on `VoteEnvelope`** | Use it for the bulletin board — §2.1 |
-| **19a.3 `DisclosurePolicy`** | Generalised role labels rather than raw role IDs | Publish a raw `published_by_role_id` |
-| **§21 canonical event envelope** | Unchanged | Add transport metadata or a second envelope |
-| **19d.18, 19e.22, 19f.23** | Every prohibited edge | Create any of them |
+| Canon section                          | What PACK-16C relies on                                                                                                    | What PACK-16C does **not** do                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **5.9 Tally Context**                  | Ownership of ballot-set verification and a signed result                                                                   | Redefine it; move tally artefacts out of it                           |
+| **5.11 Transparency Context**          | Public publication as a bounded context                                                                                    | Extend its scope to ballots                                           |
+| **15.1 `Ballot`, 15.2 `BallotOption`** | Manifest-side shapes                                                                                                       | Modify either                                                         |
+| **15.3 `VoteEnvelope`**                | Its forbidden-field set (`account ID`, name, email, membership ID, IdP reference) — **all of which PACK-16C also forbids** | Add a field, remove a field, or reach a prohibited value — §2.2, §2.3 |
+| **15.4 `VoteReceipt`**                 | Inclusion-checkable without revealing the choice                                                                           | Change what a receipt proves                                          |
+| **15.5 `Tally`**                       | `input_set_hash`, `algorithm_version`, `tally_signature`                                                                   | Add a guardian, share or proof field — §2.5                           |
+| **15.6 `ResultPublication`**           | Its count set and non-finality rule                                                                                        | Publish any count before closure                                      |
+| **18.1 `AuditEvent`**                  | The audit primitive as it stands                                                                                           | Route board evidence through it — §3.2                                |
+| **19a.1 `PublicLedgerEntry`**          | The append-only chained-publication primitive, its immutability rule and **its prohibition on `VoteEnvelope`**             | Use it for the bulletin board — §2.1                                  |
+| **19a.3 `DisclosurePolicy`**           | Generalised role labels rather than raw role IDs                                                                           | Publish a raw `published_by_role_id`                                  |
+| **§21 canonical event envelope**       | Unchanged                                                                                                                  | Add transport metadata or a second envelope                           |
+| **19d.18, 19e.22, 19f.23**             | Every prohibited edge                                                                                                      | Create any of them                                                    |
 
 **Nothing above is modified by this round.**
 
@@ -68,7 +68,7 @@ finding — CQ-P16C-01 and CAM-P16C-01.
 
 19a.1 prohibits `PublicLedgerEntry → VoteEnvelope`. The board publishes
 encrypted ballots, their proofs and their confirmation codes — artefacts
-that *correspond to* vote envelopes even where they are not modelled as
+that _correspond to_ vote envelopes even where they are not modelled as
 them. Routing the board through `PublicLedgerEntry` would either violate the
 prohibition or require pretending a published ballot is not a ballot.
 
@@ -174,16 +174,16 @@ They are board entries, and the board is not a PublicLedgerEntry
 in the entry catalogue, and are not modelled as canonical aggregates.
 ```
 
-| Property | Canonical reading |
-| -------- | ----------------- |
-| Append-only, hash-chained, corrected only by supersession | **Same semantics as 19a.1**, applied to a primitive the canon does not have |
-| Carries no link to `Account`, `IdentityRecord`, `ParticipationCredential` or any capability | **Stricter than 19a.1 requires** (`BE-24` prohibited fields) |
-| Carries no timestamp finer than the context's granularity | `ER-09`, `DM-12` — the constraint `CAM-P16C-02` would generalise |
+| Property                                                                                            | Canonical reading                                                                                       |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Append-only, hash-chained, corrected only by supersession                                           | **Same semantics as 19a.1**, applied to a primitive the canon does not have                             |
+| Carries no link to `Account`, `IdentityRecord`, `ParticipationCredential` or any capability         | **Stricter than 19a.1 requires** (`BE-24` prohibited fields)                                            |
+| Carries no timestamp finer than the context's granularity                                           | `ER-09`, `DM-12` — the constraint `CAM-P16C-02` would generalise                                        |
 | `sealed_batch_commitment` is a **commitment to** ballot artefacts, never a link to a `VoteEnvelope` | **The 19a.1 prohibition is not approached, let alone crossed** — a hiding commitment is not a reference |
 
-| ID | Rule |
-| -- | ---- |
-| `CAN-P16C-04` | **The sealed batch layer does not create a canonical aggregate and does not require one.** It extends `CAM-P16C-01`'s scope by three entry types and changes neither its shape nor its alternative |
+| ID            | Rule                                                                                                                                                                                                                                                                                                                                                  |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CAN-P16C-04` | **The sealed batch layer does not create a canonical aggregate and does not require one.** It extends `CAM-P16C-01`'s scope by three entry types and changes neither its shape nor its alternative                                                                                                                                                    |
 | `CAN-P16C-05` | **A commitment is not a link.** `PublicLedgerEntry → VoteEnvelope` prohibits a reference; a `commitment_root` is a hash over hiding commitments from which no envelope is reachable. **The prohibition is honoured more strictly after this correction than before it**, because before closure the board no longer publishes ballot artefacts at all |
 
 ---
@@ -200,18 +200,18 @@ aggregate, it is not published, and it must NEVER appear in the public
 election record.
 ```
 
-| Property | Canonical reading |
-| -------- | ----------------- |
-| Holds no identity, no credential, no ballot reference, no artefact ID | **Below the canon's aggregate threshold entirely** (`CN-36`) |
-| Never published, never in the record, never in an event payload | Nothing for `PublicLedgerEntry` to publish (`EV-71`, `EV-72`) |
-| Three booleans with no counter | Cannot become an activity aggregate by accumulation (`CN-37`, `DM-23`) |
-| Lives only inside the anonymous continuation boundary | PACK-15's capability lineage, unchanged |
+| Property                                                              | Canonical reading                                                      |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Holds no identity, no credential, no ballot reference, no artefact ID | **Below the canon's aggregate threshold entirely** (`CN-36`)           |
+| Never published, never in the record, never in an event payload       | Nothing for `PublicLedgerEntry` to publish (`EV-71`, `EV-72`)          |
+| Three booleans with no counter                                        | Cannot become an activity aggregate by accumulation (`CN-37`, `DM-23`) |
+| Lives only inside the anonymous continuation boundary                 | PACK-15's capability lineage, unchanged                                |
 
-| ID | Rule |
-| -- | ---- |
-| `CAN-P16C-06` | **No new public canonical identity-bearing aggregate is introduced by the bounded-challenge model.** The entitlement is private anonymous capability state and must not appear in the public election record |
-| `CAN-P16C-07` | **A canonical aggregate for entitlement state would be a defect, not an improvement.** Modelling it canonically invites publication, and publishing it would create a per-capability activity record — exactly what `CC-04` removes |
-| `CAN-P16C-08` | **The capacity plan (`DM-22`) is public manifest content, not a canonical aggregate**, and is published as part of `BE-01` and `BE-26` (`BE-32`). It carries nothing voter-specific |
+| ID            | Rule                                                                                                                                                                                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CAN-P16C-06` | **No new public canonical identity-bearing aggregate is introduced by the bounded-challenge model.** The entitlement is private anonymous capability state and must not appear in the public election record                                                                                                                                |
+| `CAN-P16C-07` | **A canonical aggregate for entitlement state would be a defect, not an improvement.** Modelling it canonically invites publication, and publishing it would create a per-capability activity record — exactly what `CC-04` removes                                                                                                         |
+| `CAN-P16C-08` | **The capacity plan (`DM-22`) is public manifest content, not a canonical aggregate**, and is published as part of `BE-01` and `BE-26` (`BE-32`). It carries nothing voter-specific                                                                                                                                                         |
 | `CAN-P16C-09` | **Removing event-bus propagation of a capability reference requires no canon amendment.** Deleting `capability.consumed` and `challenge.public_entitlement_consumed` removes two integration events; it creates no aggregate, changes no canonical field, and **strengthens** 19a.1's separation rather than touching it (`EV-71`, `EV-78`) |
 
 ---
@@ -252,7 +252,7 @@ constructible.**
 
 Board evidence — checkpoints, inclusion proofs, batch publications — is
 **not** routed through 18.1. An `AuditEvent` records that something
-happened; a checkpoint *is* the evidence, verifiable by a stranger with no
+happened; a checkpoint _is_ the evidence, verifiable by a stranger with no
 access to EPD² systems (`IV-*`). Conflating them would make universal
 verifiability depend on trusting an internal audit stream. **18.1 is
 untouched.**
@@ -275,11 +275,11 @@ verification obligation (VO-08), would bind the canon to a design
 that external review has not yet seen.
 ```
 
-| ID | Rule |
-| -- | ---- |
+| ID            | Rule                                                                                                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `CAN-P16C-01` | **The gap in §2.1 is real and is recorded as a gap.** PACK-16C does not close it by declaring the board a `PublicLedgerEntry`, which would violate 19a.1, nor by declaring published ballots not to be ballots, which would be false |
-| `CAN-P16C-02` | **`CANON_VERSION` stays `0.8.0` and the canon files are byte-identical.** A clarification is not a version change |
-| `CAN-P16C-03` | **PACK-16A's `CA-02` and PACK-16B's `CAM-P16B-01`…`CAM-P16B-03` are untouched.** This round neither advances nor discharges them |
+| `CAN-P16C-02` | **`CANON_VERSION` stays `0.8.0` and the canon files are byte-identical.** A clarification is not a version change                                                                                                                    |
+| `CAN-P16C-03` | **PACK-16A's `CA-02` and PACK-16B's `CAM-P16B-01`…`CAM-P16B-03` are untouched.** This round neither advances nor discharges them                                                                                                     |
 
 ---
 

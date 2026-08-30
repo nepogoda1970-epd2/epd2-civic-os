@@ -124,7 +124,7 @@ def read_manifest_from_zip(zip_path: Path) -> tuple[dict, str, list[str]]:
             )
         try:
             manifest = json.loads(zf.read(manifest_name).decode("utf-8"))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             fail(f"invalid scope manifest: {exc}")
         return manifest, root, names
 
@@ -187,7 +187,7 @@ def validate_candidate(zip_path: Path, lock: dict) -> None:
             for name in relevant_docs:
                 try:
                     text = zf.read(name).decode("utf-8", errors="ignore").lower()
-                except Exception:  # noqa: BLE001
+                except Exception:
                     continue
                 for marker in stale_markers:
                     if marker in text:

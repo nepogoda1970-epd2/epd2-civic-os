@@ -76,9 +76,9 @@ PACK-16A `KC-11` describes lost-trustee handling in terms of **compensated
 shares**. That mechanism belonged to the 1.x lineage. **The word does not
 appear in the pinned 2.1 specification** `[F-11]`, which instead computes
 partial decryptions over the available set and explicitly refuses to
-reconstruct an absent guardian's secret, *"to prevent the secret from being
+reconstruct an absent guardian's secret, _"to prevent the secret from being
 used for additional decryptions without the cooperation of at least `k`
-guardians."*
+guardians."_
 
 **That is `KC-15`'s own policy, reached independently by the specification's
 authors.** The requirement is unchanged; only the described mechanism is
@@ -112,9 +112,9 @@ byte.
 
 **The commitment round is claimed as a mitigation of an analogous exposure,
 not as a fix**, and `TV-08` must assess it. `F-32` — Pedersen-DKG bias is
-provably survivable for *some* DL-based schemes at the cost of a larger
-modulus — is the counterweight, and it says *some schemes*, not *this
-scheme*.
+provably survivable for _some_ DL-based schemes at the cost of a larger
+modulus — is the counterweight, and it says _some schemes_, not _this
+scheme_.
 
 ### 2.4 The component the architecture depends on most has the least scrutiny
 
@@ -137,62 +137,62 @@ review` rather than described as addressed.
 
 ## 3. The decisions, in one place
 
-| Question                                | Decision                                                                     | Where                    |
-| --------------------------------------- | ------------------------------------------------------------------------------ | ------------------------ |
-| Parameter profile                       | `EPD2-CRYPTO-1`, unmodified upstream parameters (Option A)                    | `PSS` §2                 |
-| Specification pinning                   | By SHA-256, not by URL; a new digest is a new profile                         | `PSS` §3, `CA-01`…`CA-05`|
-| BSI verdict                             | `q = 256` exceeds the BSI minimum of **250** — §2.3.3 p. 34, §2.3.5 p. 36, read first-hand `[F-36]`; complete conformity **not** claimed | `CPA` §3, §3.2           |
-| Deprecation / prohibition               | 2030-12-31 (high assurance) / 2031-12-31; prohibited 2032-12-31               | `PS-*`, `CA-08`          |
-| Fiat–Shamir                             | Strong FS, statement and context in every challenge                           | `FSDS` §3                |
-| Domain separation                       | 27 upstream tag bytes + EPD² **string** tags under `H_X`                      | `FSDS` §5                |
-| Canonical encoding                      | Fixed-length big-endian 512/32/4, non-canonical **rejected**                  | `FSDS` §4                |
-| Randomness                              | `EPD2-RND-1`; PTG.2 never used directly; fail-closed                          | `RND` §1, §6             |
-| Guardian count                          | `n = 5` default, `n = 7` high assurance; `5 ≤ n ≤ 9`, `n ≥ k + 2`             | `GQM` §2                 |
-| Quorum                                  | `k = 3` default, `k = 4` high assurance; `k ≥ 3` always; never reducible      | `GQM` §2, `GQ-05`        |
-| Independence                            | 15 pairwise tests, hard/soft; internal guardians capped at `k − 1`            | `GIM` §2, `GQ-11`        |
-| Key ceremony                            | 20 phases + EPD² pre-publication commitment round                             | `KCS` §3, §4             |
-| Transcript                              | One canonical published artefact, not a canonical aggregate                   | `CTS`, `CAN` `CQ-P16B-01`|
-| Complaints                              | 11 grounds, 7 arithmetically checkable; no administrative resolution          | `CDM` §2, `CD-08`        |
-| Custody                                 | Dedicated devices, smart cards, HSMs one-per-guardian; **no cloud KMS**       | `KCR` §2, §4.1           |
-| Backup                                  | Per-guardian, own share, own custody, second dedicated medium only            | `BRC` §3                 |
-| Compensation                            | **Does not exist** in the pinned version; not reintroduced                    | `BRC` §5                 |
-| Compromise                              | 9 classes; bounded by activation state, never by preference                   | `CQL` §3, §4             |
-| Quorum loss                             | The result is unobtainable; the context is annulled; ballots never decrypted  | `CQL` §5                 |
-| Break-glass                             | **None.** Enforced by absence of the operation                                | `CQL` §6                 |
-| Pre-closure decryption                  | **Prohibited.** An attempt aborts and annuls                                  | `CQL` §7                 |
-| Remote ceremony                         | Fully remote **prohibited**; controlled hybrid expected                       | `RCA` §1                 |
-| Roles                                   | 12 ceremony roles + 2 new; 20-phase RACI; 19 prohibitions                     | `RSM` §1…§3              |
-| Incidents                               | 19 events with class, actor, timing bound and code                            | `INM` §1                 |
-| Reason codes                            | 22 namespaces, 129 codes, closed field vocabulary                             | `RCS`                    |
-| Failures                                | 35 conditions; 8 outcomes; **no "governance decides"**                        | `FAM`                    |
-| Implementation                          | Criteria fixed; `OD-P16A-04` **not** closed                                   | `IEC`                    |
-| Formal review                           | `TV-01`…`TV-08`, 14 vector classes; `OD-P16A-06` **blocked**                  | `TVR`                    |
+| Question                  | Decision                                                                                                                                 | Where                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| Parameter profile         | `EPD2-CRYPTO-1`, unmodified upstream parameters (Option A)                                                                               | `PSS` §2                  |
+| Specification pinning     | By SHA-256, not by URL; a new digest is a new profile                                                                                    | `PSS` §3, `CA-01`…`CA-05` |
+| BSI verdict               | `q = 256` exceeds the BSI minimum of **250** — §2.3.3 p. 34, §2.3.5 p. 36, read first-hand `[F-36]`; complete conformity **not** claimed | `CPA` §3, §3.2            |
+| Deprecation / prohibition | 2030-12-31 (high assurance) / 2031-12-31; prohibited 2032-12-31                                                                          | `PS-*`, `CA-08`           |
+| Fiat–Shamir               | Strong FS, statement and context in every challenge                                                                                      | `FSDS` §3                 |
+| Domain separation         | 27 upstream tag bytes + EPD² **string** tags under `H_X`                                                                                 | `FSDS` §5                 |
+| Canonical encoding        | Fixed-length big-endian 512/32/4, non-canonical **rejected**                                                                             | `FSDS` §4                 |
+| Randomness                | `EPD2-RND-1`; PTG.2 never used directly; fail-closed                                                                                     | `RND` §1, §6              |
+| Guardian count            | `n = 5` default, `n = 7` high assurance; `5 ≤ n ≤ 9`, `n ≥ k + 2`                                                                        | `GQM` §2                  |
+| Quorum                    | `k = 3` default, `k = 4` high assurance; `k ≥ 3` always; never reducible                                                                 | `GQM` §2, `GQ-05`         |
+| Independence              | 15 pairwise tests, hard/soft; internal guardians capped at `k − 1`                                                                       | `GIM` §2, `GQ-11`         |
+| Key ceremony              | 20 phases + EPD² pre-publication commitment round                                                                                        | `KCS` §3, §4              |
+| Transcript                | One canonical published artefact, not a canonical aggregate                                                                              | `CTS`, `CAN` `CQ-P16B-01` |
+| Complaints                | 11 grounds, 7 arithmetically checkable; no administrative resolution                                                                     | `CDM` §2, `CD-08`         |
+| Custody                   | Dedicated devices, smart cards, HSMs one-per-guardian; **no cloud KMS**                                                                  | `KCR` §2, §4.1            |
+| Backup                    | Per-guardian, own share, own custody, second dedicated medium only                                                                       | `BRC` §3                  |
+| Compensation              | **Does not exist** in the pinned version; not reintroduced                                                                               | `BRC` §5                  |
+| Compromise                | 9 classes; bounded by activation state, never by preference                                                                              | `CQL` §3, §4              |
+| Quorum loss               | The result is unobtainable; the context is annulled; ballots never decrypted                                                             | `CQL` §5                  |
+| Break-glass               | **None.** Enforced by absence of the operation                                                                                           | `CQL` §6                  |
+| Pre-closure decryption    | **Prohibited.** An attempt aborts and annuls                                                                                             | `CQL` §7                  |
+| Remote ceremony           | Fully remote **prohibited**; controlled hybrid expected                                                                                  | `RCA` §1                  |
+| Roles                     | 12 ceremony roles + 2 new; 20-phase RACI; 19 prohibitions                                                                                | `RSM` §1…§3               |
+| Incidents                 | 19 events with class, actor, timing bound and code                                                                                       | `INM` §1                  |
+| Reason codes              | 22 namespaces, 129 codes, closed field vocabulary                                                                                        | `RCS`                     |
+| Failures                  | 35 conditions; 8 outcomes; **no "governance decides"**                                                                                   | `FAM`                     |
+| Implementation            | Criteria fixed; `OD-P16A-04` **not** closed                                                                                              | `IEC`                     |
+| Formal review             | `TV-01`…`TV-08`, 14 vector classes; `OD-P16A-06` **blocked**                                                                             | `TVR`                     |
 
 ---
 
 ## 4. Verification performed locally
 
-| Check                                            | Result                                                        |
-| ------------------------------------------------ | --------------------------------------------------------------- |
-| `scripts/check_repository.py`                    | **OK — all 983 required paths present**                        |
-| `scripts/verify_versions.py`                     | **OK — all version sources consistent**                        |
-| `scripts/check_canon_0_8_0.py`                   | **OK — all 18 canon 0.8.0 amendment checks passed**            |
-| `scripts/check_forbidden_files.py`               | **OK — no forbidden paths found**                              |
-| Required documents present                       | **29 of 29** under `docs/packs/PACK-16/`                       |
-| `ADR-100` path and status                        | Correct path; status **`proposed`**                            |
-| Evidence registries in PACK-16B                  | **1**                                                          |
-| `[F-nn]` references unresolved                   | **0** (35 defined; every reference resolves)                   |
-| Conflicting evidence definitions                 | **0**                                                          |
-| Evidence sequence gaps                           | **0** (`F-01`…`F-35` contiguous)                               |
-| Acceptance-matrix rows                           | **129**, `AC-P16B-001`…`AC-P16B-129`                          |
-| Duplicate requirement IDs                        | **0**                                                          |
-| `sum(status counts) == requirement rows`         | **129 == 129 ✓**                                               |
-| Reason codes defined                             | **129**, across 22 namespaces (20 required + 2 declared)       |
-| Duplicate reason codes                           | **0**                                                          |
-| Reason codes used but undefined                  | **0**                                                          |
-| Source / test / migration / CI / lock changes    | **0**                                                          |
-| `REPOSITORY_VERSION`                             | **`0.15.0`, unchanged**                                        |
-| `CANON_VERSION`                                  | **`0.8.0`, unchanged**                                         |
+| Check                                         | Result                                                   |
+| --------------------------------------------- | -------------------------------------------------------- |
+| `scripts/check_repository.py`                 | **OK — all 983 required paths present**                  |
+| `scripts/verify_versions.py`                  | **OK — all version sources consistent**                  |
+| `scripts/check_canon_0_8_0.py`                | **OK — all 18 canon 0.8.0 amendment checks passed**      |
+| `scripts/check_forbidden_files.py`            | **OK — no forbidden paths found**                        |
+| Required documents present                    | **29 of 29** under `docs/packs/PACK-16/`                 |
+| `ADR-100` path and status                     | Correct path; status **`proposed`**                      |
+| Evidence registries in PACK-16B               | **1**                                                    |
+| `[F-nn]` references unresolved                | **0** (35 defined; every reference resolves)             |
+| Conflicting evidence definitions              | **0**                                                    |
+| Evidence sequence gaps                        | **0** (`F-01`…`F-35` contiguous)                         |
+| Acceptance-matrix rows                        | **129**, `AC-P16B-001`…`AC-P16B-129`                     |
+| Duplicate requirement IDs                     | **0**                                                    |
+| `sum(status counts) == requirement rows`      | **129 == 129 ✓**                                         |
+| Reason codes defined                          | **129**, across 22 namespaces (20 required + 2 declared) |
+| Duplicate reason codes                        | **0**                                                    |
+| Reason codes used but undefined               | **0**                                                    |
+| Source / test / migration / CI / lock changes | **0**                                                    |
+| `REPOSITORY_VERSION`                          | **`0.15.0`, unchanged**                                  |
+| `CANON_VERSION`                               | **`0.8.0`, unchanged**                                   |
 
 **Cross-reference resolution:** every PACK-16A identifier cited by a
 PACK-16B document (`KC-*`, `BM-*`, `BB-*`, `TP-*`, `RS-*`, `T-P16A-*`,
@@ -246,24 +246,24 @@ PACK-16C not started. PACK-16D not started.
 
 **It also did not close four things it could have pretended to close:**
 `OD-P16A-04` (implementation), `OD-P16A-06` (cryptographic review),
-and `OD-P16A-11` (the legal *Stand der Technik* mapping).
+and `OD-P16A-11` (the legal _Stand der Technik_ mapping).
 
 ---
 
 ## 7. Residual risks, ranked
 
-| Rank | Risk                                                                             | Rating   | Carried by                  |
-| ---- | -------------------------------------------------------------------------------- | -------- | --------------------------- |
-| 1    | **No peer-reviewed analysis of the key ceremony was located** `[F-31]`           | **high** | `TV-08`, `OD-P16A-06`       |
-| 2    | **No production-grade implementation of the pinned version exists**              | **high** | `OD-P16A-04`, `OD-P16B-02`  |
-| 3    | The classical-cryptography recommendation lapses end-2031 / end-2030 `[F-25]`    | **high** | `OD-P16B-06`, `CA-08`       |
-| 4    | Upstream has no errata process and marks two versions "Recommended" `[F-30]`     | medium   | `CA-19`…`CA-27`             |
-| 5    | A weak or duplicated nonce in a browser is **silent and undetectable** `RB-08`   | medium   | `IM-43`, PACK-16D           |
-| 6    | Independence declarations are self-reported                                      | medium   | `GI-*`, governance          |
-| 7    | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`        | medium   | `DS-16`, `CA-27`            |
-| 8    | Guardian volunteers bear real personal exposure through publication              | medium   | governance                  |
+| Rank | Risk                                                                                                                                                                                                                                                  | Rating   | Carried by                                       |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------ |
+| 1    | **No peer-reviewed analysis of the key ceremony was located** `[F-31]`                                                                                                                                                                                | **high** | `TV-08`, `OD-P16A-06`                            |
+| 2    | **No production-grade implementation of the pinned version exists**                                                                                                                                                                                   | **high** | `OD-P16A-04`, `OD-P16B-02`                       |
+| 3    | The classical-cryptography recommendation lapses end-2031 / end-2030 `[F-25]`                                                                                                                                                                         | **high** | `OD-P16B-06`, `CA-08`                            |
+| 4    | Upstream has no errata process and marks two versions "Recommended" `[F-30]`                                                                                                                                                                          | medium   | `CA-19`…`CA-27`                                  |
+| 5    | A weak or duplicated nonce in a browser is **silent and undetectable** `RB-08`                                                                                                                                                                        | medium   | `IM-43`, PACK-16D                                |
+| 6    | Independence declarations are self-reported                                                                                                                                                                                                           | medium   | `GI-*`, governance                               |
+| 7    | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`                                                                                                                                                                             | medium   | `DS-16`, `CA-27`                                 |
+| 8    | Guardian volunteers bear real personal exposure through publication                                                                                                                                                                                   | medium   | governance                                       |
 | 9    | **Published parameter family normative divergence** — Remark 2.12 prefers MODP or ffdhe groups; `EPD2-CRYPTO-1` uses neither, though every numerical condition is met `[F-36]`. **Not a claim of insecurity.** Blocks production and legal activation | medium   | `VO-08` — external cryptographic review, PACK-17 |
-| —    | A quorum loss makes a result genuinely unobtainable                              | accepted | `CM-14`…`CM-19`             |
+| —    | A quorum loss makes a result genuinely unobtainable                                                                                                                                                                                                   | accepted | `CM-14`…`CM-19`                                  |
 
 ---
 

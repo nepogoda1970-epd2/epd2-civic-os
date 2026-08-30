@@ -19,12 +19,12 @@ the difficult things first and the reassuring things second.
 
 The authoritative formulation:
 
-> *"Because remote systems enable voters to fill out their ballots outside a
+> _"Because remote systems enable voters to fill out their ballots outside a
 > controlled environment, anyone can watch over the voter's shoulder while
 > she fills out her ballot… Note that if the coercer can monitor the voter
 > throughout the vote casting period, then resistance is futile … For remote
 > voting, we need to assume that voters will have some time when they can
-> interact with the voting system unobserved."* `[E-46]`
+> interact with the voting system unobserved."_ `[E-46]`
 
 Every coercion-resistant scheme in the literature **relocates** this
 assumption rather than removing it: JCJ to postal credential delivery
@@ -42,26 +42,26 @@ what they **cannot**, and who owns the remainder.
 
 ### 2.1 Cryptographic guarantees
 
-| Guarantees                                                                                | Cannot guarantee                                                                       |
-| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| No individual ballot is decrypted in `EPD2-HOM-1`                                         | That the client encrypted what the voter chose                                          |
-| The aggregate cannot be decrypted below a trustee quorum                                  | That a quorum will not collude                                                          |
-| A published ballot cannot be altered without detection from the record                    | That anyone will check                                                                  |
-| A malformed or out-of-range ballot is rejected by proof verification                      | That the implementation verifies proofs correctly (`F-INF-2`)                           |
-| The confirmation code reveals nothing about the choice `[E-05]`                           | That the **fact of participation** is not itself coercive information                   |
-| A copied ciphertext cannot be resubmitted without knowledge of its plaintext (`BM-14`)    | Anything about the voter's physical surroundings                                        |
+| Guarantees                                                                             | Cannot guarantee                                                      |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| No individual ballot is decrypted in `EPD2-HOM-1`                                      | That the client encrypted what the voter chose                        |
+| The aggregate cannot be decrypted below a trustee quorum                               | That a quorum will not collude                                        |
+| A published ballot cannot be altered without detection from the record                 | That anyone will check                                                |
+| A malformed or out-of-range ballot is rejected by proof verification                   | That the implementation verifies proofs correctly (`F-INF-2`)         |
+| The confirmation code reveals nothing about the choice `[E-05]`                        | That the **fact of participation** is not itself coercive information |
+| A copied ciphertext cannot be resubmitted without knowledge of its plaintext (`BM-14`) | Anything about the voter's physical surroundings                      |
 
 **Owner of the remainder:** PACK-16B (parameters, ceremony), PACK-16D
 (implementation correctness).
 
 ### 2.2 Client guarantees
 
-| Guarantees                                                                          | Cannot guarantee                                                                      |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| No persistent storage, no analytics, no third-party origin, no fingerprinting (ADR-096) | That the browser or operating system is honest                                     |
-| No credential or ballot material survives the visit (PACK-15 §13.3)                 | That an extension is not reading the page                                              |
-| Challenge/spoil is offered on equal footing with casting (`BM-11`)                  | That the voter uses it, or understands it                                              |
-| Randomness self-test refuses to encrypt on failure (`T-P16A-35`)                    | The quality of browser entropy in general                                              |
+| Guarantees                                                                              | Cannot guarantee                               |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| No persistent storage, no analytics, no third-party origin, no fingerprinting (ADR-096) | That the browser or operating system is honest |
+| No credential or ballot material survives the visit (PACK-15 §13.3)                     | That an extension is not reading the page      |
+| Challenge/spoil is offered on equal footing with casting (`BM-11`)                      | That the voter uses it, or understands it      |
+| Randomness self-test refuses to encrypt on failure (`T-P16A-35`)                        | The quality of browser entropy in general      |
 
 **Owner of the remainder:** out of scope for every candidate system
 assessed; stated as `RR-05`, and **not** claimed to be solved.
@@ -70,11 +70,11 @@ assessed; stated as `RR-05`, and **not** claimed to be solved.
 
 Available only where a physical channel exists.
 
-| Guarantees                                                             | Cannot guarantee                                                    |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| An unobserved interval, physically enforced                            | That the voter can reach the location                                |
-| A device the organisation controls                                     | That the organisation is trustworthy                                 |
-| Assistance under supervision by more than one person                   | That an assisted voter is not pressured beforehand                   |
+| Guarantees                                           | Cannot guarantee                                   |
+| ---------------------------------------------------- | -------------------------------------------------- |
+| An unobserved interval, physically enforced          | That the voter can reach the location              |
+| A device the organisation controls                   | That the organisation is trustworthy               |
+| Assistance under supervision by more than one person | That an assisted voter is not pressured beforehand |
 
 **This is the only layer that addresses `T-P16A-26` and `T-P16A-30` at
 all.** Every other layer treats them as unmitigated.
@@ -98,23 +98,23 @@ guidance (§6) and, properly, only by changing the channel.
 
 ### 2.5 Organizational controls
 
-| Control                                                                              | Effect                                                        |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Separation of duties across election roles                                           | Prevents insider concentration; does nothing about coercion    |
-| Trustees from independent organisations                                              | Raises the cost of collusion                                   |
-| Independent Auditor concurrence for exclusions and aborts                            | Prevents unilateral outcome changes                            |
-| A long voting window                                                                 | Increases the chance an unobserved interval exists             |
-| Governed content telling participants to vote in private                             | Informs; enforces nothing                                      |
-| **A governance decision not to hold a high-coercion-risk vote online**               | **The only organizational control that actually works**        |
+| Control                                                                | Effect                                                      |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Separation of duties across election roles                             | Prevents insider concentration; does nothing about coercion |
+| Trustees from independent organisations                                | Raises the cost of collusion                                |
+| Independent Auditor concurrence for exclusions and aborts              | Prevents unilateral outcome changes                         |
+| A long voting window                                                   | Increases the chance an unobserved interval exists          |
+| Governed content telling participants to vote in private               | Informs; enforces nothing                                   |
+| **A governance decision not to hold a high-coercion-risk vote online** | **The only organizational control that actually works**     |
 
 ### 2.6 Legal and governance controls
 
-| Control                                                                                | Effect                                                                 |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Election-specific authorization before activation                                      | Forces a per-context decision rather than a default                     |
-| Prohibition of public-election activation by default                                   | Removes the highest-coercion class from scope entirely                  |
-| Offence and complaint procedures for coercion and vote buying                          | Deterrent; after the fact                                               |
-| A declaration that the vote was cast freely and in secret                              | ODIHR recommends one for Estonia `[E-40]`; evidential, not preventive   |
+| Control                                                       | Effect                                                                |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Election-specific authorization before activation             | Forces a per-context decision rather than a default                   |
+| Prohibition of public-election activation by default          | Removes the highest-coercion class from scope entirely                |
+| Offence and complaint procedures for coercion and vote buying | Deterrent; after the fact                                             |
+| A declaration that the vote was cast freely and in secret     | ODIHR recommends one for Estonia `[E-40]`; evidential, not preventive |
 
 ---
 
@@ -124,18 +124,18 @@ The `EPD2-HOM-1` receipt is a **confirmation code** derived entirely from
 the encryptions of the ballot and the election's extended base hash
 (`BM-03`, `[E-05]`).
 
-| The confirmation code **is**                                          | The confirmation code **is not**                                        |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| A pointer to an entry on the bulletin board                           | A proof of which option was selected                                     |
-| Evidence that a ballot with these encryptions was recorded            | Evidence of what those encryptions contain                               |
-| Checkable by anyone holding the code                                  | Decryptable by anyone, including its holder                              |
-| Evidence that the holder **participated**                             | — and this is the residual: participation itself can be coercive         |
+| The confirmation code **is**                               | The confirmation code **is not**                                 |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| A pointer to an entry on the bulletin board                | A proof of which option was selected                             |
+| Evidence that a ballot with these encryptions was recorded | Evidence of what those encryptions contain                       |
+| Checkable by anyone holding the code                       | Decryptable by anyone, including its holder                      |
+| Evidence that the holder **participated**                  | — and this is the residual: participation itself can be coercive |
 
 **Why a receipt must not reveal the choice.** If it did, it would be a
 transferable proof of vote, saleable and demandable. Council of Europe
-Standard 23 states the requirement directly: *"An e-voting system shall not
+Standard 23 states the requirement directly: _"An e-voting system shall not
 provide the voter with proof of the content of the vote cast for use by
-third parties"* `[E-56]`.
+third parties"_ `[E-56]`.
 
 **Why verifiability must not become transferable proof.** Standard 15
 requires the voter to be able to verify; Standard 23 forbids giving her
@@ -186,14 +186,14 @@ is not the control most descriptions imply.
 
 **Sometimes, under assumptions that often fail, and at a cost.**
 
-| Question                                       | Answer                                                                                                                                    |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Does revoting help?                            | Only if the coercer **cannot occupy the last moment** of the voting window. Its guarantee is temporal, not cryptographic                   |
-| Under what assumptions does it help?           | The coercer leaves before the window closes; cannot observe *whether* a revote happened; and does not simply supervise until closing time   |
-| What does it not solve?                        | **Forced abstention.** Household and workplace coercion spanning the whole window. A coercer who returns at the end                        |
-| What does it cost?                             | Belenios caveat #1 — an undetectable server-side rollback of the latest ballot `[E-15]`; and in Estonia, a device attack that defeats individual verifiability by exploiting revoting `[E-28a]` |
-| Was it made to work cryptographically?         | It was attempted (VoteAgain) and **broken**, with no fix proposed `[E-44]`                                                                 |
-| Official assessments                           | Belenios calls it *"a (moderate) protection against coercion"* `[E-14]`; Springall et al. call Estonia's *"relatively strong protection against in-person, individual coercion… More sophisticated attacks remain possible"* `[E-28b]` |
+| Question                               | Answer                                                                                                                                                                                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does revoting help?                    | Only if the coercer **cannot occupy the last moment** of the voting window. Its guarantee is temporal, not cryptographic                                                                                                               |
+| Under what assumptions does it help?   | The coercer leaves before the window closes; cannot observe _whether_ a revote happened; and does not simply supervise until closing time                                                                                              |
+| What does it not solve?                | **Forced abstention.** Household and workplace coercion spanning the whole window. A coercer who returns at the end                                                                                                                    |
+| What does it cost?                     | Belenios caveat #1 — an undetectable server-side rollback of the latest ballot `[E-15]`; and in Estonia, a device attack that defeats individual verifiability by exploiting revoting `[E-28a]`                                        |
+| Was it made to work cryptographically? | It was attempted (VoteAgain) and **broken**, with no fix proposed `[E-44]`                                                                                                                                                             |
+| Official assessments                   | Belenios calls it _"a (moderate) protection against coercion"_ `[E-14]`; Springall et al. call Estonia's _"relatively strong protection against in-person, individual coercion… More sophisticated attacks remain possible"_ `[E-28b]` |
 
 **EPD²'s decision: no revoting in `EPD2-HOM-1`.**
 `PACK-16A-REVOTING-AND-BALLOT-LIFECYCLE.md` §2 is the reasoning and §2.4 is
@@ -223,14 +223,14 @@ nominations it is not merely permitted but **required** `[E-51]`.
 
 Verification is usually presented as protective. It has an attack surface.
 
-| Path                                                                     | Control                                                                                            | Residual                                                            |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| A coercer compels a verification session and reads the choice off screen | **Verification shows presence of a code on the board, never a choice.** No operation reveals a choice post-cast | A coercer present during **casting** already has the choice |
-| A fake verification interface reassures a voter whose ballot was dropped | Published board and mirror addresses; the whole board is independently downloadable (`BB-09`)      | A voter who uses only the handed-to-them interface is unprotected     |
-| A fake interface shows the coercer what he wants                         | Same                                                                                               | Same                                                                  |
-| The verification origin is the casting origin                            | **Separate origin, mandatory** (`BB-14`)                                                           | —                                                                     |
-| Verification timing identifies the voter's board entry                   | Board reads unauthenticated and not logged per entry; full-board download available (`BB-09`)      | A mirror operator can observe fetches                                 |
-| A coercer demands the confirmation code                                  | The code reveals nothing about the choice                                                          | **It proves participation** — unavoidable                             |
+| Path                                                                     | Control                                                                                                         | Residual                                                          |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| A coercer compels a verification session and reads the choice off screen | **Verification shows presence of a code on the board, never a choice.** No operation reveals a choice post-cast | A coercer present during **casting** already has the choice       |
+| A fake verification interface reassures a voter whose ballot was dropped | Published board and mirror addresses; the whole board is independently downloadable (`BB-09`)                   | A voter who uses only the handed-to-them interface is unprotected |
+| A fake interface shows the coercer what he wants                         | Same                                                                                                            | Same                                                              |
+| The verification origin is the casting origin                            | **Separate origin, mandatory** (`BB-14`)                                                                        | —                                                                 |
+| Verification timing identifies the voter's board entry                   | Board reads unauthenticated and not logged per entry; full-board download available (`BB-09`)                   | A mirror operator can observe fetches                             |
+| A coercer demands the confirmation code                                  | The code reveals nothing about the choice                                                                       | **It proves participation** — unavoidable                         |
 
 ---
 
@@ -238,19 +238,19 @@ Verification is usually presented as protective. It has an attack surface.
 
 **These may be stated, in these words, with these qualifications.**
 
-| ID       | Permitted claim                                                                                                              | Required qualification                                                        |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `PC-01`  | "No individual ballot is decrypted."                                                                                         | Add: "in this election profile"                                                |
-| `PC-02`  | "The result cannot be decrypted without a quorum of trustees."                                                               | Add: "acting together"                                                         |
-| `PC-03`  | "Your receipt does not show how you voted."                                                                                  | none                                                                           |
-| `PC-04`  | "You can check that your ballot is on the public list."                                                                      | none                                                                           |
-| `PC-05`  | "Anyone can check that the published result matches the published ballots."                                                  | Add: "using an independent verifier"                                           |
-| `PC-06`  | "No result, partial result or turnout figure is available before the vote closes."                                           | none                                                                           |
-| `PC-07`  | "You can check that the app encrypted what you chose, before you cast."                                                      | Add: "the ballot you check is discarded"                                       |
-| `PC-08`  | "The system cannot tell anyone how you voted."                                                                               | Add: "and cannot tell anyone whether a particular person voted"                |
-| `PC-09`  | "Ballots cannot be altered or removed without this being visible in the public record."                                      | Add: "provided the record is checked"                                          |
-| `PC-10`  | "The system is designed so that no single administrator can decrypt anything."                                               | none                                                                           |
-| `PC-11`  | "This design has been specified and is awaiting external review."                                                            | Required whenever the architecture is described at all, until review completes |
+| ID      | Permitted claim                                                                         | Required qualification                                                         |
+| ------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `PC-01` | "No individual ballot is decrypted."                                                    | Add: "in this election profile"                                                |
+| `PC-02` | "The result cannot be decrypted without a quorum of trustees."                          | Add: "acting together"                                                         |
+| `PC-03` | "Your receipt does not show how you voted."                                             | none                                                                           |
+| `PC-04` | "You can check that your ballot is on the public list."                                 | none                                                                           |
+| `PC-05` | "Anyone can check that the published result matches the published ballots."             | Add: "using an independent verifier"                                           |
+| `PC-06` | "No result, partial result or turnout figure is available before the vote closes."      | none                                                                           |
+| `PC-07` | "You can check that the app encrypted what you chose, before you cast."                 | Add: "the ballot you check is discarded"                                       |
+| `PC-08` | "The system cannot tell anyone how you voted."                                          | Add: "and cannot tell anyone whether a particular person voted"                |
+| `PC-09` | "Ballots cannot be altered or removed without this being visible in the public record." | Add: "provided the record is checked"                                          |
+| `PC-10` | "The system is designed so that no single administrator can decrypt anything."          | none                                                                           |
+| `PC-11` | "This design has been specified and is awaiting external review."                       | Required whenever the architecture is described at all, until review completes |
 
 **Every claim above is conditional on the assumptions in
 `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` §3.4.** A claim quoted without its
@@ -264,25 +264,25 @@ qualification is a prohibited claim.
 statement, grant application or handover, unless and until a specific
 proof is produced and cited.**
 
-| Prohibited                                             | Why                                                                                                            |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `coercion-proof`                                       | No remote system is; `[E-46]`                                                                                   |
-| `fully coercion-resistant`                             | Not claimed by any candidate; JCJ's own property is contested `[E-37]`                                          |
-| `impossible to buy votes`                              | Turnout buying and forced participation remain                                                                  |
-| `impossible to force a voter`                          | `T-P16A-26`, `T-P16A-30` are unmitigated                                                                        |
-| `absolute ballot secrecy`                              | Secrecy is conditional on trustee non-collusion and on client honesty                                           |
-| `unhackable`                                           | Meaningless and false                                                                                           |
-| `fraud-proof`                                          | Detection is not prevention                                                                                     |
-| `mathematically impossible to manipulate`              | The mathematics is conditional on parameters, implementation and quorum                                         |
-| `end-to-end verifiable` **without qualification**      | Requires a board, mirrors, an independent verifier and take-up — none of which exists yet                       |
-| `anonymous`                                            | Unlinkable under stated assumptions ≠ anonymous                                                                 |
-| `BSI certified`                                        | The current BSI protection profile is scoped to **non-political** elections and nothing is certified `[E-53]`   |
-| `BVerfG compliant`                                     | The Court has never ruled on cryptographic verifiability; any such claim is an extrapolation `[E-41]`           |
-| `legally compliant` / `legally ready`                  | No legal assessment has been performed                                                                          |
-| `approved for public elections`                        | Prohibited by default                                                                                           |
-| `production ready`                                     | It is not                                                                                                       |
-| `implemented` / `implementation complete`              | Nothing is implemented                                                                                          |
-| `external CI pass` / `final pass` for this tree        | Not claimed                                                                                                     |
+| Prohibited                                        | Why                                                                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `coercion-proof`                                  | No remote system is; `[E-46]`                                                                                 |
+| `fully coercion-resistant`                        | Not claimed by any candidate; JCJ's own property is contested `[E-37]`                                        |
+| `impossible to buy votes`                         | Turnout buying and forced participation remain                                                                |
+| `impossible to force a voter`                     | `T-P16A-26`, `T-P16A-30` are unmitigated                                                                      |
+| `absolute ballot secrecy`                         | Secrecy is conditional on trustee non-collusion and on client honesty                                         |
+| `unhackable`                                      | Meaningless and false                                                                                         |
+| `fraud-proof`                                     | Detection is not prevention                                                                                   |
+| `mathematically impossible to manipulate`         | The mathematics is conditional on parameters, implementation and quorum                                       |
+| `end-to-end verifiable` **without qualification** | Requires a board, mirrors, an independent verifier and take-up — none of which exists yet                     |
+| `anonymous`                                       | Unlinkable under stated assumptions ≠ anonymous                                                               |
+| `BSI certified`                                   | The current BSI protection profile is scoped to **non-political** elections and nothing is certified `[E-53]` |
+| `BVerfG compliant`                                | The Court has never ruled on cryptographic verifiability; any such claim is an extrapolation `[E-41]`         |
+| `legally compliant` / `legally ready`             | No legal assessment has been performed                                                                        |
+| `approved for public elections`                   | Prohibited by default                                                                                         |
+| `production ready`                                | It is not                                                                                                     |
+| `implemented` / `implementation complete`         | Nothing is implemented                                                                                        |
+| `external CI pass` / `final pass` for this tree   | Not claimed                                                                                                   |
 
 ### 8.1 Required alternatives
 

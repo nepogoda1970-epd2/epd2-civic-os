@@ -61,11 +61,11 @@ fully remote ceremony prohibited no hidden master key
 no break-glass decryption        no compensated decryption
 ```
 
-| ID       | Rule                                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `SB-01`  | **PACK-16C specifies how the chosen protocol is operated, not what the protocol is.** Any change to the list above is a return to `ADR-099` or `ADR-100`, not a PACK-16C decision |
-| `SB-02`  | Where this round finds an **incompatibility** with `ADR-099` or `ADR-100`, it raises an **`ARCHITECTURAL BLOCKER`**, names the affected assumption, stops the dependent decision, and **does not amend the protocol** |
-| `SB-03`  | No document in this pack may weaken an inherited invariant by restating it more loosely. Where a restatement is needed, the inherited identifier is cited |
+| ID      | Rule                                                                                                                                                                                                                  |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SB-01` | **PACK-16C specifies how the chosen protocol is operated, not what the protocol is.** Any change to the list above is a return to `ADR-099` or `ADR-100`, not a PACK-16C decision                                     |
+| `SB-02` | Where this round finds an **incompatibility** with `ADR-099` or `ADR-100`, it raises an **`ARCHITECTURAL BLOCKER`**, names the affected assumption, stops the dependent decision, and **does not amend the protocol** |
+| `SB-03` | No document in this pack may weaken an inherited invariant by restating it more loosely. Where a restatement is needed, the inherited identifier is cited                                                             |
 
 **No `ARCHITECTURAL BLOCKER` was raised by this round.** §7 records the
 conditions that were checked.
@@ -84,12 +84,12 @@ NOT owned by: PACK-16C
 Status:       OPEN
 ```
 
-| ID       | Rule                                                                                                              |
-| -------- | --------------------------------------------------------------------------------------------------------------------- |
-| `SB-04`  | **PACK-16C inherits `VO-08` as a constraint and may not close, narrow, re-own or reinterpret it**                     |
-| `SB-05`  | **PACK-16C may not alter the parameter family and may not claim approval of it.** The manifest binds a parameter-set identifier and reproduces it; it does not endorse it |
-| `SB-06`  | **No document in this pack makes a complete-BSI-conformity claim**, and none may. `VO-08` blocks production implementation acceptance, production and legal activation, complete BSI-conformity claims and final cryptographic assurance |
-| `SB-07`  | Every activation gate this round defines carries `VO-08` in its precondition list, so that it cannot be satisfied by PACK-16C work alone |
+| ID      | Rule                                                                                                                                                                                                                                     |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SB-04` | **PACK-16C inherits `VO-08` as a constraint and may not close, narrow, re-own or reinterpret it**                                                                                                                                        |
+| `SB-05` | **PACK-16C may not alter the parameter family and may not claim approval of it.** The manifest binds a parameter-set identifier and reproduces it; it does not endorse it                                                                |
+| `SB-06` | **No document in this pack makes a complete-BSI-conformity claim**, and none may. `VO-08` blocks production implementation acceptance, production and legal activation, complete BSI-conformity claims and final cryptographic assurance |
+| `SB-07` | Every activation gate this round defines carries `VO-08` in its precondition list, so that it cannot be satisfied by PACK-16C work alone                                                                                                 |
 
 ---
 
@@ -163,23 +163,23 @@ NOT CLAIMED  that any of this is implemented, tested or reviewed
 
 ## 7. Compatibility checks performed against the inherited architecture
 
-| Inherited commitment                                     | Checked against                                  | Result       |
-| -------------------------------------------------------- | -------------------------------------------------- | ------------ |
-| `BM-01`…`BM-06` identifier rules                         | Ballot-ID model, envelope, receipt, board entries  | **consistent** |
-| `BM-07`…`BM-13` challenge rules                          | Cast-or-challenge specification                    | **consistent** |
-| `BM-14`…`BM-16` proof rules                              | Validation pipeline                                | **consistent** |
-| `BM-17`…`BM-19` publication and lookup                   | Board architecture, receipt, verification client   | **consistent** |
-| `BM-20`…`BM-25` tally and exclusion                      | Election record, completeness matrix               | **consistent** |
-| `BM-26`…`BM-29` verifiability                            | Independent verifier requirements                  | **consistent** |
-| `NIT-01`…`NIT-07` no intermediate tally                  | Turnout model, board entry catalogue, API catalogue | **consistent** |
-| `CC-01`…`CC-10` continuation capability                  | Consumption and acceptance model                   | **consistent** |
-| `BB-01`…`BB-37` board requirements                       | Board architecture, append-only model, entry catalogue | **consistent** — every one is discharged or explicitly deferred |
-| `EX-01`…`EX-07` exclusion                                | Ballot lifecycle                                   | **consistent** |
-| PACK-16A ballot lifecycle states                         | PACK-16C lifecycle                                 | **extended, not redefined** — §7.1 |
-| `NIT-01`…`NIT-07` no intermediate tally                  | Sealed batch commitment layer                      | **consistent — and the reason the first candidate's padding model was rejected** (`TC-21`) |
-| `BM-12` challenge repeatability                          | Two-tier challenge model                           | **consistent — the repeatable part is preserved in full as the local diagnostic challenge** (`CH-18`, `CH-36`) |
-| `ADR-100` ceremony, quorum, no pre-closure decryption     | Election record, tally artefacts                   | **consistent** |
-| Canon 19a.1 `PublicLedgerEntry → VoteEnvelope` prohibited | Board data model                                   | **not violated** — `PACK-16C-CANON-ASSESSMENT.md` |
+| Inherited commitment                                      | Checked against                                        | Result                                                                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `BM-01`…`BM-06` identifier rules                          | Ballot-ID model, envelope, receipt, board entries      | **consistent**                                                                                                 |
+| `BM-07`…`BM-13` challenge rules                           | Cast-or-challenge specification                        | **consistent**                                                                                                 |
+| `BM-14`…`BM-16` proof rules                               | Validation pipeline                                    | **consistent**                                                                                                 |
+| `BM-17`…`BM-19` publication and lookup                    | Board architecture, receipt, verification client       | **consistent**                                                                                                 |
+| `BM-20`…`BM-25` tally and exclusion                       | Election record, completeness matrix                   | **consistent**                                                                                                 |
+| `BM-26`…`BM-29` verifiability                             | Independent verifier requirements                      | **consistent**                                                                                                 |
+| `NIT-01`…`NIT-07` no intermediate tally                   | Turnout model, board entry catalogue, API catalogue    | **consistent**                                                                                                 |
+| `CC-01`…`CC-10` continuation capability                   | Consumption and acceptance model                       | **consistent**                                                                                                 |
+| `BB-01`…`BB-37` board requirements                        | Board architecture, append-only model, entry catalogue | **consistent** — every one is discharged or explicitly deferred                                                |
+| `EX-01`…`EX-07` exclusion                                 | Ballot lifecycle                                       | **consistent**                                                                                                 |
+| PACK-16A ballot lifecycle states                          | PACK-16C lifecycle                                     | **extended, not redefined** — §7.1                                                                             |
+| `NIT-01`…`NIT-07` no intermediate tally                   | Sealed batch commitment layer                          | **consistent — and the reason the first candidate's padding model was rejected** (`TC-21`)                     |
+| `BM-12` challenge repeatability                           | Two-tier challenge model                               | **consistent — the repeatable part is preserved in full as the local diagnostic challenge** (`CH-18`, `CH-36`) |
+| `ADR-100` ceremony, quorum, no pre-closure decryption     | Election record, tally artefacts                       | **consistent**                                                                                                 |
+| Canon 19a.1 `PublicLedgerEntry → VoteEnvelope` prohibited | Board data model                                       | **not violated** — `PACK-16C-CANON-ASSESSMENT.md`                                                              |
 
 ### 7.1 The one place PACK-16C extends an inherited model
 

@@ -8,15 +8,15 @@ This document is the canonical stage-number/scope lock for the EPD² PILOT line.
 
 ## Locked roadmap
 
-| Stage | Canonical scope |
-|---|---|
-| PILOT-01 | Internal Organization Pilot |
-| PILOT-02 | Membership & Participation Pilot |
+| Stage    | Canonical scope                             |
+| -------- | ------------------------------------------- |
+| PILOT-01 | Internal Organization Pilot                 |
+| PILOT-02 | Membership & Participation Pilot            |
 | PILOT-03 | Assemblies / Motions / Communications Pilot |
-| PILOT-04 | Non-binding Digital Vote Pilot |
-| PILOT-05 | Representative Desk / Transparency Pilot |
-| PILOT-06 | Pilot Findings & Corrections |
-| PILOT-07 | Production Readiness Decision |
+| PILOT-04 | Non-binding Digital Vote Pilot              |
+| PILOT-05 | Representative Desk / Transparency Pilot    |
+| PILOT-06 | Pilot Findings & Corrections                |
+| PILOT-07 | Production Readiness Decision               |
 
 `NON_BINDING_PILOT` remains in force until a separate governed activation decision changes it.
 

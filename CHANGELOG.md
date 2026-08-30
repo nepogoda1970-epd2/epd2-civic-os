@@ -50,7 +50,7 @@ touched.
   drifting ahead of its evidence; promoting because an obstacle disappeared
   would be the same error pointed the other way. Matrix: 90 rows, **76
   `SATISFIED`, 6 `PARTIALLY SATISFIED`, 3 `DEFERRED`, 4 `BLOCKED`, 1 `NOT
-  APPLICABLE`**.
+APPLICABLE`**.
 - **Every dual-state test branch is gone.** While the blockers were open, the
   dependency and provenance tests were deliberately written to pass in both
   states, because a permanently red test trains a reader to ignore red. That
@@ -94,7 +94,7 @@ three items. One was fixable in this environment and is fixed; two were
 not, and are recorded as blocked rather than worked around.
 
 - **`AM-79` corrected from `SATISFIED` to `PARTIALLY SATISFIED`.** The row
-  claimed the parameter set was *immutably provenanced* while its own
+  claimed the parameter set was _immutably provenanced_ while its own
   evidence column recorded that the commit, the pinned URL and the source
   digest were all absent. **Nothing new was learned to force the
   downgrade** — the facts were already in the artefact, the evidence
@@ -103,10 +103,10 @@ not, and are recorded as blocked rather than worked around.
   column drifts optimistic is invisible to anyone who reads only the
   status, and it is exactly what an audit reading both will catch.
 - **`DEPENDENCY LOCK: BLOCKED BY ENVIRONMENT`. `FROZEN CLEAN INSTALL: NOT
-  EXECUTED`.** `cryptography>=46.0.7,<47` stays declared and stays absent
+EXECUTED`.** `cryptography>=46.0.7,<47` stays declared and stays absent
   from `uv.lock`. `uv lock` and `uv sync --all-groups --frozen` were
   **re-run this round** and failed again on a proxy 403 — `Host not in
-  allowlist: pypi.org` — as did a clean-environment attempt. Hand-editing
+allowlist: pypi.org` — as did a clean-environment attempt. Hand-editing
   the lock is prohibited and was not done. `NOT EXECUTED` rather than
   "failed": a run ending in a proxy 403 produced no verdict about this
   repository.
@@ -148,7 +148,7 @@ not, and are recorded as blocked rather than worked around.
 ### Final correction pass — vetted cryptographic provider, immutable parameter provenance, target-profile conformance
 
 A second independent audit passed the parameter profile, the target-profile
-crypto tests, both guardian paths, checkpoint signature *semantics* and
+crypto tests, both guardian paths, checkpoint signature _semantics_ and
 archive hygiene. It failed one thing and half-passed two, and all three are
 addressed here.
 
@@ -189,14 +189,14 @@ addressed here.
   3-of-5 combination and tally recovery — from one deterministic fixture set
   with fixed nonces, plus two invalid fixtures that stay **inside the
   subgroup** so they are refused by the mathematics rather than a cheap
-  structural check. The oracle is handed the ballot's *fields* and rebuilds
+  structural check. The oracle is handed the ballot's _fields_ and rebuilds
   the canonical bytes itself, because handing it the producer's encoding
   would test the hash and not the encoding.
 - **Five conformance classifications replace three.** One
   `cross-implementation` label covering both profiles is exactly how it
   stayed invisible that most checks ran on a group no election will use.
 - **A pre-existing repository defect surfaced and was fixed.** A contract
-  test had been *skipping* rather than passing since PACK-16D first landed,
+  test had been _skipping_ rather than passing since PACK-16D first landed,
   because PyYAML was not importable — hiding ~65 reference-package reason
   codes that had never been checked against the voting service's contract
   registry, through two rounds and two audits. Verified pre-existing against
@@ -220,7 +220,7 @@ addressed here.
   `OD-P16D-05` stays the production blocker. A compiled native artefact is
   now in the runtime path, which is stated rather than netted off.
 - **Verification.** 5847 Python tests passed, 5 skipped, **no `--ignore`**
-  (previously 5616 passed / 17 skipped *with* one); 499 in the reference
+  (previously 5616 passed / 17 skipped _with_ one); 499 in the reference
   suite; `ruff check`, `ruff format --check` (497 files) and
   `mypy services/voting-service` (70 source files) clean; all four
   repository scripts pass. Line coverage 90.9 %. **`uv lock`, the entire npm
@@ -267,7 +267,7 @@ accepted does not consume a new one.
   `SignerRegistry` supplied alongside the export — no path reads a key out
   of the artefact being verified — with declared-in-advance rotation windows
   and five distinct failure outcomes. Authenticity and consistency are kept
-  apart: two *validly signed* conflicting checkpoints still return
+  apart: two _validly signed_ conflicting checkpoints still return
   `BOARD_INCONSISTENCY`. `OD-P16D-09` is **closed** and is no longer a
   production blocker.
 - **External conformance, in three named classes.** 2 primary-source and 11
@@ -316,16 +316,16 @@ accepted does not consume a new one.
 
 ### Original candidate pass
 
-*The entries below describe the candidate the audit rejected. They are kept
+_The entries below describe the candidate the audit rejected. They are kept
 as the record of what was delivered and when. **Where they conflict with the
 correction section above, the correction section is current** — in
 particular the profile availability, the guardian model, checkpoint
 signature verification, the vector counts and the two production blockers
-have all changed.*
+have all changed._
 
 - **The first PACK-16 round that ships code.** PACK-16A specified the
   protocol, PACK-16B the parameters and ceremony, PACK-16C the casting,
-  publication and record model. PACK-16D implements a *reference* form of
+  publication and record model. PACK-16D implements a _reference_ form of
   all three inside `services/voting-service`, under
   `epd2_voting_service.reference`: cryptography, canonical encoding,
   domain separation, randomness, ballot preparation, proofs, the two
@@ -346,7 +346,7 @@ have all changed.*
   therefore raises `ParameterProfileUnavailableError` rather than
   substituting anything, and two clearly banner-marked TEST profiles
   (4096/256 and 1024/160, both self-verified) carry the tests.
-  `OD-P16D-01` owns closing this. `q = 2^256 - 189` *was* confirmed
+  `OD-P16D-01` owns closing this. `q = 2^256 - 189` _was_ confirmed
   first-hand and is asserted by test.
 - **Eighteen defects were found by this round's own harness and readers,
   and every one was fixed in the implementation rather than documented

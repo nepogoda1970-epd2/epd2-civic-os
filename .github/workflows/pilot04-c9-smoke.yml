@@ -28,7 +28,7 @@ jobs:
     env:
       EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
       EPD2_LOCAL_CI_HOME: ${{ runner.temp }}/epd2-local-ci
-      PYTHONUNBUFFERED: '1'
+      PYTHONUNBUFFERED: "1"
 
     steps:
       - name: Checkout exact verification branch
@@ -37,17 +37,17 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Set up Node 24.19.0
         uses: actions/setup-node@v4
         with:
-          node-version: '24.19.0'
+          node-version: "24.19.0"
 
       - name: Set up uv 0.10.0
         uses: astral-sh/setup-uv@v6
         with:
-          version: '0.10.0'
+          version: "0.10.0"
           enable-cache: true
 
       - name: Install PostgreSQL 16 client
@@ -64,7 +64,7 @@ jobs:
           path: pb01
           github-token: ${{ github.token }}
           repository: nepogoda1970-epd2/epd2-civic-os
-          run-id: '32388797195'
+          run-id: "32388797195"
 
       - name: Run PILOT-04 C9 exact-byte authoritative acceptance
         shell: bash

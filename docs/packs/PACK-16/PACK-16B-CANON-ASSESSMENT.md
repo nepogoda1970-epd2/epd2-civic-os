@@ -16,7 +16,7 @@ CANON CLARIFICATION REQUIRED
 **`CANON_VERSION` remains `0.8.0`. `docs/canonical/TZ-00-domain-event-canon.md`
 and `docs/canonical/canon-version.json` are not modified by this round.**
 
-PACK-16A recorded `CA-02` — *a trustee / key-ceremony evidence aggregate* —
+PACK-16A recorded `CA-02` — _a trustee / key-ceremony evidence aggregate_ —
 as an amendment candidate owned by "PACK-16B or 16C". **This round has now
 produced the shapes that candidate was waiting for, and it still does not
 propose the amendment.** §4 says why, and §5 states exactly what a future
@@ -40,16 +40,16 @@ PACK-16A's candidates by their full context.
 process whose artefacts are documents and published evidence, not domain
 events — and that is a finding, not an omission.
 
-| Canon section                        | What PACK-16B relies on                                          | What PACK-16B does **not** do                                    |
-| ------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| **5.9 Tally Context**                | The context owns ballot-set verification and a signed result       | Redefine it; add a ceremony stage to it                          |
-| **15.3 `VoteEnvelope`**              | Its forbidden-field set, unchanged                                 | Reference it at all — the ceremony domain touches no envelope     |
-| **15.5 `Tally`**                     | `input_set_hash`, `algorithm_version`, `tally_signature`           | Add a guardian field, a share field or a proof field             |
-| **15.6 `ResultPublication`**         | Its count set and non-finality rule                                | Publish any count from the ceremony domain (`RN-C12`)             |
-| **18.1 `AuditEvent`**                | The audit primitive, as it stands                                  | Route ceremony evidence through it — §3.2                        |
-| **19a.1 `PublicLedgerEntry`**        | The append-only chained-publication primitive and **its prohibition on `VoteEnvelope`** | Use it for the ceremony transcript — §3.1     |
-| **§21 canonical event envelope**     | Unchanged                                                          | Add transport metadata or a second envelope                      |
-| **19d.18, 19e.22, 19f.23**           | Every prohibited edge                                              | Create any of them                                               |
+| Canon section                    | What PACK-16B relies on                                                                 | What PACK-16B does **not** do                                 |
+| -------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **5.9 Tally Context**            | The context owns ballot-set verification and a signed result                            | Redefine it; add a ceremony stage to it                       |
+| **15.3 `VoteEnvelope`**          | Its forbidden-field set, unchanged                                                      | Reference it at all — the ceremony domain touches no envelope |
+| **15.5 `Tally`**                 | `input_set_hash`, `algorithm_version`, `tally_signature`                                | Add a guardian field, a share field or a proof field          |
+| **15.6 `ResultPublication`**     | Its count set and non-finality rule                                                     | Publish any count from the ceremony domain (`RN-C12`)         |
+| **18.1 `AuditEvent`**            | The audit primitive, as it stands                                                       | Route ceremony evidence through it — §3.2                     |
+| **19a.1 `PublicLedgerEntry`**    | The append-only chained-publication primitive and **its prohibition on `VoteEnvelope`** | Use it for the ceremony transcript — §3.1                     |
+| **§21 canonical event envelope** | Unchanged                                                                               | Add transport metadata or a second envelope                   |
+| **19d.18, 19e.22, 19f.23**       | Every prohibited edge                                                                   | Create any of them                                            |
 
 **Nothing above is modified by this round.**
 
@@ -75,7 +75,7 @@ inside the system whose behaviour the ceremony exists to constrain.
 That is the substantive argument, and it is stronger than the convenience
 argument on the other side. **The transcript stays a published artefact.**
 
-What *does* eventually need a canonical home is narrower: the **reference**
+What _does_ eventually need a canonical home is narrower: the **reference**
 from a context to its ceremony transcript and joint key — a pointer and a
 digest, not the transcript. That is `CAM-P16B-01`.
 
@@ -88,12 +88,12 @@ ceremony transcript never references a `VoteEnvelope`, so the prohibition is
 not violated by using the primitive — but two other properties make it the
 wrong fit:
 
-| Property                                    | `PublicLedgerEntry`             | Ceremony transcript                                        |
-| ------------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| Producer                                    | A service, appending            | A convened ceremony, with named human participants           |
-| Reader's trust basis                        | The system's own chain          | **Independent recomputation from published values**          |
-| Multi-view reconciliation                   | Not a concept                   | **Load-bearing** — `RC-07`, `RC-08`, `FM-16B-16`             |
-| Content                                     | Domain publication records      | Commitments, proofs, complaints, verdicts, attestations      |
+| Property                  | `PublicLedgerEntry`        | Ceremony transcript                                     |
+| ------------------------- | -------------------------- | ------------------------------------------------------- |
+| Producer                  | A service, appending       | A convened ceremony, with named human participants      |
+| Reader's trust basis      | The system's own chain     | **Independent recomputation from published values**     |
+| Multi-view reconciliation | Not a concept              | **Load-bearing** — `RC-07`, `RC-08`, `FM-16B-16`        |
+| Content                   | Domain publication records | Commitments, proofs, complaints, verdicts, attestations |
 
 **Using `PublicLedgerEntry` would import a trust model the transcript
 deliberately does not have.** Recorded as `CAM-P16B-01`, not proposed.
@@ -144,11 +144,11 @@ records what **people** did, in a room, verified by recomputation.
 
 Three concrete mismatches:
 
-| Ceremony property                                               | `AuditEvent` handles it? |
-| --------------------------------------------------------------- | ------------------------ |
-| Two published views of the same event, compared before signing   | No                       |
-| A complaint with a respondent, a deadline and an adjudication     | No                       |
-| A record whose verification requires no system access at all      | No — that is the point   |
+| Ceremony property                                              | `AuditEvent` handles it? |
+| -------------------------------------------------------------- | ------------------------ |
+| Two published views of the same event, compared before signing | No                       |
+| A complaint with a respondent, a deadline and an adjudication  | No                       |
+| A record whose verification requires no system access at all   | No — that is the point   |
 
 **The system may emit `AuditEvent`s about ceremony-adjacent operations**
 (a parameter load, a published checkpoint), and those are ordinary audit
@@ -177,7 +177,7 @@ honest position: EPD² adopts the property without claiming the aggregate.
 
 ## 4. Why `CA-02` is still not proposed
 
-PACK-16A recorded *a trustee / key-ceremony evidence aggregate* as owned by
+PACK-16A recorded _a trustee / key-ceremony evidence aggregate_ as owned by
 "PACK-16B or 16C". PACK-16B now has the shapes — 29 transcript
 requirements, 36 complaint rules, a 20-phase lifecycle — and declines.
 
@@ -188,7 +188,7 @@ requirements, 36 complaint rules, a 20-phase lifecycle — and declines.
 2. **PACK-16C will change the shape.** The bulletin board consumes the joint
    key and publishes alongside the transcript; designing the canonical
    relationship before the board exists fixes the wrong half first.
-3. **This round's own finding is that the transcript should *not* be a
+3. **This round's own finding is that the transcript should _not_ be a
    canonical aggregate at all** (`CQ-P16B-01`, `CQ-P16B-02`). Proposing
    `CA-02` as PACK-16A imagined it would canonise a decision this round
    examined and rejected. **The right amendment is smaller than the one that
@@ -198,11 +198,11 @@ requirements, 36 complaint rules, a 20-phase lifecycle — and declines.
 
 ## 5. Amendment candidates — recorded, not proposed
 
-| ID             | Candidate                                                                                              | Owning round | Affected clauses                          | Precondition                          |
-| -------------- | -------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------- | ------------------------------------- |
-| `CAM-P16B-01`  | A **reference** from an election context to its ceremony transcript digest, joint public key and parameter-set ID — a pointer and hashes, **not** the transcript | **PACK-16C** | new field group under 15; 19a.1 prohibition preserved | The bulletin-board aggregate exists (PACK-16A `CA-01`) |
-| `CAM-P16B-02`  | A cryptographic parameter-set registry aggregate                                                       | **The successor round** | new section under 15; `FIR-CONFIG-001` interaction | A **second** parameter profile exists (`OD-P16B-06`) |
-| `CAM-P16B-03`  | A ceremony-incident evidence reference, if `AuditEvent` proves insufficient in practice                 | **PACK-17**  | 18.1 `AuditEvent`                          | Operational experience, not speculation |
+| ID            | Candidate                                                                                                                                                        | Owning round            | Affected clauses                                      | Precondition                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| `CAM-P16B-01` | A **reference** from an election context to its ceremony transcript digest, joint public key and parameter-set ID — a pointer and hashes, **not** the transcript | **PACK-16C**            | new field group under 15; 19a.1 prohibition preserved | The bulletin-board aggregate exists (PACK-16A `CA-01`) |
+| `CAM-P16B-02` | A cryptographic parameter-set registry aggregate                                                                                                                 | **The successor round** | new section under 15; `FIR-CONFIG-001` interaction    | A **second** parameter profile exists (`OD-P16B-06`)   |
+| `CAM-P16B-03` | A ceremony-incident evidence reference, if `AuditEvent` proves insufficient in practice                                                                          | **PACK-17**             | 18.1 `AuditEvent`                                     | Operational experience, not speculation                |
 
 **PACK-16A's `CA-02` is hereby narrowed, not discharged:** the trustee /
 key-ceremony evidence aggregate as originally conceived is **not
@@ -219,21 +219,21 @@ is deemed approved.**
 
 ## 6. Compatibility statement
 
-| Check                                                       | Result                                                                 |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Does PACK-16B add a canonical aggregate?                    | **No**                                                                 |
-| Does it add a field to an existing aggregate?               | **No**                                                                 |
-| Does it add or change a status?                             | **No**                                                                 |
-| Does it change an owner?                                    | **No**                                                                 |
-| Does it create a prohibited edge?                           | **No**                                                                 |
-| Does it weaken any canonical prohibition?                   | **No** — every clarification narrows                                   |
-| Does it use `PublicLedgerEntry` for ceremony evidence?      | **No** — `CQ-P16B-02`                                                  |
-| Does it route ceremony evidence through `AuditEvent`?       | **No** — `CQ-P16B-05`                                                  |
-| Does it modify `TZ-00-domain-event-canon.md`?               | **No**                                                                 |
-| Does it modify `canon-version.json`?                        | **No**                                                                 |
-| Does it change `CANON_VERSION`?                             | **No — it stays `0.8.0`**                                              |
-| Does it require a canon amendment **now**?                  | **No**                                                                 |
-| Does it identify amendment candidates for later rounds?     | **Yes — `CAM-P16B-01`…`CAM-P16B-03`, recorded and not proposed**       |
+| Check                                                         | Result                                                                                                |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Does PACK-16B add a canonical aggregate?                      | **No**                                                                                                |
+| Does it add a field to an existing aggregate?                 | **No**                                                                                                |
+| Does it add or change a status?                               | **No**                                                                                                |
+| Does it change an owner?                                      | **No**                                                                                                |
+| Does it create a prohibited edge?                             | **No**                                                                                                |
+| Does it weaken any canonical prohibition?                     | **No** — every clarification narrows                                                                  |
+| Does it use `PublicLedgerEntry` for ceremony evidence?        | **No** — `CQ-P16B-02`                                                                                 |
+| Does it route ceremony evidence through `AuditEvent`?         | **No** — `CQ-P16B-05`                                                                                 |
+| Does it modify `TZ-00-domain-event-canon.md`?                 | **No**                                                                                                |
+| Does it modify `canon-version.json`?                          | **No**                                                                                                |
+| Does it change `CANON_VERSION`?                               | **No — it stays `0.8.0`**                                                                             |
+| Does it require a canon amendment **now**?                    | **No**                                                                                                |
+| Does it identify amendment candidates for later rounds?       | **Yes — `CAM-P16B-01`…`CAM-P16B-03`, recorded and not proposed**                                      |
 | Does it change PACK-16A's `CQ-01`…`CQ-06` or `CA-01`…`CA-03`? | **No** — PACK-16A's canon assessment is unmodified; §5 records a narrowing for the round that owns it |
 
 `docs/canonical/canon-version.json` declares

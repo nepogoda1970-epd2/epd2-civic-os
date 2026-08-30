@@ -52,23 +52,23 @@ bulletin board required          NO PERSON-TO-BALLOT LINK
 ```
 
 **None of these is revisited, weakened or reinterpreted here.** Where this
-round found a fact that contradicted a PACK-16A *statement*, it corrected
-the statement and left the *requirement* standing — once, in `KC-11`, and
+round found a fact that contradicted a PACK-16A _statement_, it corrected
+the statement and left the _requirement_ standing — once, in `KC-11`, and
 the correction is recorded rather than applied silently.
 
 ---
 
 ## Decision drivers
 
-| Driver                                                                 | Weight in this decision                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------ |
-| A record must be verifiable by **any conforming verifier**              | Decisive for the parameter choice                            |
-| A record must remain verifiable **decades later, with no live system**  | Decisive for pinning and for `PS-10`                         |
-| **No fewer than `k` parties may ever decrypt**, by any path             | Decisive for backup, recovery and break-glass                |
-| German cryptographic guidance                                           | Strong; alignment is diligence, not compliance               |
-| The **absence of independent review** of the key ceremony `[F-31]`      | Decisive wherever a choice was between conservative and convenient |
-| Volunteers, not institutions, will hold the shares                      | Decisive for quorum size and for accessibility               |
-| Performance                                                             | **Explicitly non-decisive** (`IM-46`)                        |
+| Driver                                                                 | Weight in this decision                                            |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| A record must be verifiable by **any conforming verifier**             | Decisive for the parameter choice                                  |
+| A record must remain verifiable **decades later, with no live system** | Decisive for pinning and for `PS-10`                               |
+| **No fewer than `k` parties may ever decrypt**, by any path            | Decisive for backup, recovery and break-glass                      |
+| German cryptographic guidance                                          | Strong; alignment is diligence, not compliance                     |
+| The **absence of independent review** of the key ceremony `[F-31]`     | Decisive wherever a choice was between conservative and convenient |
+| Volunteers, not institutions, will hold the shares                     | Decisive for quorum size and for accessibility                     |
+| Performance                                                            | **Explicitly non-decisive** (`IM-46`)                              |
 
 ---
 
@@ -77,14 +77,14 @@ the correction is recorded rather than applied silently.
 Four options were assessed against sixteen criteria
 (`PACK-16B-PARAMETER-SET-SPECIFICATION.md` §2):
 
-| Option | Description                                                        | Verdict                                              |
-| ------ | ------------------------------------------------------------------ | ------------------------------------------------------ |
-| **A**  | The specification's fixed 4096-bit finite-field parameters, unmodified | **SELECTED**                                         |
-| B      | Different finite-field parameters (larger `p`, different `q`)      | **Rejected** — forks every conforming verifier `[F-05]`, and `H_q` would need redesign `[F-07]` |
-| C      | An elliptic-curve adaptation                                       | **Rejected** — a protocol adaptation, not a parameter choice; outside BSI's recommended curve set `[F-23]`; security proofs need re-derivation |
-| D      | A post-quantum or hybrid construction                              | **Rejected for now** — a different protocol entirely; carried as `OD-P16B-06` with a dated deadline |
+| Option | Description                                                            | Verdict                                                                                                                                        |
+| ------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A**  | The specification's fixed 4096-bit finite-field parameters, unmodified | **SELECTED**                                                                                                                                   |
+| B      | Different finite-field parameters (larger `p`, different `q`)          | **Rejected** — forks every conforming verifier `[F-05]`, and `H_q` would need redesign `[F-07]`                                                |
+| C      | An elliptic-curve adaptation                                           | **Rejected** — a protocol adaptation, not a parameter choice; outside BSI's recommended curve set `[F-23]`; security proofs need re-derivation |
+| D      | A post-quantum or hybrid construction                                  | **Rejected for now** — a different protocol entirely; carried as `OD-P16B-06` with a dated deadline                                            |
 
-**The decisive discovery** is that the specification *fixes* its parameters
+**The decisive discovery** is that the specification _fixes_ its parameters
 `[F-04]` and requires bit-equality at verification `[F-05]`. That converts
 B and C from parameter choices into verifier-forking protocol adaptations,
 each needing its own ADR, its own proofs and its own verifier — which is a
@@ -158,15 +158,15 @@ with additional published governance around the ceremony.
 
 Against **BSI TR-02102-1, Version 2026-01, 23 January 2026** `[F-20]`:
 
-| Item                    | EPD²      | Guidance                        | Result   |
-| ----------------------- | --------- | ------------------------------- | -------- |
-| Security-level target   | ≈128 bits (inference `[F-01]`) | ≥ 120 bits           | **meets** |
-| DH in `F_p` modulus     | 4096      | 3000 recommended `[F-21]`       | **exceeds** |
-| Subgroup order `\|q\|`  | 256       | **250** — TR-02102-1 (2026-01) §2.3.3 p. 34 and §2.3.5 p. 36, read first-hand `[F-36]`; 250 — ECCG `[F-33]`; 256 — German signature catalogue `[F-34]` | **satisfies every located minimum, current edition included** |
-| Hash / MAC              | SHA-256 / HMAC-SHA-256, 256-bit | 128 minimum      | **meets** |
-| Prime-order subgroup    | yes       | required `[F-21]` §2.3          | **meets** |
-| Randomness              | AIS 20/31 v3.0 classes `[F-26]`, SP 800-90A/B/C `[F-27]`…`[F-29]` | — | **aligned** |
-| Classical-crypto horizon| —         | end-2031 / end-2030 `[F-25]`    | **a dated limit, carried as `OD-P16B-06`** |
+| Item                     | EPD²                                                              | Guidance                                                                                                                                               | Result                                                        |
+| ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Security-level target    | ≈128 bits (inference `[F-01]`)                                    | ≥ 120 bits                                                                                                                                             | **meets**                                                     |
+| DH in `F_p` modulus      | 4096                                                              | 3000 recommended `[F-21]`                                                                                                                              | **exceeds**                                                   |
+| Subgroup order `\|q\|`   | 256                                                               | **250** — TR-02102-1 (2026-01) §2.3.3 p. 34 and §2.3.5 p. 36, read first-hand `[F-36]`; 250 — ECCG `[F-33]`; 256 — German signature catalogue `[F-34]` | **satisfies every located minimum, current edition included** |
+| Hash / MAC               | SHA-256 / HMAC-SHA-256, 256-bit                                   | 128 minimum                                                                                                                                            | **meets**                                                     |
+| Prime-order subgroup     | yes                                                               | required `[F-21]` §2.3                                                                                                                                 | **meets**                                                     |
+| Randomness               | AIS 20/31 v3.0 classes `[F-26]`, SP 800-90A/B/C `[F-27]`…`[F-29]` | —                                                                                                                                                      | **aligned**                                                   |
+| Classical-crypto horizon | —                                                                 | end-2031 / end-2030 `[F-25]`                                                                                                                           | **a dated limit, carried as `OD-P16B-06`**                    |
 
 **The subgroup-order check is complete, on the document this decision names,
 read first-hand.**
@@ -386,7 +386,7 @@ pattern, at the orchestration layer, changing no hash input.
 **This is claimed as a mitigation of an analogous exposure, not as a fix**,
 and `TV-08` must assess it. `F-32` — Pedersen-DKG bias is provably
 survivable for some DL-based schemes at the cost of a larger modulus — is
-the counterweight, and it says *some schemes*, not *this scheme*.
+the counterweight, and it says _some schemes_, not _this scheme_.
 
 ---
 
@@ -404,8 +404,8 @@ Where a ground is arithmetic, there is no discretion (`CD-09`).
 The one ground that cannot be settled arithmetically — contradictory
 sender/recipient claims about a share — is resolved by opening **one** share
 under Board order with Auditor concurrence, from a key set that is discarded
-immediately afterwards. The specification's broader suggestion that *all*
-guardians release *all* secret information `[F-12]` is **prohibited**: it is
+immediately afterwards. The specification's broader suggestion that _all_
+guardians release _all_ secret information `[F-12]` is **prohibited**: it is
 a quorum-equivalent disclosure. A construction making this publicly
 adjudicable without disclosure would be better, does not exist here, and is
 `OD-P16B-04` rather than an invention.
@@ -457,10 +457,10 @@ device failure no longer costing the election a guardian.
 The word does not appear in 2.1; the mechanism belonged to the 1.x lineage.
 What 2.1 does is compute partial decryptions over the available set `U` with
 `|U| = h ≥ k`, and it explicitly refuses to reconstruct an absent guardian's
-secret: *"it is preferable to not release any missing secret … and instead
+secret: _"it is preferable to not release any missing secret … and instead
 only release the partial decryptions that the secret would have produced.
 This prevents the secret from being used for additional decryptions without
-the cooperation of at least `k` guardians."* `[F-11]`
+the cooperation of at least `k` guardians."_ `[F-11]`
 
 **That is `KC-15`'s policy, arrived at independently by the specification's
 authors.**
@@ -562,8 +562,8 @@ FULLY REMOTE           PROHIBITED
 
 Four grounds, of which the fourth decides it: device trust is unverifiable
 remotely; the faults that most need a witness leave no cryptographic trace;
-guardian coercion is unaddressed — *"if the coercer can monitor the voter
-throughout the vote casting period, then resistance is futile"* `[E-46]`
+guardian coercion is unaddressed — _"if the coercer can monitor the voter
+throughout the vote casting period, then resistance is futile"_ `[E-46]`
 applies equally to a guardian alone with a device; and **no evidence
 base was located** `[F-31]` — an absence of evidence, which is not evidence
 of absence, and which is why the answer is "not yet" rather than "never".
@@ -625,40 +625,40 @@ its blocking findings are closed.**
 
 ## Rejected alternatives
 
-| Alternative                                               | Rejected because                                                                 |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Different finite-field parameters                          | Forks every conforming verifier `[F-05]`; `H_q` needs redesign `[F-07]`           |
-| An elliptic-curve adaptation                               | A protocol adaptation, not a parameter change; outside BSI's recommended set `[F-23]`; proofs need re-derivation |
-| A post-quantum construction now                            | A different protocol; guidance says quantum-safe mechanisms are not yet trusted equally `[F-25]`. Dated as `OD-P16B-06` |
-| `k = 2` of 3                                               | Two people are not a threshold for a binding party vote                           |
-| `n > 9`                                                    | Ceremony logistics and recruitment make it unworkable for the organisations that will actually run it |
-| Split-custody backup under independent custodians          | An escrow with extra steps — it reduces the effective threshold                    |
-| Hardware-token duplication                                 | Two places to steal one share                                                     |
-| Escrowed recovery shares                                   | The escrow holder is a shadow quorum                                              |
-| Reintroducing compensated decryption                       | It does not exist in 2.1, and its absence removes a drift surface `[F-11]`        |
-| A break-glass decryption under Board or judicial order     | A mechanism that can produce a result without a quorum can produce a result without an election |
-| Fully remote ceremonies                                    | No evidence base **located** `[F-31]`; coercion unaddressed `[E-46]`; device trust unverifiable |
-| Cloud KMS custody                                          | Two guardians in one tenant are one guardian                                       |
-| Consumer hardware wallets                                  | Solves extraction and nothing else; no verifiable attestation                     |
-| Making the ceremony transcript a `PublicLedgerEntry`       | Imports a trust model the transcript deliberately does not have                    |
-| Proposing PACK-16A's `CA-02` amendment now                 | This round's finding is that the transcript should **not** be a canonical aggregate; the right amendment is smaller |
+| Alternative                                            | Rejected because                                                                                                        |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Different finite-field parameters                      | Forks every conforming verifier `[F-05]`; `H_q` needs redesign `[F-07]`                                                 |
+| An elliptic-curve adaptation                           | A protocol adaptation, not a parameter change; outside BSI's recommended set `[F-23]`; proofs need re-derivation        |
+| A post-quantum construction now                        | A different protocol; guidance says quantum-safe mechanisms are not yet trusted equally `[F-25]`. Dated as `OD-P16B-06` |
+| `k = 2` of 3                                           | Two people are not a threshold for a binding party vote                                                                 |
+| `n > 9`                                                | Ceremony logistics and recruitment make it unworkable for the organisations that will actually run it                   |
+| Split-custody backup under independent custodians      | An escrow with extra steps — it reduces the effective threshold                                                         |
+| Hardware-token duplication                             | Two places to steal one share                                                                                           |
+| Escrowed recovery shares                               | The escrow holder is a shadow quorum                                                                                    |
+| Reintroducing compensated decryption                   | It does not exist in 2.1, and its absence removes a drift surface `[F-11]`                                              |
+| A break-glass decryption under Board or judicial order | A mechanism that can produce a result without a quorum can produce a result without an election                         |
+| Fully remote ceremonies                                | No evidence base **located** `[F-31]`; coercion unaddressed `[E-46]`; device trust unverifiable                         |
+| Cloud KMS custody                                      | Two guardians in one tenant are one guardian                                                                            |
+| Consumer hardware wallets                              | Solves extraction and nothing else; no verifiable attestation                                                           |
+| Making the ceremony transcript a `PublicLedgerEntry`   | Imports a trust model the transcript deliberately does not have                                                         |
+| Proposing PACK-16A's `CA-02` amendment now             | This round's finding is that the transcript should **not** be a canonical aggregate; the right amendment is smaller     |
 
 ---
 
 ## Residual risks
 
-| ID       | Risk                                                                                      | Rating   | Carried by                |
-| -------- | ----------------------------------------------------------------------------------------- | -------- | ------------------------- |
-| `RB-09`  | **Published parameter family normative divergence** — `EPD2-CRYPTO-1` uses the ElectionGuard 2.1 family rather than a MODP or ffdhe family preferred by Remark 2.12. **The numerical conditions are satisfied**; the residual is normative acceptability, provenance reviewability, and the consequences of retaining or replacing the family. **Not a claim that the parameters are insecure.** Blocks production and legal activation | medium   | `VO-08` — external cryptographic review, PACK-17 |
-| `RB-02`  | The classical-cryptography recommendation lapses end-2031 / end-2030                      | **high** | `OD-P16B-06`, `CA-08`     |
-| `RB-05`  | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`                 | low      | `DS-16`, `CA-27`          |
-| `RB-06`  | Upstream has no errata process and marks two versions "Recommended" `[F-30]`              | medium   | `CA-19`…`CA-27`           |
-| `RR-01`  | **No production-grade implementation of the pinned version exists**                       | **high** | `OD-P16A-04`, `OD-P16B-02`|
-| `RR-09`  | **No peer-reviewed analysis of the key ceremony was located by this round** `[F-31]`      | **high** | `TV-08`, `OD-P16A-06`     |
-| —        | A silent nonce failure in a browser is undetectable by any verifier                        | medium   | `IM-43`, PACK-16D         |
-| —        | Guardian volunteers bear real personal exposure through publication                        | medium   | GOVERNANCE                |
-| —        | Independence declarations are self-reported                                                | medium   | `GI-*`, GOVERNANCE        |
-| —        | A quorum loss makes a result genuinely unobtainable                                        | accepted | `CM-14`…`CM-19`           |
+| ID      | Risk                                                                                                                                                                                                                                                                                                                                                                                                                                    | Rating   | Carried by                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------ |
+| `RB-09` | **Published parameter family normative divergence** — `EPD2-CRYPTO-1` uses the ElectionGuard 2.1 family rather than a MODP or ffdhe family preferred by Remark 2.12. **The numerical conditions are satisfied**; the residual is normative acceptability, provenance reviewability, and the consequences of retaining or replacing the family. **Not a claim that the parameters are insecure.** Blocks production and legal activation | medium   | `VO-08` — external cryptographic review, PACK-17 |
+| `RB-02` | The classical-cryptography recommendation lapses end-2031 / end-2030                                                                                                                                                                                                                                                                                                                                                                    | **high** | `OD-P16B-06`, `CA-08`                            |
+| `RB-05` | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`                                                                                                                                                                                                                                                                                                                                                               | low      | `DS-16`, `CA-27`                                 |
+| `RB-06` | Upstream has no errata process and marks two versions "Recommended" `[F-30]`                                                                                                                                                                                                                                                                                                                                                            | medium   | `CA-19`…`CA-27`                                  |
+| `RR-01` | **No production-grade implementation of the pinned version exists**                                                                                                                                                                                                                                                                                                                                                                     | **high** | `OD-P16A-04`, `OD-P16B-02`                       |
+| `RR-09` | **No peer-reviewed analysis of the key ceremony was located by this round** `[F-31]`                                                                                                                                                                                                                                                                                                                                                    | **high** | `TV-08`, `OD-P16A-06`                            |
+| —       | A silent nonce failure in a browser is undetectable by any verifier                                                                                                                                                                                                                                                                                                                                                                     | medium   | `IM-43`, PACK-16D                                |
+| —       | Guardian volunteers bear real personal exposure through publication                                                                                                                                                                                                                                                                                                                                                                     | medium   | GOVERNANCE                                       |
+| —       | Independence declarations are self-reported                                                                                                                                                                                                                                                                                                                                                                                             | medium   | `GI-*`, GOVERNANCE                               |
+| —       | A quorum loss makes a result genuinely unobtainable                                                                                                                                                                                                                                                                                                                                                                                     | accepted | `CM-14`…`CM-19`                                  |
 
 ---
 

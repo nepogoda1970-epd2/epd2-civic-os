@@ -24,14 +24,14 @@ turned out to be simpler than expected.
 
 ## 2. The comparison
 
-| Model                                        | Threshold reduced? | Collusion change                                   | Availability gain           | Loss scenario                        | Compromise scenario                                  | Auditable? | Verdict                          |
-| -------------------------------------------- | ------------------ | ---------------------------------------------------- | ---------------------------- | -------------------------------------- | ------------------------------------------------------ | ---------- | ---------------------------------- |
-| **No backup at all**                         | No                 | none                                                | none — a lost device is a permanent absence | Absence, survivable within `n − k` | none added                              | n/a        | **Permitted**; the conservative floor |
-| **Per-guardian, guardian-custodied encrypted backup of that guardian's own share** | **No** — one share stays one share | **none** | **Real** — device loss stops being permanent | Recoverable by that guardian alone | The guardian's own exposure surface grows slightly; nobody else's does | Yes — its existence is declared | **SELECTED** |
-| Split backup under independent custodians    | **Yes, effectively** | `m` custodians become a path to a share            | Real                         | Recoverable                            | The custodians become targets                          | Partly     | **PROHIBITED** — an escrow with extra steps |
-| Hardware-token duplication                   | **Yes** — two tokens, one share, two places to steal it | Doubles the physical attack surface | Real   | Recoverable                            | Either token compromises the share                     | Poorly     | **PROHIBITED**                    |
-| Escrowed recovery shares                     | **Yes**            | The escrow holder is a shadow quorum                | Real                         | Recoverable                            | The escrow is the single point                         | No         | **PROHIBITED**                    |
-| Compensated decryption                       | n/a                | n/a                                                 | n/a                          | n/a                                    | n/a                                                     | n/a        | **DOES NOT EXIST** in the selected specification — §5 |
+| Model                                                                              | Threshold reduced?                                      | Collusion change                        | Availability gain                            | Loss scenario                      | Compromise scenario                                                    | Auditable?                      | Verdict                                               |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------- | -------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------- |
+| **No backup at all**                                                               | No                                                      | none                                    | none — a lost device is a permanent absence  | Absence, survivable within `n − k` | none added                                                             | n/a                             | **Permitted**; the conservative floor                 |
+| **Per-guardian, guardian-custodied encrypted backup of that guardian's own share** | **No** — one share stays one share                      | **none**                                | **Real** — device loss stops being permanent | Recoverable by that guardian alone | The guardian's own exposure surface grows slightly; nobody else's does | Yes — its existence is declared | **SELECTED**                                          |
+| Split backup under independent custodians                                          | **Yes, effectively**                                    | `m` custodians become a path to a share | Real                                         | Recoverable                        | The custodians become targets                                          | Partly                          | **PROHIBITED** — an escrow with extra steps           |
+| Hardware-token duplication                                                         | **Yes** — two tokens, one share, two places to steal it | Doubles the physical attack surface     | Real                                         | Recoverable                        | Either token compromises the share                                     | Poorly                          | **PROHIBITED**                                        |
+| Escrowed recovery shares                                                           | **Yes**                                                 | The escrow holder is a shadow quorum    | Real                                         | Recoverable                        | The escrow is the single point                                         | No                              | **PROHIBITED**                                        |
+| Compensated decryption                                                             | n/a                                                     | n/a                                     | n/a                                          | n/a                                | n/a                                                                    | n/a                             | **DOES NOT EXIST** in the selected specification — §5 |
 
 ---
 
@@ -42,16 +42,16 @@ PER-GUARDIAN, GUARDIAN-CUSTODIED, ENCRYPTED BACKUP
 OF THAT GUARDIAN'S OWN SHARE — AND NOTHING ELSE.
 ```
 
-| ID       | Rule                                                                                                                    |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `BR-01`  | A guardian **may** hold one encrypted backup of **its own** `z_i` and `ẑ_i`. It may hold no other guardian's material   |
-| `BR-02`  | The backup is under the **same guardian's sole custody**, on a second dedicated medium, meeting the same custody requirements (`KU-04`…`KU-16`) |
-| `BR-03`  | **The backup does not change the threshold.** One share backed up is still one share; recovering it recovers one share, and `k` are still needed |
-| `BR-04`  | The backup is encrypted under a secret **only that guardian holds**. No EPD² component, no operator and no provider holds it or can compel it |
-| `BR-05`  | The **existence** of a backup is declared and published; its content, location and key are not                          |
-| `BR-06`  | The backup is **destroyed at retirement** alongside the primary, with the same attestation (`GL-17`)                      |
-| `BR-07`  | A guardian may decline to hold a backup. **No backup is mandatory**, and its absence is not a defect                     |
-| `BR-08`  | The backup is **never transported to, held by, or accessible from** any EPD² system                                     |
+| ID      | Rule                                                                                                                                             |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BR-01` | A guardian **may** hold one encrypted backup of **its own** `z_i` and `ẑ_i`. It may hold no other guardian's material                            |
+| `BR-02` | The backup is under the **same guardian's sole custody**, on a second dedicated medium, meeting the same custody requirements (`KU-04`…`KU-16`)  |
+| `BR-03` | **The backup does not change the threshold.** One share backed up is still one share; recovering it recovers one share, and `k` are still needed |
+| `BR-04` | The backup is encrypted under a secret **only that guardian holds**. No EPD² component, no operator and no provider holds it or can compel it    |
+| `BR-05` | The **existence** of a backup is declared and published; its content, location and key are not                                                   |
+| `BR-06` | The backup is **destroyed at retirement** alongside the primary, with the same attestation (`GL-17`)                                             |
+| `BR-07` | A guardian may decline to hold a backup. **No backup is mandatory**, and its absence is not a defect                                             |
+| `BR-08` | The backup is **never transported to, held by, or accessible from** any EPD² system                                                              |
 
 ### 3.1 Why this is not an escrow
 
@@ -83,12 +83,12 @@ NO backup held by EPD² in any form, encrypted or otherwise.
 NO "sealed envelope in a safe" arrangement — it is an escrow with furniture.
 ```
 
-| ID       | Rule                                                                                                              |
-| -------- | --------------------------------------------------------------------------------------------------------------------- |
-| `BR-09`  | Any arrangement in which **fewer than `k` parties can reconstruct a decryption capability** is prohibited, whatever it is called |
-| `BR-10`  | Any arrangement in which **a party other than the guardian can produce that guardian's share** is prohibited        |
-| `BR-11`  | A proposal for either is a **design-review rejection** (`FM-16B-21`), not a risk to be accepted                    |
-| `BR-12`  | Discovery that such an arrangement exists is a **hidden-master-key detection** — `FM-16B-22`, and it blocks activation or, after activation, forces the compromise model's §4 |
+| ID      | Rule                                                                                                                                                                          |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BR-09` | Any arrangement in which **fewer than `k` parties can reconstruct a decryption capability** is prohibited, whatever it is called                                              |
+| `BR-10` | Any arrangement in which **a party other than the guardian can produce that guardian's share** is prohibited                                                                  |
+| `BR-11` | A proposal for either is a **design-review rejection** (`FM-16B-21`), not a risk to be accepted                                                                               |
+| `BR-12` | Discovery that such an arrangement exists is a **hidden-master-key detection** — `FM-16B-22`, and it blocks activation or, after activation, forces the compromise model's §4 |
 
 ---
 
@@ -111,33 +111,33 @@ The partial decryptions are combined.
 And the specification refuses to reconstruct an absent guardian's secret,
 in terms `[F-11]`:
 
-> *"a missing secret `s_j` could be computed directly … **However, it is
+> _"a missing secret `s_j` could be computed directly … **However, it is
 > preferable to not release any missing secret `s_j` (or the secret `s`) and
 > instead only release the partial decryptions** that the secret would have
 > produced. This prevents the secret from being used for additional
-> decryptions without the cooperation of at least `k` guardians."*
+> decryptions without the cooperation of at least `k` guardians."_
 
 **That is the same policy `KC-15` states, arrived at independently by the
 specification's authors.**
 
 ### 5.2 Consequences
 
-| Question                                                             | Answer                                                                    |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Who stores backup shares for compensation?                           | **Nobody. There are none.**                                               |
-| When is compensation material generated?                             | Never                                                                     |
-| How is it authenticated, encrypted, requested?                       | Not applicable                                                            |
-| Does compensation change the effective collusion threshold?          | Not applicable — and this is why its absence is welcome                   |
-| Can one guardian compensate for several absentees?                   | **No such operation exists**                                              |
-| Maximum permitted absences                                           | **Exactly `n − k`** — 2 in the default profile, 3 in high-assurance       |
-| Does anything persist after the election?                            | Only what `GL-16`/`GL-17` permit: the guardian's share until retirement    |
+| Question                                                    | Answer                                                                  |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Who stores backup shares for compensation?                  | **Nobody. There are none.**                                             |
+| When is compensation material generated?                    | Never                                                                   |
+| How is it authenticated, encrypted, requested?              | Not applicable                                                          |
+| Does compensation change the effective collusion threshold? | Not applicable — and this is why its absence is welcome                 |
+| Can one guardian compensate for several absentees?          | **No such operation exists**                                            |
+| Maximum permitted absences                                  | **Exactly `n − k`** — 2 in the default profile, 3 in high-assurance     |
+| Does anything persist after the election?                   | Only what `GL-16`/`GL-17` permit: the guardian's share until retirement |
 
-| ID       | Rule                                                                                                            |
-| -------- | ------------------------------------------------------------------------------------------------------------------- |
-| `BR-13`  | **Compensation material is not created, not stored and not permitted.** No EPD² profile reintroduces it           |
-| `BR-14`  | Absence tolerance is exactly `n − k` and is a property of the quorum, not of a recovery feature                   |
-| `BR-15`  | The mandatory rule of the round task — *compensation may recover availability within the approved threshold model; it may not create a new threshold* — is satisfied **vacuously**, because no compensation exists |
-| `BR-16`  | The correction to `PACK-16A` `KC-11` is recorded in `PACK-16B-SCOPE-AND-BOUNDARY.md` §5 and changes **no requirement** |
+| ID      | Rule                                                                                                                                                                                                               |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BR-13` | **Compensation material is not created, not stored and not permitted.** No EPD² profile reintroduces it                                                                                                            |
+| `BR-14` | Absence tolerance is exactly `n − k` and is a property of the quorum, not of a recovery feature                                                                                                                    |
+| `BR-15` | The mandatory rule of the round task — _compensation may recover availability within the approved threshold model; it may not create a new threshold_ — is satisfied **vacuously**, because no compensation exists |
+| `BR-16` | The correction to `PACK-16A` `KC-11` is recorded in `PACK-16B-SCOPE-AND-BOUNDARY.md` §5 and changes **no requirement**                                                                                             |
 
 ### 5.3 Why this is a better position than the one PACK-16A expected
 
@@ -155,15 +155,15 @@ prices honestly.
 
 ## 6. Recovery — the complete list of what is possible
 
-| Situation                                          | Recoverable?                | By whom                        | How                                                              |
-| -------------------------------------------------- | --------------------------- | ------------------------------ | ------------------------------------------------------------------ |
-| A guardian's primary device fails, backup exists   | **Yes**                     | That guardian, alone           | Restore from their own backup (`BR-01`)                          |
-| A guardian's device fails, no backup               | **No** — a permanent absence | —                             | Survivable while `\|U\| ≥ k`                                     |
-| A guardian is unavailable at decryption            | Not needed                  | —                              | The remaining quorum decrypts `[F-11]`                            |
-| Up to `n − k` guardians lost                       | Not needed                  | —                              | The remaining quorum decrypts                                     |
-| **More than `n − k` guardians lost**               | **No**                      | **Nobody**                     | **The result is unobtainable.** Compromise model §5               |
-| A guardian is compromised                          | n/a — this is not a loss    | —                              | Compromise model §4                                               |
-| The election secret is needed for any other purpose | **No**                      | **Nobody**                     | No operation exists, and none may be added                        |
+| Situation                                           | Recoverable?                 | By whom              | How                                                 |
+| --------------------------------------------------- | ---------------------------- | -------------------- | --------------------------------------------------- |
+| A guardian's primary device fails, backup exists    | **Yes**                      | That guardian, alone | Restore from their own backup (`BR-01`)             |
+| A guardian's device fails, no backup                | **No** — a permanent absence | —                    | Survivable while `\|U\| ≥ k`                        |
+| A guardian is unavailable at decryption             | Not needed                   | —                    | The remaining quorum decrypts `[F-11]`              |
+| Up to `n − k` guardians lost                        | Not needed                   | —                    | The remaining quorum decrypts                       |
+| **More than `n − k` guardians lost**                | **No**                       | **Nobody**           | **The result is unobtainable.** Compromise model §5 |
+| A guardian is compromised                           | n/a — this is not a loss     | —                    | Compromise model §4                                 |
+| The election secret is needed for any other purpose | **No**                       | **Nobody**           | No operation exists, and none may be added          |
 
 **There is no other recovery path, and there is no authority that can
 create one.** Not the Election Board, not governance, not a court order
@@ -188,8 +188,8 @@ it is used, it can be compelled, and its existence is exactly what the
 threshold was adopted to prevent.
 
 PACK-15 made the identical trade for credential delivery, in the same words
-— *"Inventing a recovery that requires linking a person to a credential
-would trade the system's central guarantee for one voter's convenience"* —
+— _"Inventing a recovery that requires linking a person to a credential
+would trade the system's central guarantee for one voter's convenience"_ —
 and this round keeps it for the same reason.
 
 **What reduces the cost honestly:** `n − k = 2` in the default profile, so

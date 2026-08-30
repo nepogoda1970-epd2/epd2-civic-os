@@ -112,8 +112,8 @@ NO VERSION BUMP
 
 Also out of scope for **this stage** and deferred by name:
 
-| Deferred to | What                                                                                                                       |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Deferred to | What                                                                                                                        |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------- |
 | PACK-16B    | Group, curve, key size, hash, library, HSM/KMS, key ceremony script, guardian count and quorum values, parameter provenance |
 | PACK-16C    | Casting protocol messages, verification-client specification, receipt surface, bulletin-board wire format, mirror protocol  |
 | PACK-16D    | Any code, schema, migration, contract fixture, test or CI stage                                                             |
@@ -128,7 +128,7 @@ does not authorise one to be used.**
 
 ## 2. Relationship to FIR-ROADMAP-006
 
-`FIR-ROADMAP-006` — *PACK-16 Verifiable Voting Implementation*, status
+`FIR-ROADMAP-006` — _PACK-16 Verifiable Voting Implementation_, status
 `approved`, target version `0.16.0` — records the scope:
 
 ```text
@@ -190,20 +190,20 @@ Applied to this round: it is **not sufficient** to show that no current
 code joins a redemption record to a ballot. The architecture must show that
 records cannot be paired, including through:
 
-| Correlation channel      | Owning stage                       |
-| ------------------------ | ---------------------------------- |
-| Exact timestamps         | PACK-16A (requirements), PACK-16C  |
-| Order of arrival         | PACK-16A (requirements), PACK-16C  |
-| Request IDs              | PACK-16A (prohibition), PACK-16D   |
-| Correlation IDs          | PACK-15 rule, restated here        |
-| Trace IDs                | PACK-15 rule, restated here        |
-| Idempotency keys         | PACK-16A (prohibition), PACK-16D   |
-| Log sequencing           | PACK-16A (requirements), PACK-16D  |
-| Metrics labels           | PACK-16A (prohibition), PACK-16D   |
-| Backup snapshots         | PACK-17                            |
-| Shared infrastructure    | PACK-17                            |
-| Administrator access     | PACK-16A (role separation), PACK-12 mechanism |
-| Network metadata         | PACK-17                            |
+| Correlation channel   | Owning stage                                  |
+| --------------------- | --------------------------------------------- |
+| Exact timestamps      | PACK-16A (requirements), PACK-16C             |
+| Order of arrival      | PACK-16A (requirements), PACK-16C             |
+| Request IDs           | PACK-16A (prohibition), PACK-16D              |
+| Correlation IDs       | PACK-15 rule, restated here                   |
+| Trace IDs             | PACK-15 rule, restated here                   |
+| Idempotency keys      | PACK-16A (prohibition), PACK-16D              |
+| Log sequencing        | PACK-16A (requirements), PACK-16D             |
+| Metrics labels        | PACK-16A (prohibition), PACK-16D              |
+| Backup snapshots      | PACK-17                                       |
+| Shared infrastructure | PACK-17                                       |
+| Administrator access  | PACK-16A (role separation), PACK-12 mechanism |
+| Network metadata      | PACK-17                                       |
 
 `PACK-16A-PRIVACY-DATA-FLOW-MATRIX.md` is the per-flow treatment.
 `PACK-16A-THREAT-MODEL.md` §2 is the adversarial treatment.
@@ -214,22 +214,22 @@ PACK-16A defines **what consumption must satisfy**. It does not implement
 consumption, does not define its wire format and does not choose its
 construction.
 
-| ID       | Requirement                                                                                                              |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `CC-01`  | Consumption is a single atomic act with exactly-once effect; a second presentation is refused with a distinct reason code |
-| `CC-02`  | Consumption produces a **casting authorisation** that is not stored beside any ballot and is not derivable from one       |
-| `CC-03`  | No ballot identifier, confirmation code, tracker or board entry is derived from the continuation reference                |
-| `CC-04`  | No record anywhere holds a continuation reference and a ballot identifier together                                       |
-| `CC-05`  | Consumption writes to the credential-side stream (`AS-03` lineage) only; the ballot record is written on the board side   |
-| `CC-06`  | Consumption timestamps are coarsened to the context's `timestamp_granularity`; no microsecond value is logged             |
-| `CC-07`  | Consumption does not create a session, a cookie, a storage entry or a resumable state in the Voting Client                |
-| `CC-08`  | A failed casting act after consumption does **not** restore the capability; the remedy is governed, not automatic (§6)    |
-| `CC-09`  | Consumption is refused if the election manifest, the cryptographic parameters or the board checkpoint fail validation     |
-| `CC-10`  | The count of consumptions is not published, exported or displayed before closure — it is turnout (ADR-094)                |
+| ID      | Requirement                                                                                                               |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `CC-01` | Consumption is a single atomic act with exactly-once effect; a second presentation is refused with a distinct reason code |
+| `CC-02` | Consumption produces a **casting authorisation** that is not stored beside any ballot and is not derivable from one       |
+| `CC-03` | No ballot identifier, confirmation code, tracker or board entry is derived from the continuation reference                |
+| `CC-04` | No record anywhere holds a continuation reference and a ballot identifier together                                        |
+| `CC-05` | Consumption writes to the credential-side stream (`AS-03` lineage) only; the ballot record is written on the board side   |
+| `CC-06` | Consumption timestamps are coarsened to the context's `timestamp_granularity`; no microsecond value is logged             |
+| `CC-07` | Consumption does not create a session, a cookie, a storage entry or a resumable state in the Voting Client                |
+| `CC-08` | A failed casting act after consumption does **not** restore the capability; the remedy is governed, not automatic (§6)    |
+| `CC-09` | Consumption is refused if the election manifest, the cryptographic parameters or the board checkpoint fail validation     |
+| `CC-10` | The count of consumptions is not published, exported or displayed before closure — it is turnout (ADR-094)                |
 
 `CC-08` is uncomfortable and is stated deliberately. A capability that can
 be re-obtained after a failed cast is a capability that can be re-obtained
-after a *successful* cast if the success signal is lost, and that is a
+after a _successful_ cast if the success signal is lost, and that is a
 double-vote path. PACK-15 refused the equivalent trade for credential
 delivery (§13.2) and PACK-16A refuses it here for the same reason.
 `PACK-16A-FAILURE-AND-ABORT-MODEL.md` `FM-P16A-07` states the governed
@@ -322,20 +322,20 @@ Separately, PACK-16A must define **requirements** for the following
 properties. Defining a requirement is not the same as claiming the
 property, and the distinction is enforced throughout this pack:
 
-| Property                    | Where its requirement is defined                           | Claim status after PACK-16A                                 |
-| --------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
-| Cast as intended            | Ballot model §4; coercion boundary §3                      | **specified**; evidence obligation on PACK-16C              |
-| Recorded as cast            | Ballot model §5; bulletin board §2                         | **specified**; depends on board properties not yet built    |
-| Tallied as recorded         | Ballot model §6; trustee requirements §4                   | **specified**; depends on a verifier not yet specified      |
-| Individual verifiability    | Ballot model §5; coercion boundary §4                      | **specified**, with a stated take-up limitation             |
-| Universal verifiability     | Bulletin board §2; trustee requirements §5                 | **specified**; requires an independent verifier (PACK-16C)  |
-| Software independence       | Ballot model §7                                            | **specified as an objective**; not demonstrated             |
-| Ballot secrecy              | Ballot model §3; privacy data flows                        | **specified**; bounded by §5.1 below                        |
-| Receipt-freeness            | Coercion boundary §2, §5                                   | **bounded claim only**; see the prohibited-claims registry  |
-| Coercion-resistance limits  | Coercion boundary §5, §6                                   | **limits stated**; the property itself is **not claimed**   |
-| Cryptographic agility       | Ballot model §8; trustee requirements §6                   | **specified**; parameters deferred to PACK-16B              |
-| Fail-closed behaviour       | Failure and abort model                                    | **specified**                                               |
-| Independent verification    | Bulletin board §6; roles §3                                | **specified**; operations owned by PACK-17                  |
+| Property                   | Where its requirement is defined           | Claim status after PACK-16A                                |
+| -------------------------- | ------------------------------------------ | ---------------------------------------------------------- |
+| Cast as intended           | Ballot model §4; coercion boundary §3      | **specified**; evidence obligation on PACK-16C             |
+| Recorded as cast           | Ballot model §5; bulletin board §2         | **specified**; depends on board properties not yet built   |
+| Tallied as recorded        | Ballot model §6; trustee requirements §4   | **specified**; depends on a verifier not yet specified     |
+| Individual verifiability   | Ballot model §5; coercion boundary §4      | **specified**, with a stated take-up limitation            |
+| Universal verifiability    | Bulletin board §2; trustee requirements §5 | **specified**; requires an independent verifier (PACK-16C) |
+| Software independence      | Ballot model §7                            | **specified as an objective**; not demonstrated            |
+| Ballot secrecy             | Ballot model §3; privacy data flows        | **specified**; bounded by §5.1 below                       |
+| Receipt-freeness           | Coercion boundary §2, §5                   | **bounded claim only**; see the prohibited-claims registry |
+| Coercion-resistance limits | Coercion boundary §5, §6                   | **limits stated**; the property itself is **not claimed**  |
+| Cryptographic agility      | Ballot model §8; trustee requirements §6   | **specified**; parameters deferred to PACK-16B             |
+| Fail-closed behaviour      | Failure and abort model                    | **specified**                                              |
+| Independent verification   | Bulletin board §6; roles §3                | **specified**; operations owned by PACK-17                 |
 
 ### 5.1 The rule that governs every claim in this pack
 
@@ -380,7 +380,7 @@ partial decryption revealing an outcome
 **Sampling and spot checks of ballot content may not be presented as a
 verification mechanism before closure.** PACK-15's `IT-15` states it; this
 round restates it because the selected protocol family makes a
-pre-closure integrity check *possible*, and the temptation to describe it
+pre-closure integrity check _possible_, and the temptation to describe it
 as "auditing a few ballots" is exactly the failure mode.
 
 ### 6.1 What PACK-16A adds
@@ -388,15 +388,15 @@ as "auditing a few ballots" is exactly the failure mode.
 The architecture must make the following true, and
 `PACK-16A-BALLOT-MODEL-SPECIFICATION.md` §6 is where each is discharged:
 
-| ID       | Requirement                                                                                                             | How the selected model discharges it                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `NIT-01` | Encrypted ballots are checkable without revealing any choice                                                            | Ballot well-formedness proofs verify against ciphertext only; no decryption is involved        |
-| `NIT-02` | Cryptographic validity is checkable without a partial tally                                                             | Proof verification is per-ballot and per-contest, and yields a boolean, not a count            |
-| `NIT-03` | No trustee action before closure discloses an outcome                                                                   | The decryption ceremony is bound to `voting_closed`; no partial decryption exists before it    |
-| `NIT-04` | Operational dashboards contain no outcome-bearing data                                                                  | Permitted-signal list plus PACK-12 disclosure control, `disclosure_min_cell = 5`               |
-| `NIT-05` | A privileged administrator cannot obtain an early tally                                                                 | Threshold decryption; no single principal holds a quorum; `NO SINGLE-ADMIN DECRYPTION`         |
-| `NIT-06` | **No feature flag may disable this constraint**                                                                         | `FIR-INV-006`; the prohibition is structural, and a flag that could relax it may not exist     |
-| `NIT-07` | Challenged/spoiled ballots are decrypted **and are never tallied**, and their publication is not an intermediate tally  | Challenged ballots are excluded from the tally by construction and are marked as such on the board |
+| ID       | Requirement                                                                                                            | How the selected model discharges it                                                               |
+| -------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `NIT-01` | Encrypted ballots are checkable without revealing any choice                                                           | Ballot well-formedness proofs verify against ciphertext only; no decryption is involved            |
+| `NIT-02` | Cryptographic validity is checkable without a partial tally                                                            | Proof verification is per-ballot and per-contest, and yields a boolean, not a count                |
+| `NIT-03` | No trustee action before closure discloses an outcome                                                                  | The decryption ceremony is bound to `voting_closed`; no partial decryption exists before it        |
+| `NIT-04` | Operational dashboards contain no outcome-bearing data                                                                 | Permitted-signal list plus PACK-12 disclosure control, `disclosure_min_cell = 5`                   |
+| `NIT-05` | A privileged administrator cannot obtain an early tally                                                                | Threshold decryption; no single principal holds a quorum; `NO SINGLE-ADMIN DECRYPTION`             |
+| `NIT-06` | **No feature flag may disable this constraint**                                                                        | `FIR-INV-006`; the prohibition is structural, and a flag that could relax it may not exist         |
+| `NIT-07` | Challenged/spoiled ballots are decrypted **and are never tallied**, and their publication is not an intermediate tally | Challenged ballots are excluded from the tally by construction and are marked as such on the board |
 
 `NIT-07` deserves a sentence, because it is the one place where the
 selected family decrypts something before closure. A challenged ballot is

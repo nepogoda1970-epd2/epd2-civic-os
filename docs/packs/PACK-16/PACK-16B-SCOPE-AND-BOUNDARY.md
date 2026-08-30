@@ -117,17 +117,17 @@ NO DEPENDENCY CHANGES       NO VERSION BUMP
 
 And, deferred by name:
 
-| Deferred to | What                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
+| Deferred to | What                                                                                                                                                       |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PACK-16C    | Casting and verification protocol messages; the bulletin board; the receipt surface; the ballot-side use of the transcript model; reason-code registration |
-| PACK-16D    | Any code; the library selection itself; the ceremony application; test-vector production            |
-| PACK-17     | Ceremony network and infrastructure security; venue security; resilience; archival operations       |
-| GOVERNANCE  | Guardian appointment; guardian organizations; activation of any context                             |
+| PACK-16D    | Any code; the library selection itself; the ceremony application; test-vector production                                                                   |
+| PACK-17     | Ceremony network and infrastructure security; venue security; resilience; archival operations                                                              |
+| GOVERNANCE  | Guardian appointment; guardian organizations; activation of any context                                                                                    |
 
 **No product, vendor, library, HSM model or key-management service is
-selected by this round.** Permitted *classes* are selected
-(`PACK-16B-KEY-CUSTODY-REQUIREMENTS.md`), and mandatory *evaluation
-criteria* are fixed (`PACK-16B-IMPLEMENTATION-EVALUATION-CRITERIA.md`).
+selected by this round.** Permitted _classes_ are selected
+(`PACK-16B-KEY-CUSTODY-REQUIREMENTS.md`), and mandatory _evaluation
+criteria_ are fixed (`PACK-16B-IMPLEMENTATION-EVALUATION-CRITERIA.md`).
 
 ---
 
@@ -168,11 +168,11 @@ selected specification is strong exactly where it is verifiable and thin
 exactly where it is procedural.**
 
 **First — bad shares.** The specification's entire treatment of a failed
-share verification is that the receiving guardian *"complains to the
+share verification is that the receiving guardian _"complains to the
 election administrator and all other guardians. This triggers an
-out-of-band investigation"*, that such an investigation *"does not
-necessarily allow identification of a misbehaving guardian"*, and that key
-generation is then *"started from scratch"* `[F-12]`. There is no
+out-of-band investigation"_, that such an investigation _"does not
+necessarily allow identification of a misbehaving guardian"_, and that key
+generation is then _"started from scratch"_ `[F-12]`. There is no
 disqualification predicate, no complaint format, no deadline, no
 adjudication authority, no liveness bound, and the encrypted shares are not
 part of the published election record — so share distribution is not
@@ -207,23 +207,23 @@ as changes to the protocol.
 
 `PACK-16A-TRUSTEE-AND-CEREMONY-REQUIREMENTS.md` `KC-11` reads:
 
-> *"Lost-trustee handling. **Compensated shares** cover an absent guardian
-> within the quorum; absence is published, not concealed."*
+> _"Lost-trustee handling. **Compensated shares** cover an absent guardian
+> within the quorum; absence is published, not concealed."_
 
 **Compensated decryption does not exist in ElectionGuard 2.1.0.** The word
 "compensated" appears nowhere in the specification; the mechanism belonged
 to the 1.x lineage. In 2.1 decryption is direct Lagrange interpolation over
 the set `U` of available guardians with `|U| ≥ k`, and the specification
-explicitly refuses to reconstruct a missing guardian's secret — *"it is
+explicitly refuses to reconstruct a missing guardian's secret — _"it is
 preferable to not release any missing secret … instead only release the
-partial decryptions that the secret would have produced"* `[F-11]`.
+partial decryptions that the secret would have produced"_ `[F-11]`.
 
-| Aspect                                   | `KC-11` as written | Corrected           |
-| ---------------------------------------- | ------------------ | ------------------- |
-| **Requirement — absence within the quorum is survivable** | unchanged | unchanged |
-| **Requirement — absence is published, not concealed**     | unchanged | unchanged |
-| **Mechanism**                            | compensated shares | direct Lagrange over the available set |
-| **Absence tolerance**                    | unstated           | exactly `n − k`     |
+| Aspect                                                    | `KC-11` as written | Corrected                              |
+| --------------------------------------------------------- | ------------------ | -------------------------------------- |
+| **Requirement — absence within the quorum is survivable** | unchanged          | unchanged                              |
+| **Requirement — absence is published, not concealed**     | unchanged          | unchanged                              |
+| **Mechanism**                                             | compensated shares | direct Lagrange over the available set |
+| **Absence tolerance**                                     | unstated           | exactly `n − k`                        |
 
 **No requirement changes. No invariant changes. No decision changes.** The
 mechanism description was inherited from the `[E-04]` reading of the
@@ -239,29 +239,29 @@ written to prevent.
 
 ## 6. Obligations discharged from PACK-16A
 
-| Inherited        | Discharged where                                                                  |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| `KC-01`…`KC-05`  | Guardian and quorum model §2–§4                                                    |
-| `KC-06`          | Key ceremony §5 (guardian authentication and device attestation)                    |
-| `KC-07`…`KC-09`  | Ceremony transcript specification                                                   |
-| `KC-10`          | Key ceremony §14; failure matrix `FM-16B-19`                                        |
-| `KC-11`…`KC-13`  | Compromise and quorum-loss model; corrected per §5 above                            |
-| `KC-14`, `KC-15` | Backup, recovery and compensation §2–§4                                             |
-| `KC-16`          | Role separation matrix §2                                                           |
-| `KC-17`, `KC-18` | Incident and notification model                                                     |
-| `KC-19`          | Parameter assessment §6 — **discharged with an unusually strong result**            |
-| `KC-20`          | Test and rehearsal separation — `PACK-16B-KEY-CEREMONY-SPECIFICATION.md` §9         |
-| `KC-21`, `KC-22` | Parameter assessment §3–§5                                                          |
-| `KC-23`…`KC-26`  | Implementation evaluation criteria                                                  |
-| `KC-27`          | Cryptographic agility model §6                                                      |
-| `TP-01`…`TP-07`  | Guardian and quorum model §3 — every principle satisfied by the selected values     |
+| Inherited        | Discharged where                                                                |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `KC-01`…`KC-05`  | Guardian and quorum model §2–§4                                                 |
+| `KC-06`          | Key ceremony §5 (guardian authentication and device attestation)                |
+| `KC-07`…`KC-09`  | Ceremony transcript specification                                               |
+| `KC-10`          | Key ceremony §14; failure matrix `FM-16B-19`                                    |
+| `KC-11`…`KC-13`  | Compromise and quorum-loss model; corrected per §5 above                        |
+| `KC-14`, `KC-15` | Backup, recovery and compensation §2–§4                                         |
+| `KC-16`          | Role separation matrix §2                                                       |
+| `KC-17`, `KC-18` | Incident and notification model                                                 |
+| `KC-19`          | Parameter assessment §6 — **discharged with an unusually strong result**        |
+| `KC-20`          | Test and rehearsal separation — `PACK-16B-KEY-CEREMONY-SPECIFICATION.md` §9     |
+| `KC-21`, `KC-22` | Parameter assessment §3–§5                                                      |
+| `KC-23`…`KC-26`  | Implementation evaluation criteria                                              |
+| `KC-27`          | Cryptographic agility model §6                                                  |
+| `TP-01`…`TP-07`  | Guardian and quorum model §3 — every principle satisfied by the selected values |
 
 ### 6.1 `KC-19` — the finding worth stating in the boundary
 
-`KC-19` required *"published, independently reproducible parameter
-provenance"*, and it exists because of `F-INF-3`: in the Swiss Post/Scytl
+`KC-19` required _"published, independently reproducible parameter
+provenance"_, and it exists because of `F-INF-3`: in the Swiss Post/Scytl
 case the proof system was sound and the commitment parameters were
-*"just randomly generated without a proof of how they arose"*, which
+_"just randomly generated without a proof of how they arose"_, which
 permitted transcripts that pass verification while altering votes
 (`[E-33]`).
 
@@ -284,14 +284,14 @@ that reproduction a standing acceptance test rather than a one-off.
 `ADR-099` would have had to be re-opened, rather than quietly worked
 around, under any of the following. Each was assessed:
 
-| Condition                                                                              | Met? | Basis                                                                                          |
-| -------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------ |
-| The selected parameters fall below applicable cryptographic guidance                   | **No** | 4096-bit modulus against a recommended 3000; 256-bit subgroup order against a recommended 250 `[F-21]`, `[F-22]` |
-| The construction cannot be used in any permitted profile                               | **No** | Modes A, B, D and E of the legal boundary are unaffected                                      |
-| Strong Fiat–Shamir is not actually present in the specification                        | **No** | Present in all three proof families, with statement and context in every challenge `[F-08]`     |
-| Parameter provenance is unverifiable                                                   | **No** | Independently reproduced `[F-03]`                                                              |
-| No parameter set can be operated without a downgrade surface                           | **No** | The parameters are fixed by the specification, which removes negotiation entirely `[F-04]`     |
-| A quorum model satisfying `TP-01`…`TP-07` does not exist                                | **No** | 3-of-5 and 4-of-7 both satisfy every principle                                                 |
+| Condition                                                            | Met?   | Basis                                                                                                            |
+| -------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| The selected parameters fall below applicable cryptographic guidance | **No** | 4096-bit modulus against a recommended 3000; 256-bit subgroup order against a recommended 250 `[F-21]`, `[F-22]` |
+| The construction cannot be used in any permitted profile             | **No** | Modes A, B, D and E of the legal boundary are unaffected                                                         |
+| Strong Fiat–Shamir is not actually present in the specification      | **No** | Present in all three proof families, with statement and context in every challenge `[F-08]`                      |
+| Parameter provenance is unverifiable                                 | **No** | Independently reproduced `[F-03]`                                                                                |
+| No parameter set can be operated without a downgrade surface         | **No** | The parameters are fixed by the specification, which removes negotiation entirely `[F-04]`                       |
+| A quorum model satisfying `TP-01`…`TP-07` does not exist             | **No** | 3-of-5 and 4-of-7 both satisfy every principle                                                                   |
 
 **One condition is deferred rather than answered, and it is dated.** Current
 German guidance recommends classical key agreement **only until the end of

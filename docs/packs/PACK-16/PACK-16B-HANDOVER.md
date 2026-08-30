@@ -32,26 +32,26 @@ decision as `ADR-100` with status `proposed`.
 
 ### 0.1 Explicit confirmations
 
-| Statement                                                              | Confirmed |
-| ---------------------------------------------------------------------- | --------- |
-| No source code written or modified                                      | **yes**   |
-| No cryptographic code written                                           | **yes**   |
-| No test written or modified                                             | **yes**   |
-| No migration created or modified                                        | **yes**   |
-| No API, event or frontend implementation                                | **yes**   |
-| No CI workflow changed                                                  | **yes**   |
-| `uv.lock` unchanged                                                     | **yes**   |
-| `package-lock.json` unchanged                                           | **yes**   |
-| Dependency graph unchanged                                              | **yes**   |
-| `REPOSITORY_VERSION` unchanged at `0.15.0`                              | **yes**   |
-| `CANON_VERSION` unchanged at `0.8.0`                                    | **yes**   |
-| Canon files unmodified                                                  | **yes**   |
-| `ADR-100` status is `proposed`, never `accepted`                        | **yes**   |
-| No FIR entry marked implemented; no FIR status changed                  | **yes**   |
-| No implementation, library or vendor selected                           | **yes**   |
-| No certification, conformance or legal-compliance claim made            | **yes**   |
-| No verification result fabricated                                       | **yes**   |
-| PACK-16C not started; PACK-16D not started                              | **yes**   |
+| Statement                                                    | Confirmed |
+| ------------------------------------------------------------ | --------- |
+| No source code written or modified                           | **yes**   |
+| No cryptographic code written                                | **yes**   |
+| No test written or modified                                  | **yes**   |
+| No migration created or modified                             | **yes**   |
+| No API, event or frontend implementation                     | **yes**   |
+| No CI workflow changed                                       | **yes**   |
+| `uv.lock` unchanged                                          | **yes**   |
+| `package-lock.json` unchanged                                | **yes**   |
+| Dependency graph unchanged                                   | **yes**   |
+| `REPOSITORY_VERSION` unchanged at `0.15.0`                   | **yes**   |
+| `CANON_VERSION` unchanged at `0.8.0`                         | **yes**   |
+| Canon files unmodified                                       | **yes**   |
+| `ADR-100` status is `proposed`, never `accepted`             | **yes**   |
+| No FIR entry marked implemented; no FIR status changed       | **yes**   |
+| No implementation, library or vendor selected                | **yes**   |
+| No certification, conformance or legal-compliance claim made | **yes**   |
+| No verification result fabricated                            | **yes**   |
+| PACK-16C not started; PACK-16D not started                   | **yes**   |
 
 ---
 
@@ -87,13 +87,13 @@ points. Exactly those four were corrected.
 **Corrected.** The correction round read three official sources first-hand
 and completed the assessment:
 
-| Source                                                                          | Read | Finding                                     |
-| --------------------------------------------------------------------------------- | ---- | ------------------------------------------- |
-| **ECCG, *Agreed Cryptographic Mechanisms*, Version 2.0, April 2025**, §4.2 *Agreed FF-DLOG Parameters* `[F-33]` | **yes** | **`log₂(q) ≥ 250`** for agreed mechanisms; `≥ 200` legacy |
-| **Bundesnetzagentur / BSI algorithm catalogue**, 9 December 2015, §3.2 and Table 2 `[F-34]` | **yes** | DSA in a prime field: **`p ≥ 2048`, `q ≥ 256` from 2016**; §3.2.a Table 3 verbatim: *"Die Länge von q muss mindestens 224 Bit betragen, und ab Anfang 2016 sind für q mindestens 250 Bit erforderlich."* |
-| **BSI TR-02102-1, Version 2025-01, 31 January 2025**, Table 1.2, p. 20 `[F-35]`   | **yes**, via an institutional mirror | block cipher 128 · MAC 128 · RSA 3000 · **DH `F_p` 3000** · ECDH 250 · ECDSA 250 |
-| **BSI TR-02102-1, Version 2026-01, 23 January 2026** — title, version, date `[F-20]` | **yes** | Confirmed from the publisher's own publication pages |
-| **BSI TR-02102-1, 2026-01 — the finite-field `q` sentence itself**                | **no**  | Existence corroborated; value, section and page **not read** `[F-22]` |
+| Source                                                                                                          | Read                                 | Finding                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ECCG, _Agreed Cryptographic Mechanisms_, Version 2.0, April 2025**, §4.2 _Agreed FF-DLOG Parameters_ `[F-33]` | **yes**                              | **`log₂(q) ≥ 250`** for agreed mechanisms; `≥ 200` legacy                                                                                                                                                |
+| **Bundesnetzagentur / BSI algorithm catalogue**, 9 December 2015, §3.2 and Table 2 `[F-34]`                     | **yes**                              | DSA in a prime field: **`p ≥ 2048`, `q ≥ 256` from 2016**; §3.2.a Table 3 verbatim: _"Die Länge von q muss mindestens 224 Bit betragen, und ab Anfang 2016 sind für q mindestens 250 Bit erforderlich."_ |
+| **BSI TR-02102-1, Version 2025-01, 31 January 2025**, Table 1.2, p. 20 `[F-35]`                                 | **yes**, via an institutional mirror | block cipher 128 · MAC 128 · RSA 3000 · **DH `F_p` 3000** · ECDH 250 · ECDSA 250                                                                                                                         |
+| **BSI TR-02102-1, Version 2026-01, 23 January 2026** — title, version, date `[F-20]`                            | **yes**                              | Confirmed from the publisher's own publication pages                                                                                                                                                     |
+| **BSI TR-02102-1, 2026-01 — the finite-field `q` sentence itself**                                              | **no**                               | Existence corroborated; value, section and page **not read** `[F-22]`                                                                                                                                    |
 
 ```text
 EPD2-CRYPTO-1 subgroup-order requirement:
@@ -112,7 +112,7 @@ The correction round established something narrower and more useful:
 available here. Every endpoint tested — TR-02102-1 EN (`v=7`, `v=10`),
 TR-02102-1 DE, TR-03111 and an unrelated BSI signature catalogue — returned
 the publisher's **HTML landing page**, while third-party mirrors of the
-*same* documents and other government hosts extracted normally. The
+_same_ documents and other government hosts extracted normally. The
 limitation is a property of one host `[F-22]`.
 
 ### Defect 2 — the interoperability claim was stronger than the evidence
@@ -142,8 +142,8 @@ confused again. **`TV-07`, `TV-11` and `TV-19` all remain unresolved.**
 
 ### Defect 3 — an absolute negative research claim
 
-**Corrected.** *"No peer-reviewed security analysis … exists, in any
-version"* is removed everywhere and replaced with:
+**Corrected.** _"No peer-reviewed security analysis … exists, in any
+version"_ is removed everywhere and replaced with:
 
 > No peer-reviewed security analysis specifically covering the selected
 > ElectionGuard 2.1 key-ceremony composition was located in the sources
@@ -166,16 +166,16 @@ file count, with the source candidate's digest kept separately as lineage.
 
 ### Status changes made by the correction — the complete list
 
-| ID            | Old status                                   | New status                                       | Reason                                                                 | Evidence                     |
-| ------------- | -------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------- |
-| `OD-P16B-01`  | open — **blocks activation**                 | **CLOSED BY SPECIFICATION EVIDENCE**             | The subgroup-order minimum is established and `256` meets it              | `[F-33]`, `[F-34]`, `[F-35]` |
-| `VO-01`       | open — **blocks activation**                 | **CLOSED**                                       | Same                                                                     | `[F-33]`, `[F-34]`, `[F-35]` |
-| `VO-06`       | —                                            | **NEW — documentation completeness, not a blocker** | The publisher's own text still cannot be quoted                        | `[F-22]`                     |
-| `F-22`        | "the BSI threshold could not be assessed"    | **rewritten** — a retrieval-limitation finding about one host, with the threshold assessed elsewhere | The old text asserted an inability that no longer holds | this round's own retrieval record |
-| `F-31`        | absolute non-existence claim                 | **rewritten** — bounded absence-of-evidence finding | A bounded survey cannot establish non-existence                       | this round's own survey       |
-| `F-33`, `F-34`, `F-35` | —                                   | **NEW evidence entries**                         | The sources that complete the subgroup-order assessment                  | read first-hand               |
-| `TV-19`, `TV-20`, `TV-21`, `TV-22` | —                       | **NEW obligations**                              | Make the verifier test explicit and forbid the withdrawn wording          | —                             |
-| `RB-01`       | "the `q` minimum was not read first-hand"    | **rewritten** — documentary residual, not a compliance one | The requirement is established                                  | `[F-33]`…`[F-35]`             |
+| ID                                 | Old status                                | New status                                                                                           | Reason                                                           | Evidence                          |
+| ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------- |
+| `OD-P16B-01`                       | open — **blocks activation**              | **CLOSED BY SPECIFICATION EVIDENCE**                                                                 | The subgroup-order minimum is established and `256` meets it     | `[F-33]`, `[F-34]`, `[F-35]`      |
+| `VO-01`                            | open — **blocks activation**              | **CLOSED**                                                                                           | Same                                                             | `[F-33]`, `[F-34]`, `[F-35]`      |
+| `VO-06`                            | —                                         | **NEW — documentation completeness, not a blocker**                                                  | The publisher's own text still cannot be quoted                  | `[F-22]`                          |
+| `F-22`                             | "the BSI threshold could not be assessed" | **rewritten** — a retrieval-limitation finding about one host, with the threshold assessed elsewhere | The old text asserted an inability that no longer holds          | this round's own retrieval record |
+| `F-31`                             | absolute non-existence claim              | **rewritten** — bounded absence-of-evidence finding                                                  | A bounded survey cannot establish non-existence                  | this round's own survey           |
+| `F-33`, `F-34`, `F-35`             | —                                         | **NEW evidence entries**                                                                             | The sources that complete the subgroup-order assessment          | read first-hand                   |
+| `TV-19`, `TV-20`, `TV-21`, `TV-22` | —                                         | **NEW obligations**                                                                                  | Make the verifier test explicit and forbid the withdrawn wording | —                                 |
+| `RB-01`                            | "the `q` minimum was not read first-hand" | **rewritten** — documentary residual, not a compliance one                                           | The requirement is established                                   | `[F-33]`…`[F-35]`                 |
 
 **No acceptance-matrix row changed status.** `AC-P16B-021` remains
 `PARTIALLY SATISFIED`, `AC-P16B-041` remains `SATISFIED` and
@@ -230,30 +230,30 @@ been.**
 **So the defect is resolved in the only honest direction available: the
 closure is withdrawn, not defended.**
 
-| Before                                        | After                                                                 |
-| --------------------------------------------- | ----------------------------------------------------------------------- |
-| `OD-P16B-01` **CLOSED BY SPECIFICATION EVIDENCE** | **OPEN — narrowed**, and **blocks activation** again                |
-| `VO-01` closed                                | **OPEN — reinstated and rescoped** to the 2026-01 edition specifically |
-| `VO-06` (documentary, non-blocking)           | **WITHDRAWN** — absorbed into `VO-01`                                 |
-| `RB-01` low                                   | **medium**                                                            |
+| Before                                            | After                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `OD-P16B-01` **CLOSED BY SPECIFICATION EVIDENCE** | **OPEN — narrowed**, and **blocks activation** again                   |
+| `VO-01` closed                                    | **OPEN — reinstated and rescoped** to the 2026-01 edition specifically |
+| `VO-06` (documentary, non-blocking)               | **WITHDRAWN** — absorbed into `VO-01`                                  |
+| `RB-01` low                                       | **medium**                                                             |
 
 ### Why the document could not be read — the full attempt log
 
 Every route below was actually attempted and is recorded in `[F-22]`:
 
-| Route                                                                     | Result                                     |
-| --------------------------------------------------------------------------- | -------------------------------------------- |
-| `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=10` (the 2026-01 file)     | **HTML landing page**                       |
-| `bsi.bund.de` EN PDF, `v=7`; and with no query string                      | **HTML landing page**                       |
-| `bsi.bund.de` DE PDF                                                       | **HTML landing page**                       |
-| `bsi.bund.de` TR-03111 and a BSI signature catalogue (controls)            | **HTML landing page** — host-wide behaviour  |
-| `allianz-fuer-cybersicherheit.de` — BSI's second official host             | **HTML landing page** (same CMS)            |
-| Text-extraction proxy                                                      | HTTP 403                                     |
-| Web-archive snapshot                                                       | rejected by the fetch proxy                  |
-| Search for any third-party mirror of the **2026-01** edition               | **none found**                               |
-| Interactive browser session                                                | **not available in this environment**        |
-| **Control:** third-party mirror of TR-02102-1 **2025-01**                  | **PDF body extracted normally** — `[F-35]`   |
-| **Control:** Bundesnetzagentur PDF on a non-BSI government host            | **PDF body extracted normally** — `[F-34]`   |
+| Route                                                                   | Result                                      |
+| ----------------------------------------------------------------------- | ------------------------------------------- |
+| `bsi.bund.de` EN PDF, `?__blob=publicationFile&v=10` (the 2026-01 file) | **HTML landing page**                       |
+| `bsi.bund.de` EN PDF, `v=7`; and with no query string                   | **HTML landing page**                       |
+| `bsi.bund.de` DE PDF                                                    | **HTML landing page**                       |
+| `bsi.bund.de` TR-03111 and a BSI signature catalogue (controls)         | **HTML landing page** — host-wide behaviour |
+| `allianz-fuer-cybersicherheit.de` — BSI's second official host          | **HTML landing page** (same CMS)            |
+| Text-extraction proxy                                                   | HTTP 403                                    |
+| Web-archive snapshot                                                    | rejected by the fetch proxy                 |
+| Search for any third-party mirror of the **2026-01** edition            | **none found**                              |
+| Interactive browser session                                             | **not available in this environment**       |
+| **Control:** third-party mirror of TR-02102-1 **2025-01**               | **PDF body extracted normally** — `[F-35]`  |
+| **Control:** Bundesnetzagentur PDF on a non-BSI government host         | **PDF body extracted normally** — `[F-34]`  |
 
 The two controls are the point: **PDF extraction works; the publisher's own
 delivery is what does not.** A final confirmation fetch, made specifically to
@@ -265,12 +265,12 @@ The evidence registry now distinguishes **direct primary**, **supporting
 contextual** and **historical** evidence, precisely so that this cannot
 happen again:
 
-| Source                                                                   | Weight                     | Minimum for `q`   | `\|q\| = 256` |
-| -------------------------------------------------------------------------- | -------------------------- | ------------------ | ------------- |
-| ECCG *Agreed Cryptographic Mechanisms* v2.0, April 2025, §4.2 `[F-33]`    | **direct primary**         | `log₂(q) ≥ 250`   | **meets**     |
-| BSI TR-02102-1 (2025-01), Table 1.2, p. 20 `[F-35]`                       | **supporting contextual**  | 250 (EC), DH 3000 | **exceeds**   |
-| BSI TR-02102-1 (2026-01), Tables 1.1 / 1.2 / 2.2 `[F-21]`                 | **supporting contextual**  | 240 (ECDSA/ECIES break-even) / 250 | **exceeds**   |
-| German signature algorithm catalogue, §3.2 / Table 2 `[F-34]`             | **historical**             | `q ≥ 256`         | **meets**     |
+| Source                                                                 | Weight                    | Minimum for `q`                    | `\|q\| = 256` |
+| ---------------------------------------------------------------------- | ------------------------- | ---------------------------------- | ------------- |
+| ECCG _Agreed Cryptographic Mechanisms_ v2.0, April 2025, §4.2 `[F-33]` | **direct primary**        | `log₂(q) ≥ 250`                    | **meets**     |
+| BSI TR-02102-1 (2025-01), Table 1.2, p. 20 `[F-35]`                    | **supporting contextual** | 250 (EC), DH 3000                  | **exceeds**   |
+| BSI TR-02102-1 (2026-01), Tables 1.1 / 1.2 / 2.2 `[F-21]`              | **supporting contextual** | 240 (ECDSA/ECIES break-even) / 250 | **exceeds**   |
+| German signature algorithm catalogue, §3.2 / Table 2 `[F-34]`          | **historical**            | `q ≥ 256`                          | **meets**     |
 
 **No located source — current, previous or historical — sets a finite-field
 subgroup-order minimum above 256 bits.** The substantive risk that `q = 256`
@@ -290,11 +290,11 @@ and a return to `ADR-100` review — not a profile change made locally.**
 
 ### Acceptance-matrix status changes
 
-| Requirement ID | Old status  | New status    | Reason                                                                                         | Evidence            |
-| -------------- | ----------- | ------------- | ------------------------------------------------------------------------------------------------ | ------------------- |
-| `AC-P16B-011`  | `CORRECTED` | **`SATISFIED`** | `CORRECTED` is a process status, not an acceptance status. `KC-11`'s requirement — absence handled within the quorum and published — **is** met; the correction to PACK-16A's *description of the mechanism* is recorded in the decision cell instead | `[F-11]`            |
-| `AC-P16B-021`  | `PARTIALLY SATISFIED` | **`PARTIALLY SATISFIED`** (unchanged) | Status was already right. Its decision, residual and next-stage cells now say the current-edition check is unfinished and blocks activation | `[F-22]`, `[F-33]`…`[F-35]` |
-| `AC-P16B-040`, `AC-P16B-121` | `SATISFIED` | **`SATISFIED`** (unchanged) | Wording only | `[F-22]`            |
+| Requirement ID               | Old status            | New status                            | Reason                                                                                                                                                                                                                                                | Evidence                    |
+| ---------------------------- | --------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `AC-P16B-011`                | `CORRECTED`           | **`SATISFIED`**                       | `CORRECTED` is a process status, not an acceptance status. `KC-11`'s requirement — absence handled within the quorum and published — **is** met; the correction to PACK-16A's _description of the mechanism_ is recorded in the decision cell instead | `[F-11]`                    |
+| `AC-P16B-021`                | `PARTIALLY SATISFIED` | **`PARTIALLY SATISFIED`** (unchanged) | Status was already right. Its decision, residual and next-stage cells now say the current-edition check is unfinished and blocks activation                                                                                                           | `[F-22]`, `[F-33]`…`[F-35]` |
+| `AC-P16B-040`, `AC-P16B-121` | `SATISFIED`           | **`SATISFIED`** (unchanged)           | Wording only                                                                                                                                                                                                                                          | `[F-22]`                    |
 
 ```text
 Final counts, computed from the rows:
@@ -354,22 +354,22 @@ PACK-16C MUST NOT START BEFORE ACCEPTANCE
 
 ### The check
 
-| Field                    | Value                                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| **Official document**    | *BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths*                              |
-| **Issuing institution**  | Bundesamt für Sicherheit in der Informationstechnik                                                       |
-| **Version**              | **2026-01**                                                                                               |
-| **Publication date**     | **23 January 2026**                                                                                       |
-| **Language**             | English edition (a German edition is published in parallel)                                               |
-| **Official URL**         | `https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=10` |
-| **Exact chapter**        | **not recorded** — see attribution                                                                        |
-| **Exact subsection**     | **not recorded**                                                                                          |
-| **Exact table / equation** | **not recorded**                                                                                        |
-| **Exact PDF page**       | **not recorded**                                                                                          |
-| **Exact printed page**   | **not recorded**                                                                                          |
-| **Applicable requirement** *(as attested then; superseded)* | *"at least 240 bits"* — **corrected to 250 bits on first-hand reading, §0.5** |
-| **Selected `q`**         | **256 bits**                                                                                              |
-| **Comparison** *(superseded)* | `256 ≥ 240` as attested; **the current comparison is `256 ≥ 250`, §0.5**                              |
+| Field                                                       | Value                                                                                                                                    |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Official document**                                       | _BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths_                                                             |
+| **Issuing institution**                                     | Bundesamt für Sicherheit in der Informationstechnik                                                                                      |
+| **Version**                                                 | **2026-01**                                                                                                                              |
+| **Publication date**                                        | **23 January 2026**                                                                                                                      |
+| **Language**                                                | English edition (a German edition is published in parallel)                                                                              |
+| **Official URL**                                            | `https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=10` |
+| **Exact chapter**                                           | **not recorded** — see attribution                                                                                                       |
+| **Exact subsection**                                        | **not recorded**                                                                                                                         |
+| **Exact table / equation**                                  | **not recorded**                                                                                                                         |
+| **Exact PDF page**                                          | **not recorded**                                                                                                                         |
+| **Exact printed page**                                      | **not recorded**                                                                                                                         |
+| **Applicable requirement** _(as attested then; superseded)_ | _"at least 240 bits"_ — **corrected to 250 bits on first-hand reading, §0.5**                                                            |
+| **Selected `q`**                                            | **256 bits**                                                                                                                             |
+| **Comparison** _(superseded)_                               | `256 ≥ 240` as attested; **the current comparison is `256 ≥ 250`, §0.5**                                                                 |
 
 ```text
 CURRENT BSI SUBGROUP-ORDER CHECK: SATISFIED
@@ -420,13 +420,13 @@ The attested floor of **240** coincides exactly with BSI's own break-even
 for a 120-bit security level, which EPD² **did** read first-hand `[F-21]`,
 and it is the **least demanding** of five located figures:
 
-| Figure                                                          | Source                      | `\|q\| = 256` |
-| ----------------------------------------------------------------- | --------------------------- | ------------- |
+| Figure                                                                  | Source                    | `\|q\| = 256` |
+| ----------------------------------------------------------------------- | ------------------------- | ------------- |
 | ~~240~~ — the figure attested at the time, **superseded by 250** (§0.5) | `[F-36]` as it then stood | **passes**    |
-| 240 — 120-bit break-even, read first-hand                        | `[F-21]`                     | **passes**    |
-| `log₂(q) ≥ 250` — ECCG agreed FF-DLOG, April 2025                | `[F-33]`                     | **passes**    |
-| 250 — BSI Table 1.2 (2025-01), read first-hand                   | `[F-35]`                     | **passes**    |
-| 256 — German signature algorithm catalogue                       | `[F-34]`                     | **passes**    |
+| 240 — 120-bit break-even, read first-hand                               | `[F-21]`                  | **passes**    |
+| `log₂(q) ≥ 250` — ECCG agreed FF-DLOG, April 2025                       | `[F-33]`                  | **passes**    |
+| 250 — BSI Table 1.2 (2025-01), read first-hand                          | `[F-35]`                  | **passes**    |
+| 256 — German signature algorithm catalogue                              | `[F-34]`                  | **passes**    |
 
 **`|q| = 256` satisfies every one of them.** The conclusion does not depend
 on the attested number being precisely right; it would survive any figure up
@@ -439,26 +439,26 @@ parameter change. No parameter was changed by this round.
 
 ### Status changes
 
-| ID            | Old status                    | New status                                          | Reason                                                                 | Evidence  |
-| ------------- | ----------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------ | --------- |
-| `OD-P16B-01`  | OPEN — blocks activation      | **CLOSED** (reviewer-attested at the time) | The named edition's requirement was put on record; the comparison then read `256 ≥ 240`, **superseded by `256 ≥ 250` in §0.5** | `[F-36]` as it then stood |
-| `VO-01`       | OPEN — blocks activation      | **SATISFIED FOR THE CURRENT SUBGROUP-ORDER CHECK**  | Same                                                                     | `[F-36]`  |
-| `VO-06`       | withdrawn                     | **SATISFIED BY PRIMARY-SOURCE REVIEW**              | It existed only because the document had not been reviewed               | `[F-36]`  |
-| `VO-07`       | —                             | **NEW — non-blocking**                              | Record the exact chapter, subsection, table, PDF page, printed page and wording | —   |
-| `F-36`        | —                             | **NEW evidence entry**                              | The current-edition requirement, with full attribution                    | —         |
-| `F-22`        | "the reason the check is open"| **rescoped** — the record of why the reading is attested rather than EPD²'s own | The check is no longer open                        | —         |
-| `RB-01`       | medium                        | **low**                                             | The check is complete; only its citation is incomplete                   | `[F-36]`  |
+| ID           | Old status                     | New status                                                                      | Reason                                                                                                                         | Evidence                  |
+| ------------ | ------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| `OD-P16B-01` | OPEN — blocks activation       | **CLOSED** (reviewer-attested at the time)                                      | The named edition's requirement was put on record; the comparison then read `256 ≥ 240`, **superseded by `256 ≥ 250` in §0.5** | `[F-36]` as it then stood |
+| `VO-01`      | OPEN — blocks activation       | **SATISFIED FOR THE CURRENT SUBGROUP-ORDER CHECK**                              | Same                                                                                                                           | `[F-36]`                  |
+| `VO-06`      | withdrawn                      | **SATISFIED BY PRIMARY-SOURCE REVIEW**                                          | It existed only because the document had not been reviewed                                                                     | `[F-36]`                  |
+| `VO-07`      | —                              | **NEW — non-blocking**                                                          | Record the exact chapter, subsection, table, PDF page, printed page and wording                                                | —                         |
+| `F-36`       | —                              | **NEW evidence entry**                                                          | The current-edition requirement, with full attribution                                                                         | —                         |
+| `F-22`       | "the reason the check is open" | **rescoped** — the record of why the reading is attested rather than EPD²'s own | The check is no longer open                                                                                                    | —                         |
+| `RB-01`      | medium                         | **low**                                                                         | The check is complete; only its citation is incomplete                                                                         | `[F-36]`                  |
 
 **Acceptance-matrix row changes:**
 
-| Requirement ID | Old status            | New status      | Reason                                                                              | Evidence |
-| -------------- | --------------------- | --------------- | -------------------------------------------------------------------------------------- | -------- |
+| Requirement ID | Old status            | New status      | Reason                                                                                                                                 | Evidence |
+| -------------- | --------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `AC-P16B-021`  | `PARTIALLY SATISFIED` | **`SATISFIED`** | `q = 256` bits exceeds the reviewed BSI minimum for this parameter dimension — stated as 240 at the time, **corrected to 250 in §0.5** | `[F-36]` |
 
-Its residual-risk cell now reads: *this row does not establish complete BSI
+Its residual-risk cell now reads: _this row does not establish complete BSI
 conformity or certification; the current-edition reading is
 reviewer-attested, not EPD²'s own, and its exact citation is not yet
-recorded (`VO-07`).*
+recorded (`VO-07`)._
 
 ```text
 Final counts, computed from the rows:
@@ -524,35 +524,35 @@ PACK-16C MUST NOT START BEFORE ACCEPTANCE
 
 ### The document
 
-| Field                      | Value                                                                                       |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| **Title**                  | *BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths*                  |
-| **Issuing institution**    | Bundesamt für Sicherheit in der Informationstechnik                                           |
-| **Version**                | **2026-01** — title page: *"Version: 2026-01"*                                                |
-| **Publication date**       | **23 January 2026** — title page: *"As of: January 23, 2026"*                                 |
-| **Language / extent**      | English edition · 92 pages                                                                    |
-| **Official URL**           | `https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=10` |
-| **File SHA-256 as read**   | `f601cdf25c000b431573a307a3c125f3c51d301897089e7e63dde0449367a62a`                            |
-| **How obtained**           | **Supplied locally by the project's reviewer and read directly.** Four earlier rounds could not obtain it over any network route — `[F-22]` keeps that log |
+| Field                    | Value                                                                                                                                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Title**                | _BSI TR-02102-1 — Cryptographic Mechanisms: Recommendations and Key Lengths_                                                                               |
+| **Issuing institution**  | Bundesamt für Sicherheit in der Informationstechnik                                                                                                        |
+| **Version**              | **2026-01** — title page: _"Version: 2026-01"_                                                                                                             |
+| **Publication date**     | **23 January 2026** — title page: _"As of: January 23, 2026"_                                                                                              |
+| **Language / extent**    | English edition · 92 pages                                                                                                                                 |
+| **Official URL**         | `https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=10`                   |
+| **File SHA-256 as read** | `f601cdf25c000b431573a307a3c125f3c51d301897089e7e63dde0449367a62a`                                                                                         |
+| **How obtained**         | **Supplied locally by the project's reviewer and read directly.** Four earlier rounds could not obtain it over any network route — `[F-22]` keeps that log |
 
 ### The requirement, verbatim
 
 **§2.3.3 DLIES Encryption Scheme — PDF page 34, printed page 34 —
-*Key Length*:**
+_Key Length_:**
 
-> *"The length of the prime number p should be at least 3000 bits. The
-> length of the prime q should be at least 250 bits in both cases."*
+> _"The length of the prime number p should be at least 3000 bits. The
+> length of the prime q should be at least 250 bits in both cases."_
 
 **§2.3.5 Diffie-Hellman Key Agreement — PDF page 36, printed page 36 —
-*System Parameters*, step 2:**
+_System Parameters_, step 2:**
 
-> *"Choose an element g ∈ F∗p with ord(g) prime and q := ord(g) ≥ 2²⁵⁰."*
+> _"Choose an element g ∈ F∗p with ord(g) prime and q := ord(g) ≥ 2²⁵⁰."_
 
-**§2.3.5 — PDF page 36 — *Key Length*:**
+**§2.3.5 — PDF page 36 — _Key Length_:**
 
-> *"The length of p should be at least 3000 bits."*
+> _"The length of p should be at least 3000 bits."_
 
-*(The printed folios match the PDF page numbers throughout this document.)*
+_(The printed folios match the PDF page numbers throughout this document.)_
 
 ### The comparison
 
@@ -589,20 +589,19 @@ establish:**
 **1 — The figure is 250, not 240.** The previous candidate carried 240 on an
 attestation. In the document, **240 is a different figure**: Table 1.1
 (p. 18) uses it as the **ECDSA/ECIES** key length at which a 120-bit
-security level *"is just achieved"*, and p. 18 separately gives 240 bits as
+security level _"is just achieved"_, and p. 18 separately gives 240 bits as
 the general minimum **hash-digest** length. Neither is the finite-field
 subgroup-order minimum.
 
-**Every occurrence of 240 as the subgroup-order minimum has been replaced by
-250.** Table 1.1's genuine 240 — the ECDSA/ECIES break-even — is left intact
+**Every occurrence of 240 as the subgroup-order minimum has been replaced by 250.** Table 1.1's genuine 240 — the ECDSA/ECIES break-even — is left intact
 in `[F-21]`, because that is what the document says there. **The conclusion
 is unchanged:** `|q| = 256` satisfies 250 with 6 bits of margin.
 
 **2 — One recommendation-level divergence, now declared.** **Remark 2.12,
 p. 34** states that where published parameters are used the guideline
-*"recommends using the MODP groups from [78] or the ffdhe groups from
-[60]"*, in which *"q = (p − 1)/2 and g = 2"*, and that a common `p` is
-recommended *"only when log₂(p) ≥ 3000"*.
+_"recommends using the MODP groups from [78] or the ffdhe groups from
+[60]"_, in which _"q = (p − 1)/2 and g = 2"_, and that a common `p` is
+recommended _"only when log₂(p) ≥ 3000"_.
 
 ```text
 EPD2-CRYPTO-1 uses published parameters that are NEITHER MODP NOR ffdhe,
@@ -623,26 +622,26 @@ a MODP or ffdhe group without forking every conforming verifier `[F-04]`,
 
 ### Corroboration read in the same document
 
-| Location             | Figure                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------- |
-| Table 1.2, p. 19     | Block cipher 128 · MAC 128 · RSA 3000 · **DH F_p 3000** · ECDH 250 · ECDSA 250        |
-| Table 2.2, p. 33     | RSA 3000 · DLIES 3000 · ECIES 250 · **DH 3000** · ECDH 250 — each *"Recommended until 2031"* |
-| §2.3 introduction    | Classical mechanisms alone *"only recommended until the end of 2031"*; beyond 2031 only with a quantum-safe KEM and a key derivation — corroborates `[F-25]` and `OD-P16B-06` |
-| Ch. 1                | *"all cryptographic mechanisms specified in this Technical Guideline achieve a security level of at least 120 bits"* |
+| Location          | Figure                                                                                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Table 1.2, p. 19  | Block cipher 128 · MAC 128 · RSA 3000 · **DH F_p 3000** · ECDH 250 · ECDSA 250                                                                                                |
+| Table 2.2, p. 33  | RSA 3000 · DLIES 3000 · ECIES 250 · **DH 3000** · ECDH 250 — each _"Recommended until 2031"_                                                                                  |
+| §2.3 introduction | Classical mechanisms alone _"only recommended until the end of 2031"_; beyond 2031 only with a quantum-safe KEM and a key derivation — corroborates `[F-25]` and `OD-P16B-06` |
+| Ch. 1             | _"all cryptographic mechanisms specified in this Technical Guideline achieve a security level of at least 120 bits"_                                                          |
 
 ### Status changes
 
-| ID            | Old status                                          | New status                                        | Reason                                                              | Evidence |
-| ------------- | --------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------- | -------- |
-| `OD-P16B-01`  | CLOSED (reviewer-attested)                          | **CLOSED BY PRIMARY-SOURCE EVIDENCE, read first-hand** | The document was read; §2.3.3 p. 34 and §2.3.5 p. 36 recorded verbatim | `[F-36]` |
-| `VO-01`       | satisfied for the check                             | **SATISFIED**                                     | Same                                                                   | `[F-36]` |
-| `VO-06`       | satisfied by primary-source review                  | **SATISFIED** (unchanged)                         | —                                                                      | `[F-36]` |
-| `VO-07`       | OPEN — record the exact citation                    | **SATISFIED**                                     | Chapter, subsections, pages and verbatim wording are now recorded      | `[F-36]` |
-| `VO-08`       | —                                                   | **NEW — OPEN; stage-specific effect, see §0.6**   | Assess the normative acceptability of retaining the ElectionGuard 2.1 published parameter family | `[F-36]` |
-| `F-36`        | reviewer-attested, 240, no location                 | **rewritten** — direct primary, read first-hand, **250**, §2.3.3 p. 34 and §2.3.5 p. 36, verbatim | The document was read                     | —        |
-| `F-22`        | live constraint                                     | **rescoped to history** — the limitation was resolved by direct local supply | —                                          | —        |
-| `RB-01`       | low                                                 | **CLOSED**                                        | The check is complete and exactly cited                                | `[F-36]` |
-| `RB-09`       | —                                                   | **NEW — medium**                                  | The Remark 2.12 divergence                                             | `[F-36]` |
+| ID           | Old status                          | New status                                                                                        | Reason                                                                                           | Evidence |
+| ------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------- |
+| `OD-P16B-01` | CLOSED (reviewer-attested)          | **CLOSED BY PRIMARY-SOURCE EVIDENCE, read first-hand**                                            | The document was read; §2.3.3 p. 34 and §2.3.5 p. 36 recorded verbatim                           | `[F-36]` |
+| `VO-01`      | satisfied for the check             | **SATISFIED**                                                                                     | Same                                                                                             | `[F-36]` |
+| `VO-06`      | satisfied by primary-source review  | **SATISFIED** (unchanged)                                                                         | —                                                                                                | `[F-36]` |
+| `VO-07`      | OPEN — record the exact citation    | **SATISFIED**                                                                                     | Chapter, subsections, pages and verbatim wording are now recorded                                | `[F-36]` |
+| `VO-08`      | —                                   | **NEW — OPEN; stage-specific effect, see §0.6**                                                   | Assess the normative acceptability of retaining the ElectionGuard 2.1 published parameter family | `[F-36]` |
+| `F-36`       | reviewer-attested, 240, no location | **rewritten** — direct primary, read first-hand, **250**, §2.3.3 p. 34 and §2.3.5 p. 36, verbatim | The document was read                                                                            | —        |
+| `F-22`       | live constraint                     | **rescoped to history** — the limitation was resolved by direct local supply                      | —                                                                                                | —        |
+| `RB-01`      | low                                 | **CLOSED**                                                                                        | The check is complete and exactly cited                                                          | `[F-36]` |
+| `RB-09`      | —                                   | **NEW — medium**                                                                                  | The Remark 2.12 divergence                                                                       | `[F-36]` |
 
 **Acceptance-matrix row changes:** **none.** `AC-P16B-021` was already
 `SATISFIED`; its decision cell now cites **250**, §2.3.3 p. 34 and §2.3.5
@@ -719,7 +718,7 @@ no research was repeated.**
 ### Defect 1 — stale wording in the acceptance matrix
 
 The matrix's §4 narrative still said `AC-P16B-021` moved to `SATISFIED`
-*"on the reviewer's attested reading"*. That was true of an earlier round
+_"on the reviewer's attested reading"_. That was true of an earlier round
 and is no longer the basis. Replaced with:
 
 > **`AC-P16B-021` moved to `SATISFIED` after direct first-hand review of the
@@ -740,13 +739,13 @@ and the bulletin board; it cannot resolve parameter-family acceptability, and
 assigning it there would have parked the question with a round that has no
 means to answer it.
 
-| Element                     | Old                              | New                                                                 |
-| --------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
-| **Primary owner**           | PACK-16C                         | **PACK-16B external cryptographic review**                            |
-| **Independent assurance**   | —                                | **PACK-17**                                                           |
-| **Implementation consequences** | —                            | **PACK-16D**, if any                                                  |
-| **Explicitly not owner**    | —                                | **PACK-16C** — inherits it as a constraint only                        |
-| **Activation effect**       | *"not an activation blocker"* — unqualified | **Stage-specific**, below                                  |
+| Element                         | Old                                         | New                                             |
+| ------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| **Primary owner**               | PACK-16C                                    | **PACK-16B external cryptographic review**      |
+| **Independent assurance**       | —                                           | **PACK-17**                                     |
+| **Implementation consequences** | —                                           | **PACK-16D**, if any                            |
+| **Explicitly not owner**        | —                                           | **PACK-16C** — inherits it as a constraint only |
+| **Activation effect**           | _"not an activation blocker"_ — unqualified | **Stage-specific**, below                       |
 
 **The stage-specific effect, in full:**
 
@@ -802,32 +801,32 @@ unqualified blocking statement.
 
 ## 1. Archive
 
-| Item                             | Value                                                                                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Archive filename**             | `EPD2_PACK-16B_CRYPTOGRAPHIC_PARAMETERS_KEY_CEREMONY_AND_TRUSTEE_ARCHITECTURE_SPEC_ADR_FINAL_REVIEW_CANDIDATE.zip` |
-| **Archive SHA-256**              | **Published with the delivery message and reproduced in §5.0.** A file cannot contain its own archive's digest — §5.0 says how this is handled and how to check it |
-| **Corrected-tree content digest**| `616311f8911124cb305ffcaac5b23c26c772c15283cd0135526ae35e9ed72cc8` — SHA-256 over the sorted `sha256  path` manifest of all 1224 files **other than this handover**. Self-contained, and reproducible from the extracted tree with the command in §5.0 |
-| **File count**                   | **1225** (unchanged — the correction adds and deletes no file)                                        |
-| **Source archive filename**      | `EPD2_PACK-16B_..._SPEC_ADR_FINAL_CORRECTED_CANDIDATE.zip`                                            |
-| **Source archive SHA-256**       | `8e7207bfc8ce845f843ab8141b22f3b36d375ee1384f89467ec33ddb3da33a2e` — the BSI-verified candidate, **verified before use.** Lineage only |
-| **Preceding lineage**            | `2a4f6b8bcb7b65f61cdf1dc1cc0ef0944d98cf625a7ec4ac57c78099784d0ac7` |
-| **Preceding SHA-256**            | `e32a8df7bf52446436996d0dba6cfaf5b9db706313fbf27365be0ae629152379` — lineage only |
-| **Previous corrected SHA-256**   | `c464921e5ed99641cdb3069d3d8165c71203ed26f93ff51c993904b0aac86777` — lineage only                     |
-| **First candidate SHA-256**      | `6ba2ef239f6548542ed8b9b5d48e819a912d3e0d22678da9844052d02d56fbb7` — lineage only                     |
-| **Source archive file count**    | 1225                                                                                                  |
-| **Baseline (PACK-16A)**          | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CORRECTED_CANDIDATE.zip`          |
-| **Baseline SHA-256**             | `14b65dae696eeb80e237fbb33a14f7bad55e8ca043672ba0fa2e86a90b011f9e`                                    |
-| **Baseline file count**          | 1195                                                                                                  |
-| **Repository roots**             | 1                                                                                                     |
-| **`uv.lock` copies**             | 1                                                                                                     |
-| **`package-lock.json` copies**   | 1                                                                                                     |
-| **Master Register copies**       | 1, at `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`                                    |
-| **Evidence registries (PACK-16B)** | 1, at `docs/packs/PACK-16/PACK-16B-PROTOCOL-EVIDENCE-MATRIX.md`                                     |
-| **Duplicate archive paths**      | 0                                                                                                     |
-| **Nested ZIP files**             | 0                                                                                                     |
-| **Private-key-like artefacts**   | 0                                                                                                     |
-| **Stale repository copies**      | 0                                                                                                     |
-| **Build outputs**                | 0                                                                                                     |
+| Item                               | Value                                                                                                                                                                                                                                                  |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Archive filename**               | `EPD2_PACK-16B_CRYPTOGRAPHIC_PARAMETERS_KEY_CEREMONY_AND_TRUSTEE_ARCHITECTURE_SPEC_ADR_FINAL_REVIEW_CANDIDATE.zip`                                                                                                                                     |
+| **Archive SHA-256**                | **Published with the delivery message and reproduced in §5.0.** A file cannot contain its own archive's digest — §5.0 says how this is handled and how to check it                                                                                     |
+| **Corrected-tree content digest**  | `616311f8911124cb305ffcaac5b23c26c772c15283cd0135526ae35e9ed72cc8` — SHA-256 over the sorted `sha256  path` manifest of all 1224 files **other than this handover**. Self-contained, and reproducible from the extracted tree with the command in §5.0 |
+| **File count**                     | **1225** (unchanged — the correction adds and deletes no file)                                                                                                                                                                                         |
+| **Source archive filename**        | `EPD2_PACK-16B_..._SPEC_ADR_FINAL_CORRECTED_CANDIDATE.zip`                                                                                                                                                                                             |
+| **Source archive SHA-256**         | `8e7207bfc8ce845f843ab8141b22f3b36d375ee1384f89467ec33ddb3da33a2e` — the BSI-verified candidate, **verified before use.** Lineage only                                                                                                                 |
+| **Preceding lineage**              | `2a4f6b8bcb7b65f61cdf1dc1cc0ef0944d98cf625a7ec4ac57c78099784d0ac7`                                                                                                                                                                                     |
+| **Preceding SHA-256**              | `e32a8df7bf52446436996d0dba6cfaf5b9db706313fbf27365be0ae629152379` — lineage only                                                                                                                                                                      |
+| **Previous corrected SHA-256**     | `c464921e5ed99641cdb3069d3d8165c71203ed26f93ff51c993904b0aac86777` — lineage only                                                                                                                                                                      |
+| **First candidate SHA-256**        | `6ba2ef239f6548542ed8b9b5d48e819a912d3e0d22678da9844052d02d56fbb7` — lineage only                                                                                                                                                                      |
+| **Source archive file count**      | 1225                                                                                                                                                                                                                                                   |
+| **Baseline (PACK-16A)**            | `EPD2_PACK-16A_VERIFIABLE_VOTING_PROTOCOL_AND_BALLOT_MODEL_SPEC_ADR_CORRECTED_CANDIDATE.zip`                                                                                                                                                           |
+| **Baseline SHA-256**               | `14b65dae696eeb80e237fbb33a14f7bad55e8ca043672ba0fa2e86a90b011f9e`                                                                                                                                                                                     |
+| **Baseline file count**            | 1195                                                                                                                                                                                                                                                   |
+| **Repository roots**               | 1                                                                                                                                                                                                                                                      |
+| **`uv.lock` copies**               | 1                                                                                                                                                                                                                                                      |
+| **`package-lock.json` copies**     | 1                                                                                                                                                                                                                                                      |
+| **Master Register copies**         | 1, at `docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md`                                                                                                                                                                                     |
+| **Evidence registries (PACK-16B)** | 1, at `docs/packs/PACK-16/PACK-16B-PROTOCOL-EVIDENCE-MATRIX.md`                                                                                                                                                                                        |
+| **Duplicate archive paths**        | 0                                                                                                                                                                                                                                                      |
+| **Nested ZIP files**               | 0                                                                                                                                                                                                                                                      |
+| **Private-key-like artefacts**     | 0                                                                                                                                                                                                                                                      |
+| **Stale repository copies**        | 0                                                                                                                                                                                                                                                      |
+| **Build outputs**                  | 0                                                                                                                                                                                                                                                      |
 
 ---
 
@@ -961,10 +960,10 @@ docs/packs/PACK-16/PACK-16B-SCOPE-AND-BOUNDARY.md                           ← 
 **Four files beyond the audit's expected list of seven were changed, and
 each is explained here:**
 
-| File                          | Why                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `...-TEST-VECTOR-AND-FORMAL-REVIEW-REQUIREMENTS.md` | Listed by the audit as *possibly* affected. It carried the absolute negative claim (§0, §5) and is where `TV-19`…`TV-22` belong |
-| `...-FIR-COVERAGE-MATRIX.md`  | Listed by the audit as *possibly* affected. §6 named `OD-P16B-01` / `VO-01` as blocked; leaving it would contradict the corrected state |
+| File                                                                | Why                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `...-TEST-VECTOR-AND-FORMAL-REVIEW-REQUIREMENTS.md`                 | Listed by the audit as _possibly_ affected. It carried the absolute negative claim (§0, §5) and is where `TV-19`…`TV-22` belong                                                                                                                                                                         |
+| `...-FIR-COVERAGE-MATRIX.md`                                        | Listed by the audit as _possibly_ affected. §6 named `OD-P16B-01` / `VO-01` as blocked; leaving it would contradict the corrected state                                                                                                                                                                 |
 | `...-REMOTE-CEREMONY-ASSESSMENT.md` and `...-SCOPE-AND-BOUNDARY.md` | **Not on the audit's list.** Both restated the absolute negative claim verbatim. Defect 3 cannot be corrected while two documents still assert it, so the wording — and only the wording — was corrected in both. **The remote-ceremony decision itself is unchanged: fully remote remains PROHIBITED** |
 
 **`docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md` is
@@ -1227,7 +1226,7 @@ of false verification result this project forbids.
    sha256sum EPD2_PACK-16B_..._SPEC_ADR_FINAL_REVIEW_CANDIDATE.zip
    ```
 
-2. **A content digest that *can* live inside the archive is recorded above**
+2. **A content digest that _can_ live inside the archive is recorded above**
    — SHA-256 over the sorted `sha256  path` manifest of every file in the
    corrected tree **except this handover**. It fixes the content of all
    1224 other files, including every corrected document, and is reproduced
@@ -1268,29 +1267,29 @@ same either way.
 
 ### 5.2 Structural checks
 
-| Check                                                | Result                                                  |
-| ---------------------------------------------------- | --------------------------------------------------------- |
-| All required documents present                       | **PASS** — 29 of 29                                      |
-| `ADR-100` at the required path                       | **PASS**                                                 |
-| `ADR-100` status                                     | **PASS** — `proposed`                                    |
-| One Master Register                                  | **PASS**                                                 |
-| Prior Master Register content preserved              | **PASS** — additive only; §1.20 byte-identical           |
-| Versions unchanged                                   | **PASS** — `0.15.0`, `0.8.0`                             |
-| Source changes                                       | **0**                                                    |
-| Test changes                                         | **0**                                                    |
-| Migration changes                                    | **0**                                                    |
-| CI changes                                           | **0**                                                    |
-| Lock-file changes                                    | **0**                                                    |
-| One PACK-16B evidence registry                       | **PASS** — 1                                             |
-| Unresolved evidence references                       | **0** — every `[F-nn]` referenced is defined              |
-| Evidence entries defined                             | **35** — `F-01`…`F-35`                                   |
-| Evidence sequence gaps                               | **0** — contiguous                                       |
-| Conflicting evidence definitions                     | **0**                                                    |
-| Cross-pack references (`E-nn`, `KC-*`, `BM-*`, …)    | **0 unresolved** — all checked against PACK-16A in this tree |
-| Acceptance-matrix arithmetic                         | **PASS** — see §5.3                                      |
-| Duplicate requirement IDs                            | **0**                                                    |
-| Duplicate reason codes                               | **0**                                                    |
-| Reason codes used but undefined                      | **0**                                                    |
+| Check                                             | Result                                                       |
+| ------------------------------------------------- | ------------------------------------------------------------ |
+| All required documents present                    | **PASS** — 29 of 29                                          |
+| `ADR-100` at the required path                    | **PASS**                                                     |
+| `ADR-100` status                                  | **PASS** — `proposed`                                        |
+| One Master Register                               | **PASS**                                                     |
+| Prior Master Register content preserved           | **PASS** — additive only; §1.20 byte-identical               |
+| Versions unchanged                                | **PASS** — `0.15.0`, `0.8.0`                                 |
+| Source changes                                    | **0**                                                        |
+| Test changes                                      | **0**                                                        |
+| Migration changes                                 | **0**                                                        |
+| CI changes                                        | **0**                                                        |
+| Lock-file changes                                 | **0**                                                        |
+| One PACK-16B evidence registry                    | **PASS** — 1                                                 |
+| Unresolved evidence references                    | **0** — every `[F-nn]` referenced is defined                 |
+| Evidence entries defined                          | **35** — `F-01`…`F-35`                                       |
+| Evidence sequence gaps                            | **0** — contiguous                                           |
+| Conflicting evidence definitions                  | **0**                                                        |
+| Cross-pack references (`E-nn`, `KC-*`, `BM-*`, …) | **0 unresolved** — all checked against PACK-16A in this tree |
+| Acceptance-matrix arithmetic                      | **PASS** — see §5.3                                          |
+| Duplicate requirement IDs                         | **0**                                                        |
+| Duplicate reason codes                            | **0**                                                        |
+| Reason codes used but undefined                   | **0**                                                        |
 
 ### 5.3 Acceptance-matrix arithmetic, computed from the rows
 
@@ -1324,19 +1323,19 @@ Codes used elsewhere but undefined         0
 
 ### 5.5 Parameter-set and architectural invariants
 
-| Invariant                                            | Covered | Where                                                    |
-| ---------------------------------------------------- | ------- | ---------------------------------------------------------- |
-| Parameter-set identity, lifecycle and authority      | **yes** | `PSS` §3                                                  |
-| Downgrade prohibited architecturally                 | **yes** | `PSS` §5, `FM-16B-34`                                     |
-| Guardian/quorum decision explicit                    | **yes** | `GQM` §2, §3                                              |
-| **No hidden master key**                             | **yes** | `BR-09`…`BR-12`, `FM-16B-22`                              |
-| **No single-admin decryption**                       | **yes** | `GQ-13`, `RS-16B-13`, `KU-17`…`KU-20`                     |
-| **No break-glass decryption**                        | **yes** | `CQL` §6, `RS-16B-11`                                     |
-| **No pre-closure decryption**                        | **yes** | `CM-20`…`CM-23`, `FM-16B-25`                              |
-| **No compensation material**                         | **yes** | `BR-13`, `IN-32`, `RN-C11`                                |
-| **No guardian secret in a browser**                  | **yes** | `IM-28`…`IM-32`                                           |
-| No false implementation claims                       | **yes** | every document header; `RN-C09`                            |
-| No false certification claims                        | **yes** | `CPA` §3; §4.2 above                                       |
+| Invariant                                       | Covered | Where                                 |
+| ----------------------------------------------- | ------- | ------------------------------------- |
+| Parameter-set identity, lifecycle and authority | **yes** | `PSS` §3                              |
+| Downgrade prohibited architecturally            | **yes** | `PSS` §5, `FM-16B-34`                 |
+| Guardian/quorum decision explicit               | **yes** | `GQM` §2, §3                          |
+| **No hidden master key**                        | **yes** | `BR-09`…`BR-12`, `FM-16B-22`          |
+| **No single-admin decryption**                  | **yes** | `GQ-13`, `RS-16B-13`, `KU-17`…`KU-20` |
+| **No break-glass decryption**                   | **yes** | `CQL` §6, `RS-16B-11`                 |
+| **No pre-closure decryption**                   | **yes** | `CM-20`…`CM-23`, `FM-16B-25`          |
+| **No compensation material**                    | **yes** | `BR-13`, `IN-32`, `RN-C11`            |
+| **No guardian secret in a browser**             | **yes** | `IM-28`…`IM-32`                       |
+| No false implementation claims                  | **yes** | every document header; `RN-C09`       |
+| No false certification claims                   | **yes** | `CPA` §3; §4.2 above                  |
 
 ### 5.5a Correction-specific verification
 
@@ -1493,18 +1492,18 @@ NOT CLOSED, AND NOT NARROWED, BY THE CORRECTION ROUND:
 
 ## 9. Residual risks
 
-| Rank | Risk                                                                          | Rating   | Carried by                 |
-| ---- | ----------------------------------------------------------------------------- | -------- | -------------------------- |
-| 1    | **No peer-reviewed analysis of the key ceremony was located** `[F-31]`        | **high** | `TV-08`, `OD-P16A-06`      |
-| 2    | **No production-grade implementation of the pinned version exists**           | **high** | `OD-P16A-04`, `OD-P16B-02` |
-| 3    | Classical-cryptography recommendation lapses end-2031 / end-2030 `[F-25]`     | **high** | `OD-P16B-06`, `CA-08`      |
-| 4    | Upstream has no errata process; two versions marked "Recommended" `[F-30]`    | medium   | `CA-19`…`CA-27`            |
-| 5    | A weak or duplicated nonce in a browser is silent and undetectable            | medium   | `RB-08`, `IM-43`           |
-| 6    | Independence declarations are self-reported                                   | medium   | `GI-*`, governance         |
-| 7    | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`     | medium   | `DS-16`, `CA-27`           |
-| 8    | Guardian volunteers bear real personal exposure through publication           | medium   | governance                 |
+| Rank | Risk                                                                                                                                                                                                                                                          | Rating   | Carried by                                |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
+| 1    | **No peer-reviewed analysis of the key ceremony was located** `[F-31]`                                                                                                                                                                                        | **high** | `TV-08`, `OD-P16A-06`                     |
+| 2    | **No production-grade implementation of the pinned version exists**                                                                                                                                                                                           | **high** | `OD-P16A-04`, `OD-P16B-02`                |
+| 3    | Classical-cryptography recommendation lapses end-2031 / end-2030 `[F-25]`                                                                                                                                                                                     | **high** | `OD-P16B-06`, `CA-08`                     |
+| 4    | Upstream has no errata process; two versions marked "Recommended" `[F-30]`                                                                                                                                                                                    | medium   | `CA-19`…`CA-27`                           |
+| 5    | A weak or duplicated nonce in a browser is silent and undetectable                                                                                                                                                                                            | medium   | `RB-08`, `IM-43`                          |
+| 6    | Independence declarations are self-reported                                                                                                                                                                                                                   | medium   | `GI-*`, governance                        |
+| 7    | Two specification inconsistencies resolved on EPD²'s own reading `[F-19]`                                                                                                                                                                                     | medium   | `DS-16`, `CA-27`                          |
+| 8    | Guardian volunteers bear real personal exposure through publication                                                                                                                                                                                           | medium   | governance                                |
 | 9    | **Published parameter family normative divergence** — Remark 2.12 (p. 34) prefers MODP or ffdhe groups; `EPD2-CRYPTO-1` uses neither, though every numerical condition is met `[F-36]`. **Not a claim of insecurity.** Blocks production and legal activation | medium   | `VO-08` — external crypto review, PACK-17 |
-| —    | A quorum loss makes a result genuinely unobtainable                           | accepted | `CM-14`…`CM-19`            |
+| —    | A quorum loss makes a result genuinely unobtainable                                                                                                                                                                                                           | accepted | `CM-14`…`CM-19`                           |
 
 ---
 
