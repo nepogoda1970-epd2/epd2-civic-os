@@ -2,9 +2,6 @@ name: PILOT-04 C9 exact-byte acceptance
 
 on:
   pull_request:
-  push:
-    branches:
-      - governance/bsi-voting-readiness
 
 permissions:
   contents: write
@@ -12,12 +9,13 @@ permissions:
 
 jobs:
   bsi-register:
-    if: github.event_name == 'push'
+    if: github.head_ref == 'governance/bsi-voting-readiness'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact BSI governance branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 2
 
       - name: Register FIR-BSI-001 against current canonical Master
@@ -44,7 +42,7 @@ jobs:
           git push origin HEAD:governance/bsi-voting-readiness
 
   accept:
-    if: github.event_name == 'pull_request'
+    if: github.head_ref != 'governance/bsi-voting-readiness'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     services:
