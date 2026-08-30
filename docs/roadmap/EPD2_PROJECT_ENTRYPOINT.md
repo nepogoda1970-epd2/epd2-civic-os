@@ -85,8 +85,8 @@ independent verification, voting audit/time/channels/recovery, or the
 security-critical production environment must additionally read and apply:
 
 - `docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md`;
-- `docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md`;
-- `FIR-BSI-001` in the Master Future Implementation Register.
+- `docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md`;
+- `FIR-VOTE-BSI-001` in the Master Future Implementation Register.
 
 From 2026-08-30 forward, Voting-affecting work must identify the BSI readiness
 rows it touches and must not silently introduce a blocker to the future
