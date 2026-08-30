@@ -1,0 +1,64 @@
+name: v26-authority-transport
+
+on:
+  push:
+    branches:
+      - transport/v26-api02-c7-authority
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Materialize exact canonical V26 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANON=8ff32c3e9ed654768ae86ac569a9c498f78c5aa2
+          OUT=transport
+          mkdir -p "$OUT/docs/roadmap" "$OUT/docs/security/bsi"
+
+          git show "$CANON:docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md" > "$OUT/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md"
+          git show "$CANON:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" > "$OUT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          git show "$CANON:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md" > "$OUT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"
+          git show "$CANON:docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json" > "$OUT/docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json"
+          git show "$CANON:docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md" > "$OUT/docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md"
+          git show "$CANON:docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md" > "$OUT/docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md"
+          git show "$CANON:docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md" > "$OUT/docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md"
+
+          {
+            echo "canonical_commit  $CANON"
+            echo "parent_commit     88c992bcbac13699a9ac9370f8afa3b3cbae3834"
+            echo "maintenance       V26"
+            echo "claim_boundary    PREPARATORY PARALLEL WORK / NOT CERTIFIED"
+            echo "api02_state        ACTIVE / IN DEVELOPMENT"
+            echo "api03_state        PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
+            echo "removed_path       docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md"
+          } > "$OUT/V26_AUTHORITY_METADATA.txt"
+
+          (cd "$OUT" && sha256sum $(find docs -type f | sort) | tee CANONICAL_SHA256SUMS.txt)
+
+          MASTER_SHA=$(sha256sum "$OUT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md" | awk '{print $1}')
+          test "$MASTER_SHA" = "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d"
+
+          (cd "$OUT" && zip -X -r EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip docs CANONICAL_SHA256SUMS.txt V26_AUTHORITY_METADATA.txt)
+          sha256sum "$OUT/EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip" | tee "$OUT/TRANSPORT_ZIP_SHA256.txt"
+
+      - name: Upload authority transport
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e
+          path: |
+            transport/EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip
+            transport/CANONICAL_SHA256SUMS.txt
+            transport/V26_AUTHORITY_METADATA.txt
+            transport/TRANSPORT_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 7
