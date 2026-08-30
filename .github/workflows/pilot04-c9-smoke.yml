@@ -4,45 +4,11 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 jobs:
-  bsi-register:
-    if: github.head_ref == 'governance/bsi-voting-readiness'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout exact BSI governance branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 2
-
-      - name: Register FIR-BSI-001 against current canonical Master
-        shell: bash
-        run: |
-          set -euo pipefail
-          python scripts/register_bsi_fir_once.py
-
-      - name: Restore workflow, validate and commit governed update
-        shell: bash
-        run: |
-          set -euo pipefail
-          git show HEAD^:.github/workflows/pilot04-c9-smoke.yml > .github/workflows/pilot04-c9-smoke.yml
-          git diff --check
-          test -f docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json
-          test ! -e scripts/register_bsi_fir_once.py
-          test ! -e .github/workflows/bsi-register-once.yml
-          grep -q '^## FIR-BSI-001 — BSI CC PP-0121 Certification Readiness$' docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
-          test "$(grep -c '^## FIR-BSI-001 — BSI CC PP-0121 Certification Readiness$' docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md)" = "1"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "governance(bsi): register FIR-BSI-001 in canonical Master"
-          git push origin HEAD:governance/bsi-voting-readiness
-
   accept:
-    if: github.head_ref != 'governance/bsi-voting-readiness'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     services:

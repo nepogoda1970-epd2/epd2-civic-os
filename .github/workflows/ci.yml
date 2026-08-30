@@ -6,52 +6,10 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  bsi-register:
-    if: github.event_name == 'pull_request' && github.head_ref == 'governance/bsi-voting-readiness'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout exact BSI governance head
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-
-      - name: Append FIR-BSI-001 to exact current canonical Master
-        shell: bash
-        run: |
-          set -euo pipefail
-          python scripts/register_bsi_fir_once.py
-
-      - name: Restore temporary workflows and validate final governed diff
-        shell: bash
-        run: |
-          set -euo pipefail
-          git show 9e86543c0c199cf1c56acb02f42fd348cf14200e:.github/workflows/ci.yml > .github/workflows/ci.yml
-          git show 9e86543c0c199cf1c56acb02f42fd348cf14200e:.github/workflows/pilot04-c9-smoke.yml > .github/workflows/pilot04-c9-smoke.yml
-          git diff --check
-          test -f docs/roadmap/EPD2_BSI_MASTER_UPDATE_EVIDENCE.json
-          test ! -e scripts/register_bsi_fir_once.py
-          test ! -e .github/workflows/bsi-register-once.yml
-          test "$(grep -c '^## FIR-BSI-001 — BSI CC PP-0121 Certification Readiness$' docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md)" = "1"
-          grep -q 'FIR-OSS-007' docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
-          git diff --quiet 9e86543c0c199cf1c56acb02f42fd348cf14200e -- .github/workflows/ci.yml
-          git diff --quiet 9e86543c0c199cf1c56acb02f42fd348cf14200e -- .github/workflows/pilot04-c9-smoke.yml
-
-      - name: Commit canonical BSI governance registration
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "governance(bsi): register FIR-BSI-001 in canonical Master"
-          git push origin HEAD:governance/bsi-voting-readiness
-
   verify:
-    if: github.head_ref != 'governance/bsi-voting-readiness'
     name: Verify repository skeleton
     runs-on: ubuntu-latest
     steps:
@@ -125,6 +83,6 @@ jobs:
       - name: Browser, accessibility, and visual regression tests
         run: npm run test:browser --workspace=frontend/web-shell
 
-# This workflow does not use repository secrets or deploy anything.
-# The BSI job above is a one-shot governance maintenance step on the dedicated branch;
-# it restores this workflow and the temporary pilot workflow before committing.
+# This workflow does not use any repository secrets, does not deploy
+# anything, and does not publish any package. It only verifies the
+# repository skeleton.
