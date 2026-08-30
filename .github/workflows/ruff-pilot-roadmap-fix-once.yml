@@ -38,7 +38,9 @@ jobs:
           rm .github/workflows/ruff-pilot-roadmap-fix-once.yml
           uv run ruff format --check scripts/check_pilot_roadmap.py
           git diff --check
-          test "$(git diff --name-only | sort)" = "scripts/check_pilot_roadmap.py"
+          actual="$(git diff --name-only | sort)"
+          expected="$(printf '%s\n' '.github/workflows/ruff-pilot-roadmap-fix-once.yml' 'scripts/check_pilot_roadmap.py' | sort)"
+          test "$actual" = "$expected"
 
       - name: Commit format-only repair
         run: |
