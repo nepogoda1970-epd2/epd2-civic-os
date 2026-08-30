@@ -76,3 +76,25 @@ copy of each of these files at these paths:
 Repository governance should fail closed when a required file is missing,
 duplicated as a competing register, or stale relative to the governed
 stage/baseline represented by the candidate.
+
+## 7. Voting / BSI certification-readiness bootstrap
+
+Any task or acceptance decision that can affect the EPD² Voting trust boundary,
+eligibility, Voting Client, ballot processing, cryptography, guardians, tally,
+independent verification, voting audit/time/channels/recovery, or the
+security-critical production environment must additionally read and apply:
+
+- `docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md`;
+- `docs/roadmap/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md`;
+- `FIR-BSI-001` in the Master Future Implementation Register.
+
+From 2026-08-30 forward, Voting-affecting work must identify the BSI readiness
+rows it touches and must not silently introduce a blocker to the future
+certification target. A known blocker must either be closed or explicitly
+recorded as deferred with an owner, rationale, required closure stage and
+required evidence.
+
+This is a **certification-readiness gate**, not a certification claim. It does
+not alter historical execution state by itself and it does not authorize the
+terms `BSI-certified`, `BSI compliant`, `CC compliant` or `EAL4` for the
+current product.

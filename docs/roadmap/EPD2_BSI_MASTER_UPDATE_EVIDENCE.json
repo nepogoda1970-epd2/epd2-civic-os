@@ -1,0 +1,14 @@
+{
+  "after_sha256": "15b116640bf191419dbe42403ba8a124a7c4272f55fb9f998f38ce1c3f0a01f9",
+  "after_size": 800058,
+  "before_sha256": "895cf4186b88da74721f95d07ccdd6102a339a80d95ed19701e1695f5f7b4934",
+  "before_size": 794800,
+  "claim": "GOVERNANCE_REGISTRATION_ONLY_NOT_BSI_CC_CONFORMANCE",
+  "effective_date": "2026-08-30",
+  "fir_bsi_001_heading_count": 1,
+  "fir_oss_007_preserved": true,
+  "master_path": "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md",
+  "program_control_modified": false,
+  "schema": "epd2.bsi.master-update-evidence.v1",
+  "workflow_input_commit": "14e1990d9997ea16f6607e63964c716b1df5c9ff"
+}
