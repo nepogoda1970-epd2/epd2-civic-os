@@ -1,0 +1,50 @@
+name: API-02 C8 Exact-Byte Transport
+
+on:
+  push:
+    branches:
+      - handoff/api-02
+    paths:
+      - '.github/workflows/api02-c8-transport.yml'
+      - 'handoff/API-02/incoming/EPD2_API02_C8.zip.part0'
+      - 'handoff/API-02/incoming/EPD2_API02_C8.zip.part1'
+
+permissions:
+  contents: read
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact transport branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Reconstruct and verify exact C8 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          p0='handoff/API-02/incoming/EPD2_API02_C8.zip.part0'
+          p1='handoff/API-02/incoming/EPD2_API02_C8.zip.part1'
+          out='_handoff_out/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8.zip'
+          mkdir -p _handoff_out
+          test -f "$p0"
+          test -f "$p1"
+          cat "$p0" "$p1" > "$out"
+          actual_size="$(stat -c '%s' "$out")"
+          actual_sha="$(sha256sum "$out" | awk '{print $1}')"
+          test "$actual_size" = '34641029'
+          test "$actual_sha" = '7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef'
+          unzip -t "$out" > _handoff_out/UNZIP_TEST.log
+          printf '%s  %s\n' "$actual_sha" "$(basename "$out")" > _handoff_out/SHA256SUM.txt
+          printf '{\n  "schema": "epd2.api02-c8-transport/1",\n  "source_head_sha": "%s",\n  "size_bytes": %s,\n  "sha256": "%s",\n  "state": "EXACT_BYTES_RECONSTRUCTED"\n}\n' "$GITHUB_SHA" "$actual_size" "$actual_sha" > _handoff_out/TRANSPORT_METADATA.json
+          echo "EPD2_API02_C8_EXACT_BYTES sha256=$actual_sha size=$actual_size"
+
+      - name: Upload exact C8 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c8-exact-candidate-${{ github.run_id }}
+          path: _handoff_out/
+          if-no-files-found: error
+          retention-days: 30
