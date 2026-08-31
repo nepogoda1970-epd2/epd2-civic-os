@@ -1,0 +1,242 @@
+name: api02-c12-build
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - '.github/workflows/api02-c12-build.yml'
+      - 'handoff/API-02/tools/build_api02_c12.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      C11_RUN_ID: '33401509109'
+      C11_SHA256: '62da62bbf3ea8a1d8352e5c39d6f2abcd5d8d8b1abc7d15d022e3e76232c0732'
+      C11_SIZE: '34651116'
+      C11_NAME: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11.zip'
+      C12_ROOT: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12'
+      API01_NAME: 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip'
+      API01_SHA256: 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27'
+      DATA06_NAME: 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip'
+      DATA06_SHA256: '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1'
+
+    steps:
+      - name: '01 Checkout governed C12 builder branch'
+        uses: actions/checkout@v4
+
+      - name: '02 Install exact uv and CPython for frozen formatter'
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+          enable-cache: false
+
+      - name: '03 Install exact CPython 3.12.12'
+        run: uv python install 3.12.12
+
+      - name: '04 Download exact sealed C11 candidate'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: transport/c11
+          run-id: ${{ env.C11_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '05 Download exact C11 acceptance anchors'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-anchors
+          path: transport/anchors
+          run-id: ${{ env.C11_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '06 Verify exact inputs'
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          C11="$(find transport/c11 -type f -name "$C11_NAME" -print -quit)"
+          A1="$(find transport/anchors -type f -name "$API01_NAME" -print -quit)"
+          D6="$(find transport/anchors -type f -name "$DATA06_NAME" -print -quit)"
+          test -n "$C11" -a -n "$A1" -a -n "$D6"
+          echo "$C11_SHA256  $C11" | sha256sum -c -
+          [ "$(stat -c '%s' "$C11")" = "$C11_SIZE" ]
+          echo "$API01_SHA256  $A1" | sha256sum -c -
+          echo "$DATA06_SHA256  $D6" | sha256sum -c -
+          echo "c11=$(realpath "$C11")" >> "$GITHUB_OUTPUT"
+          echo "api01=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "data06=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: '07 Fresh extract and apply bounded C12 correction'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work out
+          mkdir -p work out
+          unzip -t "${{ steps.inputs.outputs.c11 }}" >/dev/null
+          unzip -q "${{ steps.inputs.outputs.c11 }}" -d work
+          mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11" "work/$C12_ROOT"
+          python3 handoff/API-02/tools/build_api02_c12.py --patch-only --root "work/$C12_ROOT" --out out
+
+      - name: '08 Frozen-format the corrected validator file and prove formatter currentness'
+        working-directory: work/${{ env.C12_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/c12-format-env"
+          uv sync --frozen --all-groups --python 3.12.12
+          uv run --frozen ruff format scripts/api02/build_stale_audit.py
+          uv run --frozen ruff format --check scripts/api02/build_stale_audit.py
+          uv run --frozen ruff check scripts/api02/build_stale_audit.py
+          [ ! -e .venv ]
+
+      - name: '09 Rebuild current identity and exact inventories'
+        working-directory: work/${{ env.C12_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c11 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_authorization_registers.py
+          python3 scripts/api02/build_mandatory_tests.py
+          python3 scripts/api02/build_v23_reconciliation.py
+          python3 scripts/api02/build_exact_inventories.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: '10 Converge fixed-point seal and require complete acceptance-path PASS'
+        working-directory: work/${{ env.C12_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c11 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_evidence_state.py
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;f.write_validation_txt()'
+          converged=0
+          for pass in 1 2 3 4 5 6; do
+            echo "SEAL_FIXED_POINT_PASS=$pass"
+            python3 scripts/api02/build_stale_audit.py
+            python3 scripts/api02/build_consistency_result.py
+            python3 scripts/api02/build_correction_inventory.py
+            python3 scripts/api02/build_bsi_classification.py
+            python3 scripts/api02/build_correction_inventory.py
+            python3 scripts/api02/build_bsi_classification.py --check
+            python3 scripts/api02/build_sealed_accounting.py --layer-a-only
+            python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;print("CHECKSUM_ROWS",f.write_checksums())'
+            python3 scripts/api02/build_sealed_accounting.py --layer-b-only
+            if python3 scripts/api02/finalize_candidate.py --check; then converged=1; break; fi
+          done
+          [ "$converged" = 1 ]
+          python3 scripts/api02/acceptance_path_identity.py --root .
+          python3 scripts/validate_api02.py --acceptance-path-only
+
+      - name: '11 Targeted N5/N6 adversarial proof before publication'
+        working-directory: work/${{ env.C12_ROOT }}
+        env:
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c11 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, pathlib, shutil, subprocess, sys, tempfile
+          root=pathlib.Path.cwd()
+          sys.path.insert(0,str(root/'scripts/api02'))
+          import validator_selftest as vs
+          for name, mutator, marker in [
+              ('N5',vs._dossier_claims_a_past_round,'this candidate'),
+              ('N6',vs._stale_round_beside_another_stage,'earlier round'),
+          ]:
+              with tempfile.TemporaryDirectory(prefix=f'c12-{name}-') as td:
+                  tree=pathlib.Path(td)/root.name
+                  shutil.copytree(root,tree)
+                  mutator(tree)
+                  env={**os.environ,'API02_VALIDATE_ROOT':str(tree),'PYTHONDONTWRITEBYTECODE':'1'}
+                  proc=subprocess.run([sys.executable,str(tree/'scripts/validate_api02.py'),'--acceptance-path-only'],cwd=tree,env=env,capture_output=True,text=True)
+                  out=proc.stdout+proc.stderr
+                  print(name,'exit',proc.returncode); print(out[-4000:])
+                  assert proc.returncode != 0, (name,'mutation was accepted')
+                  assert 'API02_ACCEPTANCE_PATH:FAIL' in out, (name,'wrong failure mode')
+                  assert marker in out, (name,'expected marker missing')
+          print('API02_C12_N5_N6_TARGETED_SELFTEST:PASS')
+          PY
+
+      - name: '12 Prove C11 to C12 runtime-neutral correction'
+        working-directory: work/${{ env.C12_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('docs/api/API-02/API02_C11_TO_C12_CORRECTION_INVENTORY.json'))
+          runtime=('packages/','apps/','services/','src/','migrations/','db/','schema/','frontend/','contracts/')
+          changed=[r for r in d['entries'] if r.get('change') in ('added','modified','removed')]
+          bad=[r['path'] for r in changed if r['path'].startswith(runtime)]
+          print('changed_rows',len(changed),d.get('counts')); print('runtime_delta_paths',bad)
+          assert not bad,bad
+          PY
+
+      - name: '13 Deterministically package exact C12'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c12.py --package-only --root "work/$C12_ROOT" --out out
+          unzip -t "out/${C12_ROOT}.zip" >/dev/null
+          cat out/candidate_sha256.txt
+          cat out/candidate_meta.json
+
+      - name: '14 Prepare exact anchors and builder evidence'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/accept-anchors out/evidence
+          cp "${{ steps.inputs.outputs.api01 }}" out/accept-anchors/
+          cp "${{ steps.inputs.outputs.data06 }}" out/accept-anchors/
+          cp "${{ steps.inputs.outputs.c11 }}" out/accept-anchors/
+          cp out/candidate_meta.json out/evidence/
+          cp out/candidate_sha256.txt out/evidence/
+          cp "work/$C12_ROOT/docs/api/API-02/API02_C11_TO_C12_CORRECTION_REPORT.md" out/evidence/
+          cp "work/$C12_ROOT/docs/api/API-02/API02_C11_TO_C12_CORRECTION_INVENTORY.json" out/evidence/
+          cp "work/$C12_ROOT/.github/workflows/api02-accept.yml" out/evidence/api02-accept.yml
+
+      - name: '15 Upload canonical api02-candidate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: |
+            out/${{ env.C12_ROOT }}.zip
+            out/candidate_sha256.txt
+            out/candidate_meta.json
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '16 Upload canonical api02-anchors'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: out/accept-anchors/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '17 Upload C12 builder evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c12-build-evidence-${{ github.run_id }}
+          path: out/evidence/*
+          compression-level: 0
+          if-no-files-found: error
