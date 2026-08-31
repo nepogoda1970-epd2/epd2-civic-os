@@ -21,13 +21,13 @@ jobs:
         with:
           name: api02-candidate
           path: incoming/candidate
-          run-id: '33440170278'
+          run-id: '33443005475'
           github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
           name: api02-anchors
           path: incoming/anchors
-          run-id: '33440170278'
+          run-id: '33443005475'
           github-token: ${{ github.token }}
       - name: Remove generated Ruff cache from transport ZIP only
         shell: bash
@@ -75,4 +75,4 @@ jobs:
           path: incoming/anchors/*
           compression-level: 0
           if-no-files-found: error
-# Canonicalized predecessor acceptance record candidate repack
+# Schema-aligned assertion candidate repack
