@@ -1,0 +1,207 @@
+name: api02-c11-build-v2
+
+on:
+  push:
+    branches:
+      - tmp/api02-c11-canonical-accept
+    paths:
+      - '.github/workflows/api02-c11-build-v2.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      C10_RUN_ID: '33397575368'
+      C10_SHA256: '479e17323422f20e0badec5256ced45c48392e8a103698d9a32d37324e393eeb'
+      C10_SIZE: '34652031'
+      API01_SHA256: 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27'
+      DATA06_SHA256: '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1'
+      C10_NAME: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10.zip'
+      C11_ROOT: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11'
+      API01_NAME: 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip'
+      DATA06_NAME: 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip'
+    steps:
+      - name: '01 Checkout governed builder branch'
+        uses: actions/checkout@v4
+
+      - name: '02 Download exact C10 candidate'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c10-candidate
+          path: transport/c10
+          run-id: ${{ env.C10_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '03 Download exact C10 anchors'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c10-anchors
+          path: transport/anchors
+          run-id: ${{ env.C10_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '04 Verify exact inputs and establish paths'
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          C10="$(find transport/c10 -type f -name "$C10_NAME" -print -quit)"
+          A1="$(find transport/anchors -type f -name "$API01_NAME" -print -quit)"
+          D6="$(find transport/anchors -type f -name "$DATA06_NAME" -print -quit)"
+          test -n "$C10" -a -n "$A1" -a -n "$D6"
+          echo "$C10_SHA256  $C10" | sha256sum -c -
+          [ "$(stat -c '%s' "$C10")" = "$C10_SIZE" ]
+          echo "$API01_SHA256  $A1" | sha256sum -c -
+          echo "$DATA06_SHA256  $D6" | sha256sum -c -
+          echo "c10=$(realpath "$C10")" >> "$GITHUB_OUTPUT"
+          echo "api01=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "data06=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: '05 Fresh extract and apply bounded C11 corrections'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work out
+          mkdir -p work out
+          unzip -t "${{ steps.inputs.outputs.c10 }}" >/dev/null
+          unzip -q "${{ steps.inputs.outputs.c10 }}" -d work
+          mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10" "work/$C11_ROOT"
+          python3 handoff/API-02/tools/build_api02_c11.py --patch-only --root "work/$C11_ROOT" --out out
+          python3 handoff/API-02/tools/fix_api02_c11_preflight.py "work/$C11_ROOT"
+
+      - name: '06 Prove multi-digit stale-audit historical cue semantics'
+        working-directory: work/${{ env.C11_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util, pathlib, re, sys
+          d=pathlib.Path('scripts/api02').resolve();sys.path.insert(0,str(d))
+          spec=importlib.util.spec_from_file_location('sa',d/'build_stale_audit.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+          print('candidate',m.CANDIDATE_ROLE,'past',m.past_rounds(),'pattern',m._PAST_ROUND)
+          assert m.CANDIDATE_ROLE=='C11'
+          assert m.past_rounds()==tuple(f'C{i}' for i in range(1,11))
+          for r in ('C1','C2','C9','C10'):
+              assert re.search(rf'^{m._PAST_ROUND}$',r), (r,m._PAST_ROUND)
+          assert not re.search(rf'^{m._PAST_ROUND}$','C11')
+          print('API02_STALE_AUDIT_MULTIDIGIT_SELFTEST:PASS')
+          PY
+
+      - name: '07 Rebuild governed current identity and inventories'
+        working-directory: work/${{ env.C11_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c10 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_authorization_registers.py
+          python3 scripts/api02/build_mandatory_tests.py
+          python3 scripts/api02/build_v23_reconciliation.py
+          python3 scripts/api02/build_exact_inventories.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: '08 Converge fixed-point seal and require full acceptance-path PASS'
+        working-directory: work/${{ env.C11_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c10 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_evidence_state.py
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;f.write_validation_txt()'
+          converged=0
+          for pass in 1 2 3 4 5; do
+            echo "SEAL_FIXED_POINT_PASS=$pass"
+            python3 scripts/api02/build_stale_audit.py
+            python3 scripts/api02/build_consistency_result.py
+            python3 scripts/api02/build_correction_inventory.py
+            python3 scripts/api02/build_bsi_classification.py
+            python3 scripts/api02/build_correction_inventory.py
+            python3 scripts/api02/build_bsi_classification.py --check
+            python3 scripts/api02/build_sealed_accounting.py --layer-a-only
+            python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;print("CHECKSUM_ROWS",f.write_checksums())'
+            python3 scripts/api02/build_sealed_accounting.py --layer-b-only
+            if python3 scripts/api02/finalize_candidate.py --check; then converged=1; break; fi
+          done
+          [ "$converged" = 1 ]
+          python3 scripts/api02/acceptance_path_identity.py --root .
+          python3 scripts/validate_api02.py --acceptance-path-only
+
+      - name: '09 Prove C10 to C11 runtime-neutral correction'
+        working-directory: work/${{ env.C11_ROOT }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          d=json.load(open('docs/api/API-02/API02_C10_TO_C11_CORRECTION_INVENTORY.json'))
+          runtime=('packages/','apps/','services/','src/','migrations/','db/','schema/','frontend/','contracts/')
+          changed=[r for r in d['entries'] if r.get('change') in ('added','modified','removed')]
+          bad=[r['path'] for r in changed if r['path'].startswith(runtime)]
+          print('changed_rows',len(changed),d.get('counts'));print('runtime_delta_paths',bad)
+          assert not bad,bad
+          assert len(changed)<=100,len(changed)
+          PY
+
+      - name: '10 Deterministically package exact C11'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c11.py --package-only --root "work/$C11_ROOT" --out out
+          unzip -t "out/${C11_ROOT}.zip" >/dev/null
+          cat out/candidate_sha256.txt
+          cat out/candidate_meta.json
+
+      - name: '11 Prepare exact acceptance anchors/evidence'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/accept-anchors out/evidence
+          cp "${{ steps.inputs.outputs.api01 }}" out/accept-anchors/
+          cp "${{ steps.inputs.outputs.data06 }}" out/accept-anchors/
+          cp "${{ steps.inputs.outputs.c10 }}" out/accept-anchors/
+          cp out/candidate_meta.json out/evidence/
+          cp out/candidate_sha256.txt out/evidence/
+          cp "work/$C11_ROOT/docs/api/API-02/API02_C10_TO_C11_CORRECTION_REPORT.md" out/evidence/
+          cp "work/$C11_ROOT/docs/api/API-02/API02_C10_TO_C11_CORRECTION_INVENTORY.json" out/evidence/
+          cp "work/$C11_ROOT/.github/workflows/api02-accept.yml" out/evidence/api02-accept.yml
+
+      - name: '12 Upload canonical api02-candidate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: |
+            out/${{ env.C11_ROOT }}.zip
+            out/candidate_sha256.txt
+            out/candidate_meta.json
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '13 Upload canonical api02-anchors'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: out/accept-anchors/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '14 Upload C11 builder evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c11-build-evidence-${{ github.run_id }}
+          path: out/evidence/*
+          compression-level: 0
+          if-no-files-found: error
