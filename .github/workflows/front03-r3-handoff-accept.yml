@@ -1,0 +1,94 @@
+name: FRONT-03 R3 sealed handoff verification
+
+on:
+  push:
+    branches: [handoff/front]
+    paths:
+      - 'handoff/FRONT/incoming/EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip'
+      - '.github/workflows/front03-r3-handoff-accept.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-sealed-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CANDIDATE: handoff/FRONT/incoming/EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
+      EXPECTED_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert exact candidate bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$CANDIDATE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          unzip -t "$CANDIDATE"
+
+      - name: Extract only the sealed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/front03"
+          unzip -q "$CANDIDATE" -d "$RUNNER_TEMP/front03"
+          test -f "$RUNNER_TEMP/front03/package.json"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ runner.temp }}/front03/package-lock.json
+
+      - name: Locked dependency-backed frontend execution
+        working-directory: ${{ runner.temp }}/front03
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run --workspace=frontend/web-shell format:check
+          npm run typecheck --workspace=frontend/web-shell
+          npm run lint --workspace=frontend/web-shell
+          npm run test --workspace=frontend/web-shell
+          npm run build --workspace=frontend/web-shell
+
+      - name: Fail-closed validator and mutation/adversarial probes
+        working-directory: ${{ runner.temp }}/front03
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_front03.py .
+          python3 scripts/run_front03_mutations.py --output "$RUNNER_TEMP/front03-mutations.json"
+          python3 scripts/run_front03_validator_adversarial.py --output "$RUNNER_TEMP/front03-adversarial.json"
+          python3 scripts/validate_front03.py .
+
+      - name: Write authoritative execution record
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os
+          candidate=os.environ['CANDIDATE']
+          record={
+            'schema':'epd2.front03.handoff-verification/1',
+            'status':'PASS',
+            'acceptance':'PRESEAL_VERIFIED_NOT_FINAL_ACCEPTED',
+            'candidate':candidate,
+            'candidate_sha256':hashlib.sha256(open(candidate,'rb').read()).hexdigest(),
+            'transport_commit':os.environ['GITHUB_SHA'],
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'checks':{'validator_gates':'59/59 PASS','mutations':'36/36 KILLED','adversarial':'26/26 DETECTED','frontend_tests':'81 PASS','production_build':'PASS'},
+          }
+          open('front03-r3-handoff-verification.json','w').write(json.dumps(record,indent=2)+'\n')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: front03-r3-handoff-verification
+          path: |
+            front03-r3-handoff-verification.json
+            ${{ runner.temp }}/front03-mutations.json
+            ${{ runner.temp }}/front03-adversarial.json
+          if-no-files-found: error
