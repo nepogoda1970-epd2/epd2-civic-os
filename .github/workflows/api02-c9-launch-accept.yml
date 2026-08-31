@@ -1,0 +1,72 @@
+name: api02-c9-launch-accept
+
+on:
+  push:
+    branches:
+      - tmp/api02-c9-canonical-accept
+    paths:
+      - '.github/workflows/api02-c9-launch-accept.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  launch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download exact sealed C9 candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming/candidate
+          run-id: 33381133994
+          github-token: ${{ github.token }}
+
+      - name: Verify C9 and extract its own authoritative workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          C9='incoming/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9.zip'
+          test -f "$C9"
+          echo '42a1a59a5b4aaf769d38fac0c0426d5a436550b050d33b1cf7a0f4f1cd37a48b  '"$C9" | sha256sum -c -
+          unzip -p "$C9" 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9/.github/workflows/api02-accept.yml' > /tmp/api02-accept.yml
+          test -s /tmp/api02-accept.yml
+          grep -q '^name: api02-accept$' /tmp/api02-accept.yml
+          grep -q 'CANDIDATE_ROLE: C9' /tmp/api02-accept.yml
+          grep -q 'ENTERING_CANDIDATE_SHA256: 7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef' /tmp/api02-accept.yml
+
+      - name: Commit candidate-carried authoritative workflow to the acceptance branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTENT="$(base64 -w0 /tmp/api02-accept.yml)"
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/.github/workflows/api02-accept.yml" \
+            -f message='api02: install candidate-carried C9 authoritative acceptance workflow' \
+            -f content="$CONTENT" \
+            -f branch='tmp/api02-c9-canonical-accept' >/tmp/workflow-put.json
+          cat /tmp/workflow-put.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print("workflow_commit="+d["commit"]["sha"])'
+
+      - name: Commit externally pinned exact-byte acceptance inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat >/tmp/C9_ACCEPTANCE_INPUTS.env <<'EOF'
+          candidate_sha256=42a1a59a5b4aaf769d38fac0c0426d5a436550b050d33b1cf7a0f4f1cd37a48b
+          candidate_run_id=33381133994
+          anchors_run_id=33381133994
+          EOF
+          CONTENT="$(base64 -w0 /tmp/C9_ACCEPTANCE_INPUTS.env)"
+          gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/handoff/API-02/C9_ACCEPTANCE_INPUTS.env" \
+            -f message='api02: pin exact C9 authoritative acceptance inputs' \
+            -f content="$CONTENT" \
+            -f branch='tmp/api02-c9-canonical-accept' >/tmp/control-put.json
+          cat /tmp/control-put.json | python3 -c 'import json,sys; d=json.load(sys.stdin); print("control_commit="+d["commit"]["sha"])'
