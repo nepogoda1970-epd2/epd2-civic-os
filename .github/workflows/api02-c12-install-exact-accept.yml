@@ -1,0 +1,49 @@
+name: api02-c12-install-exact-accept
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - '.github/workflows/api02-c12-install-exact-accept.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/api02-c12-canonical-accept
+
+      - name: Download exact C12 builder evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c12-build-evidence-33413366989
+          path: /tmp/c12-evidence
+          run-id: 33413366989
+          github-token: ${{ github.token }}
+
+      - name: Build exact workflow commit object and expose identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC=/tmp/c12-evidence/api02-accept.yml
+          test -f "$SRC"
+          echo '3232f12ee71c651b57572ba1367104463b0361fa53bfb080457206d545bbcd5f  '"$SRC" | sha256sum -c -
+          cp "$SRC" .github/workflows/api02-accept.yml
+          echo '3232f12ee71c651b57572ba1367104463b0361fa53bfb080457206d545bbcd5f  .github/workflows/api02-accept.yml' | sha256sum -c -
+          git config user.name 'epd2-governed-verification'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/api02-accept.yml
+          git commit -m 'api02: install exact C12 candidate-carried acceptance workflow'
+          echo "EXACT_COMMIT_SHA=$(git rev-parse HEAD)"
+          echo "EXACT_TREE_SHA=$(git rev-parse HEAD^{tree})"
+          echo "EXACT_WORKFLOW_BLOB_SHA=$(git rev-parse HEAD:.github/workflows/api02-accept.yml)"
+          echo "EXACT_WORKFLOW_SHA256=$(sha256sum .github/workflows/api02-accept.yml | awk '{print $1}')"
+          git push origin HEAD:tmp/api02-c12-canonical-accept || true
+          echo 'API02_C12_EXACT_ACCEPT_OBJECT:PASS'
