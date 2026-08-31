@@ -13,23 +13,30 @@ async function applicant(page: Page) {
 }
 
 const cases = [
-  ["application", "ANTRAG-2026-0142"],
-  ["home", "Aktiv · Bund"],
-  ["membership", "Provenienz"],
-  ["initiatives", "Offene kommunale Daten"],
-  ["initiatives-new", "Vorschau"],
-  ["deliberation", "Offene kommunale Daten"],
-  ["delegation", "Kein akzeptierter Laufzeitvertrag"],
-  ["assurance-authentication-session-assurance", "AL2"],
-  ["membership-appeal", "Rechtliche und operative Aktivierung"],
+  ["application", "/member/application", "ANTRAG-2026-0142"],
+  ["home", "/member/home", "Aktiv · Bund"],
+  ["membership", "/member/membership", "Provenienz"],
+  ["initiatives", "/member/initiatives", "Offene kommunale Daten"],
+  ["initiatives-new", "/member/initiatives/new", "Vorschau"],
+  ["deliberation", "/member/deliberation", "Offene kommunale Daten"],
+  ["delegation", "/member/delegation", "Kein akzeptierter Laufzeitvertrag"],
+  [
+    "assurance-authentication-session-assurance",
+    "/member/assurance/authentication-session-assurance",
+    "AL2",
+  ],
+  [
+    "membership-appeal",
+    "/member/membership/appeal",
+    "Rechtliche und operative Aktivierung",
+  ],
 ] as const;
 
-for (const [key, readyText] of cases) {
+for (const [key, route, readyText] of cases) {
   test(`capture immutable FRONT03 ${key}`, async ({ page }, testInfo) => {
     if (key === "application" || key === "membership-appeal") {
       await applicant(page);
     }
-    const route = `/member/${key.replaceAll("-", "/")}`;
     await page.goto(route);
     await expect(
       page.getByText(readyText, { exact: false }).first(),
