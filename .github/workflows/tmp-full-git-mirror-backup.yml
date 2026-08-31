@@ -1,0 +1,78 @@
+name: tmp-full-git-mirror-backup
+
+on:
+  push:
+    branches:
+      - tmp/full-project-baseline-2026-09-01
+
+permissions:
+  contents: read
+
+jobs:
+  build-full-git-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build complete Git bundle backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}.git"
+          EXPECTED_MAIN="8ff32c3e9ed654768ae86ac569a9c498f78c5aa2"
+          TECH_BRANCH="refs/heads/tmp/full-project-baseline-2026-09-01"
+          OUT="EPD2_FULL_GIT_MIRROR_2026-09-01"
+          mkdir -p "$OUT"
+          git clone --mirror "$REPO_URL" epd2-civic-os.git
+          cd epd2-civic-os.git
+          # Exclude the temporary artifact-generation branch itself from the archival ref set.
+          git update-ref -d "$TECH_BRANCH" || true
+          MAIN_SHA="$(git rev-parse refs/heads/main)"
+          test "$MAIN_SHA" = "$EXPECTED_MAIN"
+          git show-ref | sort > "../$OUT/REFS.txt"
+          git count-objects -vH > "../$OUT/GIT_OBJECT_STATS.txt"
+          git bundle create "../$OUT/epd2-civic-os-full-history.bundle" --all
+          git bundle verify "../$OUT/epd2-civic-os-full-history.bundle" > "../$OUT/BUNDLE_VERIFY.txt" 2>&1
+          cd ..
+          BUNDLE_SHA="$(sha256sum "$OUT/epd2-civic-os-full-history.bundle" | awk '{print $1}')"
+          BUNDLE_SIZE="$(stat -c%s "$OUT/epd2-civic-os-full-history.bundle")"
+          REF_COUNT="$(wc -l < "$OUT/REFS.txt" | tr -d ' ')"
+          cat > "$OUT/MANIFEST.txt" <<EOF
+          EPD2 FULL GIT MIRROR BACKUP
+          Date: 2026-09-01
+          Repository: ${GITHUB_REPOSITORY}
+          Canonical main SHA: ${MAIN_SHA}
+          Expected canonical main SHA: ${EXPECTED_MAIN}
+          Temporary generation branch excluded: ${TECH_BRANCH}
+          Backup format: git bundle --all
+          Bundle SHA-256: ${BUNDLE_SHA}
+          Bundle size bytes: ${BUNDLE_SIZE}
+          Archived refs: ${REF_COUNT}
+          Restore example: git clone epd2-civic-os-full-history.bundle epd2-civic-os
+          Verification: git bundle verify epd2-civic-os-full-history.bundle
+          EOF
+          sha256sum "$OUT"/* > "$OUT/SHA256SUMS.txt"
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('EPD2_FULL_GIT_MIRROR_2026-09-01')
+          out=Path('EPD2_FULL_GIT_MIRROR_2026-09-01.zip')
+          with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED,compresslevel=9,allowZip64=True) as z:
+              for p in sorted(root.iterdir()):
+                  z.write(p, arcname=f'{root.name}/{p.name}')
+          with zipfile.ZipFile(out) as z:
+              bad=z.testzip()
+              if bad:
+                  raise SystemExit(f'ZIP CRC failure: {bad}')
+          PY
+          sha256sum EPD2_FULL_GIT_MIRROR_2026-09-01.zip > EPD2_FULL_GIT_MIRROR_2026-09-01.zip.sha256
+          ls -lh EPD2_FULL_GIT_MIRROR_2026-09-01.zip "$OUT/epd2-civic-os-full-history.bundle"
+
+      - name: Upload complete Git backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_FULL_GIT_MIRROR_2026-09-01
+          path: |
+            EPD2_FULL_GIT_MIRROR_2026-09-01.zip
+            EPD2_FULL_GIT_MIRROR_2026-09-01.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
