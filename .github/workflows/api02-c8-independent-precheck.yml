@@ -1,0 +1,76 @@
+name: API-02 C8 Independent Exact-Byte Precheck
+
+on:
+  push:
+    branches: [handoff/api-02]
+    paths:
+      - '.github/workflows/api02-c8-independent-precheck.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct exact C8
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _api02_c8
+          cat handoff/API-02/incoming/EPD2_API02_C8.zip.part0 handoff/API-02/incoming/EPD2_API02_C8.zip.part1 > _api02_c8/C8.zip
+          test "$(stat -c '%s' _api02_c8/C8.zip)" = 34641029
+          echo '7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef  _api02_c8/C8.zip' | sha256sum -c -
+          unzip -t _api02_c8/C8.zip
+          unzip -q _api02_c8/C8.zip -d _api02_c8/tree
+          root='_api02_c8/tree/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8'
+          test -d "$root"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt)
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, zipfile
+          z=Path('_api02_c8/C8.zip')
+          with zipfile.ZipFile(z) as f:
+              infos=f.infolist()
+              assert len(infos)==3950
+              assert len({i.filename for i in infos})==3950
+              assert not any(i.filename.startswith('/') or '..' in Path(i.filename).parts for i in infos)
+              assert not any(((i.external_attr>>16)&0o170000)==0o120000 for i in infos)
+          print('ARCHIVE_STRUCTURE:PASS:3950 unique members; no traversal; no symlink')
+          PY
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: C8 acceptance-path and consistency gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GITHUB_WORKSPACE/_api02_c8/tree/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8"
+          zip="$GITHUB_WORKSPACE/_api02_c8/C8.zip"
+          export API02_VALIDATE_ROOT="$root"
+          cd "$root"
+          python scripts/validate_api02.py --candidate-zip "$zip" --acceptance-path-only
+          python scripts/validate_api02.py --candidate-zip "$zip" --consistency-only
+      - name: C8 acceptance-path repository tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GITHUB_WORKSPACE/_api02_c8/tree/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8"
+          cd "$root"
+          python -m pip install --disable-pip-version-check -q pytest
+          pytest -q tests/repository/test_api02_acceptance_path.py
+      - name: Record result
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _api02_c8/evidence
+          printf '{"schema":"epd2.api02.c8-independent-precheck/1","candidate_sha256":"7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef","github_run_id":"%s","result":"PASS","scope":"exact-byte structure + sealed manifest + C8 acceptance-path/consistency gates + acceptance-path repository tests; full governed acceptance still requires exact C7/API01/DATA06 anchors"}\n' "$GITHUB_RUN_ID" > _api02_c8/evidence/result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api02-c8-independent-precheck-${{ github.run_id }}
+          path: _api02_c8/evidence/result.json
+          if-no-files-found: error
