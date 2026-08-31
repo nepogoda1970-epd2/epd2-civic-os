@@ -93,6 +93,18 @@ def main() -> None:
         raise SystemExit("C12 M23 fix: stale-current-claims anchor not found")
     validator.write_text(text.replace(anchor, replacement, 1))
 
+    # The carried M23 mutator still targeted a heading that no longer exists
+    # in the C12 executive dossier. That made the fixture a no-op while the
+    # harness reported a clean mutated process. Bind M23 to an actual current
+    # C12 heading and assert the mutation changed the file before validation.
+    selftest = root / "scripts/api02/validator_selftest.py"
+    stext = selftest.read_text()
+    old_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    path.write_text(\n        text.replace(\n            "## The architecture, in a paragraph",\n            # stale-audit: mutation-payload\n            "## Current position\\n\\nCandidate C4 is the present candidate and API-02 = NEXT.\\n\\n"\n            "## The architecture, in a paragraph",\n            1,\n        ),\n        encoding="utf-8",\n    )\n'''
+    new_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    anchor = "## What C12 corrects"\n    if anchor not in text:\n        raise AssertionError("M23 mutation anchor missing from current C12 dossier")\n    mutated = text.replace(\n        anchor,\n        # stale-audit: mutation-payload\n        "## Current position\\n\\nCandidate C4 is the present candidate and API-02 = NEXT.\\n\\n" + anchor,\n        1,\n    )\n    if mutated == text:\n        raise AssertionError("M23 mutation did not change the current C12 dossier")\n    path.write_text(mutated, encoding="utf-8")\n'''
+    if old_m23 not in stext:
+        raise SystemExit("C12 M23 fix: carried no-op M23 mutator not found")
+    selftest.write_text(stext.replace(old_m23, new_m23, 1))
+
     voting = root / "docs/api/API-02/11_VOTING_IDENTITY_ISOLATION.md"
     if voting.exists():
         voting.write_text(
@@ -122,7 +134,7 @@ def main() -> None:
         r = report.read_text()
         r = r.replace(
             "C12 makes explicit current-candidate identity cues CURRENT before historical-cue evaluation, orders past-round alternatives longest-first, and regenerates the current-facing dossier identity.",
-            "C12 replaces the invalid numeric character-class construction for earlier rounds with a dynamically derived longest-first alternation (`C11|C10|...|C1` for C12), retains the stale-audit historical classifier, regenerates the current-facing dossier identity, and rejects an earlier round asserted through the authoritative markdown `Candidate:` field.",
+            "C12 replaces the invalid numeric character-class construction for earlier rounds with a dynamically derived longest-first alternation (`C11|C10|...|C1` for C12), retains the stale-audit historical classifier, regenerates the current-facing dossier identity, rejects an earlier round asserted through the authoritative markdown `Candidate:` field, and binds M23 to a real current C12 dossier heading so the adversarial fixture cannot silently become a no-op.",
         )
         report.write_text(r)
 
