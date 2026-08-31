@@ -17,6 +17,8 @@ jobs:
           cache: npm
       - name: Locked dependency install
         run: npm ci
+      - name: Dependency lock identity
+        run: test "$(sha256sum package-lock.json | cut -d' ' -f1)" = "86e1a6bfa5f77dcf10680bf7a084e4bb49a78527cec455eedaf1ad941489e258"
       - name: Format check
         run: npm run --workspace web-shell format:check
       - name: Typecheck
@@ -29,6 +31,30 @@ jobs:
         run: node scripts/validate_front02_catalogue.mjs
       - name: Production build
         run: npm run --workspace web-shell build
+      - name: Fixture browser, a11y, keyboard and reflow
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        run: |
+          npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts tests/browser/front01.browser.spec.ts tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
+      - name: Production-like fail-closed browser profile
+        env:
+          NODE_ENV: production
+          FRONT03_TEST_PROFILE: production
+          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.production.browser.spec.ts
+      - name: Immutable FRONT-03 visual baseline verification
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        run: |
+          rm -rf frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+          npm exec --workspace web-shell playwright test -- tests/browser/front03.browser.spec.ts --grep '@visual' --update-snapshots
+          cd frontend/web-shell
+          sha256sum -c tests/browser/front03-r2-visual-baseline.sha256
       - name: Dependency audit evidence
         if: always()
         shell: bash
@@ -37,11 +63,18 @@ jobs:
           python3 - <<'PY'
           import json
           d=json.load(open('front03-r3-npm-audit.json'))
-          print('audit vulnerabilities', d.get('metadata',{}).get('vulnerabilities',{}))
+          v=d.get('metadata',{}).get('vulnerabilities',{})
+          print('audit vulnerabilities', v)
+          assert v.get('critical',0) == 0
+          assert v.get('high',0) <= 9
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: front03-r3-dependency-backed-evidence
           if-no-files-found: warn
-          path: front03-r3-npm-audit.json
+          path: |
+            front03-r3-npm-audit.json
+            frontend/web-shell/playwright-report/**
+            frontend/web-shell/test-results/**
+            frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/*.png
