@@ -1,0 +1,57 @@
+name: tmp-full-project-baseline
+
+on:
+  push:
+    branches:
+      - tmp/full-project-baseline-2026-09-01
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact baseline source
+        uses: actions/checkout@v4
+        with:
+          ref: 8ff32c3e9ed654768ae86ac569a9c498f78c5aa2
+          path: src
+          fetch-depth: 1
+
+      - name: Verify exact identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C src rev-parse HEAD)" = "8ff32c3e9ed654768ae86ac569a9c498f78c5aa2"
+          test "$(git -C src rev-parse HEAD^{tree})" = "13e1c439f8f5b0bd37cb6519f109d9f4c02f1ef9"
+
+      - name: Create full project baseline archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf src/.git
+          cat > EPD2_BASELINE_MANIFEST.txt <<'EOF'
+          EPD2 FULL PROJECT BASELINE
+          Date: 2026-09-01
+          Repository: nepogoda1970-epd2/epd2-civic-os
+          Source commit: 8ff32c3e9ed654768ae86ac569a9c498f78c5aa2
+          Source tree: 13e1c439f8f5b0bd37cb6519f109d9f4c02f1ef9
+          Snapshot policy: exact tracked source tree at the commit above, without .git history.
+          EOF
+          mv src epd2-civic-os
+          zip -qry -y EPD2_FULL_PROJECT_BASELINE_2026-09-01.zip epd2-civic-os EPD2_BASELINE_MANIFEST.txt
+          sha256sum EPD2_FULL_PROJECT_BASELINE_2026-09-01.zip > SHA256SUMS.txt
+          unzip -tq EPD2_FULL_PROJECT_BASELINE_2026-09-01.zip
+          cat SHA256SUMS.txt
+          du -h EPD2_FULL_PROJECT_BASELINE_2026-09-01.zip
+
+      - name: Upload full project baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_FULL_PROJECT_BASELINE_2026-09-01
+          path: |
+            EPD2_FULL_PROJECT_BASELINE_2026-09-01.zip
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
