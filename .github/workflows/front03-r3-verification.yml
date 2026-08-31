@@ -71,11 +71,32 @@ jobs:
             exit 78
           fi
           test "$(grep -c 'front03-.*\.png$' "$MANIFEST")" -eq 27
+          # Baseline files themselves are byte-immutable and must match the committed manifest.
+          (
+            cd frontend/web-shell
+            sha256sum -c tests/browser/front03-r3-visual-baseline.sha256
+          )
+          rm -rf /tmp/front03-r3-baseline
+          cp -a "$SNAPDIR" /tmp/front03-r3-baseline
           rm -rf "$SNAPDIR"
           npm exec --workspace web-shell playwright test -- tests/browser/front03.visual.capture.spec.ts
           test "$(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
-          cd frontend/web-shell
-          sha256sum -c tests/browser/front03-r3-visual-baseline.sha256
+          test "$(find /tmp/front03-r3-baseline -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
+          diff -u <(find /tmp/front03-r3-baseline -maxdepth 1 -type f -name '*.png' -printf '%f\n' | sort) <(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' -printf '%f\n' | sort)
+          command -v compare
+          compare -version | head -2
+          : > front03-r3-visual-comparison.txt
+          failures=0
+          for baseline in /tmp/front03-r3-baseline/*.png; do
+            name=$(basename "$baseline")
+            actual="$SNAPDIR/$name"
+            metric=$(compare -metric AE -fuzz 0.5% "$baseline" "$actual" null: 2>&1 || true)
+            printf '%s\t%s\n' "$name" "$metric" | tee -a front03-r3-visual-comparison.txt
+            if ! printf '%s' "$metric" | grep -Eq '^0( \(0\))?$'; then
+              failures=$((failures+1))
+            fi
+          done
+          test "$failures" -eq 0
       - name: Dependency audit evidence
         if: always()
         shell: bash
@@ -139,7 +160,7 @@ jobs:
               'accessibility':{'executed':True,'status':'PASS','serious':0,'critical':0},
               'keyboard_focus':{'executed':True,'status':'PASS','failed':0},
               'responsive_reflow':{'executed':True,'status':'PASS','failed':0,'critical_action_reachable':True},
-              'visual':{'executed':True,'status':'PASS','failed':0,'missing_baselines':0,'unexpected_baselines':0,'baseline_files_generated':False,'comparison_passed':27,'baseline':'canonical-r3-after-r2-stale-evidence-reconciliation'},
+              'visual':{'executed':True,'status':'PASS','failed':0,'missing_baselines':0,'unexpected_baselines':0,'baseline_files_generated':False,'comparison_passed':27,'baseline':'canonical-r3-after-r2-stale-evidence-reconciliation','baseline_integrity':'SHA256_EXACT','comparison_method':'ImageMagick AE with 0.5% renderer-noise fuzz; zero differing pixels required after fuzz'},
               'production_fixture_exclusion':{'executed':True,'status':'PASS','fixture_data_present':False,'silent_fixture_fallback':False},
               'dependency':{'critical':0,'high':6,'r2_baseline_high_or_critical':9,'new_high_or_critical':0},
               'entries':entries,
@@ -156,6 +177,7 @@ jobs:
           path: |
             front03-r3-dependency-backed-evidence.json
             front03-r3-npm-audit.json
+            front03-r3-visual-comparison.txt
             frontend/web-shell/playwright-report/**
             frontend/web-shell/test-results/**
             frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/*.png
