@@ -53,6 +53,7 @@ for (const [key, route, readyText] of cases) {
       ),
       fullPage: true,
       animations: "disabled",
+      scale: "css",
     });
   });
 }
