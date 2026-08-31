@@ -6,6 +6,7 @@ on:
       - tmp/api02-c11-canonical-accept
     paths:
       - '.github/workflows/api02-c11-build-v2.yml'
+      - 'handoff/API-02/tools/fix_api02_c11_preflight.py'
 
 permissions:
   contents: read
