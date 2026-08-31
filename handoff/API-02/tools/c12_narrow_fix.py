@@ -83,24 +83,16 @@ def main() -> None:
         raise SystemExit("C12 narrow fix: C11 _EARLIER_ROUNDS block not found")
     text = text.replace(old, new, 1)
 
-    # IR-C12-M23: current dossier markdown uses **Candidate:** `...C12...`.
-    # The generic `candidate Cn` detector does not match the colon / closing
-    # emphasis / filename form, so an earlier round could be asserted in the
-    # authoritative current-candidate field without gate 28 rejecting it.
     anchor = '''_STALE_CURRENT_CLAIMS: Final[tuple[tuple[str, str], ...]] = (\n    (rf"\\b{_EARLIER_ROUNDS}\\s*\\(this candidate\\)", "names an earlier round as this candidate"),\n'''
     replacement = '''_STALE_CURRENT_CLAIMS: Final[tuple[tuple[str, str], ...]] = (\n    (rf"\\b{_EARLIER_ROUNDS}\\s*\\(this candidate\\)", "names an earlier round as this candidate"),\n    (\n        rf"\\bcandidate\\s*:\\*{{0,2}}\\s*`?[^`\\n]*\\b{_EARLIER_ROUNDS}\\b",\n        "names an earlier round in the current Candidate field",\n    ),\n'''
     if anchor not in text:
         raise SystemExit("C12 M23 fix: stale-current-claims anchor not found")
     validator.write_text(text.replace(anchor, replacement, 1))
 
-    # The carried M23 mutator still targeted a heading that no longer exists
-    # in the C12 executive dossier. That made the fixture a no-op while the
-    # harness reported a clean mutated process. Bind M23 to an actual current
-    # C12 heading and assert the mutation changed the file before validation.
     selftest = root / "scripts/api02/validator_selftest.py"
     stext = selftest.read_text()
     old_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    path.write_text(\n        text.replace(\n            "## The architecture, in a paragraph",\n            # stale-audit: mutation-payload\n            "## Current position\\n\\nCandidate C4 is the present candidate and API-02 = NEXT.\\n\\n"\n            "## The architecture, in a paragraph",\n            1,\n        ),\n        encoding="utf-8",\n    )\n'''
-    new_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    anchor = "## What C12 corrects"\n    if anchor not in text:\n        raise AssertionError("M23 mutation anchor missing from current C12 dossier")\n    payload = (\n        "## Current position\\n\\n"\n        "Candidate C4 is the present candidate and API-02 = NEXT.\\n\\n"\n        + anchor\n    )\n    mutated = text.replace(anchor, payload, 1)\n    if mutated == text:\n        raise AssertionError("M23 mutation did not change the current C12 dossier")\n    path.write_text(mutated, encoding="utf-8")\n'''
+    new_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    anchor = "## What C12 corrects"\n    if anchor not in text:\n        raise AssertionError("M23 mutation anchor missing from current C12 dossier")\n    stale_role = "C" + "4"\n    payload = (\n        "## Current position\\n\\n"\n        f"Candidate {stale_role} is the present candidate and API-02 = NEXT.\\n\\n"\n        + anchor\n    )\n    mutated = text.replace(anchor, payload, 1)\n    if mutated == text:\n        raise AssertionError("M23 mutation did not change the current C12 dossier")\n    path.write_text(mutated, encoding="utf-8")\n'''
     if old_m23 not in stext:
         raise SystemExit("C12 M23 fix: carried no-op M23 mutator not found")
     selftest.write_text(stext.replace(old_m23, new_m23, 1))
