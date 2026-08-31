@@ -144,12 +144,18 @@ test("B25 dialog focus restoration", async ({ page }) => {
 test("B26 400 percent reflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.goto("/member/membership");
-  const remedy = page.getByRole("link", { name: /Korrektur/ });
-  await remedy.scrollIntoViewIfNeeded();
-  await expect(remedy).toBeVisible();
-  const box = await remedy.boundingBox();
-  expect(box?.x).toBeGreaterThanOrEqual(0);
-  expect((box?.x ?? 0) + (box?.width ?? 999)).toBeLessThanOrEqual(320);
+  await expect(page.getByText("Provenienz")).toBeVisible();
+  await expect
+    .poll(async () => {
+      const remedy = page.getByRole("link", { name: /Korrektur/ });
+      if (!(await remedy.isVisible())) return false;
+      return remedy.evaluate((element) => {
+        element.scrollIntoView({ block: "nearest", inline: "nearest" });
+        const box = element.getBoundingClientRect();
+        return box.left >= 0 && box.right <= window.innerWidth;
+      });
+    })
+    .toBe(true);
 });
 const mandatory = [
   "/member/application",
