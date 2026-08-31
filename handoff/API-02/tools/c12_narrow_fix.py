@@ -18,8 +18,6 @@ def _rebind_expected_candidate(obj: dict) -> None:
 
 
 def _rebind_carried_evidence(root: Path) -> None:
-    # acceptance_path_identity_result is carried preseal evidence. Candidate
-    # bindings are current C12 identity; entering bindings remain exact C11.
     p = root / "validation/api02/acceptance_path_identity_result.json"
     if p.exists():
         d = json.loads(p.read_text())
@@ -64,9 +62,6 @@ def main() -> None:
     args = parser.parse_args()
     root = Path(args.root).resolve()
 
-    # Revert the over-broad interim CURRENT-cue classifier. Historical
-    # correction reports must remain historical even when their own old
-    # headings contain "Candidate:" / "Role:".
     stale = root / "scripts/api02/build_stale_audit.py"
     text = stale.read_text()
     broad_header = '''CURRENT_IDENTITY_CUES: tuple[str, ...] = (\n    r"\\bthis candidate\\b",\n    r"\\bcurrent candidate\\b",\n    r"\\*\\*Candidate:\\*\\*",\n    r"\\*\\*Role:\\*\\*",\n)\n\n\ndef _classify_text(text: str, *, heading: str = "") -> tuple[str, str]:\n    """Classify one current-state context.\n\n    An explicit claim about this/current candidate is CURRENT by definition.\n    It cannot be downgraded to HISTORICAL because the same block also names\n    an entering predecessor or contains a past-round cue. N5/N6 enforce this.\n    """\n'''
@@ -80,19 +75,24 @@ def main() -> None:
     text = text.replace(broad_loop, "", 1)
     stale.write_text(text)
 
-    # IR-C11-02 / N5-N6: a regex character class is not a numeric round
-    # range. C[1-11] matches one character after C, so C8/C9/C10/C11 are
-    # not represented correctly. Derive an explicit longest-first alternation.
     validator = root / "scripts/validate_api02.py"
     text = validator.read_text()
     old = '''_EARLIER_ROUNDS: Final[str] = (\n    f"C[1-{int(CANDIDATE_ROLE[1:]) - 1}]" if CANDIDATE_ROLE[1:].isdigit() else "C[1-6]"\n)\n'''
     new = '''_EARLIER_ROUNDS: Final[str] = (\n    "(?:"\n    + "|".join(\n        f"C{index}" for index in range(int(CANDIDATE_ROLE[1:]) - 1, 0, -1)\n    )\n    + ")"\n    if CANDIDATE_ROLE[1:].isdigit()\n    else r"C(?!)"\n)\n'''
     if old not in text:
         raise SystemExit("C12 narrow fix: C11 _EARLIER_ROUNDS block not found")
-    validator.write_text(text.replace(old, new, 1))
+    text = text.replace(old, new, 1)
 
-    # Current C12 references which C11 could not see as stale because C11
-    # was then the current round. These are current-facing, not history.
+    # IR-C12-M23: current dossier markdown uses **Candidate:** `...C12...`.
+    # The generic `candidate Cn` detector does not match the colon / closing
+    # emphasis / filename form, so an earlier round could be asserted in the
+    # authoritative current-candidate field without gate 28 rejecting it.
+    anchor = '''_STALE_CURRENT_CLAIMS: Final[tuple[tuple[str, str], ...]] = (\n    (rf"\\b{_EARLIER_ROUNDS}\\s*\\(this candidate\\)", "names an earlier round as this candidate"),\n'''
+    replacement = '''_STALE_CURRENT_CLAIMS: Final[tuple[tuple[str, str], ...]] = (\n    (rf"\\b{_EARLIER_ROUNDS}\\s*\\(this candidate\\)", "names an earlier round as this candidate"),\n    (\n        rf"\\bcandidate\\s*:\\*{{0,2}}\\s*`?[^`\\n]*\\b{_EARLIER_ROUNDS}\\b",\n        "names an earlier round in the current Candidate field",\n    ),\n'''
+    if anchor not in text:
+        raise SystemExit("C12 M23 fix: stale-current-claims anchor not found")
+    validator.write_text(text.replace(anchor, replacement, 1))
+
     voting = root / "docs/api/API-02/11_VOTING_IDENTITY_ISOLATION.md"
     if voting.exists():
         voting.write_text(
@@ -122,7 +122,7 @@ def main() -> None:
         r = report.read_text()
         r = r.replace(
             "C12 makes explicit current-candidate identity cues CURRENT before historical-cue evaluation, orders past-round alternatives longest-first, and regenerates the current-facing dossier identity.",
-            "C12 replaces the invalid numeric character-class construction for earlier rounds with a dynamically derived longest-first alternation (`C11|C10|...|C1` for C12), retains the stale-audit historical classifier, and regenerates the current-facing dossier identity.",
+            "C12 replaces the invalid numeric character-class construction for earlier rounds with a dynamically derived longest-first alternation (`C11|C10|...|C1` for C12), retains the stale-audit historical classifier, regenerates the current-facing dossier identity, and rejects an earlier round asserted through the authoritative markdown `Candidate:` field.",
         )
         report.write_text(r)
 
