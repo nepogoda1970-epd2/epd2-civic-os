@@ -1,0 +1,209 @@
+name: API-02 C7 Exact Recovery
+
+on:
+  push:
+    branches:
+      - tmp/api02-c7-exact-recovery
+    paths:
+      - '.github/workflows/api02-c7-exact-recovery.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch every repository branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --tags --force --prune
+
+      - name: Reconstruct and verify exact C8
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/api02-recovery"
+          cat handoff/API-02/incoming/EPD2_API02_C8.zip.part0 handoff/API-02/incoming/EPD2_API02_C8.zip.part1 > "$RUNNER_TEMP/api02-recovery/C8.zip"
+          test "$(stat -c '%s' "$RUNNER_TEMP/api02-recovery/C8.zip")" = 34641029
+          echo '7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef  '"$RUNNER_TEMP/api02-recovery/C8.zip" | sha256sum -c -
+          unzip -q "$RUNNER_TEMP/api02-recovery/C8.zip" -d "$RUNNER_TEMP/api02-recovery/c8"
+
+      - name: Recover C7 tree from exact C8 correction inventory and Git history
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib, json, os, pathlib, shutil, stat, subprocess, sys, zipfile
+
+          work = pathlib.Path(os.environ['RUNNER_TEMP']) / 'api02-recovery'
+          c8zip = work / 'C8.zip'
+          c8base = work / 'c8'
+          c8roots = [p for p in c8base.iterdir() if p.is_dir()]
+          assert len(c8roots) == 1, c8roots
+          c8 = c8roots[0]
+          assert c8.name == 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8'
+          invp = c8 / 'docs/api/API-02/API02_C7_TO_C8_CORRECTION_INVENTORY.json'
+          inv = json.loads(invp.read_text())
+          assert inv['entering_baseline']['sha256'] == '87e1a36da39b5427e94b619f075a117af8a996b44d601d18714b22f40f55a8fd'
+          assert inv['entering_baseline']['size'] == 34569523
+          rows = inv['entries']
+          assert len(rows) == 85
+
+          c7 = work / 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C7'
+          if c7.exists(): shutil.rmtree(c7)
+          shutil.copytree(c8, c7, copy_function=shutil.copy2)
+
+          report = {
+              'schema':'epd2.api02.c7-exact-recovery/1',
+              'target_sha256':'87e1a36da39b5427e94b619f075a117af8a996b44d601d18714b22f40f55a8fd',
+              'target_size':34569523,
+              'source_c8_sha256':'7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef',
+              'rows':len(rows), 'found':[], 'missing':[]
+          }
+
+          cache = {}
+          def sha(b: bytes) -> str: return hashlib.sha256(b).hexdigest()
+
+          def recover_path(path: str, target: str):
+              key=(path,target)
+              if key in cache: return cache[key]
+              try:
+                  raw = subprocess.check_output(['git','rev-list','--all','--',path], text=True)
+                  commits = [x for x in raw.splitlines() if x]
+              except subprocess.CalledProcessError:
+                  commits=[]
+              seen=set()
+              for commit in commits:
+                  spec=f'{commit}:{path}'
+                  try:
+                      blob_id=subprocess.check_output(['git','rev-parse',spec], text=True, stderr=subprocess.DEVNULL).strip()
+                  except subprocess.CalledProcessError:
+                      continue
+                  if blob_id in seen: continue
+                  seen.add(blob_id)
+                  try:
+                      data=subprocess.check_output(['git','cat-file','blob',blob_id])
+                  except subprocess.CalledProcessError:
+                      continue
+                  if sha(data)==target:
+                      cache[key]=(data,commit,blob_id,'same-path-history')
+                      return cache[key]
+              cache[key]=None
+              return None
+
+          # Apply round reversal. Added-in-C8 files did not exist in C7.
+          for r in rows:
+              rel=r['path']; change=r['change']; p=c7/rel
+              if change=='added':
+                  if p.exists() or p.is_symlink(): p.unlink()
+                  continue
+              target=r['entering_sha256']
+              got=recover_path(rel,target)
+              if got is None:
+                  report['missing'].append({'path':rel,'sha256':target,'change':change})
+                  continue
+              data,commit,blob_id,method=got
+              p.parent.mkdir(parents=True,exist_ok=True)
+              p.write_bytes(data)
+              mode=int(r['entering_mode'],8)
+              os.chmod(p,mode)
+              report['found'].append({'path':rel,'sha256':target,'change':change,'commit':commit,'blob':blob_id,'method':method})
+
+          # Verify every recovered changed/removed C7 path against governed entering hashes.
+          mismatches=[]
+          for r in rows:
+              rel=r['path']; change=r['change']; p=c7/rel
+              if change=='added':
+                  if p.exists(): mismatches.append({'path':rel,'problem':'C8-added path still present'})
+                  continue
+              if not p.is_file():
+                  if not any(x['path']==rel for x in report['missing']): mismatches.append({'path':rel,'problem':'missing after recovery'})
+                  continue
+              actual=sha(p.read_bytes())
+              if actual != r['entering_sha256']:
+                  mismatches.append({'path':rel,'expected':r['entering_sha256'],'actual':actual})
+          report['mismatches']=mismatches
+          report['c7_total_files_after_reversal']=sum(1 for p in c7.rglob('*') if p.is_file())
+
+          # If SHA256SUMS.txt was recovered, independently verify its complete census.
+          sums=c7/'SHA256SUMS.txt'
+          sumcheck={'present':sums.is_file()}
+          if sums.is_file() and sha(sums.read_bytes()) == next((r['entering_sha256'] for r in rows if r['path']=='SHA256SUMS.txt'), sha(sums.read_bytes())):
+              listed=[]; bad=[]
+              for line in sums.read_text().splitlines():
+                  if not line.strip(): continue
+                  h,rel=line.split('  ',1)
+                  q=c7/rel
+                  if not q.is_file(): bad.append({'path':rel,'problem':'missing'})
+                  else:
+                      a=sha(q.read_bytes())
+                      if a!=h: bad.append({'path':rel,'expected':h,'actual':a})
+                  listed.append(rel)
+              sumcheck.update({'rows':len(listed),'bad':bad})
+          report['sha256sums_check']=sumcheck
+
+          out_report=work/'recovery_report.json'
+          out_report.write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:report[k] for k in ['found','missing','mismatches','c7_total_files_after_reversal','sha256sums_check']},indent=2)[:30000])
+
+          # Package only when the whole governed tree is exact enough to prove itself.
+          if report['missing'] or report['mismatches']:
+              print(f"RECOVERY_INCOMPLETE found={len(report['found'])} missing={len(report['missing'])} mismatches={len(report['mismatches'])}")
+              sys.exit(0)
+          if report['c7_total_files_after_reversal'] != 3944:
+              print('RECOVERY_INCOMPLETE unexpected total file count')
+              sys.exit(0)
+          if not sumcheck.get('present') or sumcheck.get('rows') != 3940 or sumcheck.get('bad'):
+              print('RECOVERY_INCOMPLETE SHA256SUMS census did not prove exact C7 tree')
+              sys.exit(0)
+
+          # Rebuild the deterministic archive. C8 exact-byte reproduction established these packaging semantics.
+          target='87e1a36da39b5427e94b619f075a117af8a996b44d601d18714b22f40f55a8fd'
+          target_size=34569523
+          candidates=[]
+          for dt in [(2026,8,30,0,0,0),(2026,8,29,0,0,0),(2026,8,31,0,0,0)]:
+              out=work/f"C7_{dt[2]:02d}.zip"
+              files=[(p.relative_to(c7).as_posix(),p) for p in c7.rglob('*') if p.is_file()]
+              files.sort(key=lambda x:x[0])
+              with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,strict_timestamps=True) as z:
+                  for rel,p in files:
+                      zi=zipfile.ZipInfo(c7.name+'/'+rel,dt)
+                      zi.compress_type=zipfile.ZIP_DEFLATED
+                      zi.create_system=3
+                      zi.external_attr=(stat.S_IMODE(p.stat().st_mode)<<16)
+                      z.writestr(zi,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=6)
+              h=sha(out.read_bytes()); s=out.stat().st_size
+              candidates.append({'file':out.name,'date_time':dt,'size':s,'sha256':h,'match':h==target and s==target_size})
+              print('PACKAGE',out.name,s,h,'MATCH' if h==target and s==target_size else '')
+              if h==target and s==target_size:
+                  final=work/'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C7.zip'
+                  shutil.copy2(out,final)
+          report['package_candidates']=candidates
+          report['exact_archive_recovered']=(work/'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C7.zip').is_file()
+          out_report.write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          if report['exact_archive_recovered']:
+              print('C7_EXACT_RECOVERY:PASS')
+          else:
+              print('C7_TREE_EXACT_ARCHIVE_METADATA_NOT_YET_MATCHED')
+          PY
+
+      - name: Upload recovery evidence and exact C7 if recovered
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c7-exact-recovery-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/api02-recovery/recovery_report.json
+            ${{ runner.temp }}/api02-recovery/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C7.zip
+            ${{ runner.temp }}/api02-recovery/C7_*.zip
+          if-no-files-found: warn
+          compression-level: 0
