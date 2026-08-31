@@ -26,7 +26,7 @@ jobs:
       - name: Unit and component tests
         run: npm run --workspace web-shell test
       - name: Inherited FRONT-02 validation
-        run: npm run --workspace web-shell validate:front02
+        run: node scripts/validate_front02_catalogue.mjs
       - name: Production build
         run: npm run --workspace web-shell build
       - name: Dependency audit evidence
