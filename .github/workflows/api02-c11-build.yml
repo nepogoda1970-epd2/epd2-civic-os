@@ -96,9 +96,8 @@ jobs:
           python3 scripts/api02/build_exact_inventories.py
           python3 scripts/api02/build_correction_inventory.py
           python3 scripts/api02/acceptance_path_identity.py --root .
-          python3 scripts/validate_api02.py --acceptance-path-only
 
-      - name: 08 Converge fixed-point seal and re-run full acceptance-path gate
+      - name: 08 Converge fixed-point seal and run full acceptance-path gate
         shell: bash
         working-directory: work/${{ env.C11_ROOT }}
         env:
