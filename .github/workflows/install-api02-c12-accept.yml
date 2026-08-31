@@ -25,7 +25,7 @@ jobs:
           path: incoming
           run-id: '33413366989'
           github-token: ${{ github.token }}
-      - name: Install exact candidate-carried workflow
+      - name: Stage exact candidate-carried workflow bytes as ordinary governed handoff blob
         shell: bash
         run: |
           set -euo pipefail
@@ -34,15 +34,17 @@ jobs:
           rm -rf /tmp/c12 && mkdir -p /tmp/c12
           unzip -q "$CAND" -d /tmp/c12
           SRC='/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12/.github/workflows/api02-accept.yml'
+          DST='handoff/API-02/C12_api02_accept_exact.yml'
           test -f "$SRC"
-          cp "$SRC" .github/workflows/api02-accept.yml
-          cmp -s "$SRC" .github/workflows/api02-accept.yml
+          cp "$SRC" "$DST"
+          cmp -s "$SRC" "$DST"
+          test "$(git hash-object "$DST")" = 'af6fafef6be01d550e759087a59a18e416d43cbf'
           git config user.name 'epd2-governed-automation'
           git config user.email 'actions@users.noreply.github.com'
-          git add .github/workflows/api02-accept.yml
+          git add "$DST"
           if git diff --cached --quiet; then
-            echo 'exact C12 acceptance workflow already installed'
+            echo 'exact C12 acceptance blob already staged'
             exit 0
           fi
-          git commit -m 'Install exact API-02 C12 authoritative acceptance workflow'
+          git commit -m 'Stage exact API-02 C12 acceptance workflow blob'
           git push origin HEAD:tmp/api02-c12-canonical-accept
