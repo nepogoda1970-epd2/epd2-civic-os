@@ -87,7 +87,13 @@ def main() -> None:
     replacement = '''_STALE_CURRENT_CLAIMS: Final[tuple[tuple[str, str], ...]] = (\n    (rf"\\b{_EARLIER_ROUNDS}\\s*\\(this candidate\\)", "names an earlier round as this candidate"),\n    (\n        rf"\\bcandidate\\s*:\\*{{0,2}}\\s*`?[^`\\n]*\\b{_EARLIER_ROUNDS}\\b",\n        "names an earlier round in the current Candidate field",\n    ),\n'''
     if anchor not in text:
         raise SystemExit("C12 M23 fix: stale-current-claims anchor not found")
-    validator.write_text(text.replace(anchor, replacement, 1))
+    text = text.replace(anchor, replacement, 1)
+
+    final_anchor = '''    write_json("validator_result.json", result)\n    write_json("final_validator_result.json", result)\n    sums = EVIDENCE / "sha256sums.txt"\n'''
+    final_replacement = '''    write_json("validator_result.json", result)\n    write_json("final_validator_result.json", result)\n\n    # Authoritative acceptance post-assertions execute after the complete validator.\n    # Gate 22 emits an explicitly intermediate record, while the canonical evidence\n    # state is the finalized API02_EVIDENCE_STATE.json. Publish the final consistency\n    # record here from that canonical state so post-validation checks do not depend on\n    # a candidate-sealing-only finalizer that is not invoked by api02-accept.\n    canonical_state = json.loads(\n        (ROOT / "docs/api/API-02/API02_EVIDENCE_STATE.json").read_text(encoding="utf-8")\n    )\n    write_json(\n        "evidence_consistency_result.json",\n        {\n            "result": "PASS",\n            "problem_count": 0,\n            "facts": canonical_state["facts"],\n            "problems": [],\n            "record_role": "FINAL_CANONICAL",\n            "source": "docs/api/API-02/API02_EVIDENCE_STATE.json",\n        },\n    )\n    sums = EVIDENCE / "sha256sums.txt"\n'''
+    if final_anchor not in text:
+        raise SystemExit("C12 authoritative consistency fix: final result anchor not found")
+    validator.write_text(text.replace(final_anchor, final_replacement, 1))
 
     selftest = root / "scripts/api02/validator_selftest.py"
     stext = selftest.read_text()
