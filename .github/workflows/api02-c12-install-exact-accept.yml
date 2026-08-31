@@ -28,15 +28,30 @@ jobs:
           run-id: 33413366989
           github-token: ${{ github.token }}
 
+      - name: Download exact C12 candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: /tmp/c12-candidate
+          run-id: 33413366989
+          github-token: ${{ github.token }}
+
       - name: Build exact workflow commit object and expose identity
         shell: bash
         run: |
           set -euo pipefail
           SRC=/tmp/c12-evidence/api02-accept.yml
+          ZIP=/tmp/c12-candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
           test -f "$SRC"
-          echo '3232f12ee71c651b57572ba1367104463b0361fa53bfb080457206d545bbcd5f  '"$SRC" | sha256sum -c -
+          test -f "$ZIP"
+          echo '94724dfd8825ea92107cddbc860a9fba2ecc93e1cbd25abe74970430654f5a6f  '"$ZIP" | sha256sum -c -
+          unzip -p "$ZIP" 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12/.github/workflows/api02-accept.yml' > /tmp/api02-accept.from-candidate.yml
+          cmp -s "$SRC" /tmp/api02-accept.from-candidate.yml
+          SRC_SHA="$(sha256sum "$SRC" | awk '{print $1}')"
+          CAND_SHA="$(sha256sum /tmp/api02-accept.from-candidate.yml | awk '{print $1}')"
+          test "$SRC_SHA" = "$CAND_SHA"
           cp "$SRC" .github/workflows/api02-accept.yml
-          echo '3232f12ee71c651b57572ba1367104463b0361fa53bfb080457206d545bbcd5f  .github/workflows/api02-accept.yml' | sha256sum -c -
+          test "$(sha256sum .github/workflows/api02-accept.yml | awk '{print $1}')" = "$SRC_SHA"
           git config user.name 'epd2-governed-verification'
           git config user.email 'actions@users.noreply.github.com'
           git add .github/workflows/api02-accept.yml
@@ -44,6 +59,6 @@ jobs:
           echo "EXACT_COMMIT_SHA=$(git rev-parse HEAD)"
           echo "EXACT_TREE_SHA=$(git rev-parse HEAD^{tree})"
           echo "EXACT_WORKFLOW_BLOB_SHA=$(git rev-parse HEAD:.github/workflows/api02-accept.yml)"
-          echo "EXACT_WORKFLOW_SHA256=$(sha256sum .github/workflows/api02-accept.yml | awk '{print $1}')"
+          echo "EXACT_WORKFLOW_SHA256=$SRC_SHA"
           git push origin HEAD:tmp/api02-c12-canonical-accept || true
           echo 'API02_C12_EXACT_ACCEPT_OBJECT:PASS'
