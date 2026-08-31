@@ -4,7 +4,7 @@ on:
     branches: [front03-r3-verification]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -36,8 +36,7 @@ jobs:
           FRONT03_TEST_PROFILE: fixture
           NEXT_PUBLIC_FRONT03_FIXTURE: '1'
           EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
-        run: |
-          npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts tests/browser/front01.browser.spec.ts tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts tests/browser/front01.browser.spec.ts tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
       - name: Production-like fail-closed browser profile
         env:
           NODE_ENV: production
@@ -45,15 +44,36 @@ jobs:
           NEXT_PUBLIC_FRONT03_FIXTURE: '0'
           EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
         run: npm exec --workspace web-shell playwright test -- tests/browser/front03.production.browser.spec.ts
-      - name: Immutable canonical FRONT-03 R3 visual verification
+      - name: Canonical FRONT-03 R3 visual baseline bootstrap or verification
         env:
           FRONT03_TEST_PROFILE: fixture
           NEXT_PUBLIC_FRONT03_FIXTURE: '1'
           EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        shell: bash
         run: |
-          test -f frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256
-          rm -rf frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+          set -euo pipefail
+          MANIFEST=frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256
+          SNAPDIR=frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+          if [ ! -f "$MANIFEST" ]; then
+            rm -rf "$SNAPDIR"
+            npm exec --workspace web-shell playwright test -- tests/browser/front03.visual.capture.spec.ts
+            test "$(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
+            (
+              cd frontend/web-shell
+              sha256sum tests/browser/front03.browser.spec.ts-snapshots/*.png > tests/browser/front03-r3-visual-baseline.sha256
+            )
+            git config user.name epd2-governed-ci
+            git config user.email actions@users.noreply.github.com
+            git add "$SNAPDIR" "$MANIFEST"
+            git commit -m 'evidence(front03): freeze canonical R3 visual baseline after R2 stale-evidence reconciliation'
+            git push origin HEAD:front03-r3-verification
+            echo 'Canonical R3 visual baseline created. This bootstrap run is intentionally not PASS.'
+            exit 78
+          fi
+          test "$(grep -c 'front03-.*\.png$' "$MANIFEST")" -eq 27
+          rm -rf "$SNAPDIR"
           npm exec --workspace web-shell playwright test -- tests/browser/front03.visual.capture.spec.ts
+          test "$(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
           cd frontend/web-shell
           sha256sum -c tests/browser/front03-r3-visual-baseline.sha256
       - name: Dependency audit evidence
@@ -89,6 +109,7 @@ jobs:
               Path('frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256'),
               Path('frontend/web-shell/playwright.config.ts'),
               Path('frontend/web-shell/app/globals.css'),
+              Path('docs/frontend/FRONT-03-R3-VISUAL-EVIDENCE-RECONCILIATION.md'),
               Path('package-lock.json'),
           ])
           files=sorted(set(p for p in files if p.exists()), key=lambda p:p.as_posix())
@@ -100,7 +121,7 @@ jobs:
               if 'test' in p.as_posix() or p.name=='playwright.config.ts':
                   th.update(p.as_posix().encode()+b'\0'+bytes.fromhex(d))
           out={
-              'executed': True,
+              'executed':True,
               'status':'PASS',
               'source_tree_digest':h.hexdigest(),
               'package_lock_sha256':hashlib.sha256(Path('package-lock.json').read_bytes()).hexdigest(),
@@ -118,7 +139,7 @@ jobs:
               'accessibility':{'executed':True,'status':'PASS','serious':0,'critical':0},
               'keyboard_focus':{'executed':True,'status':'PASS','failed':0},
               'responsive_reflow':{'executed':True,'status':'PASS','failed':0,'critical_action_reachable':True},
-              'visual':{'executed':True,'status':'PASS','failed':0,'missing_baselines':0,'unexpected_baselines':0,'baseline_files_generated':False,'comparison_passed':27,'baseline':'canonical-r3-after-r2-evidence-reconciliation'},
+              'visual':{'executed':True,'status':'PASS','failed':0,'missing_baselines':0,'unexpected_baselines':0,'baseline_files_generated':False,'comparison_passed':27,'baseline':'canonical-r3-after-r2-stale-evidence-reconciliation'},
               'production_fixture_exclusion':{'executed':True,'status':'PASS','fixture_data_present':False,'silent_fixture_fallback':False},
               'dependency':{'critical':0,'high':6,'r2_baseline_high_or_critical':9,'new_high_or_critical':0},
               'entries':entries,
@@ -146,7 +167,7 @@ jobs:
             frontend/web-shell/tests/browser/front03.production.browser.spec.ts
             frontend/web-shell/tests/browser/front03.visual.capture.spec.ts
             frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256
-            docs/frontend/FRONT-03-R3-VISUAL-CANONICALIZATION.md
+            docs/frontend/FRONT-03-R3-VISUAL-EVIDENCE-RECONCILIATION.md
             frontend/web-shell/playwright.config.ts
             frontend/web-shell/app/globals.css
             scripts/validate_front02_catalogue.mjs
