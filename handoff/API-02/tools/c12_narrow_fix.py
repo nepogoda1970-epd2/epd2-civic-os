@@ -118,6 +118,15 @@ def main() -> None:
             predecessor_run.pop("note", None)
         lineage.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
 
+    workflow = root / ".github/workflows/api02-accept.yml"
+    if workflow.exists():
+        wtext = workflow.read_text()
+        old_key = 'f["clean_accepted"] and f["mutation_rejected"]'
+        new_key = 'f["clean_accepted"] and f["mutated_rejected"]'
+        if old_key not in wtext:
+            raise SystemExit("C12 mutation assertion fix: stale schema key not found")
+        workflow.write_text(wtext.replace(old_key, new_key, 1))
+
     inv = root / "scripts/api02/build_exact_inventories.py"
     if inv.exists():
         inv.write_text(inv.read_text().replace("# --- C11 ", "# --- C12 ", 1))
