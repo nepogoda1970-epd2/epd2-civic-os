@@ -1,0 +1,39 @@
+name: api02-c12-seal-diagnostic
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - '.github/workflows/api02-c12-seal-diagnostic.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact C12 candidate artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming
+          run-id: '33413366989'
+          github-token: ${{ github.token }}
+      - name: Report exact unlisted sealed-tree files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work && mkdir work
+          unzip -q incoming/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip -d work
+          cd work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
+          awk '{print substr($0,67)}' SHA256SUMS.txt | sed 's#^\*##' | sort > /tmp/listed
+          find . -type f ! -path ./SHA256SUMS.txt ! -path ./docs/api/API-02/API02_SEALED_FILE_MANIFEST.json -printf '%P\n' | sort > /tmp/tree
+          echo '=== TREE_NOT_IN_SHA256SUMS ==='
+          comm -13 /tmp/listed /tmp/tree
+          echo '=== SHA256SUMS_NOT_IN_TREE ==='
+          comm -23 /tmp/listed /tmp/tree
+          echo "listed=$(wc -l < /tmp/listed) tree=$(wc -l < /tmp/tree)"
