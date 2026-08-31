@@ -23,7 +23,6 @@ jobs:
           mkdir -p "$OUT"
           git clone --mirror "$REPO_URL" epd2-civic-os.git
           cd epd2-civic-os.git
-          # Exclude the temporary artifact-generation branch itself from the archival ref set.
           git update-ref -d "$TECH_BRANCH" || true
           MAIN_SHA="$(git rev-parse refs/heads/main)"
           test "$MAIN_SHA" = "$EXPECTED_MAIN"
@@ -64,15 +63,40 @@ jobs:
                   raise SystemExit(f'ZIP CRC failure: {bad}')
           PY
           sha256sum EPD2_FULL_GIT_MIRROR_2026-09-01.zip > EPD2_FULL_GIT_MIRROR_2026-09-01.zip.sha256
-          ls -lh EPD2_FULL_GIT_MIRROR_2026-09-01.zip "$OUT/epd2-civic-os-full-history.bundle"
+          split -b 250M -d -a 2 EPD2_FULL_GIT_MIRROR_2026-09-01.zip EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part
+          sha256sum EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part* > EPD2_FULL_GIT_MIRROR_2026-09-01.parts.sha256
+          ls -lh EPD2_FULL_GIT_MIRROR_2026-09-01.zip EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part*
 
-      - name: Upload complete Git backup
+      - name: Upload part 00
         uses: actions/upload-artifact@v4
         with:
-          name: EPD2_FULL_GIT_MIRROR_2026-09-01
+          name: EPD2_FULL_GIT_MIRROR_2026-09-01_PART00
+          path: EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part00
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_FULL_GIT_MIRROR_2026-09-01_PART01
+          path: EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part01
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_FULL_GIT_MIRROR_2026-09-01_PART02
+          path: EPD2_FULL_GIT_MIRROR_2026-09-01.zip.part02
+          retention-days: 30
+          compression-level: 0
+
+      - name: Upload hashes
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPD2_FULL_GIT_MIRROR_2026-09-01_HASHES
           path: |
-            EPD2_FULL_GIT_MIRROR_2026-09-01.zip
             EPD2_FULL_GIT_MIRROR_2026-09-01.zip.sha256
-          if-no-files-found: error
+            EPD2_FULL_GIT_MIRROR_2026-09-01.parts.sha256
           retention-days: 30
           compression-level: 0
