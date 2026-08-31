@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { MemberWorkspaceEntry } from "../../../member/MemberWorkspaceEntry";
+import "../../../member/member.css";
 import type { ActorMode } from "../../../member/types";
 
 export const dynamic = "force-dynamic";
