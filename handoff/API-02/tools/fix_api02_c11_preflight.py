@@ -13,11 +13,6 @@ t=t.replace('API02_ENTERING_CANDIDATE_ZIP       …API02…CANDIDATE_0.1_C9.zip 
 p.write_text(t)
 
 # C11 exposes a latent C10+ bug in the stale-audit historical-cue regex.
-# `C[1-9]` worked through C10, but the derived C11 value `C[1-10]` is a
-# character class, not the sequence C1..C10. Build an explicit alternation
-# from the already-governed `past_rounds()` source instead. This changes no
-# token set and no CURRENT classification rule; it only makes the historical
-# cue recognizer represent multi-digit prior rounds correctly.
 p=root/'scripts/api02/build_stale_audit.py'
 t=p.read_text()
 old='_PAST_ROUND = f"C[1-{int(CANDIDATE_ROLE[1:]) - 1}]" if CANDIDATE_ROLE[1:].isdigit() else "C[12]"'
@@ -27,21 +22,24 @@ if old not in t:
 t=t.replace(old,new,1)
 p.write_text(t)
 
-# The C9 -> C10 correction report is predecessor history once C11 is current.
-# Keep its substantive bytes untouched and add only the governed whole-document
-# historical declaration that makes that fact machine-checkable.
+# C9 -> C10 is a whole-document predecessor record in C11. Enforce BOTH
+# pieces required by historical_document_problems(): a HISTORICAL first-line
+# heading and the exact **HISTORICAL.** banner in the opening block.
 report=root/'docs/api/API-02/API02_C9_TO_C10_CORRECTION_REPORT.md'
-rt=report.read_text()
-if 'HISTORICAL' not in rt.splitlines()[0]:
-    rt=(
-        '# HISTORICAL — API-02 C9 → C10 correction record\n\n'
-        '**HISTORICAL.** This document records the completed C9 → C10 correction and is retained as predecessor history.\n\n'
-        + rt
-    )
-    report.write_text(rt)
+lines=report.read_text().splitlines()
+if not lines:
+    raise SystemExit('C9->C10 correction report is empty')
+if 'HISTORICAL' not in lines[0]:
+    lines.insert(0,'# HISTORICAL — API-02 C9 → C10 correction record')
+if '**HISTORICAL.**' not in '\n'.join(lines[:12]):
+    lines.insert(1,'')
+    lines.insert(2,'**HISTORICAL.** This document records the completed C9 → C10 correction and is retained as predecessor history.')
+report.write_text('\n'.join(lines)+'\n')
+head='\n'.join(report.read_text().splitlines()[:12])
+assert 'HISTORICAL' in head.splitlines()[0]
+assert '**HISTORICAL.**' in head
 
-# Register that whole-document history explicitly. The existing checker still
-# requires the banner above, so this cannot become a blanket stale-state bypass.
+# Register the whole-document historical record explicitly.
 p=root/'scripts/api02/lineage_gates.py'
 t=p.read_text()
 needle='    f"{DOSSIER}/PROGRAM_CONTROL_REGISTER_UPDATE_PROPOSAL.md",\n)'
@@ -51,9 +49,8 @@ if needle not in t:
 t=t.replace(needle,replacement,1)
 p.write_text(t)
 
-# C10 carried a machine identity record produced for C10. Regenerate that
-# record from C11's own workflow + lineage before stale-state sealing, rather
-# than preserving a stale current-state machine claim.
+# Regenerate the carried current machine identity record from C11's own
+# workflow + lineage instead of retaining C10 current-state evidence.
 scripts=root/'scripts/api02'
 sys.path.insert(0,str(scripts))
 for name in ('lineage_gates','acceptance_path_identity'):
@@ -68,4 +65,5 @@ out.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
 print('API02_C11_PREFLIGHT_REFERENCE_FIX:PASS')
 print('API02_C11_STALE_AUDIT_MULTIDIGIT_FIX:PASS')
 print('API02_C11_HISTORICAL_RECORD_CLASSIFICATION:PASS')
+print('API02_C11_HISTORICAL_BANNER_EXACT:PASS')
 print('API02_C11_ACCEPTANCE_IDENTITY_RECORD:PASS')
