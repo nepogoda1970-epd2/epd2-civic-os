@@ -113,6 +113,9 @@ def main() -> None:
         if isinstance(bsi, dict):
             bsi["generated_from"] = "docs/api/API-02/API02_C11_TO_C12_CORRECTION_INVENTORY.json"
             bsi["delta"] = "C11 → C12"
+        predecessor_run = d.get("predecessor_acceptance_run")
+        if isinstance(predecessor_run, dict):
+            predecessor_run.pop("note", None)
         lineage.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
 
     inv = root / "scripts/api02/build_exact_inventories.py"
