@@ -1,16 +1,33 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useScopeTransition } from "./useScopeTransition";
 import type {
   ActorMode,
   ApplicantCase,
   InitiativeDraft,
+  Locale,
   MemberRuntime,
   Result,
 } from "./types";
 
+const labels = {
+  de: {
+    unavailable: "Verbindung zur zuständigen Laufzeit nicht verfügbar",
+    retry: "Sicher erneut versuchen",
+    help: "Alternativ erreichen Sie die Mitgliederstelle schriftlich.",
+    restricted: "Dieser Bereich ist für Ihr Konto nicht freigegeben.",
+    back: "Zum eigenen Antrag",
+  },
+  en: {
+    unavailable: "Responsible runtime is unavailable",
+    retry: "Retry safely",
+    help: "Alternatively, contact the membership office in writing.",
+    restricted: "This area is not available to your account.",
+    back: "Back to your application",
+  },
+};
 const memberNav = [
   ["/member/home", "Übersicht"],
   ["/member/membership", "Profil & Mitgliedsstatus"],
@@ -18,7 +35,7 @@ const memberNav = [
   ["/member/deliberation", "Programmwerkstatt"],
   ["/member/delegation", "Meine Stimmen & Delegation"],
   ["/member/assurance/authentication-session-assurance", "Sicherheit"],
-] as const;
+];
 
 export function MemberWorkspace({
   path,
@@ -29,7 +46,8 @@ export function MemberWorkspace({
   runtime: MemberRuntime;
   actor: ActorMode;
 }) {
-  const locale = useSearchParams().get("lang") === "en" ? "en" : "de";
+  const params = useSearchParams();
+  const locale: Locale = params.get("lang") === "en" ? "en" : "de";
   const scope = useScopeTransition(runtime.organizationScope);
   const isApplication =
     path === "/member/application" || path === "/member/membership/appeal";
@@ -50,9 +68,21 @@ export function MemberWorkspace({
           <span>Bürgerbereich</span>
         </div>
         <div className="header-actions">
-          <Link href={`${path}?lang=de`}>DE</Link>
+          <Link
+            href={`${path}?lang=de`}
+            lang="de"
+            aria-current={locale === "de" ? "page" : undefined}
+          >
+            DE
+          </Link>
           <span aria-hidden>·</span>
-          <Link href={`${path}?lang=en`}>EN</Link>
+          <Link
+            href={`${path}?lang=en`}
+            lang="en"
+            aria-current={locale === "en" ? "page" : undefined}
+          >
+            EN
+          </Link>
         </div>
       </header>
       {!isApplication &&
@@ -74,37 +104,24 @@ export function MemberWorkspace({
         {unavailable ? (
           <State
             title="BLOCKED"
-            text={
-              locale === "en"
-                ? "Responsible runtime is unavailable"
-                : "Verbindung zur zuständigen Laufzeit nicht verfügbar"
-            }
-            help="Nicht akzeptierte Laufzeitfunktionen bleiben fail-closed."
+            text={labels[locale].unavailable}
+            help={labels[locale].help}
           />
         ) : denied ? (
           <State
             title="Zugriff nicht möglich"
-            text={
-              locale === "en"
-                ? "This area is not available to your account."
-                : "Dieser Bereich ist für Ihr Konto nicht freigegeben."
-            }
-            help="Der geschützte Datensatz wird nicht bestätigt oder verneint."
+            text={labels[locale].restricted}
+            help={labels[locale].help}
           >
             <Link
               className="button button--primary"
               href={`/member/application?lang=${locale}`}
             >
-              Zum eigenen Antrag
+              {labels[locale].back}
             </Link>
           </State>
         ) : (
-          <RouteContent
-            path={path}
-            runtime={runtime}
-            actor={actor}
-            scope={scope}
-          />
+          <RouteContent path={path} runtime={runtime} scope={scope} />
         )}
       </main>
     </div>
@@ -131,6 +148,335 @@ function State({
     </section>
   );
 }
+function Capability({
+  status,
+  owner,
+  reason,
+}: {
+  status: string;
+  owner: string;
+  reason: string;
+}) {
+  return (
+    <aside className="notice" role="status">
+      <strong>{status}</strong>
+      <p>{reason}</p>
+      <small>
+        Zuständig: {owner}. Nächster Schritt: akzeptierten Vertrag abwarten.
+      </small>
+    </aside>
+  );
+}
+
+function useScoped<T>(
+  scope: ReturnType<typeof useScopeTransition>,
+  loader: (scopeRef: string, signal: AbortSignal) => Promise<Result<T>>,
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const generation = useRef(0);
+  useEffect(() => {
+    const current = ++generation.current;
+    setData(null);
+    setError(null);
+    if (!scope.contextReady || !scope.scope || !scope.contextVersion) return;
+    const controller = new AbortController();
+    void loader(scope.scope, controller.signal).then((result) => {
+      if (controller.signal.aborted || current !== generation.current) return;
+      if (result.ok) setData(result.value);
+      else setError(result.error.safeMessage);
+    });
+    return () => controller.abort();
+  }, [scope.contextReady, scope.scope, scope.contextVersion, loader]);
+  return { data, error };
+}
+
+function RouteContent({
+  path,
+  runtime,
+  scope,
+}: {
+  path: string;
+  runtime: MemberRuntime;
+  scope: ReturnType<typeof useScopeTransition>;
+}) {
+  const memberCoreLoader = useMemo(
+    () => runtime.memberCore.read.bind(runtime.memberCore),
+    [runtime],
+  );
+  const membershipLoader = useMemo(
+    () => runtime.membership.read.bind(runtime.membership),
+    [runtime],
+  );
+  const initiativesLoader = useMemo(
+    () => runtime.initiatives.list.bind(runtime.initiatives),
+    [runtime],
+  );
+  const deliberationLoader = useMemo(
+    () => runtime.deliberation.list.bind(runtime.deliberation),
+    [runtime],
+  );
+  const delegationLoader = useMemo(
+    () => runtime.delegation.status.bind(runtime.delegation),
+    [runtime],
+  );
+  const memberCore = useScoped(scope, memberCoreLoader);
+  const membership = useScoped(scope, membershipLoader);
+  const initiatives = useScoped(scope, initiativesLoader);
+  const deliberation = useScoped(scope, deliberationLoader);
+  const delegation = useScoped(scope, delegationLoader);
+
+  if (path === "/member/application") return <Applicant runtime={runtime} />;
+  if (path === "/member/membership/appeal")
+    return (
+      <>
+        <Page
+          title="Rechtsbehelf zur Mitgliedschaft"
+          lead="Ihr eigener Verfahrensweg bleibt in diesem Bereich. Interne Bearbeitung im Compliance- und Rechtsbereich wird nicht geöffnet."
+        />
+        <Capability
+          status="BLOCKED"
+          owner="Mitgliedschaft / Compliance & Recht"
+          reason="Rechtliche und operative Aktivierung ist nicht nachgewiesen."
+        />
+      </>
+    );
+  if (path === "/member/home")
+    return (
+      <>
+        <Page
+          title="Mein Bürgerbereich"
+          lead="Persönliche Mitgliedschaft, eigene Vorschläge und regionale Beteiligung – jeweils nur im serverseitig freigegebenen Organisationsumfang."
+        />
+        <StatusNotice />
+        <ScopeSelector scope={scope} />
+        {memberCore.error && (
+          <Capability
+            status="BLOCKED"
+            owner="MemberCorePort"
+            reason={memberCore.error}
+          />
+        )}
+        {scope.contextReady && memberCore.data && (
+          <>
+            <div className="grid">
+              <Card title="Profil & Mitgliedsstatus">
+                {memberCore.data.status} · {memberCore.data.organization}
+              </Card>
+              <Card title="Meine Vorschläge">
+                Eigene Initiativen und Arbeitsstände
+              </Card>
+              <Card title="Programmwerkstatt">
+                Diskussion und nachvollziehbare Versionen
+              </Card>
+              <Card title="Abstimmungen">
+                <strong>GEPLANT / NICHT AKTIVIERT</strong>
+                <p>
+                  Hier wird nur Verfügbarkeit angezeigt. Eine spätere
+                  Stimmabgabe bleibt im getrennten Voting Client; keine
+                  Stimmabgabe im Bürgerbereich.
+                </p>
+              </Card>
+              <Card title="Meine Stimmen & Delegation">
+                <strong>{memberCore.data.capabilities.delegation}</strong>
+                <p>
+                  Delegationssemantik und Laufzeitvertrag sind noch nicht
+                  aktiviert.
+                </p>
+              </Card>
+              <Card title="Kommunikation mit Gremien">
+                <strong>PLANNED_LATER</strong>
+                <p>
+                  Mitgliederkommunikation bleibt ein eigener, geregelter
+                  Kommunikationsbereich.
+                </p>
+              </Card>
+              <Card title="Transparente Beteiligungshistorie">
+                <strong>PLANNED_LATER</strong>
+                <p>
+                  Nur freigegebene persönliche bzw. öffentliche Projektionen;
+                  keine Rohaktenkopie im Bürgerbereich.
+                </p>
+              </Card>
+              <Card title="Regionale Beteiligung">
+                Autorisierter Umfang: {memberCore.data.organization}
+              </Card>
+            </div>
+            <CrossWorkspaceLinks />
+          </>
+        )}
+      </>
+    );
+  if (path === "/member/membership")
+    return (
+      <>
+        <Page
+          title="Profil & Mitgliedsstatus"
+          lead="Mitgliedschaftsstatus, organisatorische Zuordnung und Korrekturweg. Identitätsprüfung allein aktiviert keine Mitgliedschaft."
+        />
+        {membership.error && (
+          <Capability
+            status="BLOCKED"
+            owner="MembershipPort"
+            reason={membership.error}
+          />
+        )}
+        {membership.data && (
+          <>
+            <dl className="record">
+              <dt>Status</dt>
+              <dd>{membership.data.status}</dd>
+              <dt>Zuordnung</dt>
+              <dd>{membership.data.affiliation}</dd>
+              <dt>Version</dt>
+              <dd>v3 · 29.08.2026</dd>
+              <dt>Provenienz</dt>
+              <dd>{membership.data.provenance}</dd>
+            </dl>
+            <h2>Verlauf</h2>
+            <ol className="timeline">
+              <li>Aufnahme bestätigt</li>
+              <li>Zuordnung korrigiert</li>
+            </ol>
+            <Link
+              className="button button--secondary"
+              href="/member/membership/appeal"
+            >
+              Korrektur oder Rechtsbehelf
+            </Link>
+          </>
+        )}
+      </>
+    );
+  if (path === "/member/initiatives")
+    return (
+      <>
+        <Page
+          title="Meine Vorschläge"
+          lead="Eigene Initiativen im aktuell autorisierten Organisationsumfang. Der Weg bleibt: Problem → Strukturierung → Diskussion → Fach-/Rechtsprüfung → demokratische Entscheidung → Dokumentation."
+        />
+        <ProgramDraftContext />
+        <ScopeSelector scope={scope} />
+        {initiatives.error && (
+          <Capability
+            status="BLOCKED"
+            owner="InitiativesPort"
+            reason={initiatives.error}
+          />
+        )}
+        {scope.contextReady && initiatives.data && initiatives.data[0] && (
+          <>
+            <Card title="Offene kommunale Daten">
+              {initiatives.data[0].state} · Version 4 ·{" "}
+              {initiatives.data[0].scopeRef}
+            </Card>
+            <Link
+              className="button button--primary"
+              href="/member/initiatives/new"
+            >
+              Neue Initiative
+            </Link>
+          </>
+        )}
+      </>
+    );
+  if (path === "/member/initiatives/new")
+    return scope.contextReady ? (
+      <InitiativeFlow runtime={runtime} scopeRef={scope.scope} />
+    ) : (
+      <State
+        title="LOADING"
+        text="Autorisierte Organisation wird geladen"
+        help="Ein Vorschlag kann erst nach erfolgreicher Scope-Autorisierung vorbereitet werden."
+      />
+    );
+  if (path === "/member/deliberation")
+    return (
+      <>
+        <Page
+          title="Programmwerkstatt · Diskussion"
+          lead="Beiträge mit Herkunft, Versionskontext und Sichtbarkeit. Diskussion ist eine Prozessphase und noch keine demokratische Entscheidung."
+        />
+        <ProgramDraftContext />
+        <ProcessChain />
+        {deliberation.error && (
+          <Capability
+            status="BLOCKED"
+            owner="DeliberationPort"
+            reason={deliberation.error}
+          />
+        )}
+        {deliberation.data?.[0] && (
+          <Card title="Offene kommunale Daten">
+            <p>Sichtbar für den autorisierten Umfang {scope.scope}.</p>
+            <small>
+              Version 4 · Provenienz: {deliberation.data[0].provenance}
+            </small>
+          </Card>
+        )}
+      </>
+    );
+  if (path === "/member/delegation")
+    return (
+      <>
+        <Page
+          title="Meine Stimmen & Delegation"
+          lead="Abstimmungsverfügbarkeit und Delegation werden getrennt von der eigentlichen Stimmabgabe dargestellt. Delegationsregeln werden nicht im Frontend erfunden."
+        />
+        <aside className="notice" role="status">
+          <strong>Abstimmungen: GEPLANT / NICHT AKTIVIERT</strong>
+          <p>
+            eID und sichere Online-Abstimmungen sind Ziel-Fähigkeiten. Eine
+            echte Stimmabgabe ist hier nicht verfügbar.
+          </p>
+        </aside>
+        {delegation.error && (
+          <Capability
+            status="BLOCKED"
+            owner="DelegationPort"
+            reason={delegation.error}
+          />
+        )}
+        {delegation.data && (
+          <Capability
+            status={delegation.data.activation}
+            owner="Delegation domain"
+            reason="Kein akzeptierter Laufzeitvertrag; daher kein aktives Formular."
+          />
+        )}
+      </>
+    );
+  if (path === "/member/assurance/authentication-session-assurance")
+    return (
+      <>
+        <Page
+          title="Anmeldung, Sitzungen & Vertrauensarchitektur"
+          lead="Darstellung der durch API‑02 gelieferten Assurance; keine eigene Authentifizierungsautorität."
+        />
+        <aside className="notice" role="status">
+          <strong>eID: geplant, derzeit nicht live</strong>
+          <p>
+            Der Bürgerbereich startet keinen echten AusweisApp-Login.
+            Identitätsprüfung und Mitgliedschaftsentscheidung bleiben getrennte
+            Schritte.
+          </p>
+        </aside>
+        <Capability
+          status="BLOCKED"
+          owner="API‑02"
+          reason="Sitzungs-, Passkey-, Widerrufs- und Recovery-Laufzeit ist bis zur unabhängigen API‑02-Annahme fail-closed."
+        />
+      </>
+    );
+  return (
+    <State
+      title="UNAVAILABLE"
+      text="Seite nicht verfügbar"
+      help="Der geschützte Datensatz wird nicht bestätigt oder verneint."
+    />
+  );
+}
+
 function Page({ title, lead }: { title: string; lead: string }) {
   return (
     <header className="page-header">
@@ -140,6 +486,84 @@ function Page({ title, lead }: { title: string; lead: string }) {
         <p>{lead}</p>
       </div>
     </header>
+  );
+}
+
+function StatusNotice() {
+  return (
+    <aside className="notice" role="status">
+      <strong>Bürgerbereich im Aufbau</strong>
+      <p>
+        FRONT‑03 ist eine PRE‑SEAL Arbeitsfassung. eID, sichere
+        Online-Abstimmungen und nicht akzeptierte Laufzeitfunktionen werden
+        nicht als live dargestellt.
+      </p>
+    </aside>
+  );
+}
+
+function ProgramDraftContext() {
+  return (
+    <aside className="notice" role="status">
+      <strong>
+        Grundsatzprogramm – Gründungsfassung 1.2 · Entwurf / noch nicht
+        beschlossen
+      </strong>
+      <p>
+        Vorschläge und Beratung in der Programmwerkstatt sind keine bereits
+        angenommenen Programmpunkte. Die öffentliche Fassung bleibt eindeutig
+        als Entwurf gekennzeichnet.
+      </p>
+      <a href="https://epd-partei.de/programm.html">
+        Öffentlichen Programmstatus ansehen
+      </a>
+    </aside>
+  );
+}
+
+function ProcessChain() {
+  return (
+    <section className="card" aria-labelledby="process-chain-title">
+      <h2 id="process-chain-title" className="card-title">
+        Weg eines Programmvorschlags
+      </h2>
+      <p>
+        Problem → Strukturierung → Diskussion → Fach-/Rechtsprüfung →
+        demokratische Entscheidung → Dokumentation
+      </p>
+    </section>
+  );
+}
+
+function CrossWorkspaceLinks() {
+  return (
+    <section className="card" aria-labelledby="other-areas-title">
+      <h2 id="other-areas-title" className="card-title">
+        Weitere EPD²-Bereiche
+      </h2>
+      <p>
+        Diese Konzepte bleiben öffentlich oder in anderen Arbeitsbereichen. Der
+        Bürgerbereich übernimmt ihre operative Autorität nicht.
+      </p>
+      <ul>
+        <li>
+          <a href="https://epd-partei.de/transparenz.html">Transparenz</a> —
+          öffentliche, freigegebene Darstellungen.
+        </li>
+        <li>
+          <a href="https://epd-partei.de/transparenz/abgeordnetentisch.html">
+            Offener Abgeordnetentisch
+          </a>{" "}
+          — öffentliche Rechenschaft, nicht Fallbearbeitung im Bürgerbereich.
+        </li>
+        <li>
+          <a href="https://epd-partei.de/struktur/digitales-buero.html">
+            Digitale Bürgerbüros
+          </a>{" "}
+          — eigener Bürgerbüro-/Fallbereich außerhalb des Bürgerbereichs.
+        </li>
+      </ul>
+    </section>
   );
 }
 function Card({
@@ -156,53 +580,11 @@ function Card({
     </section>
   );
 }
-function Capability({
-  status,
-  owner,
-  reason,
+function ScopeSelector({
+  scope,
 }: {
-  status: string;
-  owner: string;
-  reason: string;
+  scope: ReturnType<typeof useScopeTransition>;
 }) {
-  return (
-    <aside className="notice" role="status">
-      <strong>{status}</strong>
-      <p>{reason}</p>
-      <small>Zuständig: {owner}.</small>
-    </aside>
-  );
-}
-function ProgramDraftContext() {
-  return (
-    <aside className="notice" role="status">
-      <strong>
-        Grundsatzprogramm – Gründungsfassung 1.2 · Entwurf / noch nicht
-        beschlossen
-      </strong>
-      <p>
-        Vorschläge und Beratung sind keine bereits angenommenen Programmpunkte.
-      </p>
-      <a href="https://epd-partei.de/programm.html">
-        Öffentlichen Programmstatus ansehen
-      </a>
-    </aside>
-  );
-}
-function ProcessChain() {
-  return (
-    <section className="card">
-      <h2 className="card-title">Weg eines Programmvorschlags</h2>
-      <p>
-        Problem → Strukturierung → Diskussion → Fach-/Rechtsprüfung →
-        demokratische Entscheidung → Dokumentation
-      </p>
-    </section>
-  );
-}
-
-type ScopeState = ReturnType<typeof useScopeTransition>;
-function ScopeSelector({ scope }: { scope: ScopeState }) {
   return (
     <section className="scope-control" aria-busy={scope.pending}>
       <label htmlFor="scope">Meine Organisation</label>
@@ -241,368 +623,12 @@ function ScopeSelector({ scope }: { scope: ScopeState }) {
   );
 }
 
-function useScoped<T>(
-  scope: ScopeState,
-  loader: (scopeRef: string, signal: AbortSignal) => Promise<Result<T>>,
-) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const generation = useRef(0);
-  useEffect(() => {
-    const current = ++generation.current;
-    setData(null);
-    setError(null);
-    if (!scope.contextReady || !scope.scope || !scope.contextVersion) return;
-    const c = new AbortController();
-    void loader(scope.scope, c.signal).then((r) => {
-      if (c.signal.aborted || current !== generation.current) return;
-      if (r.ok) setData(r.value);
-      else setError(r.error.safeMessage);
-    });
-    return () => c.abort();
-  }, [scope.contextReady, scope.scope, scope.contextVersion, loader]);
-  return { data, error };
-}
-
-function RouteContent({
-  path,
-  runtime,
-  actor,
-  scope,
-}: {
-  path: string;
-  runtime: MemberRuntime;
-  actor: ActorMode;
-  scope: ScopeState;
-}) {
-  if (path === "/member/application") return <Applicant runtime={runtime} />;
-  if (path === "/member/membership/appeal")
-    return (
-      <>
-        <Page
-          title="Rechtsbehelf zur Mitgliedschaft"
-          lead="Ihr eigener Verfahrensweg bleibt in diesem Bereich. Interne Bearbeitung im Compliance- und Rechtsbereich wird nicht geöffnet."
-        />
-        <Capability
-          status="BLOCKED"
-          owner="Mitgliedschaft / Compliance & Recht"
-          reason="Rechtliche und operative Aktivierung ist nicht nachgewiesen."
-        />
-      </>
-    );
-  if (actor !== "member")
-    return (
-      <State
-        title="UNAVAILABLE"
-        text="Seite nicht verfügbar"
-        help="Der geschützte Datensatz wird nicht bestätigt oder verneint."
-      />
-    );
-  if (path === "/member/home") return <Home runtime={runtime} scope={scope} />;
-  if (path === "/member/membership")
-    return <Membership runtime={runtime} scope={scope} />;
-  if (path === "/member/initiatives")
-    return <Initiatives runtime={runtime} scope={scope} />;
-  if (path === "/member/initiatives/new")
-    return scope.contextReady ? (
-      <InitiativeFlow runtime={runtime} scopeRef={scope.scope} />
-    ) : (
-      <State
-        title="LOADING"
-        text="Autorisierte Organisation wird geladen"
-        help="Ein Vorschlag kann erst nach erfolgreicher Scope-Autorisierung vorbereitet werden."
-      />
-    );
-  if (path === "/member/deliberation")
-    return <Deliberation runtime={runtime} scope={scope} />;
-  if (path === "/member/delegation")
-    return <Delegation runtime={runtime} scope={scope} />;
-  if (path === "/member/assurance/authentication-session-assurance")
-    return (
-      <>
-        <Page
-          title="Anmeldung, Sitzungen & Vertrauensarchitektur"
-          lead="Darstellung der durch API‑02 gelieferten Assurance; keine eigene Authentifizierungsautorität."
-        />
-        <aside className="notice">
-          <strong>eID: geplant, derzeit nicht live</strong>
-          <p>
-            Identitätsprüfung und Mitgliedschaftsentscheidung bleiben getrennte
-            Schritte.
-          </p>
-        </aside>
-        <Capability
-          status="BLOCKED"
-          owner="API‑02"
-          reason="Sitzungs-, Passkey-, Widerrufs- und Recovery-Laufzeit ist bis zur unabhängigen API‑02-Annahme fail-closed."
-        />
-      </>
-    );
-  return (
-    <State
-      title="UNAVAILABLE"
-      text="Seite nicht verfügbar"
-      help="Der geschützte Datensatz wird nicht bestätigt oder verneint."
-    />
-  );
-}
-
-function Home({
-  runtime,
-  scope,
-}: {
-  runtime: MemberRuntime;
-  scope: ScopeState;
-}) {
-  const read = runtime.memberCore.read.bind(runtime.memberCore);
-  const { data, error } = useScoped(scope, read);
-  return (
-    <>
-      <Page
-        title="Mein Bürgerbereich"
-        lead="Persönliche Mitgliedschaft, eigene Vorschläge und regionale Beteiligung – jeweils nur im serverseitig freigegebenen Organisationsumfang."
-      />
-      <aside className="notice">
-        <strong>Bürgerbereich im Aufbau</strong>
-        <p>
-          eID und sichere Online-Abstimmungen werden nicht als live dargestellt.
-        </p>
-      </aside>
-      <ScopeSelector scope={scope} />
-      {error && (
-        <Capability status="BLOCKED" owner="MemberCorePort" reason={error} />
-      )}{" "}
-      {data && (
-        <>
-          <div className="grid">
-            <Card title="Profil & Mitgliedsstatus">
-              <strong>
-                {data.status} · {data.organization}
-              </strong>
-            </Card>
-            <Card title="Aufgaben">
-              <ul>
-                {data.tasks.map((x) => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </Card>
-            <Card title="Fristen">
-              <ul>
-                {data.deadlines.map((x) => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </Card>
-            <Card title="Mitteilungen">
-              <ul>
-                {data.messages.map((x) => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </Card>
-            <Card title="Abstimmungen">
-              <strong>GEPLANT / NICHT AKTIVIERT</strong>
-              <p>
-                Hier wird nur Verfügbarkeit angezeigt; keine Stimmabgabe im
-                Bürgerbereich.
-              </p>
-            </Card>
-            <Card title="Meine Stimmen & Delegation">
-              <strong>{data.capabilities.delegation}</strong>
-            </Card>
-            <Card title="Regionale Beteiligung">
-              Autorisierter Umfang: {data.organization}
-            </Card>
-          </div>
-          <section className="card">
-            <h2 className="card-title">Weitere EPD²-Bereiche</h2>
-            <ul>
-              <li>
-                <a href="https://epd-partei.de/transparenz.html">Transparenz</a>
-              </li>
-              <li>
-                <a href="https://epd-partei.de/transparenz/abgeordnetentisch.html">
-                  Offener Abgeordnetentisch
-                </a>
-              </li>
-              <li>
-                <a href="https://epd-partei.de/struktur/digitales-buero.html">
-                  Digitale Bürgerbüros
-                </a>
-              </li>
-            </ul>
-          </section>
-        </>
-      )}
-    </>
-  );
-}
-function Membership({
-  runtime,
-  scope,
-}: {
-  runtime: MemberRuntime;
-  scope: ScopeState;
-}) {
-  const read = runtime.membership.read.bind(runtime.membership);
-  const { data, error } = useScoped(scope, read);
-  return (
-    <>
-      <Page
-        title="Profil & Mitgliedsstatus"
-        lead="Identitätsprüfung allein aktiviert keine Mitgliedschaft."
-      />
-      <ScopeSelector scope={scope} />
-      {error && (
-        <Capability status="BLOCKED" owner="MembershipPort" reason={error} />
-      )}{" "}
-      {data && (
-        <>
-          <dl className="record">
-            <dt>Status</dt>
-            <dd>{data.status}</dd>
-            <dt>Zuordnung</dt>
-            <dd>{data.affiliation}</dd>
-            <dt>Version</dt>
-            <dd>{data.version}</dd>
-            <dt>Provenienz</dt>
-            <dd>{data.provenance}</dd>
-            <dt>Entscheidung</dt>
-            <dd>{data.decisionState}</dd>
-            <dt>Dokumentstatus</dt>
-            <dd>{data.documentState}</dd>
-          </dl>
-          <h2>Verlauf</h2>
-          <ol className="timeline">
-            {data.history.map((x) => (
-              <li key={x}>{x}</li>
-            ))}
-          </ol>
-          <Link
-            className="button button--secondary"
-            href="/member/membership/appeal"
-          >
-            Korrektur oder Rechtsbehelf
-          </Link>
-        </>
-      )}
-    </>
-  );
-}
-function Initiatives({
-  runtime,
-  scope,
-}: {
-  runtime: MemberRuntime;
-  scope: ScopeState;
-}) {
-  const list = runtime.initiatives.list.bind(runtime.initiatives);
-  const { data, error } = useScoped(scope, list);
-  return (
-    <>
-      <Page
-        title="Meine Vorschläge"
-        lead="Eigene Initiativen im aktuell autorisierten Organisationsumfang."
-      />
-      <ProgramDraftContext />
-      <ProcessChain />
-      <ScopeSelector scope={scope} />
-      {error && (
-        <Capability status="BLOCKED" owner="InitiativesPort" reason={error} />
-      )}{" "}
-      {data && (
-        <>
-          {data.map((x) => (
-            <Card key={x.ref} title={x.title}>
-              {x.state} · {x.scopeRef}
-            </Card>
-          ))}
-          <Link
-            className="button button--primary"
-            href="/member/initiatives/new"
-          >
-            Neue Initiative
-          </Link>
-        </>
-      )}
-    </>
-  );
-}
-function Deliberation({
-  runtime,
-  scope,
-}: {
-  runtime: MemberRuntime;
-  scope: ScopeState;
-}) {
-  const list = runtime.deliberation.list.bind(runtime.deliberation);
-  const { data, error } = useScoped(scope, list);
-  return (
-    <>
-      <Page
-        title="Programmwerkstatt · Diskussion"
-        lead="Diskussion ist eine Prozessphase und noch keine demokratische Entscheidung."
-      />
-      <ProgramDraftContext />
-      <ProcessChain />
-      <ScopeSelector scope={scope} />
-      {error && (
-        <Capability status="BLOCKED" owner="DeliberationPort" reason={error} />
-      )}{" "}
-      {data?.map((x) => (
-        <Card key={`${x.title}-${x.version}`} title={x.title}>
-          <small>
-            {x.version} · Provenienz: {x.provenance}
-          </small>
-        </Card>
-      ))}
-    </>
-  );
-}
-function Delegation({
-  runtime,
-  scope,
-}: {
-  runtime: MemberRuntime;
-  scope: ScopeState;
-}) {
-  const status = runtime.delegation.status.bind(runtime.delegation);
-  const { data, error } = useScoped(scope, status);
-  return (
-    <>
-      <Page
-        title="Meine Stimmen & Delegation"
-        lead="Delegationsregeln werden nicht im Frontend erfunden."
-      />
-      <ScopeSelector scope={scope} />
-      <aside className="notice">
-        <strong>Abstimmungen: GEPLANT / NICHT AKTIVIERT</strong>
-        <p>eID und sichere Online-Abstimmungen sind Ziel-Fähigkeiten.</p>
-      </aside>
-      {error && (
-        <Capability status="BLOCKED" owner="DelegationPort" reason={error} />
-      )}{" "}
-      {data && (
-        <Capability
-          status={data.activation}
-          owner="Delegation domain"
-          reason={data.reason}
-        />
-      )}
-    </>
-  );
-}
 function Applicant({ runtime }: { runtime: MemberRuntime }) {
   const [data, setData] = useState<ApplicantCase | null>(null);
   useEffect(() => {
-    let active = true;
-    void runtime.applicantCase.readOwnCase().then((r) => {
-      if (active && r.ok) setData(r.value);
-    });
-    return () => {
-      active = false;
-    };
+    void runtime.applicantCase
+      .readOwnCase()
+      .then((r) => r.ok && setData(r.value));
   }, [runtime]);
   if (!data)
     return (
@@ -612,18 +638,20 @@ function Applicant({ runtime }: { runtime: MemberRuntime }) {
     <>
       <Page
         title="Mein Aufnahmeantrag"
-        lead="Antragstellerkonto und Mitgliedschaft sind getrennte Zustände."
+        lead="Eingereichte Informationen, Verfahrensstand und Ihre nächsten zulässigen Schritte. Antragstellerkonto und Mitgliedschaft sind getrennte Zustände."
       />
-      <aside className="notice">
+      <aside className="notice" role="status">
         <strong>Applicant ≠ Member</strong>
         <p>
           Identitätsprüfung oder Kontozugang allein begründen keine
-          Mitgliedschaft.
+          Mitgliedschaft. Erst eine autoritative Aufnahmeentscheidung kann den
+          Mitgliedsstatus aktivieren.
         </p>
       </aside>
       <div className="grid">
         <Card title="Antrag">
           <strong>{data.reference}</strong>
+          <p>Eingereicht: {data.submittedAt}</p>
         </Card>
         <Card title="Status">
           <strong>{data.status}</strong>
@@ -632,6 +660,24 @@ function Applicant({ runtime }: { runtime: MemberRuntime }) {
         <Card title="Zuständige Stelle">{data.unit}</Card>
         <Card title="Frist">{data.deadline}</Card>
       </div>
+      <h2>Unterlagen</h2>
+      <ul>
+        {data.documents.map((x: string) => (
+          <li key={x}>{x}</li>
+        ))}
+      </ul>
+      <h2>Verlauf</h2>
+      <ol className="timeline">
+        {data.timeline.map((x) => (
+          <li key={x.at}>
+            <time>{x.at}</time> {x.label}
+          </li>
+        ))}
+      </ol>
+      <aside className="notice">
+        <h2>Offizielle Mitteilung</h2>
+        <p>{data.notice}</p>
+      </aside>
       <Link
         className="button button--secondary"
         href="/member/membership/appeal"
@@ -650,13 +696,7 @@ function InitiativeFlow({
   scopeRef: string;
 }) {
   const [step, setStep] = useState<
-    | "draft"
-    | "preview"
-    | "confirm"
-    | "submitting"
-    | "receipt"
-    | "error"
-    | "stepup"
+    "draft" | "preview" | "confirm" | "submitting" | "receipt" | "error"
   >("draft");
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
@@ -679,15 +719,11 @@ function InitiativeFlow({
       !principal.ok ||
       principal.value.actor !== "member" ||
       principal.value.assurance === "expired" ||
-      principal.value.assurance === "revoked"
+      principal.value.assurance === "revoked" ||
+      principal.value.assurance === "step-up-required"
     ) {
       submitting.current = false;
       setStep("error");
-      return;
-    }
-    if (principal.value.assurance === "step-up-required") {
-      submitting.current = false;
-      setStep("stepup");
       return;
     }
     const r = await runtime.initiatives.commit(scopeRef, draft);
@@ -719,19 +755,12 @@ function InitiativeFlow({
         help="Ohne autoritative Bestätigung wird kein Erfolg angezeigt."
       />
     );
-  if (step === "stepup")
-    return (
-      <State
-        title="BLOCKED"
-        text="Zusätzliche Bestätigung erforderlich"
-        help="Die Aktion wurde nicht ausgeführt."
-      />
-    );
+
   return (
     <>
       <Page
         title="Problem / Vorschlag einreichen"
-        lead="Entwurf → Vorschau → ausdrückliche Bestätigung → autoritativer Commit → Quittung."
+        lead="Entwurf → Vorschau → ausdrückliche Bestätigung → autoritativer Commit → Quittung. Danach folgen Strukturierung, Diskussion und Prüfungen; ein Commit ist noch keine Annahme ins Programm."
       />
       <ProgramDraftContext />
       <ProcessChain />
@@ -782,7 +811,10 @@ function InitiativeFlow({
         aria-labelledby="confirm-title"
       >
         <h2 id="confirm-title">Übermittlung bestätigen</h2>
-        <p>Erfolg erst nach autoritativer Bestätigung.</p>
+        <p>
+          Die Initiative wird erst nach Bestätigung der zuständigen Laufzeit als
+          erfolgreich angezeigt.
+        </p>
         <button
           className="button button--secondary"
           onClick={() => {
