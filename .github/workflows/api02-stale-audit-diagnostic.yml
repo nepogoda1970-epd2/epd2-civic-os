@@ -1,0 +1,37 @@
+name: api02-stale-audit-diagnostic
+
+on:
+  push:
+    branches:
+      - tmp/api02-c11-canonical-accept
+    paths:
+      - '.github/workflows/api02-stale-audit-diagnostic.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: api02-c10-candidate
+          path: transport/c10
+          run-id: 33397575368
+          github-token: ${{ github.token }}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          C10="$(find transport/c10 -type f -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10.zip' -print -quit)"
+          mkdir -p work
+          unzip -q "$C10" -d work
+          ROOT='work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10'
+          echo '=== stale audit round/classification definitions ==='
+          grep -nE 'CANDIDATE_ROLE|CURRENT|ROUND|STALE|histor|HISTOR|allowed|ALLOW|token|TOKEN' "$ROOT/scripts/api02/build_stale_audit.py" | head -n 260
+          echo '=== stale audit key region 1 ==='
+          sed -n '1,240p' "$ROOT/scripts/api02/build_stale_audit.py"
+          echo '=== stale audit key region 2 ==='
+          sed -n '700,860p' "$ROOT/scripts/api02/build_stale_audit.py"
