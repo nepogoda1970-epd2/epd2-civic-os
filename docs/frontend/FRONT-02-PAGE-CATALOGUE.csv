@@ -1,0 +1,15 @@
+id,path,workspace,kind,visibility,status,authority,scope,dependency,locale,fixture
+FRONT02-PAGE-001,/aktuelles,WS-01,public-index,public,prototype,public-projection,all-public,PACK-12,de/en,yes
+FRONT02-PAGE-002,/presse,WS-01,public-index,public,prototype,public-projection,all-public,PACK-12,de/en,yes
+FRONT02-PAGE-003,/termine,WS-01,public-index,public,planned,public-projection,all-public,PACK-28,de/en,yes
+FRONT02-PAGE-004,/regionen,WS-01,public-index,public,specified,public-projection,regional-public,PACK-28,de/en,yes
+FRONT02-PAGE-005,/personen,WS-01,public-index,public,planned,public-projection,all-public,PACK-28,de/en,yes
+FRONT02-PAGE-006,/wahlen,WS-01,public-information,public,not_activated,public-projection,all-public,PACK-15,de/en,yes
+FRONT02-PAGE-007,/hilfe,WS-01,public-help,public,informational,public-projection,all-public,PACK-18,de/en,yes
+FRONT02-PAGE-008,/suche,WS-01,public-search,public,planned,public-projection,all-public,PACK-12,de/en,yes
+FRONT02-DETAIL-001,/aktuelles/aufbau,WS-01,detail,public,prototype,public-projection,all-public,PACK-12,de,yes
+FRONT02-DETAIL-002,/presse/stellungnahme,WS-01,detail,public,prototype,public-projection,all-public,PACK-12,de,yes
+FRONT02-DETAIL-003,/termine/berlin,WS-01,detail,public,planned,public-projection,regional-public,PACK-28,de,yes
+FRONT02-DETAIL-004,/regionen/berlin,WS-01,regional-hub,public,specified,public-projection,regional-public,PACK-28,de,yes
+FRONT02-DETAIL-005,/personen/sprecherin,WS-01,detail,public,planned,public-projection,all-public,PACK-28,de,yes
+FRONT02-DETAIL-006,/wahlen/bundestag,WS-01,detail,public,not_activated,public-projection,all-public,PACK-15,de,yes
