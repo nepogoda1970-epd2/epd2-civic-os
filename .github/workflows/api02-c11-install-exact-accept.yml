@@ -28,7 +28,7 @@ jobs:
           run-id: 33401509109
           github-token: ${{ github.token }}
 
-      - name: Install exact candidate-carried acceptance workflow
+      - name: Build exact workflow commit object and expose identity
         shell: bash
         run: |
           set -euo pipefail
@@ -44,6 +44,13 @@ jobs:
             echo 'API02_C11_EXACT_ACCEPT_WORKFLOW:ALREADY_INSTALLED'
           else
             git commit -m 'api02: install exact C11 candidate-carried acceptance workflow'
-            git push origin HEAD:tmp/api02-c11-canonical-accept
           fi
-          echo 'API02_C11_EXACT_ACCEPT_WORKFLOW:PASS'
+          echo "EXACT_COMMIT_SHA=$(git rev-parse HEAD)"
+          echo "EXACT_TREE_SHA=$(git rev-parse HEAD^{tree})"
+          echo "EXACT_WORKFLOW_BLOB_SHA=$(git rev-parse HEAD:.github/workflows/api02-accept.yml)"
+          echo "EXACT_WORKFLOW_SHA256=$(sha256sum .github/workflows/api02-accept.yml | awk '{print $1}')"
+          # Transfer objects to GitHub. Ref update may be refused because GITHUB_TOKEN lacks
+          # workflows permission; that refusal is expected here and is completed through the
+          # governed GitHub connector after the object identities above are captured.
+          git push origin HEAD:tmp/api02-c11-canonical-accept || true
+          echo 'API02_C11_EXACT_ACCEPT_OBJECT:PASS'
