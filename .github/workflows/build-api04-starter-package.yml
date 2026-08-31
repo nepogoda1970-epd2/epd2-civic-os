@@ -1,0 +1,368 @@
+name: Build API-04 developer starter package
+
+on:
+  push:
+    branches:
+      - transport/api04-starter-package-20260831
+    paths:
+      - ".github/workflows/build-api04-starter-package.yml"
+      - "handoff/API-04/starter/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-starter:
+    runs-on: ubuntu-latest
+    env:
+      PKG_NAME: EPD2_API04_DEVELOPER_STARTER_PACKAGE_0.1
+      V26_ARTIFACT_ID: "9730109404"
+      V26_TRANSPORT: EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip
+      V26_SHA256: 9ab287e078cda548dc2a16697f7423d98c93d61ed185b6957054c8577665cc17
+      API03_BRANCH: review/api03-r13-external
+      API03_PATH: handoff/API-03/incoming/API 03_R13.zip
+      API03_GIT_BLOB: 4aff630b8a6f351f90bd8b3e5eacfd6449b10608
+      API03_REVIEW_RUN: "33280355709"
+      API03_REVIEW_JOB: "99174372036"
+      API03_REVIEW_ARTIFACT: "9722794132"
+      API03_REVIEW_ARTIFACT_SHA256: 1f10da8aff6d4966ba018c7105d5dcabdd75430644a4fe6d281b323633cb6e40
+    steps:
+      - name: Checkout transport source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assemble exact authority and working predecessor
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/$PKG_NAME"
+          mkdir -p \
+            "$ROOT/00_START_HERE" \
+            "$ROOT/01_ASSIGNMENT" \
+            "$ROOT/02_CURRENT_AUTHORITY/unpacked" \
+            "$ROOT/03_API03_WORKING_PREDECESSOR" \
+            "$ROOT/04_ACCEPTED_ANCHORS" \
+            "$ROOT/05_PACK13_MESSAGING_FOUNDATION" \
+            "$ROOT/06_CHECKLISTS"
+
+          cp handoff/API-04/starter/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_FULL_DEVELOPER_ASSIGNMENT_v1.0.md \
+             "$ROOT/01_ASSIGNMENT/"
+
+          # Download the previously built exact V26 artifact and extract the exact inner authority transport.
+          gh api "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${V26_ARTIFACT_ID}/zip" > "$RUNNER_TEMP/v26_artifact_outer.zip"
+          mkdir -p "$RUNNER_TEMP/v26_outer"
+          unzip -q "$RUNNER_TEMP/v26_artifact_outer.zip" -d "$RUNNER_TEMP/v26_outer"
+          V26_INNER="$(find "$RUNNER_TEMP/v26_outer" -type f -name "$V26_TRANSPORT" -print -quit)"
+          test -n "$V26_INNER"
+          echo "$V26_SHA256  $V26_INNER" | sha256sum -c -
+          cp "$V26_INNER" "$ROOT/02_CURRENT_AUTHORITY/$V26_TRANSPORT"
+          unzip -q "$V26_INNER" -d "$ROOT/02_CURRENT_AUTHORITY/unpacked"
+
+          # Verify all exact V26 authority members and the intentional absence of the forbidden conformance matrix.
+          AUTH="$ROOT/02_CURRENT_AUTHORITY/unpacked"
+          echo 'f6a93dec5221f033236bb80b669866c6b0136acddddf8335205e6ab74ae6cbf2  docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md' > "$RUNNER_TEMP/v26.sha"
+          echo '36a7380f3448fa14a89a0730cc0981c795a2078690a517d66256902ac9e67f97  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md' >> "$RUNNER_TEMP/v26.sha"
+          echo '3cb40d8c85f36911e43745b4ad2502a5504624801db2404e62a8af7e5eec1a3d  docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md' >> "$RUNNER_TEMP/v26.sha"
+          echo 'bcd1dca075e3c8f50eef3f0c142688647001fb65932707146815761e41ee95c4  docs/roadmap/EPD2_BSI_GOVERNANCE_UPDATE_EVIDENCE.md' >> "$RUNNER_TEMP/v26.sha"
+          echo 'a72877efb2985245d7d24acb2fad43345ace5e8efe219ccd2ecdf43d6bbe5739  docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md' >> "$RUNNER_TEMP/v26.sha"
+          echo '8469dfa98515c462562e344f73ca3c51cf4c93a47e51255d07ba32d8e3ae64d5  docs/security/standards/EPD2_BSI_CC_PP_0121_READINESS_GAP_MATRIX.md' >> "$RUNNER_TEMP/v26.sha"
+          echo '84873a890778aac1c0979c356120541571d23b2ca2aa5e51888afe76196d74a2  docs/security/standards/EPD2_BSI_CC_PP_0121_P0_QUESTIONNAIRE.md' >> "$RUNNER_TEMP/v26.sha"
+          (cd "$AUTH" && sha256sum -c "$RUNNER_TEMP/v26.sha")
+          test ! -e "$AUTH/docs/security/standards/EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md"
+
+          # Materialize the exact Git blob used for API-03 R13 PRESEAL external review.
+          git fetch --no-tags origin "$API03_BRANCH"
+          git show "FETCH_HEAD:$API03_PATH" > "$RUNNER_TEMP/API_03_R13.zip"
+          test "$(git hash-object "$RUNNER_TEMP/API_03_R13.zip")" = "$API03_GIT_BLOB"
+          API03_SHA="$(sha256sum "$RUNNER_TEMP/API_03_R13.zip" | awk '{print $1}')"
+          API03_SIZE="$(stat -c '%s' "$RUNNER_TEMP/API_03_R13.zip")"
+          test "$API03_SIZE" = "40735799"
+          cp "$RUNNER_TEMP/API_03_R13.zip" "$ROOT/03_API03_WORKING_PREDECESSOR/API 03_R13.zip"
+          git show "FETCH_HEAD:handoff/API-03/incoming/README_UPLOAD_HERE.md" > "$ROOT/03_API03_WORKING_PREDECESSOR/README_UPLOAD_HERE.md"
+          git show "FETCH_HEAD:.github/workflows/api03-r13-external-review.yml" > "$ROOT/03_API03_WORKING_PREDECESSOR/api03-r13-external-review.yml"
+
+          # Fresh extraction for convenient source/reference reading.
+          mkdir -p "$RUNNER_TEMP/api03_extract"
+          unzip -q "$RUNNER_TEMP/API_03_R13.zip" -d "$RUNNER_TEMP/api03_extract"
+          mapfile -t api03_roots < <(find "$RUNNER_TEMP/api03_extract" -mindepth 1 -maxdepth 1 -type d -print)
+          test "${#api03_roots[@]}" -eq 1
+          API03_ROOT="${api03_roots[0]}"
+          test -f "$API03_ROOT/SHA256SUMS.txt"
+          (cd "$API03_ROOT" && sha256sum -c SHA256SUMS.txt >/dev/null)
+
+          if test -d "$API03_ROOT/docs/api/API-03"; then
+            cp -a "$API03_ROOT/docs/api/API-03" "$ROOT/03_API03_WORKING_PREDECESSOR/API-03_DOCS"
+          fi
+          test -d "$API03_ROOT/docs/packs/PACK-13"
+          cp -a "$API03_ROOT/docs/packs/PACK-13" "$ROOT/05_PACK13_MESSAGING_FOUNDATION/PACK-13"
+          if test -d "$API03_ROOT/contracts/events"; then
+            cp -a "$API03_ROOT/contracts/events" "$ROOT/05_PACK13_MESSAGING_FOUNDATION/contracts-events"
+          fi
+          if test -f "$API03_ROOT/packages/python/epd2-core/src/epd2_core/event_envelope.py"; then
+            mkdir -p "$ROOT/05_PACK13_MESSAGING_FOUNDATION/epd2-core"
+            cp "$API03_ROOT/packages/python/epd2-core/src/epd2_core/event_envelope.py" "$ROOT/05_PACK13_MESSAGING_FOUNDATION/epd2-core/"
+          fi
+
+          # If the working cumulative tree carries current API-02 docs, include them for integration reading only.
+          if test -d "$API03_ROOT/docs/api/API-02"; then
+            cp -a "$API03_ROOT/docs/api/API-02" "$ROOT/03_API03_WORKING_PREDECESSOR/API-02_DOCS_AS_CARRIED_BY_R13"
+          fi
+
+          cat > "$ROOT/03_API03_WORKING_PREDECESSOR/API03_R13_EXTERNAL_REVIEW_RECORD.md" <<EOF
+          # API-03 R13 working predecessor — external review record
+
+          **Classification:** \`WORKING_INTEGRATION_PREDECESSOR\` / \`PRESEAL_NOT_ACCEPTED\`  
+          **Archive:** \`API 03_R13.zip\`  
+          **Size:** \`$API03_SIZE bytes\`  
+          **Git blob:** \`$API03_GIT_BLOB\`  
+          **SHA-256:** \`$API03_SHA\`
+
+          External fresh-extract governed review:
+
+          - GitHub Actions run: \`$API03_REVIEW_RUN\`
+          - job: \`$API03_REVIEW_JOB\`
+          - conclusion: \`success\`
+          - evidence artifact ID: \`$API03_REVIEW_ARTIFACT\`
+          - evidence artifact digest: \`sha256:$API03_REVIEW_ARTIFACT_SHA256\`
+
+          That successful PRE-SEAL review checked ZIP integrity, fresh extraction, archive/Windows path hygiene, SHA256SUMS, repository/version checks and the API-03 V24 validator. It is not final API-03 acceptance. Final API-03 C1 remains dependent on exact accepted API-02 reconciliation.
+          EOF
+
+          cat > "$ROOT/04_ACCEPTED_ANCHORS/ACCEPTED_ANCHORS.md" <<'EOF'
+          # Accepted anchors needed by API-04
+
+          ## API-01 — ACCEPTED / CLOSED
+
+          Archive:
+          `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`
+
+          SHA-256:
+          `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`
+
+          Authoritative GitHub Actions acceptance run:
+          `32967210855`
+
+          Evidence artifact:
+          `api01-c5-acceptance-evidence-32967210855`
+
+          Evidence artifact ID:
+          `9606736122`
+
+          Evidence SHA-256:
+          `88fdd20fc7239eb5dfc9f66b4d3ddd5aadae013e726269b24454605a557ba8bd`
+
+          ## DATA — ACCEPTED / CLOSED
+
+          Archive:
+          `EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip`
+
+          SHA-256:
+          `8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1`
+
+          Governed inherited PostgreSQL Phase-B result:
+          `3 failed, 203 passed, 32 skipped`, with `new_failures=0`.
+
+          Required interpretation:
+          `NO_NEW_REGRESSION_AGAINST_ACCEPTED_DATA06_BASELINE`
+
+          Do not reopen DATA solely because the three inherited findings remain.
+
+          ## Current predecessor caveat
+
+          API-02 is not represented here as accepted. API-03 R13 is not represented here as accepted. Use the current authority transport and API-03 PRESEAL record supplied in this starter package.
+          EOF
+
+          cat > "$ROOT/02_CURRENT_AUTHORITY/AUTHORITY_IDENTITY.md" <<'EOF'
+          # Current canonical authority transport identity
+
+          Exact transport:
+          `EPD2_V26_API02_C7_CANONICAL_AUTHORITY_TRANSPORT_8ff32c3e.zip`
+
+          SHA-256:
+          `9ab287e078cda548dc2a16697f7423d98c93d61ed185b6957054c8577665cc17`
+
+          Source authority commit:
+          `8ff32c3e9ed654768ae86ac569a9c498f78c5aa2`
+
+          The archive contains exactly the current canonical Entrypoint, PCR, Master, BSI governance-update evidence, BSI voting bootstrap rule, CC PP-0121 readiness gap matrix and P0 questionnaire used by the current correction line.
+
+          `EPD2_BSI_CC_PP_0121_CONFORMANCE_MATRIX.md` is intentionally absent. Do not fabricate, infer or substitute it.
+          EOF
+
+          cat > "$ROOT/06_CHECKLISTS/API04_PRESEAL_TO_FINAL_C1_RECONCILIATION_CHECKLIST.md" <<'EOF'
+          # API-04 PRESEAL → final C1 predecessor reconciliation
+
+          Do not perform this freeze until API-03 is independently `ACCEPTED / CLOSED`.
+
+          - obtain exact accepted API-03 archive name and SHA-256;
+          - obtain its authoritative acceptance run/evidence identity;
+          - mechanically compare accepted API-03 against working R13 for every API-04-consumed contract/path;
+          - classify each difference as irrelevant, compatible, adapter correction or blocking incompatibility;
+          - update only the required API-04 adapters/contracts;
+          - rerun full API-04 tests, failure fixtures and mutation suite;
+          - bind exact accepted predecessor identity in `API04_LINEAGE.json`;
+          - replace `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` with `CANDIDATE_NOT_ACCEPTED`;
+          - regenerate exact predecessor→C1 inventory;
+          - regenerate final sealed manifest and checksums;
+          - fresh-extract verify final C1;
+          - do not write `ACCEPTED`, `CLOSED`, `FINAL PASS` or `API-05 NEXT` inside the candidate.
+          EOF
+
+          cat > "$ROOT/06_CHECKLISTS/API04_DEVELOPER_DELIVERY_CHECKLIST.md" <<'EOF'
+          # API-04 current developer delivery checklist
+
+          Required working output:
+          `EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_WORKING_0.1_PRESEAL.zip`
+
+          Required status:
+          `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`
+
+          Before return, verify:
+
+          - one safe archive root, no nested candidate ZIPs/caches;
+          - SHA-256 sidecar;
+          - full preseal inventory and manifest;
+          - real pinned broker path exercised;
+          - PostgreSQL outbox/inbox/dedup path exercised;
+          - at-least-once transport / effectively-once effect tests;
+          - topic/subscription registry derived from runtime truth;
+          - schema compatibility and historical-version tests;
+          - producer/consumer API-03 identity ACL tests;
+          - retry/DLQ/quarantine and governed redrive tests;
+          - replay tests;
+          - queued-work FIR-AUTH-001 reauthorization tests;
+          - readiness/lag/stale-state tests;
+          - privacy/retention/legal-hold checks;
+          - voting-isolation / BSI impact classification;
+          - cross-service failure fixtures;
+          - full adversarial mutation suite;
+          - inherited API/DATA no-new-regression checks;
+          - `API04_PRESEAL_RESULT:PASS` only if every mandatory preseal gate executed and passed.
+          EOF
+
+          cat > "$ROOT/06_CHECKLISTS/API04_ACCEPTANCE_RESPONSIBILITY.md" <<'EOF'
+          # Acceptance responsibility
+
+          The developer's responsibility is implementation, preseal verification and delivery of the complete working archive.
+
+          The developer does **not** self-authorize governance closure and should not run a substitute acceptance process that changes the meaning of the independent review.
+
+          Final flow:
+
+          `developer PRESEAL → accepted API-03 reconciliation → sealed API-04 C1 → independent authoritative review → governance update only on PASS`
+
+          Before independent PASS:
+
+          - API-04 is not accepted;
+          - API-04 is not closed;
+          - API-05 is not next;
+          - production readiness is not established.
+          EOF
+
+          cat > "$ROOT/00_START_HERE/README_START_HERE.md" <<EOF
+          # EPD² API-04 developer starter package
+
+          **Stage:** API-04 — Events & Messaging Runtime / Delivery Semantics  
+          **Execution mode:** \`PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\`
+
+          This package is intended to let API-04 development start immediately without waiting for API-02/API-03 governance closure.
+
+          ## Read first
+
+          1. \`02_CURRENT_AUTHORITY/unpacked/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md\`
+          2. \`02_CURRENT_AUTHORITY/unpacked/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md\`
+          3. \`02_CURRENT_AUTHORITY/unpacked/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md\`
+          4. BSI/bootstrap/readiness documents under \`02_CURRENT_AUTHORITY/unpacked\`
+          5. \`01_ASSIGNMENT/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_FULL_DEVELOPER_ASSIGNMENT_v1.0.md\`
+          6. \`03_API03_WORKING_PREDECESSOR/API03_R13_EXTERNAL_REVIEW_RECORD.md\`
+          7. API-03 docs carried next to that record, then the exact \`API 03_R13.zip\` when implementation detail is required
+          8. \`05_PACK13_MESSAGING_FOUNDATION/\`
+          9. \`04_ACCEPTED_ANCHORS/ACCEPTED_ANCHORS.md\`
+          10. \`06_CHECKLISTS/\`
+
+          ## Critical status distinction
+
+          API-03 R13 passed a PRE-SEAL external fresh-extract validator run, but is **not** the final accepted predecessor. Its exact SHA-256 in this package is:
+
+          \`$API03_SHA\`
+
+          Use it as \`WORKING_INTEGRATION_PREDECESSOR\` only.
+
+          Current exact authority transport SHA-256:
+
+          \`$V26_SHA256\`
+
+          Final API-04 C1 must wait only for predecessor reconciliation/freeze, not for development to restart.
+          EOF
+
+          # Build a machine-readable package manifest over all substantive files except the manifest and checksum index themselves.
+          python - "$ROOT" <<'PY'
+          import hashlib, json, pathlib, sys
+          root = pathlib.Path(sys.argv[1])
+          excluded = {"00_START_HERE/PACKAGE_MANIFEST.json", "SHA256SUMS.txt"}
+          entries = []
+          for p in sorted(root.rglob("*")):
+              if not p.is_file():
+                  continue
+              rel = p.relative_to(root).as_posix()
+              if rel in excluded:
+                  continue
+              data = p.read_bytes()
+              entries.append({"path": rel, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+          payload = {
+              "package": root.name,
+              "stage": "API-04",
+              "status": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+              "authority_transport_sha256": "9ab287e078cda548dc2a16697f7423d98c93d61ed185b6957054c8577665cc17",
+              "api03_working_predecessor_sha256": next(e["sha256"] for e in entries if e["path"] == "03_API03_WORKING_PREDECESSOR/API 03_R13.zip"),
+              "files": entries,
+          }
+          (root / "00_START_HERE/PACKAGE_MANIFEST.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+          (cd "$ROOT" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
+          (cd "$ROOT" && sha256sum -c SHA256SUMS.txt >/dev/null)
+
+          # Final package ZIP with one root.
+          cd "$RUNNER_TEMP"
+          zip -q -X -r "$PKG_NAME.zip" "$PKG_NAME"
+          sha256sum "$PKG_NAME.zip" > "$PKG_NAME.zip.sha256"
+          unzip -t "$PKG_NAME.zip" >/dev/null
+          test "$(unzip -Z1 "$PKG_NAME.zip" | sed 's#/.*##' | sort -u | wc -l)" -eq 1
+
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp "$PKG_NAME.zip" "$PKG_NAME.zip.sha256" "$GITHUB_WORKSPACE/out/"
+          echo "PACKAGE_SHA256=$(awk '{print $1}' "$PKG_NAME.zip.sha256")" >> "$GITHUB_ENV"
+          echo "API03_SHA256=$API03_SHA" >> "$GITHUB_ENV"
+
+      - name: Verify final package from fresh extraction
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd out
+          sha256sum -c "$PKG_NAME.zip.sha256"
+          rm -rf "$RUNNER_TEMP/final_verify"
+          mkdir "$RUNNER_TEMP/final_verify"
+          unzip -q "$PKG_NAME.zip" -d "$RUNNER_TEMP/final_verify"
+          ROOT="$RUNNER_TEMP/final_verify/$PKG_NAME"
+          test -d "$ROOT"
+          (cd "$ROOT" && sha256sum -c SHA256SUMS.txt >/dev/null)
+          test "$(python -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["status"])' "$ROOT/00_START_HERE/PACKAGE_MANIFEST.json")" = "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
+          echo "Final package: $PKG_NAME.zip"
+          echo "SHA-256: $PACKAGE_SHA256"
+          echo "API-03 R13 SHA-256: $API03_SHA256"
+
+      - name: Upload API-04 starter package
+        uses: actions/upload-artifact@v4
+        with:
+          name: api04-developer-starter-package-${{ github.run_id }}
+          path: |
+            out/EPD2_API04_DEVELOPER_STARTER_PACKAGE_0.1.zip
+            out/EPD2_API04_DEVELOPER_STARTER_PACKAGE_0.1.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
