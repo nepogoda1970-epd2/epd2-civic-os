@@ -14,8 +14,25 @@ jobs:
 
       - name: Reconstruct and verify exact R3 source payload
         run: |
-          cat .front03-r3-sync/part*.b64 | tr -cd 'A-Za-z0-9+/=' > /tmp/front03-r3.b64
-          echo "normalized_base64_size=$(wc -c < /tmp/front03-r3.b64)"
+          python3 - <<'PY'
+          from pathlib import Path
+          alphabet=set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=')
+          chunks=[]
+          for i in range(13):
+              p=Path(f'.front03-r3-sync/part{i:02d}.b64')
+              s=''.join(c for c in p.read_text() if c in alphabet)
+              print(p, 'sanitized=', len(s), 'used=8000')
+              assert len(s) >= 8000
+              chunks.append(s[:8000])
+          p=Path('.front03-r3-sync/part13.b64')
+          s=''.join(c for c in p.read_text() if c in alphabet)
+          print(p, 'sanitized=', len(s), 'used=', len(s))
+          assert len(s) == 6236
+          chunks.append(s)
+          out=''.join(chunks)
+          Path('/tmp/front03-r3.b64').write_text(out)
+          print('normalized_base64_size=', len(out))
+          PY
           echo "normalized_base64_sha=$(sha256sum /tmp/front03-r3.b64 | cut -d' ' -f1)"
           test "$(wc -c < /tmp/front03-r3.b64)" -eq 110236
           test "$(sha256sum /tmp/front03-r3.b64 | cut -d' ' -f1)" = "446cedf2f8c5142058844c3079a8fbdd0e72710ab6428d53fb2519620bef3106"
