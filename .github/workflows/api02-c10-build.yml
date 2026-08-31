@@ -1,0 +1,206 @@
+name: api02-c10-build
+
+on:
+  push:
+    branches:
+      - tmp/api02-c10-canonical-accept
+    paths:
+      - '.github/workflows/api02-c10-build.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api02-c10-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      C9_RUN_ID: '33381133994'
+      C9_SHA256: '42a1a59a5b4aaf769d38fac0c0426d5a436550b050d33b1cf7a0f4f1cd37a48b'
+      C9_SIZE: '34638963'
+      API01_SHA256: 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27'
+      DATA06_SHA256: '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1'
+      C9_NAME: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9.zip'
+      C10_ROOT: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10'
+      API01_NAME: 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip'
+      DATA06_NAME: 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip'
+    steps:
+      - name: '01 Checkout governed builder branch'
+        uses: actions/checkout@v4
+
+      - name: '02 Download exact C9 candidate'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: transport/c9
+          run-id: ${{ env.C9_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '03 Download exact API-02 anchors from the C9 builder'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-anchors
+          path: transport/anchors
+          run-id: ${{ env.C9_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '04 Resolve and verify exact C9, API-01 C5 and DATA-06 bytes'
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_one() {
+            local name="$1" roots="$2" found
+            found="$(find $roots -type f -name "$name" | head -n 2)"
+            [ "$(printf '%s\n' "$found" | grep -c .)" -eq 1 ] || { echo "::error::$name not unique: $found"; exit 1; }
+            printf '%s' "$found"
+          }
+          C9="$(find_one "$C9_NAME" transport/c9)"
+          A1="$(find_one "$API01_NAME" transport/anchors)"
+          D6="$(find_one "$DATA06_NAME" transport/anchors)"
+          echo "$C9_SHA256  $C9" | sha256sum -c -
+          [ "$(stat -c '%s' "$C9")" = "$C9_SIZE" ]
+          echo "$API01_SHA256  $A1" | sha256sum -c -
+          echo "$DATA06_SHA256  $D6" | sha256sum -c -
+          echo "c9=$(realpath "$C9")" >> "$GITHUB_OUTPUT"
+          echo "api01=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "data06=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: '05 Fresh extract exact C9 and establish C10 root'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work out
+          mkdir -p work out
+          unzip -t "${{ steps.inputs.outputs.c9 }}" >/dev/null
+          unzip -q "${{ steps.inputs.outputs.c9 }}" -d work
+          mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9" "work/$C10_ROOT"
+
+      - name: '06 Apply bounded C9-to-C10 acceptance-harness correction'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c10.py --patch-only --root "work/$C10_ROOT" --out out
+
+      - name: '07 Rebuild candidate identity/register/inventory inputs'
+        shell: bash
+        working-directory: work/${{ env.C10_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c9 }}
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_authorization_registers.py
+          python3 scripts/api02/build_mandatory_tests.py
+          python3 scripts/api02/build_v23_reconciliation.py
+          python3 scripts/api02/build_exact_inventories.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: '08 Seal C10 in fixed-point governed order'
+        shell: bash
+        working-directory: work/${{ env.C10_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c9 }}
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_evidence_state.py
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;f.write_validation_txt()'
+          python3 scripts/api02/build_stale_audit.py
+          python3 scripts/api02/build_consistency_result.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/build_bsi_classification.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/build_bsi_classification.py --check
+          python3 scripts/api02/build_sealed_accounting.py --layer-a-only
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;print("CHECKSUM_ROWS",f.write_checksums())'
+          python3 scripts/api02/build_sealed_accounting.py --layer-b-only
+          python3 scripts/api02/finalize_candidate.py --check
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: '09 Prove C9-to-C10 correction is runtime-neutral'
+        shell: bash
+        working-directory: work/${{ env.C10_ROOT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          p='docs/api/API-02/API02_C9_TO_C10_CORRECTION_INVENTORY.json'
+          d=json.load(open(p))
+          runtime=('packages/','apps/','services/','src/','migrations/','db/','schema/','frontend/','contracts/')
+          changed=[r for r in d['entries'] if r.get('change') in ('added','modified','removed')]
+          bad=[r['path'] for r in changed if r['path'].startswith(runtime)]
+          print('changed_rows',len(changed),d.get('counts'))
+          print('runtime_delta_paths',bad)
+          if bad: raise SystemExit('runtime delta forbidden in C10 acceptance-harness correction')
+          if len(changed) > 60: raise SystemExit('bounded correction unexpectedly broad')
+          PY
+
+      - name: '10 Deterministically package sealed C10 and verify archive safety'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c10.py --package-only --root "work/$C10_ROOT" --out out
+          unzip -t "out/${C10_ROOT}.zip" >/dev/null
+          python3 - <<'PY'
+          import zipfile, pathlib
+          z=zipfile.ZipFile('out/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10.zip')
+          n=z.namelist(); assert len(n)==len(set(n)); assert {x.split('/',1)[0] for x in n}=={'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10'}
+          assert all(not x.startswith('/') and '..' not in x.split('/') for x in n)
+          assert z.testzip() is None
+          print('C10_ARCHIVE:PASS',len(n))
+          PY
+          cat out/candidate_sha256.txt
+          cat out/candidate_meta.json
+
+      - name: '11 Prepare exact authoritative anchors and builder evidence'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/anchors out/evidence
+          cp "${{ steps.inputs.outputs.api01 }}" out/anchors/
+          cp "${{ steps.inputs.outputs.data06 }}" out/anchors/
+          cp "${{ steps.inputs.outputs.c9 }}" out/anchors/
+          cp out/candidate_meta.json out/evidence/
+          cp out/candidate_sha256.txt out/evidence/
+          cp "work/$C10_ROOT/docs/api/API-02/API02_C9_TO_C10_CORRECTION_REPORT.md" out/evidence/
+          cp "work/$C10_ROOT/docs/api/API-02/API02_C9_TO_C10_CORRECTION_INVENTORY.json" out/evidence/
+          cp "work/$C10_ROOT/.github/workflows/api02-accept.yml" out/evidence/api02-accept.yml
+
+      - name: '12 Upload exact C10 candidate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: |
+            out/${{ env.C10_ROOT }}.zip
+            out/candidate_sha256.txt
+            out/candidate_meta.json
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '13 Upload exact C10 acceptance anchors'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: out/anchors/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '14 Upload C10 builder evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c10-build-evidence-${{ github.run_id }}
+          path: out/evidence/*
+          compression-level: 0
+          if-no-files-found: error
