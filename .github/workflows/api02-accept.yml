@@ -159,7 +159,7 @@ jobs:
       - name: 10 Install exact CPython 3.12.12 and 3.13.7
         run: |
           uv python install 3.12.12 3.13.7
-          uv --version | grep -qx 'uv 0.12.5'
+          uv --version | grep -q '^uv 0\.12\.5'
 
       - name: 11 Install exact Node 22.16.0
         uses: actions/setup-node@v4
