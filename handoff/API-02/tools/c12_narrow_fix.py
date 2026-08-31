@@ -95,7 +95,12 @@ def main() -> None:
     new_m23 = '''def _dossier_claims_an_older_candidate(tree: Path) -> None:\n    """M23 — §15/§24: a current dossier section claims an earlier round."""\n    path = tree / _EXECUTIVE\n    text = path.read_text(encoding="utf-8")\n    anchor = "## What C12 corrects"\n    if anchor not in text:\n        raise AssertionError("M23 mutation anchor missing from current C12 dossier")\n    stale_role = "C" + "4"\n    payload = (\n        "## Current position\\n\\n"\n        f"Candidate {stale_role} is the present candidate and API-02 = NEXT.\\n\\n"\n        + anchor\n    )\n    mutated = text.replace(anchor, payload, 1)\n    if mutated == text:\n        raise AssertionError("M23 mutation did not change the current C12 dossier")\n    path.write_text(mutated, encoding="utf-8")\n'''
     if old_m23 not in stext:
         raise SystemExit("C12 M23 fix: carried no-op M23 mutator not found")
-    selftest.write_text(stext.replace(old_m23, new_m23, 1))
+    stext = stext.replace(old_m23, new_m23, 1)
+    schema_anchor = '''    overall = "PASS" if results and all(r["result"] == "PASS" for r in results) else "FAIL"\n'''
+    schema_replacement = '''    # Historical fixture helpers emitted two names for the same boolean.\n    # Normalize both aliases before publishing the selftest document so the\n    # authoritative workflow can apply one invariant across every fixture.\n    for result in results:\n        if "mutated_rejected" in result:\n            result["mutation_rejected"] = result["mutated_rejected"]\n        elif "mutation_rejected" in result:\n            result["mutated_rejected"] = result["mutation_rejected"]\n        else:\n            raise AssertionError(f"{result['fixture']}: mutation rejection field missing")\n    overall = "PASS" if results and all(r["result"] == "PASS" for r in results) else "FAIL"\n'''
+    if schema_anchor not in stext:
+        raise SystemExit("C12 mutation schema fix: main result anchor not found")
+    selftest.write_text(stext.replace(schema_anchor, schema_replacement, 1))
 
     voting = root / "docs/api/API-02/11_VOTING_IDENTITY_ISOLATION.md"
     if voting.exists():
@@ -117,15 +122,6 @@ def main() -> None:
         if isinstance(predecessor_run, dict):
             predecessor_run.pop("note", None)
         lineage.write_text(json.dumps(d, indent=2, ensure_ascii=False) + "\n")
-
-    workflow = root / ".github/workflows/api02-accept.yml"
-    if workflow.exists():
-        wtext = workflow.read_text()
-        old_key = 'f["clean_accepted"] and f["mutation_rejected"]'
-        new_key = 'f["clean_accepted"] and f["mutated_rejected"]'
-        if old_key not in wtext:
-            raise SystemExit("C12 mutation assertion fix: stale schema key not found")
-        workflow.write_text(wtext.replace(old_key, new_key, 1))
 
     inv = root / "scripts/api02/build_exact_inventories.py"
     if inv.exists():
