@@ -1,0 +1,48 @@
+name: install-api02-c12-accept
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - '.github/workflows/install-api02-c12-accept.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/api02-c12-canonical-accept
+          fetch-depth: 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming
+          run-id: '33413366989'
+          github-token: ${{ github.token }}
+      - name: Install exact candidate-carried workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          CAND='incoming/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip'
+          echo '94724dfd8825ea92107cddbc860a9fba2ecc93e1cbd25abe74970430654f5a6f  '"$CAND" | sha256sum -c -
+          rm -rf /tmp/c12 && mkdir -p /tmp/c12
+          unzip -q "$CAND" -d /tmp/c12
+          SRC='/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12/.github/workflows/api02-accept.yml'
+          test -f "$SRC"
+          cp "$SRC" .github/workflows/api02-accept.yml
+          cmp -s "$SRC" .github/workflows/api02-accept.yml
+          git config user.name 'epd2-governed-automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/api02-accept.yml
+          if git diff --cached --quiet; then
+            echo 'exact C12 acceptance workflow already installed'
+            exit 0
+          fi
+          git commit -m 'Install exact API-02 C12 authoritative acceptance workflow'
+          git push origin HEAD:tmp/api02-c12-canonical-accept
