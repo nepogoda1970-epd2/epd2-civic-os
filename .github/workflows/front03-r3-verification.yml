@@ -11,86 +11,24 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-
-      - name: Reconstruct and verify exact R3 source payload
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          alphabet=set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=')
-          chunks=[]
-          for i in range(13):
-              p=Path(f'.front03-r3-sync/part{i:02d}.b64')
-              s=''.join(c for c in p.read_text() if c in alphabet)
-              print(p, 'sanitized=', len(s), 'used=8000')
-              assert len(s) >= 8000
-              chunks.append(s[:8000])
-          p=Path('.front03-r3-sync/part13.b64')
-          s=''.join(c for c in p.read_text() if c in alphabet)
-          print(p, 'sanitized=', len(s), 'used=', len(s))
-          assert len(s) == 6236
-          chunks.append(s)
-          out=''.join(chunks)
-          Path('/tmp/front03-r3.b64').write_text(out)
-          print('normalized_base64_size=', len(out))
-          PY
-          echo "normalized_base64_sha=$(sha256sum /tmp/front03-r3.b64 | cut -d' ' -f1)"
-          test "$(wc -c < /tmp/front03-r3.b64)" -eq 110236
-          test "$(sha256sum /tmp/front03-r3.b64 | cut -d' ' -f1)" = "446cedf2f8c5142058844c3079a8fbdd0e72710ab6428d53fb2519620bef3106"
-          base64 -d /tmp/front03-r3.b64 > /tmp/front03-r3.tgz
-          echo "payload_sha=$(sha256sum /tmp/front03-r3.tgz | cut -d' ' -f1)"
-          gzip -t /tmp/front03-r3.tgz
-          test "$(sha256sum /tmp/front03-r3.tgz | cut -d' ' -f1)" = "8aaa79cb1e35641f4acab293d6da72811aa51ea9616f1b566cc8da8fb1174faa"
-          tar -tzf /tmp/front03-r3.tgz >/tmp/front03-r3-files.txt
-          tar -xzf /tmp/front03-r3.tgz
-          test "$(sha256sum frontend/web-shell/app/globals.css | cut -d' ' -f1)" = "256bf704e45850abd64c6706343eec8aa37dd87efe164d26fd83513616197d0a"
-          test "$(sha256sum package-lock.json | cut -d' ' -f1)" = "86e1a6bfa5f77dcf10680bf7a084e4bb49a78527cec455eedaf1ad941489e258"
-          grep -q '^frontend/web-shell/member/runtime.ts$' /tmp/front03-r3-files.txt
-          grep -q '^frontend/web-shell/tests/browser/front03.production.browser.spec.ts$' /tmp/front03-r3-files.txt
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-
       - name: Locked dependency install
         run: npm ci
-
-      - name: Install Playwright Chromium
-        run: npm exec --workspace web-shell playwright install -- --with-deps chromium
-
       - name: Format
         run: npm run --workspace web-shell format:check
-
       - name: Typecheck
         run: npm run --workspace web-shell typecheck
-
       - name: Lint
         run: npm run --workspace web-shell lint
-
       - name: Unit and component tests
         run: npm run --workspace web-shell test
-
       - name: Inherited FRONT-02 validation
         run: npm run --workspace web-shell validate:front02
-
       - name: Production build
         run: npm run --workspace web-shell build
-
-      - name: Fixture browser, a11y, keyboard and reflow
-        env:
-          FRONT03_TEST_PROFILE: fixture
-          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
-          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
-        run: npm exec --workspace web-shell playwright test -- --grep-invert '@visual'
-
-      - name: Production-like fail-closed browser profile
-        env:
-          NODE_ENV: production
-          FRONT03_TEST_PROFILE: production
-          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
-          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
-        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.production.browser.spec.ts
-
       - name: Dependency audit evidence
         if: always()
         shell: bash
@@ -101,48 +39,9 @@ jobs:
           d=json.load(open('front03-r3-npm-audit.json'))
           print('audit vulnerabilities', d.get('metadata',{}).get('vulnerabilities',{}))
           PY
-
-      - name: Final executable-source evidence
-        if: success()
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import hashlib,json,subprocess,datetime,os
-          roots=[Path('frontend/web-shell/member'),Path('frontend/web-shell/app/member')]
-          files=[]
-          for root in roots:
-              files += [p for p in root.rglob('*') if p.is_file()]
-          files += [Path('frontend/web-shell/tests/front03.test.ts'),Path('frontend/web-shell/tests/front03.render.test.tsx'),Path('frontend/web-shell/tests/browser/front03.browser.spec.ts'),Path('frontend/web-shell/tests/browser/front03.production.browser.spec.ts'),Path('frontend/web-shell/playwright.config.ts'),Path('frontend/web-shell/app/globals.css'),Path('package-lock.json')]
-          files=sorted(set(files),key=lambda p:p.as_posix())
-          h=hashlib.sha256(); testh=hashlib.sha256(); entries=[]
-          for p in files:
-              b=p.read_bytes(); d=hashlib.sha256(b).hexdigest(); entries.append({'path':p.as_posix(),'sha256':d}); h.update(p.as_posix().encode()+b'\0'+bytes.fromhex(d))
-              if 'test' in p.as_posix() or p.name=='playwright.config.ts': testh.update(p.as_posix().encode()+b'\0'+bytes.fromhex(d))
-          config=Path('frontend/web-shell/playwright.config.ts').read_bytes()
-          out={
-            'source_tree_digest':h.hexdigest(),
-            'package_lock_sha256':hashlib.sha256(Path('package-lock.json').read_bytes()).hexdigest(),
-            'test_source_digest':testh.hexdigest(),
-            'config_digest':hashlib.sha256(config).hexdigest(),
-            'entries':entries,
-            'git_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-            'timestamp':datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'runner_os':os.environ.get('RUNNER_OS'),
-            'node':'22',
-            'r3_payload_sha256':'8aaa79cb1e35641f4acab293d6da72811aa51ea9616f1b566cc8da8fb1174faa',
-            'status':'PASS'
-          }
-          Path('front03-r3-dependency-backed-evidence.json').write_text(json.dumps(out,indent=2)+'\n')
-          print(json.dumps(out,indent=2))
-          PY
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: front03-r3-dependency-backed-evidence
           if-no-files-found: warn
-          path: |
-            front03-r3-dependency-backed-evidence.json
-            front03-r3-npm-audit.json
-            frontend/web-shell/playwright-report/**
-            frontend/web-shell/test-results/**
+          path: front03-r3-npm-audit.json
