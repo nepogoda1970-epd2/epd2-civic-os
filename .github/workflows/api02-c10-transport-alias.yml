@@ -1,0 +1,65 @@
+name: api02-c10-transport-alias
+
+on:
+  push:
+    branches:
+      - tmp/api02-c10-canonical-accept
+    paths:
+      - '.github/workflows/api02-c10-transport-alias.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  alias:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download exact sealed C10
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c10-candidate
+          path: source/candidate
+          run-id: 33397575368
+          github-token: ${{ github.token }}
+
+      - name: Download exact C10 acceptance anchors
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c10-anchors
+          path: source/anchors
+          run-id: 33397575368
+          github-token: ${{ github.token }}
+
+      - name: Verify exact bytes and prepare canonical transport names
+        shell: bash
+        run: |
+          set -euo pipefail
+          C='source/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C10.zip'
+          echo '479e17323422f20e0badec5256ced45c48392e8a103698d9a32d37324e393eeb  '"$C" | sha256sum -c -
+          [ "$(stat -c '%s' "$C")" = '34652031' ]
+          unzip -t "$C" >/dev/null
+          echo 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27  source/anchors/EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip' | sha256sum -c -
+          echo '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1  source/anchors/EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip' | sha256sum -c -
+          echo '42a1a59a5b4aaf769d38fac0c0426d5a436550b050d33b1cf7a0f4f1cd37a48b  source/anchors/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9.zip' | sha256sum -c -
+          mkdir -p transport/candidate transport/anchors
+          cp "$C" transport/candidate/
+          cp source/anchors/*.zip transport/anchors/
+          printf '%s\n' 'candidate_sha256=479e17323422f20e0badec5256ced45c48392e8a103698d9a32d37324e393eeb' > transport/candidate/TRANSPORT_BINDING.txt
+          printf '%s\n' 'source_builder_run=33397575368' >> transport/candidate/TRANSPORT_BINDING.txt
+
+      - name: Upload canonical api02-candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: transport/candidate/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload canonical api02-anchors artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: transport/anchors/*
+          compression-level: 0
+          if-no-files-found: error
