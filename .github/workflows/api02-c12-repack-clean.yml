@@ -1,0 +1,77 @@
+name: api02-c12-repack-clean
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - '.github/workflows/api02-c12-repack-clean.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  repack:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact built C12 and anchors
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming/candidate
+          run-id: '33413366989'
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: api02-anchors
+          path: incoming/anchors
+          run-id: '33413366989'
+          github-token: ${{ github.token }}
+      - name: Remove generated Ruff cache from transport ZIP only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python3 - <<'PY'
+          import zipfile, pathlib, hashlib
+          src=pathlib.Path('incoming/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip')
+          dst=pathlib.Path('out/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip')
+          removed=[]
+          with zipfile.ZipFile(src,'r') as zin, zipfile.ZipFile(dst,'w') as zout:
+              for info in zin.infolist():
+                  if '/.ruff_cache/' in info.filename:
+                      removed.append(info.filename); continue
+                  zout.writestr(info, zin.read(info.filename))
+          assert len(removed)==4, removed
+          print('REMOVED_RUFF_CACHE', *removed, sep='\n')
+          h=hashlib.sha256(dst.read_bytes()).hexdigest()
+          pathlib.Path('out/candidate_sha256.txt').write_text(h+'\n')
+          print('CANDIDATE_SHA256='+h)
+          PY
+          rm -rf verify && mkdir verify
+          unzip -q out/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip -d verify
+          cd verify/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
+          sha256sum --quiet -c SHA256SUMS.txt
+          n_listed=$(grep -c . SHA256SUMS.txt)
+          n_files=$(find . -type f ! -path ./SHA256SUMS.txt ! -path ./docs/api/API-02/API02_SEALED_FILE_MANIFEST.json | wc -l)
+          test "$n_listed" = "$n_files"
+          test ! -e .ruff_cache
+          echo "SEAL_COMPLETENESS_PASS listed=$n_listed tree=$n_files"
+      - name: Upload cleaned immutable candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: |
+            out/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+            out/candidate_sha256.txt
+          compression-level: 0
+          if-no-files-found: error
+      - name: Upload unchanged exact anchors
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: incoming/anchors/*
+          compression-level: 0
+          if-no-files-found: error
