@@ -186,23 +186,35 @@ test("B28 fixture marker absent from UI", async ({ page }) => {
 });
 
 const visuals = [
-  "application",
-  "home",
-  "membership",
-  "initiatives",
-  "initiatives-new",
-  "deliberation",
-  "delegation",
-  "assurance-authentication-session-assurance",
-  "membership-appeal",
-];
-for (const key of visuals)
+  ["application", "/member/application", "ANTRAG-2026-0142"],
+  ["home", "/member/home", "Aktiv · Bund"],
+  ["membership", "/member/membership", "Provenienz"],
+  ["initiatives", "/member/initiatives", "Offene kommunale Daten"],
+  ["initiatives-new", "/member/initiatives/new", "Vorschau"],
+  ["deliberation", "/member/deliberation", "Offene kommunale Daten"],
+  ["delegation", "/member/delegation", "Kein akzeptierter Laufzeitvertrag"],
+  [
+    "assurance-authentication-session-assurance",
+    "/member/assurance/authentication-session-assurance",
+    "eID: geplant, derzeit nicht live",
+  ],
+  [
+    "membership-appeal",
+    "/member/membership/appeal",
+    "Rechtliche und operative Aktivierung",
+  ],
+] as const;
+for (const [key, route, readyText] of visuals)
   test(`@visual FRONT03 ${key}`, async ({ page }) => {
-    const route = `/member/${key.replaceAll("-", "/")}`;
     if (key === "application" || key === "membership-appeal")
       await applicant(page);
     await page.goto(route);
+    await expect(
+      page.getByText(readyText, { exact: false }).first(),
+    ).toBeVisible();
     await expect(page).toHaveScreenshot(`front03-${key}.png`, {
       fullPage: true,
+      animations: "disabled",
+      scale: "css",
     });
   });
