@@ -4,8 +4,6 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
-// Keep the extracted browser outside the repository. Some overlay filesystems
-// reject the ownership metadata used by the Chromium runtime archive.
 const browserTemp = "/tmp/epd2-front00-browser-runtime";
 mkdirSync(browserTemp, { recursive: true });
 process.env.TMPDIR = browserTemp;
@@ -49,9 +47,6 @@ export default defineConfig({
     trace: "retain-on-failure",
     launchOptions: {
       executablePath,
-      // The serverless default uses a single renderer process. Full-page
-      // screenshots of the longer FRONT-00 fixtures can exhaust that process,
-      // so browser verification uses Chromium's normal multi-process model.
       args: chromium.args.filter(
         (argument) =>
           argument !== "--single-process" && argument !== "--no-zygote",
@@ -78,7 +73,10 @@ export default defineConfig({
   webServer: process.env.FRONT00_EXTERNAL_SERVER
     ? undefined
     : {
-        command: "npm run build && node tests/start-next.mjs",
+        command:
+          process.env.FRONT03_TEST_PROFILE === "production"
+            ? "NEXT_PUBLIC_FRONT03_FIXTURE=0 EPD2_FRONT03_GOVERNED_TEST_CONTEXT=0 npm run build && NEXT_PUBLIC_FRONT03_FIXTURE=0 EPD2_FRONT03_GOVERNED_TEST_CONTEXT=0 node tests/start-next.mjs"
+            : "NEXT_PUBLIC_FRONT03_FIXTURE=1 EPD2_FRONT03_GOVERNED_TEST_CONTEXT=1 npm run build && NEXT_PUBLIC_FRONT03_FIXTURE=1 EPD2_FRONT03_GOVERNED_TEST_CONTEXT=1 node tests/start-next.mjs",
         port: 3100,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
