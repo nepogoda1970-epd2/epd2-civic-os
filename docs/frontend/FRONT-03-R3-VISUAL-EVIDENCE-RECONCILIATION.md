@@ -56,3 +56,13 @@ Every subsequent final verification run must:
 5. fail if any PNG is missing, unexpected, or differs by even one byte.
 
 The final evidence therefore cannot become GREEN merely by overwriting screenshots during the verification run.
+
+## Frozen canonical R3 baseline
+
+The one-time baseline bootstrap completed in GitHub Actions after all dependency-backed functional, accessibility, reflow and production-like fail-closed tests were green.
+
+- frozen baseline commit: `30670ea5fee135be2ced3bc40ef7bfb99bccc732`
+- canonical PNG count: `27`
+- manifest: `frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256`
+- bootstrap behavior: deliberately exited non-zero after committing the baseline, so the creation run could not be mistaken for final verification
+- final verification rule: the next clean run must regenerate all 27 PNGs from scratch and match the frozen manifest exactly; it is not permitted to update the manifest or baseline images.
