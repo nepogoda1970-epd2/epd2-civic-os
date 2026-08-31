@@ -108,6 +108,19 @@ def main() -> None:
         raise SystemExit("C12 mutation schema fix: main result anchor not found")
     selftest.write_text(stext.replace(schema_anchor, schema_replacement, 1))
 
+    # The acceptance workflow previously addressed an API-02 program-control
+    # reconciliation record that does not exist in the sealed candidate. Bind
+    # the identity assertion to the sealed V23 reconciliation record instead.
+    workflow = root / ".github/workflows/api02-accept.yml"
+    workflow_text = workflow.read_text(encoding="utf-8")
+    stale_binding = '              ("docs/api/API-02/API02_PROGRAM_CONTROL_RECONCILIATION.json", "candidate_role"),\n'
+    current_binding = '              ("docs/api/API-02/API02_V23_CRYPTO_RECONCILIATION.json", "candidate"),\n'
+    if stale_binding not in workflow_text:
+        raise SystemExit("C12 post-accept fix: stale program-control reconciliation binding not found")
+    workflow.write_text(
+        workflow_text.replace(stale_binding, current_binding, 1), encoding="utf-8"
+    )
+
     voting = root / "docs/api/API-02/11_VOTING_IDENTITY_ISOLATION.md"
     if voting.exists():
         voting.write_text(
