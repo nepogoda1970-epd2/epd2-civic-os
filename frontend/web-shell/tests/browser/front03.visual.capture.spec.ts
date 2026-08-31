@@ -12,6 +12,26 @@ async function applicant(page: Page) {
   ]);
 }
 
+async function waitForStableVisualState(page: Page) {
+  await page.evaluate(async () => {
+    if ("fonts" in document) {
+      await document.fonts.ready;
+    }
+  });
+  await page.waitForFunction(
+    async () => {
+      const signature = () =>
+        `${document.body.innerHTML}|${document.body.scrollWidth}|${document.body.scrollHeight}`;
+      const before = signature();
+      await new Promise((resolveWait) => setTimeout(resolveWait, 200));
+      return before === signature();
+    },
+    undefined,
+    { timeout: 5000, polling: 100 },
+  );
+  await page.waitForTimeout(100);
+}
+
 const cases = [
   ["application", "/member/application", "ANTRAG-2026-0142"],
   ["home", "/member/home", "Aktiv · Bund"],
@@ -41,6 +61,7 @@ for (const [key, route, readyText] of cases) {
     await expect(
       page.getByText(readyText, { exact: false }).first(),
     ).toBeVisible();
+    await waitForStableVisualState(page);
     const directory = resolve(
       process.cwd(),
       "tests/browser/front03.browser.spec.ts-snapshots",
