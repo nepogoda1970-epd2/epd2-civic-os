@@ -1,0 +1,49 @@
+name: api02-c11-install-exact-accept
+
+on:
+  push:
+    branches:
+      - tmp/api02-c11-canonical-accept
+    paths:
+      - '.github/workflows/api02-c11-install-exact-accept.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  install:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/api02-c11-canonical-accept
+
+      - name: Download exact C11 builder evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c11-build-evidence-33401509109
+          path: /tmp/c11-evidence
+          run-id: 33401509109
+          github-token: ${{ github.token }}
+
+      - name: Install exact candidate-carried acceptance workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC=/tmp/c11-evidence/api02-accept.yml
+          test -f "$SRC"
+          echo '4d879fc7e4236156d8be09316cf73a5676f56a3167495778ca44042ab66b597f  '"$SRC" | sha256sum -c -
+          cp "$SRC" .github/workflows/api02-accept.yml
+          echo '4d879fc7e4236156d8be09316cf73a5676f56a3167495778ca44042ab66b597f  .github/workflows/api02-accept.yml' | sha256sum -c -
+          git config user.name 'epd2-governed-verification'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/api02-accept.yml
+          if git diff --cached --quiet; then
+            echo 'API02_C11_EXACT_ACCEPT_WORKFLOW:ALREADY_INSTALLED'
+          else
+            git commit -m 'api02: install exact C11 candidate-carried acceptance workflow'
+            git push origin HEAD:tmp/api02-c11-canonical-accept
+          fi
+          echo 'API02_C11_EXACT_ACCEPT_WORKFLOW:PASS'
