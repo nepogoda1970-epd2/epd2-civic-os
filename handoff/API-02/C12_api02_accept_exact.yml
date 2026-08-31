@@ -1,0 +1,747 @@
+# EPD² API-02 — authoritative acceptance workflow (C12).
+#
+# IR-C7-01. Every identity below is asserted equal to the governed lineage record by
+# step 06a before any substantive validation begins, and the same assertion runs
+# locally as gate 29, so this file and `scripts/api02/lineage_gates.py` cannot drift
+# apart the way they did before this round, when C7 shipped a header, an `env:` block
+# and an input description that had all still named C4.
+#
+# The run that judges a candidate is never the run that built it. This workflow
+# verifies ONE sealed cumulative archive against THREE external anchors, all four
+# obtained by exact filename and SHA-256 and verified BEFORE anything is read or
+# extracted:
+#
+#   candidate                   EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+#                               (expected digest = workflow input; must differ from every anchor)
+#   API02_ACCEPTED_API01_ZIP    …API01…CANDIDATE_0.1_C5.zip  cea2fb0e…  (the sole acceptance
+#                               predecessor: ACCEPTED / CLOSED by authoritative run 32967210855)
+#   API02_ACCEPTED_DATA06_ZIP   EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip  8cba0199…
+#                               (the data-series baseline — API-01's predecessor, kept so the
+#                               chain DATA-06 → API-01 → API-02 stays measurable end to end)
+#   API02_ENTERING_CANDIDATE_ZIP       …API02…CANDIDATE_0.1_C11.zip  62da62bb…
+#                               (the entering baseline of this correction round — NOT an
+#                               acceptance predecessor: no API-02 candidate was ever accepted,
+#                               and a correction round does not create one. It is here because
+#                               this candidate claims to be a correction of exactly these bytes,
+#                               and gate 3 verifies the correction record against them. API-01 C5
+#                               carried its own entering anchor for the same reason.)
+#
+# What this workflow inherits from the API-01 C5 correction, and why. Authoritative
+# run 32948753708 on the API-01 C4 bytes reached the complete validator and failed
+# only on `no gate environment-blocked — 13`: browser provisioning was fail-open
+# (`playwright install chromium >/dev/null 2>&1 || true`) and the executable was
+# guessed from a `chromium-*/chrome-linux/chrome` layout Playwright 1.62.0 does not
+# produce. Step 17 below carries that inherited API-01 C5 correction forward in full: the frozen
+# Playwright version is read from the governed `package-lock.json`, that exact
+# version is installed OUTSIDE the candidate tree, `playwright install chromium`
+# runs with its failure NOT suppressed and its output NOT discarded, the executable
+# is resolved mechanically by `chromium.executablePath()`, it is proven to exist, to
+# be a regular file and to be executable, the canonical path is established and
+# proven executable, the browser is actually RUN, and a machine-readable
+# provisioning record is written into this run's evidence. Any of that failing
+# fails the job immediately. Gate 18 is NOT weakened: a browser that is genuinely
+# absent makes the gate NOT_RUN_ENVIRONMENT_BLOCKED, and an environment-blocked
+# mandatory gate is not a PASS.
+#
+# There is no "overlay" mode and no "repository" mode: the candidate is the complete
+# tree; the checked-out repository contributes only GITHUB_SHA as provenance and may
+# never substitute a candidate file. Every gate (0-24) runs inside the freshly
+# extracted candidate. The sealed-candidate accounting (Layer A exact C5 → this candidate
+# transition inventory + Layer B sealed file manifest + SHA256SUMS.txt, evidence
+# included) is verified against the tree AS EXTRACTED, before any evidence is
+# regenerated. The evidence this run publishes is this run's own; the
+# candidate-supplied evidence is set aside and labelled non-authoritative precheck
+# material, never this run's result.
+#
+# Toolchain phases are separate and exact:
+#   validator / suites   CPython 3.12.12 from the universal root uv.lock, frozen-synced
+#                        into an environment OUTSIDE the tree (the accepted hygiene
+#                        contract forbids a nested `.venv`)
+#   gateway              CPython 3.13.7 from the same lock, separate environment
+#   inherited regression uv 0.12.5, Node 22.16.0, npm 10.9.2, and PostgreSQL 16.15
+#                        built from the upstream source tarball (server_version
+#                        "16.15" exactly — distribution and container builds append a
+#                        vendor suffix and are refused)
+# A missing exact toolchain makes the corresponding gate NOT_RUN_ENVIRONMENT_BLOCKED
+# and the workflow then fails. Nothing is substituted.
+#
+# A local validator run is evidence; only this workflow's PASS on the exact bytes is
+# acceptance, and even then the candidate remains CANDIDATE_NOT_ACCEPTED until the
+# register maintainer records the run.
+#
+# NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. NOT SECURITY CERTIFIED.
+
+name: api02-accept
+
+on:
+  push:
+    branches:
+      - tmp/api02-c12-canonical-accept
+    paths:
+      - 'handoff/API-02/C12_ACCEPTANCE_INPUTS.env'
+  workflow_dispatch:
+    inputs:
+      candidate_sha256:
+        description: expected SHA-256 of EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+        required: true
+      candidate_run_id:
+        description: run id whose artifact `api02-candidate` carries the candidate ZIP (empty = candidates/ in the checkout)
+        required: false
+        default: ""
+      anchors_run_id:
+        description: run id whose artifact `api02-anchors` carries the three anchor ZIPs (empty = anchors/ in the checkout)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api02-accept-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # IR-C7-01. These four lines are the acceptance path's statement of which bytes it is
+  # judging. They are not the source of that fact — `scripts/api02/lineage_gates.py` is —
+  # and step 06a refuses to continue if they disagree with it.
+  CANDIDATE_ROLE: C12
+  CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
+  ENTERING_CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11.zip
+  ENTERING_CANDIDATE_SHA256: 62da62bbf3ea8a1d8352e5c39d6f2abcd5d8d8b1abc7d15d022e3e76232c0732
+  API01_NAME: EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip
+  API01_SHA256: cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27
+  DATA06_NAME: EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip
+  DATA06_SHA256: 8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1
+  # the frozen browser contract of the governed root package-lock.json
+  PLAYWRIGHT_VERSION: "1.62.0"
+  CANONICAL_CHROMIUM: /opt/pw-browsers/chromium
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      UV_FROZEN: "1"
+      UV_NO_SYNC_PROGRESS: "1"
+    steps:
+      # ---------------------------------------------------------------- inputs --
+      - name: "01 Check out repository (provenance only — GITHUB_SHA is recorded, nothing is read from it)"
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: "01a Resolve externally pinned exact-byte acceptance inputs"
+        id: control
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            CANDIDATE_SHA='${{ inputs.candidate_sha256 }}'
+            CANDIDATE_RUN='${{ inputs.candidate_run_id }}'
+            ANCHORS_RUN='${{ inputs.anchors_run_id }}'
+          else
+            CONTROL='handoff/API-02/C12_ACCEPTANCE_INPUTS.env'
+            test -f "$CONTROL" || { echo "::error::missing $CONTROL"; exit 1; }
+            CANDIDATE_SHA="$(grep '^candidate_sha256=' "$CONTROL" | cut -d= -f2-)"
+            CANDIDATE_RUN="$(grep '^candidate_run_id=' "$CONTROL" | cut -d= -f2-)"
+            ANCHORS_RUN="$(grep '^anchors_run_id=' "$CONTROL" | cut -d= -f2-)"
+          fi
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::invalid candidate_sha256"; exit 1; }
+          [[ "$CANDIDATE_RUN" =~ ^[0-9]+$ ]] || { echo "::error::invalid candidate_run_id"; exit 1; }
+          [[ "$ANCHORS_RUN" =~ ^[0-9]+$ ]] || { echo "::error::invalid anchors_run_id"; exit 1; }
+          echo "candidate_sha256=$CANDIDATE_SHA" >> "$GITHUB_OUTPUT"
+          echo "candidate_run_id=$CANDIDATE_RUN" >> "$GITHUB_OUTPUT"
+          echo "anchors_run_id=$ANCHORS_RUN" >> "$GITHUB_OUTPUT"
+
+      - name: "02 Obtain the exact API-02 candidate archive"
+        if: ${{ steps.control.outputs.candidate_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming/candidate
+          run-id: ${{ steps.control.outputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: "03 Obtain the exact API-01 C5, DATA-06 and entering API-02 candidate anchor archives"
+        if: ${{ steps.control.outputs.anchors_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-anchors
+          path: incoming/anchors
+          run-id: ${{ steps.control.outputs.anchors_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: "04 Locate inputs by exact filename and verify every digest BEFORE anything is read or extracted"
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_one() {  # $1 = filename, $2 = search roots
+            local found; found="$(find $2 -type f -name "$1" 2>/dev/null | head -n 2)"
+            [ "$(printf '%s\n' "$found" | grep -c .)" -eq 1 ] || { echo "::error::$1: expected exactly one file, found: $found"; exit 1; }
+            printf '%s' "$found"
+          }
+          CAND="$(find_one "${CANDIDATE_NAME}.zip" "incoming/candidate candidates")"
+          A1="$(find_one "${API01_NAME}" "incoming/anchors anchors")"
+          D6="$(find_one "${DATA06_NAME}" "incoming/anchors anchors")"
+          E1="$(find_one "${ENTERING_CANDIDATE_NAME}" "incoming/anchors anchors")"
+          echo "${{ steps.control.outputs.candidate_sha256 }}  $CAND" | sha256sum -c -
+          echo "${API01_SHA256}  $A1" | sha256sum -c -
+          echo "${DATA06_SHA256}  $D6" | sha256sum -c -
+          echo "${ENTERING_CANDIDATE_SHA256}  $E1" | sha256sum -c -
+          echo "candidate=$(realpath "$CAND")" >> "$GITHUB_OUTPUT"
+          echo "a1=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "d6=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+          echo "e1=$(realpath "$E1")" >> "$GITHUB_OUTPUT"
+
+      - name: "05 Refuse a relabelled anchor as the candidate (the candidate bytes must be new bytes)"
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The entering candidate's digest is in this list too: a candidate byte-identical
+          # to the candidate it claims to correct has corrected nothing, and would
+          # otherwise pass every gate the first API-02 candidate had passed.
+          for a in "${API01_SHA256}" "${DATA06_SHA256}" "${ENTERING_CANDIDATE_SHA256}"; do
+            [ "${{ steps.control.outputs.candidate_sha256 }}" != "$a" ] || { echo "::error::candidate digest equals an anchor digest"; exit 1; }
+          done
+          echo "candidate digest is distinct from every anchor"
+
+      - name: "06 Extract the sealed candidate (single root, safe paths, CRC) and restore modes"
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work && cd work
+          python3 - "${{ steps.inputs.outputs.candidate }}" "${CANDIDATE_NAME}" <<'PY'
+          import sys, zipfile, pathlib
+          zf = zipfile.ZipFile(sys.argv[1]); root = sys.argv[2]
+          names = zf.namelist()
+          assert {n.split("/", 1)[0] for n in names} == {root}, "exactly one root required"
+          assert all(not n.startswith("/") and ".." not in n.split("/") for n in names), "unsafe path"
+          assert len(names) == len(set(names)), "duplicate archive entries"
+          assert zf.testzip() is None, "CRC failure"
+          zf.extractall(".")
+          for info in zf.infolist():
+              if (info.external_attr >> 16) & 0o111:
+                  pathlib.Path(info.filename).chmod(0o755)
+          PY
+          echo "root=$(pwd)/${CANDIDATE_NAME}" >> "$GITHUB_OUTPUT"
+
+      # IR-C7-01. The first thing this job does with the extracted tree, and the
+      # only thing it does before verifying anything else about it: prove that the
+      # identity THIS WORKFLOW declares is the identity the candidate's own governed
+      # lineage declares. C7 shipped a workflow still naming C4 as the candidate and
+      # C3 as the entering baseline, three rounds after both had been superseded, and
+      # nothing in the acceptance path noticed because the workflow's `env:` block was
+      # its own authority for the round. It is not any more: the check runs the same
+      # module the local validator runs (gate 29), against the same constants, and a
+      # single mismatch ends the job here — before a gate has executed, before a
+      # dependency is installed, and long before anything could be reported as a PASS.
+      - name: "06a Bind the acceptance path to the candidate lineage (IR-C7-01, fail-closed)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          CANDIDATE_ROLE: ${{ env.CANDIDATE_ROLE }}
+          CANDIDATE_NAME: ${{ env.CANDIDATE_NAME }}
+          ENTERING_CANDIDATE_NAME: ${{ env.ENTERING_CANDIDATE_NAME }}
+          ENTERING_CANDIDATE_SHA256: ${{ env.ENTERING_CANDIDATE_SHA256 }}
+        run: |
+          set -euo pipefail
+          # The workflow file the check reads is the one THIS RUN is executing, not the
+          # copy inside the candidate: a candidate could otherwise carry a corrected
+          # workflow and be accepted by a stale one. Both are compared, and both must
+          # agree with the lineage.
+          cp "${GITHUB_WORKSPACE}/.github/workflows/api02-accept.yml" /tmp/running-workflow.yml
+          if ! cmp -s /tmp/running-workflow.yml .github/workflows/api02-accept.yml; then
+            echo "::error::the workflow executing this run differs from the one the candidate carries"
+            diff -u .github/workflows/api02-accept.yml /tmp/running-workflow.yml || true
+            exit 1
+          fi
+          python3 scripts/api02/acceptance_path_identity.py --root . --json \
+            | tee "${GITHUB_WORKSPACE}/acceptance_path_identity.json" >/dev/null
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: "07 Verify SHA256SUMS.txt in both directions (every file except itself and the sealed manifest)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          sha256sum --quiet -c SHA256SUMS.txt
+          n_listed=$(grep -c . SHA256SUMS.txt)
+          n_files=$(find . -type f ! -path ./SHA256SUMS.txt ! -path ./docs/api/API-02/API02_SEALED_FILE_MANIFEST.json | wc -l)
+          [ "$n_listed" = "$n_files" ] || { echo "::error::SHA256SUMS.txt lists $n_listed files, tree has $n_files"; exit 1; }
+
+      - name: "08 Verify the sealed-candidate accounting against the tree AS EXTRACTED (before any evidence is regenerated)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.a1 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.d6 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.e1 }}
+        run: |
+          set -euo pipefail
+          # Layer A (exact C5 → this-candidate transition inventory) + the entering-candidate
+          # correction record + Layer B (sealed file
+          # manifest) + SHA256SUMS.txt coverage — stdlib only. Nothing is written
+          # inside the tree: the tree must stay exactly as extracted.
+          mkdir -p "${RUNNER_TEMP}/run-logs"
+          python3 scripts/validate_api02.py --accounting-only | tee "${RUNNER_TEMP}/run-logs/accounting.out"
+          grep -q '^API02_ACCOUNTING:PASS:' "${RUNNER_TEMP}/run-logs/accounting.out"
+
+      - name: "09 Set aside the candidate-supplied evidence (labelled NON-AUTHORITATIVE precheck material) and record governance digests"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/candidate-supplied-evidence"
+          if [ -d validation/api02 ]; then
+            cp -r validation/api02 "${RUNNER_TEMP}/candidate-supplied-evidence/validation-api02-as-sealed"
+          fi
+          if [ -d validation/api01 ]; then
+            cp -r validation/api01 "${RUNNER_TEMP}/candidate-supplied-evidence/validation-api01-as-sealed"
+          fi
+          cp VALIDATION.txt "${RUNNER_TEMP}/candidate-supplied-evidence/"
+          cat > "${RUNNER_TEMP}/candidate-supplied-evidence/README.txt" <<'TXT'
+          CANDIDATE-SUPPLIED PRECHECK MATERIAL — NON-AUTHORITATIVE.
+
+          Everything in this directory was extracted from the sealed candidate archive.
+          It is the candidate author's own developer precheck and is NOT this run's
+          result. The authoritative evidence of this acceptance run is published in the
+          sibling `validation/api02/` directory of the artifact, which carries this
+          run's GITHUB_RUN_ID and the candidate SHA-256 it was produced from.
+          TXT
+          sha256sum docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md | tee "${RUNNER_TEMP}/candidate-supplied-evidence/governance_digests.txt"
+
+      # ------------------------------------------------------------- toolchain --
+      - name: "10 Install uv 0.12.5 (root universal lock)"
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: "11 Install CPython 3.12.12 (validator, suites, inherited regression) and 3.13.7 (gateway)"
+        run: |
+          uv python install 3.12.12 3.13.7
+          uv python list --only-installed
+
+      - name: "12 Install Node 22.16.0 (frozen frontend contract)"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+
+      - name: "13 Pin npm 10.9.2 and record the toolchain"
+        run: |
+          npm install -g npm@10.9.2
+          node --version | grep -qx "v22.16.0"
+          npm --version | grep -qx "10.9.2"
+          uv --version | grep -q '^uv 0\.12\.5'
+
+      - name: "14 Build the exact canonical PostgreSQL 16.15 from the upstream source tarball"
+        # The accepted DATA-06 tests and gate 16 require `SHOW server_version` = "16.15"
+        # exactly, which distribution and container builds do not report (they append a
+        # vendor suffix). The tarball is the pristine upstream release as mirrored in the
+        # Ubuntu pool; its digest is pinned here and verified before extraction.
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq build-essential libreadline-dev zlib1g-dev libssl-dev >/dev/null
+          curl -fsSL -o /tmp/postgresql-16.15.tar.gz http://archive.ubuntu.com/ubuntu/pool/main/p/postgresql-16/postgresql-16_16.15.orig.tar.gz
+          echo "4f200ca23dfb120ff9838f13ce06014aad1d3c432d16ee9f93ab2000c0eeef7b  /tmp/postgresql-16.15.tar.gz" | sha256sum -c -
+          mkdir -p /tmp/pgsrc && tar xzf /tmp/postgresql-16.15.tar.gz -C /tmp/pgsrc
+          cd /tmp/pgsrc/postgresql-16.15
+          ./configure --prefix=/opt/pg1615 --without-icu --with-openssl >/tmp/pg-configure.log
+          make -j"$(nproc)" >/tmp/pg-make.log && make install >/tmp/pg-install.log
+          (cd contrib/pgcrypto && make -j"$(nproc)" >>/tmp/pg-make.log && make install >>/tmp/pg-install.log)
+          /opt/pg1615/bin/postgres --version
+
+      - name: "15 Start the canonical cluster and create the runtime test databases"
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/pg1615" && /opt/pg1615/bin/initdb -D "${RUNNER_TEMP}/pg1615/data" --auth=trust -U epd2 >/dev/null && true
+          /opt/pg1615/bin/pg_ctl -D "${RUNNER_TEMP}/pg1615/data" -l "${RUNNER_TEMP}/pg1615/pg.log" -o "-p 5432 -c listen_addresses=127.0.0.1" -w start
+          v="$(/opt/pg1615/bin/psql -h 127.0.0.1 -p 5432 -U epd2 -d postgres -tAc 'show server_version')"
+          echo "server_version=$v"
+          [ "$v" = "16.15" ] || { echo "::error::PostgreSQL server is '$v', not the accepted exact 16.15 — no substitution"; exit 1; }
+          /opt/pg1615/bin/psql -h 127.0.0.1 -p 5432 -U epd2 -d postgres -c "alter user epd2 password 'epd2-ci-only'"
+          for db in epd2_test epd2_voting_test epd2_identity_test; do
+            /opt/pg1615/bin/psql -h 127.0.0.1 -p 5432 -U epd2 -d postgres -c "create database $db owner epd2"
+          done
+          /opt/pg1615/bin/psql -h 127.0.0.1 -p 5432 -U epd2 -d epd2_test -c "create extension if not exists pgcrypto"
+          echo "/opt/pg1615/bin" >> "$GITHUB_PATH"
+
+      - name: "16 Frozen-sync the root universal lock (CPython 3.12.12 and 3.13.7) outside the tree"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/epd2-api02-root-env" uv sync --frozen --all-groups --python 3.12.12
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/epd2-api02-root-env" uv run --frozen python --version | grep -qx "Python 3.12.12"
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/epd2-api02-gateway-env" uv sync --frozen --all-groups --python 3.13.7
+          "${RUNNER_TEMP}/epd2-api02-gateway-env/bin/python" --version | grep -qx "Python 3.13.7"
+          [ ! -e .venv ] || { echo "::error::a .venv was created inside the candidate tree"; exit 1; }
+
+      - name: "17 Provision the frozen Chromium FAIL-CLOSED (the API-01 C5 correction, carried forward)"
+        # The browser is a MANDATORY acceptance dependency of gate 18. Every step below
+        # fails the job immediately (`set -euo pipefail`, no `|| true`, no `2>/dev/null`):
+        #   1. the frozen Playwright version is read from the governed root package-lock.json
+        #      and must equal PLAYWRIGHT_VERSION;
+        #   2. that exact Playwright is installed into a provisioning directory OUTSIDE the
+        #      candidate tree (the tree must stay byte-identical to the archive);
+        #   3. `playwright install chromium` runs with its failure NOT suppressed and its
+        #      output NOT discarded;
+        #   4. the executable is resolved MECHANICALLY by Playwright itself
+        #      (`chromium.executablePath()`) — never by guessing a directory layout;
+        #   5. the executable is proven to exist, to be a regular file and to be executable;
+        #   6. the canonical path the validator and playwright.config.ts expect is established;
+        #   7. the canonical path is proven executable and the browser is RUN (--version);
+        #   8. a machine-readable provisioning record is written for this run's evidence.
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/run-logs"
+
+          # 1. the governed frozen Playwright version (root package-lock.json is the contract)
+          LOCKED="$(python3 -c "import json;print(json.load(open('package-lock.json'))['packages']['node_modules/@playwright/test']['version'])")"
+          echo "package-lock.json @playwright/test = ${LOCKED}; workflow pin = ${PLAYWRIGHT_VERSION}"
+          [ "${LOCKED}" = "${PLAYWRIGHT_VERSION}" ] || { echo "::error::frozen Playwright ${LOCKED} != workflow pin ${PLAYWRIGHT_VERSION}"; exit 1; }
+
+          # 2. install that exact Playwright OUTSIDE the candidate tree
+          PW_DIR="${RUNNER_TEMP}/playwright-provision"
+          rm -rf "${PW_DIR}"; mkdir -p "${PW_DIR}"
+          ( cd "${PW_DIR}" && npm init -y >/dev/null && npm install --no-audit --no-fund "playwright@${PLAYWRIGHT_VERSION}" )
+          INSTALLED="$(node -e "console.log(require('${PW_DIR}/node_modules/playwright/package.json').version)")"
+          [ "${INSTALLED}" = "${PLAYWRIGHT_VERSION}" ] || { echo "::error::installed Playwright ${INSTALLED} != ${PLAYWRIGHT_VERSION}"; exit 1; }
+
+          # 3. install the browser — failure is NOT suppressed and output is NOT discarded
+          "${PW_DIR}/node_modules/.bin/playwright" install chromium
+
+          # 4. resolve the executable mechanically from Playwright itself
+          CHROMIUM_EXECUTABLE="$(node -e "console.log(require('${PW_DIR}/node_modules/playwright').chromium.executablePath())")"
+          echo "resolved chromium executable: ${CHROMIUM_EXECUTABLE}"
+
+          # 5. prove it exists, is a regular file and is executable
+          test -n "${CHROMIUM_EXECUTABLE}"
+          test -f "${CHROMIUM_EXECUTABLE}"
+          test -x "${CHROMIUM_EXECUTABLE}"
+
+          # 6. establish the canonical path the validator and playwright.config.ts expect
+          sudo mkdir -p "$(dirname "${CANONICAL_CHROMIUM}")"
+          sudo ln -sfn "${CHROMIUM_EXECUTABLE}" "${CANONICAL_CHROMIUM}"
+
+          # 7. prove the canonical path is executable and RUN the browser
+          test -x "${CANONICAL_CHROMIUM}"
+          CHROMIUM_VERSION="$("${CANONICAL_CHROMIUM}" --version)"
+          echo "canonical chromium: ${CANONICAL_CHROMIUM} -> $(readlink -f "${CANONICAL_CHROMIUM}") (${CHROMIUM_VERSION})"
+
+          # 8. machine-readable provisioning record for this run's evidence
+          python3 - "${PW_DIR}" "${CHROMIUM_EXECUTABLE}" "${CHROMIUM_VERSION}" "${LOCKED}" > "${RUNNER_TEMP}/run-logs/browser_provisioning.json" <<'PY'
+          import json, os, sys, subprocess
+          pw_dir, executable, version, locked = sys.argv[1:5]
+          canonical = os.environ["CANONICAL_CHROMIUM"]
+          cli = subprocess.run([f"{pw_dir}/node_modules/.bin/playwright", "--version"], capture_output=True, text=True)
+          json.dump({
+              "step": "17 browser provisioning (fail-closed)",
+              "carries_forward": {"stage": "API-01", "correction": "C5", "authoritative_run": "32948753708", "gate": "13", "classification": "ENVIRONMENT_PROVISIONING"},
+              "playwright_frozen_version_package_lock": locked,
+              "playwright_workflow_pin": os.environ["PLAYWRIGHT_VERSION"],
+              "playwright_cli_version": cli.stdout.strip(),
+              "resolution_method": "require('playwright').chromium.executablePath()",
+              "resolved_chromium_executable": executable,
+              "resolved_exists": os.path.isfile(executable),
+              "resolved_executable_bit": os.access(executable, os.X_OK),
+              "canonical_chromium_path": canonical,
+              "canonical_target": os.path.realpath(canonical),
+              "canonical_executable_bit": os.access(canonical, os.X_OK),
+              "chromium_version": version,
+              "fail_open_suppression_used": False,
+              "github_run_id": os.environ.get("GITHUB_RUN_ID"),
+          }, sys.stdout, indent=2)
+          PY
+          cat "${RUNNER_TEMP}/run-logs/browser_provisioning.json"
+
+      - name: "18 Run the complete API-02 validator inside the extracted candidate (gates 0-24, exact sealed bytes)"
+        id: validate
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.a1 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.d6 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.e1 }}
+          API02_BROWSER_PROVISIONING_JSON: ${{ runner.temp }}/run-logs/browser_provisioning.json
+          EPD2_TEST_DATABASE_URL: postgresql://epd2:epd2-ci-only@127.0.0.1:5432/epd2_test
+          EPD2_VOTING_TEST_DATABASE_URL: postgresql://epd2:epd2-ci-only@127.0.0.1:5432/epd2_voting_test
+          EPD2_IDENTITY_DATABASE_URL: postgresql://epd2:epd2-ci-only@127.0.0.1:5432/epd2_identity_test
+          DATA06_PG_BINDIR: /opt/pg1615/bin
+          DATA06_WORKDIR: /tmp/d6w # short: the DATA-06 executor tests bind Unix sockets (107-byte path limit)
+          EPD2_LOCAL_CI_HOME: ${{ runner.temp }}/epd2-local-ci-api02
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/epd2-api02-root-env
+          API02_GATEWAY_ENV: ${{ runner.temp }}/epd2-api02-gateway-env
+          API02_SCRATCH: ${{ runner.temp }}/epd2-api02-scratch
+          EPD2_CHROMIUM: /opt/pw-browsers/chromium
+        run: |
+          set -euo pipefail
+          mkdir -p "${DATA06_WORKDIR}"
+          uv run --frozen python scripts/validate_api02.py \
+            --candidate-zip "${{ steps.inputs.outputs.candidate }}" | tee "${RUNNER_TEMP}/run-logs/validator.out"
+          grep -q '^API02_RESULT:PASS:validation/api02/validator_result.json$' "${RUNNER_TEMP}/run-logs/validator.out"
+
+      - name: "20 Assert every mandatory gate ran and passed (no FAIL, no NOT_RUN_ENVIRONMENT_BLOCKED)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          r = json.load(open("validation/api02/final_validator_result.json"))
+          gates = {g["gate"]: g for g in r["gates"]}
+          # The count is read off the run, not typed: a hard-coded 22 is
+          # exactly what let a 23-gate run be described as a 22-gate one.
+          # What is asserted is that the numbering is contiguous from 0 and
+          # that every gate the validator declares actually ran.
+          #
+          # The strictness below is deliberate and is expected to refuse
+          # this candidate. Gate 24 resolves to NOT_RUN_ENVIRONMENT_BLOCKED
+          # while the two normative V23 profile files are unread, and an
+          # environment-blocked mandatory gate is not a PASS. Nothing here
+          # is relaxed to let it through: the reconciliation content is
+          # complete, the authority binding is not, and this step is where
+          # that distinction has to bite.
+          numbers = sorted(int(g) for g in gates)
+          assert numbers == list(range(len(numbers))), numbers
+          assert len(numbers) >= 25, numbers
+          bad = {k: v["result"] for k, v in gates.items() if v["result"] != "PASS"}
+          assert not bad, bad
+          assert r["result"] == "PASS" and not r["failed_gates"] and not r["environment_blocked_gates"], r["result"]
+          print(f"all {len(gates)} gates PASS")
+          PY
+
+      - name: "21 Assert the sealed accounting and the anchors were verified from the exact bytes"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          a = json.load(open("validation/api02/lineage_result.json"))
+          for var, digest in (("API02_ACCEPTED_API01_ZIP", "cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27"),
+                              ("API02_ACCEPTED_DATA06_ZIP", "8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1")):
+              anchor = a[var]
+              assert anchor["present"] and anchor["sha256"] == digest and not anchor["problems"], anchor
+          run = a["lineage"]["predecessor_acceptance_run"]
+          assert run == a["lineage"]["expected_acceptance_run"], run
+          layer_a = json.load(open("validation/api02/transition_inventory_result.json"))
+          layer_b = json.load(open("validation/api02/sealed_manifest_result.json"))
+          assert layer_a["result"] == "PASS" and not layer_a.get("problems"), layer_a.get("problems")
+          assert layer_b["result"] == "PASS" and not layer_b.get("problems"), layer_b.get("problems")
+          assert not layer_b["sha256sums"]["missing"] and not layer_b["sha256sums"]["extra"] and not layer_b["sha256sums"]["mismatched"], layer_b["sha256sums"]
+          print("anchors verified; Layer A", layer_a.get("counts"), "Layer B", layer_b.get("counts"))
+          PY
+
+      - name: "22 Assert the browser gate: real, executable, run, and fail-closed provisioning (the inherited API-01 C5 correction)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          b = json.load(open("validation/api02/browser_environment_result.json"))
+          assert b["result"] == "PASS", b["result"]
+          assert not b["browser_environment_problems"] and not b["workflow_provisioning_problems"], b
+          assert b["exists"] and b["is_regular_file"] and b["executable"] and b["chromium_version"], b
+          assert b["canonical_chromium_path"] == os.environ["CANONICAL_CHROMIUM"]
+          rec = b["workflow_provisioning_record"]
+          assert rec and rec["fail_open_suppression_used"] is False, rec
+          assert rec["resolution_method"].endswith("executablePath()"), rec
+          assert rec["playwright_frozen_version_package_lock"] == os.environ["PLAYWRIGHT_VERSION"], rec
+          j = b["journey_evidence"]
+          assert j and j["verdict"] == "PASS", j
+          assert j["counts"]["failed"] == 0 and j["counts"]["did_not_run"] == 0, j["counts"]
+          print("browser:", b["chromium_version"], "journey:", j["counts"])
+          PY
+        env:
+          CANONICAL_CHROMIUM: /opt/pw-browsers/chromium
+          PLAYWRIGHT_VERSION: "1.62.0"
+
+      - name: "23 Assert the live PostgreSQL 16.15 persistence proof (every constraint attempted and refused)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          pg = json.load(open("validation/api02/postgresql_result.json"))
+          assert pg["result"] == "PASS", pg["result"]
+          assert pg["server_version"] == "16.15", pg["server_version"]
+          assert pg["migrations_applied"] and not pg["migration_failures"], pg["migration_failures"]
+          probes = pg["constraint_probes"]
+          assert probes, "no constraint was attempted; a constraint never made to fire is a constraint nobody checked"
+          assert all(p["refused"] for p in probes), [p["probe"] for p in probes if not p["refused"]]
+          print(len(probes), "constraint violations attempted, all refused, on server_version", pg["server_version"])
+          PY
+
+      - name: "24 Assert commit reauthorization, voting isolation and privileged separation"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          commit = json.load(open("validation/api02/commit_reauthorization_result.json"))
+          assert commit["result"] == "PASS", commit["result"]
+          assert len(commit["derived_refusal_cases"]) == 9, commit["derived_refusal_cases"]
+          assert commit["group"] and commit["group"]["result"] == "PASS", commit["group"]
+          voting = json.load(open("validation/api02/voting_isolation_result.json"))
+          assert voting["result"] == "PASS" and voting["group"]["result"] == "PASS", voting
+          privileged = json.load(open("validation/api02/privileged_separation_result.json"))
+          assert privileged["result"] == "PASS" and privileged["group"]["result"] == "PASS", privileged
+          recovery = json.load(open("validation/api02/recovery_result.json"))
+          assert recovery["result"] == "PASS" and recovery["group"]["result"] == "PASS", recovery
+          print("FIR-AUTH-001: nine refusal cases; voting, privileged and recovery groups PASS")
+          PY
+
+      - name: "25 Assert route truth is derived from the runtime source (no hard-coded count) and fully classified"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          r = json.load(open("validation/api02/route_authorization_result.json"))
+          assert r["result"] == "PASS", r["result"]
+          n = r["derivation"]["total_routes"]
+          assert n == r["derived_route_count"] == len(r["derived_routes"]), (n, r["derived_route_count"])
+          assert not r["runtime_only"] and not r["registry_only"], (r["runtime_only"], r["registry_only"])
+          assert not r["coverage_problems"], r["coverage_problems"]
+          print("routes derived from the runtime source:", n)
+          PY
+
+      - name: "26 Assert the mutation suite floor and refuse any self-issued acceptance wording"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          st = json.load(open("validation/api02/validator_selftest_result.json"))
+          assert st["result"] == "PASS", st["result"]
+          assert st["fixture_count"] >= 41, st["fixture_count"]
+          assert all(f["clean_accepted"] and f["mutation_rejected"] for f in st["fixtures"]), [
+              f["fixture"] for f in st["fixtures"] if f["result"] != "PASS"
+          ]
+          scope = json.load(open("validation/api02/scope_and_claims_result.json"))
+          assert scope["result"] == "PASS", scope["result"]
+          assert not scope["acceptance_claim_problems"] and not scope["forward_scope_problems"], scope
+          r = json.load(open("validation/api02/final_validator_result.json"))
+          assert r["acceptance_state"] == "LOCAL_PRECHECK_PASS_CANDIDATE_NOT_ACCEPTED", r["acceptance_state"]
+          print(st["fixture_count"], "fixtures detected; no self-issued acceptance claim")
+          PY
+
+      - name: "26b Assert candidate identity, the evidence consistency record and the stale-state audit"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+
+          # C3-01. The record that proves evidence consistency must itself
+          # be consistent: its embedded facts are the canonical facts, not a
+          # snapshot some later step replaced.
+          record = json.load(open("validation/api02/evidence_consistency_result.json"))
+          state = json.load(open("docs/api/API-02/API02_EVIDENCE_STATE.json"))
+          assert record["result"] == "PASS", record["result"]
+          assert record["facts"] == state["facts"], "consistency record and canonical state disagree"
+          assert record["problem_count"] == 0, record["problem_count"]
+
+          final = json.load(open("validation/api02/final_validator_result.json"))
+          assert record["facts"]["validator_result"] == final["result"], record["facts"]
+          assert record["facts"]["gates_failed"] == final["failed_gates"], record["facts"]
+          assert record["facts"]["acceptance_state"] == final["acceptance_state"]
+
+          # C3-02. One candidate identity, declared by every current artefact.
+          identity = json.load(open("validation/api02/candidate_identity_result.json"))
+          assert identity["result"] == "PASS", identity
+          role = state["candidate"]
+          for path, key in (
+              ("docs/api/API-02/API02_ROUTE_AUTHORIZATION_REGISTER.json", "candidate"),
+              ("docs/api/API-02/API02_CONSEQUENTIAL_COMMIT_REGISTER.json", "candidate"),
+              ("docs/api/API-02/API02_PROGRAM_CONTROL_RECONCILIATION.json", "candidate_role"),
+              ("docs/api/API-02/API02_MANDATORY_TESTS.json", "candidate"),
+          ):
+              assert json.load(open(path))[key] == role, path
+
+          # C3-03. The audit ran, classified every hit, and found no foreign
+          # round stated as current.
+          audit = json.load(open("docs/api/API-02/API02_STALE_STATE_AUDIT.json"))
+          assert audit["result"] == "PASS", audit["problems"][:5]
+          assert audit["counts"]["unclassified"] == 0, audit["counts"]
+          assert audit["candidate"] == role, audit["candidate"]
+          print(
+              f"identity {role}; consistency record equals the canonical state; "
+              f"{audit['counts']['hits']} audited hits, 0 unclassified"
+          )
+          PY
+
+      - name: "27 Assert the published evidence is THIS run's own (current GITHUB_RUN_ID and the candidate SHA)"
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          CANDIDATE_SHA256: ${{ steps.control.outputs.candidate_sha256 }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          env = json.load(open("validation/api02/environment.json"))
+          assert env["github_actions"] is True, env["github_actions"]
+          assert env["github_run_id"] == os.environ["GITHUB_RUN_ID"], env["github_run_id"]
+          assert env["github_sha"] == os.environ["GITHUB_SHA"], env["github_sha"]
+          # C4-07. This line carried a literal round name two rounds out of date,
+          # in a workflow that has never run, so nothing ever found it. A
+          # literal round name in an assertion is a landmine that only goes
+          # off on the first real acceptance attempt. Read from the job's
+          # own CANDIDATE_ROLE, which is the one place the round is written.
+          role = os.environ["CANDIDATE_ROLE"]
+          assert env["candidate_root"].endswith(f"_{role}"), env["candidate_root"]
+          assert env["expected_candidate"]["version"] == f"0.1_{role}", env["expected_candidate"]
+          assert env["mode"] == "complete", env["mode"]
+          identity = json.load(open("validation/api02/candidate_identity_result.json"))
+          assert identity["mode"] == "sealed-archive", identity["mode"]
+          assert identity["sha256"] == os.environ["CANDIDATE_SHA256"], identity["sha256"]
+          # bind this run's evidence to the bytes it judged
+          json.dump({
+              "authoritative": True,
+              "workflow": ".github/workflows/api02-accept.yml",
+              "github_run_id": os.environ["GITHUB_RUN_ID"],
+              "github_sha": os.environ["GITHUB_SHA"],
+              "candidate_sha256": os.environ["CANDIDATE_SHA256"],
+              "candidate_root": env["candidate_root"],
+              "validator_terminal": "API02_RESULT:PASS:validation/api02/validator_result.json",
+              "candidate_supplied_evidence": "NON_AUTHORITATIVE_PRECHECK_MATERIAL",
+          }, open("validation/api02/authoritative_run.json", "w"), indent=2)
+          print("evidence written by run", env["github_run_id"], "on candidate", os.environ["CANDIDATE_SHA256"])
+          PY
+
+      - name: "28 Publish this run's evidence (authoritative) and the candidate-supplied material (labelled)"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c12-acceptance-evidence-${{ github.run_id }}
+          path: |
+            ${{ steps.extract.outputs.root }}/validation/api02/
+            ${{ runner.temp }}/run-logs/
+            ${{ runner.temp }}/candidate-supplied-evidence/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: "29 Result"
+        if: always()
+        shell: bash
+        run: |
+          echo "API-02 ${CANDIDATE_ROLE} acceptance run ${GITHUB_RUN_ID} on ${GITHUB_SHA} (provenance)"
+          echo "candidate sha256 ${{ steps.control.outputs.candidate_sha256 }}"
+          echo "outcome: ${{ steps.validate.outcome }} — this job finishes 'success' only after API02_RESULT:PASS and every assertion above."
+          echo "The candidate itself remains CANDIDATE_NOT_ACCEPTED until the register maintainer records this run."
