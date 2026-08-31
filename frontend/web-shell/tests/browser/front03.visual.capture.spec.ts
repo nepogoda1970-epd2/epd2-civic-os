@@ -31,14 +31,19 @@ for (const [key, readyText] of cases) {
     }
     const route = `/member/${key.replaceAll("-", "/")}`;
     await page.goto(route);
-    await expect(page.getByText(readyText, { exact: false }).first()).toBeVisible();
+    await expect(
+      page.getByText(readyText, { exact: false }).first(),
+    ).toBeVisible();
     const directory = resolve(
       process.cwd(),
       "tests/browser/front03.browser.spec.ts-snapshots",
     );
     await mkdir(directory, { recursive: true });
     await page.screenshot({
-      path: resolve(directory, `front03-${key}-${testInfo.project.name}-linux.png`),
+      path: resolve(
+        directory,
+        `front03-${key}-${testInfo.project.name}-linux.png`,
+      ),
       fullPage: true,
       animations: "disabled",
     });
