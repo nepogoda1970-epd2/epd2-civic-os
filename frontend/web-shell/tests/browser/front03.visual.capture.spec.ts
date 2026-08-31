@@ -23,7 +23,7 @@ const cases = [
   [
     "assurance-authentication-session-assurance",
     "/member/assurance/authentication-session-assurance",
-    "AL2",
+    "eID: geplant, derzeit nicht live",
   ],
   [
     "membership-appeal",
