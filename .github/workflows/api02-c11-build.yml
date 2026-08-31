@@ -78,6 +78,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 handoff/API-02/tools/build_api02_c11.py --patch-only --root "work/$C11_ROOT" --out out
+          python3 handoff/API-02/tools/fix_api02_c11_preflight.py "work/$C11_ROOT"
 
       - name: 07 Rebuild current identity and exact inventories
         shell: bash
