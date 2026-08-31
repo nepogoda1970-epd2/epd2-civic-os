@@ -1,0 +1,218 @@
+name: api02-c9-build
+
+on:
+  push:
+    branches:
+      - tmp/api02-c9-canonical-accept
+    paths:
+      - '.github/workflows/api02-c9-build.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api02-c9-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      C8_RUN_ID: '33375210204'
+      API01_ANCHORS_RUN_ID: '32964804390'
+      C8_SHA256: '7836135f2e656c998b224c56698ad337c9474238cc241d250add710ba79ecaef'
+      API01_SHA256: 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27'
+      DATA06_SHA256: '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1'
+      C8_NAME: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8.zip'
+      C9_ROOT: 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C9'
+      API01_NAME: 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip'
+      DATA06_NAME: 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip'
+    steps:
+      - name: '01 Checkout transport branch'
+        uses: actions/checkout@v4
+
+      - name: '02 Download exact C8 candidate artifact'
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-c8-exact-candidate-33375210204
+          path: transport/c8
+          run-id: ${{ env.C8_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '03 Download exact accepted API-01 C5'
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-candidate
+          path: transport/api01
+          run-id: ${{ env.API01_ANCHORS_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '04 Download API-01 anchors containing exact DATA-06'
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-anchors
+          path: transport/api01-anchors
+          run-id: ${{ env.API01_ANCHORS_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: '05 Locate and verify all exact input bytes before extraction'
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_one() {
+            local name="$1" roots="$2" found
+            found="$(find $roots -type f -name "$name" | head -n 2)"
+            [ "$(printf '%s\n' "$found" | grep -c .)" -eq 1 ] || { echo "::error::$name not unique: $found"; exit 1; }
+            printf '%s' "$found"
+          }
+          C8="$(find_one "$C8_NAME" transport/c8)"
+          A1="$(find_one "$API01_NAME" transport/api01)"
+          D6="$(find_one "$DATA06_NAME" transport/api01-anchors)"
+          echo "$C8_SHA256  $C8" | sha256sum -c -
+          [ "$(stat -c '%s' "$C8")" = '34641029' ]
+          echo "$API01_SHA256  $A1" | sha256sum -c -
+          echo "$DATA06_SHA256  $D6" | sha256sum -c -
+          echo "c8=$(realpath "$C8")" >> "$GITHUB_OUTPUT"
+          echo "api01=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "data06=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: '06 Extract exact C8 and establish C9 root'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work out
+          mkdir -p work out
+          unzip -q "${{ steps.inputs.outputs.c8 }}" -d work
+          mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C8" "work/$C9_ROOT"
+
+      - name: '07 Apply bounded C8 to C9 acceptance-path correction'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c9.py \
+            --patch-only \
+            --root "work/$C9_ROOT" \
+            --api01 "${{ steps.inputs.outputs.api01 }}" \
+            --data06 "${{ steps.inputs.outputs.data06 }}" \
+            --entering "${{ steps.inputs.outputs.c8 }}" \
+            --out out
+
+      - name: '08 Generate current C9 identity inputs and exact inventories'
+        shell: bash
+        working-directory: work/${{ env.C9_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c8 }}
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_authorization_registers.py
+          python3 scripts/api02/build_mandatory_tests.py
+          python3 scripts/api02/build_v23_reconciliation.py
+          python3 scripts/api02/build_exact_inventories.py
+          python3 scripts/api02/build_correction_inventory.py
+
+      - name: '09 Seal C9 in the documented fixed-point order'
+        shell: bash
+        working-directory: work/${{ env.C9_ROOT }}
+        env:
+          API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_API01_ZIP: ${{ steps.inputs.outputs.api01 }}
+          API02_ACCEPTED_DATA06_ZIP: ${{ steps.inputs.outputs.data06 }}
+          API02_ENTERING_CANDIDATE_ZIP: ${{ steps.inputs.outputs.c8 }}
+        run: |
+          set -euo pipefail
+          python3 scripts/api02/build_evidence_state.py
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;f.write_validation_txt()'
+          python3 scripts/api02/build_stale_audit.py
+          python3 scripts/api02/build_consistency_result.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/build_bsi_classification.py
+          python3 scripts/api02/build_correction_inventory.py
+          python3 scripts/api02/build_bsi_classification.py --check
+          python3 scripts/api02/build_sealed_accounting.py --layer-a-only
+          python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;print("CHECKSUM_ROWS",f.write_checksums())'
+          python3 scripts/api02/build_sealed_accounting.py --layer-b-only
+          python3 scripts/api02/finalize_candidate.py --check
+          python3 scripts/api02/acceptance_path_identity.py --root .
+
+      - name: '10 Prove correction is runtime-neutral from exact C8 to sealed C9'
+        shell: bash
+        working-directory: work/${{ env.C9_ROOT }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          p='docs/api/API-02/API02_C8_TO_C9_CORRECTION_INVENTORY.json'
+          d=json.load(open(p))
+          bad=[]
+          runtime_prefixes=('packages/','apps/','services/','src/','migrations/','db/','schema/')
+          for row in d['entries']:
+              if row.get('change') in ('added','modified','removed') and row['path'].startswith(runtime_prefixes):
+                  bad.append(row['path'])
+          print('changed_rows',d.get('changed_rows'),d.get('counts'))
+          print('runtime_delta_paths',bad)
+          if bad:
+              raise SystemExit('runtime delta forbidden in C9 acceptance-path correction')
+          PY
+
+      - name: '11 Deterministically package sealed C9 and verify CRC'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 handoff/API-02/tools/build_api02_c9.py \
+            --package-only \
+            --root "work/$C9_ROOT" \
+            --api01 "${{ steps.inputs.outputs.api01 }}" \
+            --data06 "${{ steps.inputs.outputs.data06 }}" \
+            --entering "${{ steps.inputs.outputs.c8 }}" \
+            --out out
+          unzip -t "out/${C9_ROOT}.zip" >/dev/null
+          cat out/candidate_sha256.txt
+          cat out/candidate_meta.json
+
+      - name: '12 Prepare exact acceptance anchors'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/anchors out/evidence
+          cp "${{ steps.inputs.outputs.api01 }}" out/anchors/
+          cp "${{ steps.inputs.outputs.data06 }}" out/anchors/
+          cp "${{ steps.inputs.outputs.c8 }}" out/anchors/
+          cp out/candidate_meta.json out/evidence/
+          cp out/candidate_sha256.txt out/evidence/
+          cp "work/$C9_ROOT/docs/api/API-02/API02_C8_TO_C9_CORRECTION_REPORT.md" out/evidence/
+          cp "work/$C9_ROOT/docs/api/API-02/API02_C8_TO_C9_CORRECTION_INVENTORY.json" out/evidence/
+          cp "work/$C9_ROOT/.github/workflows/api02-accept.yml" out/evidence/api02-accept.yml
+
+      - name: '13 Upload exact C9 candidate'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-candidate
+          path: |
+            out/${{ env.C9_ROOT }}.zip
+            out/candidate_sha256.txt
+            out/candidate_meta.json
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '14 Upload exact API-02 acceptance anchors'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-anchors
+          path: out/anchors/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: '15 Upload C9 builder evidence'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api02-c9-build-evidence-${{ github.run_id }}
+          path: out/evidence/*
+          compression-level: 0
+          if-no-files-found: error
