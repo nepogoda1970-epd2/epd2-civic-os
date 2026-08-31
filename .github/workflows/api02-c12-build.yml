@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/api02-c12-build.yml'
       - 'handoff/API-02/tools/build_api02_c12.py'
+      - 'handoff/API-02/tools/c12_narrow_fix.py'
 
 permissions:
   contents: read
@@ -84,17 +85,18 @@ jobs:
           unzip -q "${{ steps.inputs.outputs.c11 }}" -d work
           mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11" "work/$C12_ROOT"
           python3 handoff/API-02/tools/build_api02_c12.py --patch-only --root "work/$C12_ROOT" --out out
+          python3 handoff/API-02/tools/c12_narrow_fix.py --root "work/$C12_ROOT"
 
-      - name: '08 Frozen-format the corrected validator file and prove formatter currentness'
+      - name: '08 Frozen-format corrected validator files and prove formatter currentness'
         working-directory: work/${{ env.C12_ROOT }}
         shell: bash
         run: |
           set -euo pipefail
           export UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/c12-format-env"
           uv sync --frozen --all-groups --python 3.12.12
-          uv run --frozen ruff format scripts/api02/build_stale_audit.py
-          uv run --frozen ruff format --check scripts/api02/build_stale_audit.py
-          uv run --frozen ruff check scripts/api02/build_stale_audit.py
+          uv run --frozen ruff format scripts/api02/build_stale_audit.py scripts/validate_api02.py
+          uv run --frozen ruff format --check scripts/api02/build_stale_audit.py scripts/validate_api02.py
+          uv run --frozen ruff check scripts/api02/build_stale_audit.py scripts/validate_api02.py
           [ ! -e .venv ]
 
       - name: '09 Rebuild current identity and exact inventories'
