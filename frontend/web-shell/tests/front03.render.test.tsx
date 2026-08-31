@@ -3,7 +3,10 @@ import type { AnchorHTMLAttributes, PropsWithChildren } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MemberWorkspace } from "../member/MemberWorkspace";
-import { createFixtureRuntime, createProductionRuntime } from "../member/runtime";
+import {
+  createFixtureRuntime,
+  createProductionRuntime,
+} from "../member/runtime";
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -36,7 +39,9 @@ describe("FRONT-03 route application", () => {
     expect(
       screen.getByRole("heading", { name: "Mein Bürgerbereich" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("navigation")).toHaveTextContent("Meine Vorschläge");
+    expect(screen.getByRole("navigation")).toHaveTextContent(
+      "Meine Vorschläge",
+    );
   });
   it("keeps Applicant shell free of Member navigation", () => {
     render(
@@ -120,6 +125,8 @@ describe("FRONT-03 route application", () => {
     expect(
       screen.getByText(/Compliance- und Rechtsbereich wird nicht geöffnet/),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /WS-07/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /WS-07/i }),
+    ).not.toBeInTheDocument();
   });
 });

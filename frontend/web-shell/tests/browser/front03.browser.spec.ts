@@ -81,18 +81,26 @@ test("B14-B15 initiative confirmation and duplicate guard", async ({
   await page.getByRole("button", { name: "Jetzt bestätigen" }).dblclick();
   await expect(page.getByText("RCPT-bund-2026-0081")).toHaveCount(1);
 });
-test("B16 fixture profile is active only in governed fixture run", async ({ page }) => {
+test("B16 fixture profile is active only in governed fixture run", async ({
+  page,
+}) => {
   await page.goto("/member/home");
-  await expect(page.getByRole("heading", { name: "Mein Bürgerbereich" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Mein Bürgerbereich" }),
+  ).toBeVisible();
 });
 test("B17 step-up surface does not execute", async ({ page }) => {
   await page.goto("/member/assurance/authentication-session-assurance");
   await expect(page.getByText("BLOCKED")).toBeVisible();
-  await expect(page.getByRole("button", { name: /widerrufen/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /widerrufen/i })).toHaveCount(
+    0,
+  );
 });
 test("B18-B19 voting boundary", async ({ page }) => {
   await page.goto("/member/home");
-  await expect(page.getByText("keine Stimmabgabe im Bürgerbereich")).toBeVisible();
+  await expect(
+    page.getByText("keine Stimmabgabe im Bürgerbereich"),
+  ).toBeVisible();
   const html = await page.content();
   expect(html).not.toMatch(
     /memberId|accountId|personId|Stimme abgeben|Cast ballot/,

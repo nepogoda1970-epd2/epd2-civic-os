@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("production-like profile is fail-closed and cannot fabricate fixture data", async ({ page }) => {
+test("production-like profile is fail-closed and cannot fabricate fixture data", async ({
+  page,
+}) => {
   await page.goto("/member/home");
   await expect(
     page.getByText("Verbindung zur zuständigen Laufzeit nicht verfügbar"),
@@ -12,7 +14,9 @@ test("production-like profile is fail-closed and cannot fabricate fixture data",
   await expect(page.locator("#scope")).toHaveCount(0);
 });
 
-test("production-like applicant route does not fabricate applicant case", async ({ page }) => {
+test("production-like applicant route does not fabricate applicant case", async ({
+  page,
+}) => {
   await page.context().addCookies([
     {
       name: "front03_fixture_principal",
