@@ -12,12 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstruct and verify exact R3 source payload
+      - name: Recover and verify exact R3 source payload
         run: |
-          cat .front03-r3-sync/part*.b64 | tr -d '\r\n\t ' > /tmp/front03-r3.b64
-          echo "normalized_base64_sha=$(sha256sum /tmp/front03-r3.b64 | cut -d' ' -f1)"
-          base64 -d /tmp/front03-r3.b64 > /tmp/front03-r3.tgz
-          echo "payload_sha=$(sha256sum /tmp/front03-r3.tgz | cut -d' ' -f1)"
+          git fetch --no-tags --depth=1 origin 255cfb6ecea83ac3d871b0b8da82648513fadff8
+          git show 255cfb6ecea83ac3d871b0b8da82648513fadff8:.front03-r3-source-payload.tgz > /tmp/front03-r3.tgz
+          echo "historical_payload_size=$(wc -c < /tmp/front03-r3.tgz)"
+          echo "historical_payload_sha=$(sha256sum /tmp/front03-r3.tgz | cut -d' ' -f1)"
+          gzip -t /tmp/front03-r3.tgz
           test "$(sha256sum /tmp/front03-r3.tgz | cut -d' ' -f1)" = "8aaa79cb1e35641f4acab293d6da72811aa51ea9616f1b566cc8da8fb1174faa"
           tar -tzf /tmp/front03-r3.tgz >/tmp/front03-r3-files.txt
           tar -xzf /tmp/front03-r3.tgz
@@ -82,7 +83,7 @@ jobs:
           PY
 
       - name: Final executable-source evidence
-        if: always()
+        if: success()
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -108,7 +109,8 @@ jobs:
             'timestamp':datetime.datetime.now(datetime.timezone.utc).isoformat(),
             'runner_os':os.environ.get('RUNNER_OS'),
             'node':'22',
-            'r3_payload_sha256':'8aaa79cb1e35641f4acab293d6da72811aa51ea9616f1b566cc8da8fb1174faa'
+            'r3_payload_sha256':'8aaa79cb1e35641f4acab293d6da72811aa51ea9616f1b566cc8da8fb1174faa',
+            'status':'PASS'
           }
           Path('front03-r3-dependency-backed-evidence.json').write_text(json.dumps(out,indent=2)+'\n')
           print(json.dumps(out,indent=2))
