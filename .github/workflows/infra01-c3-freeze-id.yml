@@ -1,0 +1,29 @@
+name: INFRA-01 C3 Corrected Freeze Identity
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c3-freeze-id.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  identity:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 38f7d13c8badf911e61d659adb2905d1089a64a5
+          persist-credentials: false
+      - name: Compute exact freeze identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          from scripts.acceptance.freeze import take_inventory
+          inv = take_inventory(Path('.'))
+          print('FREEZE_FILE_COUNT=' + str(len(inv.files)))
+          print('FREEZE_TREE_DIGEST=' + inv.tree_digest)
+          PY
