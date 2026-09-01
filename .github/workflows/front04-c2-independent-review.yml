@@ -1,0 +1,154 @@
+name: FRONT04 C2 Independent Review
+
+on:
+  push:
+    branches:
+      - handoff/front
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact handoff branch
+        uses: actions/checkout@v4
+
+      - name: Exact candidate identity and ZIP integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+          test -f "$ZIP"
+          sha256sum "$ZIP" | tee /tmp/front04_c2_sha256.txt
+          stat -c '%s bytes' "$ZIP" | tee /tmp/front04_c2_size.txt
+          unzip -t "$ZIP" | tail -20
+          rm -rf /tmp/front04-c2
+          mkdir -p /tmp/front04-c2
+          unzip -q "$ZIP" -d /tmp/front04-c2
+          echo '--- relevant C2 files ---'
+          find /tmp/front04-c2 -type f | grep -Ei 'front[-_]?04|candidate_identity|lineage|source_delta|authoritative|browser.*evidence|mutat|dependency.*security|stage.*contract' | sort | head -300 || true
+
+      - name: Candidate governance and evidence inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2
+          echo '--- stage contract ---'
+          find . -type f -iname '*FRONT-04*STAGE*CONTRACT*.md' -print -exec sed -n '1,240p' {} \; || true
+          echo '--- developer report ---'
+          REPORT=$(find . -type f -iname 'FRONT04_C2_DEVELOPER_REPORT.md' -print -quit || true)
+          if [ -n "$REPORT" ]; then sed -n '1,320p' "$REPORT"; else echo 'MISSING FRONT04_C2_DEVELOPER_REPORT.md'; fi
+          echo '--- identity / lineage / delta ---'
+          for n in candidate_identity.json lineage.json source_delta.json FRONT04_C2_DELTA_VS_C1.json FRONT04_DEPENDENCY_SECURITY_DISPOSITION.json authoritative_candidate_result.json; do
+            while IFS= read -r f; do echo "### $f"; cat "$f"; echo; done < <(find . -type f -iname "$n" | sort)
+          done
+
+      - name: Reproduce candidate validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2
+          V=$(find . -type f \( -name 'validate_front04_c2.py' -o -name 'validate_front04_c1.py' -o -name 'validate_front04.py' \) | sort | head -1)
+          test -n "$V"
+          echo "VALIDATOR=$V"
+          python3 "$V" | tee /tmp/front04_validator.log
+
+      - name: Reproduce mutation suite when supplied
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2
+          M=$(find . -type f \( -iname '*front04*mutation*.py' -o -iname '*mutation*front04*.py' \) | sort | head -1 || true)
+          if [ -n "$M" ]; then
+            echo "MUTATION_SUITE=$M"
+            python3 "$M" | tee /tmp/front04_mutations.log
+          else
+            echo 'No standalone FRONT04 mutation script discovered; validator evidence will be inspected separately.'
+          fi
+
+      - name: Mandatory C1 regression - reject stale source evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/front04-c2-stale
+          cp -a /tmp/front04-c2 /tmp/front04-c2-stale
+          cd /tmp/front04-c2-stale
+          TARGET=$(find . -type f -path '*frontend/voting-client/*' -name 'ReceiptSurface.tsx' -print -quit || true)
+          if [ -z "$TARGET" ]; then TARGET=$(find . -type f -path '*voting-client/*' -name '*.tsx' -print -quit || true); fi
+          test -n "$TARGET"
+          printf '\nTHIS_IS_NOT_VALID_TYPESCRIPT !!!\n' >> "$TARGET"
+          V=$(find . -type f \( -name 'validate_front04_c2.py' -o -name 'validate_front04_c1.py' -o -name 'validate_front04.py' \) | sort | head -1)
+          set +e
+          python3 "$V" > /tmp/front04_stale_attack.log 2>&1
+          rc=$?
+          set -e
+          cat /tmp/front04_stale_attack.log
+          echo "STALE_SOURCE_VALIDATOR_EXIT=$rc"
+          if [ "$rc" -eq 0 ]; then
+            echo 'FRONT04_C2_REVIEW_FAIL: stale source evidence was accepted'
+            exit 41
+          fi
+          echo 'FRONT04_C2_STALE_SOURCE_REJECTION=PASS'
+
+      - name: Additional evidence-binding attacks
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=/tmp/front04-c2
+          VREL=$(cd "$BASE" && find . -type f \( -name 'validate_front04_c2.py' -o -name 'validate_front04_c1.py' -o -name 'validate_front04.py' \) | sort | head -1)
+          test -n "$VREL"
+          attack() {
+            name="$1"; mode="$2"
+            d="/tmp/front04-attack-$name"
+            rm -rf "$d"; cp -a "$BASE" "$d"; cd "$d"
+            case "$mode" in
+              lock) printf '\n ' >> package-lock.json ;;
+              testsrc) f=$(find . -type f -path '*voting-client*' \( -name '*.test.ts' -o -name '*.spec.ts' -o -name '*.spec.tsx' \) -print -quit); test -n "$f"; printf '\n// stale-test-attack\n' >> "$f" ;;
+              validator) printf '\n# validator-stale-attack\n' >> "$VREL" ;;
+              raw) f=$(find . -type f -path '*validation/front04/raw/*' -print -quit || true); if [ -z "$f" ]; then f=$(find . -type f -iname '*browser*.log' -print -quit || true); fi; test -n "$f"; printf '\nstale-raw-attack\n' >> "$f" ;;
+            esac
+            set +e; python3 "$VREL" > "/tmp/${name}.log" 2>&1; rc=$?; set -e
+            echo "ATTACK_${name}_EXIT=$rc"
+            tail -40 "/tmp/${name}.log" || true
+            test "$rc" -ne 0
+          }
+          attack package_lock lock
+          attack test_source testsrc
+          attack validator_source validator
+          attack raw_evidence raw
+          echo 'FRONT04_C2_ADDITIONAL_BINDING_ATTACKS=PASS'
+
+      - name: Archive hygiene checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+          import stat
+          z=Path('handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip')
+          with ZipFile(z) as f:
+              names=f.namelist()
+              dup=len(names)-len(set(names))
+              traversal=[]; syms=[]; contam=[]
+              for i in f.infolist():
+                  p=PurePosixPath(i.filename)
+                  if p.is_absolute() or '..' in p.parts: traversal.append(i.filename)
+                  mode=(i.external_attr >> 16) & 0xffff
+                  if stat.S_ISLNK(mode): syms.append(i.filename)
+                  low=i.filename.lower()
+                  if '/node_modules/' in '/'+low or '/.next/' in '/'+low or '__pycache__' in low or low.endswith('.pyc'):
+                      contam.append(i.filename)
+              print('entries=',len(names),'duplicates=',dup,'traversal=',len(traversal),'symlinks=',len(syms),'contamination=',len(contam))
+              if traversal: print('TRAVERSAL',traversal[:20])
+              if syms: print('SYMLINKS',syms[:20])
+              if contam: print('CONTAMINATION',contam[:40])
+              assert dup == 0 and not traversal and not syms and not contam
+          PY
+
+      - name: Final independent marker
+        run: echo 'FRONT04_C2_INDEPENDENT_REVIEW_CORE=PASS'
