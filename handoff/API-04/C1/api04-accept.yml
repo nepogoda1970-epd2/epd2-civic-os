@@ -1,0 +1,249 @@
+name: api04-accept
+
+on:
+  push:
+    branches:
+      - tmp/api04-c1-authoritative-accept
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api04-c1-authoritative-accept
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout external acceptance control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Read external control
+        id: control
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=handoff/API-04/acceptance/API04_C1_ACCEPTANCE_CONTROL.json
+          test -f "$C"
+          python3 - "$C" >> "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          for k in ('candidate_run_id','candidate_sha256','candidate_size_bytes','builder_commit','sealed_workflow_sha256'):
+              print(f"{k}={d[k]}")
+          PY
+          cp "$C" /tmp/api04-accept-control.json
+
+      - name: Download exact sealed C1 candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: api04-c1-candidate
+          path: incoming/candidate
+          run-id: ${{ steps.control.outputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-03 C5
+        uses: actions/download-artifact@v4
+        with:
+          name: api03-c5-resealed-candidate
+          path: incoming/api03
+          run-id: 33511140504
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-02 C13
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming/api02
+          run-id: 33495990810
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-01 C5
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-candidate
+          path: incoming/api01
+          run-id: 32964804390
+          github-token: ${{ github.token }}
+
+      - name: Download accepted DATA-06 anchor
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-anchors
+          path: incoming/api01-anchors
+          run-id: 32964804390
+          github-token: ${{ github.token }}
+
+      - name: Verify exact input identities before reading them
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          one(){ local n="$1"; shift; local f; f=$(find "$@" -type f -name "$n" | head -n2); [ "$(printf '%s\n' "$f" | grep -c .)" -eq 1 ] || { echo "bad count for $n: $f"; exit 1; }; printf '%s' "$f"; }
+          C1=$(one 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip' incoming/candidate)
+          A3=$(one 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip' incoming/api03)
+          A2=$(one 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip' incoming/api02)
+          A1=$(one 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip' incoming/api01)
+          D6=$(one 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip' incoming/api01-anchors)
+          echo "${{ steps.control.outputs.candidate_sha256 }}  $C1" | sha256sum -c -
+          [ "$(stat -c%s "$C1")" = "${{ steps.control.outputs.candidate_size_bytes }}" ]
+          echo '5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55  '"$A3" | sha256sum -c -
+          echo '9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9  '"$A2" | sha256sum -c -
+          echo 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27  '"$A1" | sha256sum -c -
+          echo '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1  '"$D6" | sha256sum -c -
+          echo "c1=$(realpath "$C1")" >> "$GITHUB_OUTPUT"
+          echo "a3=$(realpath "$A3")" >> "$GITHUB_OUTPUT"
+          echo "a2=$(realpath "$A2")" >> "$GITHUB_OUTPUT"
+          echo "a1=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "d6=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: Extract sealed C1 safely
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work && mkdir work
+          python3 - "${{ steps.inputs.outputs.c1 }}" work <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); roots={n.split('/',1)[0] for n in names if n}
+          assert roots=={'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1'}, roots
+          assert all(not n.startswith('/') and '..' not in n.split('/') for n in names)
+          assert z.testzip() is None
+          z.extractall(sys.argv[2])
+          for i in z.infolist():
+              if (i.external_attr>>16)&0o111: pathlib.Path(sys.argv[2],i.filename).chmod(0o755)
+          PY
+          ROOT="$PWD/work/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+
+      - name: Verify complete seal before running anything inside candidate
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          sha256sum --quiet -c SHA256SUMS.txt
+          listed=$(grep -c . SHA256SUMS.txt)
+          actual=$(find . -type f ! -path ./SHA256SUMS.txt | wc -l)
+          [ "$listed" = "$actual" ] || { echo "seal count mismatch listed=$listed actual=$actual"; exit 1; }
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os
+          root=pathlib.Path('.')
+          seal=json.load(open('docs/api/API-04/API04_C1_SEAL_RECORD.json'))
+          assert seal['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED' and seal['self_accepted'] is False
+          assert seal['accepted_predecessor']['sha256']=='5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55'
+          assert seal['source_r2']['sha256']=='1f3e172e579d66b30416dc8a0779dc3dfe67f6cf0c85c1ca3b1ffa2337f8dc1d'
+          wf=root/seal['sealed_acceptance_workflow']['path']
+          got=hashlib.sha256(wf.read_bytes()).hexdigest()
+          assert got==seal['sealed_acceptance_workflow']['sha256']==os.environ['CONTROL_WF_SHA']
+          print('API04_C1_SEAL:PASS', got)
+          PY
+        env:
+          CONTROL_WF_SHA: ${{ steps.control.outputs.sealed_workflow_sha256 }}
+
+      - name: Prove installed workflow is byte-for-byte the sealed template
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.extract.outputs.root }}'
+          cmp --silent .github/workflows/api04-accept.yml "$ROOT/handoff/API-04/templates/C1/api04-accept.yml"
+          echo "${{ steps.control.outputs.sealed_workflow_sha256 }}  .github/workflows/api04-accept.yml" | sha256sum -c -
+
+      - name: Verify canonical governance overlay against external checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.extract.outputs.root }}'
+          cmp --silent docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          cmp --silent docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json "$ROOT/docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json"
+          grep -q 'API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+
+      - name: Install uv 0.12.5
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: Provision exact live environment from sealed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          source '${{ steps.extract.outputs.root }}/scripts/api04_ci_setup.sh' '${{ steps.extract.outputs.root }}'
+
+      - name: Bind exact accepted archives to G22 and G23
+        shell: bash
+        run: |
+          {
+            echo 'API04_ACCEPTED_API01_ZIP=${{ steps.inputs.outputs.a1 }}'
+            echo 'API04_ACCEPTED_API02_ZIP=${{ steps.inputs.outputs.a2 }}'
+            echo 'API04_ACCEPTED_API03_ZIP=${{ steps.inputs.outputs.a3 }}'
+            echo 'API04_ACCEPTED_DATA06_ZIP=${{ steps.inputs.outputs.d6 }}'
+            echo 'API04_SEALED_CANDIDATE=1'
+          } >> "$GITHUB_ENV"
+
+      - name: Run full sealed-candidate validator G0-G27
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/authoritative_acceptance_result.json | tee /tmp/api04-authoritative.out
+          grep -q '^API04_RESULT:PASS:validation/api04/authoritative_acceptance_result.json$' /tmp/api04-authoritative.out
+          python3 - <<'PY'
+          import json
+          r=json.load(open('validation/api04/authoritative_acceptance_result.json'))
+          assert r['result']=='PASS', r
+          assert r['gate_count']==28, r['gate_count']
+          assert r['failed_gates']==[], r['failed_gates']
+          assert r['environment_blocked_gates']==[], r['environment_blocked_gates']
+          assert all(g['result']=='PASS' for g in r['gates'])
+          assert r['suite']['failed']==0 and r['suite']['skipped']==0, r['suite']
+          print('API04_GATES:28/28 PASS')
+          print('API04_TESTS',r['suite'])
+          PY
+
+      - name: Write external authoritative record
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          r=json.load(open('validation/api04/authoritative_acceptance_result.json'))
+          out={
+            'schema':'epd2.api04.c1.authoritative-result/1','stage':'API-04','role':'C1',
+            'candidate_sha256':os.environ['CANDIDATE_SHA'],'candidate_size_bytes':int(os.environ['CANDIDATE_SIZE']),
+            'github_run_id':os.environ['GITHUB_RUN_ID'],'github_job':os.environ['GITHUB_JOB'],'provenance_commit':os.environ['GITHUB_SHA'],
+            'result':'PASS','terminal_marker':'API04_RESULT:PASS:validation/api04/authoritative_acceptance_result.json',
+            'gates_total':r['gate_count'],'failed_gates':r['failed_gates'],'blocked_gates':r['environment_blocked_gates'],
+            'suite':r['suite'],'accepted_predecessor_api03_sha256':'5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55',
+            'postgresql':'16.15','rabbitmq':'3.12.1','service_identity':'RabbitMQ EXTERNAL/mTLS -> API-03 C5 TrustRegistry -> API-04 ACL',
+            'self_acceptance':False
+          }
+          pathlib.Path('validation/api04/external_authoritative_result.json').write_text(json.dumps(out,indent=2)+'\n')
+          PY
+        env:
+          CANDIDATE_SHA: ${{ steps.control.outputs.candidate_sha256 }}
+          CANDIDATE_SIZE: ${{ steps.control.outputs.candidate_size_bytes }}
+
+      - name: Publish authoritative evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: api04-c1-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            ${{ steps.extract.outputs.root }}/validation/api04/
+            ${{ steps.extract.outputs.root }}/docs/api/API-04/API04_C1_SEAL_RECORD.json
+            /tmp/api04-accept-control.json
+            /tmp/api04-authoritative.out
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Result
+        shell: bash
+        run: |
+          echo 'AUTHORITATIVE GITHUB ACCEPTANCE: PASS'
+          echo 'API04_RESULT:PASS:validation/api04/authoritative_acceptance_result.json'
