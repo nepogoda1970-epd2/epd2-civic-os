@@ -16,34 +16,25 @@
   },
   "candidate": {
     "pcr_path": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md",
-    "pcr_sha256": "433bc802a4b0d62a836c0b436f0838d3179a73c09da9ea56d613d61e3781aaf7"
+    "pcr_sha256": "70cb13f029dd1954ea5d1f069b8a99b59f5881bb9bcf1a683fc38e3a626901c1"
   },
   "expected_current_state": [
     {
       "id": "api01-closed",
       "region": "primary_position",
-      "must_include": [
-        "API-01 = ACCEPTED / CLOSED"
-      ],
+      "must_include": ["API-01 = ACCEPTED / CLOSED"],
       "must_exclude": []
     },
     {
       "id": "api02-closed-primary",
       "region": "primary_position",
-      "must_include": [
-        "API-02 = ACCEPTED / CLOSED"
-      ],
-      "must_exclude": [
-        "API-02 = ACTIVE / IN DEVELOPMENT",
-        "API-02 = NEXT"
-      ]
+      "must_include": ["API-02 = ACCEPTED / CLOSED"],
+      "must_exclude": ["API-02 = ACTIVE / IN DEVELOPMENT", "API-02 = NEXT"]
     },
     {
       "id": "api03-closed-primary",
       "region": "primary_position",
-      "must_include": [
-        "API-03 = ACCEPTED / CLOSED"
-      ],
+      "must_include": ["API-03 = ACCEPTED / CLOSED"],
       "must_exclude": [
         "API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED",
         "API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
@@ -52,9 +43,7 @@
     {
       "id": "api04-active-primary",
       "region": "primary_position",
-      "must_include": [
-        "API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
-      ],
+      "must_include": ["API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],
       "must_exclude": []
     },
     {
@@ -65,24 +54,18 @@
         "API-03 ACCEPTED / CLOSED",
         "API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
       ],
-      "must_exclude": [
-        "API-03 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
-      ]
+      "must_exclude": ["API-03 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"]
     },
     {
       "id": "infra01-preseal-row",
       "region": "layer_table",
-      "must_include": [
-        "INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
-      ],
+      "must_include": ["INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"],
       "must_exclude": []
     },
     {
       "id": "front03-accepted-row",
       "region": "layer_table",
-      "must_include": [
-        "FRONT-03 C1 ACCEPTED / CLOSED"
-      ],
+      "must_include": ["FRONT-03 C1 ACCEPTED / CLOSED"],
       "must_exclude": [
         "FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL"
       ]
@@ -98,13 +81,9 @@
     {
       "id": "api04-primary-execution-decision",
       "region": "immediate_execution",
-      "must_include": [
-        "API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
-      ],
-      "must_exclude": [
-        "API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
-      ]
+      "must_include": ["API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],
+      "must_exclude": ["API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"]
     }
   ],
-  "manifest_sha256": "260999435e2528b4702838677cf20f5622b7796b22b906b137153bac83e2cd8b"
+  "manifest_sha256": "7c0b6ff7517cbb4a309d6d170fa3a02ccfd019d35e88ff3b475d9c27029cb848"
 }
