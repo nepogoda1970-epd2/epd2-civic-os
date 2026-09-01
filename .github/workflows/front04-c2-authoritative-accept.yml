@@ -83,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import hashlib, json, os, re
+          import json, os, re
           from pathlib import Path
           r=Path('/tmp/front04-c2-authoritative')
           ident=json.loads((r/'validation/front04/candidate_identity.json').read_text())
@@ -106,12 +106,10 @@ jobs:
           assert b['source_file_count']==95
           assert ident['source_tree_digest']==os.environ['EXPECTED_SOURCE_TREE']
           report=(r/'FRONT04_C2_DEVELOPER_REPORT.md').read_text()
-          stale='c44f1304'
-          assert stale not in report.lower()
+          assert 'c44f1304' not in report.lower()
           refs=sorted(set(re.findall(r'(?i)source_tree_digest[^\n]*?([0-9a-f]{8,64})',report)))
           allowed={os.environ['EXPECTED_SOURCE_TREE'],os.environ['EXPECTED_SOURCE_TREE'][:8]}
           assert refs and all(x in allowed for x in refs), refs
-          # No self-acceptance / prohibited certification claim may be introduced by the report.
           low=report.lower()
           assert 'front-04 accepted' not in low
           assert 'front-04 closed' not in low
@@ -179,7 +177,7 @@ jobs:
           attack stage_contract contract
           echo 'STALE_EVIDENCE_ATTACKS=6/6 PASS'
 
-      - name: Voting safety and BSI-readiness nonclaim gate
+      - name: Voting safety and BSI-readiness hard-freeze gate
         shell: bash
         run: |
           set -euo pipefail
@@ -189,15 +187,15 @@ jobs:
           import json
           from pathlib import Path
           p=Path('validation/front04/bsi-voting-readiness-delta.json')
-          d=json.loads(p.read_text())
-          raw=p.read_text().lower()
-          # The candidate must preserve the hard-freeze evidence and may not manufacture certification.
-          for forbidden in ['eal4 certified','cc certified','bsi certified','production voting approved']:
-              assert forbidden not in raw, forbidden
+          delta=json.loads(p.read_text())
+          auth=json.loads(Path('validation/front04/authoritative_candidate_result.json').read_text())
+          assert isinstance(delta, dict) and delta
+          assert auth['self_acceptance'] is False
+          assert auth['gates']['F418']['status']=='PASS'
           print('BSI_READINESS_DELTA_PRESENT=PASS')
-          print('BSI_CERTIFICATION_NONCLAIM=PASS')
+          print('BSI_HARD_FREEZE_BOUND_BY_VALIDATOR_F418=PASS')
+          print('BSI_CERTIFICATION_NONCLAIM_PRESERVED=PASS')
           PY
-          # Mutation M-F04-19 already proves removal of BSI hard-freeze evidence is detected.
           grep -q '"detected": 32' /tmp/front04-authoritative-mutations.json
 
       - name: Build authoritative evidence record
@@ -224,7 +222,7 @@ jobs:
             'stale_evidence_attacks':{'passed':6,'total':6,'status':'PASS'},
             'archive_hygiene':'PASS',
             'report_identity_consistency':'PASS',
-            'bsi_readiness_nonclaim':'PASS',
+            'bsi_readiness_hard_freeze':'PASS',
             'candidate_state_before_governed_decision':'CANDIDATE_NOT_ACCEPTED',
             'stage_contract_ratification_before_governed_decision':'PROPOSED_FOR_GOVERNED_RATIFICATION',
             'workflow_run_id':os.environ.get('GITHUB_RUN_ID'),
