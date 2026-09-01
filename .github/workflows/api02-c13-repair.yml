@@ -24,30 +24,21 @@ jobs:
           path: /tmp/candidate
           run-id: 33490942304
           github-token: ${{ github.token }}
-      - name: Inspect C12 lineage and finalizer
+      - name: Inspect exact C12 entering metadata and current declarations
         shell: bash
         run: |
           set -euo pipefail
           CAND=/tmp/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+          echo "C12_SHA=$(sha256sum "$CAND" | cut -d' ' -f1)"
+          echo "C12_SIZE=$(stat -c %s "$CAND")"
           rm -rf /tmp/c12 && mkdir /tmp/c12
           unzip -q "$CAND" -d /tmp/c12
           ROOT=/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
           cd "$ROOT"
-          echo '=== LINEAGE CONSTANTS 100-280 ==='
-          sed -n '100,280p' scripts/api02/lineage_gates.py
-          echo '=== IDENTITY GATE 1840-1940 ==='
-          sed -n '1840,1940p' scripts/api02/lineage_gates.py
-          echo '=== FINALIZER CLI / TAIL ==='
-          grep -n -E 'def main|ArgumentParser|add_argument|if __name__' scripts/api02/finalize_candidate.py || true
-          sed -n '560,760p' scripts/api02/finalize_candidate.py
-          echo '=== CORRECTION BUILDER ==='
-          sed -n '1,260p' scripts/api02/build_correction_inventory.py
-          echo '=== EXACT INVENTORY CURRENT ROUND ==='
-          sed -n '70,135p' scripts/api02/build_exact_inventories.py
-          sed -n '960,1045p' scripts/api02/build_exact_inventories.py
-          echo '=== VALIDATOR CLI TAIL ==='
-          grep -n -E 'def main|ArgumentParser|add_argument|if __name__' scripts/validate_api02.py | tail -n 60 || true
-          sed -n '5390,5485p' scripts/validate_api02.py
-          sed -n '5735,5815p' scripts/validate_api02.py
-          echo '=== CURRENT C12 PROSE HITS IN DOSSIER ==='
-          grep -R -n --exclude='*.json' -E '\bC12\b|C11 → C12|C11 -> C12|C11_TO_C12|What C12 corrects' docs/api/API-02 scripts/api02 .github/workflows/api02-accept.yml | head -n 320 || true
+          echo "C12_SHA256SUM_ROWS=$(wc -l < SHA256SUMS.txt)"
+          echo '=== LINEAGE JSON ==='; cat docs/api/API-02/API02_LINEAGE.json
+          echo '=== EXECUTIVE ==='; cat docs/api/API-02/01_EXECUTIVE_RESULT.md
+          echo '=== ENTERING ==='; cat docs/api/API-02/03_ENTERING_BASELINE.md
+          echo '=== C11-C12 REPORT ==='; cat docs/api/API-02/API02_C11_TO_C12_CORRECTION_REPORT.md
+          echo '=== CHANGE RULE MATCHES ==='
+          grep -n -E 'pattern.*(api02-accept|lineage_gates|validator_selftest|01_EXECUTIVE|03_ENTERING|V23_CRYPTO|11_VOTING|CORRECTION_REPORT)' scripts/api02/build_exact_inventories.py || true
