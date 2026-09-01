@@ -18,18 +18,25 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply exact C2 non-workflow delta to exact C0 source
+      - name: Apply exact C2 non-workflow patch to exact C0 source
         shell: bash
         run: |
           set -euo pipefail
-          B64="handoff/INFRA/transport/infra01-c2-nonworkflow-delta.tar.gz.b64"
-          cp "$B64" "$RUNNER_TEMP/delta.b64"
-          base64 -d "$RUNNER_TEMP/delta.b64" > "$RUNNER_TEMP/delta.tar.gz"
-          echo "de9ddab1977d9ca9e6becacddc172ed1cc21372addd8a376aeb5c6dce5c99e51  $RUNNER_TEMP/delta.tar.gz" | sha256sum -c -
+          OUT="$RUNNER_TEMP/c2patch.b64"
+          : > "$OUT"
+          for n in 00 01 02 03 04 05; do
+            cat "handoff/INFRA/transport/c2patch.part${n}" >> "$OUT"
+          done
+          base64 -d "$OUT" > "$RUNNER_TEMP/c2.patch.gz"
+          echo "98f7a6b7a73f96e297bb181422ad479c00edc14587d5472b82a6bac2222065d4  $RUNNER_TEMP/c2.patch.gz" | sha256sum -c -
+          gunzip -c "$RUNNER_TEMP/c2.patch.gz" > "$RUNNER_TEMP/c2.patch"
+          echo "311ee1290d935471b1b466d6000b792daf8a10cbf55a4959f2e70ac2f0ec43dd  $RUNNER_TEMP/c2.patch" | sha256sum -c -
 
           git fetch --no-tags origin tmp/infra01-c0-source-20260901
           git switch -C tmp/infra01-c2-source-no-workflows origin/tmp/infra01-c0-source-20260901
-          tar -xzf "$RUNNER_TEMP/delta.tar.gz" -C .
+          test ! -d .github/workflows
+          git apply --check "$RUNNER_TEMP/c2.patch"
+          git apply "$RUNNER_TEMP/c2.patch"
           test ! -d .github/workflows
           git add -A
           git config user.name "EPD2 independent acceptance"
@@ -38,7 +45,10 @@ jobs:
           git push --force origin HEAD:refs/heads/tmp/infra01-c2-source-no-workflows
 
       - name: Report source identity
+        shell: bash
         run: |
+          set -euo pipefail
           git rev-parse HEAD
           git rev-parse HEAD^{tree}
           git status --porcelain
+          git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum
