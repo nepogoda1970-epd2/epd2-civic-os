@@ -49,7 +49,17 @@ def main() -> None:
         '''      "STATUS = \\"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\\"",\n      "STATUS = \\"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\\"\\nPROVIDER_GATEWAY = \\"api-05\\"",\n''',
         '''      'DEFAULT_ORGANIZATION = uuid.UUID("11111111-1111-4111-8111-111111111111")',\n      'PROVIDER_GATEWAY = "api-05"\\nDEFAULT_ORGANIZATION = uuid.UUID("11111111-1111-4111-8111-111111111111")',\n''')
 
-    spec = importlib.util.spec_from_file_location("api04_c1_reconcile", pathlib.Path("handoff/API-04/C1/api04_c1_reconcile.py"))
+    # C1 finalization must transition the C1 preseal version as well as the old R2 anchor.
+    # The frozen finalizer still knows only 0.2.0-preseal; patch that control deterministically
+    # before it is imported here and before the later sealed-candidate finalize step runs.
+    control = pathlib.Path("handoff/API-04/C1/api04_c1_reconcile.py")
+    replace_once(
+        control,
+        's = s.replace(\'VERSION = "0.2.0-preseal"\', f\'VERSION = "{version}"\')',
+        's = s.replace(\'VERSION = "0.2.0-preseal"\', f\'VERSION = "{version}"\').replace(\'VERSION = "0.3.0-c1-preseal"\', f\'VERSION = "{version}"\')',
+    )
+
+    spec = importlib.util.spec_from_file_location("api04_c1_reconcile", control)
     if spec is None or spec.loader is None:
         raise SystemExit("cannot load api04_c1_reconcile.py")
     mod = importlib.util.module_from_spec(spec)
