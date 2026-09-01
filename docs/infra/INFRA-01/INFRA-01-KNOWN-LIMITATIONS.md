@@ -71,6 +71,21 @@ details in the implementation report §3. The frozen-artifact pins in
 `frozen_artifacts.json` pin the _entering-baseline_ bytes, which remain
 byte-identical in this candidate.
 
+## L-08 — Freshness gate boundary: local semantics, reviewer-side authority compare
+
+The C1 governance-freshness gate proves, locally and fail-closed, that the
+candidate register carries the reconciled current-state facts, that it was
+not modified after reconciliation, and that the sealed record's target
+authority was not tampered with. What it cannot prove offline is that the
+_recorded_ target authority is the real current target: an adversary who
+rewrites both the facts and the recorded authority and reseals produces an
+internally consistent but wrong record. That is exactly the field the
+authoritative path compares externally — `verify-reconciliation
+--target-pcr` against the reviewer-fetched current `main` register (wired
+into `.github/workflows/infra01-acceptance.yml`), which fails closed on any
+divergence, including legitimate target advancement (re-reconciliation
+required by governance in that case).
+
 ## L-07 — GitHub workflow not yet exercised on GitHub
 
 `.github/workflows/infra01-acceptance.yml` invokes exactly the same command

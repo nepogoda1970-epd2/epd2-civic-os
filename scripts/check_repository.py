@@ -698,6 +698,14 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/infra/INFRA-01/INFRA-01-FILE-INVENTORY.md",
     "docs/infra/INFRA-01/examples/deployment-manifest.example.json",
     "docs/infra/INFRA-01/examples/readiness-contract.example.json",
+    # INFRA-01 C1 — governance-freshness reconciliation and correction round.
+    "docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json",
+    "docs/infra/INFRA-01/INFRA01_C0_TO_C2_EXACT_INVENTORY.json",
+    "docs/infra/INFRA-01/INFRA01_C1_TO_C2_EXACT_INVENTORY.json",
+    "docs/infra/INFRA-01/INFRA-01-C1-CORRECTION-REPORT.md",
+    "docs/infra/INFRA-01/INFRA-01-C2-CORRECTION-REPORT.md",
+    "scripts/acceptance/delta.py",
+    "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json",
     # Tests
     "tests/repository/test_required_files.py",
     "tests/repository/test_forbidden_paths.py",

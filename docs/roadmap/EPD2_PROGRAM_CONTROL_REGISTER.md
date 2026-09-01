@@ -2,7 +2,7 @@
 
 **Status:** Living canonical execution-state register  
 **Location:** `docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md`  
-**Updated:** 2026-08-30  
+**Updated:** 2026-09-01  
 **Purpose:** single authoritative source for the current execution state of the EPD² development program.
 
 This register answers what is closed, active, next, blocked, permitted in parallel, and which governed candidate/evidence currently controls each active line. It does not replace the Master Future Implementation Register.
@@ -46,6 +46,8 @@ Current Master maintenance level established by project governance work: **V26**
 
 **API-02 execution-state reconciliation (2026-08-27):** the project owner confirms that `API-02 — Authentication & Authorization Runtime` implementation is already underway. The current control state is therefore **`API-02 = ACTIVE / IN DEVELOPMENT`**, not `NEXT`. The existing `handoff/api-02` branch is intentionally reserved as a clean future candidate-verification/upload slot and is not the development branch, candidate evidence, PASS or acceptance record. Historical dated statements that API-02 was `NEXT` remain preserved as history and are superseded only for current-state interpretation. No API-02 PASS/ACCEPTED/CLOSED claim is made. `API-03` may proceed only as **`PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`** and may not be accepted or closed before authoritative API-02 acceptance.
 
+**API-02 authoritative acceptance and closure (2026-09-01):** exact sealed candidate `EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip`, SHA-256 `9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9`, size `34,642,386` bytes, passed the independent GitHub Actions workflow `api02-accept`, authoritative run `33497989489`, job `99824485228`, provenance commit `ac76811912ab41772e75bd3fe366eb98bb2cddbd`, conclusion `success`. The run emitted `API02_RESULT:PASS:validation/api02/validator_result.json`; all `32/32` governed gates passed with no failed or environment-blocked gate. Exact live evidence includes PostgreSQL `16.15`, browser journey `41 passed / 1 skipped / 0 failed / 0 did_not_run`, `91` runtime-derived routes, `9` commit-time reauthorization refusal cases, `81` mutation fixtures, and stale-state audit `1437` hits / `0` unclassified. Step 27 bound the authoritative evidence to run `33497989489` and the exact candidate SHA. Authoritative evidence artifact `api02-c13-acceptance-evidence-33497989489`, artifact ID `9797383573`, GitHub artifact ZIP SHA-256 `ac5f940b98b58d18d1c7cde42314079bb1890bea3596cd5cad3997eeb1818f57`. The register-maintainer governance decision is recorded in `docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json`. **API-02 is therefore `ACCEPTED / CLOSED`.** The candidate's self-state `CANDIDATE_NOT_ACCEPTED` remains a valid no-self-acceptance safeguard in the sealed bytes and is superseded only by this independent post-run governance decision. The predecessor blocker on API-03 acceptance is released; API-03 is now the active primary API stage, must reconcile/rebase to these exact accepted C13 bytes before seal, and still requires its own independent acceptance. No API-03 acceptance/closure, API-layer closure, production-readiness, legal-activation, BSI/CC-certification or security-certification claim follows from this transition.
+
 On 2026-08-26 API-01 completed independent authoritative acceptance. Exact candidate `EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip`, sha256 `cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27`, passed GitHub Actions workflow `api01-accept`, authoritative run `32967210855`, conclusion `success`. API-01 is therefore `ACCEPTED / CLOSED`; API-02 is the next permitted primary API stage.
 
 On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its already-completed full live authoritative evidence: exact C3 sha256 `fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb` passed GitHub Actions run `32855264419`, conclusion `success`, with `3109 passed, 1 skipped, 0 failed`, F-01 `9/9 PASS` and F-02 `8/8 PASS`. PILOT-05 is therefore `ACCEPTED / ESTABLISHED`; this does not alter `API-02 = NEXT`.
@@ -54,18 +56,18 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 
 ## 2. Program phase state
 
-| Program layer      | Current control state                                                                                    | Execution rule                                                                                                                                                                                                                                 |
-| ------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ARCH PACK-01…35    | `CLOSED`                                                                                                 | Do not restart architecture PACK sequencing as current work.                                                                                                                                                                                   |
-| DATA               | `CLOSED`                                                                                                 | Do not describe DATA as still being finished unless a governed correction explicitly reopens it.                                                                                                                                               |
-| API                | `API-01 ACCEPTED / CLOSED; API-02 ACTIVE / IN DEVELOPMENT; API-03 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` | API-02 implementation is active. API-03 may proceed only as parallel PRE-SEAL and cannot be accepted/closed before authoritative API-02 acceptance.                                                                                            |
-| INFRA              | `INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`                                                         | INFRA-01 (CI Acceptance Harness & Release-Integrity Foundation) exists as a parallel pre-seal implementation candidate under Entering Baseline Identity v1.1; it is not accepted and not closed. Final INFRA closure follows API dependencies. |
-| OPS                | `NOT_STARTED`                                                                                            | Procedures/runbooks may be prepared; runtime closure follows INFRA.                                                                                                                                                                            |
-| CTRL               | `NOT_STARTED`                                                                                            | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA.                                                                                                                                                            |
-| FRONT              | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL`                                     | The exact C2.1 implementation candidate is accepted as a governed frontend baseline. Final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL.                                                           |
-| SEC                | `NOT_STARTED_FINAL`                                                                                      | Threat/adversarial preparation may proceed; final challenge targets the integrated system.                                                                                                                                                     |
-| BSI / CC readiness | `PREPARATORY PARALLEL WORK / NOT CERTIFIED`                                                              | P0 feasibility, TOE/ST preparation and assurance planning may proceed in parallel. This opens no SEC stage, changes no implementation-stage status and creates no certification claim. Hard P0 identity freeze applies.                        |
-| PILOT              | `PARALLEL_DEVELOPMENT_EXISTS`                                                                            | PILOT-01…05 have existing lineage/work. Exact stage state is governed below.                                                                                                                                                                   |
+| Program layer      | Current control state                                                                               | Execution rule                                                                                                                                                                                                                                 |
+| ------------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ARCH PACK-01…35    | `CLOSED`                                                                                            | Do not restart architecture PACK sequencing as current work.                                                                                                                                                                                   |
+| DATA               | `CLOSED`                                                                                            | Do not describe DATA as still being finished unless a governed correction explicitly reopens it.                                                                                                                                               |
+| API                | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED` | API-03 is the active primary API stage. It must reconcile/rebase to exact accepted API-02 C13 bytes before seal and independent acceptance. API remains open through API-06.                                                                   |
+| INFRA              | `INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`                                                    | INFRA-01 (CI Acceptance Harness & Release-Integrity Foundation) exists as a parallel pre-seal implementation candidate under Entering Baseline Identity v1.1; it is not accepted and not closed. Final INFRA closure follows API dependencies. |
+| OPS                | `NOT_STARTED`                                                                                       | Procedures/runbooks may be prepared; runtime closure follows INFRA.                                                                                                                                                                            |
+| CTRL               | `NOT_STARTED`                                                                                       | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA.                                                                                                                                                            |
+| FRONT              | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL`                                | The exact C2.1 implementation candidate is accepted as a governed frontend baseline. Final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL.                                                           |
+| SEC                | `NOT_STARTED_FINAL`                                                                                 | Threat/adversarial preparation may proceed; final challenge targets the integrated system.                                                                                                                                                     |
+| BSI / CC readiness | `PREPARATORY PARALLEL WORK / NOT CERTIFIED`                                                         | P0 feasibility, TOE/ST preparation and assurance planning may proceed in parallel. This opens no SEC stage, changes no implementation-stage status and creates no certification claim. Hard P0 identity freeze applies.                        |
+| PILOT              | `PARALLEL_DEVELOPMENT_EXISTS`                                                                       | PILOT-01…05 have existing lineage/work. Exact stage state is governed below.                                                                                                                                                                   |
 
 Canonical primary closure sequence:
 
@@ -78,8 +80,8 @@ Current primary position:
 ```text
 DATA = CLOSED
 API-01 = ACCEPTED / CLOSED
-API-02 = ACTIVE / IN DEVELOPMENT
-API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED
+API-02 = ACCEPTED / CLOSED
+API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED
 ```
 
 ### 2.1 Governed execution path with intermediate system trial
@@ -89,7 +91,7 @@ The canonical layer order above is unchanged. The following checkpoint-aware exe
 ```text
 DATA CLOSED
   → API-01 CLOSED
-  → API-02
+  → API-02 CLOSED
   → API-03
   → API-04
   → API-05
@@ -126,7 +128,7 @@ This does not prohibit already-existing or corrective parallel PILOT work or the
 
 ## 3. Parallel work currently permitted
 
-While API-02 is the active primary API stage, the following may proceed without changing `API-02 = ACTIVE / IN DEVELOPMENT`; API-03 is additionally permitted only as `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` and cannot be accepted/closed before API-02:
+While API-03 is the active primary API stage, the following may proceed without changing `API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`. API-03 itself must first reconcile/rebase to the exact accepted API-02 C13 bytes before seal and independent acceptance:
 
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
@@ -320,15 +322,16 @@ Every status transition must record previous/new state, governing artifact or co
 
 No status may change merely because a conversation says it is convenient.
 
-### INFRA-01 parallel working-state transition — 2026-08-31
+### INFRA-01 parallel working-state transition — 2026-08-31 (reconciled to current target 2026-09-01)
 
 - **Previous state:** `INFRA = NOT_STARTED`.
 - **New state:** `INFRA-01 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED` (working candidate exists; nothing accepted or closed).
 - **Governing baseline:** Entering Baseline Identity v1.1 — `nepogoda1970-epd2/epd2-civic-os` commit `8ff32c3e9ed654768ae86ac569a9c498f78c5aa2`, tree `13e1c439f8f5b0bd37cb6519f109d9f4c02f1ef9`.
-- **Work product:** canonical CI acceptance harness (`scripts/acceptance/`, entry point `uv run python -m scripts.acceptance run`), governed check registry, sealed execution manifest, freeze/package byte-identity proof, frozen-artifact integrity gates, secret-leakage hard gate, mutation-tested evidence validator, deployment-manifest/readiness/sovereignty foundations, and `.github/workflows/infra01-acceptance.yml` invoking the same harness. Round record: Master Register §1.75; reports under `docs/infra/INFRA-01/`.
+- **Work product:** canonical CI acceptance harness (`scripts/acceptance/`, entry point `uv run python -m scripts.acceptance run`), governed check registry, sealed execution manifest, freeze/package byte-identity proof, frozen-artifact integrity gates, secret-leakage hard gate, mutation-tested evidence validator, governance-freshness reconciliation gate, deployment-manifest/readiness/sovereignty foundations, and `.github/workflows/infra01-acceptance.yml` invoking the same harness. Round record: Master Register §1.75; reports under `docs/infra/INFRA-01/`.
+- **C1 governance reconciliation (2026-09-01):** the INFRA-01 candidate is reconciled to the current target `main` authority (commit `556821e0e5d550a4db601bbe92e4f4673a1bc3ff`), carrying the API-02 C13 authoritative acceptance identity and `API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED` as current state. Machine-readable binding: `docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json`.
 - **Acceptance status:** `LOCAL CANONICAL HARNESS: PASS` on the exact candidate only; `EXTERNAL GOVERNED ACCEPTANCE: NOT YET PERFORMED`; `NOT PRODUCTION READY`; `NOT LEGALLY ACTIVATED`.
 - **Open blockers for INFRA closure:** the governed predecessor sequence (API layer completion through API-06 and the preview-readiness checkpoint semantics of §2.1) — unchanged by this transition.
-- **Next permitted primary stage:** unchanged — `API-02 = ACTIVE / IN DEVELOPMENT`.
+- **Next permitted primary stage:** unchanged by INFRA-01 — `API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`.
 
 ### FRONT-02 C2.1 authoritative acceptance transition — 2026-08-29
 
@@ -399,6 +402,26 @@ No status may change merely because a conversation says it is convenient.
 - **Open blockers for API-01:** none.
 - **Next permitted primary stage:** `API-02 — Authentication & Authorization Runtime`.
 
+### API-02 C13 authoritative transition — 2026-09-01
+
+- **Previous state:** `API-02 ACTIVE / IN DEVELOPMENT`; sealed candidate self-state `CANDIDATE_NOT_ACCEPTED`.
+- **New state:** `API-02 ACCEPTED / CLOSED`.
+- **Governing candidate:** `EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip`.
+- **Candidate SHA-256:** `9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9`.
+- **Candidate size:** `34,642,386` bytes.
+- **Builder evidence:** GitHub Actions run `33495990810`, conclusion `success`, builder head `a378ac688e550de6907b7f8ea8ef19851837c1de`; C13 sealing converged with `3953` files and zero runtime-delta paths from C12.
+- **Authoritative workflow:** `.github/workflows/api02-accept.yml`, exact sealed workflow Git blob `55bcb7571d60eaaaf9c11f15f35c2a27d3961ee9`, workflow SHA-256 `9c93f870deaa8b6da4c74f9baa958285043d35adc19c5989cf42fe0a56f3292b`.
+- **Authoritative run:** GitHub Actions `33497989489`, run attempt `1`, job `99824485228`, conclusion `success`, provenance commit `ac76811912ab41772e75bd3fe366eb98bb2cddbd`.
+- **Validator terminal result:** `API02_RESULT:PASS:validation/api02/validator_result.json`; all `32/32` gates PASS, no failed or environment-blocked gate.
+- **Live environment:** PostgreSQL `16.15`; 10/10 constraint-violation probes refused; frozen Chromium provisioning fail-closed; browser journey `41 passed, 1 skipped, 0 failed, 0 did_not_run`.
+- **Security/runtime assertions:** `9` commit-time reauthorization refusal cases; voting isolation, privileged separation and recovery groups PASS; `91` routes derived from runtime source and fully classified; `81` mutation fixtures; candidate identity C13; consistency state exact; stale audit `1437` hits / `0` unclassified.
+- **Authoritative evidence binding:** step 27 proved the published evidence was written by run `33497989489` for candidate SHA `9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9`.
+- **Authoritative evidence artifact:** `api02-c13-acceptance-evidence-33497989489`, artifact ID `9797383573`, artifact size `782,435` bytes, GitHub artifact ZIP SHA-256 `ac5f940b98b58d18d1c7cde42314079bb1890bea3596cd5cad3997eeb1818f57`.
+- **Acceptance decision:** register-maintainer decision recorded in `docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json`.
+- **Open blockers for API-02:** none.
+- **Scope consequence:** API-02 is closed at exact C13. This transition does not accept/close API-03, does not close the API layer, and makes no production-readiness, legal-activation, security-certification or BSI/CC-certification claim.
+- **Next permitted primary stage:** `API-03 — Service-to-Service Authentication & Authorization Runtime`, `ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`; reconcile/rebase to exact accepted API-02 C13 before seal and independent acceptance.
+
 ---
 
 ## 7. Branch / reconciliation discipline
@@ -415,15 +438,15 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 ## 9. Immediate execution decision
 
-**Primary implementation:** `API-02 = ACTIVE / IN DEVELOPMENT` (`API-01 = ACCEPTED / CLOSED`). `API-03` may advance only as `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`; exact accepted API-02 bytes must precede API-03 reconciliation/rebase, C1 seal and independent acceptance.
+**Primary implementation:** `API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED` (`API-01 = ACCEPTED / CLOSED`; `API-02 = ACCEPTED / CLOSED`). API-03 must reconcile/rebase to exact accepted API-02 C13 SHA-256 `9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9` before seal and independent acceptance.
 
-**Governed forward path:** complete active API-02 with independent authoritative acceptance; then reconcile/rebase API-03 to the exact accepted API-02 bytes, seal and independently verify API-03 before any acceptance/closure claim; then continue API-04 → API-05 → API-06 with independent authoritative acceptance at each stage; close API only after API-06. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
+**Governed forward path:** reconcile/rebase active API-03 to the exact accepted API-02 C13 bytes, complete API-03, seal and independently verify it before any API-03 acceptance/closure claim; then continue API-04 → API-05 → API-06 with independent authoritative acceptance at each stage; close API only after API-06. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
 
 **Integration scheduling:** existing INTEGRATION-01 lineage is preserved, but no automatic new INTEGRATION-01 candidate is required after each API stage. Full authoritative integration is normally deferred until FRONT is closed; earlier targeted integration work is permitted only when a concrete compatibility blocker or acceptance dependency requires it.
 
-**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. This does not change `API-02 = NEXT` and does not constitute FRONT acceptance or final closure.
+**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. API-03 is now the primary API stage; this FRONT work does not constitute FRONT acceptance or final closure.
 
-**Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage changes `API-02 = NEXT`, claims production readiness/legal activation, or forces immediate INTEGRATION-01 advancement.
+**Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage changes the current API-03 primary position, claims production readiness/legal activation, or forces immediate INTEGRATION-01 advancement.
 
 ---
 
@@ -447,4 +470,4 @@ The following decision is now part of Program Control:
 7. Mobile feature parity is governed by an explicit feature matrix; complex administrative surfaces may remain web-only where justified. Required mobile journeys, optional journeys, prohibited mobile functions and safe cross-client handoffs must be explicit.
 8. If native mobile is part of the target production release, FRONT cannot close merely because the web client is complete. The governed mobile target scope must be accepted before `FRONT CLOSED`, included in the exact `FINAL INTEGRATION` baseline and challenged by final `SEC` together with the rest of the integrated system.
 9. **Master Register disposition:** no new FIR is created by this decision. Existing requirements already govern the substantive obligations, including `FIR-UX-003`, `FIR-UX-004` (explicit mobile navigation/deep-link scope), `FIR-UX-005`, `FIR-UX-006`, `FIR-ID-001`, `FIR-ID-002`, `FIR-INCLUSION-001` and existing privacy/security/voting-isolation requirements. If FRONT-MOBILE-01 discovers a genuinely new normative invariant not covered by the current Master, a new FIR ID must be created through normal Master change discipline before implementation relies on it.
-10. This decision changes no current stage status. `API-02 = NEXT` remains the primary implementation position; FRONT-MOBILE-02 is not started, FRONT is not closed, and no mobile/production/security readiness is claimed.
+10. This decision changes no mobile-stage status. The current primary implementation position is `API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`; FRONT-MOBILE-02 is not started, FRONT is not closed, and no mobile/production/security readiness is claimed.
