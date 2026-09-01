@@ -1,0 +1,201 @@
+name: OPS-01 C2 Post-Run Governance Acceptance
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: [.github/workflows/ops01-c2-governance-accept.yml]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  govern:
+    name: Record bounded OPS-01 acceptance in canonical main
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Freeze entering canonical authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=e89778667ee65e38001874b01681eff64c11354f
+          current=$(git rev-parse HEAD)
+          echo "ENTERING_MAIN=$current"
+          test "$current" = "$expected"
+          test "$(git rev-parse 'HEAD^{tree}')" = 5c2c1fddcdafdf73c38ad68d5494590d33a5b97d
+          git config user.name 'EPD2 governance acceptance'
+          git config user.email 'actions@users.noreply.github.com'
+
+      - name: Download exact authoritative evidence from accepted run
+        uses: actions/download-artifact@v4
+        with:
+          name: ops01-c2-authoritative-evidence-33564968274
+          path: ${{ runner.temp }}/ops01-authoritative
+          repository: nepogoda1970-epd2/epd2-civic-os
+          run-id: 33564968274
+          github-token: ${{ github.token }}
+
+      - name: Verify authoritative run and artifact identities
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, pathlib, urllib.request
+          token=os.environ['GH_TOKEN']
+          headers={'Authorization':f'Bearer {token}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}
+          def get(url):
+              r=urllib.request.Request(url,headers=headers)
+              with urllib.request.urlopen(r) as f: return json.load(f)
+          run=get('https://api.github.com/repos/nepogoda1970-epd2/epd2-civic-os/actions/runs/33564968274')
+          assert run['status']=='completed',run['status']
+          assert run['conclusion']=='success',run['conclusion']
+          assert run['head_sha']=='0cb18e707d18d034d8dec8d76662f3aac8042eca',run['head_sha']
+          assert run['name']=='OPS-01 C2 Authoritative Review',run['name']
+          evidence=get('https://api.github.com/repos/nepogoda1970-epd2/epd2-civic-os/actions/artifacts/9822755955')
+          candidate=get('https://api.github.com/repos/nepogoda1970-epd2/epd2-civic-os/actions/artifacts/9822756668')
+          assert evidence['name']=='ops01-c2-authoritative-evidence-33564968274'
+          assert evidence['digest']=='sha256:4bc58f043f0a89753086a5d6b560bf7af800e80cc310ec5951c60035ad6567f7',evidence.get('digest')
+          assert candidate['name']=='ops01-c2-authoritative-candidate-33564968274'
+          assert candidate['digest']=='sha256:8e07a54a1a5b60285485e595630cca060a7c6c05f12c88d89b3dc97b45c22a46',candidate.get('digest')
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'ops01-authoritative'
+          a=json.loads((root/'OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json').read_text())
+          b=json.loads((root/'OPS01_C2_BSI_READINESS_DISPOSITION.json').read_text())
+          assert a['verdict']=='PASS',a
+          assert a['candidate']['sha256']=='39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27'
+          assert a['candidate']['size_bytes']==16457357
+          assert a['candidate']['member_count']==1489
+          assert a['source']['freeze_file_count']==1486
+          assert a['source']['freeze_tree_digest']=='e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613'
+          h=a['ops_harness']
+          assert (h['gates_total'],h['gates_executed'],h['gates_passed'])==(32,32,32),h
+          assert h['gates_failed']==[] and h['skipped']==[] and h['environment_blocked']==[] and h['not_run']==[],h
+          assert b['result']=='PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS',b
+          assert b['new_certification_blockers']==[],b
+          assert len(b['deferred_existing_gap_bindings'])==9,b
+          assert b['stronger_epd2_invariants_preserved']['no_persistent_person_member_identifier_in_voting_domain'] is True
+          assert b['stronger_epd2_invariants_preserved']['identity_ballot_unlinkability'] is True
+          print('OPS01_C2_POSTRUN_EVIDENCE_VERIFICATION=PASS')
+          PY
+
+      - name: Persist authoritative evidence and create canonical acceptance record
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/ops/OPS-01
+          cp "$RUNNER_TEMP/ops01-authoritative/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json" docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+          cp "$RUNNER_TEMP/ops01-authoritative/OPS01_C2_BSI_READINESS_DISPOSITION.json" docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('docs/ops/OPS-01')
+          a=json.loads((root/'OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json').read_text())
+          b=json.loads((root/'OPS01_C2_BSI_READINESS_DISPOSITION.json').read_text())
+          rec={
+            'schema':'epd2.ops01.acceptance-record/1',
+            'stage':'OPS-01 — Operational Readiness, Incident, Recovery & Change Control Foundation',
+            'decision':'ACCEPTED / CLOSED','decision_date':'2026-09-01','decision_authority':'Project Owner',
+            'decision_basis':'Independent post-run governance decision after successful exact-sealed-byte authoritative GitHub acceptance.',
+            'scope':{'bounded_stage':'OPS-01','overall_ops_layer':'OPEN','primary_program_stage_unchanged':'API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED'},
+            'entering_canonical_main':{'repository':'nepogoda1970-epd2/epd2-civic-os','branch':'main','commit':'e89778667ee65e38001874b01681eff64c11354f','tree':'5c2c1fddcdafdf73c38ad68d5494590d33a5b97d'},
+            'candidate':{
+              'filename':a['candidate']['filename'],'sha256':a['candidate']['sha256'],'size_bytes':a['candidate']['size_bytes'],'member_count':a['candidate']['member_count'],
+              'source_commit':a['source']['seal_commit'],'source_tree':a['source']['seal_tree'],'freeze_file_count':a['source']['freeze_file_count'],'freeze_tree_digest':a['source']['freeze_tree_digest'],'candidate_self_acceptance':False},
+            'accepted_predecessor':{'stage':'INFRA-01','candidate_sha256':a['accepted_infra01']['candidate_sha256'],'source_commit':a['accepted_infra01']['source_commit'],'source_tree':a['accepted_infra01']['source_tree'],'authoritative_run_id':a['accepted_infra01']['run_id'],'authoritative_job_id':a['accepted_infra01']['job_id']},
+            'authoritative_review':{
+              'workflow':'OPS-01 C2 Authoritative Review','run_id':33564968274,'job_id':100045926256,'workflow_commit':'0cb18e707d18d034d8dec8d76662f3aac8042eca','conclusion':'success',
+              'terminal_marker':'OPS01_C2_AUTHORITATIVE_RESULT:PASS:39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27',
+              'canonical_harness':'32/32 governed OPS-01 gates EXECUTED AND PASS; 0 failed; 0 skipped; 0 environment-blocked; 0 not-run',
+              'ops_tests':'88/88 PASS','postgresql_server':'16.15','quality':'ruff format PASS; ruff check PASS; mypy PASS',
+              'sealed_transport_identity':'PASS','freeze_manifest_verification':'1486/1486 governed files PASS','same_governed_source_bytes_after_execution':True,
+              'evidence_artifact':{'name':'ops01-c2-authoritative-evidence-33564968274','id':9822755955,'digest':'sha256:4bc58f043f0a89753086a5d6b560bf7af800e80cc310ec5951c60035ad6567f7'},
+              'candidate_artifact':{'name':'ops01-c2-authoritative-candidate-33564968274','id':9822756668,'digest':'sha256:8e07a54a1a5b60285485e595630cca060a7c6c05f12c88d89b3dc97b45c22a46'}},
+            'bsi_certification_readiness':{
+              'result':b['result'],'certification_claim':b['certification_claim'],'new_certification_blockers':b['new_certification_blockers'],
+              'touched_rows':b['touched_rows'],'stronger_epd2_invariants_preserved':b['stronger_epd2_invariants_preserved'],
+              'deferred_existing_gap_bindings':b['deferred_existing_gap_bindings'],
+              'persisted_disposition':'docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json'},
+            'authoritative_result_file':'docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json',
+            'master_register':{'unchanged_by_this_decision':True,'fir_status_changes':[]},
+            'exclusions':[
+              'This decision closes only bounded OPS-01; it does not close the overall OPS layer.',
+              'It does not change API-04 status or close the API layer.',
+              'It does not close INFRA, CTRL, final FRONT or SEC.',
+              'It is not a production-readiness or legal-activation decision.',
+              'It is not BSI/Common-Criteria/EAL4 or final security certification.'
+            ]}
+          (root/'OPS01_C2_ACCEPTANCE_RECORD.json').write_text(json.dumps(rec,indent=2,ensure_ascii=False)+'\n')
+          print('OPS01_C2_ACCEPTANCE_RECORD=BUILT')
+          PY
+
+      - name: Update canonical Program Control Register only with evidence-supported facts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          s=p.read_text()
+          assert 'OPS-01 authoritative acceptance and bounded stage closure (2026-09-01)' not in s
+          old='| OPS | `NOT_STARTED` | Procedures/runbooks may be prepared; runtime closure follows INFRA. |'
+          new='| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |'
+          assert s.count(old)==1,s.count(old)
+          s=s.replace(old,new,1)
+          anchor='**INFRA-01 authoritative acceptance and bounded stage closure (2026-09-01):**'
+          start=s.index(anchor)
+          end=s.index('\n\nOn 2026-08-26',start)
+          para='''\n\n**OPS-01 authoritative acceptance and bounded stage closure (2026-09-01):** exact sealed C2 candidate `EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip`, SHA-256 `39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27`, size `16,457,357` bytes, passed the independent sealed-byte GitHub Actions workflow `OPS-01 C2 Authoritative Review`, authoritative run `33564968274`, job `100045926256`, workflow commit `0cb18e707d18d034d8dec8d76662f3aac8042eca`, conclusion `success`. The runner independently proved ZIP structure and exact transport identity, bound the candidate byte-for-byte to current canonical authority `main@e89778667ee65e38001874b01681eff64c11354f`, verified all `1,486` governed freeze-manifest files and freeze tree digest `e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613`, executed the locked environment on PostgreSQL `16.15`, passed Ruff format/check and mypy, passed `88/88` OPS tests, and completed all `32/32` OPS-01 gates with `0` failed, `0` skipped, `0` environment-blocked and `0` not-run. The exact terminal marker is `OPS01_C2_AUTHORITATIVE_RESULT:PASS:39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27`; same-governed-source-byte verification also passed after execution. Authoritative evidence artifact `ops01-c2-authoritative-evidence-33564968274`, artifact ID `9822755955`, GitHub artifact digest `sha256:4bc58f043f0a89753086a5d6b560bf7af800e80cc310ec5951c60035ad6567f7`; exact reviewed-candidate artifact `ops01-c2-authoritative-candidate-33564968274`, artifact ID `9822756668`, GitHub artifact-wrapper digest `sha256:8e07a54a1a5b60285485e595630cca060a7c6c05f12c88d89b3dc97b45c22a46`. The independent BSI certification-readiness disposition is `PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS`: touched rows `M-02`, `M-03`, `M-11`, `M-16`, `M-17`, `M-19`, `M-20`, `M-25`, `M-27`, `M-30`; `new_certification_blockers = []`; stronger EPD² voting unlinkability/no-persistent-identifier invariants are preserved, and nine existing certification gaps remain explicitly deferred with owner, closure stage and required evidence in `docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json`. The governance decision is recorded in `docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json`. **OPS-01 is therefore `ACCEPTED / CLOSED` as a bounded operational-foundation stage.** The overall OPS layer remains open and its final closure still follows the canonical API/INFRA dependencies. `API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED` remains unchanged. No production-readiness, legal-activation, BSI/CC/EAL4 or final-security claim follows from this transition.'''
+          s=s[:end]+para+s[end:]
+          marker='**Parallel FRONT action:** FRONT-02 specification is established.'
+          assert s.count(marker)==1
+          action='''**Parallel OPS action:** bounded `OPS-01 — Operational Readiness, Incident, Recovery & Change Control Foundation` is `ACCEPTED / CLOSED` at exact C2 SHA-256 `39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27`. This accepted foundation may be reused by later preview/final OPS work, but it does not close the overall OPS layer, does not authorize production operation, and does not alter `API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`.\n\n'''
+          s=s.replace(marker,action+marker,1)
+          p.write_text(s)
+          print('PCR_OPS01_ACCEPTANCE_UPDATE=PASS')
+          PY
+
+      - name: Validate bounded governance delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git diff --name-only -- docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md)"
+          test "$(git diff --name-only | sort | tr '\n' ' ')" = "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "
+          grep -F '| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -F 'API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -F 'OPS-01 is therefore `ACCEPTED / CLOSED` as a bounded operational-foundation stage.' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          python - <<'PY'
+          import json
+          r=json.load(open('docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json'))
+          assert r['decision']=='ACCEPTED / CLOSED'
+          assert r['scope']['overall_ops_layer']=='OPEN'
+          assert r['scope']['primary_program_stage_unchanged']=='API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED'
+          assert r['candidate']['sha256']=='39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27'
+          assert r['authoritative_review']['run_id']==33564968274
+          assert r['authoritative_review']['job_id']==100045926256
+          assert r['bsi_certification_readiness']['new_certification_blockers']==[]
+          assert len(r['bsi_certification_readiness']['deferred_existing_gap_bindings'])==9
+          print('OPS01_C2_GOVERNANCE_DELTA_VALIDATION=PASS')
+          PY
+          git diff --check
+
+      - name: Commit canonical OPS-01 bounded acceptance atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json \
+                  docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json \
+                  docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json \
+                  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m 'gov(ops01): accept C2 and close bounded OPS-01 stage' \
+            -m 'Independent authoritative PASS: run 33564968274, job 100045926256. Exact candidate SHA-256 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27. OPS layer remains open; API-04 primary state unchanged.'
+          git push origin HEAD:main
+          echo "OPS01_GOVERNANCE_COMMIT=$(git rev-parse HEAD)"
+          echo "OPS01_GOVERNANCE_TREE=$(git rev-parse 'HEAD^{tree}')"
+          echo 'OPS01_C2_POSTRUN_GOVERNANCE_DECISION:ACCEPTED_CLOSED_BOUNDED_STAGE'
