@@ -1,0 +1,50 @@
+name: API-03 C5 canonical register transition
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c5-register-close.yml']
+permissions:
+  contents: write
+jobs:
+  update-register:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve deterministic patcher and switch to exact main
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp handoff/API-03/governance/patch_api03_c5_register.py /tmp/patch_api03_c5_register.py
+          git fetch origin main
+          git checkout -B main origin/main
+          test "$(git rev-parse HEAD)" = "f3f59563cf5397106c74034b26ab6f23534f3897"
+          test "$(git hash-object docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md)" = "2269540db0d6955f5ec0999d0448b3af4ec196f1"
+          test -f docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json
+          grep -F 'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md' docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md >/dev/null
+      - name: Apply and verify exact canonical transition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/patch_api03_c5_register.py
+          git diff --check
+          grep -F '### API-03 C5 authoritative transition — 2026-09-01' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F '**Primary implementation:** `API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'API03_RESULT:PASS:validation/api03/authoritative_acceptance_result.json' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          python - <<'PY'
+          import json
+          r=json.load(open('docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json'))
+          assert r['decision']=='ACCEPTED_CLOSED'
+          assert r['next_permitted_primary_stage']=='API-04'
+          assert r['authoritative_evidence_artifact']['digest']=='sha256:ccbf76b448ec634803330c0f5575a44bf50f50eae195cacfcfdfe53789987a78'
+          print('API03_C5_GOVERNANCE_VERIFY:PASS')
+          PY
+      - name: Commit canonical register and push main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'nepogoda1970-epd2'
+          git config user.email 'nepogoda1970@gmail.com'
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --cached --quiet && { echo 'no register transition staged'; exit 1; }
+          git commit -m 'gov(api03): close C5 and advance primary API-04'
+          git push origin HEAD:main
