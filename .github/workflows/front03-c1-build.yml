@@ -24,7 +24,9 @@ env:
   API02_ACCEPTANCE_RUN_ID: '33497989489'
   API02_ACCEPTANCE_JOB_ID: '99824485228'
   GOVERNANCE_SHA: 556821e0e5d550a4db601bbe92e4f4673a1bc3ff
-  OVERLAY_SHA256: 0ddbf06c0ba8d8bead2ddb8a1a9044d6e8e4a9ce42a664864e448c86a2c80599
+  FORMAT_RUN_ID: '33509482398'
+  FORMAT_ARTIFACT: front03-c1-overlay-formatted
+  OVERLAY_SHA256: 47dede36db313ff19bb4c34e135209527cfc445e3f29c4e4be6a8a98cb24ddbe
   CANDIDATE_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip
 jobs:
   build:
@@ -48,26 +50,25 @@ jobs:
           path: incoming/api02
           run-id: ${{ env.API02_BUILD_RUN_ID }}
           github-token: ${{ github.token }}
+      - name: Obtain exact formatter-corrected C1 overlay
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.FORMAT_ARTIFACT }}
+          path: incoming/overlay
+          run-id: ${{ env.FORMAT_RUN_ID }}
+          github-token: ${{ github.token }}
       - name: Verify immutable inputs before extraction
         id: inputs
         shell: bash
         run: |
           set -euo pipefail
           find_one() { local name="$1" root="$2" found; found="$(find "$root" -type f -name "$name" -print)"; test "$(printf '%s\n' "$found" | grep -c .)" -eq 1 || { echo "::error::$name expected exactly once"; exit 1; }; printf '%s' "$found"; }
-          PRE="$(find_one "$PRESEAL_NAME" incoming/preseal)"; API="$(find_one "$API02_NAME" incoming/api02)"
+          PRE="$(find_one "$PRESEAL_NAME" incoming/preseal)"; API="$(find_one "$API02_NAME" incoming/api02)"; OVL="$(find_one 'front03-c1-overlay-formatted.tar.gz' incoming/overlay)"
           test "$(stat -c %s "$PRE")" = "$PRESEAL_SIZE"; test "$(stat -c %s "$API")" = "$API02_SIZE"
-          echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -; echo "$API02_SHA256  $API" | sha256sum -c -
+          echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -; echo "$API02_SHA256  $API" | sha256sum -c -; echo "$OVERLAY_SHA256  $OVL" | sha256sum -c -
           unzip -t "$PRE" >/dev/null; unzip -t "$API" >/dev/null
-          echo "preseal=$(realpath "$PRE")" >> "$GITHUB_OUTPUT"; echo "api02=$(realpath "$API")" >> "$GITHUB_OUTPUT"
-      - name: Reconstruct and verify exact C1 overlay
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat handoff/FRONT/c1-overlay/overlay.part*.b64 | tr -d '\r\n\t ' | base64 -d > "$RUNNER_TEMP/front03-c1-overlay.tar.gz"
-          echo "$OVERLAY_SHA256  $RUNNER_TEMP/front03-c1-overlay.tar.gz" | sha256sum -c -
-          tar -tzf "$RUNNER_TEMP/front03-c1-overlay.tar.gz" > "$RUNNER_TEMP/overlay-paths.txt"
-          test "$(grep -c . "$RUNNER_TEMP/overlay-paths.txt")" -eq 16
-          ! grep -E '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/overlay-paths.txt"
+          tar -tzf "$OVL" > "$RUNNER_TEMP/overlay-paths.txt"; test "$(grep -c . "$RUNNER_TEMP/overlay-paths.txt")" -eq 16; ! grep -E '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/overlay-paths.txt"
+          echo "preseal=$(realpath "$PRE")" >> "$GITHUB_OUTPUT"; echo "api02=$(realpath "$API")" >> "$GITHUB_OUTPUT"; echo "overlay=$(realpath "$OVL")" >> "$GITHUB_OUTPUT"
       - name: Extract and bind canonical governance
         id: candidate
         shell: bash
@@ -77,7 +78,7 @@ jobs:
           unzip -q "${{ steps.inputs.outputs.preseal }}" -d "$C"; unzip -q "${{ steps.inputs.outputs.api02 }}" -d "$A"
           test -f "$C/package.json"
           API_ROOT="$(find "$A" -mindepth 1 -maxdepth 1 -type d -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13' -print -quit)"; test -n "$API_ROOT"
-          tar -xzf "$RUNNER_TEMP/front03-c1-overlay.tar.gz" -C "$C"
+          tar -xzf "${{ steps.inputs.outputs.overlay }}" -C "$C"
           git fetch --no-tags --depth=1 origin "$GOVERNANCE_SHA"
           for rel in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json; do mkdir -p "$C/$(dirname "$rel")"; git show "$GOVERNANCE_SHA:$rel" > "$C/$rel"; done
           grep -F 'API-02 is therefore `ACCEPTED / CLOSED`' "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"; grep -F "$API02_SHA256" "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
@@ -113,7 +114,7 @@ jobs:
           mkdir -p validation/front03-c1
           python3 - <<'PY'
           import json, os
-          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
+          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'formatted_overlay_sha256':os.environ['OVERLAY_SHA256'],'format_run_id':int(os.environ['FORMAT_RUN_ID']),'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
           open('validation/front03-c1/execution.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
       - name: C1 exact-C13 validator and mutation resistance
@@ -134,7 +135,7 @@ jobs:
           echo "candidate_sha256=$SHA" >> "$GITHUB_OUTPUT"; echo "candidate_size=$SIZE" >> "$GITHUB_OUTPUT"
           python3 - "$ZIP" "$SHA" "$SIZE" <<'PY'
           import json,os,sys
-          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'overlay_sha256':os.environ['OVERLAY_SHA256'],'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'formatted_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'format_run_id':int(os.environ['FORMAT_RUN_ID'])},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
           echo "FRONT03_C1_BUILD_RESULT:PASS:$SHA:$SIZE"
       - name: Upload exact C1 candidate
