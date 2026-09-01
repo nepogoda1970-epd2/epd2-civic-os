@@ -81,7 +81,8 @@ jobs:
           tar -xzf "${{ steps.inputs.outputs.overlay }}" -C "$C"
           git fetch --no-tags --depth=1 origin "$GOVERNANCE_SHA"
           for rel in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json; do mkdir -p "$C/$(dirname "$rel")"; git show "$GOVERNANCE_SHA:$rel" > "$C/$rel"; done
-          grep -F 'API-02 is therefore `ACCEPTED / CLOSED`' "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"; grep -F "$API02_SHA256" "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          grep -F 'API-02 is therefore `ACCEPTED / CLOSED`' "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          grep -F "$API02_SHA256" "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
           echo "root=$C" >> "$GITHUB_OUTPUT"; echo "api02_root=$API_ROOT" >> "$GITHUB_OUTPUT"
       - name: Set up exact Node runtime
         uses: actions/setup-node@v4
@@ -97,9 +98,49 @@ jobs:
           npm run lint --workspace=frontend/web-shell
           npm run test --workspace=frontend/web-shell
           npm run build --workspace=frontend/web-shell
-      - name: Full browser visual accessibility keyboard and negative journeys
+      - name: Inherited governed fixture browser a11y keyboard and reflow
         working-directory: ${{ steps.candidate.outputs.root }}
-        run: npm run test:browser --workspace=frontend/web-shell
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts tests/browser/front01.browser.spec.ts tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
+      - name: C1 exact API-02 production adapter browser proof
+        working-directory: ${{ steps.candidate.outputs.root }}
+        env:
+          NODE_ENV: production
+          FRONT03_TEST_PROFILE: production
+          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.c1.browser.spec.ts
+      - name: Production-like fail-closed browser profile
+        working-directory: ${{ steps.candidate.outputs.root }}
+        env:
+          NODE_ENV: production
+          FRONT03_TEST_PROFILE: production
+          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.production.browser.spec.ts
+      - name: Immutable FRONT-03 R3 visual baseline verification
+        working-directory: ${{ steps.candidate.outputs.root }}
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST=frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256
+          SNAPDIR=frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+          test -f "$MANIFEST"
+          test "$(grep -c 'front03-.*\.png$' "$MANIFEST")" -eq 27
+          test "$(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
+          (cd frontend/web-shell && sha256sum -c tests/browser/front03-r3-visual-baseline.sha256)
+          BEFORE="$(sha256sum "$MANIFEST" | cut -d' ' -f1)"
+          npm exec --workspace web-shell playwright test -- tests/browser/front03.browser.spec.ts --grep '@visual'
+          AFTER="$(sha256sum "$MANIFEST" | cut -d' ' -f1)"
+          test "$BEFORE" = "$AFTER"
+          (cd frontend/web-shell && sha256sum -c tests/browser/front03-r3-visual-baseline.sha256)
       - name: Preserve inherited R3 fail-closed evidence
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
@@ -114,7 +155,7 @@ jobs:
           mkdir -p validation/front03-c1
           python3 - <<'PY'
           import json, os
-          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay_sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID']),'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
+          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay_sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID']),'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
           open('validation/front03-c1/execution.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
       - name: C1 exact-C13 validator and mutation resistance
@@ -135,7 +176,7 @@ jobs:
           echo "candidate_sha256=$SHA" >> "$GITHUB_OUTPUT"; echo "candidate_size=$SIZE" >> "$GITHUB_OUTPUT"
           python3 - "$ZIP" "$SHA" "$SIZE" <<'PY'
           import json,os,sys
-          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID'])},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID'])},'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
           echo "FRONT03_C1_BUILD_RESULT:PASS:$SHA:$SIZE"
       - name: Upload exact C1 candidate
