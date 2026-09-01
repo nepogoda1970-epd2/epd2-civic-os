@@ -1,0 +1,76 @@
+name: FRONT-03 C1 deterministic format repair
+on:
+  push:
+    branches: [tmp/front03-c1-closure]
+    paths: ['.github/workflows/front03-c1-format-repair.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PRESEAL_RUN_ID: '33502571022'
+      PRESEAL_ARTIFACT: front03-r3-preseal-exact-source
+      PRESEAL_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
+      PRESEAL_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
+      ENTERING_OVERLAY_SHA256: 0ddbf06c0ba8d8bead2ddb8a1a9044d6e8e4a9ce42a664864e448c86a2c80599
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRESEAL_ARTIFACT }}
+          path: incoming
+          run-id: ${{ env.PRESEAL_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Verify and reconstruct inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          PRE="incoming/$PRESEAL_NAME"
+          echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -
+          cat handoff/FRONT/c1-overlay/overlay.part*.b64 | tr -d '\r\n\t ' | base64 -d > "$RUNNER_TEMP/entering.tar.gz"
+          echo "$ENTERING_OVERLAY_SHA256  $RUNNER_TEMP/entering.tar.gz" | sha256sum -c -
+          tar -tzf "$RUNNER_TEMP/entering.tar.gz" > "$RUNNER_TEMP/paths.txt"
+          test "$(grep -c . "$RUNNER_TEMP/paths.txt")" -eq 16
+          mkdir "$RUNNER_TEMP/tree"
+          unzip -q "$PRE" -d "$RUNNER_TEMP/tree"
+          tar -xzf "$RUNNER_TEMP/entering.tar.gz" -C "$RUNNER_TEMP/tree"
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0'}
+      - name: Apply repository-locked Prettier only to the five failing C1 files
+        working-directory: ${{ runner.temp }}/tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          ./node_modules/.bin/prettier --write \
+            frontend/web-shell/member/api02Runtime.ts \
+            frontend/web-shell/member/MemberWorkspace.tsx \
+            frontend/web-shell/tests/browser/front03.c1.browser.spec.ts \
+            frontend/web-shell/tests/front03.api02-c1.test.ts \
+            frontend/web-shell/tests/front03.render.test.tsx
+          ./node_modules/.bin/prettier --check \
+            frontend/web-shell/member/api02Runtime.ts \
+            frontend/web-shell/member/MemberWorkspace.tsx \
+            frontend/web-shell/tests/browser/front03.c1.browser.spec.ts \
+            frontend/web-shell/tests/front03.api02-c1.test.ts \
+            frontend/web-shell/tests/front03.render.test.tsx
+      - name: Seal corrected overlay from the exact original 16-path inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/tree"
+          tar -czf "$GITHUB_WORKSPACE/front03-c1-overlay-formatted.tar.gz" -T "$RUNNER_TEMP/paths.txt"
+          sha256sum "$GITHUB_WORKSPACE/front03-c1-overlay-formatted.tar.gz" | tee "$GITHUB_WORKSPACE/front03-c1-overlay-formatted.sha256"
+          test "$(tar -tzf "$GITHUB_WORKSPACE/front03-c1-overlay-formatted.tar.gz" | grep -c .)" -eq 16
+      - uses: actions/upload-artifact@v4
+        with:
+          name: front03-c1-overlay-formatted
+          path: |
+            front03-c1-overlay-formatted.tar.gz
+            front03-c1-overlay-formatted.sha256
+          if-no-files-found: error
+          retention-days: 7
