@@ -1,0 +1,107 @@
+name: API-03 C1 runtime verification
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c1-runtime-verify.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      CANDIDATE_SHA256: 9bc0835ec7894db5f8fb1ed38e08e1fd6943ca042685e4a7ef6c5e1d599d6941
+      CANDIDATE_ARTIFACT_ID: '9798416550'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify exact C1 candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip" -o /tmp/c1-artifact.zip
+          mkdir /tmp/a && unzip -q /tmp/c1-artifact.zip -d /tmp/a
+          C="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1.zip' -print -quit)"
+          test -n "$C"
+          echo "${CANDIDATE_SHA256}  ${C}" | sha256sum -c -
+          unzip -t "$C" >/dev/null
+          mkdir /tmp/c && unzip -q "$C" -d /tmp/c
+          ROOT="$(find /tmp/c -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$ROOT/API03_C1_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          echo "C1ROOT=$ROOT" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+      - name: Frozen dependency install
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/api03-c1-env" uv sync --frozen --all-groups --python "$(command -v python)"
+          echo "API03ENV=${RUNNER_TEMP}/api03-c1-env" >> "$GITHUB_ENV"
+      - name: Install isolated governed cryptography 49 profile into API-03 execution env
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          "$API03ENV/bin/python" -m pip install --disable-pip-version-check --no-index --find-links packages/python/epd2-s2s-crypto/wheelhouse 'cryptography==49.0.0'
+          "$API03ENV/bin/python" - <<'PY'
+          import cryptography
+          assert cryptography.__version__ == '49.0.0', cryptography.__version__
+          print('cryptography', cryptography.__version__)
+          PY
+      - name: Execute complete API-03 test tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          export PYTHONPATH="$PWD/packages/python/epd2-runtime/src:$PWD/packages/python/epd2-s2s-crypto/src:$PWD"
+          "$API03ENV/bin/python" -m pytest tests/api03 -q --junitxml=/tmp/api03-c1-pytest.xml | tee /tmp/api03-c1-pytest.log
+      - name: Execute SEC-01 API-03 isolated crypto regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          export PYTHONPATH="$PWD/packages/python/epd2-runtime/src:$PWD/packages/python/epd2-s2s-crypto/src:$PWD"
+          "$API03ENV/bin/python" -m pytest packages/python/epd2-runtime/tests/test_sec01_security_controls.py::test_the_cryptography_apis_three_advisories_need_are_absent -q | tee /tmp/api03-c1-sec01.log
+      - name: Verify C13 reconciliation and V23/V26 static invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          "$API03ENV/bin/python" - <<'PY' | tee /tmp/api03-c1-static.log
+          import json, pathlib
+          r=pathlib.Path('.')
+          inv=json.load(open(r/'docs/api/API-03/API03_C1_EXACT_C13_DELTA_INVENTORY.json'))
+          rec=json.load(open(r/'docs/api/API-03/API03_API02_RECONCILIATION_REQUIREMENTS.json'))
+          assert inv['base_api02_c13_sha256']=='9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'
+          assert inv['counts']=={'added':156,'modified':2,'removed':0}
+          assert rec['open_reconciliation_blockers']==[] and rec['self_accepted'] is False
+          assert rec['accepted_predecessor']['authoritative_run']==33497989489
+          pc=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          ma=(r/'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md').read_text()
+          assert 'API-02 = ACCEPTED / CLOSED' in pc
+          assert 'API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in pc
+          assert 'FIR-VOTE-BSI-001' in ma
+          s=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/assertion.py').read_text()
+          assert 'SERVICE_ASSERTION_ALG = "ES256"' in s
+          assert 'SERVICE_ASSERTION_TYP = "epd2-service+jwt"' in s
+          legacy=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/legacy_token.py').read_text()
+          assert 'C1_ELIGIBLE_ACTIVE_AUTHENTICATION = False' in legacy
+          print('API03_C1_STATIC:PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api03-c1-runtime-verification-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            /tmp/api03-c1-pytest.xml
+            /tmp/api03-c1-pytest.log
+            /tmp/api03-c1-sec01.log
+            /tmp/api03-c1-static.log
