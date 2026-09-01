@@ -6,19 +6,23 @@ from pathlib import Path
 
 OLD_INV = "docs/api/API-02/API02_C11_TO_C12_CORRECTION_INVENTORY.json"
 NEW_INV = "docs/api/API-02/API02_C12_TO_C13_CORRECTION_INVENTORY.json"
+OLD_LAYER_A = "docs/api/API-02/API02_API01C5_TO_C12_EXACT_INVENTORY.json"
+NEW_LAYER_A = "docs/api/API-02/API02_API01C5_TO_C13_EXACT_INVENTORY.json"
 
 
-def rewrite_evidence_path(value):
+def rewrite_current_refs(value):
     if isinstance(value, dict):
         out = {}
         for key, item in value.items():
             if key == "evidence_path" and item == OLD_INV:
                 out[key] = NEW_INV
             else:
-                out[key] = rewrite_evidence_path(item)
+                out[key] = rewrite_current_refs(item)
         return out
     if isinstance(value, list):
-        return [rewrite_evidence_path(item) for item in value]
+        return [rewrite_current_refs(item) for item in value]
+    if isinstance(value, str):
+        return value.replace(OLD_LAYER_A, NEW_LAYER_A)
     return value
 
 
@@ -48,9 +52,9 @@ def main() -> None:
 
     lineage = root / "docs/api/API-02/API02_LINEAGE.json"
     data = json.loads(lineage.read_text(encoding="utf-8"))
-    rewritten = rewrite_evidence_path(data)
+    rewritten = rewrite_current_refs(data)
     if rewritten == data:
-        raise SystemExit("C13 follow-up: stale lineage evidence_path not found")
+        raise SystemExit("C13 follow-up: stale lineage references not found")
     lineage.write_text(
         json.dumps(rewritten, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
