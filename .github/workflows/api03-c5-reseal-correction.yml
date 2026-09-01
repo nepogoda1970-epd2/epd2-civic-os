@@ -1,0 +1,147 @@
+name: API-03 C5 reseal correction
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c5-reseal-correction.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reseal:
+    runs-on: ubuntu-latest
+    env:
+      FAILED_C5_SHA256: 8a62ea6c8ab1fb441811e476af0060f4b6c5374002312bb04e5a68968b6a3ea8
+      FAILED_C5_ARTIFACT_ID: '9801484259'
+      FAILED_C5_BUILDER_RUN_ID: '33510681168'
+      FAILED_ACCEPT_RUN_ID: '33510911890'
+      C4_SHA256: 09531e9b64dd66c558e3c2478ea897e020adfd4814a7237cd8eab7f18b568a86
+      C4_VERIFY_RUN_ID: '33509385291'
+      C4_VERIFY_JOB_ID: '99861098139'
+      C4_EVIDENCE_ARTIFACT_ID: '9800985043'
+      C4_EVIDENCE_DIGEST: sha256:1a8074c08631910f28833a95cef45d8f85f0b9b0762740a65bfa050f5f80555f
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact failed C5 and prove the single newly-unaccounted offender
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${FAILED_C5_ARTIFACT_ID}/zip" -o /tmp/c5-artifact.zip
+          mkdir -p /tmp/a /tmp/src
+          unzip -q /tmp/c5-artifact.zip -d /tmp/a
+          C5="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip' -print -quit)"
+          test -n "$C5"
+          echo "${FAILED_C5_SHA256}  ${C5}" | sha256sum -c -
+          unzip -t "$C5" >/dev/null
+          unzip -q "$C5" -d /tmp/src
+          ROOT="$(find /tmp/src -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$ROOT/API03_C5_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          ROOT="$ROOT" python - <<'PY'
+          import pathlib,os
+          r=pathlib.Path(os.environ['ROOT'])
+          offender=r/'scripts/__pycache__/api03_verify_seal.cpython-312.pyc'
+          assert offender.is_file(),offender
+          try:
+            import importlib.util
+            spec=importlib.util.cache_from_source(str(r/'scripts/api03_verify_seal.py'))
+            assert pathlib.Path(spec)==offender,(spec,offender)
+          except Exception as e:
+            raise AssertionError(e)
+          print('API03_C5_RESEAL_OFFENDER:CONFIRMED',offender.relative_to(r))
+          PY
+          echo "C5ROOT=$ROOT" >> "$GITHUB_ENV"
+      - name: Remove only unaccounted verifier pycache and update reseal provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm "$C5ROOT/scripts/__pycache__/api03_verify_seal.cpython-312.pyc"
+          C5ROOT="$C5ROOT" python - <<'PY'
+          import json,os,pathlib
+          r=pathlib.Path(os.environ['C5ROOT'])
+          sealp=r/'docs/api/API-03/API03_C5_SEAL_RECORD.json';seal=json.loads(sealp.read_text())
+          assert seal['builder_run_id']==int(os.environ['FAILED_C5_BUILDER_RUN_ID'])
+          assert seal['source_c4']['sha256']==os.environ['C4_SHA256']
+          seal['builder_run_id']=int(os.environ['GITHUB_RUN_ID'])
+          seal['builder_provenance_commit']=os.environ['GITHUB_SHA']
+          seal['reseal_correction']={
+            'superseded_candidate_sha256':os.environ['FAILED_C5_SHA256'],
+            'superseded_builder_run_id':int(os.environ['FAILED_C5_BUILDER_RUN_ID']),
+            'failed_authoritative_run_id':int(os.environ['FAILED_ACCEPT_RUN_ID']),
+            'reason':'builder py_compile created scripts/__pycache__/api03_verify_seal.cpython-312.pyc after successful seal verification and before packaging',
+            'runtime_source_changed':False,'governed_test_logic_changed':False,'sealed_workflow_changed':False
+          }
+          sealp.write_text(json.dumps(seal,indent=2,sort_keys=True)+'\n')
+          invp=r/'docs/api/API-03/API03_C5_EXACT_C4_DELTA_INVENTORY.json';inv=json.loads(invp.read_text())
+          assert inv['base_c4_sha256']==os.environ['C4_SHA256']
+          inv['reseal_correction']={'superseded_candidate_sha256':os.environ['FAILED_C5_SHA256'],'removed_unaccounted':['scripts/__pycache__/api03_verify_seal.cpython-312.pyc'],'runtime_source_changed':False,'sealed_workflow_changed':False}
+          invp.write_text(json.dumps(inv,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Rebuild complete manifest and SHA256SUMS from final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          C5ROOT="$C5ROOT" python - <<'PY'
+          import hashlib,json,os,pathlib,stat
+          r=pathlib.Path(os.environ['C5ROOT']);manifest_rel='docs/api/API-03/API03_C5_SEALED_FILE_MANIFEST.json';sums_rel='SHA256SUMS.txt'
+          def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+          for p in r.rglob('*'):assert not p.is_symlink(),p
+          files=sorted(p for p in r.rglob('*') if p.is_file());rels=[p.relative_to(r).as_posix() for p in files]
+          entries=[]
+          for p,rel in zip(files,rels):
+            if rel in (manifest_rel,sums_rel):continue
+            entries.append({'path':rel,'sha256':sha(p),'size':p.stat().st_size,'mode':f'{stat.S_IMODE(p.stat().st_mode):04o}'})
+          manifest={'schema':'epd2.api03.sealed-file-manifest/1','stage':'API-03','candidate':{'role':'C5','root':r.name,'state':'CANDIDATE_NOT_ACCEPTED'},'source_c4_sha256':os.environ['C4_SHA256'],'accepted_api02_c13_sha256':os.environ['C13_SHA256'],'files_in_archive':len(set(rels)|{manifest_rel,sums_rel}),'excluded_self_referential':[manifest_rel,sums_rel],'entries':entries}
+          (r/manifest_rel).write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+          files=sorted(p for p in r.rglob('*') if p.is_file());rows=[]
+          for p in files:
+            rel=p.relative_to(r).as_posix()
+            if rel==sums_rel:continue
+            rows.append(f'{sha(p)}  {rel}')
+          (r/sums_rel).write_text('\n'.join(rows)+'\n')
+          PY
+      - name: Fail-closed corrected seal verification without writing pycache
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$C5ROOT/scripts/api03_verify_seal.py" "$C5ROOT" | tee /tmp/API03_C5_RESEAL_VERIFY.log
+          C5ROOT="$C5ROOT" python - <<'PY'
+          import ast,os,pathlib,json,hashlib
+          r=pathlib.Path(os.environ['C5ROOT'])
+          ast.parse((r/'scripts/api03_verify_seal.py').read_text())
+          assert not (r/'scripts/__pycache__/api03_verify_seal.cpython-312.pyc').exists()
+          s=json.loads((r/'docs/api/API-03/API03_C5_SEAL_RECORD.json').read_text())
+          assert s['builder_run_id']==int(os.environ['GITHUB_RUN_ID'])
+          assert s['reseal_correction']['superseded_candidate_sha256']==os.environ['FAILED_C5_SHA256']
+          assert s['sealed_workflow_sha256']==hashlib.sha256((r/'.github/workflows/api03-accept.yml').read_bytes()).hexdigest()
+          print('API03_C5_RESEAL_CORRECTION:PASS')
+          PY
+      - name: Pack corrected exact C5
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip
+          C5ROOT="$C5ROOT" python - <<'PY'
+          import os,zipfile
+          from pathlib import Path
+          r=Path(os.environ['C5ROOT']);o=Path('/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip')
+          with zipfile.ZipFile(o,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+            for p in sorted(r.rglob('*')):
+              if p.is_file():z.write(p,arcname=f'{r.name}/{p.relative_to(r).as_posix()}')
+          PY
+          unzip -t "$OUT" >/dev/null
+          sha256sum "$OUT" | tee /tmp/API03_C5_RESEALED.sha256
+          stat -c '%s' "$OUT" | tee /tmp/API03_C5_RESEALED.size
+          sha256sum "$C5ROOT/.github/workflows/api03-accept.yml" | tee /tmp/API03_C5_RESEALED.workflow.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-c5-resealed-candidate
+          compression-level: 0
+          path: |
+            /tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip
+            /tmp/API03_C5_RESEALED.sha256
+            /tmp/API03_C5_RESEALED.size
+            /tmp/API03_C5_RESEALED.workflow.sha256
+            /tmp/API03_C5_RESEAL_VERIFY.log
