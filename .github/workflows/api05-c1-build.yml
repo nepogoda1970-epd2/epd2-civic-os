@@ -83,14 +83,22 @@ jobs:
         run: |
           set -euo pipefail
           python3 - "$RUNNER_TEMP/api05-overlay.tar.gz" <<'PY'
-          import base64, hashlib, os, pathlib, sys
+          import base64, hashlib, os, pathlib, string, sys
           src = pathlib.Path('handoff/API-05/WORKING_0.1/api05_c1_overlay.tar.gz.b64').read_text(encoding='ascii')
-          compact = ''.join(src.split())
+          alphabet = set(string.ascii_letters + string.digits + '+/=')
+          invalid = [(i, repr(c), ord(c)) for i, c in enumerate(src) if not c.isspace() and c not in alphabet]
+          print(f'API05_OVERLAY_BASE64_INPUT:chars={len(src)}:invalid_non_ws={len(invalid)}')
+          if invalid:
+              print(f'API05_OVERLAY_BASE64_INVALID_SAMPLE:{invalid[:64]}')
+          compact = ''.join(c for c in src if c in alphabet)
+          compact = compact.rstrip('=')
           compact += '=' * ((-len(compact)) % 4)
           raw = base64.b64decode(compact, validate=True)
           got = hashlib.sha256(raw).hexdigest()
           expected = os.environ['API05_OVERLAY_SHA']
-          assert got == expected, (got, expected)
+          print(f'API05_OVERLAY_DECODED_SHA256:{got}:bytes={len(raw)}')
+          if got != expected:
+              raise SystemExit(f'API05_OVERLAY_INTEGRITY_FAIL:got={got}:expected={expected}')
           pathlib.Path(sys.argv[1]).write_bytes(raw)
           print(f'API05_OVERLAY_DECODE:PASS:{got}:{len(raw)}')
           PY
