@@ -1,0 +1,131 @@
+name: API-03 C4 PostgreSQL version-check correction build
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c4-pg-version-build.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      C3_SHA256: 9b46a3ea5e5d812889d23fae5a66a94e770175a1444fe460fcbb1dbbcbb7b0a2
+      C3_ARTIFACT_ID: '9800679097'
+      C2_SHA256: 8f0a52464e05a8d66473b2c983fa4d5630a196e3f0368aac45862c9ef2bdabd6
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify exact C3
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${C3_ARTIFACT_ID}/zip" -o /tmp/c3-artifact.zip
+          mkdir /tmp/a && unzip -q /tmp/c3-artifact.zip -d /tmp/a
+          C3="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C3.zip' -print -quit)"
+          test -n "$C3"
+          echo "${C3_SHA256}  ${C3}" | sha256sum -c -
+          unzip -t "$C3" >/dev/null
+          mkdir /tmp/src && unzip -q "$C3" -d /tmp/src
+          C3ROOT="$(find /tmp/src -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$C3ROOT/API03_C3_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          echo "C3ROOT=$C3ROOT" >> "$GITHUB_ENV"
+      - name: Replace distro-string comparison with exact server_version_num gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          C4ROOT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C4
+          cp -a "$C3ROOT" "$C4ROOT"
+          rm "$C4ROOT/API03_C3_STATUS.txt"
+          printf 'CANDIDATE_NOT_ACCEPTED\n' > "$C4ROOT/API03_C4_STATUS.txt"
+          printf 'SUPERSEDED_BY_API03_C4_STATUS\n' > "$C4ROOT/API03_PRESEAL_STATUS.txt"
+          C4ROOT="$C4ROOT" C3_SHA256="$C3_SHA256" C2_SHA256="$C2_SHA256" C13_SHA256="$C13_SHA256" python - <<'PY'
+          import json,os,pathlib
+          r=pathlib.Path(os.environ['C4ROOT'])
+          r11=r/'scripts/api03_run_r11_v23_tests.py'
+          s=r11.read_text()
+          old="with admin.cursor() as cur:cur.execute('SHOW server_version');sv=cur.fetchone()[0]\n  except Exception as e:return emit_block('postgres unavailable: '+str(e),out)\n  if sv!='16.15':admin.close();return emit_block(f'PostgreSQL server_version={sv}, required 16.15',out)"
+          new="with admin.cursor() as cur:\n   cur.execute('SHOW server_version_num');svn=str(cur.fetchone()[0])\n   cur.execute('SHOW server_version');sv=str(cur.fetchone()[0])\n  except Exception as e:return emit_block('postgres unavailable: '+str(e),out)\n  if svn!='160015':admin.close();return emit_block(f'PostgreSQL server_version_num={svn}, server_version={sv}, required server_version_num=160015 (16.15)',out)"
+          assert old in s
+          r11.write_text(s.replace(old,new))
+          top=r/'scripts/api03_run_topology.py'
+          s=top.read_text()
+          old="admin=psycopg.connect(a.dsn,autocommit=True);ver=admin.execute('SHOW server_version').fetchone()[0]\n if str(ver)!='16.15':admin.close();return blocked(out,'PostgreSQL server_version='+str(ver))"
+          new="admin=psycopg.connect(a.dsn,autocommit=True);ver_num=str(admin.execute('SHOW server_version_num').fetchone()[0]);ver=str(admin.execute('SHOW server_version').fetchone()[0])\n if ver_num!='160015':admin.close();return blocked(out,'PostgreSQL server_version_num='+ver_num+', server_version='+ver+', required server_version_num=160015 (16.15)')"
+          assert old in s
+          top.write_text(s.replace(old,new))
+          report={
+            'schema':'epd2.api03.c4.pg-version-check-correction/1',
+            'candidate_state':'CANDIDATE_NOT_ACCEPTED',
+            'source_c3_sha256':os.environ['C3_SHA256'],
+            'accepted_api02_c13_sha256':os.environ['C13_SHA256'],
+            'triggering_verification_run':33508852804,
+            'failure':'governed R11 V23 helper rejected PostgreSQL 16.15 because SHOW server_version includes the Debian packaging suffix',
+            'observed_server_version':'16.15 (Debian 16.15-1.pgdg13+2)',
+            'observed_server_version_num':'160015',
+            'correction':'both governed PostgreSQL gates now require exact server_version_num 160015 while retaining server_version as diagnostic evidence',
+            'version_requirement_weakened':False,
+            'runtime_source_changed':False,
+            'test_harness_changed':True,
+            'required_postgresql':'16.15 / server_version_num=160015',
+            'open_blockers':['dependency-backed C4 verification','seal','independent authoritative acceptance']
+          }
+          (r/'docs/api/API-03/API03_C4_CORRECTION_REPORT.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          inv={
+            'schema':'epd2.api03.c4.c3-delta/1',
+            'base_c3_sha256':os.environ['C3_SHA256'],
+            'added':['API03_C4_STATUS.txt','docs/api/API-03/API03_C4_CORRECTION_REPORT.json'],
+            'modified':['API03_PRESEAL_STATUS.txt','scripts/api03_run_r11_v23_tests.py','scripts/api03_run_topology.py'],
+            'removed':['API03_C3_STATUS.txt'],
+            'counts':{'added':2,'modified':3,'removed':1},
+            'inventory_excludes_self':True
+          }
+          (r/'docs/api/API-03/API03_C4_EXACT_C3_DELTA_INVENTORY.json').write_text(json.dumps(inv,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "C4ROOT=$C4ROOT" >> "$GITHUB_ENV"
+      - name: Fail-closed C4 assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat "$C4ROOT/API03_C4_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          test ! -e "$C4ROOT/API03_C3_STATUS.txt"
+          C4ROOT="$C4ROOT" python - <<'PY'
+          import pathlib,os,json
+          r=pathlib.Path(os.environ['C4ROOT'])
+          for f in ('scripts/api03_run_r11_v23_tests.py','scripts/api03_run_topology.py'):
+              s=(r/f).read_text()
+              assert "server_version_num" in s
+              assert "160015" in s
+              assert "!='16.15'" not in s
+          rep=json.load(open(r/'docs/api/API-03/API03_C4_CORRECTION_REPORT.json'))
+          assert rep['version_requirement_weakened'] is False
+          assert rep['runtime_source_changed'] is False
+          print('API03_C4_EXACT_PG_VERSION_GATE:PASS')
+          PY
+      - name: Pack exact C4 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C4.zip
+          C4ROOT="$C4ROOT" python - <<'PY'
+          from pathlib import Path
+          import zipfile,os
+          root=Path(os.environ['C4ROOT']);out=Path('/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C4.zip')
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(root.rglob('*')):
+                  if p.is_file():z.write(p,arcname=f'{root.name}/{p.relative_to(root).as_posix()}')
+          PY
+          unzip -t "$OUT" >/dev/null
+          sha256sum "$OUT" | tee /tmp/API03_C4.sha256
+          stat -c '%s' "$OUT" | tee /tmp/API03_C4.size
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-c4-corrected-candidate
+          compression-level: 0
+          path: |
+            /tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C4.zip
+            /tmp/API03_C4.sha256
+            /tmp/API03_C4.size
