@@ -1,0 +1,139 @@
+name: API-03 C2 correction build
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c2-correction-build.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      C1_SHA256: 9bc0835ec7894db5f8fb1ed38e08e1fd6943ca042685e4a7ef6c5e1d599d6941
+      C1_ARTIFACT_ID: '9798416550'
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify exact C1
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${C1_ARTIFACT_ID}/zip" -o /tmp/c1-artifact.zip
+          mkdir /tmp/a && unzip -q /tmp/c1-artifact.zip -d /tmp/a
+          C1="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1.zip' -print -quit)"
+          test -n "$C1"
+          echo "${C1_SHA256}  ${C1}" | sha256sum -c -
+          unzip -t "$C1" >/dev/null
+          mkdir /tmp/src && unzip -q "$C1" -d /tmp/src
+          C1ROOT="$(find /tmp/src -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$C1ROOT/API03_C1_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          echo "C1ROOT=$C1ROOT" >> "$GITHUB_ENV"
+      - name: Apply minimal fail-closed SEC-01 correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          C2ROOT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2
+          cp -a "$C1ROOT" "$C2ROOT"
+          rm "$C2ROOT/API03_C1_STATUS.txt"
+          printf 'CANDIDATE_NOT_ACCEPTED\n' > "$C2ROOT/API03_C2_STATUS.txt"
+          printf 'SUPERSEDED_BY_API03_C2_STATUS\n' > "$C2ROOT/API03_PRESEAL_STATUS.txt"
+          C2ROOT="$C2ROOT" C1_SHA256="$C1_SHA256" C13_SHA256="$C13_SHA256" python - <<'PY'
+          import json, os, pathlib
+          r=pathlib.Path(os.environ['C2ROOT'])
+          p=r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/dependency_gate.py'
+          text=p.read_text()
+          old='API-03 must not activate PolicyBuilder/Verifier (or equivalent chain\nvalidation APIs introduced around that line) on 46.0.7.'
+          new='API-03 must not activate vulnerable X.509 chain-verification APIs\non the 46.0.7 workspace dependency line.'
+          assert old in text
+          text=text.replace(old,new)
+          assert 'PolicyBuilder' not in text
+          p.write_text(text)
+          report={
+            'schema':'epd2.api03.c2.sec01-correction/1',
+            'candidate_state':'CANDIDATE_NOT_ACCEPTED',
+            'source_c1_sha256':os.environ['C1_SHA256'],
+            'accepted_api02_c13_sha256':os.environ['C13_SHA256'],
+            'triggering_runtime_run':33507888488,
+            'triggering_runtime_result':{'api03_tests':{'passed':99,'failed':0,'skipped':0},'sec01':'FAIL'},
+            'failure':'SEC-01 repository-wide token guard found PolicyBuilder in non-isolated epd2-runtime dependency_gate.py docstring',
+            'root_cause':'documentation-only forbidden-token occurrence; no import, attribute access, or invocation of the verifier API existed in dependency_gate.py',
+            'correction':'remove the forbidden concrete verifier API token from non-isolated runtime documentation while preserving the fail-closed dependency gate and the unchanged SEC-01 repository-wide guard',
+            'runtime_behavior_changed':False,
+            'sec01_guard_weakened':False,
+            'open_blockers':['independent dependency-backed C2 verification','seal','independent authoritative acceptance']
+          }
+          (r/'docs/api/API-03/API03_C2_CORRECTION_REPORT.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          inv={
+            'schema':'epd2.api03.c2.c1-delta/1',
+            'base_c1_sha256':os.environ['C1_SHA256'],
+            'added':['API03_C2_STATUS.txt','docs/api/API-03/API03_C2_CORRECTION_REPORT.json'],
+            'modified':['API03_PRESEAL_STATUS.txt','packages/python/epd2-runtime/src/epd2_runtime/s2s/dependency_gate.py'],
+            'removed':['API03_C1_STATUS.txt'],
+            'counts':{'added':2,'modified':2,'removed':1},
+            'inventory_excludes_self':True
+          }
+          (r/'docs/api/API-03/API03_C2_EXACT_C1_DELTA_INVENTORY.json').write_text(json.dumps(inv,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "C2ROOT=$C2ROOT" >> "$GITHUB_ENV"
+      - name: Fail-closed C2 assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(cat "$C2ROOT/API03_C2_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          test ! -e "$C2ROOT/API03_C1_STATUS.txt"
+          python - <<'PY'
+          import pathlib, os, json
+          r=pathlib.Path(os.environ['C2ROOT'])
+          needles=('PolicyBuilder','load_pem_x509','load_der_x509','verify_directly_issued_by','ServerVerifier','ClientVerifier')
+          outside=[]; isolated=0
+          for base in ('packages','services','scripts'):
+              root=r/base
+              if not root.exists(): continue
+              for p in root.rglob('*.py'):
+                  if p.name=='test_sec01_security_controls.py': continue
+                  text=p.read_text(encoding='utf-8',errors='replace')
+                  iso='epd2-s2s-crypto' in p.parts
+                  for n in needles:
+                      if n in text:
+                          if iso: isolated+=1
+                          else: outside.append(f'{p.relative_to(r)}:{n}')
+          assert outside==[], outside
+          assert isolated>0
+          gate=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/dependency_gate.py').read_text()
+          for required in ['UNSAFE_X509_VERIFIER_PREFIXES = ("46.",)','MINIMUM_SAFE_CRYPTOGRAPHY = (49, 0, 0)','def verifier_api_permitted','def assert_x509_path_safe']:
+              assert required in gate
+          rep=json.load(open(r/'docs/api/API-03/API03_C2_CORRECTION_REPORT.json'))
+          assert rep['runtime_behavior_changed'] is False and rep['sec01_guard_weakened'] is False
+          print('API03_C2_CORRECTION_ASSERTIONS:PASS')
+          PY
+      - name: Pack exact C2 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2.zip
+          cd /tmp
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile, os
+          root=Path(os.environ['C2ROOT'])
+          out=Path('/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2.zip')
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(root.rglob('*')):
+                  if p.is_file():
+                      z.write(p, arcname=f'{root.name}/{p.relative_to(root).as_posix()}')
+          PY
+          unzip -t "$OUT" >/dev/null
+          sha256sum "$OUT" | tee /tmp/API03_C2.sha256
+          stat -c '%s' "$OUT" | tee /tmp/API03_C2.size
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-c2-corrected-candidate
+          compression-level: 0
+          path: |
+            /tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2.zip
+            /tmp/API03_C2.sha256
+            /tmp/API03_C2.size
