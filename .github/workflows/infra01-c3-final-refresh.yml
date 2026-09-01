@@ -58,3 +58,5 @@ jobs:
           git rev-parse HEAD^{tree}
           git status --porcelain
           git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum
+
+# trigger: exact final C3 source refresh
