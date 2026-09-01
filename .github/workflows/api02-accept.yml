@@ -669,7 +669,7 @@ jobs:
           for path, key in (
               ("docs/api/API-02/API02_ROUTE_AUTHORIZATION_REGISTER.json", "candidate"),
               ("docs/api/API-02/API02_CONSEQUENTIAL_COMMIT_REGISTER.json", "candidate"),
-              ("docs/api/API-02/API02_PROGRAM_CONTROL_RECONCILIATION.json", "candidate_role"),
+              ("docs/api/API-02/API02_V23_CRYPTO_RECONCILIATION.json", "candidate"),
               ("docs/api/API-02/API02_MANDATORY_TESTS.json", "candidate"),
           ):
               assert json.load(open(path))[key] == role, path
