@@ -70,7 +70,7 @@ jobs:
           assert cryptography.__version__ == '49.0.0', cryptography.__version__
           print('cryptography', cryptography.__version__)
           PY
-      - name: Prove exact PostgreSQL 16.15 runtime
+      - name: Prove exact PostgreSQL 16.15 runtime and prepare isolated topology DB
         shell: bash
         run: |
           set -euo pipefail
@@ -83,17 +83,52 @@ jobs:
                   cur.execute('SHOW server_version')
                   version=cur.fetchone()[0]
           assert version_num == '160015', (version_num, version)
+          admin='postgresql://postgres@127.0.0.1:55432/postgres'
+          with psycopg.connect(admin, autocommit=True) as conn:
+              with conn.cursor() as cur:
+                  cur.execute('DROP DATABASE IF EXISTS epd2_s2s_topology WITH (FORCE)')
+                  cur.execute('CREATE DATABASE epd2_s2s_topology')
           print('POSTGRES_VERSION_NUM', version_num)
           print('POSTGRES_VERSION', version)
           print('API03_C1_POSTGRES:PASS')
+          print('API03_C1_TOPOLOGY_DB:FRESH')
           PY
-      - name: Execute complete API-03 test tree
+      - name: Execute API-03 test tree except persistent topology isolation case
         shell: bash
         run: |
           set -euo pipefail
           cd "$C1ROOT"
           export PYTHONPATH="$PWD/packages/python/epd2-runtime/src:$PWD/packages/python/epd2-s2s-crypto/src:$PWD"
-          "$API03ENV/bin/python" -m pytest tests/api03 -q --junitxml=/tmp/api03-c1-pytest.xml | tee /tmp/api03-c1-pytest.log
+          "$API03ENV/bin/python" -m pytest tests/api03 -q -k 'not cross_instance_revoke_without_restart' --junitxml=/tmp/api03-c1-pytest-main.xml | tee /tmp/api03-c1-pytest-main.log
+      - name: Execute cross-instance revoke topology against isolated PostgreSQL state
+        shell: bash
+        env:
+          EPD2_S2S_DSN: postgresql://postgres@127.0.0.1:55432/epd2_s2s_topology
+        run: |
+          set -euo pipefail
+          cd "$C1ROOT"
+          export PYTHONPATH="$PWD/packages/python/epd2-runtime/src:$PWD/packages/python/epd2-s2s-crypto/src:$PWD"
+          "$API03ENV/bin/python" -m pytest tests/api03/test_topology_r4.py::test_cross_instance_revoke_without_restart -q --junitxml=/tmp/api03-c1-pytest-topology.xml | tee /tmp/api03-c1-pytest-topology.log
+      - name: Assert complete 99-test API-03 execution coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$API03ENV/bin/python" - <<'PY' | tee /tmp/api03-c1-test-coverage.log
+          import xml.etree.ElementTree as ET
+          def counts(path):
+              root=ET.parse(path).getroot()
+              suites=[root] if root.tag=='testsuite' else list(root.findall('testsuite'))
+              return tuple(sum(int(s.attrib.get(k,0)) for s in suites) for k in ('tests','failures','errors','skipped'))
+          main=counts('/tmp/api03-c1-pytest-main.xml')
+          topo=counts('/tmp/api03-c1-pytest-topology.xml')
+          total=tuple(a+b for a,b in zip(main,topo))
+          assert main[0] == 98 and topo[0] == 1, (main,topo)
+          assert total == (99,0,0,0), total
+          print('API03_MAIN_COUNTS', main)
+          print('API03_TOPOLOGY_COUNTS', topo)
+          print('API03_TOTAL_COUNTS', total)
+          print('API03_C1_99_TESTS:PASS')
+          PY
       - name: Execute SEC-01 API-03 isolated crypto regression
         shell: bash
         run: |
@@ -134,7 +169,10 @@ jobs:
           if-no-files-found: warn
           path: |
             /tmp/api03-c1-postgres.log
-            /tmp/api03-c1-pytest.xml
-            /tmp/api03-c1-pytest.log
+            /tmp/api03-c1-pytest-main.xml
+            /tmp/api03-c1-pytest-main.log
+            /tmp/api03-c1-pytest-topology.xml
+            /tmp/api03-c1-pytest-topology.log
+            /tmp/api03-c1-test-coverage.log
             /tmp/api03-c1-sec01.log
             /tmp/api03-c1-static.log
