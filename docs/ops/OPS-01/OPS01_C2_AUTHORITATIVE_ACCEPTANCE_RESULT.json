@@ -1,0 +1,57 @@
+{
+  "accepted_infra01": {
+    "candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+    "job_id": 100017170812,
+    "run_id": 33556094346,
+    "source_commit": "38f7d13c8badf911e61d659adb2905d1089a64a5",
+    "source_tree": "3036aa886ca554607fec67f74ab753d41c7dbd5b"
+  },
+  "bsi_readiness": {
+    "certification_claim": "NONE",
+    "deferred_gap_count": 9,
+    "new_certification_blockers": [],
+    "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS"
+  },
+  "candidate": {
+    "filename": "EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip",
+    "member_count": 1489,
+    "sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+    "size_bytes": 16457357
+  },
+  "candidate_self_state_observed": "CANDIDATE_NOT_ACCEPTED",
+  "canonical_target": {
+    "main_commit": "e89778667ee65e38001874b01681eff64c11354f",
+    "main_tree": "5c2c1fddcdafdf73c38ad68d5494590d33a5b97d"
+  },
+  "governance_effect": "INDEPENDENT_EVIDENCE_ONLY_PENDING_SEPARATE_POST_RUN_GOVERNANCE_DECISION",
+  "independent_run": {
+    "run_id": 33564968274,
+    "workflow_commit": "0cb18e707d18d034d8dec8d76662f3aac8042eca"
+  },
+  "nonclaims": [
+    "does not close overall OPS layer",
+    "does not change API-04 primary state",
+    "not production ready",
+    "not legally activated",
+    "not BSI/CC/EAL4 certified"
+  ],
+  "ops_harness": {
+    "environment_blocked": [],
+    "gates_executed": 32,
+    "gates_failed": [],
+    "gates_passed": 32,
+    "gates_total": 32,
+    "not_run": [],
+    "skipped": [],
+    "verdict": "PASS"
+  },
+  "schema": "epd2.ops01.authoritative-acceptance/1",
+  "source": {
+    "freeze_file_count": 1486,
+    "freeze_tree_digest": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+    "seal_commit": "a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc",
+    "seal_tree": "a91a290ae87a83bede5d3cfc0e53dc682379b8a3"
+  },
+  "stage": "OPS-01",
+  "verdict": "PASS"
+}

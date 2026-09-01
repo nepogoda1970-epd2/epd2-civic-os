@@ -1,0 +1,309 @@
+{
+  "schema": "epd2.ops01.acceptance-record/1",
+  "stage": "OPS-01 — Operational Readiness, Incident, Recovery & Change Control Foundation",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-01",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Independent post-run governance decision after successful exact-sealed-byte authoritative GitHub acceptance, followed by fail-closed reconciliation against the then-current canonical main.",
+  "scope": {
+    "bounded_stage": "OPS-01",
+    "overall_ops_layer": "OPEN",
+    "primary_program_stage_unchanged": "API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+  },
+  "authoritative_review_target": {
+    "repository": "nepogoda1970-epd2/epd2-civic-os",
+    "branch": "main",
+    "commit": "e89778667ee65e38001874b01681eff64c11354f",
+    "tree": "5c2c1fddcdafdf73c38ad68d5494590d33a5b97d"
+  },
+  "post_run_canonical_reconciliation": {
+    "authoritative_target_main": "e89778667ee65e38001874b01681eff64c11354f",
+    "authoritative_target_tree": "5c2c1fddcdafdf73c38ad68d5494590d33a5b97d",
+    "governance_decision_entering_main": "f568ca2538d0a3ea83825c8eb6f229bebf4c438a",
+    "governance_decision_entering_tree": "0c8fad90b3ba459ff017073ab617669d91212f1e",
+    "controlling_authority_diff": [],
+    "concurrent_changes_since_authoritative_target": [
+      {
+        "status": "A",
+        "paths": [
+          ".github/workflows/api04-c1-seal-build-main.yml"
+        ]
+      },
+      {
+        "status": "A",
+        "paths": [
+          "handoff/API-04/C1/api04_c1_seal_fix.py"
+        ]
+      }
+    ],
+    "classification": "NO_CONTROLLING_AUTHORITY_CONFLICT"
+  },
+  "candidate": {
+    "filename": "EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip",
+    "sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+    "size_bytes": 16457357,
+    "member_count": 1489,
+    "source_commit": "a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc",
+    "source_tree": "a91a290ae87a83bede5d3cfc0e53dc682379b8a3",
+    "freeze_file_count": 1486,
+    "freeze_tree_digest": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+    "candidate_self_acceptance": false
+  },
+  "accepted_predecessor": {
+    "stage": "INFRA-01",
+    "candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+    "source_commit": "38f7d13c8badf911e61d659adb2905d1089a64a5",
+    "source_tree": "3036aa886ca554607fec67f74ab753d41c7dbd5b",
+    "authoritative_run_id": 33556094346,
+    "authoritative_job_id": 100017170812
+  },
+  "authoritative_review": {
+    "workflow": "OPS-01 C2 Authoritative Review",
+    "run_id": 33564968274,
+    "job_id": 100045926256,
+    "workflow_commit": "0cb18e707d18d034d8dec8d76662f3aac8042eca",
+    "conclusion": "success",
+    "terminal_marker": "OPS01_C2_AUTHORITATIVE_RESULT:PASS:39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+    "canonical_harness": "32/32 governed OPS-01 gates EXECUTED AND PASS; 0 failed; 0 skipped; 0 environment-blocked; 0 not-run",
+    "ops_tests": "88/88 PASS",
+    "postgresql_server": "16.15",
+    "quality": "ruff format PASS; ruff check PASS; mypy PASS",
+    "sealed_transport_identity": "PASS",
+    "freeze_manifest_verification": "1486/1486 governed files PASS",
+    "same_governed_source_bytes_after_execution": true,
+    "evidence_artifact": {
+      "name": "ops01-c2-authoritative-evidence-33564968274",
+      "id": 9822755955,
+      "digest": "sha256:4bc58f043f0a89753086a5d6b560bf7af800e80cc310ec5951c60035ad6567f7"
+    },
+    "candidate_artifact": {
+      "name": "ops01-c2-authoritative-candidate-33564968274",
+      "id": 9822756668,
+      "digest": "sha256:8e07a54a1a5b60285485e595630cca060a7c6c05f12c88d89b3dc97b45c22a46"
+    }
+  },
+  "bsi_certification_readiness": {
+    "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS",
+    "certification_claim": "NONE",
+    "new_certification_blockers": [],
+    "touched_rows": [
+      {
+        "current_readiness": "RED / P0",
+        "effect": "PRESERVED_NO_REGRESSION",
+        "evidence": [
+          "G10",
+          "G11",
+          "G12"
+        ],
+        "id": "M-02",
+        "note": "OPS telemetry and correlation controls preserve the hard no-persistent-person/member-identifier voting boundary; the evaluator P0 question remains open."
+      },
+      {
+        "current_readiness": "YELLOW",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G16",
+          "G17",
+          "G18",
+          "G28"
+        ],
+        "id": "M-03",
+        "note": "Operational SoD, independent approval and voting incident authority are exercised; production election-board authorization remains outside OPS-01."
+      },
+      {
+        "current_readiness": "GREEN",
+        "effect": "PRESERVED_AND_OPERATIONALLY_STRENGTHENED",
+        "evidence": [
+          "G10",
+          "G11",
+          "G12"
+        ],
+        "id": "M-11",
+        "note": "Forbidden identity/ballot telemetry, scoped correlation and voting isolation all pass without creating a join handle."
+      },
+      {
+        "current_readiness": "YELLOW",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G09",
+          "G10",
+          "G11",
+          "G26"
+        ],
+        "id": "M-16",
+        "note": "Privacy-safe audit/telemetry and authoritative-time failure behavior are exercised; production reliable-time and final anti-correlation audit design remain open."
+      },
+      {
+        "current_readiness": "RED",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G13",
+          "G15",
+          "G27"
+        ],
+        "id": "M-17",
+        "note": "Incident evidence and compromise handling exist, but protected production storage/external anchoring and evaluator evidence remain open."
+      },
+      {
+        "current_readiness": "RED",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G06",
+          "G07",
+          "G19",
+          "G20",
+          "G21",
+          "G22",
+          "G23",
+          "G24",
+          "G26"
+        ],
+        "id": "M-19",
+        "note": "Readiness, backup/restore, rollback and failure modes are exercised in a controlled environment; TOE production secure-state behavior remains open."
+      },
+      {
+        "current_readiness": "RED",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G16",
+          "G17",
+          "G18",
+          "G27",
+          "G28"
+        ],
+        "id": "M-20",
+        "note": "Operational authority boundaries are exercised; the production security-function management plane remains open."
+      },
+      {
+        "current_readiness": "YELLOW",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G22",
+          "G23",
+          "G32"
+        ],
+        "id": "M-25",
+        "note": "Rollback/freeze/package identity strengthen CM evidence; certification-grade lifecycle/configuration management remains open."
+      },
+      {
+        "current_readiness": "YELLOW",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G28"
+        ],
+        "id": "M-27",
+        "note": "Twenty governed runbooks are structurally and behaviorally exercised; evaluator-ready AGD remains future work."
+      },
+      {
+        "current_readiness": "RED",
+        "effect": "PARTIALLY_IMPROVED",
+        "evidence": [
+          "G05",
+          "G06",
+          "G07",
+          "G08",
+          "G09",
+          "G13",
+          "G19",
+          "G20",
+          "G21",
+          "G22",
+          "G23",
+          "G24",
+          "G25",
+          "G26",
+          "G27",
+          "G28",
+          "G29",
+          "G30"
+        ],
+        "id": "M-30",
+        "note": "Operational health, incident, recovery and change-control foundations improve readiness; hardened production deployment/TR-03169 evidence remains open."
+      }
+    ],
+    "stronger_epd2_invariants_preserved": {
+      "identity_ballot_unlinkability": true,
+      "independent_verification": "UNCHANGED_BY_OPS01",
+      "no_intermediate_tally": "UNCHANGED_BY_OPS01",
+      "no_persistent_person_member_identifier_in_voting_domain": true
+    },
+    "deferred_existing_gap_bindings": [
+      {
+        "id": "OPS01-BSI-M02-P0",
+        "matrix_row": "M-02",
+        "owner": "BSI/ITSEF + Voting architecture",
+        "required_closure_stage": "P0 pre-evaluation before certification-oriented voting freeze",
+        "required_evidence": "written recognised-evaluator position on non-identifying election-scoped eligibility representation"
+      },
+      {
+        "id": "OPS01-BSI-M03-PROD-AUTH",
+        "matrix_row": "M-03",
+        "owner": "SEC / CTRL / Voting governance",
+        "required_closure_stage": "final production authorization integration before BSI pre-evaluation",
+        "required_evidence": "production role mapping and enforced election-board/quorum authorization evidence"
+      },
+      {
+        "id": "OPS01-BSI-M16-TIME-AUDIT",
+        "matrix_row": "M-16",
+        "owner": "INFRA / OPS / SEC",
+        "required_closure_stage": "production infrastructure and final SEC",
+        "required_evidence": "reliable-time deployment plus audit anti-correlation proof"
+      },
+      {
+        "id": "OPS01-BSI-M17-AUDIT-PROTECTION",
+        "matrix_row": "M-17",
+        "owner": "OPS / SEC",
+        "required_closure_stage": "final SEC / certification evidence assembly",
+        "required_evidence": "protected audit storage, storage-full behavior, authorized review, retention and external anchoring evidence"
+      },
+      {
+        "id": "OPS01-BSI-M19-SECURE-STATE",
+        "matrix_row": "M-19",
+        "owner": "Voting / INFRA / OPS / SEC",
+        "required_closure_stage": "production voting integration before certification pre-evaluation",
+        "required_evidence": "TOE startup/phase/resume self-tests and governed recoverable/unrecoverable secure-state evidence"
+      },
+      {
+        "id": "OPS01-BSI-M20-MGMT",
+        "matrix_row": "M-20",
+        "owner": "CTRL / SEC / Voting governance",
+        "required_closure_stage": "CTRL closure + final SEC",
+        "required_evidence": "production management plane with phase transitions and quorum-authorized critical actions"
+      },
+      {
+        "id": "OPS01-BSI-M25-CM",
+        "matrix_row": "M-25",
+        "owner": "INFRA / OPS / SEC",
+        "required_closure_stage": "certification lifecycle evidence assembly",
+        "required_evidence": "certification-grade CM, controlled build/release, development security and delivery evidence"
+      },
+      {
+        "id": "OPS01-BSI-M27-AGD",
+        "matrix_row": "M-27",
+        "owner": "OPS / SEC",
+        "required_closure_stage": "certification guidance evidence assembly",
+        "required_evidence": "evaluator-ready preparative and operational guidance"
+      },
+      {
+        "id": "OPS01-BSI-M30-TR03169",
+        "matrix_row": "M-30",
+        "owner": "INFRA / OPS / SEC",
+        "required_closure_stage": "production infrastructure + final SEC",
+        "required_evidence": "hardened deployment, segmentation, reliable time, monitoring, admin controls, availability, incident/recovery and TR-03169 deployment profile"
+      }
+    ],
+    "persisted_disposition": "docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json"
+  },
+  "authoritative_result_file": "docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json",
+  "master_register": {
+    "unchanged_by_this_decision": true,
+    "fir_status_changes": []
+  },
+  "exclusions": [
+    "This decision closes only bounded OPS-01; it does not close the overall OPS layer.",
+    "It does not change API-04 status or close the API layer.",
+    "It does not close INFRA, CTRL, final FRONT or SEC.",
+    "It is not a production-readiness or legal-activation decision.",
+    "It is not BSI/Common-Criteria/EAL4 or final security certification."
+  ]
+}
