@@ -15,6 +15,15 @@ jobs:
         run: |
           set -euo pipefail
           cp handoff/API-03/governance/patch_api03_c5_register.py /tmp/patch_api03_c5_register.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/patch_api03_c5_register.py')
+          s=p.read_text()
+          old="assert '`API-03 ACCEPTED / CLOSED; API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`' in s"
+          new="assert 'API-03 ACCEPTED / CLOSED; API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in s"
+          assert s.count(old)==1
+          p.write_text(s.replace(old,new,1))
+          PY
           git fetch origin main
           git checkout -B main origin/main
           test "$(git rev-parse HEAD)" = "f3f59563cf5397106c74034b26ab6f23534f3897"
@@ -30,6 +39,7 @@ jobs:
           grep -F '### API-03 C5 authoritative transition — 2026-09-01' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
           grep -F '**Primary implementation:** `API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
           grep -F 'API03_RESULT:PASS:validation/api03/authoritative_acceptance_result.json' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F '| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
           python - <<'PY'
           import json
           r=json.load(open('docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json'))
