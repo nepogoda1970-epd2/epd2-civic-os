@@ -1,0 +1,374 @@
+name: OPS-01 C2 Authoritative Review
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: [.github/workflows/ops01-c2-authoritative.yml]
+
+permissions:
+  contents: read
+
+env:
+  CANDIDATE_FILE: EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip
+  CANDIDATE_SHA256: 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27
+  CANDIDATE_SIZE: "16457357"
+  CANDIDATE_MEMBER_COUNT: "1489"
+  FREEZE_FILE_COUNT: "1486"
+  FREEZE_TREE_DIGEST: e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613
+  C2_SOURCE_COMMIT: a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc
+  C2_SOURCE_TREE: a91a290ae87a83bede5d3cfc0e53dc682379b8a3
+  TARGET_MAIN: e89778667ee65e38001874b01681eff64c11354f
+  TARGET_MAIN_TREE: 5c2c1fddcdafdf73c38ad68d5494590d33a5b97d
+  INFRA01_SHA256: 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+  INFRA01_SOURCE_COMMIT: 38f7d13c8badf911e61d659adb2905d1089a64a5
+  INFRA01_SOURCE_TREE: 3036aa886ca554607fec67f74ab753d41c7dbd5b
+  INFRA01_RUN: "33556094346"
+  INFRA01_JOB: "100017170812"
+  EPD2_OPS_PGHOST: 127.0.0.1
+  EPD2_OPS_PGPORT: "5432"
+  EPD2_OPS_PGUSER: postgres
+  EPD2_OPS_PGDATABASE: epd2_ops01_authoritative
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  authoritative:
+    name: Independent sealed-byte governed review
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - name: Checkout acceptance control branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: control
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove exact sealed C2 transport identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C control rev-parse HEAD)" = "$GITHUB_SHA"
+          src="$GITHUB_WORKSPACE/control/handoff/OPS/incoming/$CANDIDATE_FILE"
+          test -f "$src"
+          echo "$CANDIDATE_SHA256  $src" | sha256sum -c -
+          test "$(stat -c %s "$src")" = "$CANDIDATE_SIZE"
+          recorded=$(awk '{print $1}' "$src.sha256")
+          test "$recorded" = "$CANDIDATE_SHA256"
+          mkdir -p "$RUNNER_TEMP/ops01-c2"
+          python - "$src" "$RUNNER_TEMP/ops01-c2" <<'PY'
+          import pathlib, stat, sys, zipfile
+          archive=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None
+              infos=z.infolist(); names=[i.filename for i in infos]
+              assert len(names)==1489, len(names)
+              assert len(names)==len(set(names))
+              required={'CANDIDATE_NOT_ACCEPTED','OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json'}
+              assert required.issubset(names), required-set(names)
+              for i in infos:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts, i.filename
+                  assert not stat.S_ISLNK((i.external_attr>>16)&0xffff), i.filename
+              z.extractall(out)
+          print('OPS01_C2_ZIP_STRUCTURE=PASS')
+          PY
+          echo "CANDIDATE_ROOT=$RUNNER_TEMP/ops01-c2" >> "$GITHUB_ENV"
+          echo "SEALED_CANDIDATE_PATH=$src" >> "$GITHUB_ENV"
+
+      - name: Bind exact current canonical authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C control fetch --no-tags origin main
+          current=$(git -C control rev-parse origin/main)
+          current_tree=$(git -C control rev-parse 'origin/main^{tree}')
+          echo "CURRENT_MAIN=$current"
+          echo "CURRENT_MAIN_TREE=$current_tree"
+          test "$current" = "$TARGET_MAIN"
+          test "$current_tree" = "$TARGET_MAIN_TREE"
+          for p in \
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md \
+            docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md \
+            docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json \
+            docs/handover/PACK-15-PRIVACY-EVIDENCE.md \
+            docs/handover/PACK-15-SECURITY-EVIDENCE.md \
+            docs/packs/PACK-16/PACK-16B-BACKUP-RECOVERY-AND-COMPENSATION.md \
+            docs/packs/PACK-16/PACK-16B-INCIDENT-AND-NOTIFICATION-MODEL.md \
+            docs/packs/PACK-16/PACK-16D-LOGGING-AND-AUDIT-BOUNDARY.md \
+            docs/packs/PACK-16/PACK-16D-SCOPE-AND-IMPLEMENTATION-BOUNDARY.md; do
+            mkdir -p "$RUNNER_TEMP/authority/$(dirname "$p")"
+            git -C control show "origin/main:$p" > "$RUNNER_TEMP/authority/$p"
+            cmp "$RUNNER_TEMP/authority/$p" "$CANDIDATE_ROOT/$p"
+          done
+          grep -F 'OPS incident/recovery/change/election runbooks and SoD models' "$CANDIDATE_ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          grep -F 'API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' "$CANDIDATE_ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          grep -F 'INFRA-01 is therefore `ACCEPTED / CLOSED`' "$CANDIDATE_ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          echo 'OPS01_C2_CANONICAL_AUTHORITY_BINDING=PASS'
+
+      - name: Independently verify self-state, lineage and freeze manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "$CANDIDATE_ROOT" <<'PY'
+          import hashlib, json, os, pathlib, sys
+          root=pathlib.Path(sys.argv[1])
+          self_state=json.loads((root/'OPS01_CANDIDATE_SELF_STATE.json').read_text())
+          assert self_state['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert self_state['seal_commit']==os.environ['C2_SOURCE_COMMIT']
+          assert self_state['seal_tree']==os.environ['C2_SOURCE_TREE']
+          assert self_state['tree_digest']==os.environ['FREEZE_TREE_DIGEST']
+          assert self_state['entering_base_commit']==os.environ['TARGET_MAIN']
+          assert self_state['entering_base_tree']==os.environ['TARGET_MAIN_TREE']
+          assert self_state['working_tree_clean'] is True
+          recon=json.loads((root/'docs/ops/OPS-01/INFRA01_RECONCILIATION_RESULT.json').read_text())
+          assert recon['result']=='PASS'
+          assert recon['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert recon['accepted_infra01_candidate_sha256']==os.environ['INFRA01_SHA256']
+          assert recon['accepted_infra01_source_commit']==os.environ['INFRA01_SOURCE_COMMIT']
+          assert recon['accepted_infra01_source_tree']==os.environ['INFRA01_SOURCE_TREE']
+          assert str(recon['accepted_infra01_authoritative_run_id'])==os.environ['INFRA01_RUN']
+          assert str(recon['accepted_infra01_authoritative_job_id'])==os.environ['INFRA01_JOB']
+          assert recon['c1_to_c2_source_reconciliation']['conflicts']==0
+          assert recon['c1_to_c2_source_reconciliation']['deleted_source_files']==0
+          manifest=json.loads((root/'OPS01_FREEZE_MANIFEST.json').read_text())
+          assert manifest['file_count']==int(os.environ['FREEZE_FILE_COUNT'])
+          assert manifest['tree_digest']==os.environ['FREEZE_TREE_DIGEST']
+          assert len(manifest['files'])==int(os.environ['FREEZE_FILE_COUNT'])
+          observed={}
+          for name, expected in manifest['files'].items():
+              p=root/name
+              assert p.is_file(), name
+              got=hashlib.sha256(p.read_bytes()).hexdigest()
+              assert got==expected,(name,got,expected)
+              observed[name]=got
+          canonical=json.dumps(observed,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
+          tree=hashlib.sha256(canonical).hexdigest()
+          assert tree==manifest['tree_digest'],(tree,manifest['tree_digest'])
+          all_files={p.relative_to(root).as_posix() for p in root.rglob('*') if p.is_file()}
+          extras=all_files-set(manifest['files'])
+          assert extras=={'CANDIDATE_NOT_ACCEPTED','OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json'},extras
+          print('OPS01_C2_FREEZE_MANIFEST=PASS')
+          print('OPS01_C2_FREEZE_TREE_DIGEST='+tree)
+          PY
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Locked environment and PostgreSQL identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          python -m pip install --disable-pip-version-check 'uv==0.12.5'
+          uv sync --all-groups --frozen
+          psql -h 127.0.0.1 -U postgres -d postgres -c 'CREATE DATABASE epd2_ops01_authoritative;' || true
+          v=$(psql -h 127.0.0.1 -U postgres -d postgres -Atc 'show server_version')
+          echo "POSTGRES_SERVER_VERSION=$v"
+          case "$v" in 16.15*) ;; *) echo "unexpected PostgreSQL version: $v"; exit 1;; esac
+          uv --version
+          python --version
+          uv run ruff --version
+
+      - name: Independent OPS-01 quality gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run ruff format --check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run ruff check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run mypy packages/python/epd2-ops/src packages/python/epd2-ops/tests tests/ops01 scripts/validation/validate_ops01.py scripts/ops01/seal_candidate.py
+
+      - name: Run exact canonical OPS-01 harness
+        id: harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          rm -rf validation/ops01
+          make verify-ops01 | tee "$RUNNER_TEMP/ops01-c2-authoritative.log"
+          grep -F 'OPS01_RESULT:PASS:validation/ops01/ops01_acceptance_result.json' "$RUNNER_TEMP/ops01-c2-authoritative.log"
+          grep -F 'OPS-01 gates: 32/32 PASS' "$RUNNER_TEMP/ops01-c2-authoritative.log"
+          test "$(grep -Ec '^\[PASS\] G[0-9][0-9] ' "$RUNNER_TEMP/ops01-c2-authoritative.log")" -eq 32
+          if grep -Eq '^\[(FAIL|SKIP|BLOCKED|ERROR)\]' "$RUNNER_TEMP/ops01-c2-authoritative.log"; then exit 1; fi
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/ops01/ops01_acceptance_result.json'))
+          assert d['schema']=='epd2.ops01.acceptance/1'
+          assert d['stage']=='OPS-01'
+          assert d['verdict']=='PASS'
+          assert d['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED'
+          r=d['result']
+          assert r['gates_total']==32
+          assert r['gates_executed']==32
+          assert r['gates_passed']==32
+          assert r['gates_failed']==[]
+          assert r['gates_missing']==[]
+          assert r['skipped']==[]
+          assert r['environment_blocked']==[]
+          assert r['not_run']==[]
+          assert r['manual_assume_pass']==[]
+          assert len(r['results'])==32
+          assert all(x['verdict']=='PASS' for x in r['results'])
+          assert {x['gate'] for x in r['results']}=={f'G{i:02d}' for i in range(1,33)}
+          print('OPS01_C2_AUTHORITATIVE_GATES=32_OF_32_PASS')
+          PY
+
+      - name: Prove no governed source byte changed during execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$CANDIDATE_SHA256  $SEALED_CANDIDATE_PATH" | sha256sum -c -
+          python - "$CANDIDATE_ROOT" <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); m=json.loads((root/'OPS01_FREEZE_MANIFEST.json').read_text())
+          changed=[]
+          for name,expected in m['files'].items():
+              got=hashlib.sha256((root/name).read_bytes()).hexdigest()
+              if got!=expected: changed.append((name,expected,got))
+          assert not changed,changed[:20]
+          observed={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in m['files']}
+          tree=hashlib.sha256(json.dumps(observed,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+          assert tree==m['tree_digest']
+          print('OPS01_C2_SAME_GOVERNED_SOURCE_BYTES=PASS')
+          PY
+
+      - name: Independent BSI certification-readiness disposition
+        id: bsi
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          python - "$RUNNER_TEMP/OPS01_C2_BSI_READINESS_DISPOSITION.json" <<'PY'
+          import json, pathlib, re, sys
+          out=pathlib.Path(sys.argv[1])
+          matrix=pathlib.Path('docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md').read_text()
+          result=json.load(open('validation/ops01/ops01_acceptance_result.json'))['result']
+          gates={x['gate']:x for x in result['results']}
+          for g in ['G06','G07','G09','G10','G11','G12','G13','G15','G16','G17','G18','G19','G20','G21','G22','G23','G24','G26','G27','G28','G30','G32']:
+              assert gates[g]['verdict']=='PASS',g
+          assert gates['G10']['measurements']['any_forbidden_emitted'] is False
+          assert gates['G11']['measurements']['audit']['global_person_key_present'] is False
+          assert gates['G12']['measurements']['probe']['linkage_possible'] is False
+          expected={'M-02':'RED / P0','M-03':'YELLOW','M-11':'GREEN','M-16':'YELLOW','M-17':'RED','M-19':'RED','M-20':'RED','M-25':'YELLOW','M-27':'YELLOW','M-30':'RED'}
+          observed={}
+          for mid,status in expected.items():
+              mm=re.search(r'^\|\s*'+re.escape(mid)+r'\s*\|.*?\|\s*\*\*([^*]+)\*\*\s*\|',matrix,re.M)
+              assert mm,mid
+              got=mm.group(1).strip(); assert got==status,(mid,got,status); observed[mid]=got
+          touched=[
+            {'id':'M-02','current_readiness':observed['M-02'],'effect':'PRESERVED_NO_REGRESSION','evidence':['G10','G11','G12'],'note':'OPS telemetry and correlation controls preserve the hard no-persistent-person/member-identifier voting boundary; the evaluator P0 question remains open.'},
+            {'id':'M-03','current_readiness':observed['M-03'],'effect':'PARTIALLY_IMPROVED','evidence':['G16','G17','G18','G28'],'note':'Operational SoD, independent approval and voting incident authority are exercised; production election-board authorization remains outside OPS-01.'},
+            {'id':'M-11','current_readiness':observed['M-11'],'effect':'PRESERVED_AND_OPERATIONALLY_STRENGTHENED','evidence':['G10','G11','G12'],'note':'Forbidden identity/ballot telemetry, scoped correlation and voting isolation all pass without creating a join handle.'},
+            {'id':'M-16','current_readiness':observed['M-16'],'effect':'PARTIALLY_IMPROVED','evidence':['G09','G10','G11','G26'],'note':'Privacy-safe audit/telemetry and authoritative-time failure behavior are exercised; production reliable-time and final anti-correlation audit design remain open.'},
+            {'id':'M-17','current_readiness':observed['M-17'],'effect':'PARTIALLY_IMPROVED','evidence':['G13','G15','G27'],'note':'Incident evidence and compromise handling exist, but protected production storage/external anchoring and evaluator evidence remain open.'},
+            {'id':'M-19','current_readiness':observed['M-19'],'effect':'PARTIALLY_IMPROVED','evidence':['G06','G07','G19','G20','G21','G22','G23','G24','G26'],'note':'Readiness, backup/restore, rollback and failure modes are exercised in a controlled environment; TOE production secure-state behavior remains open.'},
+            {'id':'M-20','current_readiness':observed['M-20'],'effect':'PARTIALLY_IMPROVED','evidence':['G16','G17','G18','G27','G28'],'note':'Operational authority boundaries are exercised; the production security-function management plane remains open.'},
+            {'id':'M-25','current_readiness':observed['M-25'],'effect':'PARTIALLY_IMPROVED','evidence':['G22','G23','G32'],'note':'Rollback/freeze/package identity strengthen CM evidence; certification-grade lifecycle/configuration management remains open.'},
+            {'id':'M-27','current_readiness':observed['M-27'],'effect':'PARTIALLY_IMPROVED','evidence':['G28'],'note':'Twenty governed runbooks are structurally and behaviorally exercised; evaluator-ready AGD remains future work.'},
+            {'id':'M-30','current_readiness':observed['M-30'],'effect':'PARTIALLY_IMPROVED','evidence':['G05','G06','G07','G08','G09','G13','G19','G20','G21','G22','G23','G24','G25','G26','G27','G28','G29','G30'],'note':'Operational health, incident, recovery and change-control foundations improve readiness; hardened production deployment/TR-03169 evidence remains open.'},
+          ]
+          deferred=[
+            {'id':'OPS01-BSI-M02-P0','matrix_row':'M-02','owner':'BSI/ITSEF + Voting architecture','required_closure_stage':'P0 pre-evaluation before certification-oriented voting freeze','required_evidence':'written recognised-evaluator position on non-identifying election-scoped eligibility representation'},
+            {'id':'OPS01-BSI-M03-PROD-AUTH','matrix_row':'M-03','owner':'SEC / CTRL / Voting governance','required_closure_stage':'final production authorization integration before BSI pre-evaluation','required_evidence':'production role mapping and enforced election-board/quorum authorization evidence'},
+            {'id':'OPS01-BSI-M16-TIME-AUDIT','matrix_row':'M-16','owner':'INFRA / OPS / SEC','required_closure_stage':'production infrastructure and final SEC','required_evidence':'reliable-time deployment plus audit anti-correlation proof'},
+            {'id':'OPS01-BSI-M17-AUDIT-PROTECTION','matrix_row':'M-17','owner':'OPS / SEC','required_closure_stage':'final SEC / certification evidence assembly','required_evidence':'protected audit storage, storage-full behavior, authorized review, retention and external anchoring evidence'},
+            {'id':'OPS01-BSI-M19-SECURE-STATE','matrix_row':'M-19','owner':'Voting / INFRA / OPS / SEC','required_closure_stage':'production voting integration before certification pre-evaluation','required_evidence':'TOE startup/phase/resume self-tests and governed recoverable/unrecoverable secure-state evidence'},
+            {'id':'OPS01-BSI-M20-MGMT','matrix_row':'M-20','owner':'CTRL / SEC / Voting governance','required_closure_stage':'CTRL closure + final SEC','required_evidence':'production management plane with phase transitions and quorum-authorized critical actions'},
+            {'id':'OPS01-BSI-M25-CM','matrix_row':'M-25','owner':'INFRA / OPS / SEC','required_closure_stage':'certification lifecycle evidence assembly','required_evidence':'certification-grade CM, controlled build/release, development security and delivery evidence'},
+            {'id':'OPS01-BSI-M27-AGD','matrix_row':'M-27','owner':'OPS / SEC','required_closure_stage':'certification guidance evidence assembly','required_evidence':'evaluator-ready preparative and operational guidance'},
+            {'id':'OPS01-BSI-M30-TR03169','matrix_row':'M-30','owner':'INFRA / OPS / SEC','required_closure_stage':'production infrastructure + final SEC','required_evidence':'hardened deployment, segmentation, reliable time, monitoring, admin controls, availability, incident/recovery and TR-03169 deployment profile'},
+          ]
+          doc={
+            'schema':'epd2.ops01.bsi-readiness-disposition/1',
+            'stage':'OPS-01','candidate_sha256':'39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27',
+            'result':'PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS','certification_claim':'NONE',
+            'new_certification_blockers':[],
+            'stronger_epd2_invariants_preserved':{'no_persistent_person_member_identifier_in_voting_domain':True,'identity_ballot_unlinkability':True,'no_intermediate_tally':'UNCHANGED_BY_OPS01','independent_verification':'UNCHANGED_BY_OPS01'},
+            'touched_rows':touched,'deferred_existing_gap_bindings':deferred,
+            'untouched_relevant_rows':['M-01','M-04','M-05','M-06','M-07','M-08','M-09','M-10','M-12','M-13','M-14','M-15','M-18','M-21','M-22','M-23','M-24','M-26','M-28','M-29','M-31'],
+            'nonclaims':['NOT BSI certified','NOT CC compliant','NOT EAL4 certified','NOT production ready','NOT legally activated']
+          }
+          out.write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
+          print('OPS01_C2_BSI_READINESS_MAPPING:PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS')
+          PY
+
+      - name: Build independent authoritative result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "$RUNNER_TEMP/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json" <<'PY'
+          import json,os,pathlib,sys
+          r=json.load(open(pathlib.Path(os.environ['CANDIDATE_ROOT'])/'validation/ops01/ops01_acceptance_result.json'))
+          b=json.load(open(pathlib.Path(os.environ['RUNNER_TEMP'])/'OPS01_C2_BSI_READINESS_DISPOSITION.json'))
+          out={
+            'schema':'epd2.ops01.authoritative-acceptance/1','stage':'OPS-01','verdict':'PASS',
+            'candidate':{'filename':os.environ['CANDIDATE_FILE'],'sha256':os.environ['CANDIDATE_SHA256'],'size_bytes':int(os.environ['CANDIDATE_SIZE']),'member_count':int(os.environ['CANDIDATE_MEMBER_COUNT'])},
+            'source':{'seal_commit':os.environ['C2_SOURCE_COMMIT'],'seal_tree':os.environ['C2_SOURCE_TREE'],'freeze_tree_digest':os.environ['FREEZE_TREE_DIGEST'],'freeze_file_count':int(os.environ['FREEZE_FILE_COUNT'])},
+            'canonical_target':{'main_commit':os.environ['TARGET_MAIN'],'main_tree':os.environ['TARGET_MAIN_TREE']},
+            'accepted_infra01':{'candidate_sha256':os.environ['INFRA01_SHA256'],'source_commit':os.environ['INFRA01_SOURCE_COMMIT'],'source_tree':os.environ['INFRA01_SOURCE_TREE'],'run_id':int(os.environ['INFRA01_RUN']),'job_id':int(os.environ['INFRA01_JOB'])},
+            'independent_run':{'workflow_commit':os.environ['GITHUB_SHA'],'run_id':int(os.environ['GITHUB_RUN_ID'])},
+            'ops_harness':{'verdict':r['verdict'],'gates_total':r['result']['gates_total'],'gates_executed':r['result']['gates_executed'],'gates_passed':r['result']['gates_passed'],'gates_failed':r['result']['gates_failed'],'skipped':r['result']['skipped'],'environment_blocked':r['result']['environment_blocked'],'not_run':r['result']['not_run']},
+            'bsi_readiness':{'result':b['result'],'new_certification_blockers':b['new_certification_blockers'],'deferred_gap_count':len(b['deferred_existing_gap_bindings']),'certification_claim':b['certification_claim']},
+            'candidate_self_state_observed':'CANDIDATE_NOT_ACCEPTED',
+            'governance_effect':'INDEPENDENT_EVIDENCE_ONLY_PENDING_SEPARATE_POST_RUN_GOVERNANCE_DECISION',
+            'nonclaims':['does not close overall OPS layer','does not change API-04 primary state','not production ready','not legally activated','not BSI/CC/EAL4 certified']
+          }
+          pathlib.Path(sys.argv[1]).write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print('OPS01_C2_AUTHORITATIVE_RESULT_JSON=PASS')
+          PY
+
+      - name: Upload authoritative evidence
+        if: steps.harness.outcome == 'success' && steps.bsi.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops01-c2-authoritative-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+            ${{ runner.temp }}/OPS01_C2_BSI_READINESS_DISPOSITION.json
+            ${{ runner.temp }}/ops01-c2-authoritative.log
+            ${{ env.CANDIDATE_ROOT }}/validation/ops01/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload exact reviewed C2 candidate
+        if: steps.harness.outcome == 'success' && steps.bsi.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops01-c2-authoritative-candidate-${{ github.run_id }}
+          path: ${{ env.SEALED_CANDIDATE_PATH }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Terminal governed-review marker
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "HARNESS_OUTCOME=${{ steps.harness.outcome }}"
+          echo "BSI_OUTCOME=${{ steps.bsi.outcome }}"
+          test "${{ steps.harness.outcome }}" = "success"
+          test "${{ steps.bsi.outcome }}" = "success"
+          echo "OPS01_C2_AUTHORITATIVE_RESULT:PASS:$CANDIDATE_SHA256"
+          echo "OPS-01 bounded stage may proceed to separate post-run governance decision."
+          echo "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. OPS LAYER NOT CLOSED BY THIS RUN. NOT BSI/CC/EAL4 CERTIFIED."
