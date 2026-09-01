@@ -1,0 +1,7 @@
+FRONT04 C2 corrected reseal identity
+archive=EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip
+sha256=1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8
+size_bytes=21448756
+source_tree_digest=eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e
+correction=stale developer-report source_tree_digest reconciled to authoritative machine evidence; detached SHA sidecar added; execution byproducts excluded
+candidate_state=CANDIDATE_NOT_ACCEPTED
