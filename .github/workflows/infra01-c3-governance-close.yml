@@ -1,0 +1,200 @@
+name: INFRA-01 C3 Post-Run Governance Closure
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c3-governance-close.yml]
+
+permissions:
+  contents: write
+
+env:
+  TARGET_MAIN: c333b9dd12e0c13dd402222cc958d95e779b8488
+  CANDIDATE_FILENAME: EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip
+  CANDIDATE_SHA256: 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+  CANDIDATE_SIZE: "15854311"
+  SOURCE_COMMIT: 38f7d13c8badf911e61d659adb2905d1089a64a5
+  SOURCE_TREE: 3036aa886ca554607fec67f74ab753d41c7dbd5b
+  SOURCE_TRACKED_MANIFEST: 1591d85ebaffc6f1b253e1787472225fd99ccac94eb9816590b40f675bc3dbd2
+  SOURCE_FILE_COUNT: "1459"
+  FREEZE_TREE_DIGEST: d022822dbf3a127919595848cc7688053b2601210c56fa9d01aed54172fd4db6
+  AUTH_RUN: "33556094346"
+  AUTH_JOB: "100017170812"
+  AUTH_WORKFLOW_COMMIT: 9537d6624b446a78d6646c0d5508860907f83b3f
+  EVIDENCE_ARTIFACT_NAME: infra01-c3-authoritative-evidence-33556094346
+  EVIDENCE_ARTIFACT_ID: "9819611454"
+  EVIDENCE_ARTIFACT_DIGEST: sha256:eb0997a9c5de08c21d3efd34a64de987a1b984258947e7d95d59bd0bb37c868e
+  CANDIDATE_ARTIFACT_NAME: infra01-c3-authoritative-candidate-33556094346
+  CANDIDATE_ARTIFACT_ID: "9819612258"
+  CANDIDATE_ARTIFACT_DIGEST: sha256:78776108bbf045fb20ad9cc9e395b6954aa81fa3b19baefb23863c35c9bfd1a3
+  MASTER_SHA256: 3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d
+
+jobs:
+  close:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Fail closed if canonical main moved
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          test "$(git rev-parse HEAD)" = "$TARGET_MAIN"
+          test "$(git rev-parse origin/main)" = "$TARGET_MAIN"
+          test ! -e docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json
+
+      - name: Record independent bounded acceptance and update PCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          record_path = Path('docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json')
+          record = {
+            'schema': 'epd2.infra01.acceptance-record/1',
+            'stage': 'INFRA-01 — CI Acceptance Harness & Release-Integrity Foundation',
+            'decision': 'ACCEPTED / CLOSED',
+            'decision_date': '2026-09-01',
+            'decision_authority': 'Project Owner',
+            'decision_basis': 'Independent post-run governance decision after successful exact-source authoritative GitHub acceptance.',
+            'scope': {
+              'bounded_stage': 'INFRA-01',
+              'overall_infra_layer': 'OPEN',
+              'primary_program_stage_unchanged': 'API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED'
+            },
+            'entering_canonical_main': {
+              'repository': 'nepogoda1970-epd2/epd2-civic-os',
+              'branch': 'main',
+              'commit': os.environ['TARGET_MAIN']
+            },
+            'candidate': {
+              'filename': os.environ['CANDIDATE_FILENAME'],
+              'sha256': os.environ['CANDIDATE_SHA256'],
+              'size_bytes': int(os.environ['CANDIDATE_SIZE']),
+              'source_commit': os.environ['SOURCE_COMMIT'],
+              'source_tree': os.environ['SOURCE_TREE'],
+              'source_tracked_manifest_sha256': os.environ['SOURCE_TRACKED_MANIFEST'],
+              'source_file_count': int(os.environ['SOURCE_FILE_COUNT']),
+              'freeze_tree_digest': os.environ['FREEZE_TREE_DIGEST'],
+              'candidate_self_acceptance': False
+            },
+            'authoritative_review': {
+              'workflow': 'INFRA-01 C3 Authoritative Review',
+              'run_id': int(os.environ['AUTH_RUN']),
+              'job_id': int(os.environ['AUTH_JOB']),
+              'workflow_commit': os.environ['AUTH_WORKFLOW_COMMIT'],
+              'conclusion': 'success',
+              'terminal_marker': 'INFRA01_C3_AUTHORITATIVE_RESULT:PASS',
+              'canonical_harness': '43/43 governed checks EXECUTED AND PASS; 0 FAIL; 0 BLOCKED',
+              'evidence_verification': 'INFRA01_EVIDENCE_RESULT:PASS',
+              'evidence_artifact': {
+                'name': os.environ['EVIDENCE_ARTIFACT_NAME'],
+                'id': int(os.environ['EVIDENCE_ARTIFACT_ID']),
+                'digest': os.environ['EVIDENCE_ARTIFACT_DIGEST']
+              },
+              'candidate_artifact': {
+                'name': os.environ['CANDIDATE_ARTIFACT_NAME'],
+                'id': int(os.environ['CANDIDATE_ARTIFACT_ID']),
+                'digest': os.environ['CANDIDATE_ARTIFACT_DIGEST']
+              }
+            },
+            'correction_lineage': {
+              'prior_authoritative_run': 33541200112,
+              'prior_result': 'FAIL',
+              'sole_failed_gate': 'frontend.prettier',
+              'correction': 'Prettier normalization of exactly four diagnosed governed files, with required PCR SHA rebinding and reconciliation reseal; no runtime, security-boundary, test, registry or harness semantic weakening.',
+              'corrected_files': [
+                'docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json',
+                'docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json',
+                'docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json',
+                'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'
+              ]
+            },
+            'canonical_master': {
+              'sha256': os.environ['MASTER_SHA256'],
+              'unchanged_by_this_decision': True
+            },
+            'exclusions': [
+              'This decision closes only bounded INFRA-01; it does not close the overall INFRA layer.',
+              'It does not change API-04 status or close the API layer.',
+              'It does not open or close OPS, CTRL, final FRONT or SEC.',
+              'It is not a production-readiness or legal-activation decision.',
+              'It is not BSI/Common-Criteria/EAL4 or final security certification.'
+            ]
+          }
+          record_path.parent.mkdir(parents=True, exist_ok=True)
+          record_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          pcr_path = Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          pcr = pcr_path.read_text(encoding='utf-8')
+          old_row = '| INFRA | `NOT_STARTED` | Preparation/specification may proceed; final closure follows API dependencies. |'
+          new_row = '| INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA LAYER OPEN` | Exact bounded INFRA-01 CI Acceptance Harness & Release-Integrity Foundation is accepted/closed at C3. The overall INFRA layer remains open; final INFRA closure still follows API dependencies. |'
+          if pcr.count(old_row) != 1:
+            raise SystemExit('expected exact current INFRA row not found exactly once')
+          pcr = pcr.replace(old_row, new_row, 1)
+
+          marker = 'On 2026-08-26 API-01 completed independent authoritative acceptance.'
+          if pcr.count(marker) != 1:
+            raise SystemExit('PCR insertion marker not found exactly once')
+          paragraph = (
+            '**INFRA-01 authoritative acceptance and bounded stage closure (2026-09-01):** exact corrected C3 candidate '
+            f'`{os.environ["CANDIDATE_FILENAME"]}`, SHA-256 `{os.environ["CANDIDATE_SHA256"]}`, size `{int(os.environ["CANDIDATE_SIZE"]):,}` bytes, '
+            'passed the full independent GitHub Actions workflow `INFRA-01 C3 Authoritative Review`, '
+            f'authoritative run `{os.environ["AUTH_RUN"]}`, job `{os.environ["AUTH_JOB"]}`, workflow commit `{os.environ["AUTH_WORKFLOW_COMMIT"]}`, conclusion `success`. '
+            'All `43/43` governed checks executed and passed with `0` FAIL and `0` BLOCKED, including governance freshness, full backend/security suites, Prettier/type/lint/tests, Next build, browser, accessibility, visual, secrets, freeze, byte-identical packaging and independent evidence reconciliation. '
+            f'The exact source commit is `{os.environ["SOURCE_COMMIT"]}`, freeze tree digest `{os.environ["FREEZE_TREE_DIGEST"]}`, and the terminal marker is `INFRA01_C3_AUTHORITATIVE_RESULT:PASS`. '
+            f'Authoritative evidence artifact `{os.environ["EVIDENCE_ARTIFACT_NAME"]}`, artifact ID `{os.environ["EVIDENCE_ARTIFACT_ID"]}`, GitHub artifact digest `{os.environ["EVIDENCE_ARTIFACT_DIGEST"]`; exact candidate artifact `{os.environ["CANDIDATE_ARTIFACT_NAME"]}`, artifact ID `{os.environ["CANDIDATE_ARTIFACT_ID"]}`, GitHub artifact digest `{os.environ["CANDIDATE_ARTIFACT_DIGEST"]`. '
+            'The earlier authoritative run `33541200112` correctly failed only `frontend.prettier`; the four diagnosed formatting defects were corrected without weakening any runtime, security, registry, test or harness semantics, and the complete authoritative suite was rerun from the corrected exact source. '
+            'The governance decision is recorded in `docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json`. **INFRA-01 is therefore `ACCEPTED / CLOSED` as a bounded infrastructure-foundation stage.** '
+            'The overall INFRA layer remains open and its final closure still follows the canonical API dependencies. `API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED` remains unchanged. No production-readiness, legal-activation, BSI/CC/EAL4 or final-security claim follows from this transition.\n\n'
+          )
+          pcr = pcr.replace(marker, paragraph + marker, 1)
+          pcr_path.write_text(pcr, encoding='utf-8')
+          PY
+
+      - name: Verify bounded governance delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed=$(git diff --name-only | sort)
+          expected=$(printf '%s\n' \
+            docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | sort)
+          printf '%s\n' "$changed"
+          test "$changed" = "$expected"
+          grep -F '**INFRA-01 authoritative acceptance and bounded stage closure (2026-09-01):**' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -F '| INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA LAYER OPEN` |' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -F 'API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json').read_text())
+          assert r['decision'] == 'ACCEPTED / CLOSED'
+          assert r['candidate']['sha256'] == '5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131'
+          assert r['authoritative_review']['run_id'] == 33556094346
+          assert r['authoritative_review']['terminal_marker'] == 'INFRA01_C3_AUTHORITATIVE_RESULT:PASS'
+          assert r['scope']['overall_infra_layer'] == 'OPEN'
+          PY
+
+      - name: Commit bounded INFRA-01 acceptance to canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "EPD2 governance acceptance"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m "gov(infra01): accept C3 and close bounded INFRA-01 stage" -m "Independent authoritative PASS: run 33556094346, job 100017170812. Candidate SHA-256 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131. Net governed change limited to INFRA-01 acceptance record and Program Control Register. Overall INFRA layer remains open; API-04 primary state unchanged."
+          git push origin HEAD:main
+          echo "INFRA01_C3_CLOSURE_COMMIT=$(git rev-parse HEAD)"
+          echo "INFRA01_C3_POSTRUN_GOVERNANCE_RESULT:ACCEPTED_CLOSED"
