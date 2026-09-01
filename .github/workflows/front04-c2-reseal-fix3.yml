@@ -1,0 +1,131 @@
+name: FRONT04 C2 Reseal Identity Fix3
+
+on:
+  push:
+    branches: [handoff/front]
+    paths:
+      - '.github/workflows/front04-c2-reseal-fix3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  reseal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/front
+          fetch-depth: 0
+
+      - name: Correct report identity and verify tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+          rm -rf /tmp/front04-c2-reseal && mkdir -p /tmp/front04-c2-reseal
+          unzip -q "$ZIP" -d /tmp/front04-c2-reseal
+          python3 - <<'PY'
+          import hashlib, json, re
+          from pathlib import Path
+          root=Path('/tmp/front04-c2-reseal')
+          rp=root/'FRONT04_C2_DEVELOPER_REPORT.md'
+          ip=root/'validation/front04/candidate_identity.json'
+          ap=root/'validation/front04/authoritative_candidate_result.json'
+          dp=root/'validation/front04/source_delta.json'
+          ident=json.loads(ip.read_text()); auth=json.loads(ap.read_text())
+          actual=ident['source_tree_digest']
+          assert actual == auth['binding']['source_tree_digest']
+          old_full='c44f1304a7e3d4333f59ac10cef2235d5f17e6c33f4243ec8c3fe77e20b5f697'
+          old_short='c44f1304'
+          text=rp.read_text()
+          text2=text.replace(old_full,actual).replace(old_short,actual[:8])
+          if text2 == text: raise SystemExit('expected stale report identity not found')
+          if old_full in text2 or old_short in text2: raise SystemExit('stale report identity remains')
+          rp.write_text(text2)
+          rsha=hashlib.sha256(rp.read_bytes()).hexdigest()
+          delta=json.loads(dp.read_text()); changed=0
+          for entries in (delta.get('added',[]), delta.get('against_accepted_predecessor',{}).get('added',[])):
+              for e in entries:
+                  if e.get('path')=='FRONT04_C2_DEVELOPER_REPORT.md' and 'sha256' in e:
+                      e['sha256']=rsha; changed += 1
+          if changed < 1: raise SystemExit('report hash inventory entry missing')
+          dp.write_text(json.dumps(delta,indent=2,ensure_ascii=False)+'\n')
+          refs=sorted(set(re.findall(r'(?i)source_tree_digest[^\n]*?([0-9a-f]{8,64})',text2)))
+          bad=[r for r in refs if r not in {actual,actual[:8]}]
+          if bad: raise SystemExit(f'non-current report digest refs: {bad}')
+          print('SOURCE_TREE_DIGEST='+actual)
+          print('REPORT_SHA256='+rsha)
+          print('SOURCE_DELTA_PATCHED='+str(changed))
+          PY
+          cd /tmp/front04-c2-reseal
+          python3 scripts/validate_front04.py | tee /tmp/front04-validator.log
+          grep -q '"gates_passed": 29' /tmp/front04-validator.log
+          grep -q '"status": "PASS"' /tmp/front04-validator.log
+          python3 scripts/run_front04_mutations.py --root . --output /tmp/front04-mutations.json | tee /tmp/front04-mutations.log
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/front04-mutations.json'))
+          assert d.get('count')==32, d
+          assert d.get('detected')==32, d
+          assert d.get('status')=='PASS', d
+          print('MUTATIONS=32/32 PASS')
+          PY
+
+      - name: Clean execution byproducts, repack and revalidate exact archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='/tmp/front04-c2-reseal'
+          ZIP='handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+          TMPZIP='/tmp/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+          find "$ROOT" -type d -name '__pycache__' -prune -exec rm -rf {} +
+          find "$ROOT" -type f \( -name '*.pyc' -o -name '*.pyo' -o -name '.DS_Store' \) -delete
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('/tmp/front04-c2-reseal')
+          out=Path('/tmp/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip')
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(root.rglob('*')):
+                  if not p.is_file(): continue
+                  rel=p.relative_to(root).as_posix()
+                  if '/__pycache__/' in '/'+rel or rel.endswith(('.pyc','.pyo')): continue
+                  z.write(p,rel)
+          PY
+          unzip -t "$TMPZIP" >/dev/null
+          rm -rf /tmp/front04-final && mkdir /tmp/front04-final
+          unzip -q "$TMPZIP" -d /tmp/front04-final
+          if find /tmp/front04-final -type f \( -name '*.pyc' -o -name '*.pyo' \) | grep -q .; then echo 'runtime contamination'; exit 1; fi
+          if find /tmp/front04-final -type d -name '__pycache__' | grep -q .; then echo 'runtime contamination'; exit 1; fi
+          (cd /tmp/front04-final && python3 scripts/validate_front04.py) | tee /tmp/front04-final-validator.log
+          grep -q '"gates_passed": 29' /tmp/front04-final-validator.log
+          grep -q '"status": "PASS"' /tmp/front04-final-validator.log
+          NEW_SHA=$(sha256sum "$TMPZIP" | awk '{print $1}')
+          NEW_SIZE=$(stat -c '%s' "$TMPZIP")
+          echo "NEW_ARCHIVE_SHA256=$NEW_SHA"
+          echo "NEW_ARCHIVE_SIZE=$NEW_SIZE"
+          mv "$TMPZIP" "$ZIP"
+          printf '%s  %s\n' "$NEW_SHA" "$(basename "$ZIP")" > "${ZIP}.sha256"
+          cat > handoff/FRONT/incoming/FRONT04_C2_RESEAL_IDENTITY.txt <<EOF
+          FRONT04 C2 corrected reseal identity
+          archive=EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip
+          sha256=$NEW_SHA
+          size_bytes=$NEW_SIZE
+          source_tree_digest=eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e
+          correction=stale developer-report source_tree_digest reconciled to authoritative machine evidence; detached SHA sidecar added; execution byproducts excluded
+          candidate_state=CANDIDATE_NOT_ACCEPTED
+          EOF
+
+      - name: Commit corrected exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'epd2-governed-reseal'
+          git config user.email 'actions@users.noreply.github.com'
+          git add handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip \
+                  handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip.sha256 \
+                  handoff/FRONT/incoming/FRONT04_C2_RESEAL_IDENTITY.txt
+          git commit -m 'fix(front04): reseal corrected exact C2 candidate'
+          git push origin HEAD:handoff/front
