@@ -706,6 +706,10 @@ REQUIRED_PATHS: tuple[str, ...] = (
     "docs/infra/INFRA-01/INFRA-01-C2-CORRECTION-REPORT.md",
     "scripts/acceptance/delta.py",
     "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json",
+    "docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json",
+    "docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json",
+    "docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json",
+    "docs/infra/INFRA-01/INFRA-01-C3-CORRECTION-REPORT.md",
     # Tests
     "tests/repository/test_required_files.py",
     "tests/repository/test_forbidden_paths.py",

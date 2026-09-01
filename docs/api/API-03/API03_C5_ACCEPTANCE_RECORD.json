@@ -1,0 +1,91 @@
+{
+  "accepted_predecessor": {
+    "authoritative_run_id": 33497989489,
+    "role": "C13",
+    "sha256": "9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9",
+    "stage": "API-02",
+    "state": "ACCEPTED / CLOSED"
+  },
+  "api_layer_state": "OPEN until API-06 closes",
+  "authoritative": {
+    "branch": "tmp/api03-c5-authoritative-accept",
+    "conclusion": "SUCCESS",
+    "environment_blocked_gates": 0,
+    "failed_gates": 0,
+    "governed_gates_total": 22,
+    "job_id": 99867183151,
+    "provenance_commit": "412a6fb3e5445a92d3792ceecd17649e4afd132d",
+    "run_id": 33511256210,
+    "terminal_marker": "API03_RESULT:PASS:validation/api03/authoritative_acceptance_result.json"
+  },
+  "authoritative_evidence_artifact": {
+    "created_at": "2026-09-01T13:05:41Z",
+    "digest": "sha256:ccbf76b448ec634803330c0f5575a44bf50f50eae195cacfcfdfe53789987a78",
+    "expires_at": "2026-11-30T13:04:44Z",
+    "id": 9801733668,
+    "name": "api03-c5-authoritative-acceptance-33511256210",
+    "size_bytes": 9563
+  },
+  "candidate": {
+    "artifact_id": 9801661733,
+    "artifact_outer_digest": "sha256:b85551b811c0a75358b9f5c717830a5a3306b82d473fd6c49e0c0a9e6373d0e3",
+    "builder_provenance_commit": "9d4292eb38a388c85ac0205a02c47d4a525ddcb1",
+    "builder_reseal_run_id": 33511140504,
+    "filename": "EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip",
+    "role": "C5",
+    "self_accepted": false,
+    "self_state": "CANDIDATE_NOT_ACCEPTED",
+    "sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55",
+    "size_bytes": 43300451
+  },
+  "candidate_self_state_resolution": "CANDIDATE_NOT_ACCEPTED is an intentional no-self-acceptance safeguard; the independent authoritative run and this post-run governance decision supersede it for canonical project state.",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-01",
+  "measured_evidence": {
+    "api03_tests_failed": 0,
+    "api03_tests_passed": 99,
+    "api03_tests_skipped": 0,
+    "api03_tests_total": 99,
+    "isolated_cryptography": "49.0.0",
+    "isolated_cryptography_install_mode": "offline wheelhouse",
+    "multi_process_mtls_replay_topology": "PASS",
+    "postgresql": "16.15",
+    "postgresql_server_version_num": "160015",
+    "r11_v23": "PASS",
+    "sealed_files": 4125,
+    "sec01_repository_guard": "PASS",
+    "workspace_cryptography": "46.0.7"
+  },
+  "new_state": "ACCEPTED / CLOSED",
+  "next_permitted_primary_stage": "API-04",
+  "nonclaims": [
+    "production readiness",
+    "legal activation",
+    "final security readiness",
+    "BSI certification",
+    "Common Criteria / EAL4 certification"
+  ],
+  "open_blockers": [],
+  "previous_state": "ACTIVE / IN DEVELOPMENT / NOT ACCEPTED",
+  "schema": "epd2.api03.c5.acceptance-record/1",
+  "sealed_workflow": {
+    "git_blob": "2bc621dd168c5c9fa5bc0782ed2cecdde40a9e82",
+    "path": ".github/workflows/api03-accept.yml",
+    "sha256": "39a04b1a5d57c320f542889d81a5c6e9a2a30e6684d2bae49e4a82cbe5406e8d"
+  },
+  "stage": "API-03",
+  "stage_title": "Service-to-Service Authentication & Authorization Runtime",
+  "superseded_failed_c5": {
+    "builder_run_id": 33510681168,
+    "failed_authoritative_run_id": 33510911890,
+    "reason": "post-verification py_compile created unaccounted scripts/__pycache__/api03_verify_seal.cpython-312.pyc",
+    "sha256": "8a62ea6c8ab1fb441811e476af0060f4b6c5374002312bb04e5a68968b6a3ea8"
+  },
+  "technical_basis_c4": {
+    "evidence_artifact_id": 9800985043,
+    "evidence_digest": "sha256:1a8074c08631910f28833a95cef45d8f85f0b9b0762740a65bfa050f5f80555f",
+    "sha256": "09531e9b64dd66c558e3c2478ea897e020adfd4814a7237cd8eab7f18b568a86",
+    "verification_job_id": 99861098139,
+    "verification_run_id": 33509385291
+  }
+}
