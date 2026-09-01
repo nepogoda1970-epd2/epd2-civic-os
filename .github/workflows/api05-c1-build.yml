@@ -2,8 +2,7 @@ name: API-05 C1 sealed candidate build
 
 on:
   push:
-    branches:
-      - tmp/api05-working-0.1-preseal
+    branches: [tmp/api05-working-0.1-preseal]
   workflow_dispatch:
 
 permissions:
@@ -25,13 +24,10 @@ jobs:
           POSTGRES_USER: api05
           POSTGRES_PASSWORD: api05-synthetic-ci-only
           POSTGRES_DB: epd2_api05
-        ports:
-          - 5432:5432
+        ports: ["5432:5432"]
         options: >-
           --health-cmd "pg_isready -U api05 -d epd2_api05"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+          --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       EPD2_API05_DATABASE_URL: postgresql://api05:api05-synthetic-ci-only@127.0.0.1:5432/epd2_api05
@@ -40,7 +36,7 @@ jobs:
       API05_OVERLAY_SHA: 47447de97d1d463c3d7f9ce98ced6978aa021dbd1de18b2e3a5e96415a4f7acf
 
     steps:
-      - name: Checkout API-05 builder control
+      - name: Checkout builder control
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -59,17 +55,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          A4=$(find incoming/api04 -type f -name 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip')
+          A4=$(find incoming/api04 -type f -name 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip' -print -quit)
           test -n "$A4"
           echo "$API05_API04_SHA  $A4" | sha256sum -c -
           test "$(stat -c%s "$A4")" = '43880523'
           rm -rf "$RUNNER_TEMP/api05" && mkdir -p "$RUNNER_TEMP/api05"
           python3 - "$A4" "$RUNNER_TEMP/api05" <<'PY'
           import pathlib,sys,zipfile
-          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); roots={n.split('/',1)[0] for n in names if n}
-          assert roots=={'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1'},roots
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist()
+          roots={n.split('/',1)[0] for n in names if n}
+          assert roots=={'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1'}, roots
           assert z.testzip() is None
-          assert all(not n.startswith('/') and '..' not in n.split('/') for n in names)
+          assert all(not n.startswith('/') and '..' not in pathlib.PurePosixPath(n).parts for n in names)
           z.extractall(sys.argv[2])
           PY
           ROOT="$RUNNER_TEMP/api05/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1"
@@ -77,36 +74,39 @@ jobs:
           cp "$ROOT/uv.lock" "$RUNNER_TEMP/api04-uv.lock"
           echo "root=$ROOT" >> "$GITHUB_OUTPUT"
           echo "a4=$(realpath "$A4")" >> "$GITHUB_OUTPUT"
+          echo 'API05_PREDECESSOR_EXACT:PASS'
 
-      - name: Apply corrected API-05-only overlay
+      - name: Reassemble and verify corrected API-05 overlay
         shell: bash
         run: |
           set -euo pipefail
           python3 - "$RUNNER_TEMP/api05-overlay.tar.gz" <<'PY'
-          import base64, hashlib, os, pathlib, string, sys
-          src = pathlib.Path('handoff/API-05/WORKING_0.1/api05_c1_overlay.tar.gz.b64').read_text(encoding='ascii')
-          alphabet = set(string.ascii_letters + string.digits + '+/=')
-          invalid = [(i, repr(c), ord(c)) for i, c in enumerate(src) if not c.isspace() and c not in alphabet]
-          print(f'API05_OVERLAY_BASE64_INPUT:chars={len(src)}:invalid_non_ws={len(invalid)}')
-          if invalid:
-              print(f'API05_OVERLAY_BASE64_INVALID_SAMPLE:{invalid[:64]}')
-          compact = ''.join(c for c in src if c in alphabet)
-          compact = compact.rstrip('=')
-          compact += '=' * ((-len(compact)) % 4)
-          raw = base64.b64decode(compact, validate=True)
-          got = hashlib.sha256(raw).hexdigest()
-          expected = os.environ['API05_OVERLAY_SHA']
-          print(f'API05_OVERLAY_DECODED_SHA256:{got}:bytes={len(raw)}')
-          if got != expected:
-              raise SystemExit(f'API05_OVERLAY_INTEGRITY_FAIL:got={got}:expected={expected}')
-          pathlib.Path(sys.argv[1]).write_bytes(raw)
-          print(f'API05_OVERLAY_DECODE:PASS:{got}:{len(raw)}')
+          import base64,hashlib,os,pathlib,sys,tarfile
+          base=pathlib.Path('handoff/API-05/WORKING_0.1')
+          paths=[base/f'api05_c1_overlay.part0{i}.b64' for i in range(5)]
+          sizes=[len(p.read_text(encoding='ascii')) for p in paths]
+          assert sizes == [13000,13000,13000,13000,12], sizes
+          src=''.join(p.read_text(encoding='ascii') for p in paths)
+          assert len(src)==52012, len(src)
+          raw=base64.b64decode(src,validate=True)
+          got=hashlib.sha256(raw).hexdigest()
+          assert len(raw)==39009, len(raw)
+          assert got==os.environ['API05_OVERLAY_SHA'], (got,os.environ['API05_OVERLAY_SHA'])
+          out=pathlib.Path(sys.argv[1]); out.write_bytes(raw)
+          with tarfile.open(out,'r:gz') as t:
+              members=t.getmembers()
+              assert members
+              for m in members:
+                  p=pathlib.PurePosixPath(m.name)
+                  assert not p.is_absolute() and '..' not in p.parts, m.name
+                  assert not (m.issym() or m.islnk()), m.name
+          print(f'API05_OVERLAY_INTEGRITY:PASS:{got}:bytes={len(raw)}:members={len(members)}')
           PY
           tar --no-same-owner -xzf "$RUNNER_TEMP/api05-overlay.tar.gz" -C '${{ steps.base.outputs.root }}'
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -print -quit | grep -q .
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type f \( -name '*.pyc' -o -name '*.pyo' \) -print -quit | grep -q .
 
-      - name: Overlay current canonical API-04 closure governance
+      - name: Bind canonical API-04 closure governance
         shell: bash
         run: |
           set -euo pipefail
@@ -123,7 +123,9 @@ jobs:
           assert a['candidate']['sha256']=='8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337'
           assert a['authoritative']['run_id']==33569092401
           p=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
-          assert 'API-04 = ACCEPTED / CLOSED' in p and 'API-05 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in p
+          assert 'API-04 = ACCEPTED / CLOSED' in p
+          assert 'API-05 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in p
+          print('API05_GOVERNANCE_PREDECESSOR:PASS')
           PY
 
       - name: Install exact toolchain
@@ -132,7 +134,7 @@ jobs:
           version: "0.12.5"
           enable-cache: false
 
-      - name: Regenerate lock without predecessor dependency drift
+      - name: Lock without accepted dependency drift
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
         run: |
@@ -140,9 +142,9 @@ jobs:
           uv lock
           python3 - "$RUNNER_TEMP/api04-uv.lock" uv.lock <<'PY'
           import sys,tomllib
-          def versions(p):
-              d=tomllib.loads(open(p).read()); return {x['name']:x.get('version') for x in d['package']}
-          before,after=versions(sys.argv[1]),versions(sys.argv[2])
+          def vers(p):
+              return {x['name']:x.get('version') for x in tomllib.loads(open(p).read())['package']}
+          before,after=vers(sys.argv[1]),vers(sys.argv[2])
           changed={k:(v,after.get(k)) for k,v in before.items() if after.get(k)!=v}
           assert changed=={}, changed
           assert after.get('epd2-external-integration-runtime')=='0.1.0'
@@ -151,7 +153,7 @@ jobs:
           PY
           uv sync --frozen --all-groups
 
-      - name: Format API-05 authored Python and re-check
+      - name: Format and lint API-05 authored code
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
         run: |
@@ -159,7 +161,7 @@ jobs:
           uv run --frozen ruff format services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
           uv run --frozen ruff check services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
 
-      - name: Run C1 validator against exact accepted API-04 bytes
+      - name: Run complete API-05 C1 validator
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
         env:
@@ -170,7 +172,7 @@ jobs:
           grep -q '^API05_CANDIDATE_RESULT:PASS:validation/api05/candidate_validator_result.json$' /tmp/api05-c1-validator.log
           jq -e '.result=="PASS" and .failed_gates==[] and .environment_blocked_gates==[]' validation/api05/candidate_validator_result.json
 
-      - name: Freeze exact C1 and seal
+      - name: Freeze and seal exact C1
         id: package
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
@@ -184,7 +186,8 @@ jobs:
           python3 - <<'PY'
           import hashlib,json,os,pathlib
           wf=pathlib.Path('handoff/API-05/templates/C1/api05-accept.yml')
-          got=hashlib.sha256(wf.read_bytes()).hexdigest(); assert got==os.environ['API05_ACCEPT_WF_SHA']
+          got=hashlib.sha256(wf.read_bytes()).hexdigest()
+          assert got==os.environ['API05_ACCEPT_WF_SHA'], (got,os.environ['API05_ACCEPT_WF_SHA'])
           payload={
             'schema':'epd2.api05.c1.seal/1','stage':'API-05','candidate_role':'C1',
             'candidate_self_state':'CANDIDATE_NOT_ACCEPTED','self_accepted':False,
@@ -198,12 +201,12 @@ jobs:
           PY
           find . -type f ! -path './SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
           sha256sum --quiet -c SHA256SUMS.txt
-          listed=$(grep -c . SHA256SUMS.txt); actual=$(find . -type f ! -path './SHA256SUMS.txt' | wc -l); test "$listed" = "$actual"
+          test "$(grep -c . SHA256SUMS.txt)" = "$(find . -type f ! -path './SHA256SUMS.txt' | wc -l)"
           FINAL="$RUNNER_TEMP/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1"
           rm -rf "$FINAL"; mv "$ROOT" "$FINAL"
           ZIP="$RUNNER_TEMP/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip"
           (cd "$RUNNER_TEMP" && zip -q -r -X "$ZIP" "$(basename "$FINAL")")
-          SHA=$(sha256sum "$ZIP"|cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
+          SHA=$(sha256sum "$ZIP" | cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
           printf '%s  %s\n' "$SHA" "$(basename "$ZIP")" > "$ZIP.sha256"
           echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "sha_file=$ZIP.sha256" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "size=$SIZE" >> "$GITHUB_OUTPUT"
