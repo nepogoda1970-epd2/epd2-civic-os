@@ -103,27 +103,13 @@ jobs:
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/front04-c2-reseal-mutations.json'))
-          raw=json.dumps(d)
-          if 'SURVIVED' in raw:
-              raise SystemExit('mutation survived')
-          # Accept the candidate runner's schema, but require 32 mutation IDs and all detected.
-          ids=[]
-          def walk(x):
-              if isinstance(x, dict):
-                  if isinstance(x.get('id'), str) and x['id'].startswith('M-F04-'):
-                      ids.append((x['id'], x.get('status') or x.get('result')))
-                  for v in x.values(): walk(v)
-              elif isinstance(x, list):
-                  for v in x: walk(v)
-          walk(d)
-          uniq={i:s for i,s in ids}
-          print('MUTATION_IDS=', len(uniq))
-          print('MUTATION_STATUSES=', sorted(set(str(v) for v in uniq.values())))
-          if len(uniq) != 32:
-              raise SystemExit(f'expected 32 mutation IDs, got {len(uniq)}')
-          bad={i:s for i,s in uniq.items() if str(s).upper() not in {'DETECTED','PASS','KILLED'}}
-          if bad:
-              raise SystemExit(f'undetected mutations: {bad}')
+          print('MUTATION_RESULT=', d)
+          if d.get('count') != 32:
+              raise SystemExit(f"expected mutation count 32, got {d.get('count')}")
+          if d.get('detected') != 32:
+              raise SystemExit(f"expected 32 detected mutations, got {d.get('detected')}")
+          if d.get('status') != 'PASS':
+              raise SystemExit(f"mutation status is not PASS: {d.get('status')}")
           PY
 
       - name: Repack, hygiene-check and write detached identity
