@@ -94,8 +94,8 @@ jobs:
           (r/'docs/api/API-03/API03_C5_SEAL_RECORD.json').write_text(json.dumps(seal,indent=2,sort_keys=True)+'\n')
           inv={
             'schema':'epd2.api03.c5.c4-delta/1','base_c4_sha256':os.environ['C4_SHA256'],'inventory_excludes_self':True,
-            'added':['API03_C5_STATUS.txt','.github/workflows/api03-accept.yml','scripts/api03_verify_seal.py','docs/api/API-03/API03_C5_SEAL_RECORD.json','docs/api/API-03/API03_C5_EXACT_C4_DELTA_INVENTORY.json','docs/api/API-03/API03_C5_SEALED_FILE_MANIFEST.json','SHA256SUMS.txt'],
-            'modified':['API03_PRESEAL_STATUS.txt'],'removed':['API03_C4_STATUS.txt'],
+            'added':['API03_C5_STATUS.txt','.github/workflows/api03-accept.yml','scripts/api03_verify_seal.py','docs/api/API-03/API03_C5_SEAL_RECORD.json','docs/api/API-03/API03_C5_EXACT_C4_DELTA_INVENTORY.json','docs/api/API-03/API03_C5_SEALED_FILE_MANIFEST.json'],
+            'modified':['API03_PRESEAL_STATUS.txt','SHA256SUMS.txt'],'removed':['API03_C4_STATUS.txt'],
             'runtime_source_changed':False,'governed_test_logic_changed':False,'seal_only':True
           }
           (r/'docs/api/API-03/API03_C5_EXACT_C4_DELTA_INVENTORY.json').write_text(json.dumps(inv,indent=2,sort_keys=True)+'\n')
@@ -117,11 +117,12 @@ jobs:
           for p,rel in zip(files,rels):
             if rel in (manifest_rel,sums_rel): continue
             entries.append({'path':rel,'sha256':sha(p),'size':p.stat().st_size,'mode':f'{stat.S_IMODE(p.stat().st_mode):04o}'})
+          final_rels=set(rels)|{manifest_rel,sums_rel}
           manifest={
             'schema':'epd2.api03.sealed-file-manifest/1','stage':'API-03',
             'candidate':{'role':'C5','root':r.name,'state':'CANDIDATE_NOT_ACCEPTED'},
             'source_c4_sha256':os.environ['C4_SHA256'],'accepted_api02_c13_sha256':os.environ['C13_SHA256'],
-            'files_in_archive':len(rels)+2,'excluded_self_referential':[manifest_rel,sums_rel],'entries':entries
+            'files_in_archive':len(final_rels),'excluded_self_referential':[manifest_rel,sums_rel],'entries':entries
           }
           mp=r/manifest_rel;mp.write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
           files=sorted(p for p in r.rglob('*') if p.is_file())
