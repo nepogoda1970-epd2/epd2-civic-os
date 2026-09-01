@@ -1,0 +1,39 @@
+name: API-03 R13 exact export
+on:
+  push:
+    branches: [tmp/api03-r13-exact-export]
+    paths: ['.github/workflows/api03-r13-exact-export.yml']
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove exact committed R13 archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          C='handoff/API-03/incoming/API 03_R13.zip'
+          test -f "$C"
+          sha256sum "$C" | tee API03_R13_EXACT.sha256
+          stat -c 'size_bytes=%s' "$C" | tee API03_R13_EXACT.size
+          git hash-object "$C" | tee API03_R13_EXACT.gitblob
+          python - <<'PY'
+          import zipfile, json
+          p='handoff/API-03/incoming/API 03_R13.zip'
+          with zipfile.ZipFile(p) as z:
+              bad=z.testzip(); names=z.namelist()
+          assert bad is None, bad
+          print(json.dumps({'members':len(names),'root':names[0].split('/')[0] if names else None}, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-r13-exact-archive
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            handoff/API-03/incoming/API 03_R13.zip
+            API03_R13_EXACT.sha256
+            API03_R13_EXACT.size
+            API03_R13_EXACT.gitblob
