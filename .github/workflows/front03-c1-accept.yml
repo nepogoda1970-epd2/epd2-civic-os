@@ -1,0 +1,183 @@
+name: FRONT-03 C1 independent governed acceptance
+on:
+  push:
+    branches: [tmp/front03-c1-closure]
+    paths: ['.github/workflows/front03-c1-accept.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+env:
+  CANDIDATE_RUN_ID: '33527376449'
+  CANDIDATE_ARTIFACT: front03-c1-candidate
+  CANDIDATE_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip
+  CANDIDATE_SHA256: fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26
+  CANDIDATE_SIZE: '17646011'
+  API02_BUILD_RUN_ID: '33495990810'
+  API02_ARTIFACT: api02-candidate
+  API02_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip
+  API02_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+  API02_SIZE: '34642386'
+  API02_ACCEPTANCE_RUN_ID: '33497989489'
+  API02_ACCEPTANCE_JOB_ID: '99824485228'
+  PRESEAL_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
+  RUNTIME_PROOF_RUN_ID: '33526403812'
+  FINALIZE_RUN_ID: '33527376449'
+  FINALIZE_JOB_ID: '99921554491'
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout acceptance control only
+        uses: actions/checkout@v4
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Download exact sealed C1
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.CANDIDATE_ARTIFACT }}
+          path: incoming/candidate
+          run-id: ${{ env.CANDIDATE_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Download exact accepted API-02 C13
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.API02_ARTIFACT }}
+          path: incoming/api02
+          run-id: ${{ env.API02_BUILD_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Exact byte identity, CRC and provenance
+        id: exact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ZIP="incoming/candidate/$CANDIDATE_NAME"; API="incoming/api02/$API02_NAME"
+          test -f "$ZIP"; test -f "$API"
+          test "$(stat -c %s "$ZIP")" = "$CANDIDATE_SIZE"
+          test "$(stat -c %s "$API")" = "$API02_SIZE"
+          echo "$CANDIDATE_SHA256  $ZIP" | sha256sum -c -
+          echo "$API02_SHA256  $API" | sha256sum -c -
+          unzip -t "$ZIP" >/dev/null; unzip -t "$API" >/dev/null
+          RUN="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$FINALIZE_RUN_ID")"
+          jq -e '.id == 33527376449 and .conclusion == "success" and .name == "FRONT-03 C1 governed finalize"' <<<"$RUN" >/dev/null
+          JOBS="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$FINALIZE_RUN_ID/jobs?per_page=100")"
+          jq -e --argjson jid "$FINALIZE_JOB_ID" '.jobs[] | select(.id == $jid) | .conclusion == "success"' <<<"$JOBS" >/dev/null
+          echo "zip=$(realpath "$ZIP")" >> "$GITHUB_OUTPUT"; echo "api=$(realpath "$API")" >> "$GITHUB_OUTPUT"
+      - name: Fresh isolated extraction
+        id: tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="$RUNNER_TEMP/front03-c1-accept"; A="$RUNNER_TEMP/api02-c13"; mkdir "$C" "$A"
+          unzip -q "${{ steps.exact.outputs.zip }}" -d "$C"
+          unzip -q "${{ steps.exact.outputs.api }}" -d "$A"
+          API_ROOT="$(find "$A" -mindepth 1 -maxdepth 1 -type d -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13' -print -quit)"; test -n "$API_ROOT"
+          test -f "$C/package.json"; test -f "$C/scripts/validate_front03_c1.py"
+          python3 - "$C" <<'PY'
+          import json,sys,re
+          from pathlib import Path
+          r=Path(sys.argv[1])
+          b=json.loads((r/'docs/frontend/FRONT-03-C1-API02-CONTRACT-BINDINGS.json').read_text())
+          assert b['candidate_state']=='C1_CANDIDATE_NOT_ACCEPTED'
+          assert b['api03_dependency']=='NONE_DISCOVERED_FOR_C1_BROWSER_TO_API02_BINDING'
+          e=json.loads((r/'validation/front03-c1/execution.json').read_text())
+          assert e['status']=='PASS' and e['candidate_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert e['runtime_proof_run_id']==33526403812
+          assert e['accepted_api02_sha256']=='9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'
+          texts='\n'.join(p.read_text(errors='ignore') for p in r.rglob('*') if p.is_file() and p.suffix in {'.md','.json','.ts','.tsx','.py','.csv'})
+          assert not re.search(r'FRONT-03\s*=\s*(ACCEPTED|CLOSED)|FRONT-03\s+(ACCEPTED|CLOSED)',texts,re.I)
+          PY
+          echo "root=$C" >> "$GITHUB_OUTPUT"; echo "api02_root=$API_ROOT" >> "$GITHUB_OUTPUT"
+      - name: Set up governed Node runtime
+        uses: actions/setup-node@v4
+        with: {node-version: '22.17.0'}
+      - name: Fresh dependency-backed compile unit and build gates
+        working-directory: ${{ steps.tree.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run --workspace=frontend/web-shell format:check
+          npm run typecheck --workspace=frontend/web-shell
+          npm run lint --workspace=frontend/web-shell
+          npm run test --workspace=frontend/web-shell
+          npm run build --workspace=frontend/web-shell
+      - name: Fresh inherited nonvisual browser regression
+        working-directory: ${{ steps.tree.outputs.root }}
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts --grep-invert '@visual'
+          npm exec --workspace web-shell playwright test -- tests/browser/front01.browser.spec.ts --grep-invert '@front01-visual'
+          npm exec --workspace web-shell playwright test -- tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
+      - name: Fresh C1 exact API-02 production adapter browser proof
+        working-directory: ${{ steps.tree.outputs.root }}
+        env:
+          NODE_ENV: production
+          FRONT03_TEST_PROFILE: production
+          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.c1.browser.spec.ts
+      - name: Fresh production fail-closed browser proof
+        working-directory: ${{ steps.tree.outputs.root }}
+        env:
+          NODE_ENV: production
+          FRONT03_TEST_PROFILE: production
+          NEXT_PUBLIC_FRONT03_FIXTURE: '0'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '0'
+        run: npm exec --workspace web-shell playwright test -- tests/browser/front03.production.browser.spec.ts
+      - name: Fresh immutable FRONT-03 visual proof
+        working-directory: ${{ steps.tree.outputs.root }}
+        env:
+          FRONT03_TEST_PROFILE: fixture
+          NEXT_PUBLIC_FRONT03_FIXTURE: '1'
+          EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          MANIFEST=frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256
+          SNAPDIR=frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots
+          test "$(grep -c 'front03-.*\.png$' "$MANIFEST")" -eq 27
+          test "$(find "$SNAPDIR" -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 27
+          (cd frontend/web-shell && sha256sum -c tests/browser/front03-r3-visual-baseline.sha256)
+          BEFORE="$(sha256sum "$MANIFEST" | cut -d' ' -f1)"
+          npm exec --workspace web-shell playwright test -- tests/browser/front03.browser.spec.ts --grep '@visual'
+          test "$BEFORE" = "$(sha256sum "$MANIFEST" | cut -d' ' -f1)"
+          (cd frontend/web-shell && sha256sum -c tests/browser/front03-r3-visual-baseline.sha256)
+      - name: Fresh C1 validator mutation and trust-boundary gates
+        working-directory: ${{ steps.tree.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile scripts/validate_front03_c1.py scripts/run_front03_c1_mutations.py
+          python3 scripts/validate_front03_c1.py . --api02-root "${{ steps.tree.outputs.api02_root }}" | tee "$RUNNER_TEMP/front03-c1-accept-validator.json"
+          python3 scripts/run_front03_c1_mutations.py --root . --api02-root "${{ steps.tree.outputs.api02_root }}" --output "$RUNNER_TEMP/front03-c1-accept-mutations.json"
+          python3 scripts/validate_front03_c1.py . --api02-root "${{ steps.tree.outputs.api02_root }}" > "$RUNNER_TEMP/front03-c1-accept-validator-final.json"
+      - name: Emit independent authoritative acceptance evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p acceptance
+          python3 - <<'PY'
+          import json,os
+          row={'schema':'epd2.front03.c1-acceptance-evidence/1','status':'PASS','decision_scope':'INDEPENDENT_GOVERNED_TECHNICAL_ACCEPTANCE_EVIDENCE','candidate_name':os.environ['CANDIDATE_NAME'],'candidate_sha256':os.environ['CANDIDATE_SHA256'],'candidate_size':int(os.environ['CANDIDATE_SIZE']),'acceptance_run_id':int(os.environ['GITHUB_RUN_ID']),'acceptance_commit':os.environ['GITHUB_SHA'],'finalize_run_id':int(os.environ['FINALIZE_RUN_ID']),'runtime_proof_run_id':int(os.environ['RUNTIME_PROOF_RUN_ID']),'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'gates':{'exact_bytes_crc':'PASS','fresh_dependencies_compile_unit_build':'PASS','inherited_browser':'PASS','api02_production_browser':'PASS','production_fail_closed':'PASS','immutable_visual_27':'PASS','c1_validator_14':'PASS','c1_mutations_9_of_9':'PASS','no_api03_dependency_discovered':'PASS','no_self_acceptance':'PASS'},'claim_boundary':'evidence PASS authorizes governance acceptance record for bounded FRONT-03 stage; does not close entire FRONT layer'}
+          open('acceptance/FRONT03_C1_ACCEPTANCE_EVIDENCE.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "FRONT03_C1_ACCEPTANCE_RESULT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
+      - name: Upload independent acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: front03-c1-acceptance-evidence-${{ github.run_id }}
+          path: |
+            acceptance/FRONT03_C1_ACCEPTANCE_EVIDENCE.json
+            ${{ runner.temp }}/front03-c1-accept-validator.json
+            ${{ runner.temp }}/front03-c1-accept-validator-final.json
+            ${{ runner.temp }}/front03-c1-accept-mutations.json
+          if-no-files-found: error
+          retention-days: 90
