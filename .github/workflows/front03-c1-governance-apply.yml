@@ -26,6 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/apply_front03_c1_governance.py
+          git add -N docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json
           test "$(git diff --name-only | sort | paste -sd, -)" = "docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json,docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
           git diff --check
       - name: Commit same governed change
