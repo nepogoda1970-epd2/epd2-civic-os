@@ -24,21 +24,18 @@ jobs:
           path: /tmp/candidate
           run-id: 33490942304
           github-token: ${{ github.token }}
-      - name: Inspect exact C12 entering metadata and current declarations
+      - name: Inspect exact-inventory change-rule schema
         shell: bash
         run: |
           set -euo pipefail
           CAND=/tmp/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
-          echo "C12_SHA=$(sha256sum "$CAND" | cut -d' ' -f1)"
-          echo "C12_SIZE=$(stat -c %s "$CAND")"
           rm -rf /tmp/c12 && mkdir /tmp/c12
           unzip -q "$CAND" -d /tmp/c12
           ROOT=/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
           cd "$ROOT"
-          echo "C12_SHA256SUM_ROWS=$(wc -l < SHA256SUMS.txt)"
-          echo '=== LINEAGE JSON ==='; cat docs/api/API-02/API02_LINEAGE.json
-          echo '=== EXECUTIVE ==='; cat docs/api/API-02/01_EXECUTIVE_RESULT.md
-          echo '=== ENTERING ==='; cat docs/api/API-02/03_ENTERING_BASELINE.md
-          echo '=== C11-C12 REPORT ==='; cat docs/api/API-02/API02_C11_TO_C12_CORRECTION_REPORT.md
-          echo '=== CHANGE RULE MATCHES ==='
-          grep -n -E 'pattern.*(api02-accept|lineage_gates|validator_selftest|01_EXECUTIVE|03_ENTERING|V23_CRYPTO|11_VOTING|CORRECTION_REPORT)' scripts/api02/build_exact_inventories.py || true
+          echo '=== RULES 1-330 ==='
+          sed -n '1,330p' scripts/api02/build_exact_inventories.py
+          echo '=== RULES 430-550 ==='
+          sed -n '430,550p' scripts/api02/build_exact_inventories.py
+          echo '=== REASON FUNCTION ==='
+          grep -n -A85 -B10 'def reason_for' scripts/api02/build_exact_inventories.py || true
