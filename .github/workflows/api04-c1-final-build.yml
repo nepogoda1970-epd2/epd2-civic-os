@@ -1,4 +1,4 @@
-name: api04-c1-final-build
+name: api04-c1-seal-fix
 
 on:
   push:
@@ -10,13 +10,13 @@ permissions:
   actions: read
 
 jobs:
-  final-build-and-verify:
+  seal-fix-build-and-verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
       PYTHONDONTWRITEBYTECODE: "1"
     steps:
-      - name: Checkout final builder provenance
+      - name: Checkout seal-fix provenance
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -61,58 +61,17 @@ jobs:
           run-id: 32964804390
           github-token: ${{ github.token }}
 
-      - name: Materialize snapshot and apply exact final postfix
+      - name: Materialize exact snapshot and apply seal correction
         id: candidate
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/api04-final"
-          tar -xzf snapshot/API04_C1_SNAPSHOT.tar.gz -C "$RUNNER_TEMP/api04-final"
-          ROOT="$RUNNER_TEMP/api04-final/API04_C1_SNAPSHOT"
-          python3 - "$ROOT" <<'PY'
-          import importlib.util, pathlib, sys
-          root=pathlib.Path(sys.argv[1])
-          def replace_once(rel, old, new):
-              p=root/rel
-              s=p.read_text(encoding='utf-8')
-              n=s.count(old)
-              if n != 1:
-                  raise SystemExit(f'{rel}: expected one anchor, got {n}: {old!r}')
-              p.write_text(s.replace(old,new),encoding='utf-8')
-
-          replace_once(
-              'services/events-messaging-runtime/tests/unit/test_readiness_and_lag.py',
-              'healthy(reconciliation_state="RECONCILED_AGAINST_EXACT_ACCEPTED_API03")',
-              'healthy(reconciliation_state="RECONCILED_AGAINST_EXACT_ACCEPTED_API03_C5")',
-          )
-          replace_once(
-              'services/events-messaging-runtime/tests/unit/test_validator_exemptions.py',
-              'assert len(validator.FORWARD_SCOPE_EXEMPT) <= 6',
-              'assert len(validator.FORWARD_SCOPE_EXEMPT) <= 8',
-          )
-          p=root/'services/events-messaging-runtime/tests/unit/test_identity.py'
-          s=p.read_text(encoding='utf-8')
-          old='    RefusingServiceIdentityPort,\n    TransportCredential,\n)'
-          new='    RefusingServiceIdentityPort,\n    TransportCredential,\n    VerifiedServicePrincipal,\n    CredentialState,\n    PrincipalClass,\n)'
-          if 'def test_human_credential_is_structurally_refused_at_verified_principal_boundary' not in s:
-              if s.count(old) != 1:
-                  raise SystemExit('identity import anchor mismatch')
-              s=s.replace(old,new)
-              s += '''\n\ndef test_human_credential_is_structurally_refused_at_verified_principal_boundary():\n    principal = VerifiedServicePrincipal(\n        service_id="human-session",\n        credential_id="human-credential",\n        credential_state=CredentialState.ACTIVE,\n        principal_class=PrincipalClass.HUMAN,\n        organization_scopes=frozenset(),\n        data_classifications=frozenset(),\n        trust_anchor="negative-test",\n        not_before=NOW - timedelta(minutes=1),\n        not_after=NOW + timedelta(minutes=1),\n        verified_at=NOW,\n        source_boundary="mutation-negative-test",\n    )\n    with pytest.raises(HumanCredentialAsServiceIdentityError):\n        principal.require_active("mutation M23")\n'''
-              p.write_text(s,encoding='utf-8')
-
-          spec=importlib.util.spec_from_file_location('api04_c1_reconcile', pathlib.Path('handoff/API-04/C1/api04_c1_reconcile.py'))
-          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
-          mod.clean(root)
-          mod.refresh_inventory(root,status='PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED')
-          mod.file_manifest(root,status='PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED')
-          print('API04_C1_FINAL_POSTFIX:PASS')
-          PY
-          python3 -m py_compile "$ROOT/services/events-messaging-runtime/tests/unit/test_identity.py" "$ROOT/services/events-messaging-runtime/tests/unit/test_readiness_and_lag.py" "$ROOT/services/events-messaging-runtime/tests/unit/test_validator_exemptions.py"
-          grep -q 'RECONCILED_AGAINST_EXACT_ACCEPTED_API03_C5' "$ROOT/services/events-messaging-runtime/tests/unit/test_readiness_and_lag.py"
-          grep -q 'FORWARD_SCOPE_EXEMPT) <= 8' "$ROOT/services/events-messaging-runtime/tests/unit/test_validator_exemptions.py"
-          grep -q 'human_credential_is_structurally_refused_at_verified_principal_boundary' "$ROOT/services/events-messaging-runtime/tests/unit/test_identity.py"
-          find "$ROOT" -type d -name __pycache__ -prune -exec rm -rf {} +
+          mkdir -p "$RUNNER_TEMP/api04-c1-seal-fix"
+          tar -xzf snapshot/API04_C1_SNAPSHOT.tar.gz -C "$RUNNER_TEMP/api04-c1-seal-fix"
+          ROOT="$RUNNER_TEMP/api04-c1-seal-fix/API04_C1_SNAPSHOT"
+          python3 handoff/API-04/C1/api04_c1_seal_fix.py "$ROOT"
+          cmp --silent docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          cmp --silent docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json "$ROOT/docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json"
           test -z "$(find "$ROOT" -type d -name __pycache__ -print -quit)"
           echo "root=$ROOT" >> "$GITHUB_OUTPUT"
 
@@ -147,7 +106,7 @@ jobs:
           set -euo pipefail
           source '${{ steps.candidate.outputs.root }}/scripts/api04_ci_setup.sh' '${{ steps.candidate.outputs.root }}'
 
-      - name: Bind accepted archives
+      - name: Bind accepted archives for PRESEAL
         shell: bash
         run: |
           {
@@ -158,21 +117,21 @@ jobs:
             echo 'API04_SEALED_CANDIDATE=0'
           } >> "$GITHUB_ENV"
 
-      - name: Full final PRESEAL verification G0 G27
+      - name: Full corrected PRESEAL verification G0 G27
         shell: bash
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
           set -euo pipefail
-          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/final_preseal_validator_result.json | tee /tmp/api04-final-preseal.out
-          grep -q '^API04_PRESEAL_RESULT:PASS:validation/api04/final_preseal_validator_result.json$' /tmp/api04-final-preseal.out
+          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/c1_seal_fix_preseal_result.json | tee /tmp/api04-c1-seal-fix-preseal.out
+          grep -q '^API04_PRESEAL_RESULT:PASS:validation/api04/c1_seal_fix_preseal_result.json$' /tmp/api04-c1-seal-fix-preseal.out
           python3 - <<'PY'
           import json
-          r=json.load(open('validation/api04/final_preseal_validator_result.json'))
+          r=json.load(open('validation/api04/c1_seal_fix_preseal_result.json'))
           assert r['result']=='PASS' and r['gate_count']==28
           assert r['failed_gates']==[] and r['environment_blocked_gates']==[]
           assert all(g['result']=='PASS' for g in r['gates'])
           assert r['suite']['failed']==0 and r['suite']['skipped']==0
-          print('API04_C1_FINAL_PRESEAL:28/28 PASS',r['suite'])
+          print('API04_C1_CORRECTED_PRESEAL:28/28 PASS', r['suite'])
           PY
 
       - name: Finalize exact internal C1
@@ -183,24 +142,24 @@ jobs:
           python3 handoff/API-04/C1/api04_c1_reconcile.py --finalize --out-root "$ROOT" --workflow-template handoff/API-04/C1/api04-accept.yml
           echo 'API04_SEALED_CANDIDATE=1' >> "$GITHUB_ENV"
 
-      - name: Full sealed candidate verification G0 G27
+      - name: Full corrected sealed candidate verification G0 G27
         shell: bash
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
           set -euo pipefail
-          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/final_candidate_validator_result.json | tee /tmp/api04-final-candidate.out
-          grep -q '^API04_RESULT:PASS:validation/api04/final_candidate_validator_result.json$' /tmp/api04-final-candidate.out
+          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/c1_seal_fix_candidate_result.json | tee /tmp/api04-c1-seal-fix-candidate.out
+          grep -q '^API04_RESULT:PASS:validation/api04/c1_seal_fix_candidate_result.json$' /tmp/api04-c1-seal-fix-candidate.out
           python3 - <<'PY'
           import json
-          r=json.load(open('validation/api04/final_candidate_validator_result.json'))
+          r=json.load(open('validation/api04/c1_seal_fix_candidate_result.json'))
           assert r['result']=='PASS' and r['gate_count']==28
           assert r['failed_gates']==[] and r['environment_blocked_gates']==[]
           assert all(g['result']=='PASS' for g in r['gates'])
           assert r['suite']['failed']==0 and r['suite']['skipped']==0
-          print('API04_C1_FINAL_SEALED:28/28 PASS',r['suite'])
+          print('API04_C1_CORRECTED_SEALED:28/28 PASS', r['suite'])
           PY
 
-      - name: Reseal after candidate evidence
+      - name: Reseal after final candidate evidence
         id: seal
         shell: bash
         run: |
@@ -216,7 +175,7 @@ jobs:
           [ "$WF_SHA" = "$(sha256sum "$GITHUB_WORKSPACE/handoff/API-04/C1/api04-accept.yml" | cut -d' ' -f1)" ]
           echo "workflow_sha=$WF_SHA" >> "$GITHUB_OUTPUT"
           echo "files=$actual" >> "$GITHUB_OUTPUT"
-          echo 'API04_C1_FINAL_SEAL:PASS'
+          echo 'API04_C1_CORRECTED_SEAL:PASS'
 
       - name: Package exact C1 archive
         id: package
@@ -229,7 +188,9 @@ jobs:
           ZIP="$RUNNER_TEMP/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip"
           (cd "$RUNNER_TEMP" && zip -q -r -X "$ZIP" "$(basename "$FINALROOT")")
           SHA=$(sha256sum "$ZIP" | cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
-          echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "size=$SIZE" >> "$GITHUB_OUTPUT"; echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
           echo "API04_C1_SHA256=$SHA"
           echo "API04_C1_SIZE=$SIZE"
           echo "API04_C1_FILES=${{ steps.seal.outputs.files }}"
@@ -244,20 +205,20 @@ jobs:
           retention-days: 90
           compression-level: 0
 
-      - name: Publish final build evidence
+      - name: Publish C1 build evidence
         uses: actions/upload-artifact@v4
         with:
-          name: api04-c1-final-build-evidence-${{ github.run_id }}
+          name: api04-c1-seal-fix-evidence-${{ github.run_id }}
           path: |
-            /tmp/api04-final-preseal.out
-            /tmp/api04-final-candidate.out
+            /tmp/api04-c1-seal-fix-preseal.out
+            /tmp/api04-c1-seal-fix-candidate.out
             ${{ runner.temp }}/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1/validation/api04/
             ${{ runner.temp }}/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1/docs/api/API-04/API04_C1_SEAL_RECORD.json
           if-no-files-found: error
           retention-days: 90
 
-      - name: Final builder result
+      - name: Final corrected builder result
         shell: bash
         run: |
-          echo 'API04_C1_FINAL_BUILDER:PASS'
+          echo 'API04_C1_CORRECTED_BUILDER:PASS'
           echo 'candidate remains CANDIDATE_NOT_ACCEPTED; independent acceptance required'
