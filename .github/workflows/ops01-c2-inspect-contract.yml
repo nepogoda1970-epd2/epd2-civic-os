@@ -30,17 +30,13 @@ jobs:
           with zipfile.ZipFile(z) as f: f.extractall(out)
           PY
           cd /tmp/c1
+          echo '=== ENTERING BASELINE ==='
+          cat docs/ops/OPS-01/OPS01_ENTERING_BASELINE_IDENTITY.json
           echo '=== SELF STATE ==='
           cat OPS01_CANDIDATE_SELF_STATE.json
-          echo '=== FREEZE MANIFEST HEAD ==='
-          python - <<'PY'
-          import json
-          d=json.load(open('OPS01_FREEZE_MANIFEST.json'))
-          print(json.dumps(d,indent=2)[:20000])
-          PY
-          echo '=== SEALER ==='
-          cat scripts/ops01/seal_candidate.py
-          echo '=== VALIDATOR RECONCILIATION REFERENCES ==='
-          grep -n -C 5 -E 'INFRA01|FINAL_SEAL|reconciliation|CANDIDATE_NOT_ACCEPTED|KNOWN_LIMITATIONS|freeze' scripts/validation/validate_ops01.py | head -500
-          echo '=== OPS README SEAL / ACCEPTANCE ==='
-          grep -n -C 6 -E 'seal|accept|CANDIDATE_NOT_ACCEPTED|OPS01_RESULT' docs/ops/README.md | head -400
+          echo '=== SEALER KEY CONTRACT ==='
+          grep -n -C 5 -E 'CANDIDATE_NAME|build_manifest|candidate_metadata|entering_base|identity_path|archive_path' scripts/ops01/seal_candidate.py
+          echo '=== FREEZE EXCLUSIONS ==='
+          grep -n -C 8 -E 'CANDIDATE_NOT_ACCEPTED|OPS01_FREEZE_MANIFEST|OPS01_CANDIDATE_SELF_STATE|excluded|EXCLUDE|build_manifest' packages/python/epd2-ops/src/epd2_ops/freeze.py | head -400
+          echo '=== VALIDATOR DECLARATION GATES ==='
+          grep -n -C 8 -E 'def g0[1-9]|INFRA01_RECONCILIATION|KNOWN_LIMITATIONS|ENTERING_BASELINE|candidate_self' scripts/validation/validate_ops01.py | head -700
