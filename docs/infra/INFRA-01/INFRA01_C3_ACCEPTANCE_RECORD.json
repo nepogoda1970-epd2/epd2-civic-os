@@ -1,0 +1,72 @@
+{
+  "schema": "epd2.infra01.acceptance-record/1",
+  "stage": "INFRA-01 — CI Acceptance Harness & Release-Integrity Foundation",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-01",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Independent post-run governance decision after successful exact-source authoritative GitHub acceptance.",
+  "scope": {
+    "bounded_stage": "INFRA-01",
+    "overall_infra_layer": "OPEN",
+    "primary_program_stage_unchanged": "API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+  },
+  "entering_canonical_main": {
+    "repository": "nepogoda1970-epd2/epd2-civic-os",
+    "branch": "main",
+    "commit": "c333b9dd12e0c13dd402222cc958d95e779b8488"
+  },
+  "candidate": {
+    "filename": "EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip",
+    "sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+    "size_bytes": 15854311,
+    "source_commit": "38f7d13c8badf911e61d659adb2905d1089a64a5",
+    "source_tree": "3036aa886ca554607fec67f74ab753d41c7dbd5b",
+    "source_tracked_manifest_sha256": "1591d85ebaffc6f1b253e1787472225fd99ccac94eb9816590b40f675bc3dbd2",
+    "source_file_count": 1459,
+    "freeze_tree_digest": "d022822dbf3a127919595848cc7688053b2601210c56fa9d01aed54172fd4db6",
+    "candidate_self_acceptance": false
+  },
+  "authoritative_review": {
+    "workflow": "INFRA-01 C3 Authoritative Review",
+    "run_id": 33556094346,
+    "job_id": 100017170812,
+    "workflow_commit": "9537d6624b446a78d6646c0d5508860907f83b3f",
+    "conclusion": "success",
+    "terminal_marker": "INFRA01_C3_AUTHORITATIVE_RESULT:PASS",
+    "canonical_harness": "43/43 governed checks EXECUTED AND PASS; 0 FAIL; 0 BLOCKED",
+    "evidence_verification": "INFRA01_EVIDENCE_RESULT:PASS",
+    "evidence_artifact": {
+      "name": "infra01-c3-authoritative-evidence-33556094346",
+      "id": 9819611454,
+      "digest": "sha256:eb0997a9c5de08c21d3efd34a64de987a1b984258947e7d95d59bd0bb37c868e"
+    },
+    "candidate_artifact": {
+      "name": "infra01-c3-authoritative-candidate-33556094346",
+      "id": 9819612258,
+      "digest": "sha256:78776108bbf045fb20ad9cc9e395b6954aa81fa3b19baefb23863c35c9bfd1a3"
+    }
+  },
+  "correction_lineage": {
+    "prior_authoritative_run": 33541200112,
+    "prior_result": "FAIL",
+    "sole_failed_gate": "frontend.prettier",
+    "correction": "Prettier normalization of exactly four diagnosed governed files, with required PCR SHA rebinding and reconciliation reseal; no runtime, security-boundary, test, registry or harness semantic weakening.",
+    "corrected_files": [
+      "docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json",
+      "docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json",
+      "docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json",
+      "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+    ]
+  },
+  "canonical_master": {
+    "sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+    "unchanged_by_this_decision": true
+  },
+  "exclusions": [
+    "This decision closes only bounded INFRA-01; it does not close the overall INFRA layer.",
+    "It does not change API-04 status or close the API layer.",
+    "It does not open or close OPS, CTRL, final FRONT or SEC.",
+    "It is not a production-readiness or legal-activation decision.",
+    "It is not BSI/Common-Criteria/EAL4 or final security certification."
+  ]
+}
