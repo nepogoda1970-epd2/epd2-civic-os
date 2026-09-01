@@ -1,0 +1,30 @@
+name: FRONT-03 C1 exact-source export
+on:
+  push:
+    branches: [tmp/front03-c1-closure]
+    paths:
+      - '.github/workflows/front03-c1-source-export.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact PRESEAL source
+        shell: bash
+        run: |
+          set -euo pipefail
+          C='handoff/FRONT/incoming/EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip'
+          test -f "$C"
+          test "$(stat -c %s "$C")" = '17619496'
+          echo 'da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294  '"$C" | sha256sum -c -
+          unzip -t "$C" >/dev/null
+      - name: Export exact bytes
+        uses: actions/upload-artifact@v4
+        with:
+          name: front03-r3-preseal-exact-source
+          path: handoff/FRONT/incoming/EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
+          if-no-files-found: error
+          retention-days: 7
