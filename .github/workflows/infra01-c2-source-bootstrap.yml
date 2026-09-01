@@ -1,4 +1,4 @@
-name: INFRA-01 C2 Source Bootstrap
+name: INFRA-01 C3 Source Bootstrap
 
 on:
   push:
@@ -17,26 +17,33 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
-      - name: Apply exact C2 non-workflow patch to exact C0 source
+
+      - name: Apply exact C3 non-workflow patch to exact C2 source
         shell: bash
         run: |
           set -euo pipefail
-          OUT="$RUNNER_TEMP/c2patch.b64"; : > "$OUT"
-          for f in c2patch.part00 c2patch.part01 c2patch.part02 c2patch.part03 c2patch.part04 c2patch.part04b c2patch.part05; do cat "handoff/INFRA/transport/${f}" >> "$OUT"; done
-          base64 -d "$OUT" > "$RUNNER_TEMP/c2.patch.gz"
-          echo "98f7a6b7a73f96e297bb181422ad479c00edc14587d5472b82a6bac2222065d4  $RUNNER_TEMP/c2.patch.gz" | sha256sum -c -
-          gunzip -c "$RUNNER_TEMP/c2.patch.gz" > "$RUNNER_TEMP/c2.patch"
-          echo "302b346d77abd34f80151f7edf83812e05c2d7da62bca106319e94ddc64704fd  $RUNNER_TEMP/c2.patch" | sha256sum -c -
-          git fetch --no-tags origin tmp/infra01-c0-source-20260901
-          git switch -C tmp/infra01-c2-source-no-workflows origin/tmp/infra01-c0-source-20260901
-          test ! -d .github/workflows
-          git apply --check "$RUNNER_TEMP/c2.patch"
-          git apply "$RUNNER_TEMP/c2.patch"
+          OUT="$RUNNER_TEMP/c3patch.b64"
+          : > "$OUT"
+          cat handoff/INFRA/transport/c3patch.part00 >> "$OUT"
+          cat handoff/INFRA/transport/c3patch.part01 >> "$OUT"
+          base64 -d "$OUT" > "$RUNNER_TEMP/c3.patch.gz"
+          echo "52769853af60b8ce50f8bef44d6d90f3efea7bf5dcaea58e063188b6388bd01d  $RUNNER_TEMP/c3.patch.gz" | sha256sum -c -
+          gunzip -c "$RUNNER_TEMP/c3.patch.gz" > "$RUNNER_TEMP/c3.patch"
+          echo "40805ea1ef964c64de0ad0924278a9a96289cc96ea35e9e2ad465c81ee32d753  $RUNNER_TEMP/c3.patch" | sha256sum -c -
+
+          git fetch --no-tags origin tmp/infra01-c2-canonical-20260901
+          git switch -C tmp/infra01-c3-source-no-workflow origin/tmp/infra01-c2-canonical-20260901
+          BEFORE_WORKFLOW=$(sha256sum .github/workflows/infra01-acceptance.yml | awk '{print $1}')
+          git apply --check "$RUNNER_TEMP/c3.patch"
+          git apply "$RUNNER_TEMP/c3.patch"
+          AFTER_WORKFLOW=$(sha256sum .github/workflows/infra01-acceptance.yml | awk '{print $1}')
+          test "$BEFORE_WORKFLOW" = "$AFTER_WORKFLOW"
           git add -A
           git config user.name "EPD2 independent acceptance"
           git config user.email "actions@users.noreply.github.com"
-          git commit -m "test(infra01): apply exact C2 non-workflow delta"
-          git push --force origin HEAD:refs/heads/tmp/infra01-c2-source-no-workflows
+          git commit -m "test(infra01): apply exact C3 governance/package delta"
+          git push --force origin HEAD:refs/heads/tmp/infra01-c3-source-no-workflow
+
       - name: Report source identity
         shell: bash
         run: |
@@ -44,4 +51,5 @@ jobs:
           git rev-parse HEAD
           git rev-parse HEAD^{tree}
           git status --porcelain
+          echo "workflow=$(sha256sum .github/workflows/infra01-acceptance.yml | awk '{print $1}')"
           git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum
