@@ -1,0 +1,71 @@
+name: OPS-01 C2 Post-Run Governance Acceptance v3
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: [.github/workflows/ops01-c2-governance-accept-v3.yml]
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  govern:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout governance control
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: control
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout live canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: repo
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download exact authoritative evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ops01-c2-authoritative-evidence-33564968274
+          path: ${{ runner.temp }}/ops01-authoritative
+          repository: nepogoda1970-epd2/epd2-civic-os
+          run-id: 33564968274
+          github-token: ${{ github.token }}
+
+      - name: Reconcile live main and build exact bounded governance delta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python control/tools/governance/ops01_c2_postrun_govern_v2.py repo "$RUNNER_TEMP/ops01-authoritative" | tee "$RUNNER_TEMP/ops01-governance-writer.log"
+          entering=$(git -C repo rev-parse HEAD)
+          echo "GOVERNANCE_ENTERING_MAIN=$entering" >> "$GITHUB_ENV"
+
+      - name: Race guard and atomic bounded acceptance commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repo
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$GOVERNANCE_ENTERING_MAIN"
+          git config user.name 'EPD2 governance acceptance'
+          git config user.email 'actions@users.noreply.github.com'
+          git add docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json \
+                  docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json \
+                  docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json \
+                  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          test "$(git diff --cached --name-only | wc -l)" -eq 4
+          git diff --cached --check
+          git commit -m 'gov(ops01): accept C2 and close bounded OPS-01 stage' \
+            -m 'Authoritative sealed-byte PASS: run 33564968274 job 100045926256. Candidate SHA-256 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27. Post-run main reconciliation found no controlling-authority conflict. Overall OPS layer remains open.'
+          git push origin HEAD:main
+          echo "OPS01_GOVERNANCE_COMMIT=$(git rev-parse HEAD)"
+          echo "OPS01_GOVERNANCE_TREE=$(git rev-parse 'HEAD^{tree}')"
+          echo 'OPS01_C2_POSTRUN_GOVERNANCE_DECISION:ACCEPTED_CLOSED_BOUNDED_STAGE'
