@@ -1,0 +1,380 @@
+name: OPS-01 C2 Build Verify Publish v2
+
+on:
+  push:
+    branches:
+      - tmp/ops01-c2-build
+    paths:
+      - '.github/workflows/ops01-c2-build-verify-publish-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-verify-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.ops01-c2-venv
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: '5432'
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      C1_SHA256: 3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d
+      C1_BASE_COMMIT: 3d0b2fec5f86c491f36de1041caa66d983727480
+      INFRA_C3_SHA256: 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+      INFRA_C3_SOURCE_COMMIT: 38f7d13c8badf911e61d659adb2905d1089a64a5
+      INFRA_C3_SOURCE_TREE: 3036aa886ca554607fec67f74ab753d41c7dbd5b
+      INFRA_C3_RUN: '33556094346'
+      INFRA_C3_JOB: '100017170812'
+      INFRA_C3_WORKFLOW_COMMIT: 9537d6624b446a78d6646c0d5508860907f83b3f
+      INFRA_C3_FREEZE_DIGEST: d022822dbf3a127919595848cc7688053b2601210c56fa9d01aed54172fd4db6
+      API03_C5_SHA256: 5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55
+
+    steps:
+      - name: Checkout control branch
+        uses: actions/checkout@v4
+        with:
+          path: control
+          fetch-depth: 1
+
+      - name: Checkout C1 entering base
+        uses: actions/checkout@v4
+        with:
+          ref: 3d0b2fec5f86c491f36de1041caa66d983727480
+          path: c1base
+          fetch-depth: 1
+
+      - name: Checkout current canonical main as C2 base
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: c2
+          fetch-depth: 0
+
+      - name: Verify canonical anchors and derive C2 base identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "C2_BASE_COMMIT=$(git -C c2 rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "C2_BASE_TREE=$(git -C c2 rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
+          echo "C2_BASE_SUBJECT=$(git -C c2 log -1 --format=%s)" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import json
+          d=json.load(open('c2/docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json'))
+          text=json.dumps(d,sort_keys=True)
+          required=['5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131','33556094346','100017170812','ACCEPTED / CLOSED']
+          missing=[x for x in required if x not in text]
+          if missing: raise SystemExit(f'INFRA C3 canonical acceptance mismatch: {missing}')
+          print('INFRA_C3_CANONICAL_ANCHOR=PASS')
+          PY
+          echo "C2_BASE_COMMIT=$(git -C c2 rev-parse HEAD)"
+          echo "C2_BASE_TREE=$(git -C c2 rev-parse 'HEAD^{tree}')"
+
+      - name: Apply exact C1 OPS source delta to canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, zipfile, shutil
+          z=Path('control/handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip')
+          got=hashlib.sha256(z.read_bytes()).hexdigest()
+          assert got=='3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d',got
+          c1=Path('/tmp/ops01-c1'); shutil.rmtree(c1,ignore_errors=True); c1.mkdir()
+          with zipfile.ZipFile(z) as f:
+              assert f.testzip() is None
+              f.extractall(c1)
+          base=Path('c1base'); dst=Path('c2')
+          def fmap(root): return {str(p.relative_to(root)):p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
+          def h(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          B=fmap(base); C=fmap(c1); N=fmap(dst)
+          added=sorted(set(C)-set(B)); modified=sorted(p for p in set(B)&set(C) if h(B[p])!=h(C[p])); deleted=sorted(set(B)-set(C))
+          assert (len(added),len(modified),len(deleted))==(72,5,0),(len(added),len(modified),len(deleted))
+          expected=['.gitignore','Makefile','pyproject.toml','scripts/check_repository.py','uv.lock']
+          assert modified==expected,modified
+          metadata={'CANDIDATE_NOT_ACCEPTED','OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json'}
+          for p in added:
+              if p in metadata: continue
+              target=dst/p
+              if target.exists() and h(target)!=h(C[p]): raise SystemExit(f'divergent current-main OPS path: {p}')
+              target.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(C[p],target)
+          for p in modified:
+              if p not in N or h(N[p])!=h(B[p]): raise SystemExit(f'current main diverged at integration path: {p}')
+              shutil.copy2(C[p],dst/p)
+          for p in metadata: assert not (dst/p).exists(),p
+          print('C1_SOURCE_DELTA=69_ADDED_5_MODIFIED_0_DELETED_0_CONFLICTS')
+          PY
+
+      - name: Bind accepted INFRA-01 C3 and correct C2 governance records
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          python - <<'PY'
+          from pathlib import Path
+          import json,os,re
+          def writej(p,d): Path(p).write_text(json.dumps(d,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          base_commit=os.environ['C2_BASE_COMMIT']; base_tree=os.environ['C2_BASE_TREE']
+          infra_file='EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip'
+          infra_sha=os.environ['INFRA_C3_SHA256']; infra_commit=os.environ['INFRA_C3_SOURCE_COMMIT']; infra_tree=os.environ['INFRA_C3_SOURCE_TREE']
+          run=int(os.environ['INFRA_C3_RUN']); job=int(os.environ['INFRA_C3_JOB'])
+
+          p='docs/ops/OPS-01/OPS01_ENTERING_BASELINE_IDENTITY.json'; d=json.load(open(p))
+          d.update({
+            'base_commit':base_commit,'base_tree':base_tree,'base_commit_subject':os.environ['C2_BASE_SUBJECT'],
+            'infra01_dependency_state':'ACCEPTED / CLOSED',
+            'infra01_accepted_candidate_filename':infra_file,'infra01_accepted_candidate_sha256':infra_sha,
+            'infra01_accepted_source_commit':infra_commit,'infra01_accepted_source_tree':infra_tree,
+            'infra01_authoritative_run_id':run,'infra01_authoritative_job_id':job,
+            'infra01_acceptance_record':'docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json',
+            'infra01_freeze_tree_digest':os.environ['INFRA_C3_FREEZE_DIGEST'],
+            'api03_accepted_candidate_sha256':os.environ['API03_C5_SHA256'],
+            'api04_state':'ACTIVE / IN DEVELOPMENT / NOT ACCEPTED',
+            'ops_layer_state_in_program_control_register':'NOT_STARTED',
+            'governance_permission':'Current canonical Program Control Register permits parallel OPS incident/recovery/change/election runbooks and SoD work. INFRA-01 C3 is ACCEPTED / CLOSED; OPS-01 remains CANDIDATE_NOT_ACCEPTED pending independent governed acceptance.',
+            'c1_lineage':{'candidate_filename':'EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip','candidate_sha256':os.environ['C1_SHA256'],'entering_base_commit':os.environ['C1_BASE_COMMIT'],'source_delta_added_excluding_candidate_metadata':69,'source_delta_modified':5,'source_delta_deleted':0,'three_way_merge_conflicts':0},
+            'preexisting_baseline_defects':[
+              {'id':'PRE-01','path':'scripts/check_pilot_roadmap.py','observation':'Rerun on C2 canonical entering baseline: ruff 0.15.22 still reports exactly two RUF100 unused-noqa findings at lines 127 and 190.','attribution':'PRE-EXISTING on canonical C2 entering baseline','ops01_action':'Recorded; not used to excuse any OPS-01 gate.'},
+              {'id':'PRE-02','path':'services/voting-service/tests/reference/test_property.py::test_property_limitation_is_recorded','observation':'Rerun on C2 locked environment: still fails because hypothesis is installed and the test expects ImportError.','attribution':'PRE-EXISTING on canonical C2 entering baseline','ops01_action':'Recorded; not used to excuse any OPS-01 gate.'},
+              {'id':'PRE-03','path':'services/voting-service/tests/reference/vectors/PACK-16D-TARGET-PROFILE-TIMINGS.json','observation':'Rerun of voting reference suite on C2 baseline still rewrites this tracked timing vector; diagnostic run restored it before OPS verification.','attribution':'PRE-EXISTING same-bytes hazard','ops01_action':'Recorded; OPS-01 harness does not invoke that mutating unrelated suite.'}
+            ],
+            'c2_baseline_defect_reevaluation':{'source_run_id':33559769523,'PRE-01_ruff_clean':False,'PRE-02_property_test_pass':False,'PRE-03_reference_suite_result':'505 passed / 1 exact PRE-02 failed','PRE-03_tracked_timing_file_unchanged':False},
+            'recorded_at':'2026-09-01'
+          })
+          d['infra01_lineage_artifact']={'classification':'AUTHORITATIVE_ACCEPTED_INFRA01_C3','acceptance_record':'docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json','candidate_filename':infra_file,'candidate_sha256':infra_sha,'source_commit':infra_commit,'source_tree':infra_tree,'authoritative_run_id':run,'authoritative_job_id':job}
+          writej(p,d)
+
+          p='docs/ops/OPS-01/INFRA01_RECONCILIATION_RESULT.json'; r=json.load(open(p))
+          r.update({
+            'result':'PASS','reason':'Accepted INFRA-01 C3 is bound by exact candidate SHA-256, source commit/tree and authoritative run/job. The exact C1 OPS source delta applies to current post-INFRA canonical main with zero conflicts and no demonstrated implementation incompatibility.',
+            'ops01_final_seal':'UNBLOCKED_AFTER_ACCEPTED_INFRA01_C3_RECONCILIATION',
+            'accepted_infra01_candidate':infra_file,'accepted_infra01_candidate_filename':infra_file,
+            'accepted_infra01_sha256':infra_sha,'accepted_infra01_candidate_sha256':infra_sha,
+            'accepted_infra01_commit':infra_commit,'accepted_infra01_source_commit':infra_commit,
+            'accepted_infra01_tree':infra_tree,'accepted_infra01_source_tree':infra_tree,
+            'accepted_infra01_authoritative_run_id':run,'accepted_infra01_authoritative_job_id':job,
+            'accepted_infra01_acceptance_record':'docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json',
+            'accepted_infra01_freeze_tree_digest':os.environ['INFRA_C3_FREEZE_DIGEST'],
+            'authoritative_workflow_identity':{'workflow_name':'INFRA-01 C3 Authoritative Review','workflow_commit':os.environ['INFRA_C3_WORKFLOW_COMMIT'],'run_id':run,'job_id':job,'conclusion':'success'},
+            'delta_discovered':'No OPS-01 implementation incompatibility was found. C1 source delta rebased onto the exact post-INFRA canonical main with 69 additions, 5 integration-file modifications, 0 deletions and 0 conflicts.',
+            'required_corrections':[], 'required_corrections_after_reconciliation':[],
+            'c2_entering_canonical_main':{'commit':base_commit,'tree':base_tree},
+            'ops01_base':{'repository':'nepogoda1970-epd2/epd2-civic-os','base_commit':base_commit,'base_tree':base_tree,'classification':'C2_CANONICAL_ENTERING_BASE'},
+            'c1_to_c2_source_reconciliation':{'method':'derive exact C1 source delta against recorded C1 entering base; exclude candidate-only seal metadata; apply onto current canonical main; require zero conflicts','added_source_files':69,'modified_source_files':5,'deleted_source_files':0,'conflicts':0,'modified_paths':['.gitignore','Makefile','pyproject.toml','scripts/check_repository.py','uv.lock']},
+            'infra01_material_observed_in_repository':{'classification':'HISTORICAL_IMPLEMENTATION_LINEAGE_NOT_USED_AS_ACCEPTANCE','path':'EPD2_INFRA01_BRANCH_infra01ciacceptanceharness.bundle','note':'Historical implementation bundle remains non-authoritative. OPS-01 C2 uses the separate canonical INFRA01_C3_ACCEPTANCE_RECORD and exact accepted C3 identity instead.'},
+            'infra01_interfaces_consumed_by_ops01':['canonical accepted INFRA-01 C3 identity and governance record as predecessor/dependency anchor','post-INFRA canonical repository baseline carrying accepted release-integrity/freeze foundations','INFRA-owned environment/release integrity remains lower-layer authority; OPS stage-specific freeze is subordinate evidence, not a competing INFRA acceptance mechanism'],
+            'infra01_interfaces_deliberately_not_consumed':[],
+            'reconciliation_procedure':['COMPLETED: verify canonical INFRA-01 C3 acceptance record and exact identity','COMPLETED: derive exact C1 OPS source delta from recorded C1 entering base','COMPLETED: apply delta onto current post-INFRA canonical main with zero conflicts','COMPLETED: bind accepted INFRA identity and remove former L-01 seal blocker','REQUIRED BEFORE DELIVERY: rerun all 32 OPS-01 gates and reseal exact C2 bytes'],
+            'gates_to_rerun_after_reconciliation':['G03','G04','G06','G07','G19','G20','G21','G22','G23','G24','G31','G32'],
+            'reconciliation_sensitive_gates_to_rerun':['G03','G04','G06','G07','G19','G20','G21','G22','G23','G24','G31','G32'],
+            'api_reconciliation_note':'C2 consumes accepted API-03 C5 SHA '+os.environ['API03_C5_SHA256']+'. API-04 remains ACTIVE / IN DEVELOPMENT / NOT ACCEPTED and is not promoted or treated as accepted.',
+            'candidate_self_state':'CANDIDATE_NOT_ACCEPTED','recorded_at':'2026-09-01'
+          })
+          writej(p,r)
+
+          p=Path('docs/ops/OPS-01/OPS01_KNOWN_LIMITATIONS.md'); text=p.read_text()
+          replacement='''## L-01 — RESOLVED: accepted INFRA-01 C3 is bound\n\n**Class:** resolved dependency (no longer a blocker)\n\nINFRA-01 C3 is authoritatively `ACCEPTED / CLOSED`. OPS-01 C2 binds exact candidate SHA-256 `5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131`, source commit `38f7d13c8badf911e61d659adb2905d1089a64a5`, run `33556094346` and job `100017170812`. `OPS01_FINAL_SEAL` is no longer blocked by L-01. This does not self-accept OPS-01.\n\n'''
+          text,n=re.subn(r'## L-01\b.*?(?=\n## L-02\b)',replacement,text,flags=re.S)
+          if n!=1: raise SystemExit(f'L-01 section replacement count={n}')
+          marker='## L-03'
+          note='''### C2 re-evaluation of C1 entering-baseline defects\n\nPRE-01, PRE-02 and PRE-03 were independently rerun on the exact C2 canonical entering baseline in GitHub run `33559769523`; all three observations remain reproducible. They remain explicitly recorded as pre-existing baseline defects and are not used to waive or skip any OPS-01 gate.\n\n'''
+          if note.strip() not in text: text=text.replace(marker,note+marker)
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('docs/ops/OPS-01/OPS01_DEVELOPER_REPORT.md'); text=p.read_text()
+          text=text.replace('IMPLEMENTED / UNDER GOVERNED VERIFICATION / NOT ACCEPTED','ACCEPTED / CLOSED')
+          text=text.replace('`OPS01_FINAL_SEAL = BLOCKED`','`OPS01_FINAL_SEAL = UNBLOCKED_AFTER_ACCEPTED_INFRA01_C3_RECONCILIATION`')
+          section=f'''\n## C2 dependency reconciliation update — 2026-09-01\n\nC2 enters from canonical main `{base_commit}` / tree `{base_tree}` and carries only the exact C1 OPS source delta: 69 source additions, five integration-file modifications, zero deletions and zero conflicts. C1 candidate-only seal metadata is regenerated and never used as source.\n\nINFRA-01 C3 is bound exactly: candidate SHA-256 `{infra_sha}`, source commit `{infra_commit}`, authoritative run `{run}`, job `{job}`. The former L-01 dependency blocker is resolved. API-03 C5 remains the accepted API baseline consumed by OPS-01; API-04 remains unaccepted. This tree remains `CANDIDATE_NOT_ACCEPTED`.\n'''
+          if '## C2 dependency reconciliation update' not in text: text=section+'\n'+text
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('scripts/ops01/seal_candidate.py'); text=p.read_text()
+          old='EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip'; new='EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip'
+          if old not in text: raise SystemExit('C1 name absent from sealer')
+          p.write_text(text.replace(old,new),encoding='utf-8')
+          PY
+          grep -RIn --exclude-dir=.git -E 'Not assessable until an accepted INFRA-01|OPS01_FINAL_SEAL = BLOCKED' docs/ops/OPS-01 || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked environment and assert PostgreSQL 16.15
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          python -m pip install --disable-pip-version-check 'uv==0.12.5'
+          uv sync --all-groups --frozen
+          psql -h 127.0.0.1 -U postgres -d postgres -c 'CREATE DATABASE epd2_ops01;' || true
+          v=$(psql -h 127.0.0.1 -U postgres -d postgres -Atc 'show server_version')
+          echo "POSTGRES_SERVER_VERSION=$v"
+          case "$v" in 16.15*) ;; *) exit 1;; esac
+          uv --version; python --version; uv run ruff --version
+
+      - name: Commit exact C2 source locally and preserve source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          git config user.name 'epd2-governed-builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'ops01(c2): bind accepted INFRA-01 C3 and rebase onto canonical main'
+          echo "C2_SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "C2_SOURCE_TREE=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
+          test -z "$(git status --porcelain)"
+          echo "C2_SOURCE_COMMIT=$(git rev-parse HEAD)"
+          echo "C2_SOURCE_TREE=$(git rev-parse 'HEAD^{tree}')"
+
+      - name: OPS-01 lint and typing parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          uv run ruff format --check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run ruff check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run mypy packages/python/epd2-ops/src packages/python/epd2-ops/tests tests/ops01 scripts/validation/validate_ops01.py scripts/ops01/seal_candidate.py
+          test -z "$(git status --porcelain)"
+
+      - name: Canonical OPS-01 verification — require 32 of 32
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          rm -rf validation/ops01
+          make verify-ops01 | tee /tmp/ops01-c2-verify.log
+          grep -F 'OPS01_RESULT:PASS:validation/ops01/ops01_acceptance_result.json' /tmp/ops01-c2-verify.log
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/ops01/ops01_acceptance_result.json'))
+          assert d['gates_total']==32,d
+          assert d['gates_executed']==32,d
+          assert d['gates_passed']==32,d
+          assert d['gates_failed']==[],d
+          assert d['gates_missing']==[],d
+          assert d['skipped']==[],d
+          assert d['environment_blocked']==[],d
+          print('OPS01_C2_ALL_32_GATES=PASS')
+          PY
+          for g in G03 G04 G06 G07 G19 G20 G21 G22 G23 G24 G31 G32; do grep -F "[PASS] $g " /tmp/ops01-c2-verify.log; done
+          test -z "$(git status --porcelain)"
+
+      - name: Reseal exact verified C2 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          test "$(git rev-parse HEAD)" = "$C2_SOURCE_COMMIT"
+          test -z "$(git status --porcelain)"
+          rm -rf dist
+          make seal-ops01 | tee /tmp/ops01-c2-seal.log
+          ZIP='dist/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip'
+          ID='dist/OPS01_CANDIDATE_IDENTITY.json'
+          python - <<'PY'
+          import json,hashlib,zipfile,pathlib,stat,os
+          z=pathlib.Path('dist/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip')
+          i=json.load(open('dist/OPS01_CANDIDATE_IDENTITY.json')); raw=z.read_bytes(); sha=hashlib.sha256(raw).hexdigest()
+          assert i['filename']==z.name and i['sha256']==sha and i['size_bytes']==len(raw)
+          assert i['harness']=='PASS' and i['working_tree_clean'] is True and i['same_bytes']['same_bytes'] is True and i['archive_verification']['clean'] is True
+          assert i['seal_commit']==os.environ['C2_SOURCE_COMMIT']
+          with zipfile.ZipFile(z) as f:
+              assert f.testzip() is None
+              names=f.namelist(); assert len(names)==len(set(names))
+              for n in ['CANDIDATE_NOT_ACCEPTED','OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json']: assert n in names
+              assert not any(pathlib.PurePosixPath(n).is_absolute() or '..' in pathlib.PurePosixPath(n).parts for n in names)
+              assert not any(stat.S_ISLNK((x.external_attr>>16)&0xffff) for x in f.infolist())
+          print('C2_SHA256='+sha); print('C2_SIZE_BYTES='+str(len(raw))); print('C2_MEMBER_COUNT='+str(i['member_count'])); print('C2_TREE_DIGEST='+i['tree_digest']); print('C2_RESEAL_RESULT=PASS')
+          PY
+          test -z "$(git status --porcelain)"
+
+      - name: Build source bundle and governed evidence package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish/evidence
+          cd c2
+          git bundle create ../publish/EPD2_OPS01_C2_SOURCE.bundle HEAD
+          git bundle verify ../publish/EPD2_OPS01_C2_SOURCE.bundle
+          cp dist/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip ../publish/
+          cp dist/OPS01_CANDIDATE_IDENTITY.json ../publish/
+          cp -r validation/ops01 ../publish/evidence/validation-ops01
+          cp docs/ops/OPS-01/INFRA01_RECONCILIATION_RESULT.json ../publish/evidence/
+          cp docs/ops/OPS-01/OPS01_ENTERING_BASELINE_IDENTITY.json ../publish/evidence/
+          cp docs/ops/OPS-01/OPS01_KNOWN_LIMITATIONS.md ../publish/evidence/
+          cd ..
+          cp /tmp/ops01-c2-verify.log publish/evidence/
+          cp /tmp/ops01-c2-seal.log publish/evidence/
+          sha256sum publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip > publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256
+          sha256sum publish/EPD2_OPS01_C2_SOURCE.bundle > publish/EPD2_OPS01_C2_SOURCE.bundle.sha256
+          cat > publish/OPS01_C2_PREACCEPTANCE_PROVENANCE.txt <<EOF
+          stage=OPS-01
+          state=CANDIDATE_NOT_ACCEPTED
+          c1_sha256=$C1_SHA256
+          c2_entering_main_commit=$C2_BASE_COMMIT
+          c2_entering_main_tree=$C2_BASE_TREE
+          accepted_infra01_candidate_sha256=$INFRA_C3_SHA256
+          accepted_infra01_source_commit=$INFRA_C3_SOURCE_COMMIT
+          accepted_infra01_authoritative_run=$INFRA_C3_RUN
+          accepted_infra01_authoritative_job=$INFRA_C3_JOB
+          accepted_api03_candidate_sha256=$API03_C5_SHA256
+          c2_source_commit=$C2_SOURCE_COMMIT
+          c2_source_tree=$C2_SOURCE_TREE
+          build_run=$GITHUB_RUN_ID
+          EOF
+
+      - name: Upload immutable C2 pre-acceptance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops01-c2-preacceptance-${{ github.run_id }}
+          path: publish/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish exact C2 candidate to OPS handoff incoming
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --branch handoff/ops --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" handoff
+          cp publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256 handoff/handoff/OPS/incoming/
+          cp publish/OPS01_CANDIDATE_IDENTITY.json handoff/handoff/OPS/incoming/OPS01_C2_CANDIDATE_IDENTITY.json
+          cp publish/OPS01_C2_PREACCEPTANCE_PROVENANCE.txt handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_C2_SOURCE.bundle handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_C2_SOURCE.bundle.sha256 handoff/handoff/OPS/incoming/
+          cd handoff
+          git config user.name 'epd2-governed-builder'
+          git config user.email 'actions@users.noreply.github.com'
+          git add handoff/OPS/incoming
+          git commit -m 'handoff(ops01): publish INFRA-bound C2 candidate'
+          git push origin handoff/ops
+          echo "HANDOFF_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Final pre-acceptance verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'OPS01_C2_PREACCEPTANCE_RESULT:PASS'
+          echo "candidate_source_commit=$C2_SOURCE_COMMIT"
+          echo "candidate_source_tree=$C2_SOURCE_TREE"
+          echo "handoff_commit=$HANDOFF_COMMIT"
+          cat publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256
