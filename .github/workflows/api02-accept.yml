@@ -1,4 +1,4 @@
-# EPD² API-02 — authoritative acceptance workflow (C12).
+# EPD² API-02 — authoritative acceptance workflow (C13).
 #
 # IR-C7-01. Every identity below is asserted equal to the governed lineage record by
 # step 06a before any substantive validation begins, and the same assertion runs
@@ -11,14 +11,14 @@
 # obtained by exact filename and SHA-256 and verified BEFORE anything is read or
 # extracted:
 #
-#   candidate                   EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+#   candidate                   EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip
 #                               (expected digest = workflow input; must differ from every anchor)
 #   API02_ACCEPTED_API01_ZIP    …API01…CANDIDATE_0.1_C5.zip  cea2fb0e…  (the sole acceptance
 #                               predecessor: ACCEPTED / CLOSED by authoritative run 32967210855)
 #   API02_ACCEPTED_DATA06_ZIP   EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip  8cba0199…
 #                               (the data-series baseline — API-01's predecessor, kept so the
 #                               chain DATA-06 → API-01 → API-02 stays measurable end to end)
-#   API02_ENTERING_CANDIDATE_ZIP       …API02…CANDIDATE_0.1_C11.zip  62da62bb…
+#   API02_ENTERING_CANDIDATE_ZIP       …API02…CANDIDATE_0.1_C12.zip  ef124329…
 #                               (the entering baseline of this correction round — NOT an
 #                               acceptance predecessor: no API-02 candidate was ever accepted,
 #                               and a correction round does not create one. It is here because
@@ -76,13 +76,13 @@ name: api02-accept
 on:
   push:
     branches:
-      - tmp/api02-c12-canonical-accept
+      - tmp/api02-c13-canonical-accept
     paths:
-      - 'handoff/API-02/C12_ACCEPTANCE_INPUTS.env'
+      - 'handoff/API-02/C13_ACCEPTANCE_INPUTS.env'
   workflow_dispatch:
     inputs:
       candidate_sha256:
-        description: expected SHA-256 of EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+        description: expected SHA-256 of EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip
         required: true
       candidate_run_id:
         description: run id whose artifact `api02-candidate` carries the candidate ZIP (empty = candidates/ in the checkout)
@@ -105,10 +105,10 @@ env:
   # IR-C7-01. These four lines are the acceptance path's statement of which bytes it is
   # judging. They are not the source of that fact — `scripts/api02/lineage_gates.py` is —
   # and step 06a refuses to continue if they disagree with it.
-  CANDIDATE_ROLE: C12
-  CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
-  ENTERING_CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C11.zip
-  ENTERING_CANDIDATE_SHA256: 62da62bbf3ea8a1d8352e5c39d6f2abcd5d8d8b1abc7d15d022e3e76232c0732
+  CANDIDATE_ROLE: C13
+  CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13
+  ENTERING_CANDIDATE_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+  ENTERING_CANDIDATE_SHA256: ef124329645a92232285df6e2662df090114244bcf13953da015cc296518759a
   API01_NAME: EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip
   API01_SHA256: cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27
   DATA06_NAME: EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip
@@ -142,7 +142,7 @@ jobs:
             CANDIDATE_RUN='${{ inputs.candidate_run_id }}'
             ANCHORS_RUN='${{ inputs.anchors_run_id }}'
           else
-            CONTROL='handoff/API-02/C12_ACCEPTANCE_INPUTS.env'
+            CONTROL='handoff/API-02/C13_ACCEPTANCE_INPUTS.env'
             test -f "$CONTROL" || { echo "::error::missing $CONTROL"; exit 1; }
             CANDIDATE_SHA="$(grep '^candidate_sha256=' "$CONTROL" | cut -d= -f2-)"
             CANDIDATE_RUN="$(grep '^candidate_run_id=' "$CONTROL" | cut -d= -f2-)"
@@ -709,8 +709,17 @@ jobs:
           assert env["expected_candidate"]["version"] == f"0.1_{role}", env["expected_candidate"]
           assert env["mode"] == "complete", env["mode"]
           identity = json.load(open("validation/api02/candidate_identity_result.json"))
-          assert identity["mode"] == "sealed-archive", identity["mode"]
-          assert identity["sha256"] == os.environ["CANDIDATE_SHA256"], identity["sha256"]
+          # IR-C12-01. The governed identity record intentionally does not carry the
+          # ZIP's own SHA-256 (a candidate cannot contain a non-recursive self-hash)
+          # and has no `mode` field. C12's step 27 queried both nonexistent keys even
+          # after all 32 governed gates had passed. Assert the schema that actually
+          # governs candidate identity here; the exact archive digest remains bound
+          # by step 04 and the CANDIDATE_SHA256 control input verified before extract.
+          assert identity["result"] == "PASS", identity
+          assert identity["candidate"] == role, identity
+          assert identity["entering_role"] == "C12", identity
+          candidate_sha = os.environ["CANDIDATE_SHA256"]
+          assert len(candidate_sha) == 64 and all(c in "0123456789abcdef" for c in candidate_sha), candidate_sha
           # bind this run's evidence to the bytes it judged
           json.dump({
               "authoritative": True,
@@ -729,7 +738,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: api02-c12-acceptance-evidence-${{ github.run_id }}
+          name: api02-c13-acceptance-evidence-${{ github.run_id }}
           path: |
             ${{ steps.extract.outputs.root }}/validation/api02/
             ${{ runner.temp }}/run-logs/
