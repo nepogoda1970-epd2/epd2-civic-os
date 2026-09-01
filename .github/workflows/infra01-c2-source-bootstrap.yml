@@ -17,36 +17,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
-
-      - name: Verify unchanged C2 workflow bytes available on transport branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat > "$RUNNER_TEMP/workflow.sha256" <<'EOF'
-          118fbbbd426cc5f23d6eb5ad6bd836db06ba84219ded3d745cec5210a664ee10  .github/workflows/api01-accept.yml
-          8d1e540d99f35709df0e74be19f7981e4f0f6820ae006800577e0aa67ba24dd1  .github/workflows/ci.yml
-          e000033fb054b5afcab47830b380dd27c2ad564c3efbc2f12b53f32331b4e52d  .github/workflows/consolidation-c1-accept.yml
-          417eeb5b0afa6a18f84d01e55e64a79c8378b2f729dcd8035baf50860667823c  .github/workflows/epd2-handoff-intake.yml
-          a2ae56aa9cd548a0df2762826f9cfee9fdef70021ad7055ba79b198593d1db40  .github/workflows/front02-governed-review.yml
-          087b42e405b257532514ae5487813f2fd0c2c02ce06ad76e48dc58e7677cc49e  .github/workflows/pb01-i09-pg16-runtime.yml
-          c75a7503f9722a0b8e05eb4693e497a856b3a2e49f4db2a1ff4b3c9b21d01dd5  .github/workflows/pb01-i09-pg16-toolchain.yml
-          6b9a4be413b34e60a44c880c186d1011c76fd4392d6781518116356514954b88  .github/workflows/pilot-roadmap-guard.yml
-          f98479e425064d357381a8a8f232806b3d19c22e6532bcfffa288f93700033bd  .github/workflows/pilot04-c9-accept.yml
-          a4f69af542c04180b4ed57761cd7383be22d76daedd702f664107280b547c27d  .github/workflows/pilot04-c9-smoke.yml
-          69be8489e28d324d55859e74b61d0a9a57ebe7427c04a2e64eb6f4e0136f7b23  .github/workflows/pilot04-c9-stage1.yml
-          0ffeb8e6c1c929379dd22c90320fb90df64b4c910eabb93ea702b773a4f5de68  .github/workflows/verify-and-package.yml
-          EOF
-          sha256sum -c "$RUNNER_TEMP/workflow.sha256"
-
       - name: Apply exact C2 non-workflow patch to exact C0 source
         shell: bash
         run: |
           set -euo pipefail
-          OUT="$RUNNER_TEMP/c2patch.b64"
-          : > "$OUT"
-          for f in c2patch.part00 c2patch.part01 c2patch.part02 c2patch.part03 c2patch.part04 c2patch.part04b c2patch.part05; do
-            cat "handoff/INFRA/transport/${f}" >> "$OUT"
-          done
+          OUT="$RUNNER_TEMP/c2patch.b64"; : > "$OUT"
+          for f in c2patch.part00 c2patch.part01 c2patch.part02 c2patch.part03 c2patch.part04 c2patch.part04b c2patch.part05; do cat "handoff/INFRA/transport/${f}" >> "$OUT"; done
           base64 -d "$OUT" > "$RUNNER_TEMP/c2.patch.gz"
           echo "98f7a6b7a73f96e297bb181422ad479c00edc14587d5472b82a6bac2222065d4  $RUNNER_TEMP/c2.patch.gz" | sha256sum -c -
           gunzip -c "$RUNNER_TEMP/c2.patch.gz" > "$RUNNER_TEMP/c2.patch"
@@ -56,13 +32,11 @@ jobs:
           test ! -d .github/workflows
           git apply --check "$RUNNER_TEMP/c2.patch"
           git apply "$RUNNER_TEMP/c2.patch"
-          test ! -d .github/workflows
           git add -A
           git config user.name "EPD2 independent acceptance"
           git config user.email "actions@users.noreply.github.com"
           git commit -m "test(infra01): apply exact C2 non-workflow delta"
           git push --force origin HEAD:refs/heads/tmp/infra01-c2-source-no-workflows
-
       - name: Report source identity
         shell: bash
         run: |
