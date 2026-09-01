@@ -1,0 +1,56 @@
+name: api02-c13-repair
+
+on:
+  push:
+    branches:
+      - tmp/api02-c13-repair
+    paths:
+      - '.github/workflows/api02-c13-repair.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download exact C12 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: /tmp/candidate
+          run-id: 33490942304
+          github-token: ${{ github.token }}
+      - name: Inspect sealed C12 repair surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          CAND=/tmp/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
+          echo '=== CANDIDATE SHA ==='
+          sha256sum "$CAND"
+          rm -rf /tmp/c12 && mkdir /tmp/c12
+          unzip -q "$CAND" -d /tmp/c12
+          ROOT=/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
+          cd "$ROOT"
+          echo '=== API02 SCRIPT FILES ==='
+          find scripts/api02 -maxdepth 1 -type f -printf '%f\n' | sort
+          echo '=== SEALED CANDIDATE IDENTITY RESULT ==='
+          cat validation/api02/candidate_identity_result.json || true
+          echo
+          echo '=== EVIDENCE STATE ==='
+          cat docs/api/API-02/API02_EVIDENCE_STATE.json || true
+          echo
+          echo '=== LINEAGE CONSTANT HITS ==='
+          grep -R -n --exclude='*.pyc' -E 'CANDIDATE_ROLE|CANDIDATE_NAME|ENTERING_CANDIDATE|C12|C11' scripts/api02 docs/api/API-02/.github 2>/dev/null | head -n 240 || true
+          echo '=== IDENTITY GENERATOR HITS ==='
+          grep -R -n --exclude='*.pyc' -E 'candidate_identity_result|sealed-archive|expected_candidate|candidate_root' scripts/api02 | head -n 240 || true
+          echo '=== PACKAGING/SEAL HITS ==='
+          grep -R -n --exclude='*.pyc' -E 'SEALED_FILE_MANIFEST|SHA256SUMS|transition_inventory|CORRECTION|package_candidate|zipfile' scripts docs/api/API-02 | head -n 320 || true
+          echo '=== API02 DOC FILES ==='
+          find docs/api/API-02 -maxdepth 1 -type f -printf '%f\n' | sort
+          echo '=== WORKFLOW STEP 27 ==='
+          grep -n -A55 -B8 '27 Assert the published evidence' .github/workflows/api02-accept.yml || true
