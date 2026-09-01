@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/event-envelope.schema.json",
+  "title": "Canonical event envelope",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 21. Implemented by epd2_core.event_envelope.EventEnvelope. Validated locally by epd2_core.minimal_json_schema (a documented subset of this schema's keywords) and by the real jsonschema package in CI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "producer",
+    "actor",
+    "subject",
+    "correlation_id",
+    "causation_id",
+    "payload",
+    "integrity"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": { "type": "string", "minLength": 1 },
+    "event_version": { "type": "string", "minLength": 3 },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "producer": { "type": "string", "minLength": 1 },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_id", "actor_type"],
+      "properties": {
+        "actor_id": { "type": "string", "format": "uuid" },
+        "actor_type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_type", "subject_id"],
+      "properties": {
+        "subject_type": { "type": "string", "minLength": 1 },
+        "subject_id": { "type": "string", "format": "uuid" }
+      }
+    },
+    "correlation_id": { "type": "string", "format": "uuid" },
+    "causation_id": { "type": ["string", "null"], "format": "uuid" },
+    "payload": { "type": "object" },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["payload_hash", "signature"],
+      "properties": {
+        "payload_hash": { "type": "string", "minLength": 64 },
+        "signature": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

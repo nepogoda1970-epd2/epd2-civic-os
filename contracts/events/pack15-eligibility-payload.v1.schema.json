@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/pack15-eligibility-payload.v1.schema.json",
+  "title": "PACK-15 eligibility-stream event payload (v1)",
+  "description": "Produced by epd2_eligibility_service.voting_trust_events.build_eligibility_event. Shared by the nine eligibility-stream event types: eligibility.requested, eligibility.evaluation_started, eligibility.approved, eligibility.denied, eligibility.review_required, eligibility.evidence_referenced, eligibility.decision_expired, eligibility.disputed, eligibility.dispute_resolved (docs/packs/PACK-15/PACK-15-EVENT-CATALOG.md). The six decision-derived properties are present only when a decision exists, which is why they are optional rather than required. It deliberately omits every identity-side field the case itself holds - participant_reference, the scoped attributes, the evidence references and the assisted party's identity - carrying only the boolean fact that assistance occurred, because identification stops at the case (ADR-089) and never reaches the wire.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "voting_context_reference",
+    "participation_class",
+    "assisted"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "voting_context_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "participation_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assisted": {
+      "type": "boolean"
+    },
+    "decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "evaluating",
+        "approved",
+        "denied",
+        "review_required",
+        "under_review",
+        "superseded",
+        "expired",
+        "disputed",
+        "withdrawn"
+      ]
+    },
+    "rule_set_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source_versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "organizational_scope": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

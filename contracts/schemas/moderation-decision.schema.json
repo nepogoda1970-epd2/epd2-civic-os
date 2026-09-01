@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/moderation-decision.schema.json",
+  "title": "ModerationDecision",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 14.2. Owned by moderation-service (epd2_moderation_service.domain.ModerationDecision). Immutable once created - no status field and no transition table. `reason_code` here is the decision's own domain field (a reason-code-registry value describing why the decision was made, e.g. 'MODERATION_POLICY_VIOLATION') - distinct from an API exception's reason_code class attribute. `effective_until` is nullable (an open-ended decision). `audit_reference` is set at construction time to the audit_event_id this same call appends under.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "moderation_decision_id",
+    "case_id",
+    "decision_type",
+    "reason_code",
+    "policy_reference",
+    "decided_by",
+    "effective_from",
+    "effective_until",
+    "public_explanation",
+    "audit_reference"
+  ],
+  "properties": {
+    "moderation_decision_id": { "type": "string", "format": "uuid" },
+    "case_id": { "type": "string", "format": "uuid" },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "no_action",
+        "warning",
+        "temporary_hide",
+        "restore",
+        "participation_limit",
+        "account_restriction_request",
+        "escalate",
+        "remove_from_public_view"
+      ]
+    },
+    "reason_code": { "type": "string", "minLength": 1 },
+    "policy_reference": { "type": "string", "minLength": 1 },
+    "decided_by": { "type": "string", "format": "uuid" },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "effective_until": { "type": ["string", "null"], "format": "date-time" },
+    "public_explanation": { "type": "string" },
+    "audit_reference": { "type": "string", "minLength": 1 }
+  }
+}

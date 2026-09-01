@@ -1,0 +1,3541 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-09 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the one PACK-09 service
+    (compliance-service; ADR-038 through ADR-042). No production HTTP
+    server ships in this pack — these paths document, one-to-one, a
+    deliberately minimal subset of real command/query functions in
+    epd2_compliance_service.application, and are exercised in tests via
+    those application-layer functions directly, not over HTTP. Every path
+    maps to exactly one real function; none of this file's paths invent an
+    HTTP surface a function does not already provide. This mirrors the
+    convention every earlier pack's own OpenAPI contract follows.
+
+    Request bodies list only genuine business fields — actor identity,
+    the caller's organizational scope, presented cross-scope authority
+    references, correlation/causation ids, the clock, and the idempotency
+    event_id are transport/session concerns carried outside the body, the
+    same convention pack-02.yaml through pack-08.yaml already use.
+
+    Scope rules this contract makes explicit, because they are the
+    difference between an ordinary CRUD API and a governed one:
+
+    * Every path is evaluated against the CALLER'S OWN organizational
+      scope, resolved server-side and never trusted from the request body.
+    * A resource id belonging to another organization returns 404 with
+      VALIDATION_RECORD_NOT_FOUND — deliberately identical to a resource
+      that does not exist, so a foreign id cannot be used to probe for
+      existence. The specific 403 CROSS_ORGANIZATION_CASE_ACCESS_DENIED /
+      CROSS_SCOPE_AUTHORITY_INVALID responses are reachable only by a
+      caller that already presented cross-scope authority.
+    * There is NO hierarchy-derived inheritance. A Bund-level caller
+      holds nothing over a Landesverband's cases, and a Kreisverband
+      nothing over its parent Land's, without a CrossScopeAuthorityGrant
+      issued by the organization being reached into.
+    * There is NO delete path for any governed record anywhere in this
+      file. Destruction is a three-step governed workflow
+      (evaluate → authorize → execute) that produces immutable evidence
+      and leaves the record's metadata row in place.
+    * Every timestamp in every request and response is a timezone-aware
+      RFC 3339 / ISO-8601 string with an explicit offset, and every
+      deadline additionally carries an explicit IANA timezone name.
+    * No path accepts or returns an identity attribute, an eID/KYC
+      payload, an authentication secret, a document or its bytes, or any
+      ballot/vote/tally/delegation reference.
+
+    This contract makes no claim of automatic legal compliance with the
+    GDPR, the BDSG or the Parteiengesetz. It documents a governed
+    workflow, evidence references and auditability; every legal
+    determination stays a human judgement made outside this system.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://compliance.epd2.example
+    description: compliance-service (not deployed in PACK-09 — contract only)
+
+paths:
+  /retention-policies:
+    post:
+      operationId: registerRetentionPolicy
+      summary: Register a retention policy version
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_retention_policy.
+        Registers one (policy_id, policy_version) pair inside the caller's
+        own organization. Versions are append-only: re-registering the
+        same pair with different content is refused with
+        RETENTION_POLICY_VERSION_CONFLICT, and an identical
+        re-registration is an idempotent no-op.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  policy_id,
+                  record_class,
+                  trigger,
+                  retention_days,
+                  disposition_action,
+                  policy_version,
+                  valid_from,
+                ]
+              properties:
+                policy_id: { type: string, format: uuid }
+                record_class: { type: string, minLength: 1 }
+                trigger:
+                  type: string
+                  enum:
+                    [
+                      created_at,
+                      case_closed_at,
+                      membership_ended_at,
+                      contract_ended_at,
+                      processing_ended_at,
+                    ]
+                retention_days: { type: integer, minimum: 0 }
+                disposition_action:
+                  type: string
+                  enum: [delete, anonymize, archive, review]
+                policy_version: { type: integer, minimum: 1 }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, null], format: date-time }
+                authorizing_decision_reference:
+                  { type: [string, null], format: uuid }
+      responses:
+        "201":
+          description: Retention policy version registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/retention-policy.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "409":
+          description: RETENTION_POLICY_VERSION_CONFLICT — this version already exists with different content
+
+  /retention-policies/{policy_id}/versions:
+    post:
+      operationId: supersedeRetentionPolicy
+      summary: Supersede a retention policy with a newer version
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.supersede_retention_policy.
+        Registers a newer version AND rebinds every affected governed
+        record to it, resetting each record's state to active and dropping
+        any standing destruction authorization. This is the executable
+        half of the no-policy-rewrite-bypasses-retention rule: changing a
+        retention schedule never, by itself, authorizes destruction of
+        already-governed records — a fresh eligibility evaluation and a
+        fresh authorization are always required afterwards, and any active
+        Legal Hold keeps blocking regardless.
+      tags: [compliance-service]
+      parameters:
+        - name: policy_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The policy being superseded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  policy_version,
+                  supersedes_policy_version,
+                  record_class,
+                  trigger,
+                  retention_days,
+                  disposition_action,
+                  valid_from,
+                ]
+              properties:
+                policy_version: { type: integer, minimum: 2 }
+                supersedes_policy_version: { type: integer, minimum: 1 }
+                record_class: { type: string, minLength: 1 }
+                trigger:
+                  type: string
+                  enum:
+                    [
+                      created_at,
+                      case_closed_at,
+                      membership_ended_at,
+                      contract_ended_at,
+                      processing_ended_at,
+                    ]
+                retention_days: { type: integer, minimum: 0 }
+                disposition_action:
+                  type: string
+                  enum: [delete, anonymize, archive, review]
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: [string, null], format: date-time }
+                authorizing_decision_reference:
+                  { type: [string, null], format: uuid }
+      responses:
+        "201":
+          description: >-
+            New policy version registered; every rebound governed record is
+            returned so the caller can see exactly which authorizations were
+            invalidated.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [policy, rebound_records]
+                properties:
+                  policy:
+                    $ref: "../schemas/retention-policy.schema.json"
+                  rebound_records:
+                    type: array
+                    items:
+                      $ref: "../schemas/governed-record.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /governed-records:
+    post:
+      operationId: registerGovernedRecord
+      summary: Register compliance metadata about a record another service owns
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_governed_record.
+        source_reference is an opaque pointer back to the owning service's
+        own object; no record content is ever accepted or stored here. The
+        referenced retention policy version must exist and belong to the
+        same organization.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  record_id,
+                  record_class,
+                  sensitivity,
+                  created_at,
+                  retention_policy_id,
+                  retention_policy_version,
+                  source_reference,
+                ]
+              properties:
+                record_id: { type: string, format: uuid }
+                record_class: { type: string, minLength: 1 }
+                sensitivity:
+                  type: string
+                  enum: [public, internal, confidential, restricted]
+                created_at: { type: string, format: date-time }
+                retention_policy_id: { type: string, format: uuid }
+                retention_policy_version: { type: integer, minimum: 1 }
+                source_reference: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Governed record registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/governed-record.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /governed-records/{record_id}/retention-start:
+    post:
+      operationId: recordRetentionStart
+      summary: Record the explicit fact that retention has started
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.record_retention_start.
+        Retention never starts implicitly: until this is recorded,
+        eligibility evaluation returns RETENTION_START_UNDETERMINED and no
+        destruction can be authorized. Idempotent on the caller-supplied
+        event_id.
+      tags: [compliance-service]
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The governed record whose retention period starts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [trigger_occurred_at, source_reference]
+              properties:
+                trigger_occurred_at: { type: string, format: date-time }
+                source_reference: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Retention start recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/governed-record.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with
+            different content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the
+            caller-supplied expected version no longer matches).
+
+  /governed-records/{record_id}/disposal-eligibility:
+    get:
+      operationId: evaluateDisposalEligibility
+      summary: Deterministically evaluate whether a record may be disposed of
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.evaluate_disposal_eligibility.
+        A read-only evaluation whose refusal order is fixed and
+        observable: unresolved scope, unknown record, unknown policy
+        version, indeterminate hold state, unknown retention start, active
+        Legal Hold, then the due-time check. An indeterminate hold state
+        is a 409 LEGAL_HOLD_STATE_UNKNOWN rather than an ineligible
+        verdict, because 'we could not determine the hold state' is a
+        different fact from 'this record is not yet eligible'.
+      tags: [compliance-service]
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The governed record being evaluated.
+      responses:
+        "200":
+          description: >-
+            Deterministic eligibility verdict. An ineligible verdict always
+            carries the reason code that produced it
+            (RETENTION_DISPOSITION_NOT_DUE, RETENTION_START_UNDETERMINED or
+            RECORD_UNDER_LEGAL_HOLD) plus, for a hold, the blocking hold ids.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  [
+                    record_id,
+                    organization_id,
+                    evaluated_at,
+                    retention_policy_id,
+                    retention_policy_version,
+                    due_at,
+                    eligible,
+                    reason_code,
+                    blocking_hold_ids,
+                  ]
+                properties:
+                  record_id: { type: string, format: uuid }
+                  organization_id: { type: string, format: uuid }
+                  evaluated_at: { type: string, format: date-time }
+                  retention_policy_id: { type: string, format: uuid }
+                  retention_policy_version: { type: integer, minimum: 1 }
+                  due_at: { type: [string, null], format: date-time }
+                  eligible: { type: boolean }
+                  reason_code: { type: [string, null] }
+                  blocking_hold_ids:
+                    type: array
+                    items: { type: string, format: uuid }
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            LEGAL_HOLD_STATE_UNKNOWN — at least one applicable hold is in the
+            indeterminate state, so eligibility cannot be assessed and the
+            operation fails closed.
+
+  /governed-records/{record_id}/destruction-authorizations:
+    post:
+      operationId: authorizeDestruction
+      summary: Issue the separate authorization a destruction requires
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.authorize_destruction. Re-runs
+        the full eligibility evaluation itself rather than trusting a
+        caller-supplied verdict, so a hold placed between evaluation and
+        authorization still blocks. The resulting authorization is bound
+        to the exact policy version and record version it was issued
+        against.
+      tags: [compliance-service]
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The governed record being authorized for disposal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [authorized_by_authority_reference]
+              properties:
+                authorized_by_authority_reference:
+                  { type: string, format: uuid }
+                expected_record_version: { type: [integer, null], minimum: 1 }
+      responses:
+        "201":
+          description: Destruction authorized
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/governed-record.schema.json"
+        "403":
+          description: >-
+            RECORD_UNDER_LEGAL_HOLD (an active hold applies — this always wins
+            over retention state), LEGAL_HOLD_STATE_UNKNOWN (fail closed), or
+            one of the scope codes listed on the other paths.
+        "409":
+          description: >-
+            RETENTION_DISPOSITION_NOT_DUE, RETENTION_START_UNDETERMINED,
+            OPTIMISTIC_CONCURRENCY_CONFLICT or COMPLIANCE_COMMAND_CONFLICT.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /governed-records/{record_id}/destruction:
+    post:
+      operationId: executeDestruction
+      summary: Execute an authorized destruction and produce immutable evidence
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.execute_destruction. This is
+        the ONLY way a governed record reaches the destroyed state; there
+        is deliberately no DELETE method on any governed-record path in
+        this contract, and the service's storage layer exposes no delete
+        operation at all. Legal Hold is re-checked here, at execution
+        time, so a hold placed after authorization still blocks. Evidence
+        is created exactly once per record; a retried call with the same
+        event_id returns the existing evidence untouched. The record's
+        metadata row survives with state=destroyed and its evidence
+        reference attached.
+      tags: [compliance-service]
+      parameters:
+        - name: record_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The governed record being destroyed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [executed_by_authority_reference, evidence_digest]
+              properties:
+                executed_by_authority_reference: { type: string, format: uuid }
+                evidence_digest: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Destruction executed; immutable evidence recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [record, evidence]
+                properties:
+                  record:
+                    $ref: "../schemas/governed-record.schema.json"
+                  evidence:
+                    $ref: "../schemas/destruction-evidence.schema.json"
+        "403":
+          description: >-
+            RECORD_UNDER_LEGAL_HOLD, LEGAL_HOLD_STATE_UNKNOWN, or a scope code.
+        "409":
+          description: >-
+            DESTRUCTION_AUTHORIZATION_REQUIRED (no authorization exists — a
+            governed record is never removed by an ordinary delete),
+            DESTRUCTION_AUTHORIZATION_STALE (the authorization predates a policy
+            supersession or record change) or DESTRUCTION_ALREADY_EXECUTED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /legal-holds:
+    post:
+      operationId: placeLegalHold
+      summary: Place a Legal Hold over governed records in the caller's organization
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.place_legal_hold. A hold's
+        scope names record ids, record classes and/or case ids, and is
+        only ever evaluated inside the hold's own organization — a hold
+        can never reach another organization's record even if its id were
+        guessed. Idempotent on event_id.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  hold_id,
+                  matter_reference,
+                  scope,
+                  issued_by_authority_reference,
+                ]
+              properties:
+                hold_id: { type: string, format: uuid }
+                matter_reference: { type: string, minLength: 1 }
+                scope:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    record_ids:
+                      type: array
+                      items: { type: string, format: uuid }
+                    record_classes:
+                      type: array
+                      items: { type: string, minLength: 1 }
+                    case_ids:
+                      type: array
+                      items: { type: string, format: uuid }
+                issued_by_authority_reference: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Legal Hold placed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-hold.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with
+            different content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the
+            caller-supplied expected version no longer matches).
+
+  /legal-holds/{hold_id}/release:
+    post:
+      operationId: releaseLegalHold
+      summary: Release a Legal Hold
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.release_legal_hold. Release is
+        explicit, timestamped and appended to the hold's own append-only
+        history; the issue entry is never rewritten and the hold record is
+        never deleted. A hold never expires implicitly. Releasing an
+        already-released hold is refused with
+        LEGAL_HOLD_TRANSITION_INVALID.
+      tags: [compliance-service]
+      parameters:
+        - name: hold_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The hold being released.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [released_by_authority_reference]
+              properties:
+                released_by_authority_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Legal Hold released
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-hold.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: LEGAL_HOLD_TRANSITION_INVALID or COMPLIANCE_COMMAND_CONFLICT.
+
+  /legal-holds/{hold_id}/indeterminate:
+    post:
+      operationId: markLegalHoldIndeterminate
+      summary: Record that a hold's state can no longer be established
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.mark_legal_hold_indeterminate.
+        Makes 'unknown' a real, auditable state rather than an absence
+        that silently reads as 'unheld': every record the hold covers then
+        fails closed on eligibility assessment and destruction with
+        LEGAL_HOLD_STATE_UNKNOWN.
+      tags: [compliance-service]
+      parameters:
+        - name: hold_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The hold whose state could not be confirmed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [actor_authority_reference]
+              properties:
+                actor_authority_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Legal Hold marked indeterminate
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-hold.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: LEGAL_HOLD_TRANSITION_INVALID or COMPLIANCE_COMMAND_CONFLICT.
+
+  /data-assets:
+    post:
+      operationId: registerDataAsset
+      summary: Register a Data Catalog entry
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_data_asset. The
+        retention reference is resolved against the retention-policy store
+        rather than merely type-checked, so a catalog entry can never
+        point at a policy that does not exist.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  asset_id,
+                  name,
+                  asset_class,
+                  system_reference,
+                  record_class,
+                  retention_policy_reference,
+                  status,
+                  valid_from,
+                  owner_authority_reference,
+                ]
+              properties:
+                asset_id: { type: string, format: uuid }
+                name: { type: string, minLength: 1 }
+                asset_class: { type: string, minLength: 1 }
+                system_reference: { type: string, minLength: 1 }
+                record_class: { type: string, minLength: 1 }
+                retention_policy_reference: { type: string, format: uuid }
+                status:
+                  type: string
+                  enum: [draft, active, suspended, deprecated]
+                valid_from: { type: string, format: date-time }
+                owner_authority_reference: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Data asset registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/data-asset.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /processing-activities:
+    post:
+      operationId: registerProcessingActivity
+      summary: Register a Processing Registry entry
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_processing_activity.
+        Everything recorded is categorical — categories of data, of data
+        subjects, of recipients — and no individual data subject is ever
+        named. legal_basis is a managed classification drawn from a closed
+        list; recording it asserts nothing about legal sufficiency. The
+        retention reference is mandatory and must resolve to a policy in
+        the same organization.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  activity_id,
+                  name,
+                  purpose,
+                  legal_basis,
+                  data_subject_categories,
+                  personal_data_categories,
+                  recipient_categories,
+                  retention_policy_reference,
+                  technical_organizational_measures,
+                  controller_reference,
+                  process_owner_authority_reference,
+                  system_references,
+                  status,
+                  valid_from,
+                ]
+              properties:
+                activity_id: { type: string, format: uuid }
+                name: { type: string, minLength: 1 }
+                purpose: { type: string, minLength: 1 }
+                legal_basis:
+                  type: string
+                  enum:
+                    [
+                      consent,
+                      contract,
+                      legal_obligation,
+                      vital_interests,
+                      public_task,
+                      legitimate_interests,
+                      party_statute,
+                      other_documented,
+                    ]
+                data_subject_categories:
+                  type: array
+                  minItems: 1
+                  items: { type: string, minLength: 1 }
+                personal_data_categories:
+                  type: array
+                  minItems: 1
+                  items: { type: string, minLength: 1 }
+                recipient_categories:
+                  type: array
+                  items: { type: string, minLength: 1 }
+                retention_policy_reference: { type: string, format: uuid }
+                technical_organizational_measures:
+                  type: array
+                  minItems: 1
+                  items: { type: string, minLength: 1 }
+                controller_reference: { type: string, format: uuid }
+                process_owner_authority_reference:
+                  { type: string, format: uuid }
+                system_references:
+                  type: array
+                  minItems: 1
+                  items: { type: string, minLength: 1 }
+                data_asset_references:
+                  type: array
+                  items: { type: string, format: uuid }
+                status:
+                  type: string
+                  enum: [draft, active, suspended, deprecated]
+                valid_from: { type: string, format: date-time }
+                dpo_review_reference: { type: [string, null], format: uuid }
+      responses:
+        "201":
+          description: Processing activity registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/processing-activity.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "422":
+          description: >-
+            PROCESSING_REGISTRY_INCOMPLETE (a mandatory field or category list
+            is missing) or PROCESSING_REGISTRY_IDENTITY_PAYLOAD_REJECTED (the
+            write carried an identity attribute this service refuses to store).
+
+  /processing-activities/{activity_id}/status:
+    post:
+      operationId: changeProcessingActivityStatus
+      summary: Move a Processing Registry entry through its lifecycle
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.change_processing_activity_status.
+        Each transition increments activity_version; a deprecated entry is
+        terminal and can never return to active.
+      tags: [compliance-service]
+      parameters:
+        - name: activity_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The registry entry being transitioned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_status]
+              properties:
+                target_status:
+                  type: string
+                  enum: [draft, active, suspended, deprecated]
+                expected_activity_version: { type: [integer, null], minimum: 1 }
+      responses:
+        "200":
+          description: Processing activity status changed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/processing-activity.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            PROCESSING_ACTIVITY_TRANSITION_INVALID,
+            OPTIMISTIC_CONCURRENCY_CONFLICT or COMPLIANCE_COMMAND_CONFLICT.
+
+  /processing-activities/{activity_id}:
+    get:
+      operationId: getProcessingActivity
+      summary: Read one Processing Registry entry
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.read_processing_activity.
+        In-scope reads resolve normally. A caller presenting a cross-scope
+        grant carrying read_processing_registry may reach another
+        organization's entry; a caller presenting nothing gets the
+        non-disclosing 404.
+      tags: [compliance-service]
+      parameters:
+        - name: activity_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The registry entry being read.
+      responses:
+        "200":
+          description: Processing activity
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/processing-activity.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /procedural-cases:
+    post:
+      operationId: openProceduralCase
+      summary: Open a governed procedural case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.open_procedural_case. A case
+        may only ever be opened inside the caller's own organization —
+        creating obligations inside a scope one does not own is not a
+        capability any cross-scope grant confers. The procedural
+        authority, case handler and independent decision-maker are three
+        distinct references and can never coincide.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  case_id,
+                  case_type,
+                  opened_at,
+                  subject_reference,
+                  procedural_authority_reference,
+                  workflow_type,
+                ]
+              properties:
+                case_id: { type: string, format: uuid }
+                case_type:
+                  type: string
+                  enum:
+                    [
+                      data_subject_request,
+                      compliance_review,
+                      party_arbitration,
+                      internal_dispute,
+                      legal_request,
+                    ]
+                opened_at: { type: string, format: date-time }
+                subject_reference: { type: string, minLength: 1 }
+                procedural_authority_reference: { type: string, format: uuid }
+                workflow_type: { type: string, minLength: 1 }
+                required_steps:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [step_code, required]
+                    properties:
+                      step_code: { type: string, minLength: 1 }
+                      required: { type: boolean }
+      responses:
+        "201":
+          description: Procedural case opened
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with
+            different content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the
+            caller-supplied expected version no longer matches).
+
+  /procedural-cases/{case_id}:
+    get:
+      operationId: getProceduralCase
+      summary: Read one governed procedural case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.read_procedural_case. A case
+        belonging to another organization returns the same 404 as a case
+        that does not exist, unless the caller presents a grant carrying
+        read_case issued by that organization.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case being read.
+      responses:
+        "200":
+          description: Procedural case
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /procedural-cases/{case_id}/case-handler:
+    post:
+      operationId: assignCaseHandler
+      summary: Assign the case handler
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.assign_case_handler. The case
+        handler is a role distinct from both the procedural authority and
+        the independent decision-maker; assigning a party that already
+        holds either is refused with PROCEDURAL_ROLE_CONFLICT.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case being staffed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [handler_party_reference, assigned_by_party_reference]
+              properties:
+                handler_party_reference: { type: string, format: uuid }
+                assigned_by_party_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Case handler assigned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-case.schema.json"
+        "403":
+          description: >-
+            PROCEDURAL_ROLE_CONFLICT (this party already holds a separated role
+            on the case) or one of the scope codes.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: PROCEDURAL_CASE_CLOSED or COMPLIANCE_COMMAND_CONFLICT.
+
+  /procedural-cases/{case_id}/conflict-declarations:
+    post:
+      operationId: declareConflictOfInterest
+      summary: File an explicit conflict-of-interest declaration
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.declare_conflict_of_interest.
+        A conflict is an explicit state that changes what the workflow
+        permits, never free text: declared and confirmed both make the
+        party ineligible to become the independent decision-maker or to
+        record a decision. basis_code is a closed-vocabulary marker; any
+        narrative lives in a referenced document under PACK-11.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case the declaration belongs to.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [party_reference, state, basis_code]
+              properties:
+                party_reference: { type: string, format: uuid }
+                state:
+                  type: string
+                  enum: [none_declared, declared, confirmed, waived]
+                basis_code: { type: string, minLength: 1 }
+                decided_by_party_reference:
+                  { type: [string, null], format: uuid }
+      responses:
+        "201":
+          description: Conflict declaration recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/conflict-of-interest-declaration.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: PROCEDURAL_CASE_CLOSED.
+
+  /procedural-cases/{case_id}/independent-decision-maker:
+    post:
+      operationId: assignIndependentDecisionMaker
+      summary: Assign the independent decision-maker
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.assign_independent_decision_maker.
+        Refuses when the candidate appoints themselves, when the appointer
+        is a party to the dispute or the current case handler, when the
+        candidate holds any party role or is the procedural authority or
+        case handler, when no conflict declaration exists for the
+        candidate, or when that declaration is in a blocking state.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case being assigned a decision-maker.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [candidate_party_reference, appointing_party_reference]
+              properties:
+                candidate_party_reference: { type: string, format: uuid }
+                appointing_party_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Independent decision-maker assigned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-case.schema.json"
+        "403":
+          description: >-
+            PROCEDURAL_INDEPENDENCE_VIOLATION (self-appointment, a party or the
+            case handler appointing, or a candidate who is a party / the
+            authority / the handler), CONFLICT_OF_INTEREST_BLOCKING, or a scope
+            code.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            CONFLICT_OF_INTEREST_UNDECLARED (no declaration exists yet — fail
+            closed), PROCEDURAL_CASE_CLOSED or COMPLIANCE_COMMAND_CONFLICT.
+
+  /procedural-cases/{case_id}/decision:
+    post:
+      operationId: recordCaseDecision
+      summary: Record the decision of a governed case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.record_case_decision. For
+        party_arbitration and internal_dispute cases only the assigned
+        independent decision-maker may decide; for the remaining case
+        types the procedural authority may. Anyone carrying a blocking
+        conflict declaration is refused. Evidence is referenced, never
+        embedded. A decision is created exactly once per case.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case being decided.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [outcome, decision_reason_code, decided_by_party_reference]
+              properties:
+                outcome:
+                  type: string
+                  enum:
+                    [
+                      upheld,
+                      partially_upheld,
+                      dismissed,
+                      inadmissible,
+                      settled,
+                      withdrawn,
+                    ]
+                decision_reason_code: { type: string, minLength: 1 }
+                decided_by_party_reference: { type: string, format: uuid }
+                evidence_references:
+                  type: array
+                  items: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/case-decision.schema.json"
+        "403":
+          description: >-
+            DECISION_AUTHORITY_MISSING (the acting party holds no role permitted
+            to decide this case), CONFLICT_OF_INTEREST_BLOCKING, or a scope code.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: PROCEDURAL_CASE_CLOSED or COMPLIANCE_COMMAND_CONFLICT.
+
+  /procedural-cases/{case_id}/status:
+    post:
+      operationId: transitionProceduralCase
+      summary: Move a governed case through its status lifecycle
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.transition_procedural_case.
+        Closing requires an explicit closure reason code, and a case can
+        never reach decided before its decision is recorded. A closed case
+        is not modifiable by any ordinary command afterwards.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case being transitioned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target_status]
+              properties:
+                target_status:
+                  type: string
+                  enum:
+                    [
+                      open,
+                      admissibility_review,
+                      active,
+                      stayed,
+                      decided,
+                      closed,
+                    ]
+                closure_reason_code: { type: [string, null] }
+                expected_case_version: { type: [integer, null], minimum: 1 }
+      responses:
+        "200":
+          description: Case transitioned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            PROCEDURAL_CASE_TRANSITION_INVALID, OPTIMISTIC_CONCURRENCY_CONFLICT
+            or COMPLIANCE_COMMAND_CONFLICT.
+
+  /procedural-cases/{case_id}/appeals:
+    post:
+      operationId: fileAppeal
+      summary: File an appeal against a decided or closed case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.file_appeal. An appeal is a
+        SEPARATE governed case plus an AppealReference linking the two;
+        the original case is never reopened or edited, which is what keeps
+        'a closed case is not modifiable by an ordinary command' true.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The original, decided or closed case.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [appeal_case, filed_by_party_reference]
+              properties:
+                appeal_case:
+                  type: object
+                  description: >-
+                    The new case to open for the review, in the same shape
+                    openProceduralCase accepts.
+                filed_by_party_reference: { type: string, format: uuid }
+      responses:
+        "201":
+          description: Appeal case opened and linked
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  [
+                    appeal_id,
+                    organization_id,
+                    original_case_id,
+                    appeal_case_id,
+                    filed_at,
+                    filed_by_party_reference,
+                  ]
+                properties:
+                  appeal_id: { type: string, format: uuid }
+                  organization_id: { type: string, format: uuid }
+                  original_case_id: { type: string, format: uuid }
+                  appeal_case_id: { type: string, format: uuid }
+                  filed_at: { type: string, format: date-time }
+                  filed_by_party_reference: { type: string, format: uuid }
+        "403":
+          description: >-
+            PROCEDURAL_INDEPENDENCE_VIOLATION (only a decided or closed case can
+            be appealed) or a scope code.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /deadline-definitions:
+    post:
+      operationId: defineDeadline
+      summary: Create a reusable deadline definition
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.define_deadline. timezone is a
+        REQUIRED explicit IANA name; due dates are computed on that civil
+        clock, so a period spanning a DST change lands on the same
+        wall-clock time rather than drifting. An empty or unknown zone is
+        refused with DEADLINE_TIMEZONE_UNDETERMINED.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [definition_id, deadline_code, duration_days, timezone]
+              properties:
+                definition_id: { type: string, format: uuid }
+                deadline_code: { type: string, minLength: 1 }
+                duration_days: { type: integer, minimum: 0 }
+                timezone:
+                  type: string
+                  minLength: 1
+                  description: An IANA timezone name, e.g. Europe/Berlin.
+                escalation_after_days: { type: [integer, null], minimum: 0 }
+                description: { type: string }
+      responses:
+        "201":
+          description: Deadline definition created
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/deadline-definition.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "422":
+          description: DEADLINE_TIMEZONE_UNDETERMINED — an explicit, known IANA zone is required.
+
+  /procedural-cases/{case_id}/deadlines:
+    post:
+      operationId: startProceduralDeadline
+      summary: Start a deadline on a case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.start_deadline. If a live
+        (running, suspended or escalated) deadline already exists for this
+        (case, deadline_code) pair, the command is refused with
+        DEADLINE_SILENT_REPLACEMENT_REJECTED unless the caller explicitly
+        names it in supersedes_deadline_id. When it does, the old instance
+        is superseded — it keeps its whole history and gains a link to its
+        successor — rather than being silently replaced or reset.
+      tags: [compliance-service]
+      parameters:
+        - name: case_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The case the deadline runs on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [definition_id, deadline_id, reason_code, actor_party_reference]
+              properties:
+                definition_id: { type: string, format: uuid }
+                deadline_id: { type: string, format: uuid }
+                reason_code: { type: string, minLength: 1 }
+                actor_party_reference: { type: string, format: uuid }
+                supersedes_deadline_id: { type: [string, null], format: uuid }
+      responses:
+        "201":
+          description: Deadline started
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-deadline.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            DEADLINE_SILENT_REPLACEMENT_REJECTED (a live deadline of this code
+            already exists — name it explicitly to supersede it),
+            PROCEDURAL_CASE_CLOSED or COMPLIANCE_COMMAND_CONFLICT.
+
+  /procedural-deadlines/{deadline_id}/transitions:
+    post:
+      operationId: transitionProceduralDeadline
+      summary: Suspend, resume, extend, complete, escalate or expire a deadline
+      description: >
+        Owned by compliance-service. Maps to the six sibling commands
+        suspend_deadline, resume_deadline, extend_deadline,
+        complete_deadline, escalate_deadline and expire_deadline in
+        epd2_compliance_service.application, which share one guard path.
+        Every transition APPENDS a history entry recording due_at_before
+        and due_at_after; nothing is ever overwritten, suspension
+        preserves the remaining period rather than resetting the full one,
+        and a deadline can never expire before its own due time. A retried
+        call with the same event_id replays the recorded result instead of
+        appending a second entry.
+      tags: [compliance-service]
+      parameters:
+        - name: deadline_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The deadline being transitioned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [transition, reason_code, actor_party_reference]
+              properties:
+                transition:
+                  type: string
+                  enum: [suspend, resume, extend, complete, escalate, expire]
+                reason_code: { type: string, minLength: 1 }
+                actor_party_reference: { type: string, format: uuid }
+                additional_days:
+                  type: [integer, null]
+                  minimum: 1
+                  description: Required for, and only used by, the extend transition.
+      responses:
+        "200":
+          description: Deadline transitioned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-deadline.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: DEADLINE_TRANSITION_INVALID or COMPLIANCE_COMMAND_CONFLICT.
+
+  /data-subject-requests:
+    post:
+      operationId: intakeDataSubjectRequest
+      summary: Take in a data-subject or legal request
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.intake_data_subject_request.
+        Takes in the request together with the governed case that carries
+        its procedure. No identity attribute is accepted here at all: the
+        requester is a per-case party reference and identity verification
+        starts at not_verified.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  request_id,
+                  case,
+                  request_type,
+                  requester_party_reference,
+                  scope_description_code,
+                ]
+              properties:
+                request_id: { type: string, format: uuid }
+                case:
+                  type: object
+                  description: >-
+                    The governed case to open for this request, in the same
+                    shape openProceduralCase accepts.
+                request_type:
+                  type: string
+                  enum:
+                    [
+                      access,
+                      rectification,
+                      erasure,
+                      restriction,
+                      portability,
+                      objection,
+                      other_legal_request,
+                    ]
+                requester_party_reference: { type: string, format: uuid }
+                scope_description_code: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Request received
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/data-subject-request.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with
+            different content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the
+            caller-supplied expected version no longer matches).
+
+  /data-subject-requests/{request_id}/identity-verification:
+    post:
+      operationId: setIdentityVerificationStatus
+      summary: Record the identity-verification status of a request
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.set_identity_verification_status.
+        Records ONLY the status plus an opaque reference to the service
+        that performed the verification. There is deliberately no field
+        here — and none anywhere in this contract — that could carry an
+        identity attribute, a document, an eID assertion or a KYC payload:
+        compliance-service never acquires or stores identity.
+      tags: [compliance-service]
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The request being updated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum:
+                    [
+                      not_verified,
+                      verification_pending,
+                      verified,
+                      verification_failed,
+                    ]
+                verification_reference:
+                  type: [string, null]
+                  format: uuid
+                  description: >-
+                    Opaque pointer to the service that performed the
+                    verification. Never a verification result or attribute.
+      responses:
+        "200":
+          description: Verification status recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/data-subject-request.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_ORGANIZATION_CASE_ACCESS_DENIED
+            (the write crossed an organizational boundary without authority),
+            CROSS_SCOPE_AUTHORITY_INVALID (a grant was presented but does not
+            permit this capability here), ORGANIZATION_SCOPE_UNDETERMINED (the
+            caller has no resolvable scope — fail closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+
+  /data-subject-requests/{request_id}/response:
+    post:
+      operationId: decideDataSubjectRequest
+      summary: Record the response decision for a request
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.decide_data_subject_request.
+        Refused unless identity verification reached verified — a request
+        is never answered on the strength of an unverified claim, and this
+        service still never sees the identity data behind that status. A
+        refused or partially granted response must carry a limitation
+        reason code. completion_evidence_reference is a reference to
+        material held elsewhere, never the material itself.
+      tags: [compliance-service]
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: The request being answered.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [granted, partially_granted, refused]
+                limitation_reason_code: { type: [string, null] }
+                completion_evidence_reference: { type: [string, null] }
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/data-subject-request.schema.json"
+        "403":
+          description: >-
+            IDENTITY_VERIFICATION_INSUFFICIENT — verification has not reached
+            verified, so the request cannot be answered.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the
+            resource does not exist or exists in another organization and no
+            cross-scope authority was presented, so a foreign id discloses
+            nothing.
+        "409":
+          description: >-
+            DATA_SUBJECT_REQUEST_TRANSITION_INVALID or COMPLIANCE_COMMAND_CONFLICT.
+
+  # =========================================================================
+  # Architecture & Domain Framework 0.8.1 additions (same 0.9.0 round)
+  #
+  # The legal-case substrate, the official-notice trust boundary, records
+  # classification and the data-protection activation gate. Three contract
+  # rules are worth stating once here rather than repeating in every block:
+  #
+  # * Issuance, service telemetry and legal effect are THREE separate
+  #   paths on purpose. `issueOfficialNotice` and `recordServiceAttempt`
+  #   establish nothing; only `determineServiceEffect` can, and only it
+  #   can start a deadline.
+  # * A decision's effect, finality and enforceability are THREE separate
+  #   paths for the same reason - a single "status" field would let a
+  #   caller collapse facts the Framework requires to stay apart.
+  # * Still NO delete path anywhere: not for a governed record, not for a
+  #   legal case, not for a filing and not for a procedural decision. A
+  #   rejected filing keeps its docket position; a closed case is reopened
+  #   by a successor case, never by rewriting the closed one.
+  # =========================================================================
+
+  /legal-cases:
+    post:
+      operationId: openLegalCase
+      summary: Open a legal case on the common legal-case substrate
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.open_legal_case. A case may only ever be opened
+        inside the caller's own organization. Opening a case grants no substantive
+        capability: the case cannot enter substantive_review, hearing or decided until a
+        jurisdiction determination is bound to it (Framework 0.8.1 hard invariant 52), and
+        this path does not accept one.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/legal-case.schema.json"
+      responses:
+        "201":
+          description: Legal case opened
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-cases/{legal_case_id}/transitions:
+    post:
+      operationId: transitionLegalCase
+      summary: Move a legal case to a new status
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.transition_legal_case. Three refusals stack,
+        each with its own code: the closed transition table, the jurisdiction requirement
+        for substantive statuses, and recusal of the acting authority. Closing a case
+        requires an explicit closure reason code.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target, reason_code, acting_authority_reference]
+              properties:
+                target:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        intake,
+                        jurisdiction_review,
+                        admissibility_review,
+                        substantive_review,
+                        hearing,
+                        decided,
+                        closed,
+                        reopened,
+                      ],
+                  }
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+                closure_reason_code: { type: [string, "null"] }
+                expected_case_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Legal case transitioned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). PROCEDURAL_CASE_TRANSITION_INVALID (the transition
+            table forbids it), JURISDICTION_MISSING (a substantive status without a bound
+            determination) or RECUSED_ACTOR_DENIED.
+
+  /legal-cases/{legal_case_id}/reopening:
+    post:
+      operationId: reopenLegalCase
+      summary: Open a successor case that reopens a closed one
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.reopen_legal_case. Reopening never resurrects
+        the prior case and never rewrites its closure: it creates a NEW case that carries
+        reopened_from_case_id. The prior case stays closed with its closure reason intact.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/legal-case.schema.json"
+      responses:
+        "201":
+          description: Successor case opened
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/legal-case.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-cases/{legal_case_id}/jurisdiction:
+    post:
+      operationId: determineJurisdiction
+      summary: Record which authority is competent for this case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.determine_jurisdiction. Determinations are
+        APPENDED, never rewritten. The case is bound to the newest determination; every
+        earlier one stays queryable, so 'who was competent, and until when' survives any
+        number of challenges and transfers.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/jurisdiction-determination.schema.json"
+      responses:
+        "201":
+          description: Jurisdiction determined and bound to the case
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/jurisdiction-determination.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). JURISDICTION_SCOPE_MISMATCH (the determination is
+            for another case or kind).
+
+  /jurisdiction-determinations/{jurisdiction_id}/challenge:
+    post:
+      operationId: challengeJurisdiction
+      summary: Mark a jurisdiction determination challenged
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.challenge_jurisdiction. A challenged
+        determination stops permitting substantive decisions immediately. That is the
+        point: a contested competence must not keep producing binding outcomes while the
+        challenge is pending.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Determination challenged
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/jurisdiction-determination.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). JURISDICTION_NOT_COMPETENT (already transferred or
+            declined).
+
+  /jurisdiction-determinations/{jurisdiction_id}/transfer:
+    post:
+      operationId: transferJurisdiction
+      summary: Transfer competence to a successor determination
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.transfer_jurisdiction. Both determinations
+        survive. The outgoing one gains valid_until and a pointer to its successor; it is
+        not rewritten to describe the new authority, because acts performed while it was
+        competent must stay attributable to it.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [successor, reason_code]
+              properties:
+                successor:
+                  { $ref: "../schemas/jurisdiction-determination.schema.json" }
+                reason_code: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Competence transferred
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/jurisdiction-determination.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). JURISDICTION_TRANSFER_REQUIRED (the successor does
+            not name what it supersedes) or JURISDICTION_SCOPE_MISMATCH.
+
+  /legal-cases/{legal_case_id}/parties:
+    post:
+      operationId: registerCaseParty
+      summary: Register a party on a case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_case_party. party_reference is a
+        PER-CASE handle minted by
+        epd2_compliance_service.casework.mint_case_party_reference. It is meaningless
+        outside this case, is never reused across cases, and resolves to a person in no
+        service in this repository (Framework hard invariant 1).
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/case-party.schema.json"
+      responses:
+        "201":
+          description: Party registered on the case
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/case-party.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). PROCEDURAL_CASE_CLOSED.
+
+  /legal-cases/{legal_case_id}/representations:
+    post:
+      operationId: registerRepresentation
+      summary: Register a representation mandate
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_representation. A mandate is an
+        ENUMERATED SET OF AUTHORITIES, not a role name (Framework hard invariant 15).
+        Nothing downstream may infer that a representative can settle a case from the fact
+        that a representative exists.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/representation-mandate.schema.json"
+      responses:
+        "201":
+          description: Mandate registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/representation-mandate.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /representation-mandates/{mandate_id}/revocation:
+    post:
+      operationId: revokeRepresentation
+      summary: Revoke a representation mandate from now on
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.revoke_representation. Revocation is
+        forward-looking only. Filings already accepted under the mandate stay valid: the
+        mandate was effective when they were made, and rewriting that would be rewriting
+        the docket.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Mandate revoked
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/representation-mandate.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-cases/{legal_case_id}/filings:
+    post:
+      operationId: receiveFiling
+      summary: Append a filing to the case docket
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.receive_filing. The docket sequence is assigned
+        by the store, never by the caller: a caller-supplied sequence that disagrees with
+        the next position is refused with FILING_SEQUENCE_CONFLICT rather than silently
+        corrected. A filing made by a representative is checked against the mandate's
+        FILE_SUBMISSIONS authority at received_at. submitted_at and received_at are
+        deliberately distinct.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/filing.schema.json"
+      responses:
+        "201":
+          description: Filing appended to the docket
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/filing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). FILING_SEQUENCE_CONFLICT, REPRESENTATION_INVALID,
+            REPRESENTATION_EXPIRED, REPRESENTATION_REVOKED or PROCEDURAL_CASE_CLOSED.
+
+  /filings/{filing_id}/admissibility:
+    post:
+      operationId: decideFilingAdmissibility
+      summary: Admit or reject a received filing
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.decide_filing_admissibility. Receipt and
+        admission are separate facts. A rejected filing is NOT removed: it stays on the
+        docket at its original sequence, in rejected state, carrying its reason code, and
+        its slot is never reused.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [admit, reason_code, acting_authority_reference]
+              properties:
+                admit: { type: boolean }
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Admissibility decided
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/filing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). FILING_INADMISSIBLE, FILING_SEQUENCE_CONFLICT or
+            RECUSED_ACTOR_DENIED.
+
+  /filings/{filing_id}/supersession:
+    post:
+      operationId: supersedeFiling
+      summary: Point a filing at the filing that replaces it
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.supersede_filing. Correction is supersession,
+        not mutation. The superseded filing keeps its docket sequence, its timestamps and
+        its document references; the store compares every immutable field and refuses a
+        save that changed any of them.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [successor_filing_id]
+              properties:
+                successor_filing_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Filing marked superseded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/filing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). FILING_SEQUENCE_CONFLICT.
+
+  /legal-cases/{legal_case_id}/hearings:
+    post:
+      operationId: scheduleHearing
+      summary: Schedule a hearing on an open case
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.schedule_hearing. The hearing carries its own
+        IANA timezone name so a consumer computing a local-time notice period cannot
+        silently apply its own. The convening authority is checked against the case's
+        recusal records.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/hearing.schema.json"
+      responses:
+        "201":
+          description: Hearing scheduled
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/hearing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). RECUSED_ACTOR_DENIED or PROCEDURAL_CASE_CLOSED.
+
+  /hearings/{hearing_id}/reschedule:
+    post:
+      operationId: rescheduleHearing
+      summary: Move a hearing to a new instant
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.reschedule_hearing. Rescheduling a hearing does
+        NOT move any deadline attached to it. Framework hard invariant 60: a deadline
+        changes only through its own governed decision, so a submissions deadline tied to a
+        rescheduled hearing keeps running until somebody decides otherwise on the record.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [new_scheduled_at, reason_code, acting_authority_reference]
+              properties:
+                new_scheduled_at: { type: string, format: date-time }
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Hearing transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/hearing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). HEARING_TRANSITION_INVALID.
+
+  /hearings/{hearing_id}/cancellation:
+    post:
+      operationId: cancelHearing
+      summary: Cancel a scheduled hearing
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.cancel_hearing. The cancellation is appended to
+        the hearing's history; no earlier entry is rewritten.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code, acting_authority_reference]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Hearing transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/hearing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). HEARING_TRANSITION_INVALID.
+
+  /hearings/{hearing_id}/completion:
+    post:
+      operationId: completeHearing
+      summary: Complete a hearing
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.complete_hearing. minutes_reference is a
+        forward reference to material PACK-11 or PACK-21 will own. PACK-09 records that
+        minutes exist and where; it stores no minutes content.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code, acting_authority_reference]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+                minutes_reference:
+                  {
+                    type: [object, "null"],
+                    additionalProperties: false,
+                    required:
+                      [owner, kind, external_reference, organization_id],
+                    properties:
+                      {
+                        owner: { type: string },
+                        kind: { type: string },
+                        external_reference: { type: string },
+                        organization_id: { type: string, format: uuid },
+                      },
+                  }
+      responses:
+        "200":
+          description: Hearing transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/hearing.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). HEARING_TRANSITION_INVALID.
+
+  /legal-cases/{legal_case_id}/interim-measures:
+    post:
+      operationId: decideInterimMeasure
+      summary: Grant, refuse or record an interim measure
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.decide_interim_measure. A GRANTED measure is
+        constructible only with decided_by_actor_class = human_authority (Framework hard
+        invariant 69: AI decides no consequential legal outcomes), and only with an end
+        date or a review date plus a reasons reference - an indefinite unreasoned measure
+        is not expressible at all.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/interim-measure.schema.json"
+      responses:
+        "201":
+          description: Interim measure recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/interim-measure.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). INTERIM_MEASURE_AUTHORITY_DENIED,
+            JURISDICTION_MISSING, JURISDICTION_NOT_COMPETENT or RECUSED_ACTOR_DENIED.
+
+  /legal-cases/{legal_case_id}/procedural-decisions:
+    post:
+      operationId: issueProceduralDecision
+      summary: Issue a procedural decision
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.issue_procedural_decision. The six due-process
+        prerequisites of Framework hard invariant 52 are checked here: jurisdiction,
+        legally effective notice, an opportunity to respond, a human deciding actor,
+        reasons, and an available remedy. notice_effect_id is RESOLVED against the
+        notice-effect store - a caller cannot assert 'notice was effective' with a flag.
+        Issuance establishes neither effect, finality nor enforceability; those are three
+        separate later transitions.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  decision,
+                  notice_effect_id,
+                  response_opportunity_given,
+                  remedy_available,
+                  decided_by_actor_class,
+                ]
+              properties:
+                decision: { $ref: "../schemas/procedural-decision.schema.json" }
+                notice_effect_id: { type: [string, "null"], format: uuid }
+                response_opportunity_given: { type: boolean }
+                remedy_available: { type: boolean }
+                decided_by_actor_class:
+                  {
+                    type: string,
+                    enum:
+                      [human_authority, human_case_handler, service, automated],
+                  }
+      responses:
+        "201":
+          description: Procedural decision issued
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DUE_PROCESS_PREREQUISITE_MISSING (the message names
+            the one missing prerequisite), JURISDICTION_MISSING, JURISDICTION_NOT_COMPETENT
+            or RECUSED_ACTOR_DENIED.
+
+  /procedural-decisions/{decision_id}/effect:
+    post:
+      operationId: changeDecisionEffect
+      summary: Commence, suspend or resume a decision's legal effect
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.change_decision_effect. Legal effect is one of
+        THREE separate governed facts. Suspending effect also stays enforceability - a
+        suspended decision that stayed enforceable is exactly the failure Framework hard
+        invariant 52 exists to prevent - and the aggregate implements that coupling, so no
+        caller can suspend one without the other.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action, reason_code, acting_authority_reference]
+              properties:
+                action: { type: string, enum: [commence, suspend, resume] }
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+                expected_decision_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Effect status changed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DECISION_NOT_EFFECTIVE.
+
+  /procedural-decisions/{decision_id}/finality:
+    post:
+      operationId: makeDecisionFinal
+      summary: Record that the remedy window closed or was exhausted
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.make_decision_final. Finality does not imply
+        enforceability and this service never derives one from the other: making a decision
+        enforceable is a separate operation with its own precondition.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code, acting_authority_reference]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+                expected_decision_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Finality status changed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DECISION_NOT_FINAL.
+
+  /procedural-decisions/{decision_id}/enforceability:
+    post:
+      operationId: makeDecisionEnforceable
+      summary: Make a decision enforceable
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.make_decision_enforceable. Refused with
+        DECISION_NOT_ENFORCEABLE unless the decision is actually in effect. A final
+        decision whose effect is suspended is not enforceable, and that combination is
+        inexpressible rather than merely discouraged.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason_code, acting_authority_reference]
+              properties:
+                reason_code: { type: string, minLength: 1 }
+                acting_authority_reference: { type: string, format: uuid }
+                expected_decision_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: Enforceability status changed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/procedural-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DECISION_NOT_ENFORCEABLE.
+
+  /procedural-decisions/{decision_id}/remedies:
+    post:
+      operationId: registerRemedy
+      summary: Attach an appeal or review route to a decision
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_remedy. Framework hard invariant 52
+        requires a remedy route to exist before a sanction may stand. It does not make that
+        route permanently open: available_from and available_until bound it, and exercising
+        outside the window is refused with REMEDY_UNAVAILABLE.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/remedy.schema.json"
+      responses:
+        "201":
+          description: Remedy registered and bound to the decision
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/remedy.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-cases/{legal_case_id}/recusals:
+    post:
+      operationId: recordRecusal
+      summary: Record a conflict assessment outcome and any recusal it produces
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.record_recusal. Framework hard invariant 53:
+        recusal blocks capability WITHOUT erasing history - prior_participation_codes
+        preserves what the recused actor already did. Framework hard invariant 54:
+        assessments are versioned, not overwritten - a superseding assessment names the one
+        it supersedes.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/recusal-record.schema.json"
+      responses:
+        "201":
+          description: Recusal recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/recusal-record.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-cases/{legal_case_id}/replacement-assignments:
+    post:
+      operationId: assignReplacement
+      summary: Assign a replacement for a recused actor
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.assign_replacement. Refused if the replacement
+        is themselves recused from this case - otherwise a recusal could be 'resolved' by
+        handing the matter to somebody equally conflicted.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/replacement-assignment.schema.json"
+      responses:
+        "201":
+          description: Replacement assigned
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/replacement-assignment.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). RECUSED_ACTOR_DENIED.
+
+  /legal-cases/{legal_case_id}/notices:
+    post:
+      operationId: issueOfficialNotice
+      summary: Create an authorized official notice object (step 1 of 3)
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.issue_official_notice. STEP 1 OF 3 of the
+        notice trust boundary. Issuing a notice STARTS NOTHING: no deadline runs, no
+        presumption applies and no legal effect exists. Framework hard invariant 40
+        requires an authorized object, a valid method, proof and a governed effect
+        decision; this path supplies only the first.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/official-notice.schema.json"
+      responses:
+        "201":
+          description: Official notice issued (no legal effect established)
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/official-notice.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /official-notices/{notice_id}/service-attempts:
+    post:
+      operationId: recordServiceAttempt
+      summary: Record one attempt to serve a notice, with provider telemetry (step 2 of 3)
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.record_service_attempt. STEP 2 OF 3. Provider
+        telemetry, and nothing more. Framework hard invariant 39: delivery and read
+        telemetry are NOT legally effective notice. The method is checked against the
+        notice's authorized_methods HERE, at recording time, so an attempt over an
+        unauthorized channel is refused with NOTICE_METHOD_INVALID rather than accumulating
+        as evidence that later resembles proof of service.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/service-attempt.schema.json"
+      responses:
+        "201":
+          description: Service attempt recorded (no legal effect established)
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/service-attempt.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). NOTICE_METHOD_INVALID.
+
+  /official-notices/{notice_id}/service-attempts/{attempt_id}/reconciliation:
+    post:
+      operationId: reconcileServiceAttempt
+      summary: Reconcile a service attempt against an evidence-grade proof package
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.reconcile_service_attempt. Framework hard
+        invariant 57: a provider's status is not an internal legal effect without
+        validation and reconciliation. Until this runs, the attempt supports no
+        deemed-service rule, no matter what the provider reported.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [proof_package_reference]
+              properties:
+                proof_package_reference:
+                  {
+                    type: object,
+                    additionalProperties: false,
+                    required: [id, organization_id],
+                    properties:
+                      {
+                        id: { type: string, format: uuid },
+                        organization_id: { type: string, format: uuid },
+                      },
+                  }
+      responses:
+        "200":
+          description: Attempt reconciled
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/service-attempt.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /official-notices/{notice_id}/effect:
+    post:
+      operationId: determineServiceEffect
+      summary: Determine whether a notice took legal effect (step 3 of 3)
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.determine_service_effect. STEP 3 OF 3, and the
+        ONLY operation in this contract that can establish legal effect. The result is
+        written through a create-once store, so a retry or replay cannot manufacture a
+        second legal effect for the same notice (Framework hard invariant 59). An outcome
+        of 'undetermined' establishes nothing and starts nothing - fail closed.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  deemed_service_rule,
+                  rule_reference,
+                  decided_by_authority_reference,
+                  effective_at,
+                ]
+              properties:
+                deemed_service_rule:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        actual_receipt_proven,
+                        registered_post_presumption,
+                        portal_availability_presumption,
+                        public_posting_period,
+                        recipient_acknowledgement,
+                      ],
+                  }
+                rule_reference: { type: string, minLength: 1 }
+                decided_by_authority_reference: { type: string, format: uuid }
+                effective_at: { type: string, format: date-time }
+      responses:
+        "201":
+          description: Notice effect determined
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/notice-effect-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). SERVICE_NOT_PROVEN (no reconciled attempt supports
+            the rule invoked - this is the refusal that makes 'delivered' telemetry
+            insufficient on its own), NOTICE_EFFECT_UNDETERMINED,
+            NOTICE_EFFECT_ALREADY_ESTABLISHED or NOTICE_METHOD_INVALID.
+
+  /procedural-deadlines/{deadline_id}/trigger:
+    post:
+      operationId: triggerProceduralDeadline
+      summary: Record the governed trigger that started a deadline
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.trigger_procedural_deadline. source can NEVER
+        be delivery_telemetry or read_telemetry: those members exist in the TriggerSource
+        enum so the refusal is explicit and testable by name rather than an omission
+        (Framework hard invariant 39). The trigger store is create-once per deadline, so a
+        replay cannot start the same deadline twice (hard invariant 59). An outage does not
+        reach this path at all: a deadline whose infrastructure was unavailable is
+        suspended and resumed through its own governed transitions, each with its own
+        reason code (hard invariant 60).
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [source, notice_effect_id, source_reference]
+              properties:
+                source:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        notice_effect_decision,
+                        governed_decision,
+                        filing_receipt,
+                        statutory_date,
+                      ],
+                  }
+                notice_effect_id: { type: [string, "null"], format: uuid }
+                source_reference: { type: string }
+      responses:
+        "201":
+          description: Deadline trigger recorded exactly once
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/deadline-trigger.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DEADLINE_TRIGGER_INVALID (a telemetry source, or a
+            notice effect that establishes nothing) or DUPLICATE_LEGAL_EFFECT_PREVENTED.
+
+  /record-classes:
+    post:
+      operationId: registerRecordClass
+      summary: Register a record class with its retention and disclosure governance
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_record_class. Binds a class of records
+        to its retention schedule, custodian, disposition authority, data classification
+        and search/export eligibility as one versioned object. The record owner may not
+        also be the disposition authority - separating who owns a record from who may
+        authorize destroying it is the whole point of the class.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/record-class.schema.json"
+      responses:
+        "201":
+          description: Record class registered
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/record-class.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /legal-holds/{hold_id}/propagations:
+    post:
+      operationId: registerHoldPropagation
+      summary: Record how far a Legal Hold has actually reached
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.register_hold_propagation. A hold that exists
+        on the primary record but has not reached a replica, index, export or backup is not
+        an effective hold. States unknown, pending and failed all block destruction of the
+        primary record; recording an honest 'unknown' is more useful here than optimistic
+        silence.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/hold-propagation-record.schema.json"
+      responses:
+        "201":
+          description: Propagation state recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/hold-propagation-record.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /processing-activities/{activity_id}/dpia-requirement:
+    post:
+      operationId: determineDpiaRequirement
+      summary: Record whether this processing activity requires a DPIA
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.determine_dpia_requirement. Recorded even when
+        dpia_required is false, because the ABSENCE of a determination is what blocks
+        activation: 'nobody ever asked' and 'we asked and the answer was no' are different
+        states with different outcomes.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/dpia-requirement-determination.schema.json"
+      responses:
+        "201":
+          description: DPIA requirement determined
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/dpia-requirement-determination.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches).
+
+  /dpias/{dpia_id}/status:
+    post:
+      operationId: changeDpiaStatus
+      summary: Move a data protection impact assessment through its lifecycle
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.change_dpia_status. When the target is approved
+        and both the controller and the process owner are supplied, reviewer independence
+        is enforced: a DPIA signed off by the party that wants the processing is not a
+        review.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [target]
+              properties:
+                target:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        not_required,
+                        draft,
+                        under_review,
+                        approved,
+                        rejected,
+                        expired,
+                      ],
+                  }
+                approval_reference: { type: [string, "null"] }
+                outcome_reason_code: { type: [string, "null"] }
+                valid_until: { type: [string, "null"], format: date-time }
+                controller_reference: { type: [string, "null"], format: uuid }
+                process_owner_authority_reference:
+                  { type: [string, "null"], format: uuid }
+                expected_dpia_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: DPIA status changed
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/data-protection-impact-assessment.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DPIA_NOT_APPROVED or DPO_INDEPENDENCE_REQUIRED.
+
+  /processing-activities/{activity_id}/activation:
+    post:
+      operationId: decideProcessingActivation
+      summary: Activate a processing activity through the governed DPIA gate
+      description: >
+        Owned by compliance-service. Maps to
+        epd2_compliance_service.application.decide_processing_activation. A four-step gate
+        runs before anything is written: risk class, then a recorded requirement
+        determination must exist, then a DPIA must exist where required, then that DPIA
+        must be activating AT THIS INSTANT. A refusal writes nothing - the caller does not
+        receive a half-activated activity.
+      tags: [compliance-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [risk_class, decided_by_authority_reference, reason_code]
+              properties:
+                risk_class:
+                  {
+                    type: string,
+                    enum: [low, standard, high, special_category],
+                  }
+                decided_by_authority_reference: { type: string, format: uuid }
+                reason_code: { type: string, minLength: 1 }
+                effective_from: { type: [string, "null"], format: date-time }
+      responses:
+        "201":
+          description: Activation decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "../schemas/processing-activation-decision.schema.json"
+        "403":
+          description: >-
+            Denied with a stable reason code: CROSS_SCOPE_ACCESS_DENIED (the write crossed
+            an organizational boundary without authority), CROSS_SCOPE_AUTHORITY_INVALID (a
+            grant was presented but does not permit this capability here),
+            ORGANIZATION_SCOPE_UNDETERMINED (the caller has no resolvable scope - fail
+            closed) or PERMISSION_DENIED.
+        "404":
+          description: >-
+            VALIDATION_RECORD_NOT_FOUND. Returned identically whether the resource does not
+            exist or exists in another organization and no cross-scope authority was
+            presented, so a foreign id discloses nothing.
+        "409":
+          description: >-
+            COMPLIANCE_COMMAND_CONFLICT (the same event_id was replayed with different
+            content) or OPTIMISTIC_CONCURRENCY_CONFLICT (the caller-supplied expected
+            version no longer matches). DPIA_REQUIRED, DPIA_NOT_APPROVED or
+            PROCESSING_ACTIVATION_BLOCKED.
+
+components:
+  schemas:
+    RetentionPolicy:
+      $ref: "../schemas/retention-policy.schema.json"
+    GovernedRecord:
+      $ref: "../schemas/governed-record.schema.json"
+    RetentionStartEvent:
+      $ref: "../schemas/retention-start-event.schema.json"
+    DestructionAuthorization:
+      $ref: "../schemas/destruction-authorization.schema.json"
+    DestructionEvidence:
+      $ref: "../schemas/destruction-evidence.schema.json"
+    LegalHold:
+      $ref: "../schemas/legal-hold.schema.json"
+    DataAsset:
+      $ref: "../schemas/data-asset.schema.json"
+    ProcessingActivity:
+      $ref: "../schemas/processing-activity.schema.json"
+    ProceduralCase:
+      $ref: "../schemas/procedural-case.schema.json"
+    CaseDecision:
+      $ref: "../schemas/case-decision.schema.json"
+    ConflictOfInterestDeclaration:
+      $ref: "../schemas/conflict-of-interest-declaration.schema.json"
+    DeadlineDefinition:
+      $ref: "../schemas/deadline-definition.schema.json"
+    ProceduralDeadline:
+      $ref: "../schemas/procedural-deadline.schema.json"
+    DataSubjectRequest:
+      $ref: "../schemas/data-subject-request.schema.json"
+    CrossScopeAuthorityGrant:
+      $ref: "../schemas/cross-scope-authority-grant.schema.json"
+    LegalCase:
+      $ref: "../schemas/legal-case.schema.json"
+    JurisdictionDetermination:
+      $ref: "../schemas/jurisdiction-determination.schema.json"
+    CaseParty:
+      $ref: "../schemas/case-party.schema.json"
+    RepresentationMandate:
+      $ref: "../schemas/representation-mandate.schema.json"
+    Filing:
+      $ref: "../schemas/filing.schema.json"
+    Hearing:
+      $ref: "../schemas/hearing.schema.json"
+    InterimMeasure:
+      $ref: "../schemas/interim-measure.schema.json"
+    ProceduralDecision:
+      $ref: "../schemas/procedural-decision.schema.json"
+    Remedy:
+      $ref: "../schemas/remedy.schema.json"
+    RecusalRecord:
+      $ref: "../schemas/recusal-record.schema.json"
+    ReplacementAssignment:
+      $ref: "../schemas/replacement-assignment.schema.json"
+    OfficialNotice:
+      $ref: "../schemas/official-notice.schema.json"
+    ServiceAttempt:
+      $ref: "../schemas/service-attempt.schema.json"
+    NoticeEffectDecision:
+      $ref: "../schemas/notice-effect-decision.schema.json"
+    DeadlineTrigger:
+      $ref: "../schemas/deadline-trigger.schema.json"
+    RecordClass:
+      $ref: "../schemas/record-class.schema.json"
+    HoldPropagationRecord:
+      $ref: "../schemas/hold-propagation-record.schema.json"
+    DPIARequirementDetermination:
+      $ref: "../schemas/dpia-requirement-determination.schema.json"
+    DataProtectionImpactAssessment:
+      $ref: "../schemas/data-protection-impact-assessment.schema.json"
+    ProcessingActivationDecision:
+      $ref: "../schemas/processing-activation-decision.schema.json"
+    TransferAssessment:
+      $ref: "../schemas/transfer-assessment.schema.json"
+    ConsentWithdrawalRecord:
+      $ref: "../schemas/consent-withdrawal-record.schema.json"

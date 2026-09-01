@@ -1,0 +1,281 @@
+[project]
+name = "epd2-civic-os"
+version = "0.1.0"
+description = "EPD2 Civic OS monorepo workspace root (infrastructure skeleton plus CLAUDE-PACK-02 identity/audit kernel plus CLAUDE-PACK-03 participation/decision kernel plus CLAUDE-PACK-04 transparency context)"
+requires-python = ">=3.12"
+dependencies = [
+    "epd2-core",
+    "epd2-account-service",
+    "epd2-identity-service",
+    "epd2-eligibility-service",
+    "epd2-credential-service",
+    "epd2-audit-core",
+    "epd2-initiative-service",
+    "epd2-deliberation-service",
+    "epd2-moderation-service",
+    "epd2-voting-service",
+    "epd2-tally-service",
+    "epd2-delegation-service",
+    "epd2-transparency-service",
+    "epd2-governance-service",
+    "epd2-ai-processing-service",
+    "epd2-membership-service",
+    "epd2-organization-service",
+    "epd2-compliance-service",
+    "epd2-finance-service",
+    "epd2-document-service",
+    "epd2-privileged-access-service",
+    "epd2-data-plane-service",
+]
+
+# Lower bounds are the versions this repository's checks (Ruff ruleset,
+# mypy strictness, pytest usage) were authored and verified against.
+# Upper bounds (next major excluded) are a reproducibility guard, not a
+# guess at exact patch versions this session cannot verify against a live
+# index — `uv lock` (run with network access; see LOCAL_VERIFICATION.md)
+# resolves the actual pinned version within each range and records it in
+# uv.lock.
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-cov>=5.0,<6",
+    "mypy>=1.11,<2",
+    "ruff>=0.6,<1",
+    "pydantic>=2.9,<3",
+    "pre-commit>=3.8,<4",
+    # CLAUDE-PACK-02 additions:
+    "types-PyYAML>=6.0,<7",
+    "jsonschema>=4.23,<5",
+    "hypothesis>=6.112,<7",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+    "packages/python/epd2-core",
+    "services/account-service",
+    "services/identity-service",
+    "services/eligibility-service",
+    "services/credential-service",
+    "services/audit-core",
+    "services/initiative-service",
+    "services/deliberation-service",
+    "services/moderation-service",
+    "services/voting-service",
+    "services/tally-service",
+    "services/delegation-service",
+    "services/transparency-service",
+    "services/governance-service",
+    "services/ai-processing-service",
+    "services/membership-service",
+    "services/organization-service",
+    "services/compliance-service",
+    "services/finance-service",
+    "services/document-service",
+    "services/privileged-access-service",
+    "services/data-plane-service",
+]
+
+[tool.uv.sources]
+epd2-core = { workspace = true }
+epd2-account-service = { workspace = true }
+epd2-identity-service = { workspace = true }
+epd2-eligibility-service = { workspace = true }
+epd2-credential-service = { workspace = true }
+epd2-audit-core = { workspace = true }
+epd2-initiative-service = { workspace = true }
+epd2-deliberation-service = { workspace = true }
+epd2-moderation-service = { workspace = true }
+epd2-voting-service = { workspace = true }
+epd2-tally-service = { workspace = true }
+epd2-delegation-service = { workspace = true }
+epd2-transparency-service = { workspace = true }
+epd2-governance-service = { workspace = true }
+epd2-ai-processing-service = { workspace = true }
+epd2-membership-service = { workspace = true }
+epd2-organization-service = { workspace = true }
+epd2-compliance-service = { workspace = true }
+epd2-finance-service = { workspace = true }
+epd2-document-service = { workspace = true }
+epd2-privileged-access-service = { workspace = true }
+epd2-data-plane-service = { workspace = true }
+
+# --- Ruff ---
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = [
+    "packages/python/epd2-core/src",
+    "services/account-service/src",
+    "services/identity-service/src",
+    "services/eligibility-service/src",
+    "services/credential-service/src",
+    "services/audit-core/src",
+    "services/initiative-service/src",
+    "services/deliberation-service/src",
+    "services/moderation-service/src",
+    "services/voting-service/src",
+    "services/tally-service/src",
+    "services/delegation-service/src",
+    "services/transparency-service/src",
+    "services/governance-service/src",
+    "services/ai-processing-service/src",
+    "services/membership-service/src",
+    "services/organization-service/src",
+    "services/compliance-service/src",
+    "services/finance-service/src",
+    "services/document-service/src",
+    "services/privileged-access-service/src",
+    "services/data-plane-service/src",
+    "scripts",
+    "tests",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "epd2_core",
+    "epd2_account_service",
+    "epd2_identity_service",
+    "epd2_eligibility_service",
+    "epd2_credential_service",
+    "epd2_audit_core",
+    "epd2_initiative_service",
+    "epd2_deliberation_service",
+    "epd2_moderation_service",
+    "epd2_voting_service",
+    "epd2_tally_service",
+    "epd2_delegation_service",
+    "epd2_transparency_service",
+    "epd2_governance_service",
+    "epd2_ai_processing_service",
+    "epd2_membership_service",
+    "epd2_organization_service",
+    "epd2_compliance_service",
+    "epd2_finance_service",
+    "epd2_document_service",
+    "epd2_privileged_access_service",
+    "epd2_data_plane_service",
+]
+
+# --- mypy ---
+[tool.mypy]
+python_version = "3.12"
+mypy_path = [
+    "packages/python/epd2-core/src",
+    "services/account-service/src",
+    "services/identity-service/src",
+    "services/eligibility-service/src",
+    "services/credential-service/src",
+    "services/audit-core/src",
+    "services/initiative-service/src",
+    "services/deliberation-service/src",
+    "services/moderation-service/src",
+    "services/voting-service/src",
+    "services/tally-service/src",
+    "services/delegation-service/src",
+    "services/transparency-service/src",
+    "services/governance-service/src",
+    "services/ai-processing-service/src",
+    "services/membership-service/src",
+    "services/organization-service/src",
+    "services/compliance-service/src",
+    "services/finance-service/src",
+    "services/document-service/src",
+    "services/privileged-access-service/src",
+    "services/data-plane-service/src",
+]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+strict_equality = true
+
+# PyYAML ships no inline type stubs of its own; `types-PyYAML` (declared
+# above) supplies them in CI. That package cannot be installed in this
+# sandbox (no network access - see LOCAL_VERIFICATION.md), so this
+# override only prevents that one, single-purpose sandbox limitation from
+# blocking `mypy .` here; CI runs fully-typed (no override needed there,
+# but the override is harmless if stubs are present).
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
+
+# jsonschema and hypothesis ship their own inline type stubs (PEP 561) and
+# need no override once installed. They cannot be installed in this
+# sandbox either (same network restriction), so the same
+# ignore_missing_imports treatment applies here for the same reason as
+# "yaml" above; CI has both installed via `uv sync --all-groups` and type
+# checks the real packages.
+[[tool.mypy.overrides]]
+module = ["jsonschema", "hypothesis", "hypothesis.*"]
+ignore_missing_imports = true
+
+# pytest itself ships inline type stubs (PEP 561) and needs no override
+# once installed via `uv sync --all-groups` (as CI does). Locally, this
+# sandbox's `uv run mypy` cannot resolve at all (same lock/network
+# restriction as above), so local verification falls back to an isolated,
+# standalone mypy install with no project dependencies in its own
+# site-packages - not even pytest. This override exists only to keep that
+# local fallback invocation usable; it is a no-op in CI, where pytest's
+# own stubs are found normally.
+[[tool.mypy.overrides]]
+module = ["pytest", "_pytest.*"]
+ignore_missing_imports = true
+
+# No per-test-module relaxation is configured: all test modules in this
+# repository are fully typed and pass the same strict settings as
+# application code.
+
+# --- pytest ---
+[tool.pytest.ini_options]
+testpaths = [
+    "packages/python/epd2-core/tests",
+    "tests/repository",
+    "tests/contract",
+    "services/account-service/tests",
+    "services/identity-service/tests",
+    "services/eligibility-service/tests",
+    "services/credential-service/tests",
+    "services/audit-core/tests",
+    "services/initiative-service/tests",
+    "services/deliberation-service/tests",
+    "services/moderation-service/tests",
+    "services/voting-service/tests",
+    "services/tally-service/tests",
+    "services/delegation-service/tests",
+    "services/transparency-service/tests",
+    "services/governance-service/tests",
+    "services/ai-processing-service/tests",
+    "services/membership-service/tests",
+    "services/organization-service/tests",
+    "services/compliance-service/tests",
+    "services/finance-service/tests",
+    "services/document-service/tests",
+    "services/privileged-access-service/tests",
+    "services/data-plane-service/tests",
+]
+# --import-mode=importlib: several services intentionally use the same
+# test file basenames (test_domain.py, test_application.py, ...) - this
+# import mode resolves each by its fully-qualified path instead of by
+# bare basename, so they never collide, without requiring __init__.py
+# files in every tests/ directory (which previously caused a mypy
+# "Duplicate module named tests" error - see docs/handover/PACK-01-REPORT.md).
+addopts = "-ra --import-mode=importlib"
+# The target-profile conformance suite runs the whole cross-implementation
+# core on the real 4096-bit EPD2-CRYPTO-1 group. It is deliberately slow —
+# substituting a smaller group to make it fast is the exact substitution the
+# parameter policy forbids — so it carries its own marker and can be run
+# alone:
+#     pytest -m slow_conformance services/voting-service/tests/reference/
+markers = [
+    "slow_conformance: cross-implementation conformance on the real EPD2-CRYPTO-1 profile",
+]

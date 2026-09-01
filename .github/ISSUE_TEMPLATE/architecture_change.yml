@@ -1,0 +1,61 @@
+name: Architecture change
+description: Propose a change to the canon or an architectural invariant. Requires an ADR before implementation.
+title: "[Architecture]: "
+labels: ["architecture", "needs-adr"]
+body:
+  - type: textarea
+    id: current-rule
+    attributes:
+      label: Current rule
+      description: Quote the relevant section of docs/canonical/TZ-00-domain-event-canon.md.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason
+    validations:
+      required: true
+  - type: textarea
+    id: affected-entities
+    attributes:
+      label: Affected entities
+    validations:
+      required: true
+  - type: textarea
+    id: affected-events
+    attributes:
+      label: Affected events
+    validations:
+      required: true
+  - type: textarea
+    id: security-impact
+    attributes:
+      label: Security impact
+    validations:
+      required: true
+  - type: textarea
+    id: migration
+    attributes:
+      label: Migration
+    validations:
+      required: true
+  - type: textarea
+    id: reversibility
+    attributes:
+      label: Reversibility
+    validations:
+      required: true
+  - type: input
+    id: adr-reference
+    attributes:
+      label: ADR reference
+      description: Link the ADR once created. This change is not implemented until the ADR reaches status `accepted`.
+    validations:
+      required: false

@@ -1,0 +1,1530 @@
+# Centralized PACK-13 reason-code registry (Production Data Plane &
+# Contract Evolution; FIR-ROADMAP-003; ADR-069 through ADR-078).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced or used by the PACK-13 implementation candidate: the
+# codes `data-plane-service` raises for the canonical schema registry and
+# contract evolution, migration control, backfill, optimistic concurrency
+# and idempotency, outbox and delivery semantics, projection governance,
+# and the structural data-plane boundary refusals - plus the additive
+# `*_RECORDED` classifications it uses for its own audit bookkeeping,
+# following the same pattern ADR-004/ADR-014/ADR-019/ADR-024/ADR-055 and
+# PACK-07's through PACK-12's own registries already established. No
+# PACK-13 code path may use a free-text string in place of a registered
+# code.
+#
+# Two prohibitions from the PACK-13 reason-code catalog shape this file
+# and are worth stating where a future contributor will read them:
+#
+#   `P13-RSN-002` - there is NO generic `DATA_ERROR` and NO generic
+#   `CONFLICT` in this registry, and none may be added. A single code for
+#   many causes is a code that tells an operator nothing and an auditor
+#   less. Where two failures differ in what an operator must do next,
+#   they are two codes.
+#
+#   `P13-RSN-004` - a code's meaning never changes (`P13-API-007`). A new
+#   meaning is a new code. Editing a `meaning` field below to cover a
+#   further case is exactly the silent semantic change ADR-074 forbids.
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-12.yml (ADR-006 Option B precedent): codes several packs
+# need (PERMISSION_DENIED, VALIDATION_RECORD_NOT_FOUND,
+# ORGANIZATION_SCOPE_MISMATCH, RECORD_UNDER_LEGAL_HOLD and the rest of
+# the reused set in section 9 of the PACK-13 catalog) are independently
+# redeclared here rather than imported from an earlier pack's file, so
+# this file stays a complete, standalone source of truth for
+# `data-plane-service`'s own scan
+# (`tests/contract/test_reason_codes_registry.py`'s PACK13_SERVICE_DIRS).
+# `data-plane-service` is a single, wholly new service - no existing
+# PACK-02-through-PACK-12 service is extended in place this round - so,
+# like PACK-08's through PACK-12's files, there is no "shared with an
+# earlier pack's service directory" union needed.
+#
+# Each redeclared entry keeps its ORIGINAL owning pack's meaning and
+# names that owner in `owner` (`P13-RSN-005`): one fact keeps one code,
+# and PACK-13 shadows none of them with a prefixed duplicate.
+#
+# **There are no `source: canon-0.8.0` entries in this file.** Canon
+# section 24 registers no data-plane, schema-registry, migration or
+# delivery code at all: the canon has no data-plane section, and this
+# round amends no canon - `CANON_VERSION` stays `0.8.0`. Every SCHEMA_*,
+# MIGRATION_*, BACKFILL_*, CONCURRENCY_*, IDEMPOTENCY_*, EVENT_*,
+# OUTBOX_*, DELIVERY_*, BROKER_*, PROJECTION_* and DATAPLANE_* code below
+# is an additive `pack-13-service` code justified in ADR-069 through
+# ADR-078, and each one says in its own `meaning` what it refuses and why
+# no existing code expresses it.
+#
+# The 125 entries fall into two groups. Eighty-eight are the codes the
+# PACK-13 Reason Code Catalog specifies (sections 2 through 9 of that
+# document: 78 additive plus 10 reused). Thirty-seven are the
+# `*_RECORDED` classifications `P13-RSN-006` requires - canon section 24
+# is refusal-only, and an act that SUCCEEDS still needs a registered
+# classification for its audit row, which is the same gap ADR-004
+# recorded for PACK-02. There is exactly one per event in the PACK-13
+# Event Catalog, derived mechanically from the event name by
+# `epd2_data_plane_service.events.recorded_reason_code_for`, so the two
+# can never drift apart.
+
+# --- Additive PACK-13 codes (78) -------------------------------------------
+
+- code: SCHEMA_INCOMPATIBLE
+  meaning: >-
+    The proposed schema version is incompatible under the family's
+    declared compatibility mode. Distinct from
+    SCHEMA_COMPATIBILITY_UNKNOWN, which says the checker could not decide:
+    this code says it decided, and the answer was no.
+  severity: error
+  description: The proposed version is incompatible under the declared mode.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_COMPATIBILITY_UNKNOWN
+  meaning: >-
+    The compatibility checker could not classify the change, so it is
+    unknown and requires manual review (P13-COMPAT-002). Unknown is a
+    first-class outcome and is never collapsed into 'probably compatible'.
+  severity: error
+  description: The checker could not classify the change; manual review is required.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_OWNER_MISSING
+  meaning: >-
+    A schema was submitted with no registered owning domain, so
+    publication is refused (P13-REG-007). A platform team can maintain a
+    file; only the domain knows what a change means.
+  severity: error
+  description: No registered owner; publication refused.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_NOT_APPROVED
+  meaning: >-
+    Activation was attempted for a version that has not been approved, or
+    that is in a lifecycle state from which no version serves traffic.
+  severity: error
+  description: Activation attempted before approval.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_DIGEST_MISMATCH
+  meaning: >-
+    The submitted content does not match the recorded content_digest, or a
+    digest was compared across two different formats.
+  severity: error
+  description: The content does not match the recorded content digest.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_DUPLICATE_CONTENT
+  meaning: >-
+    Content identical to a registered version after that format's own
+    canonicalization was submitted without an intentional-republication
+    declaration; the accidental republication is blocked (P13-REG-005d).
+    It is never silently accepted and never silently deduplicated into the
+    existing version.
+  severity: error
+  description: Accidental republication of identical content is blocked.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_DUPLICATE_CONTENT_REVIEW_REQUIRED
+  meaning: >-
+    Identical content was deliberately submitted as a new version but
+    carries no governance_justification, so the submission goes to reason-
+    coded review. Wanting a new version is not itself a reason for one.
+  severity: error
+  description: Identical content submitted as a new version without a justification.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_IDENTICAL_CONTENT_REPUBLICATION_APPROVED
+  meaning: >-
+    Identical content was deliberately bound to a new governed version
+    with its justification recorded (P13-REG-005e) - a re-issue under a
+    changed compatibility mode, a new effective date, a corrected
+    ownership assignment, or a republication after a governance defect.
+    Registered as an outcome, not a refusal, because it classifies an
+    approved act.
+  severity: info
+  description: Identical content deliberately bound to a new governed version.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_IDENTITY_IMMUTABLE
+  meaning: >-
+    An attempt was made to re-point, merge or rewrite a historical
+    schema_version_id because of digest equality (P13-REG-005g). A
+    version's identity is established by its own publication decision and
+    a later publication does not retroactively alter it.
+  severity: error
+  description: A historical schema version identity is never rewritten.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_GOVERNANCE_JUSTIFICATION_MISSING
+  meaning: >-
+    A governed re-issue was submitted without the governance_justification
+    the new version must carry.
+  severity: error
+  description: A governed re-issue lacks its justification.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_EXAMPLES_INVALID
+  meaning: >-
+    The schema's own mandatory example fixtures do not validate against it
+    (P13-REG-008), so it is not publishable. A schema whose examples fail
+    is wrong, and this catches it before consumers do.
+  severity: error
+  description: The schema's own fixtures do not validate against it.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_LIFECYCLE_TRANSITION_FORBIDDEN
+  meaning: >-
+    The requested schema lifecycle transition is not one of the declared
+    transitions. There is no wildcard edge and no administrative-override
+    edge.
+  severity: error
+  description: The requested lifecycle transition is not declared.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_RETIRED
+  meaning: >-
+    A retired schema version was presented for new traffic. The version
+    itself is retained, not deleted, so historical events validated
+    against it remain interpretable (P13-REG-004).
+  severity: error
+  description: A retired version was used for new traffic.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_REGISTRY_UNAVAILABLE
+  meaning: >-
+    The schema registry could not be reached, so publication is blocked
+    while existing traffic continues on already-resolved schemas.
+  severity: error
+  description: The registry could not be reached; publication blocked.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONSUMER_NOT_READY
+  meaning: >-
+    A registered consumer has not migrated to the target version, so field
+    removal or retirement is refused (P13-API-009).
+  severity: error
+  description: A registered consumer has not migrated.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONSUMER_NOT_REGISTERED
+  meaning: >-
+    The consumer is not registered and therefore receives no compatibility
+    protection (P13-REG-009). This consequence is stated to consumers
+    rather than discovered by them.
+  severity: warning
+  description: The consumer receives no compatibility protection.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BREAKING_CHANGE_NOT_APPROVED
+  meaning: >-
+    A breaking change lacks one of the mandatory fields P13-GOV-002
+    requires, lacks its approval, or presents a feature flag in place of
+    one. A breaking change missing any mandatory field is not approvable.
+  severity: error
+  description: A breaking change lacks its required approval.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DEPRECATION_WINDOW_INCOMPLETE
+  meaning: >-
+    Retirement was attempted before the stated coexistence window elapsed.
+  severity: error
+  description: Retirement attempted before the window elapsed.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SEMANTIC_REVIEW_REQUIRED
+  meaning: >-
+    The change belongs to a structurally invisible class - an enum's
+    meaning, a reason code's semantics, an event's meaning - and always
+    requires human assessment (P13-COMPAT-004). No automated checker
+    classifies it.
+  severity: error
+  description: An invisible-class change requires human assessment.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: LEGAL_REVIEW_REQUIRED
+  meaning: >-
+    The change touches legal effect or retention semantics and requires
+    legal review before publication (P13-GOV-003).
+  severity: error
+  description: The change touches legal effect or retention semantics.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SECURITY_REVIEW_REQUIRED
+  meaning: >-
+    The change touches authorization implication, identity linkage or
+    organizational scope and requires security review before publication
+    (P13-GOV-003).
+  severity: error
+  description: The change touches authorization implication or identity linkage.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_CHECKSUM_MISMATCH
+  meaning: >-
+    An applied migration's content no longer matches its recorded
+    checksum, so execution halts and escalates (P13-MIG-004). It is never
+    auto-repaired, because auto-repair erases the evidence of tampering.
+  severity: critical
+  description: An applied migration's content changed.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_ORDER_INVALID
+  meaning: >-
+    A migration's declared ordering position conflicts with applied state,
+    or two migrations in one plan collide on a position. Order is
+    deterministic and does not depend on filesystem ordering, authorship
+    timestamps or discovery order.
+  severity: error
+  description: Ordering position conflicts with applied state.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_ALREADY_APPLIED
+  meaning: >-
+    Re-application of an already-applied migration was attempted. The
+    applied-state check is the permanent business-fact guard behind
+    migration idempotency; a correction is a new migration, never an edit
+    to this one.
+  severity: error
+  description: Re-application attempted.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_NOT_APPROVED
+  meaning: >-
+    A migration class requiring approval lacks it, or a dual-write was
+    deployed with no approved reconciliation strategy.
+  severity: error
+  description: A class requiring approval lacks it.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_SEPARATION_OF_DUTIES_MISSING
+  meaning: >-
+    The proposer and the approver of a migration, a schema activation or a
+    break-glass activation are the same subject (P13-SEC-004).
+  severity: error
+  description: Proposer and approver are the same subject.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_PARTIAL_FAILURE
+  meaning: >-
+    Execution halted mid-way. State is preserved and the failure
+    escalates; execution never auto-continues past a partial failure.
+  severity: critical
+  description: Execution halted mid-way; state preserved.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_DRY_RUN_MISSING
+  meaning: >-
+    A destructive migration was presented with no dry-run evidence
+    (P13-MIG-010).
+  severity: error
+  description: No dry-run evidence.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_DESTRUCTIVE_NOT_AUTHORIZED
+  meaning: >-
+    A destructive step was attempted without its separate approval, or a
+    destructive-class migration failed to declare itself destructive and
+    would have skipped its own approval gate.
+  severity: critical
+  description: A destructive step lacks its separate approval.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_OBSERVATION_PERIOD_INCOMPLETE
+  meaning: >-
+    The contract step was attempted before the stated observation period
+    elapsed, or an expand/contract step was attempted before its
+    predecessors completed (P13-XC-003). Divergence is found by running,
+    not by reviewing.
+  severity: error
+  description: A contract step was attempted too early.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_SCOPE_LOSS_DETECTED
+  meaning: >-
+    The migration would lose organizational scope, or a verification did
+    not evaluate every automated gate (P13-MIG-012, FIR-INV-013).
+  severity: critical
+  description: Organizational scope would be lost.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_HOLD_STATE_UNKNOWN
+  meaning: >-
+    Legal-hold state could not be resolved, or the migration would delete
+    retention or legal-hold records without an explicit policy decision.
+    The migration fails closed rather than proceeding on an unknown.
+  severity: critical
+  description: Legal-hold state could not be resolved; fail closed.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_EVIDENCE_LINKAGE_BROKEN
+  meaning: >-
+    The migration would break document or evidence linkage. No migration
+    rewrites a hash-linked history (P13-MIG-014).
+  severity: critical
+  description: Document or evidence linkage would break.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_GLOBAL_IDENTIFIER_PROHIBITED
+  meaning: >-
+    The migration would create a structure correlating a person across
+    domains (P13-MIG-015, FIR-INV-001). This is an automated acceptance
+    gate, not reviewer vigilance.
+  severity: critical
+  description: The migration would create a global user identifier.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_VOTING_UNLINKABILITY_AT_RISK
+  meaning: >-
+    The migration would weaken identity/ballot unlinkability (P13-MIG-016,
+    FIR-INV-002).
+  severity: critical
+  description: The migration would weaken ballot unlinkability.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: ROLLBACK_UNAVAILABLE
+  meaning: >-
+    No tested rollback exists and the change was not declared forward-fix-
+    only, or a rollback was presented as available but never exercised. An
+    untested rollback script is declared untested rather than presented as
+    a safety net.
+  severity: error
+  description: No tested rollback; forward-fix only.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MANUAL_SQL_PROHIBITED
+  meaning: >-
+    Direct SQL was attempted outside a governed migration or emergency
+    context, or a surface attempted to execute a query (P13-MIG-011,
+    P13-SEC-003, P13-FE-005). There is no manual, undocumented production
+    SQL.
+  severity: critical
+  description: Direct SQL outside a governed context.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BACKFILL_CONFLICT
+  meaning: >-
+    The backfill target is already populated with a value different from
+    the source's.
+  severity: error
+  description: Target already populated with a different value.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BACKFILL_SOURCE_INCOMPLETE
+  meaning: >-
+    The source lacks a fact the target requires, so the record is routed
+    to the review queue (P13-BF-011). It is never filled with a default,
+    an inference or the most likely value, because an inferred fact
+    becomes an authoritative lie.
+  severity: warning
+  description: The source lacks a required fact; routed to review.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BACKFILL_INVARIANT_VIOLATION
+  meaning: >-
+    The record the backfill would write violates a domain invariant.
+    Writing through the database rather than the domain does not make an
+    invalid record valid (P13-BF-010).
+  severity: error
+  description: The written record would violate a domain invariant.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BACKFILL_CHECKPOINT_LOST
+  meaning: >-
+    The backfill's resume position is unavailable, so a restart cannot
+    begin from a known point.
+  severity: error
+  description: Resume position unavailable.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BACKFILL_RECONCILIATION_FAILED
+  meaning: >-
+    The final reconciliation counts do not add up: processed does not
+    equal succeeded plus routed-to-review plus failed plus skipped-under-
+    hold. A run whose counts do not reconcile does not report success.
+  severity: critical
+  description: Counts do not reconcile.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONCURRENCY_STALE_AGGREGATE_VERSION
+  meaning: >-
+    The expected version a command asserted does not match the aggregate's
+    actual version, so the command is refused rather than silently
+    overwriting (P13-CC-002).
+  severity: error
+  description: Expected version does not match actual.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONCURRENCY_APPROVAL_ON_CHANGED_VERSION
+  meaning: >-
+    The aggregate moved since the approver saw it, so the approval is
+    returned for a fresh decision (P13-CC-005). Approve means approve
+    this, not approve whatever is there now.
+  severity: error
+  description: The aggregate moved since the approver saw it.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONCURRENCY_LAST_WRITE_WINS_PROHIBITED
+  meaning: >-
+    The record class bears a decision, an authorization, a financial fact,
+    a governed document state, a privileged grant, a retention or hold
+    state, or a legal effect, and forbids overwrite resolution
+    (P13-CC-003).
+  severity: error
+  description: The record class forbids overwrite resolution.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONCURRENCY_AUTHORITY_LAPSED
+  meaning: >-
+    Effective-dated authority expired between command construction and
+    command execution (P13-CC-006). Authority that lapsed in between is
+    not authority.
+  severity: error
+  description: Effective-dated authority expired before execution.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD
+  meaning: >-
+    The same idempotency key was presented with different request content.
+    This is a conflict, never a replay (P13-IDEM-004).
+  severity: error
+  description: Same key, different content.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: IDEMPOTENCY_KEY_SCOPE_INVALID
+  meaning: >-
+    An idempotency key or a deduplication record is not scoped to a domain
+    and an operation, or is empty. A key that is global across the system
+    lets one domain's retry collide with another's.
+  severity: error
+  description: The key is not scoped to a domain and an operation.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: IDEMPOTENCY_RECORD_EXPIRED
+  meaning: >-
+    The idempotency window closed and the permanent business-fact guard
+    reports the consequential effect already exists, or a consequential
+    operation was evaluated with no guard at all. An expiry never silently
+    admits a duplicate of a consequential action (P13-IDEM-006).
+  severity: error
+  description: The window closed; the business-fact guard governs.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: IDEMPOTENCY_GLOBAL_IDENTIFIER_PROHIBITED
+  meaning: >-
+    The idempotency key derives from a global user identifier
+    (P13-IDEM-003, FIR-INV-001). A key space built on a person identifier
+    is a correlation space.
+  severity: critical
+  description: The key derives from a global user identifier.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_DUPLICATE_SUPPRESSED
+  meaning: >-
+    A duplicate delivery was absorbed by consumer deduplication and
+    produced no second effect. Duplicates are normal and expected under
+    at-least-once delivery, and this code classifies the absorption so
+    they can be counted rather than guessed at.
+  severity: info
+  description: A duplicate delivery was absorbed.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_ORDERING_GAP_DETECTED
+  meaning: >-
+    A sequence gap was observed within an ordering scope (P13-ORD-006).
+    The gap is a governed fact that raises an event, not a silent absence.
+  severity: error
+  description: A sequence gap in the ordering scope.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_OUT_OF_ORDER
+  meaning: >-
+    An event arrived at or behind the consumer's checkpoint position, and
+    is handled rather than silently applied as if in order (P13-DEL-006).
+  severity: error
+  description: An event arrived behind the checkpoint.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_VERSION_UNSUPPORTED
+  meaning: >-
+    The consumer supports no such event version and fails closed rather
+    than attempting a partial parse (P13-EVO-006), or an unknown PACK-13
+    event type or prefix was presented.
+  severity: error
+  description: The consumer supports no such version; fail closed.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_POISON_MESSAGE
+  meaning: >-
+    An event failed deterministically across attempts and is routed to
+    dead-letter rather than retried indefinitely (P13-DEL-012).
+  severity: error
+  description: Deterministic failure across attempts.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_DEAD_LETTER_REQUIRED
+  meaning: >-
+    Retry is exhausted and the event must move to the dead-letter store
+    with its failure context, or a dead-letter was required and the
+    classification, retention schedule or identifier a dead-letter record
+    needs was absent.
+  severity: error
+  description: Retry exhausted.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_REPLAY_NOT_AUTHORIZED
+  meaning: >-
+    A replay or a consumer-checkpoint rewind was attempted without an
+    authorizing scoped grant for that operation (P13-DEL-010).
+  severity: error
+  description: Replay without authority or scope.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_PUBLICATION_PENDING
+  meaning: >-
+    The record is committed but not yet published, or an acknowledgement
+    was presented for a record that has not been published. Publication is
+    pending, never lost.
+  severity: warning
+  description: Committed but not yet published.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_BACKLOG_THRESHOLD_EXCEEDED
+  meaning: >-
+    The outbox backlog is past its alert threshold. Backlog is a first-
+    class health signal, not an incidental metric.
+  severity: warning
+  description: Backlog past its alert threshold.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: BROKER_UNAVAILABLE
+  meaning: >-
+    The broker could not be reached. Commands still commit, the backlog
+    grows, and publication is pending rather than lost.
+  severity: error
+  description: The broker could not be reached.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DELIVERY_ACKNOWLEDGEMENT_MISSING
+  meaning: >-
+    The record was dispatched and its acknowledgement is unknown. Treated
+    as unknown, not as failure and not as success (P13-DEL-007);
+    redelivery is safe because consumers are idempotent.
+  severity: warning
+  description: Dispatched, acknowledgement unknown.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_STALE
+  meaning: >-
+    The projection's lag exceeds the freshness a consequential decision
+    requires (P13-PROJ-008). A stale projection that looks fresh is worse
+    than one plainly unavailable.
+  severity: error
+  description: Lag exceeds the required freshness.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_REBUILD_REQUIRED
+  meaning: >-
+    The projection cannot serve until it is rebuilt.
+  severity: error
+  description: The projection cannot serve until rebuilt.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_REBUILD_FAILED
+  meaning: >-
+    The rebuild did not complete, so the projection is marked failed and
+    stale rather than silently serving partial data.
+  severity: error
+  description: Rebuild did not complete.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_DELETION_NOT_PROPAGATED
+  meaning: >-
+    A source deletion has not reached the projection with a tombstone and
+    evidence (P13-PROJ-009). A projection that outlives its source is an
+    undeletable copy.
+  severity: critical
+  description: A source deletion has not reached the projection.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_AUTHORIZATION_WIDENING_PROHIBITED
+  meaning: >-
+    The projection would expose more than its sources: a reader who could
+    not read the source reached for the derivative, or a multi-domain
+    projection lacks a source domain's ADR approval (P13-PROJ-004,
+    P13-PROJ-005).
+  severity: critical
+  description: The projection would expose more than its sources.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_NOT_AUTHORITATIVE
+  meaning: >-
+    A legal-effect decision was attempted against a read model, or a
+    projection declared itself authoritative. A decision with legal effect
+    reads the authoritative record (P13-PROJ-002, P13-PROJ-003).
+  severity: critical
+  description: A legal-effect decision attempted against a read model.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_CROSS_DOMAIN_DIRECT_ACCESS_DENIED
+  meaning: >-
+    A direct read or write across a domain boundary was attempted, or a
+    pattern that is not one of the four admissible integration mechanisms
+    was presented as integration (P13-DP-013, P13-DP-014). A query that
+    reads two domains' tables is a boundary violation that happens to
+    compile.
+  severity: critical
+  description: A direct read or write across a domain boundary.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_AUDIT_DIRECT_WRITE_DENIED
+  meaning: >-
+    A non-owner domain attempted to write audit persistence directly, or
+    held a write grant on the audit schema, instead of submitting through
+    the governed ingestion contract (P13-DP-014a). Submission is not
+    persistence.
+  severity: critical
+  description: A non-owner domain attempted to write audit persistence directly.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_AUDIT_INGESTION_CONTRACT_REQUIRED
+  meaning: >-
+    An audit record arrived by a path other than the ingestion port, its
+    API or a versioned audit command, or a submission lacked its typed
+    action or registered reason code.
+  severity: critical
+  description: An audit record arrived outside the ingestion contract.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_RESERVED_BOUNDARY_SCHEMA_PROHIBITED
+  meaning: >-
+    A schema, table, column or namespace was proposed for a reserved
+    future ownership boundary whose owner is not yet established
+    (P13-OWN-011). Reserving space for a domain that does not exist is how
+    a shared table is born.
+  severity: error
+  description: A schema was proposed for a reserved future boundary.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_ORGANIZATION_SCOPE_MISSING
+  meaning: >-
+    A record whose class is organization-scoped was presented with no
+    scope. A scoped record without scope is not a broader record; it is a
+    missing isolation boundary (FIR-INV-013).
+  severity: error
+  description: A scoped record arrived without scope.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_GLOBAL_USER_IDENTIFIER_PROHIBITED
+  meaning: >-
+    A structure that would correlate a person across domains was presented
+    - a payload key, a column, an idempotency key, a projected field, a
+    cross-domain subject join, or a global identifier used as a Voting
+    Client identifier (P13-DP-008, P13-DP-016, FIR-INV-001).
+  severity: critical
+  description: A structure that would correlate a person across domains.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_VOTING_MATERIAL_PROHIBITED
+  meaning: >-
+    Ballot content, a voting secret, a voting credential, an intermediate
+    tally, or a relation associating an eligibility-shaped reference with
+    a ballot-shaped one was presented to the general data plane
+    (P13-DP-012, P13-DP-017, P13-VOTE-001 through P13-VOTE-007, FIR-
+    INV-002).
+  severity: critical
+  description: Ballot, credential or tally material in the general plane.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_RAW_EXPORT_PROHIBITED
+  meaning: >-
+    A dump, replica query, backup extract, analytics copy or direct table
+    read was presented as an export route, or an immutable export manifest
+    would have been replaced (P13-EXPORT-004). Any path producing data for
+    a recipient goes through PACK-12's governed export.
+  severity: critical
+  description: An export route bypassing PACK-12.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_OPERATOR_PRIVILEGE_INSUFFICIENT
+  meaning: >-
+    Cluster privilege was presented as domain-content authority, or a
+    subject would hold a forbidden data-plane role pair (P13-SEC-001,
+    P13-SEC-005, FIR-INV-014). The role that operates the cluster and the
+    role that may read a domain's content are different roles.
+  severity: critical
+  description: Cluster privilege presented as domain-content authority.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_DATABASE_UNAVAILABLE
+  meaning: >-
+    The database could not be reached, so consequential actions fail
+    closed rather than proceeding on cached state.
+  severity: critical
+  description: The database could not be reached.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATAPLANE_REPLICA_STALE
+  meaning: >-
+    A consequential read was attempted against a stale replica. Staleness
+    is surfaced and consequential reads go to the primary or refuse.
+  severity: error
+  description: A consequential read against a stale replica.
+  retryable: true
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+# --- Codes owned by earlier packs, redeclared unchanged (10) ----------------
+#
+# Each keeps its original owning pack's meaning (`P13-RSN-005`): one fact
+# keeps one code, and PACK-13 shadows none of them with a prefixed
+# duplicate. `owner` names the pack that owns the meaning.
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    The record is under a legal hold and is preserved untouched. A hold
+    preserves data and does not authorize access, search, export or
+    publication (P13-RET-005): the practical meaning of a hold is that the
+    deletion job skips this record.
+  severity: error
+  description: Deletion blocked by a legal hold.
+  retryable: false
+  owner: PACK-09 (compliance-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: LEGAL_HOLD_STATE_UNKNOWN
+  meaning: >-
+    Legal-hold state could not be resolved, so deletion and propagation
+    fail closed rather than proceeding on an unknown.
+  severity: critical
+  description: Hold state unresolvable; fail closed.
+  retryable: false
+  owner: PACK-09 (compliance-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: ORGANIZATION_SCOPE_UNDETERMINED
+  meaning: >-
+    Organizational scope could not be resolved for the record or the act.
+  severity: error
+  description: Scope not resolvable.
+  retryable: false
+  owner: PACK-09 (compliance-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The act crosses an organizational scope boundary and is refused, or a
+    record fell outside a backfill's declared scope.
+  severity: error
+  description: Cross-scope act refused.
+  retryable: false
+  owner: PACK-08 (organization-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The generic authorization refusal, used only where no narrower
+    registered code applies - a minimal-payload violation at a surface
+    boundary, a forbidden operational-surface claim, or a trace identifier
+    that would carry a subject reference across domains.
+  severity: error
+  description: Generic authorization refusal.
+  retryable: false
+  owner: PACK-02 (shared); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    No record was found for the given identifier, or the record is out of
+    the caller's scope.
+  severity: error
+  description: Record absent or out of scope.
+  retryable: false
+  owner: PACK-02 (shared); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: OPTIMISTIC_CONCURRENCY_CONFLICT
+  meaning: >-
+    A generic version conflict, used where the narrower
+    CONCURRENCY_STALE_AGGREGATE_VERSION does not apply.
+  severity: error
+  description: Generic version conflict.
+  retryable: true
+  owner: PACK-09 (compliance-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: AUDIT_CHAIN_BROKEN
+  meaning: >-
+    Audit chain verification failed. PACK-13 raises this only to report
+    what audit-core determined; it holds no mutating control over the
+    chain.
+  severity: critical
+  description: Chain verification failure.
+  retryable: false
+  owner: PACK-02 (audit-core); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: PRIVILEGE_AUTHORITY_MISSING
+  meaning: >-
+    No active, scope-matching, unexpired PACK-12 privileged grant exists
+    for the requested data-plane operation, or an emergency SQL context
+    was presented with no activated break-glass context (P13-SEC-002).
+  severity: error
+  description: Migration or direct SQL without a scoped grant.
+  retryable: false
+  owner: PACK-12 (privileged-access-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+- code: GOVERNED_RECORD_DELETION_FORBIDDEN
+  meaning: >-
+    Deletion of a governed record was attempted through a storage-level
+    path, a retention binding was absent for an infrastructure persistent
+    class, a governed artifact was presented with no PACK-11 evidence
+    reference, a record was not yet due under its retention schedule, or a
+    tombstoned projection row would have been re-created.
+  severity: critical
+  description: Deletion of a governed record through an ungoverned path.
+  retryable: false
+  owner: PACK-09 (compliance-service); reused unchanged by PACK-13
+  introduced_in_version: pack-13-0.13.0
+
+# --- `*_RECORDED` audit classifications (37) --------------------------------
+#
+# `P13-RSN-006`: canon section 24 is refusal-only, and an act that SUCCEEDS
+# still needs a registered classification for its audit row - the same gap
+# ADR-004 recorded for PACK-02. Exactly one per event in the PACK-13 Event
+# Catalog, derived from the event name by
+# `epd2_data_plane_service.events.recorded_reason_code_for`, so the two can
+# never drift. Each classifies a successful, audited act; none is a refusal,
+# and none is retryable, because a completed act is not retried.
+
+- code: SCHEMA_VERSION_PROPOSED_RECORDED
+  meaning: >-
+    The governed act `schema_version.proposed` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.proposed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_COMPATIBILITY_ASSESSED_RECORDED
+  meaning: >-
+    The governed act `schema_version.compatibility_assessed` completed and
+    was audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.compatibility_assessed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_APPROVED_RECORDED
+  meaning: >-
+    The governed act `schema_version.approved` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.approved was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_ACTIVATED_RECORDED
+  meaning: >-
+    The governed act `schema_version.activated` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.activated was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_DEPRECATED_RECORDED
+  meaning: >-
+    The governed act `schema_version.deprecated` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.deprecated was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_RETIRED_RECORDED
+  meaning: >-
+    The governed act `schema_version.retired` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act schema_version.retired was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_VERSION_SUPERSEDED_RECORDED
+  meaning: >-
+    The governed act `schema_version.superseded` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_version.superseded was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_CONSUMER_REGISTERED_RECORDED
+  meaning: >-
+    The governed act `schema_consumer.registered` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act schema_consumer.registered was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: SCHEMA_CONSUMER_INCOMPATIBILITY_DETECTED_RECORDED
+  meaning: >-
+    The governed act `schema_consumer.incompatibility_detected` completed
+    and was audited. A classification for a successful act's audit row,
+    not a refusal: canon section 24 registers refusals only, and an audit
+    row for a completed act needs a registered code just as much as one
+    for a refused act does.
+  severity: info
+  description: The governed act schema_consumer.incompatibility_detected was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_PLANNED_RECORDED
+  meaning: >-
+    The governed act `migration.planned` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.planned was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_APPROVED_RECORDED
+  meaning: >-
+    The governed act `migration.approved` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.approved was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_STARTED_RECORDED
+  meaning: >-
+    The governed act `migration.started` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.started was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_CHECKPOINTED_RECORDED
+  meaning: >-
+    The governed act `migration.checkpointed` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.checkpointed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `migration.completed` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_FAILED_RECORDED
+  meaning: >-
+    The governed act `migration.failed` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act migration.failed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_ROLLBACK_INITIATED_RECORDED
+  meaning: >-
+    The governed act `migration.rollback_initiated` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act migration.rollback_initiated was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_ROLLBACK_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `migration.rollback_completed` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act migration.rollback_completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: MIGRATION_VERIFICATION_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `migration.verification_completed` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act migration.verification_completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATA_BACKFILL_STARTED_RECORDED
+  meaning: >-
+    The governed act `data_backfill.started` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act data_backfill.started was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: DATA_BACKFILL_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `data_backfill.completed` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act data_backfill.completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_CREATED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.created` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act outbox_record.created was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_DISPATCH_ATTEMPTED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.dispatch_attempted` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act outbox_record.dispatch_attempted was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_PUBLISHED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.published` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act outbox_record.published was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_ACKNOWLEDGEMENT_RECEIVED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.acknowledgement_received` completed
+    and was audited. A classification for a successful act's audit row,
+    not a refusal: canon section 24 registers refusals only, and an audit
+    row for a completed act needs a registered code just as much as one
+    for a refused act does.
+  severity: info
+  description: The governed act outbox_record.acknowledgement_received was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_RETRY_SCHEDULED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.retry_scheduled` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act outbox_record.retry_scheduled was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: OUTBOX_RECORD_DEAD_LETTERED_RECORDED
+  meaning: >-
+    The governed act `outbox_record.dead_lettered` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act outbox_record.dead_lettered was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_REPLAY_REQUESTED_RECORDED
+  meaning: >-
+    The governed act `event_replay.requested` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act event_replay.requested was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_REPLAY_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `event_replay.completed` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act event_replay.completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: CONSUMER_CHECKPOINT_ADVANCED_RECORDED
+  meaning: >-
+    The governed act `consumer_checkpoint.advanced` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act consumer_checkpoint.advanced was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: EVENT_DELIVERY_GAP_DETECTED_RECORDED
+  meaning: >-
+    The governed act `event_delivery.gap_detected` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act event_delivery.gap_detected was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_UPDATE_REQUESTED_RECORDED
+  meaning: >-
+    The governed act `projection.update_requested` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.update_requested was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_UPDATED_RECORDED
+  meaning: >-
+    The governed act `projection.updated` completed and was audited. A
+    classification for a successful act's audit row, not a refusal: canon
+    section 24 registers refusals only, and an audit row for a completed
+    act needs a registered code just as much as one for a refused act
+    does.
+  severity: info
+  description: The governed act projection.updated was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_LAG_DETECTED_RECORDED
+  meaning: >-
+    The governed act `projection.lag_detected` completed and was audited.
+    A classification for a successful act's audit row, not a refusal:
+    canon section 24 registers refusals only, and an audit row for a
+    completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.lag_detected was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_REBUILD_STARTED_RECORDED
+  meaning: >-
+    The governed act `projection.rebuild_started` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.rebuild_started was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_REBUILD_COMPLETED_RECORDED
+  meaning: >-
+    The governed act `projection.rebuild_completed` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.rebuild_completed was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_DELETION_PROPAGATED_RECORDED
+  meaning: >-
+    The governed act `projection.deletion_propagated` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.deletion_propagated was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0
+
+- code: PROJECTION_TOMBSTONE_APPLIED_RECORDED
+  meaning: >-
+    The governed act `projection.tombstone_applied` completed and was
+    audited. A classification for a successful act's audit row, not a
+    refusal: canon section 24 registers refusals only, and an audit row
+    for a completed act needs a registered code just as much as one for a
+    refused act does.
+  severity: info
+  description: The governed act projection.tombstone_applied was recorded.
+  retryable: false
+  owner: data-plane-service (PACK-13)
+  introduced_in_version: pack-13-0.13.0

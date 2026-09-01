@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/organizational-authority-assigned-payload.v1.schema.json",
+  "title": "organizational_authority.assigned event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events.build_organizational_authority_assigned_event. Minimum payload only: the authority's own id, its status (proposed or active - PROPOSED when dual control gates activation, ACTIVE otherwise), policy_version, decision_reference, effective_time (the authority's own valid_from), and recorded_at - deliberately omits role_code, scope, appointing_authority_reference, and assigned_subject_reference entirely (canon 19e.20's own identity-minimization rule: no unrelated identity data broadcast on the wire event; these fields remain in the full authority_state_payload used only for Audit Core's after_hash).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_id",
+    "status",
+    "policy_version",
+    "decision_reference",
+    "effective_time",
+    "recorded_at"
+  ],
+  "properties": {
+    "authority_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "active", "suspended", "revoked", "expired"]
+    },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "decision_reference": { "type": "string", "format": "uuid" },
+    "effective_time": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" }
+  }
+}

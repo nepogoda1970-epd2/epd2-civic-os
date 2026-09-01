@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/initiative-version-created-payload.v1.schema.json",
+  "title": "initiative.version_created event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.6. Produced by epd2_initiative_service.events.build_version_created_event, payload=initiative_version_state_payload(version). Deliberately excludes every InitiativeVersion content field (title, problem_statement, ...) from the wire event - only the minimal, canonically-hashable identity/content-hash snapshot travels; see initiative_version_full_state_payload for the complete state used by Audit Core's after_hash.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "initiative_version_id",
+    "initiative_id",
+    "version_number",
+    "content_hash"
+  ],
+  "properties": {
+    "initiative_version_id": { "type": "string", "format": "uuid" },
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "version_number": { "type": "integer", "minimum": 1 },
+    "content_hash": { "type": "string", "minLength": 1 }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/case-party-registered-payload.v1.schema.json",
+  "title": "case_party.registered payload (v1)",
+  "description": "Wire payload of `case_party.registered`. Publishes the ROLE and the fact that a party exists on the case - never the party handle, and never anything that could identify a person (Framework hard invariant 1). No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "case_party_id",
+    "display_label_code",
+    "is_authorized_service_recipient",
+    "organization_id",
+    "recorded_at",
+    "registered_at",
+    "role"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "display_label_code": {
+      "type": "string"
+    },
+    "is_authorized_service_recipient": {
+      "type": "boolean"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "role": {
+      "type": "string"
+    }
+  }
+}

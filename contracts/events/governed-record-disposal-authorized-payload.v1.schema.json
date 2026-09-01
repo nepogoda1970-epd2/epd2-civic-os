@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/governed-record-disposal-authorized-payload.v1.schema.json",
+  "title": "governed_record.disposal_authorized event payload (v1)",
+  "description": "PACK-09, ADR-039. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). Signals that the separate destruction-authorization step completed. It carries the policy and record versions the authorization is bound to, so a consumer can tell when a later supersession has made it stale.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "organization_id",
+    "authorization_id",
+    "disposition_action",
+    "retention_policy_id",
+    "retention_policy_version",
+    "record_version",
+    "recorded_at"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "authorization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "disposition_action": {
+      "type": "string",
+      "enum": ["delete", "anonymize", "archive", "review"]
+    },
+    "retention_policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "retention_policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "record_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

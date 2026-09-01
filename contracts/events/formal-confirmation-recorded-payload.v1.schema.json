@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/formal-confirmation-recorded-payload.v1.schema.json",
+  "title": "eligibility.formal_confirmation_recorded event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.12 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_eligibility_service.events.build_formal_confirmation_recorded_event, emitted once an AssemblyDecision reaches a terminal status (confirmed/rejected/returned_for_revision). Carries final_legal_decision and, where applicable, divergence_explanation - the confirming authority's own recorded outcome, never a re-statement of the originating DigitalDecision.digital_result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assembly_decision_id",
+    "digital_decision_id",
+    "status",
+    "final_legal_decision",
+    "divergence_explanation"
+  ],
+  "properties": {
+    "assembly_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "digital_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "rejected", "returned_for_revision"]
+    },
+    "final_legal_decision": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "divergence_explanation": {
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

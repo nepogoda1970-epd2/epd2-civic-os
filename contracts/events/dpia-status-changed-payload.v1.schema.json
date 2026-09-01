@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/dpia-status-changed-payload.v1.schema.json",
+  "title": "dpia.status_changed payload (v1)",
+  "description": "Wire payload of `dpia.status_changed`. Carries `is_activating` as evaluated at this event's own `occurred_at`, so a subscriber cannot read `status: approved` and miss that the approval had already expired. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity_id",
+    "approved_at",
+    "dpia_id",
+    "dpia_version",
+    "is_activating",
+    "organization_id",
+    "outcome_reason_code",
+    "recorded_at",
+    "risk_class",
+    "status",
+    "valid_until"
+  ],
+  "properties": {
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "approved_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "dpia_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "dpia_version": {
+      "type": "integer"
+    },
+    "is_activating": {
+      "type": "boolean"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "outcome_reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_class": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

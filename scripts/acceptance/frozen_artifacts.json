@@ -1,0 +1,35 @@
+{
+  "schema": "epd2.infra01.frozen-artifacts/1",
+  "note": "Governed frozen/reference evidence pin list (INFRA01-HI-07). These artifacts are immutable inputs of the baseline: tests may read them and must write generated material only to isolated temporary locations. The harness verifies these exact SHA-256 digests before testing, after testing, before packaging, during packaging, and against the bytes inside the produced archive. A one-byte mutation causes packaging refusal.",
+  "baseline_commit": "8ff32c3e9ed654768ae86ac569a9c498f78c5aa2",
+  "artifacts": [
+    {
+      "path": "services/voting-service/tests/reference/vectors/PACK-16D-TEST-VECTORS.json",
+      "sha256": "23d8560aa5aba84ee3b6602570edbf32bdc1d1dfb6257180ff04bcfd39f2bd70"
+    },
+    {
+      "path": "services/voting-service/tests/reference/vectors/PACK-16D-CONFORMANCE-EVIDENCE.json",
+      "sha256": "43305cf392ea241f63d87f1c5db08b416091767ee17ab76b9112d199f46248b0"
+    },
+    {
+      "path": "services/voting-service/tests/reference/vectors/PACK-16D-TARGET-PROFILE-FIXTURES.json",
+      "sha256": "f6a2795137832c84b1fdd7d1a344c35feb26408929299783875cb7b08c8b4e80"
+    },
+    {
+      "path": "services/voting-service/tests/reference/vectors/PACK-16D-TARGET-PROFILE-TIMINGS.json",
+      "sha256": "4c09820e52e97eb39e0263083a2b1811b0fbfd09b2dc1a0a7f5f9fec36d43c95"
+    },
+    {
+      "path": "services/voting-service/src/epd2_voting_service/reference/crypto/profiles/EPD2-CRYPTO-1.json",
+      "sha256": "00362de368310ee26132dba437dd506841da34dbf8023168f3c888c21923b95b"
+    },
+    {
+      "path": "services/voting-service/src/epd2_voting_service/reference/crypto/profiles/EPD2-TESTONLY-NOTCONFORMANT-P1024-Q160.params",
+      "sha256": "6cd407be365d7a5f289260695490d0df31735d2fc08e0df5c81a4e0be60d4a85"
+    },
+    {
+      "path": "services/voting-service/src/epd2_voting_service/reference/crypto/profiles/EPD2-TESTONLY-NOTCONFORMANT-P4096-Q256.params",
+      "sha256": "f26ed9cb464145362590fd3f259e7d849b57204ada708b2ef685271351106dd7"
+    }
+  ]
+}

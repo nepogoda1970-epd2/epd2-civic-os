@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/retention-policy.schema.json",
+  "title": "RetentionPolicy",
+  "description": "PACK-09, ADR-039. Owned by compliance-service (epd2_compliance_service.domain.RetentionPolicy). A versioned retention schedule for one record class in one organization. (policy_id, policy_version) is unique and append-only: superseding always creates a NEW version and sets supersedes_policy_version; a previous version's row is never rewritten, so what a past disposal decision was made under stays answerable. Every timestamp is timezone-aware ISO-8601 (RFC 3339) with an explicit offset. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "organization_id",
+    "record_class",
+    "trigger",
+    "retention_days",
+    "disposition_action",
+    "policy_version",
+    "valid_from",
+    "valid_until",
+    "supersedes_policy_version",
+    "authorizing_decision_reference"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "record_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "created_at",
+        "case_closed_at",
+        "membership_ended_at",
+        "contract_ended_at",
+        "processing_ended_at"
+      ]
+    },
+    "retention_days": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "disposition_action": {
+      "type": "string",
+      "enum": ["delete", "anonymize", "archive", "review"]
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "supersedes_policy_version": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "authorizing_decision_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/organizational-authority-revoked-payload.v1.schema.json",
+  "title": "organizational_authority.revoked event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events.build_organizational_authority_revoked_event. Minimum payload only: the authority's own id, its new status (revoked), revocation_reason_reference, policy_version, effective_time, and recorded_at - never the underlying assigned_subject_reference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_id",
+    "status",
+    "policy_version",
+    "effective_time",
+    "recorded_at"
+  ],
+  "properties": {
+    "authority_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["proposed", "active", "suspended", "revoked", "expired"]
+    },
+    "revocation_reason_reference": { "type": ["string", "null"] },
+    "policy_version": { "type": "string", "minLength": 1 },
+    "effective_time": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" }
+  }
+}

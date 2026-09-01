@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/contribution.schema.json",
+  "title": "Contribution",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 13.2. Owned by deliberation-service (epd2_deliberation_service.domain.Contribution). `parent_contribution_id` is nullable (a top-level contribution has none). No physical deletion is ever modeled - only visibility_status transitions (README.md's 'no physical deletion' section); `content_hash` is a deterministic digest over exactly `content`/`contribution_type` (epd2_deliberation_service.domain.compute_contribution_content_hash).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contribution_id",
+    "discussion_id",
+    "author_actor_id",
+    "parent_contribution_id",
+    "contribution_type",
+    "content",
+    "content_hash",
+    "visibility_status",
+    "created_at",
+    "edited_version"
+  ],
+  "properties": {
+    "contribution_id": { "type": "string", "format": "uuid" },
+    "discussion_id": { "type": "string", "format": "uuid" },
+    "author_actor_id": { "type": "string", "format": "uuid" },
+    "parent_contribution_id": { "type": ["string", "null"], "format": "uuid" },
+    "contribution_type": {
+      "type": "string",
+      "enum": [
+        "comment",
+        "argument_for",
+        "argument_against",
+        "question",
+        "answer",
+        "proposal",
+        "source_note",
+        "moderator_notice"
+      ]
+    },
+    "content": { "type": "string", "minLength": 1 },
+    "content_hash": { "type": "string", "minLength": 1 },
+    "visibility_status": {
+      "type": "string",
+      "enum": [
+        "visible",
+        "temporarily_hidden",
+        "restricted",
+        "removed_from_public_view",
+        "restored"
+      ]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "edited_version": { "type": "integer", "minimum": 1 }
+  }
+}

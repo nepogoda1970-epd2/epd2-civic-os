@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "epd2.infra01.check-registry/1",
+  "title": "EPD2 INFRA-01 governed check registry",
+  "description": "Machine-readable registry of every governed check in the canonical acceptance path (INFRA01-HI-03). A mandatory check may never disappear: the execution manifest must account for every registry entry with PASS, FAIL, BLOCKED or NOT_APPLICABLE_GOVERNED.",
+  "$defs": {
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "kind", "mandatory"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["command", "internal"] },
+        "mandatory": { "type": "boolean" },
+        "command": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "timeout_seconds": { "type": "integer", "minimum": 1 },
+        "expects": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sentinel": { "type": "string", "minLength": 1 },
+            "parsers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["pytest", "vitest", "nodetest", "playwright"]
+                  },
+                  "min": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "registry_version", "stages"],
+  "properties": {
+    "schema": { "const": "epd2.infra01.check-registry/1" },
+    "registry_version": { "type": "string", "minLength": 1 },
+    "note": { "type": "string" },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "mandatory", "checks"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "mandatory": { "type": "boolean" },
+          "checks": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/check" }
+          }
+        }
+      }
+    }
+  }
+}

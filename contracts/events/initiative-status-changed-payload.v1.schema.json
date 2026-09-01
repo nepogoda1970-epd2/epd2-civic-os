@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/initiative-status-changed-payload.v1.schema.json",
+  "title": "initiative.* status-change event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.6. Produced by epd2_initiative_service.events.initiative_state_payload, shared verbatim by ten distinct event_type builders that all serialize the identical Initiative state snapshot: build_draft_created_event (initiative.draft_created), build_submitted_event (initiative.submitted), build_revision_requested_event (initiative.revision_requested), build_published_event (initiative.published), build_qualified_event (initiative.qualified), build_deliberation_started_event (initiative.deliberation_started), build_legal_review_requested_event (initiative.legal_review_requested), build_ready_for_ballot_event (initiative.ready_for_ballot), build_initiative_withdrawn_event (initiative.withdrawn), build_archived_event (initiative.archived). Consolidated into one payload schema file per the task's own consolidation rule: verified by reading events.py, every one of these builders calls the shared private _build_initiative_event helper with payload=initiative_state_payload(initiative) and differs only in event_type.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "initiative_id",
+    "space_id",
+    "current_version_id",
+    "status",
+    "support_count"
+  ],
+  "properties": {
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "space_id": { "type": "string", "format": "uuid" },
+    "current_version_id": { "type": ["string", "null"], "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "completeness_review",
+        "revision_required",
+        "published",
+        "support_collection",
+        "qualified",
+        "deliberation",
+        "legal_review",
+        "ready_for_ballot",
+        "voting",
+        "adopted",
+        "rejected",
+        "withdrawn",
+        "archived"
+      ]
+    },
+    "support_count": { "type": "integer", "minimum": 0 }
+  }
+}

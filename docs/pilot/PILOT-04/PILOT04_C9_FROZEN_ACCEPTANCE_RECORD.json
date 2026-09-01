@@ -1,0 +1,68 @@
+{
+  "schema": "epd2.pilot04.frozen-acceptance-record/1",
+  "stage": "PILOT-04 C9",
+  "decision": "ACCEPTED_FROZEN",
+  "decision_date": "2026-08-26",
+  "previous_state": "DEVELOPED / NOT ACCEPTED_FROZEN",
+  "new_state": "ACCEPTED / FROZEN",
+  "candidate": {
+    "filename": "EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip",
+    "sha256": "7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664",
+    "size_bytes": 38658195
+  },
+  "authoritative_verification": {
+    "workflow_name": "PILOT-04 C9 authoritative acceptance",
+    "workflow_path": ".github/workflows/pilot04-c9-accept.yml",
+    "workflow_git_blob": "59bdbffff589f23aa981d755d4d9ca628171f992",
+    "github_run_id": 32601698352,
+    "github_run_attempt": 1,
+    "conclusion": "success",
+    "source_head_sha": "5b49275818127ea7d4e3082ac1edc99c7a4d4755",
+    "tested_merge_sha": "2504c2be709bad1189aeabc6ddd3058d27fad060",
+    "evidence_state": "GITHUB_AUTHORITATIVE_PASS",
+    "overall_status": "PASS",
+    "exit_code": 0,
+    "all_passed": true,
+    "result_digest": "42163788bbeac04522d525cee99e254c1baef98d9d2b1f8fa8fe4692373c4a23",
+    "property_results": {
+      "A": "29/29 PASS",
+      "B": "10/10 PASS",
+      "C": "8/8 PASS",
+      "D": "25/25 PASS",
+      "E": "PASS",
+      "F": "9/9 PASS",
+      "G": "494/494 PASS"
+    }
+  },
+  "artifacts": {
+    "authoritative_evidence": {
+      "name": "pilot04-c9-authoritative-evidence",
+      "artifact_id": 9483475935,
+      "artifact_zip_sha256": "5e7ac279069415fc7ff7007a59012f390ae16648abb46f25e8f0aebb63a4b3b4"
+    },
+    "exact_accepted_candidate": {
+      "name": "pilot04-c9-exact-accepted-candidate",
+      "artifact_id": 9483476323,
+      "artifact_zip_sha256": "8182abd5cf0f871475ab613f7e70b81ef5e3e1e2f2c17ed77004e5b75cb21cb0"
+    }
+  },
+  "independent_post_run_reverification": {
+    "date": "2026-08-26",
+    "candidate_sha256_reverified": true,
+    "candidate_size_reverified": true,
+    "authoritative_evidence_reverified": true
+  },
+  "governance_reason": "The authoritative runner correctly emitted GITHUB_AUTHORITATIVE_PASS while retaining NOT_FROZEN because a run cannot issue its own ACCEPTED_FROZEN decision. This post-run governance record reviews that exact run and exact candidate and supplies the missing acceptance/freeze decision without modifying or re-running the candidate.",
+  "scope": {
+    "pilot04": "ACCEPTED / FROZEN",
+    "pilot05_automatic_promotion": false,
+    "pilot06_opened": false,
+    "pilot07_opened": false,
+    "production_ready_claimed": false,
+    "legally_activated_claimed": false,
+    "integration_accepted_claimed": false,
+    "historical_pilot05_stage_entry_pin": "PILOT-04 C7 remains a historical lineage fact and does not override the current frozen PILOT-04 C9 baseline."
+  },
+  "open_blockers": [],
+  "next_primary_program_stage_unchanged": "API-02 — Authentication & Authorization Runtime"
+}

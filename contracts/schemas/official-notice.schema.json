@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/official-notice.schema.json",
+  "title": "OfficialNotice",
+  "description": "PACK-09, Framework 0.8.1 section 13.2 and hard invariant 40. Owned by compliance-service (epd2_compliance_service.notices.OfficialNotice). STEP 1 OF 3 of the notice trust boundary: an authorized notice OBJECT. Issuing it starts nothing - no deadline runs, no presumption applies, no legal effect exists. `authorized_methods` is the closed set of channels over which this notice may validly be served; an attempt over any other method is refused at recording time with NOTICE_METHOD_INVALID. `content_reference` points at PACK-11 content; PACK-09 stores no notice body. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "notice_id",
+    "case_id",
+    "organization_id",
+    "notice_kind",
+    "issuing_authority_reference",
+    "recipient_party_reference",
+    "authorized_methods",
+    "issued_at",
+    "content_reference",
+    "recipient_is_authorized_service_recipient"
+  ],
+  "properties": {
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "notice_kind": {
+      "type": "string",
+      "enum": [
+        "case_opened",
+        "hearing_summons",
+        "submission_request",
+        "decision_service",
+        "interim_measure_service",
+        "deadline_notification",
+        "procedural_order"
+      ]
+    },
+    "issuing_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recipient_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "authorized_methods": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "registered_post",
+          "postal",
+          "electronic_portal",
+          "electronic_mail",
+          "personal_service",
+          "public_posting"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "content_reference": {
+      "type": "string"
+    },
+    "recipient_is_authorized_service_recipient": {
+      "type": "boolean"
+    }
+  }
+}

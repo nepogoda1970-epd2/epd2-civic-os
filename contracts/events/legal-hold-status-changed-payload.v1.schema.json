@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/legal-hold-status-changed-payload.v1.schema.json",
+  "title": "legal_hold.status_changed event payload (v1)",
+  "description": "PACK-09, ADR-039. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). Shared verbatim by the three actions a hold's lifecycle has: issued, released and marked_indeterminate. scope_record_count is a COUNT, not the list of covered record ids, so a hold's coverage is not broadcast.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hold_id",
+    "organization_id",
+    "matter_reference",
+    "action",
+    "status",
+    "reason_code",
+    "scope_record_count",
+    "scope_record_classes",
+    "recorded_at"
+  ],
+  "properties": {
+    "hold_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "matter_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action": {
+      "type": "string",
+      "enum": ["issued", "released", "marked_indeterminate"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "released", "indeterminate"]
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope_record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scope_record_classes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/appeal-status-changed-payload.v1.schema.json",
+  "title": "moderation.appeal_submitted / moderation.appeal_decided event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.9. Produced by epd2_moderation_service.events.appeal_state_payload, shared verbatim by build_appeal_submitted_event (moderation.appeal_submitted) and build_appeal_decided_event (moderation.appeal_decided) - verified by reading events.py, both call the identical payload function. Deliberately excludes submitted_by/grounds (see appeal_full_state_payload for Audit Core's complete snapshot). reviewer_actor_id/result are nullable (null until decide_appeal sets them).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appeal_id",
+    "decision_id",
+    "status",
+    "reviewer_actor_id",
+    "result"
+  ],
+  "properties": {
+    "appeal_id": { "type": "string", "format": "uuid" },
+    "decision_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "admissibility_review",
+        "under_review",
+        "upheld",
+        "partially_upheld",
+        "rejected",
+        "withdrawn"
+      ]
+    },
+    "reviewer_actor_id": { "type": ["string", "null"], "format": "uuid" },
+    "result": { "type": ["string", "null"] }
+  }
+}

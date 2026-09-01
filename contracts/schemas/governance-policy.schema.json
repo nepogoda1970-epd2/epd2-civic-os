@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/governance-policy.schema.json",
+  "title": "GovernancePolicy",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19b.2 (added by canon 0.4.0, ADR-018). Owned by governance-service (epd2_governance_service.domain.GovernancePolicy). approved_by_role_id is non-nullable (canon: 'не nullable') - both the proposer and the designated approver are recorded from proposal time, and activate_governance_policy re-validates both are still active/in-scope/distinct at activation. Status draft -> active (requires approved_by_role_id distinct from proposed_by_role_id, ADR-020 item 1) -> superseded (only when a new version activates for the same policy_type - never a standalone command). At most one active policy per policy_type at a time; version is monotonic per policy_type.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "governance_policy_id",
+    "policy_type",
+    "rule_definition",
+    "effective_from",
+    "proposed_by_role_id",
+    "approved_by_role_id",
+    "version",
+    "status"
+  ],
+  "properties": {
+    "governance_policy_id": { "type": "string", "format": "uuid" },
+    "policy_type": {
+      "type": "string",
+      "enum": [
+        "role_taxonomy",
+        "approval_rule",
+        "challenge_rule",
+        "oversight_rule"
+      ]
+    },
+    "rule_definition": { "type": "object" },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "proposed_by_role_id": { "type": "string", "format": "uuid" },
+    "approved_by_role_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "type": "string", "enum": ["draft", "active", "superseded"] }
+  }
+}

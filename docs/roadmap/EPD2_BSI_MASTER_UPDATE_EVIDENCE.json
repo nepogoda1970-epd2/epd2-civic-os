@@ -1,0 +1,17 @@
+{
+  "schema": "epd2.bsi.master-update-evidence.v2",
+  "effective_date": "2026-08-30",
+  "claim": "GOVERNANCE_REGISTRATION_ONLY_NOT_BSI_CC_CONFORMANCE",
+  "master_path": "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md",
+  "before_sha256": "15b116640bf191419dbe42403ba8a124a7c4272f55fb9f998f38ce1c3f0a01f9",
+  "before_size": 800058,
+  "after_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+  "after_size": 799358,
+  "fir_vote_bsi_001_heading_count": 1,
+  "legacy_fir_bsi_001_present": false,
+  "fir_oss_007_preserved": true,
+  "program_control_modified": true,
+  "matrix_path": "docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md",
+  "p0_questionnaire_path": "docs/security/bsi/EPD2_BSI_CC_PP_0121_P0_PRE_EVALUATION_QUESTIONNAIRE_0.1.md",
+  "source_main_commit": "88c992bcbac13699a9ac9370f8afa3b3cbae3834"
+}

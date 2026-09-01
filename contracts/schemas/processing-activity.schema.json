@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/processing-activity.schema.json",
+  "title": "ProcessingActivity",
+  "description": "PACK-09, ADR-040. Owned by compliance-service (epd2_compliance_service.domain.ProcessingActivity). A Processing Registry entry. Everything here is CATEGORICAL: categories of data, of data subjects, of recipients - no individual data subject is ever named. legal_basis is a MANAGED CLASSIFICATION drawn from a closed, reviewable list; recording a value asserts nothing about whether that basis is legally sufficient or correctly chosen, and this system makes no claim of GDPR, BDSG or Parteiengesetz compliance - that determination stays a human legal judgement made outside it. retention_policy_reference is mandatory and is resolved against the retention-policy store, never merely type-checked. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity_id",
+    "organization_id",
+    "name",
+    "purpose",
+    "legal_basis",
+    "data_subject_categories",
+    "personal_data_categories",
+    "recipient_categories",
+    "retention_policy_reference",
+    "technical_organizational_measures",
+    "controller_reference",
+    "process_owner_authority_reference",
+    "system_references",
+    "data_asset_references",
+    "status",
+    "valid_from",
+    "activity_version",
+    "supersedes_activity_version",
+    "dpo_review_reference"
+  ],
+  "properties": {
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "legal_basis": {
+      "type": "string",
+      "enum": [
+        "consent",
+        "contract",
+        "legal_obligation",
+        "vital_interests",
+        "public_task",
+        "legitimate_interests",
+        "party_statute",
+        "other_documented"
+      ]
+    },
+    "data_subject_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "personal_data_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "recipient_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "retention_policy_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "technical_organizational_measures": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "controller_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "process_owner_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "system_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "data_asset_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "suspended", "deprecated"]
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "activity_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "supersedes_activity_version": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "dpo_review_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/hold-propagation-registered-payload.v1.schema.json",
+  "title": "legal_hold.propagation_registered payload (v1)",
+  "description": "Wire payload of `legal_hold.propagation_registered`. `state` is published explicitly, including unknown and failed, so an unresolved propagation is visible rather than silently absent. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "derivative_kind",
+    "derivative_reference",
+    "failure_reason_code",
+    "hold_id",
+    "is_resolved",
+    "organization_id",
+    "propagation_id",
+    "recorded_at",
+    "state"
+  ],
+  "properties": {
+    "derivative_kind": {
+      "type": "string"
+    },
+    "derivative_reference": {
+      "type": "string"
+    },
+    "failure_reason_code": {
+      "type": ["string", "null"]
+    },
+    "hold_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "is_resolved": {
+      "type": "boolean"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "propagation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "state": {
+      "type": "string"
+    }
+  }
+}

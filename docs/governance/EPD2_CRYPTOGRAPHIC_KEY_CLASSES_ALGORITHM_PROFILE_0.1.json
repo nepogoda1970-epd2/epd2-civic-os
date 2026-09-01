@@ -1,0 +1,256 @@
+{
+  "algorithm_statuses": [
+    "MANDATORY_BASELINE",
+    "ALLOWED_SCOPED",
+    "COMPATIBILITY_ONLY",
+    "MIGRATION_CANDIDATE",
+    "PROHIBITED"
+  ],
+  "algorithms": {
+    "AES_256_GCM": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "application_data_encryption",
+        "envelope_data_encryption"
+      ]
+    },
+    "ES256": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "authority_assertion",
+        "service_assertion",
+        "passkey_preferred"
+      ]
+    },
+    "ES384": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "root_trust",
+        "platform_intermediate",
+        "regional_issuer",
+        "audit_evidence"
+      ]
+    },
+    "Ed25519": {
+      "status": "ALLOWED_SCOPED",
+      "uses": [
+        "explicit_detached_signature_profile",
+        "compatible_webauthn",
+        "existing_voting_lineage"
+      ]
+    },
+    "HKDF_SHA256_SHA384": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "approved_protocol_kdf"
+      ]
+    },
+    "JOSE_HS_FOR_AUTHORITY": {
+      "status": "PROHIBITED",
+      "uses": []
+    },
+    "JOSE_NONE": {
+      "status": "PROHIBITED",
+      "uses": []
+    },
+    "ML_DSA_65": {
+      "status": "MIGRATION_CANDIDATE",
+      "uses": [
+        "future_pq_signatures"
+      ]
+    },
+    "ML_KEM_768": {
+      "status": "MIGRATION_CANDIDATE",
+      "uses": [
+        "future_pq_key_establishment"
+      ]
+    },
+    "PS256_PS384": {
+      "status": "COMPATIBILITY_ONLY",
+      "uses": [
+        "approved_external_integration"
+      ]
+    },
+    "RS256": {
+      "status": "COMPATIBILITY_ONLY",
+      "uses": [
+        "legacy_external_verify",
+        "webauthn_fallback_if_required"
+      ]
+    },
+    "SHA1_MD5": {
+      "status": "PROHIBITED",
+      "uses": []
+    },
+    "SHA256": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "digest",
+        "jwk_thumbprint",
+        "p256"
+      ]
+    },
+    "SHA384": {
+      "status": "MANDATORY_BASELINE",
+      "uses": [
+        "p384",
+        "high_impact_audit"
+      ]
+    }
+  },
+  "api_gates": {
+    "API_02": "MUST_RECONCILE_BEFORE_ACCEPTANCE",
+    "API_03_C1": "BLOCKED_UNTIL_V23_RECONCILIATION_AND_EXACT_ACCEPTED_API02_BYTES",
+    "API_03_PRESEAL": "MAY_CONTINUE"
+  },
+  "crypto_agility": {
+    "dual_signing_default": "PROHIBITED",
+    "dual_verification": "BOUNDED_ONLY",
+    "states": [
+      "CURRENT",
+      "STAGED_NEXT",
+      "DUAL_VERIFY",
+      "NEW_ACTIVE",
+      "OLD_VERIFY_ONLY",
+      "RETIRED"
+    ]
+  },
+  "date": "2026-08-28",
+  "fir": "FIR-TRUST-003",
+  "jose": {
+    "alg_none": false,
+    "authority_typ": "epd2-authority+jwt",
+    "dynamic_jku_x5u_trust": false,
+    "generic_hs_authorization": false,
+    "jwk_thumbprint_hash": "SHA-256",
+    "kid_min_entropy_bits": 128,
+    "kid_reuse": false,
+    "service_typ": "epd2-service+jwt",
+    "unknown_kid_behavior": "ONE_REFRESH_FROM_CONFIGURED_TRUSTED_ISSUER_THEN_FAIL_CLOSED"
+  },
+  "key_classes": [
+    {
+      "algorithm": "ES384",
+      "format": "X509_V3_TRUST_ANCHOR",
+      "id": "ROOT_TRUST_SIGNING",
+      "max_active_days": 1826,
+      "private_boundary": "OFFLINE_HSM_M_OF_N_NON_EXPORTABLE"
+    },
+    {
+      "algorithm": "ES384",
+      "format": "X509_V3_CA",
+      "id": "PLATFORM_INTERMEDIATE_SIGNING",
+      "max_active_days": 365,
+      "private_boundary": "HSM_KMS_NON_EXPORTABLE"
+    },
+    {
+      "algorithm": "ES384",
+      "format": "X509_V3_CONSTRAINED_CA",
+      "id": "REGIONAL_ISSUER_SIGNING",
+      "max_active_days": 90,
+      "private_boundary": "REGIONAL_HSM_KMS_NON_EXPORTABLE"
+    },
+    {
+      "algorithm": "ES256",
+      "assertion_default_ttl_seconds": 300,
+      "assertion_hard_max_ttl_seconds": 600,
+      "format": "JWS_JWT_JWK_JWKS",
+      "id": "AUTHORITY_ASSERTION_SIGNING",
+      "max_active_days": 30,
+      "private_boundary": "HSM_KMS_PROTECTED_SIGNER"
+    },
+    {
+      "algorithm": "ES256",
+      "assertion_default_ttl_seconds": 300,
+      "assertion_hard_max_ttl_seconds": 900,
+      "format": "JWS_JWT_JWK_JWKS",
+      "id": "SERVICE_ASSERTION_SIGNING",
+      "max_active_days": 30,
+      "private_boundary": "WORKLOAD_OR_KMS_SIGNER"
+    },
+    {
+      "algorithm": "ECDSA_P256",
+      "format": "X509_V3",
+      "id": "WORKLOAD_MTLS_LEAF",
+      "private_boundary": "WORKLOAD_HSM_KMS_AGENT",
+      "target_lifetime_hours": 24
+    },
+    {
+      "algorithm": "CURRENT_BSI_PUBLIC_PKI_PROFILE",
+      "cryptoperiod": "PROVIDER_BSI_POLICY",
+      "format": "PUBLIC_CA_X509",
+      "id": "PUBLIC_EDGE_TLS",
+      "private_boundary": "EDGE_PROVIDER_PROTECTED"
+    },
+    {
+      "algorithm": "ES384",
+      "format": "DETACHED_SIGNATURE_PLUS_EXTERNAL_ANCHOR",
+      "id": "AUDIT_EVIDENCE_SIGNING",
+      "max_active_days": 90,
+      "private_boundary": "ISOLATED_AUDIT_HSM_KMS"
+    },
+    {
+      "algorithm": "AES_256",
+      "format": "KMS_HSM_WRAP_HANDLE",
+      "id": "DATA_KEK",
+      "private_boundary": "KMS_HSM_ONLY",
+      "target_max_active_days": 180
+    },
+    {
+      "algorithm": "AES_256_GCM",
+      "cryptoperiod": "OBJECT_BATCH_POLICY",
+      "format": "WRAPPED_KEY_REFERENCE",
+      "id": "DATA_DEK",
+      "private_boundary": "APPROVED_CRYPTO_BOUNDARY"
+    },
+    {
+      "algorithm": "CSPRNG_256_BITS_MIN",
+      "format": "OPAQUE_SECRET",
+      "id": "PROVIDER_CLIENT_SECRET",
+      "private_boundary": "SECRET_MANAGER_PROVIDER",
+      "target_max_active_days": 90
+    },
+    {
+      "age_rotation": "NOT_REQUIRED_SOLELY_BY_AGE",
+      "algorithm": "WEBAUTHN_ES256_BASELINE",
+      "format": "COSE_PUBLIC_KEY",
+      "id": "HUMAN_PASSKEY",
+      "private_boundary": "USER_AUTHENTICATOR"
+    },
+    {
+      "algorithm": "THRESHOLD_OR_HSM_WRAPPED_PROFILE",
+      "cryptoperiod": "CEREMONY_POLICY_AND_ROTATE_AFTER_USE",
+      "format": "NO_GENERIC_PLAINTEXT_FILE",
+      "id": "RECOVERY_MATERIAL",
+      "private_boundary": "OFFLINE_RECOVERY_CUSTODY"
+    },
+    {
+      "algorithm": "EIDAS_APPROVED_PROVIDER_PROFILE",
+      "cryptoperiod": "PROVIDER_LEGAL_POLICY",
+      "format": "PROVIDER_CERT_VALIDATION_EVIDENCE",
+      "id": "OFFICIAL_SIGNATURE_SEAL_PROVIDER",
+      "private_boundary": "QUALIFIED_APPROVED_PROVIDER_OR_SIGNING_DEVICE"
+    },
+    {
+      "algorithm": "PACK16_VOTING_PROFILE",
+      "excluded_from_generic_profile": true,
+      "format": "VOTING_DOMAIN_ONLY",
+      "id": "VOTING_*",
+      "private_boundary": "VOTING_TRUST_DOMAIN"
+    }
+  ],
+  "profile_id": "EPD2-CRYPTO-GENERIC-0.1",
+  "provider_selection": "DEFERRED_TO_INFRA",
+  "status": "governed_target_not_activated",
+  "tls": {
+    "compatibility_only": "TLS1.2_CURRENT_BSI_PROFILE",
+    "preferred": "TLS1.3",
+    "prohibited": [
+      "TLS1.0",
+      "TLS1.1",
+      "SSLv2",
+      "SSLv3"
+    ]
+  },
+  "voting_domain_excluded": true
+}

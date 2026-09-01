@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/data-subject-request-status-changed-payload.v1.schema.json",
+  "title": "data_subject_request.status_changed event payload (v1)",
+  "description": "PACK-09, ADR-040/ADR-041. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). Carries the identity-verification STATUS only - never a verification attribute, document or eID assertion, and never the requester's party reference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "case_id",
+    "organization_id",
+    "request_type",
+    "status",
+    "identity_verification_status",
+    "response_decision",
+    "limitation_reason_code",
+    "reason_code",
+    "request_version",
+    "recorded_at"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "access",
+        "rectification",
+        "erasure",
+        "restriction",
+        "portability",
+        "objection",
+        "other_legal_request"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "classified",
+        "in_progress",
+        "answered",
+        "refused",
+        "closed"
+      ]
+    },
+    "identity_verification_status": {
+      "type": "string",
+      "enum": [
+        "not_verified",
+        "verification_pending",
+        "verified",
+        "verification_failed"
+      ]
+    },
+    "response_decision": {
+      "type": ["string", "null"],
+      "enum": ["granted", "partially_granted", "refused", null]
+    },
+    "limitation_reason_code": {
+      "type": ["string", "null"]
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

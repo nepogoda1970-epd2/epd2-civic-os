@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/party-membership-eligibility-policy.schema.json",
+  "title": "PartyMembershipEligibilityPolicy",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.6 (canon-0.6.0, PACK-07, ADR-026/ADR-030). Owned by membership-service (epd2_membership_service.domain.PartyMembershipEligibilityPolicy). Shares ParticipantEligibilityPolicy's (19d.4) field set and lifecycle, plus incompatibility_rules/membership_duration_rules. Structurally separate from ParticipantEligibilityPolicy - neither is a special case of the other.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "policy_version",
+    "status",
+    "scope_type",
+    "scope_id",
+    "effective_from",
+    "effective_until",
+    "adopted_by_decision_id",
+    "age_thresholds",
+    "citizenship_conditions",
+    "residence_conditions",
+    "exemptions",
+    "transitional_rules",
+    "incompatibility_rules",
+    "membership_duration_rules",
+    "supersedes_policy_id",
+    "signed_policy_digest_reference",
+    "transparency_log_commitment_reference"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded"]
+    },
+    "scope_type": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "scope_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "effective_from": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "effective_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "adopted_by_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "age_thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "citizenship_conditions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "residence_conditions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "exemptions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "transitional_rules": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "incompatibility_rules": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "membership_duration_rules": {
+      "type": ["object", "null"]
+    },
+    "supersedes_policy_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "signed_policy_digest_reference": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "transparency_log_commitment_reference": {
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

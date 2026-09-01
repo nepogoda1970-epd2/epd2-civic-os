@@ -1,0 +1,1551 @@
+"""CT-00-08 Identity Leakage (canon section 27) and the pack's identity-
+leakage suite (pack section 12.2): a participation response never
+contains identity fields.
+
+Checked here, per pack section 12.2's explicit list:
+- credential schema does not contain forbidden identity fields;
+- credential events do not contain identity fields;
+- validation result does not contain identity fields;
+- the OpenAPI contract's credential-service-tagged paths (and the schemas
+  they `$ref`) do not reference identity fields - scoped to
+  credential-service only, since other services' paths (identity-service's
+  `/identity/verifications`, in particular) legitimately reference their
+  own canonical fields such as `identity_record_id`;
+- the audit event *payload* for credential operations does not contain
+  identity claims (only structural target_type/target_id references);
+- a serialized credential cannot be linked to an account or identity
+  record through an explicit ID (no shared identifier field at all).
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import UTC, date, datetime
+from uuid import uuid4
+
+import pytest
+from _schema_helpers import (
+    OPENAPI_PATH,
+    PACK03_OPENAPI_PATH,
+    PACK04_OPENAPI_PATH,
+    PACK05_OPENAPI_PATH,
+    PACK06_OPENAPI_PATH,
+    load_event_schema,
+    load_schema,
+    to_jsonable,
+)
+
+from epd2_audit_core.storage import InMemoryAuditEventStore
+from epd2_core.clock import FixedClock
+from epd2_core.event_envelope import ActorRef
+from epd2_credential_service.application import (
+    IssueResult,
+    issue_participation_credential,
+    revoke_participation_credential,
+    validate_participation_credential,
+)
+from epd2_credential_service.domain import FORBIDDEN_FIELD_NAMES, CredentialType
+from epd2_credential_service.events import credential_full_state_payload
+from epd2_credential_service.storage import InMemoryCredentialStore
+from epd2_delegation_service.domain import FORBIDDEN_FIELD_NAMES as DELEGATION_FORBIDDEN
+from epd2_governance_service.domain import RoleAssignment, RoleAssignmentStatus
+from epd2_governance_service.storage import InMemoryRoleAssignmentStore
+from epd2_identity_service.domain import IdentityRecord
+from epd2_initiative_service.domain import FORBIDDEN_FIELD_NAMES as SUPPORT_FORBIDDEN
+from epd2_tally_service.domain import FORBIDDEN_FIELD_NAMES as TALLY_FORBIDDEN
+from epd2_transparency_service.domain import FORBIDDEN_FIELD_NAMES as TRANSPARENCY_FORBIDDEN
+from epd2_voting_service.domain import FORBIDDEN_FIELD_NAMES as VOTING_FORBIDDEN
+
+#: The subset of `TRANSPARENCY_FORBIDDEN` that must never appear in ANY
+#: transparency-service artifact, including the four owned entities'
+#: own *stored* schemas - unlike the four `*_role_id` fields (also in
+#: `TRANSPARENCY_FORBIDDEN`), which are legitimate stored domain fields
+#: (canon section 19a) and only become forbidden in a *public* event
+#: payload (canon section 19a.6) - see
+#: `test_transparency_event_payload_schemas_forbid_all_forbidden_fields`
+#: below, which checks the full set against the event payload schemas
+#: instead.
+TRANSPARENCY_STRUCTURAL_FORBIDDEN = TRANSPARENCY_FORBIDDEN - {
+    "published_by_role_id",
+    "requested_by_role_id",
+    "approved_by_role_id",
+    "submitted_by_role_id",
+}
+
+
+def _issue(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+    **overrides: object,
+) -> IssueResult:
+    defaults = dict(
+        credential_id=uuid4(),
+        credential_type=CredentialType.SPACE_ACCESS,
+        scope_type="civic_space",
+        scope_id=uuid4(),
+        valid_from=datetime(2026, 1, 1, tzinfo=UTC),
+        expires_at=datetime(2027, 1, 1, tzinfo=UTC),
+        usage_limit=None,
+        rule_version=1,
+        eligibility_snapshot_digest="a" * 64,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    defaults.update(overrides)
+    return issue_participation_credential(
+        credential_store,
+        audit_store,
+        **defaults,  # type: ignore[arg-type]
+    )
+
+
+def test_credential_schema_forbids_identity_fields() -> None:
+    schema = load_schema("participation-credential.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in FORBIDDEN_FIELD_NAMES:
+        assert forbidden not in schema["properties"]
+
+
+def test_credential_issued_event_payload_has_no_identity_fields(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    result = _issue(credential_store, audit_store, actor, clock)
+    payload_text = json.dumps(to_jsonable(result.event.payload))
+    for forbidden in FORBIDDEN_FIELD_NAMES:
+        assert forbidden not in payload_text
+
+
+def test_credential_revoked_event_payload_has_no_identity_fields(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    issued = _issue(credential_store, audit_store, actor, clock)
+    result = revoke_participation_credential(
+        credential_store,
+        audit_store,
+        credential_id=issued.credential.credential_id,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        causation_id=None,
+        clock=clock,
+    )
+    payload_text = json.dumps(to_jsonable(result.event.payload))
+    for forbidden in FORBIDDEN_FIELD_NAMES:
+        assert forbidden not in payload_text
+
+
+def test_credential_event_payload_schemas_forbid_identity_fields() -> None:
+    for name in (
+        "credential-issued-or-revoked-payload.v1.schema.json",
+        "credential-validation-failed-payload.v1.schema.json",
+    ):
+        schema = load_event_schema(name)
+        assert schema["additionalProperties"] is False
+        for forbidden in FORBIDDEN_FIELD_NAMES:
+            assert forbidden not in schema["properties"]
+
+
+def test_validation_result_has_no_identity_fields(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    issued = _issue(credential_store, audit_store, actor, clock)
+    result = validate_participation_credential(
+        credential_store,
+        credential_id=issued.credential.credential_id,
+        required_scope_type=None,
+        required_scope_id=None,
+        expected_rule_version=None,
+        expected_digest=None,
+        actor=actor,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    field_names = set(result.result.__dataclass_fields__)
+    assert not (field_names & FORBIDDEN_FIELD_NAMES)
+
+
+def test_audit_event_payload_for_credential_operations_has_no_identity_claims(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """The AuditEvent itself (docs/canonical/TZ-00-domain-event-canon.md,
+    section 18.1) only ever carries structural target_type/target_id
+    references (e.g. "participation_credential" + a credential UUID) -
+    never an identity claim such as a name, email, or identity_record_id."""
+    result = _issue(credential_store, audit_store, actor, clock)
+    audit_event = result.audit_event
+    assert audit_event.target_type == "participation_credential"
+    # The audit entry's own hashed state snapshot (before/after) is
+    # derived from credential_full_state_payload, which structurally
+    # cannot contain identity fields either.
+    state_text = json.dumps(to_jsonable(credential_full_state_payload(result.credential)))
+    for forbidden in FORBIDDEN_FIELD_NAMES:
+        assert forbidden not in state_text
+
+
+def test_serialized_credential_has_no_id_shared_with_identity_or_account(
+    credential_store: InMemoryCredentialStore,
+    audit_store: InMemoryAuditEventStore,
+    actor: ActorRef,
+    clock: FixedClock,
+) -> None:
+    """A serialized credential cannot be linked to an account or identity
+    record via an explicit shared identifier - the only IDs present are
+    the credential's own (credential_id, scope_id), neither of which is
+    ever an account_id or identity_record_id (structural boundary, see
+    services/credential-service/README.md)."""
+    result = _issue(credential_store, audit_store, actor, clock)
+    payload = to_jsonable(credential_full_state_payload(result.credential))
+    assert set(payload) & {"account_id", "identity_record_id", "person_id"} == set()
+
+
+def _credential_service_paths(
+    spec: dict[str, object], service_tag: str = "credential-service"
+) -> dict[str, object]:
+    """The subset of the OpenAPI `paths` mapping owned by `service_tag`
+    (`tags: [service_tag]` on at least one HTTP method) - CT-00-08 is
+    about a given service's own responses never leaking identity fields,
+    not about every path in the shared, multi-service contract. Other
+    services' paths (e.g. identity-service's `/identity/verifications`)
+    legitimately reference fields such as `identity_record_id`, since
+    that is their own canonical primary key, not a leak into a
+    participation artifact.
+
+    Generalized (PACK-03) from a credential-service-only helper: the
+    original name is kept (existing PACK-02 call sites below rely on the
+    `service_tag="credential-service"` default and pass no second
+    argument, so they are completely unaffected) rather than introducing
+    a same-shaped second helper under a new name, since the body is
+    identical for every service - only the tag string differs."""
+    paths = spec.get("paths", {})
+    assert isinstance(paths, dict)
+    result: dict[str, object] = {}
+    for path, item in paths.items():
+        assert isinstance(item, dict)
+        operations = [op for op in item.values() if isinstance(op, dict)]
+        if any(service_tag in (op.get("tags") or []) for op in operations):
+            result[path] = item
+    return result
+
+
+def _referenced_local_schema_names(node: object, found: set[str]) -> None:
+    """Recursively collect the basenames of every local `../schemas/*.json`
+    `$ref` reachable from `node`, so a credential-service path's response
+    schema (e.g. `participation-credential.schema.json`) is checked too,
+    not just the inline path/operation text."""
+    if isinstance(node, dict):
+        ref = node.get("$ref")
+        if isinstance(ref, str) and ref.startswith("../schemas/"):
+            found.add(ref.rsplit("/", 1)[-1])
+        for value in node.values():
+            _referenced_local_schema_names(value, found)
+    elif isinstance(node, list):
+        for item in node:
+            _referenced_local_schema_names(item, found)
+
+
+def _declared_property_names(node: object, names: set[str]) -> None:
+    """Recursively collect the keys of every JSON-Schema `properties`
+    mapping reachable from `node` - i.e. actual declared field names, not
+    arbitrary text. A naive full-text/substring scan of the serialized
+    spec is the wrong shape for this check: this schema file's own
+    `description` legitimately *names* every forbidden field in prose
+    (`participation-credential.schema.json`'s description literally reads
+    "...identity_record_id, person_id, account_id, ... are all forbidden
+    and cannot appear...", to document the `additionalProperties: false`
+    guarantee) - a substring match over that text is a false positive in
+    the opposite direction from the bug this test is fixing. Checking
+    structural `properties` keys instead - the same approach already used
+    by `test_credential_schema_forbids_identity_fields` and
+    `test_credential_event_payload_schemas_forbid_identity_fields` above -
+    catches only an actual declared field, exactly what CT-00-08 cares
+    about."""
+    if isinstance(node, dict):
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            names.update(properties)
+        for value in node.values():
+            _declared_property_names(value, names)
+    elif isinstance(node, list):
+        for item in node:
+            _declared_property_names(item, names)
+
+
+def test_openapi_credential_responses_do_not_reference_identity_fields() -> None:
+    """CT-00-08 / pack section 12.2: credential-service's own OpenAPI paths
+    - and the schemas they `$ref` to - never *declare* a forbidden identity
+    field as an actual property. Scoped to credential-service only (see
+    `_credential_service_paths`) so that other services' legitimate use of
+    their own identity fields (e.g. identity-service's `identity_record_id`)
+    is not a false positive; see
+    `test_identity_service_paths_may_reference_identity_record_id` below
+    for the explicit, positive counterpart proving that scoping is real
+    and not just vacuously narrow. Checks declared `properties` keys, not
+    a full-text substring scan (see `_declared_property_names` for why a
+    substring scan is itself a false-positive trap here)."""
+    pytest.importorskip("yaml")
+    import yaml
+
+    spec = yaml.safe_load(OPENAPI_PATH.read_text(encoding="utf-8"))
+    credential_paths = _credential_service_paths(spec)
+    assert credential_paths, "expected at least one credential-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(credential_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(credential_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & FORBIDDEN_FIELD_NAMES
+    assert leaked == set(), (
+        f"credential-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+def test_identity_service_paths_may_reference_identity_record_id() -> None:
+    """Negative-space check for the scoping above: identity-service's own
+    OpenAPI path legitimately declares `identity_record_id` (its own
+    canonical primary key, docs/canonical/TZ-00-domain-event-canon.md
+    section 22's ownership matrix) and must NOT be flagged or stripped by
+    CT-00-08 - that field only becomes forbidden in a *credential/
+    participation*-facing artifact, never in identity-service's own
+    contract. This proves `_credential_service_paths` truly excludes
+    identity-service rather than the previous (buggy) whole-spec scan
+    happening to still pass."""
+    pytest.importorskip("yaml")
+    import yaml
+
+    spec = yaml.safe_load(OPENAPI_PATH.read_text(encoding="utf-8"))
+    identity_path = spec["paths"]["/identity/verifications"]
+    identity_path_text = json.dumps(identity_path)
+    assert "identity_record_id" in identity_path_text
+
+
+# =============================================================================
+# PACK-03: the generalized `_credential_service_paths(spec, service_tag)`
+# helper exercised against `pack-03.yaml` for voting-service, tally-service,
+# and initiative-service, plus schema-forbids-identity-fields tests for the
+# six PACK-03 entities each own an identity-separation guarantee for
+# (VoteEnvelope, VoteReceipt, Tally, ResultPublication, SupportRecord,
+# Delegation) - mirroring `test_credential_schema_forbids_identity_fields`
+# above exactly.
+# =============================================================================
+
+
+def test_vote_envelope_schema_forbids_identity_fields() -> None:
+    schema = load_schema("vote-envelope.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in VOTING_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_vote_receipt_schema_forbids_identity_fields() -> None:
+    schema = load_schema("vote-receipt.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in VOTING_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_tally_schema_forbids_identity_fields() -> None:
+    schema = load_schema("tally.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TALLY_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_result_publication_schema_forbids_identity_fields() -> None:
+    schema = load_schema("result-publication.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TALLY_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_support_record_schema_forbids_identity_fields() -> None:
+    schema = load_schema("support-record.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in SUPPORT_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_delegation_schema_forbids_identity_fields() -> None:
+    schema = load_schema("delegation.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in DELEGATION_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def _pack03_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK03_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_voting_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    voting_paths = _credential_service_paths(spec, service_tag="voting-service")
+    assert voting_paths, "expected at least one voting-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(voting_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(voting_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & VOTING_FORBIDDEN
+    assert leaked == set(), (
+        f"voting-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+def test_openapi_tally_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    tally_paths = _credential_service_paths(spec, service_tag="tally-service")
+    assert tally_paths, "expected at least one tally-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(tally_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(tally_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & TALLY_FORBIDDEN
+    assert leaked == set(), (
+        f"tally-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+def test_openapi_initiative_responses_do_not_reference_identity_fields() -> None:
+    spec = _pack03_spec()
+    initiative_paths = _credential_service_paths(spec, service_tag="initiative-service")
+    assert initiative_paths, "expected at least one initiative-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(initiative_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(initiative_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & SUPPORT_FORBIDDEN
+    assert leaked == set(), (
+        f"initiative-service OpenAPI paths/schemas declare forbidden identity "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-04: transparency-service (ADR-013/ADR-015). The four owned entities'
+# own *stored* schemas must never contain a structurally forbidden field
+# (canon section 19a.6), and the event *payload* schemas must additionally
+# never contain any of the four internal `*_role_id` fields (never published
+# verbatim) - mirroring the PACK-02/03 pattern above, but split into two
+# checks since this pack (uniquely) has fields that are legitimate in the
+# stored entity but forbidden in the public payload.
+# =============================================================================
+
+
+def test_public_ledger_entry_schema_forbids_structural_fields() -> None:
+    schema = load_schema("public-ledger-entry.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_audit_export_package_schema_forbids_structural_fields() -> None:
+    schema = load_schema("audit-export-package.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+    # AuditExportPackage's own chain_proof items never carry actor_id/
+    # actor_type/before_hash/after_hash for any included event (canon
+    # section 19a.2/19a.6).
+    item_schema = schema["properties"]["chain_proof"]["items"]
+    for forbidden in ("actor_id", "actor_type", "before_hash", "after_hash"):
+        assert forbidden not in item_schema["properties"]
+
+
+def test_disclosure_policy_schema_forbids_structural_fields() -> None:
+    schema = load_schema("disclosure-policy.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+def test_lobby_log_entry_schema_forbids_structural_fields() -> None:
+    schema = load_schema("lobby-log-entry.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"]
+
+
+@pytest.mark.parametrize(
+    "event_schema_name",
+    [
+        "transparency-ledger-entry-payload.v1.schema.json",
+        "transparency-audit-export-payload.v1.schema.json",
+        "transparency-disclosure-policy-payload.v1.schema.json",
+        "transparency-lobby-log-entry-payload.v1.schema.json",
+    ],
+)
+def test_transparency_event_payload_schemas_forbid_all_forbidden_fields(
+    event_schema_name: str,
+) -> None:
+    """Unlike the stored entity schemas above, an event *payload* schema
+    must never declare ANY of `TRANSPARENCY_FORBIDDEN` - including the
+    four `*_role_id` fields, which are never published verbatim (canon
+    section 19a.6)."""
+    schema = load_event_schema(event_schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in TRANSPARENCY_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{event_schema_name} must never declare {forbidden!r}"
+        )
+
+
+def test_transparency_ledger_entry_published_event_has_no_role_id() -> None:
+    """End-to-end proof (not just schema-level): a real
+    `publish_ledger_entry` call's emitted event payload never contains
+    `published_by_role_id`, even though the stored `PublicLedgerEntry`
+    domain object does."""
+    from epd2_audit_core.storage import InMemoryAuditEventStore as _Store
+    from epd2_core.clock import FixedClock as _Clock
+    from epd2_transparency_service.application import (
+        activate_disclosure_policy,
+        define_disclosure_policy,
+        publish_ledger_entry,
+    )
+    from epd2_transparency_service.domain import (
+        DisclosureClass,
+        FieldRule,
+        LedgerSubjectType,
+        Transformation,
+    )
+    from epd2_transparency_service.storage import (
+        InMemoryDisclosurePolicyStore,
+        InMemoryPublicLedgerEntryStore,
+    )
+
+    clock = _Clock(datetime(2026, 1, 5, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="staff")
+    audit_store = _Store()
+    policy_store = InMemoryDisclosurePolicyStore()
+    ledger_store = InMemoryPublicLedgerEntryStore()
+
+    defined = define_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=uuid4(),
+        applies_to_subject_type="initiative",
+        field_rules=(FieldRule("title", DisclosureClass.PUBLIC, Transformation.NONE),),
+        effective_from=clock.now(),
+        version=1,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    activate_disclosure_policy(
+        policy_store,
+        audit_store,
+        disclosure_policy_id=defined.policy.disclosure_policy_id,
+        approved_by_role_id=uuid4(),
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    role_id = uuid4()
+    result = publish_ledger_entry(
+        ledger_store,
+        policy_store,
+        audit_store,
+        public_ledger_entry_id=uuid4(),
+        subject_type=LedgerSubjectType.INITIATIVE,
+        subject_id=uuid4(),
+        subject_event_id=uuid4(),
+        raw_content={"title": "x"},
+        published_by_role_id=role_id,
+        redaction_notice=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "published_by_role_id" not in payload_json
+    assert str(role_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain it (it is a real field).
+    assert result.entry.published_by_role_id == role_id
+
+
+def _pack04_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK04_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_transparency_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack04_spec()
+    transparency_paths = _credential_service_paths(spec, service_tag="transparency-service")
+    assert transparency_paths, "expected at least one transparency-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(transparency_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(transparency_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & TRANSPARENCY_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"transparency-service OpenAPI paths/schemas declare structurally forbidden "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-05: governance-service (ADR-016/ADR-018/ADR-020). Two distinct
+# forbidden-field sets, mirroring the PACK-04 split above:
+#
+# - `GOVERNANCE_STRUCTURAL_FORBIDDEN` must never appear ANYWHERE, including
+#   this pack's own *stored* entity schemas - canon 19b.3's explicit rule
+#   that a `GovernanceDecision.subject_reference` must never reference a
+#   `VoteEnvelope` directly (no reverse vote-linkability path), plus the
+#   three identity-domain fields this pack has no legitimate reason to
+#   ever declare (it never touches identity/account storage at all).
+# - `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN` are fields that ARE legitimate on
+#   the *stored* domain objects (`actor_id`, `assigned_by`, the three
+#   `*_role_id` fields, `submitter_authorization_reference`) but must never
+#   appear in a *public* event payload (canon 19b.1/19b.3/19b.4) - checked
+#   against the four event payload schemas and a real end-to-end command
+#   call, never against the stored entity schemas themselves.
+# =============================================================================
+
+GOVERNANCE_STRUCTURAL_FORBIDDEN = frozenset(
+    {"vote_envelope_id", "identity_record_id", "person_id", "account_id"}
+)
+
+GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN = frozenset(
+    {
+        "actor_id",
+        "assigned_by",
+        "proposed_by_role_id",
+        "approved_by_role_id",
+        "rejected_by_role_id",
+        "submitter_authorization_reference",
+    }
+)
+
+
+@pytest.mark.parametrize(
+    "schema_name",
+    [
+        "role-assignment.schema.json",
+        "governance-policy.schema.json",
+        "governance-decision.schema.json",
+        "technical-challenge.schema.json",
+    ],
+)
+def test_governance_entity_schema_forbids_structural_fields(schema_name: str) -> None:
+    schema = load_schema(schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in GOVERNANCE_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{schema_name} must never declare {forbidden!r}"
+        )
+
+
+@pytest.mark.parametrize(
+    "event_schema_name",
+    [
+        "governance-role-assignment-payload.v1.schema.json",
+        "governance-policy-payload.v1.schema.json",
+        "governance-decision-payload.v1.schema.json",
+        "governance-technical-challenge-payload.v1.schema.json",
+    ],
+)
+def test_governance_event_payload_schemas_forbid_all_forbidden_fields(
+    event_schema_name: str,
+) -> None:
+    """Unlike the stored entity schemas above, an event *payload* schema
+    must never declare ANY of `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN` -
+    including the `*_role_id`/`actor_id`/`assigned_by`/
+    `submitter_authorization_reference` fields, which are never published
+    verbatim (canon 19b.1/19b.3/19b.4)."""
+    schema = load_event_schema(event_schema_name)
+    assert schema["additionalProperties"] is False
+    for forbidden in GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"{event_schema_name} must never declare {forbidden!r}"
+        )
+
+
+def test_role_assignment_requested_event_has_no_actor_id_or_assigned_by() -> None:
+    """End-to-end proof (not just schema-level): a real
+    `request_role_assignment` call's emitted event payload never contains
+    `actor_id` or `assigned_by`, even though the stored `RoleAssignment`
+    domain object retains both."""
+    from epd2_core.clock import FixedClock as _Clock
+    from epd2_governance_service.application import request_role_assignment
+
+    clock = _Clock(datetime(2026, 1, 5, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="service")
+    audit_store = InMemoryAuditEventStore()
+    role_store = InMemoryRoleAssignmentStore()
+
+    granter_actor_id = uuid4()
+    granter = role_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=granter_actor_id,
+            role_code="governance_policy_approver",
+            scope_id=uuid4(),
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+    new_actor_id = uuid4()
+    result = request_role_assignment(
+        role_store,
+        audit_store,
+        role_assignment_id=uuid4(),
+        actor_id=new_actor_id,
+        role_code="observer",
+        scope_id=uuid4(),
+        valid_from=clock.now(),
+        valid_until=None,
+        granter_role_assignment_id=granter.role_assignment_id,
+        approval_reference=None,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "actor_id" not in payload_json
+    assert "assigned_by" not in payload_json
+    assert str(new_actor_id) not in json.dumps(payload_json)
+    assert str(granter.role_assignment_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain both (they are real fields).
+    assert result.assignment.actor_id == new_actor_id
+    assert result.assignment.assigned_by == granter.role_assignment_id
+
+
+def _pack05_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK05_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_governance_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack05_spec()
+    governance_paths = _credential_service_paths(spec, service_tag="governance-service")
+    assert governance_paths, "expected at least one governance-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(governance_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(governance_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & GOVERNANCE_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"governance-service OpenAPI paths/schemas declare structurally forbidden "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-06: ai-processing-service (ADR-021 through ADR-025). Two distinct
+# forbidden-field sets, mirroring the PACK-05 split above:
+#
+# - `AI_STRUCTURAL_FORBIDDEN` must never appear ANYWHERE, including this
+#   pack's own *stored* entity schema and OpenAPI response bodies - canon
+#   19c.9's invariants that AIProcessingRecord/RedactionManifest/
+#   AIDisclosurePackage never reverse-lookup identity, never reconstruct
+#   vote linkage, and never store raw input/removed values/hidden
+#   reasoning (19c.4/19c.6/19c.9; required scope item 7's strict data
+#   boundary).
+# - `AI_PUBLIC_PAYLOAD_FORBIDDEN` (`human_reviewer_reference`) IS
+#   legitimate on the *stored* `AIProcessingRecord` (canon 19c.3) but
+#   must never appear in a *public* event payload (mirrors
+#   `GOVERNANCE_PUBLIC_PAYLOAD_FORBIDDEN`'s treatment of `*_role_id`
+#   fields) - checked against the event payload schema and a real
+#   end-to-end command call, never against the OpenAPI response/entity
+#   schema (which legitimately declares it, the same way
+#   governance-decision.schema.json legitimately declares
+#   `proposed_by_role_id`).
+# =============================================================================
+
+AI_STRUCTURAL_FORBIDDEN = frozenset(
+    {
+        "vote_envelope_id",
+        "identity_record_id",
+        "person_id",
+        "account_id",
+        "credential_secret",
+        "raw_input",
+        "removed_values",
+        "hidden_reasoning",
+    }
+)
+
+AI_PUBLIC_PAYLOAD_FORBIDDEN = frozenset({"human_reviewer_reference"})
+
+
+def test_ai_processing_record_schema_forbids_structural_fields() -> None:
+    schema = load_schema("ai-processing-record.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"ai-processing-record.schema.json must never declare {forbidden!r}"
+        )
+    redaction_manifest_properties = schema["properties"]["redaction_manifest"]["properties"]
+    for forbidden in AI_STRUCTURAL_FORBIDDEN:
+        assert forbidden not in redaction_manifest_properties, (
+            f"the embedded redaction_manifest object must never declare {forbidden!r}"
+        )
+
+
+def test_ai_disclosure_package_schema_forbids_structural_fields() -> None:
+    schema = load_schema("ai-disclosure-package.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_STRUCTURAL_FORBIDDEN | AI_PUBLIC_PAYLOAD_FORBIDDEN | {"role_assignment_id"}:
+        assert forbidden not in schema["properties"], (
+            f"ai-disclosure-package.schema.json must never declare {forbidden!r}"
+        )
+
+
+def test_ai_processing_record_event_payload_schema_forbids_human_reviewer_reference() -> None:
+    schema = load_event_schema("ai-processing-record-payload.v1.schema.json")
+    assert schema["additionalProperties"] is False
+    for forbidden in AI_PUBLIC_PAYLOAD_FORBIDDEN:
+        assert forbidden not in schema["properties"], (
+            f"ai-processing-record-payload.v1.schema.json must never declare {forbidden!r}"
+        )
+
+
+def test_ai_output_accepted_event_has_no_human_reviewer_reference() -> None:
+    """End-to-end proof: a real `review_ai_output` approval call's emitted
+    `ai.output_accepted` payload never contains `human_reviewer_reference`,
+    even though the stored `AIProcessingRecord` retains it."""
+    from epd2_ai_processing_service.application import request_ai_processing, review_ai_output
+    from epd2_ai_processing_service.domain import HumanReviewStatus
+    from epd2_ai_processing_service.storage import InMemoryAIProcessingRecordStore
+    from epd2_governance_service.domain import GLOBAL_SCOPE_ID
+
+    clock = FixedClock(datetime(2026, 7, 24, tzinfo=UTC))
+    actor = ActorRef(actor_id=uuid4(), actor_type="service")
+    audit_store = InMemoryAuditEventStore()
+    record_store = InMemoryAIProcessingRecordStore()
+    role_store = InMemoryRoleAssignmentStore()
+
+    reviewer_actor_id = uuid4()
+    reviewer = role_store.create(
+        RoleAssignment(
+            role_assignment_id=uuid4(),
+            actor_id=reviewer_actor_id,
+            role_code="ai_output_reviewer",
+            scope_id=GLOBAL_SCOPE_ID,
+            valid_from=clock.now(),
+            valid_until=None,
+            assigned_by=uuid4(),
+            approval_reference=None,
+            status=RoleAssignmentStatus.ACTIVE,
+        )
+    )
+
+    requesting_actor_reference = uuid4()
+    created = request_ai_processing(
+        record_store,
+        audit_store,
+        ai_processing_record_id=uuid4(),
+        purpose_code="summarization",
+        target_type="initiative",
+        target_id=uuid4(),
+        input_version="v1",
+        model_provider="internal",
+        model_name="internal-model",
+        model_version="1.0",
+        prompt_template_version="v1",
+        is_consequential=True,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+
+    result = review_ai_output(
+        record_store,
+        audit_store,
+        role_store,
+        ai_processing_record_id=created.record.ai_processing_record_id,
+        reviewer_role_assignment_id=reviewer.role_assignment_id,
+        reviewer_subject_scope_id=GLOBAL_SCOPE_ID,
+        requesting_actor_reference=requesting_actor_reference,
+        is_official_publication=False,
+        outcome=HumanReviewStatus.APPROVED,
+        actor=actor,
+        actor_is_authorized=True,
+        correlation_id=uuid4(),
+        clock=clock,
+    )
+    payload_json = to_jsonable(result.event.payload)
+    assert "human_reviewer_reference" not in payload_json
+    assert str(reviewer_actor_id) not in json.dumps(payload_json)
+    # But the stored domain entity DOES retain it (it is a real field).
+    assert result.record.human_reviewer_reference == reviewer_actor_id
+
+
+def _pack06_spec() -> dict[str, object]:
+    pytest.importorskip("yaml")
+    import yaml
+
+    loaded: dict[str, object] = yaml.safe_load(PACK06_OPENAPI_PATH.read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_openapi_ai_processing_responses_do_not_reference_structurally_forbidden_fields() -> None:
+    spec = _pack06_spec()
+    ai_paths = _credential_service_paths(spec, service_tag="ai-processing-service")
+    assert ai_paths, "expected at least one ai-processing-service-tagged OpenAPI path"
+
+    referenced_schema_names: set[str] = set()
+    _referenced_local_schema_names(ai_paths, referenced_schema_names)
+
+    declared: set[str] = set()
+    _declared_property_names(ai_paths, declared)
+    for name in referenced_schema_names:
+        _declared_property_names(load_schema(name), declared)
+
+    leaked = declared & AI_STRUCTURAL_FORBIDDEN
+    assert leaked == set(), (
+        f"ai-processing-service OpenAPI paths/schemas declare structurally forbidden "
+        f"field(s) as an actual property: {sorted(leaked)}"
+    )
+
+
+# =============================================================================
+# PACK-07: identity-service (canon 19d.2/19d.8) and membership-service
+# (canon 19d.9 through 19d.11), ADR-030. Unlike PACK-04 through PACK-06,
+# this pack has no single stored/public schema split - instead, several
+# distinct `build_*_event` functions each carry their own explicit,
+# docstring-documented "never on the wire" invariant (ADR-030 item 5's
+# disclosure-by-default prohibition). Each test below constructs the real
+# domain entity via its dataclass constructor with the sensitive field(s)
+# deliberately populated to a non-default, identifiable value, builds the
+# real wire event via the real `build_*_event` function, and proves the
+# sensitive field is absent from `event.payload` - never a schema-level
+# proxy check, since these events do not (yet) all have their own
+# `*-payload.v1.schema.json` file the way PACK-02 through PACK-06 do.
+# =============================================================================
+
+#: Canon 19d.2's additive `IdentityRecord` fields that must never appear on
+#: any identity-service *wire* event payload (`build_identity_event`/
+#: `build_authentication_context_event`) - they may appear only in
+#: `identity_record_payload`, the internal Audit Core before/after-hash
+#: snapshot, which is a distinct, non-wire function.
+IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS = frozenset(
+    {
+        "date_of_birth",
+        "citizenship_status",
+        "residence_status",
+        "identity_scheme",
+        "attribute_verification_level",
+        "attribute_verified_at",
+        "attribute_valid_until",
+    }
+)
+
+
+def _make_identity_record_with_attributes() -> IdentityRecord:
+    from epd2_identity_service.domain import (
+        IdentityAssuranceLevel,
+        VerificationStatus,
+    )
+
+    return IdentityRecord(
+        identity_record_id=uuid4(),
+        account_id=uuid4(),
+        verification_provider="provider",
+        verification_level="substantial",
+        verification_status=VerificationStatus.VERIFIED,
+        verified_at=datetime(2026, 1, 1, tzinfo=UTC),
+        expires_at=None,
+        country="DE",
+        duplicate_check_status="unique",
+        provider_reference="secret-provider-reference-98765",
+        date_of_birth=date(1990, 5, 17),
+        citizenship_status=("DE", "FR"),
+        residence_status={"region": "berlin"},
+        identity_assurance_level=IdentityAssuranceLevel.SUBSTANTIAL,
+        identity_scheme="eidas-notified-scheme",
+        attribute_verification_level="high",
+        attribute_verified_at=datetime(2026, 1, 1, tzinfo=UTC),
+        attribute_valid_until=datetime(2027, 1, 1, tzinfo=UTC),
+    )
+
+
+def test_identity_wire_event_never_carries_canon_19d2_additive_attribute_fields() -> None:
+    """`build_identity_event`'s docstring is explicit: never any of canon
+    19d.2's identity/attribute fields, even though `identity_record_payload`
+    (the internal audit-hash snapshot, a different function) does carry
+    them all - proving that difference is real, not just documented."""
+    from epd2_identity_service.events import build_identity_event, identity_record_payload
+
+    record = _make_identity_record_with_attributes()
+    event = build_identity_event(
+        event_id=uuid4(),
+        event_type="identity.verification_started",
+        record=record,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden not in event.payload, (
+            f"identity.verification_started wire payload must never carry {forbidden!r}"
+        )
+    # But the internal, non-wire audit-hash snapshot DOES carry all of them
+    # (it is a different function with a different, documented purpose).
+    audit_snapshot = identity_record_payload(record)
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden in audit_snapshot
+
+
+def test_authentication_context_established_event_has_no_provider_reference() -> None:
+    """`build_authentication_context_event`'s docstring: never
+    `provider_reference` (an opaque infrastructure reference) or any
+    `IdentityRecord` field."""
+    from epd2_identity_service.domain import AuthenticationAssuranceLevel, AuthenticationContext
+    from epd2_identity_service.events import build_authentication_context_event
+
+    context = AuthenticationContext(
+        authentication_context_id=uuid4(),
+        account_id=uuid4(),
+        authentication_method="password",
+        authentication_assurance_level=AuthenticationAssuranceLevel.SUBSTANTIAL,
+        session_authenticated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        provider_reference="secret-idp-session-token",
+    )
+    event = build_authentication_context_event(
+        event_id=uuid4(),
+        event_type="identity.authentication_context_established",
+        context=context,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "provider_reference" not in event.payload
+    assert context.provider_reference not in json.dumps(to_jsonable(event.payload))
+    for forbidden in IDENTITY_RECORD_WIRE_FORBIDDEN_FIELDS:
+        assert forbidden not in event.payload
+
+
+def test_step_up_authentication_completed_event_has_no_provider_reference() -> None:
+    """Same invariant as above, exercised for
+    `identity.step_up_authentication_completed` - the other event built by
+    `build_authentication_context_event`."""
+    from epd2_identity_service.domain import AuthenticationAssuranceLevel, AuthenticationContext
+    from epd2_identity_service.events import build_authentication_context_event
+
+    context = AuthenticationContext(
+        authentication_context_id=uuid4(),
+        account_id=uuid4(),
+        authentication_method="webauthn",
+        authentication_assurance_level=AuthenticationAssuranceLevel.HIGH,
+        session_authenticated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        provider_reference="secret-idp-session-token-2",
+        step_up_completed_at=datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
+    )
+    event = build_authentication_context_event(
+        event_id=uuid4(),
+        event_type="identity.step_up_authentication_completed",
+        context=context,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=uuid4(),
+        occurred_at=datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
+    )
+    assert "provider_reference" not in event.payload
+    assert context.provider_reference not in json.dumps(to_jsonable(event.payload))
+
+
+def test_membership_application_submitted_event_has_no_affiliation_or_identity_content() -> None:
+    """`build_membership_application_submitted_event`'s docstring:
+    deliberately minimal, never any `AffiliationDeclaration`/identity
+    content."""
+    from epd2_membership_service.domain import MembershipApplication, MembershipApplicationStatus
+    from epd2_membership_service.events import build_membership_application_submitted_event
+
+    application = MembershipApplication(
+        membership_application_id=uuid4(),
+        subject_reference=uuid4(),
+        status=MembershipApplicationStatus.ELIGIBILITY_REVIEW,
+    )
+    event = build_membership_application_submitted_event(
+        event_id=uuid4(),
+        application=application,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    for forbidden in (
+        "declared_reference",
+        "affiliation_type",
+        "affiliation_declaration_id",
+        "subject_reference",
+    ):
+        assert forbidden not in event.payload
+
+
+def test_membership_activated_event_has_no_region_code_or_organization_id() -> None:
+    """`build_membership_activated_event`'s docstring: never carries
+    `region_code`/`organization_id` on the wire (ADR-030 item 5)."""
+    from epd2_membership_service.domain import Membership, MembershipStatus
+    from epd2_membership_service.events import build_membership_activated_event
+
+    membership = Membership(
+        membership_id=uuid4(),
+        account_reference=uuid4(),
+        organization_id=uuid4(),
+        membership_type="party_member",
+        membership_status=MembershipStatus.ACTIVE,
+        effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+        effective_until=None,
+        region_code="berlin-mitte",
+    )
+    event = build_membership_activated_event(
+        event_id=uuid4(),
+        membership=membership,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "region_code" not in event.payload
+    assert "organization_id" not in event.payload
+    assert "account_reference" not in event.payload
+    assert str(membership.organization_id) not in json.dumps(to_jsonable(event.payload))
+
+
+def test_membership_suspended_event_has_no_region_code_or_organization_id() -> None:
+    """Same invariant as above, exercised for `build_membership_suspended_event`."""
+    from epd2_membership_service.domain import Membership, MembershipStatus
+    from epd2_membership_service.events import build_membership_suspended_event
+
+    membership = Membership(
+        membership_id=uuid4(),
+        account_reference=uuid4(),
+        organization_id=uuid4(),
+        membership_type="party_member",
+        membership_status=MembershipStatus.SUSPENDED,
+        effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+        effective_until=None,
+        region_code="hamburg-nord",
+    )
+    event = build_membership_suspended_event(
+        event_id=uuid4(),
+        membership=membership,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "region_code" not in event.payload
+    assert "organization_id" not in event.payload
+
+
+def test_affiliation_declared_event_has_no_declared_reference() -> None:
+    """`build_affiliation_declared_event`'s docstring: never carries
+    `declared_reference` itself on the wire - an opaque reference, but
+    still restricted-by-default affiliation content (ADR-030 item 5)."""
+    from epd2_membership_service.domain import (
+        AffiliationDeclaration,
+        AffiliationStatus,
+        AffiliationType,
+    )
+    from epd2_membership_service.events import build_affiliation_declared_event
+
+    declaration = AffiliationDeclaration(
+        affiliation_declaration_id=uuid4(),
+        subject_reference=uuid4(),
+        affiliation_type=AffiliationType.OTHER_PARTY_MEMBERSHIP,
+        declared_reference="opaque-org-reference-4471",
+        declared_at=datetime(2026, 1, 1, tzinfo=UTC),
+        status=AffiliationStatus.SUBMITTED,
+        valid_from=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    event = build_affiliation_declared_event(
+        event_id=uuid4(),
+        declaration=declaration,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "declared_reference" not in event.payload
+    assert declaration.declared_reference not in json.dumps(to_jsonable(event.payload))
+
+
+def test_conflict_assessment_opened_event_has_no_evidence_references_or_reason_codes() -> None:
+    """`build_conflict_assessment_opened_event`'s docstring: never carries
+    `evidence_references`/`reason_codes` on the wire (ADR-030 item 5)."""
+    from epd2_membership_service.domain import (
+        ConflictAssessment,
+        ConflictAssessmentStatus,
+        ConflictType,
+        IncompatibilityLevel,
+    )
+    from epd2_membership_service.events import build_conflict_assessment_opened_event
+
+    assessment = ConflictAssessment(
+        conflict_assessment_id=uuid4(),
+        subject_reference=uuid4(),
+        conflict_type=ConflictType.DUAL_PARTY_MEMBERSHIP,
+        incompatibility_level=IncompatibilityLevel.NONE,
+        status=ConflictAssessmentStatus.PENDING,
+        reviewed_by_role_reference=uuid4(),
+        reason_codes=("DUAL_MEMBERSHIP_SUSPECTED",),
+        evidence_references=("evidence-doc-778",),
+    )
+    event = build_conflict_assessment_opened_event(
+        event_id=uuid4(),
+        assessment=assessment,
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    assert "evidence_references" not in event.payload
+    assert "reason_codes" not in event.payload
+    assert "evidence-doc-778" not in json.dumps(to_jsonable(event.payload))
+
+
+# =============================================================================
+# PACK-09 (compliance-service) — ADR-038 through ADR-042
+#
+# PACK-09's own no-identity guarantee is stronger than "an event payload
+# omits a field": compliance-service is structurally incapable of holding
+# identity at all. A natural person appears only as a per-case handle
+# minted by `domain.mint_case_party_reference` — a random UUID with no
+# meaning, never reused across cases, never derived from any identity,
+# membership or account value, and with no resolution path inside this
+# service. That is what PACK-09 required invariants 1 ("no global user
+# ID") and 11 ("no identity expansion") mean concretely, and the checks
+# below assert it against the real entities and real event payloads
+# rather than against documentation.
+# =============================================================================
+
+
+def test_no_compliance_entity_declares_an_identity_or_global_person_field() -> None:
+    """Every frozen dataclass in `epd2_compliance_service.domain` is
+    checked, not a hand-picked subset — a future entity that added an
+    `email` or `member_id` field would fail here immediately."""
+    import dataclasses as _dataclasses
+
+    from epd2_compliance_service import domain as compliance_domain
+
+    forbidden = {
+        "account_id",
+        "address",
+        "authentication_secret",
+        "credential_secret",
+        "date_of_birth",
+        "eid_attributes",
+        "eid_token",
+        "email",
+        "first_name",
+        "full_name",
+        "given_name",
+        "global_user_id",
+        "identity_document_number",
+        "identity_id",
+        "identity_record",
+        "kyc_payload",
+        "last_name",
+        "member_id",
+        "national_id",
+        "passport_number",
+        "person_id",
+        "phone",
+        "phone_number",
+        "surname",
+        "tax_id",
+        "user_id",
+    }
+    checked = 0
+    for name in dir(compliance_domain):
+        candidate = getattr(compliance_domain, name)
+        if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+            continue
+        checked += 1
+        field_names = {field.name for field in _dataclasses.fields(candidate)}
+        leaked = field_names & forbidden
+        assert not leaked, f"{name} declares identity field(s): {sorted(leaked)}"
+    assert checked >= 15, "expected the PACK-09 domain to expose its full entity set"
+
+
+def test_compliance_services_forbidden_identity_name_list_matches_what_it_rejects() -> None:
+    """`domain.reject_identity_payload_keys` is the runtime gate applied
+    to every free-form metadata mapping this service accepts. Its list and
+    the structural check above must not drift apart."""
+    from epd2_compliance_service.domain import (
+        FORBIDDEN_IDENTITY_FIELD_NAMES,
+        reject_identity_payload_keys,
+    )
+    from epd2_compliance_service.exceptions import (
+        ProcessingRegistryIdentityPayloadRejectedError,
+    )
+
+    assert "user_id" in FORBIDDEN_IDENTITY_FIELD_NAMES
+    assert "email" in FORBIDDEN_IDENTITY_FIELD_NAMES
+    for forbidden_name in sorted(FORBIDDEN_IDENTITY_FIELD_NAMES):
+        try:
+            reject_identity_payload_keys({forbidden_name: "x"}, where="ct-00-08")
+        except ProcessingRegistryIdentityPayloadRejectedError:
+            continue
+        raise AssertionError(f"{forbidden_name} was accepted by the identity gate")
+
+
+def test_case_party_references_are_unlinkable_across_cases() -> None:
+    """Two cases involving the same real person carry two unrelated
+    references. There is no derivation, no seed and no lookup that could
+    turn one into the other — which is exactly why no global user ID
+    exists here."""
+    from epd2_compliance_service.domain import mint_case_party_reference
+
+    minted = {mint_case_party_reference() for _ in range(256)}
+    assert len(minted) == 256
+
+
+def test_no_compliance_event_payload_carries_a_party_reference_or_identity_field() -> None:
+    """The wire payloads are narrower still than the entities: the
+    case-status event carries no party reference at all, and the
+    data-subject-request event carries the verification STATUS but never a
+    verification attribute or the requester's handle."""
+    from datetime import UTC as _UTC
+    from datetime import datetime as _datetime
+
+    from epd2_compliance_service.domain import (
+        CaseStatus,
+        CaseType,
+        DataSubjectRequest,
+        DataSubjectRequestStatus,
+        DataSubjectRequestType,
+        IdentityVerificationStatus,
+        ProceduralCase,
+        mint_case_party_reference,
+    )
+    from epd2_compliance_service.events import (
+        build_case_status_changed_event,
+        build_request_status_changed_event,
+    )
+
+    occurred_at = _datetime(2026, 1, 1, tzinfo=_UTC)
+    authority = mint_case_party_reference()
+    handler = mint_case_party_reference()
+    decision_maker = mint_case_party_reference()
+    requester = mint_case_party_reference()
+
+    case = ProceduralCase(
+        case_id=uuid4(),
+        organization_id=uuid4(),
+        case_type=CaseType.PARTY_ARBITRATION,
+        status=CaseStatus.OPEN,
+        opened_at=occurred_at,
+        subject_reference="dispute:1",
+        procedural_authority_reference=authority,
+        workflow_type="party_arbitration_standard",
+        case_handler_reference=handler,
+        assigned_decision_maker_reference=decision_maker,
+    )
+    case_event = build_case_status_changed_event(
+        event_id=uuid4(),
+        case=case,
+        reason_code="COMPLIANCE_PROCEDURAL_CASE_STATUS_CHANGED",
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=occurred_at,
+    )
+    serialized_case = json.dumps(to_jsonable(case_event.payload))
+    for reference in (authority, handler, decision_maker):
+        assert str(reference) not in serialized_case
+
+    request = DataSubjectRequest(
+        request_id=uuid4(),
+        case_id=case.case_id,
+        organization_id=case.organization_id,
+        request_type=DataSubjectRequestType.ACCESS,
+        status=DataSubjectRequestStatus.RECEIVED,
+        requester_party_reference=requester,
+        received_at=occurred_at,
+        scope_description_code="all_membership_data",
+        identity_verification_status=IdentityVerificationStatus.VERIFIED,
+        identity_verification_reference=uuid4(),
+    )
+    request_event = build_request_status_changed_event(
+        event_id=uuid4(),
+        request=request,
+        reason_code="COMPLIANCE_DATA_SUBJECT_REQUEST_STATUS_CHANGED",
+        actor=ActorRef(actor_id=uuid4(), actor_type="service"),
+        correlation_id=uuid4(),
+        causation_id=None,
+        occurred_at=occurred_at,
+    )
+    serialized_request = json.dumps(to_jsonable(request_event.payload))
+    assert str(requester) not in serialized_request
+    assert str(request.identity_verification_reference) not in serialized_request
+    assert "identity_verification_status" in request_event.payload
+
+
+def test_set_identity_verification_status_accepts_no_identity_carrying_parameter() -> None:
+    """The one command that touches identity verification at all takes a
+    status and an opaque reference — and nothing else. A future parameter
+    that could carry an attribute, document or eID assertion would fail
+    here."""
+    import inspect as _inspect
+
+    from epd2_compliance_service.application import set_identity_verification_status
+
+    parameters = set(_inspect.signature(set_identity_verification_status).parameters)
+    assert parameters == {
+        "request_store",
+        "context",
+        "request_id",
+        "status",
+        "verification_reference",
+    }
+
+
+# --- PACK-09, Architecture & Domain Framework 0.8.1 additions ---------------
+#
+# Round 1 checked `epd2_compliance_service.domain`. The Framework
+# additions put four more modules into the service - `casework`,
+# `notices`, `dataprotection` and `references` - and a forbidden field
+# added to any of them would have escaped the round-1 check entirely.
+
+
+def _pack09_framework_modules() -> list[object]:
+    from epd2_compliance_service import casework, dataprotection, notices, references
+
+    return [casework, notices, dataprotection, references]
+
+
+def test_no_pack09_framework_dataclass_declares_an_identity_field() -> None:
+    """Framework hard invariant 1: no global user ID. Applied
+    structurally to every dataclass in every new PACK-09 module, so the
+    guarantee does not depend on anybody remembering it."""
+    import dataclasses as _dataclasses
+
+    from epd2_compliance_service.domain import FORBIDDEN_IDENTITY_FIELD_NAMES
+
+    forbidden = set(FORBIDDEN_IDENTITY_FIELD_NAMES)
+    checked = 0
+    for module in _pack09_framework_modules():
+        for name in dir(module):
+            candidate = getattr(module, name)
+            if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+                continue
+            checked += 1
+            field_names = {field.name for field in _dataclasses.fields(candidate)}
+            leaked = field_names & forbidden
+            assert not leaked, f"{name} declares identity field(s): {sorted(leaked)}"
+    assert checked >= 30, "expected the Framework additions to expose their full entity set"
+
+
+def test_the_references_module_publishes_no_person_shaped_reference() -> None:
+    """`references.py` is PACK-09's outward interface. A `PersonRef`,
+    `UserRef` or `MemberRef` there would hand every later pack exactly the
+    global identifier the Framework forbids - so its absence is asserted
+    by name rather than left to review."""
+    from epd2_compliance_service import references
+
+    exported = {name for name in dir(references) if not name.startswith("_")}
+    for forbidden_name in ("PersonRef", "UserRef", "MemberRef", "AccountRef", "IdentityRef"):
+        assert forbidden_name not in exported, (
+            f"references.py exports {forbidden_name}, which would be a global person handle"
+        )
+    assert "CasePartyRef" in exported
+
+
+def test_no_pack09_framework_dataclass_declares_a_voting_or_document_field() -> None:
+    """PACK-09 required invariants 12 and 13, extended to the new
+    modules: no ballot/vote/tally/delegation linkage, and no document or
+    message body anywhere."""
+    import dataclasses as _dataclasses
+
+    forbidden = {
+        "ballot_id",
+        "vote_id",
+        "vote_envelope_id",
+        "tally_id",
+        "delegation_id",
+        "result_publication_id",
+        "document_body",
+        "document_bytes",
+        "message_body",
+        "notice_body",
+        "content",
+        "reasons_text",
+        "narrative",
+    }
+    for module in _pack09_framework_modules():
+        for name in dir(module):
+            candidate = getattr(module, name)
+            if not _dataclasses.is_dataclass(candidate) or not isinstance(candidate, type):
+                continue
+            field_names = {field.name for field in _dataclasses.fields(candidate)}
+            leaked = field_names & forbidden
+            assert not leaked, f"{name} declares forbidden field(s): {sorted(leaked)}"
+
+
+def test_case_party_handles_are_unlinkable_across_the_new_casework_module() -> None:
+    """The casework module re-exports the minting function; it must be
+    the same unlinkable generator, not a second one with weaker
+    properties."""
+    from epd2_compliance_service.casework import mint_case_party_reference as casework_mint
+    from epd2_compliance_service.domain import mint_case_party_reference as domain_mint
+
+    assert casework_mint is domain_mint or len({casework_mint() for _ in range(256)}) == 256

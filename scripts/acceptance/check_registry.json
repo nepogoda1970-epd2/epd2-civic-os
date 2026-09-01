@@ -1,0 +1,509 @@
+{
+  "schema": "epd2.infra01.check-registry/1",
+  "registry_version": "1.0.0",
+  "note": "The machine-readable governed check registry (INFRA01-HI-03). Every governed check of the canonical acceptance path is declared here with an explicit mandatory flag and execution expectation. A mandatory check can never silently disappear: the manifest must account for every entry with PASS, FAIL, BLOCKED or NOT_APPLICABLE_GOVERNED, and unknown or missing execution fails closed.",
+  "stages": [
+    {
+      "id": "bootstrap",
+      "title": "Identity binding, tool inventory, registry integrity, frozen pre-check",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "bootstrap.identity",
+          "title": "Exact candidate identity binding (HI-01)",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "bootstrap.tools",
+          "title": "Toolchain inventory",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "bootstrap.registry-integrity",
+          "title": "Check-registry integrity",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "bootstrap.frozen-pre-test",
+          "title": "Frozen artifacts before testing (HI-07 point 1)",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-governance",
+      "title": "Canonical governance state",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "governance.canonical-registers",
+          "title": "Canonical registers present, no competing register",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "governance.pilot-roadmap-lock",
+          "title": "PILOT roadmap lock detector self-check",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_pilot_roadmap.py",
+            "--self-check"
+          ],
+          "timeout_seconds": 300,
+          "expects": { "sentinel": "PILOT roadmap lock self-check PASS" }
+        }
+      ]
+    },
+    {
+      "id": "verify-repository",
+      "title": "Repository structure, forbidden paths, version and canon consistency",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "repository.required-paths",
+          "title": "All governed required paths present",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "python", "scripts/check_repository.py"],
+          "timeout_seconds": 300,
+          "expects": { "sentinel": "OK: all .* required paths are present" }
+        },
+        {
+          "id": "repository.forbidden-paths",
+          "title": "No forbidden files or directories",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "scripts/check_forbidden_files.py"
+          ],
+          "timeout_seconds": 300,
+          "expects": { "sentinel": "OK: no forbidden paths found" }
+        },
+        {
+          "id": "repository.version-consistency",
+          "title": "Repository/canon version sources consistent",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "python", "scripts/verify_versions.py"],
+          "timeout_seconds": 120,
+          "expects": { "sentinel": "OK: all version sources are consistent" }
+        },
+        {
+          "id": "repository.canon-0-8-0",
+          "title": "Canon 0.8.0 amendment checks",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "python", "scripts/check_canon_0_8_0.py"],
+          "timeout_seconds": 300,
+          "expects": {
+            "sentinel": "OK: all .* canon 0.8.0 amendment checks passed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "verify-dependencies",
+      "title": "Frozen dependency installation (environment reproducibility)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "dependencies.uv-sync-frozen",
+          "title": "uv sync --all-groups --frozen",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "sync", "--all-groups", "--frozen"],
+          "timeout_seconds": 1800,
+          "expects": {}
+        },
+        {
+          "id": "dependencies.npm-ci",
+          "title": "npm ci (frozen Node installation)",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["npm", "ci", "--no-audit", "--no-fund"],
+          "timeout_seconds": 1800,
+          "expects": {}
+        },
+        {
+          "id": "dependencies.locks-unchanged",
+          "title": "Lock files unchanged by installation",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-backend",
+      "title": "Backend formatting, lint, typing and tests",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "backend.ruff-format",
+          "title": "Ruff format --check",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "ruff", "format", "--check", "."],
+          "timeout_seconds": 600,
+          "expects": {}
+        },
+        {
+          "id": "backend.ruff-lint",
+          "title": "Ruff lint",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "ruff", "check", "."],
+          "timeout_seconds": 600,
+          "expects": {}
+        },
+        {
+          "id": "backend.mypy",
+          "title": "Collision-safe repository-wide mypy groups",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["make", "typecheck"],
+          "timeout_seconds": 3600,
+          "expects": {}
+        },
+        {
+          "id": "backend.pytest",
+          "title": "Full Python test suite",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["uv", "run", "pytest"],
+          "timeout_seconds": 14400,
+          "expects": { "parsers": [{ "type": "pytest", "min": 1 }] }
+        },
+        {
+          "id": "backend.security-suites",
+          "title": "Adversarial/security reference suites executed explicitly",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "uv",
+            "run",
+            "pytest",
+            "services/voting-service/tests/reference/test_negative_corpus.py",
+            "services/voting-service/tests/reference/test_fault_injection.py",
+            "services/voting-service/tests/reference/test_verifier_branches.py",
+            "services/voting-service/tests/reference/test_invariants.py"
+          ],
+          "timeout_seconds": 7200,
+          "expects": { "parsers": [{ "type": "pytest", "min": 1 }] }
+        }
+      ]
+    },
+    {
+      "id": "verify-frontend",
+      "title": "Frontend formatting, lint, typing and unit/render tests",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "frontend.prettier",
+          "title": "Prettier --check (pinned via lock file)",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["npm", "run", "format:check"],
+          "timeout_seconds": 900,
+          "expects": {}
+        },
+        {
+          "id": "frontend.typecheck-types",
+          "title": "TypeScript typecheck (epd2-types)",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "typecheck",
+            "--workspace=packages/typescript/epd2-types"
+          ],
+          "timeout_seconds": 900,
+          "expects": {}
+        },
+        {
+          "id": "frontend.typecheck-web-shell",
+          "title": "TypeScript typecheck (web-shell)",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "typecheck",
+            "--workspace=frontend/web-shell"
+          ],
+          "timeout_seconds": 900,
+          "expects": {}
+        },
+        {
+          "id": "frontend.eslint",
+          "title": "ESLint (web-shell)",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["npm", "run", "lint", "--workspace=frontend/web-shell"],
+          "timeout_seconds": 900,
+          "expects": {}
+        },
+        {
+          "id": "frontend.test-types",
+          "title": "epd2-types unit tests",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "test",
+            "--workspace=packages/typescript/epd2-types"
+          ],
+          "timeout_seconds": 1800,
+          "expects": { "parsers": [{ "type": "nodetest", "min": 1 }] }
+        },
+        {
+          "id": "frontend.test-web-shell",
+          "title": "web-shell unit and render tests",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["npm", "run", "test", "--workspace=frontend/web-shell"],
+          "timeout_seconds": 3600,
+          "expects": {
+            "parsers": [
+              { "type": "nodetest", "min": 1 },
+              { "type": "vitest", "min": 1 }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "verify-build",
+      "title": "Production frontend build",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "build.next-build",
+          "title": "next build (web-shell)",
+          "kind": "command",
+          "mandatory": true,
+          "command": ["npm", "run", "build", "--workspace=frontend/web-shell"],
+          "timeout_seconds": 3600,
+          "expects": {
+            "sentinel": "(?i)creating an optimized production build"
+          }
+        }
+      ]
+    },
+    {
+      "id": "verify-browser",
+      "title": "Browser end-to-end tests",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "browser.playwright",
+          "title": "Playwright browser suite",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "test:browser",
+            "--workspace=frontend/web-shell"
+          ],
+          "timeout_seconds": 7200,
+          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+        }
+      ]
+    },
+    {
+      "id": "verify-accessibility",
+      "title": "Accessibility gates",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "accessibility.playwright-a11y",
+          "title": "Playwright @a11y suite",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "test:a11y",
+            "--workspace=frontend/web-shell"
+          ],
+          "timeout_seconds": 3600,
+          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+        }
+      ]
+    },
+    {
+      "id": "verify-visual",
+      "title": "Visual regression gates",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "visual.playwright-visual",
+          "title": "Playwright @visual suite",
+          "kind": "command",
+          "mandatory": true,
+          "command": [
+            "npm",
+            "run",
+            "test:visual",
+            "--workspace=frontend/web-shell"
+          ],
+          "timeout_seconds": 3600,
+          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+        }
+      ]
+    },
+    {
+      "id": "verify-secrets",
+      "title": "Secret-leakage hard gate (HI-08)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "secrets.tree-scan",
+          "title": "Current-tree secret scan",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-frozen-artifacts",
+      "title": "Frozen artifacts after testing (HI-07 point 2)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "frozen.post-test",
+          "title": "Frozen artifact digests unchanged by testing",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-boundaries",
+      "title": "Infrastructure non-ownership structural checks (HI-11)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "boundaries.non-ownership",
+          "title": "No domain logic in infrastructure/gateway code",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-evidence",
+      "title": "Evidence reconciliation (HI-04)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "evidence.reconciliation",
+          "title": "Executed evidence reconciles with declared results",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "freeze",
+      "title": "Freeze inventory of the tested tree (HI-02)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "freeze.preconditions",
+          "title": "Tree clean and hygienic for freezing",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "freeze.inventory",
+          "title": "Byte inventory and tree digest",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "freeze.frozen-pre-package",
+          "title": "Frozen artifacts before packaging (HI-07 point 3)",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "package",
+      "title": "Candidate packaging (HI-02 / HI-06)",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "package.build",
+          "title": "Archive built from frozen bytes plus governed additions only (HI-07 point 4 during staging)",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "verify-package",
+      "title": "Independent archive-side verification",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "verify-package.byte-identity",
+          "title": "Packaged bytes equal frozen bytes; no undeclared or missing member",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "verify-package.hygiene",
+          "title": "Archive hygiene, duplicates, unsafe and machine-local paths",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "verify-package.frozen-in-archive",
+          "title": "Frozen artifacts inside the archive (HI-07 point 5)",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "verify-package.secret-scan",
+          "title": "Final archive secret scan",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
+          "id": "verify-package.evidence-sanitation",
+          "title": "Persisted evidence sanitation",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "id": "emit-manifest",
+      "title": "Execution manifest and evidence bundle",
+      "mandatory": true,
+      "checks": [
+        {
+          "id": "manifest.emit",
+          "title": "Sealed canonical execution manifest emitted",
+          "kind": "internal",
+          "mandatory": true
+        }
+      ]
+    }
+  ]
+}

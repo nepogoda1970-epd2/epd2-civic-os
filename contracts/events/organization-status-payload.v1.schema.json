@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/organization-status-payload.v1.schema.json",
+  "title": "organization.* event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.5/19e.20. Produced by epd2_organization_service.events._organization_event, shared verbatim by seven distinct event_type builders: build_organization_created_event (organization.created), build_organization_activated_event (organization.activated), build_organization_suspended_event (organization.suspended), build_organization_dissolved_event (organization.dissolved), build_organization_merged_event (organization.merged), build_organization_split_event (organization.split), build_organization_successor_declared_event (organization.successor_declared) - verified by reading events.py, all seven call the shared payload builder and differ only in event_type. Minimum payload only (19e.20): the organization's own id, its new status, effective_time (the organization's own effective_from), recorded_at, and decision_reference where applicable - no name, legal_operator, or any other identifying field.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["organization_id", "status", "effective_time", "recorded_at"],
+  "properties": {
+    "organization_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "restricted", "archived"]
+    },
+    "effective_time": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" },
+    "decision_reference": { "type": "string", "format": "uuid" }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/data-subject-request.schema.json",
+  "title": "DataSubjectRequest",
+  "description": "PACK-09, ADR-040/ADR-041. Owned by compliance-service (epd2_compliance_service.domain.DataSubjectRequest). A data-subject or other legal request, always attached to its own governed ProceduralCase. It carries NO identity data whatsoever: the requester appears as a per-case party reference, and identity verification is a STATUS plus an opaque reference to the service that performed it - never an attribute, document, eID assertion or KYC payload (PACK-09 required invariant 11). A request is never answered while identity_verification_status is not 'verified'. search_result_references and completion_evidence_reference are references to material held elsewhere, never the material itself. This system provides a governed workflow and auditability; it does not determine legal compliance. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "case_id",
+    "organization_id",
+    "request_type",
+    "status",
+    "requester_party_reference",
+    "received_at",
+    "scope_description_code",
+    "identity_verification_status",
+    "identity_verification_reference",
+    "assigned_handler_reference",
+    "search_result_references",
+    "response_decision",
+    "limitation_reason_code",
+    "completion_evidence_reference",
+    "request_version"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "access",
+        "rectification",
+        "erasure",
+        "restriction",
+        "portability",
+        "objection",
+        "other_legal_request"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "classified",
+        "in_progress",
+        "answered",
+        "refused",
+        "closed"
+      ]
+    },
+    "requester_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scope_description_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identity_verification_status": {
+      "type": "string",
+      "enum": [
+        "not_verified",
+        "verification_pending",
+        "verified",
+        "verification_failed"
+      ]
+    },
+    "identity_verification_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "assigned_handler_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "search_result_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "response_decision": {
+      "type": ["string", "null"],
+      "enum": ["granted", "partially_granted", "refused", null]
+    },
+    "limitation_reason_code": {
+      "type": ["string", "null"]
+    },
+    "completion_evidence_reference": {
+      "type": ["string", "null"]
+    },
+    "request_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

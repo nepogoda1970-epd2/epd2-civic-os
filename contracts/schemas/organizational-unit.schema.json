@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/organizational-unit.schema.json",
+  "title": "OrganizationalUnit",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19e.5, PACK-08 implementation round. A lighter-weight node for subordinate structures not themselves a full Organization in the legal/statutory sense. Owned by organization-service (epd2_organization_service.domain.OrganizationalUnit); shares Organization's status/lifecycle machinery (draft/active/restricted/archived), never a parallel hierarchy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "organizational_unit_id",
+    "owning_organization_id",
+    "unit_type",
+    "status",
+    "valid_from",
+    "valid_until",
+    "recorded_at"
+  ],
+  "properties": {
+    "organizational_unit_id": { "type": "string", "format": "uuid" },
+    "owning_organization_id": { "type": "string", "format": "uuid" },
+    "unit_type": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "restricted", "archived"]
+    },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "recorded_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

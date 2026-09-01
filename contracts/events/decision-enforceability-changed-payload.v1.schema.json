@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/decision-enforceability-changed-payload.v1.schema.json",
+  "title": "procedural_decision.enforceability_changed payload (v1)",
+  "description": "Wire payload of `procedural_decision.enforceability_changed` - the narrowest of the three and the only one that licenses a consequential action downstream. `effect_status` is guaranteed to be in_effect when enforceability becomes enforceable. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "appeal_case_id",
+    "case_id",
+    "decision_id",
+    "decision_type",
+    "decision_version",
+    "effect_status",
+    "effective_at",
+    "enforceability_status",
+    "finality_status",
+    "has_reasons_reference",
+    "issued_at",
+    "operative_result",
+    "organization_id",
+    "reason_code",
+    "recorded_at",
+    "remedy_id",
+    "sequence",
+    "supersedes_decision_id"
+  ],
+  "properties": {
+    "appeal_case_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decision_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "decision_type": {
+      "type": "string"
+    },
+    "decision_version": {
+      "type": "integer"
+    },
+    "effect_status": {
+      "type": "string"
+    },
+    "effective_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "enforceability_status": {
+      "type": "string"
+    },
+    "finality_status": {
+      "type": "string"
+    },
+    "has_reasons_reference": {
+      "type": "boolean"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operative_result": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "remedy_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "supersedes_decision_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

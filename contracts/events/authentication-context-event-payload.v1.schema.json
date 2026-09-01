@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/authentication-context-event-payload.v1.schema.json",
+  "title": "identity.authentication_context_established / identity.step_up_authentication_completed event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.8 (canon-0.6.0, PACK-07, ADR-026). Produced by epd2_identity_service.events.build_authentication_context_event, shared verbatim by both event_type builders (identity.authentication_context_established, identity.step_up_authentication_completed) - verified by reading application.py, both call the same payload function and differ only in event_type. Deliberately minimal - never includes provider_reference (an opaque infrastructure reference) or any IdentityRecord field (this pack's own task 11 identity-boundary discipline).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authentication_context_id",
+    "account_id",
+    "authentication_assurance_level"
+  ],
+  "properties": {
+    "authentication_context_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "account_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "authentication_assurance_level": {
+      "type": "string",
+      "enum": ["none", "low", "substantial", "high"]
+    }
+  }
+}

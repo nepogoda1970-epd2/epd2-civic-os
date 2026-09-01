@@ -1,0 +1,67 @@
+{
+  "schema": "epd2.pilot05.acceptance-record/1",
+  "stage": "PILOT-05 C3",
+  "decision": "ACCEPTED_ESTABLISHED",
+  "decision_date": "2026-08-26",
+  "previous_state": "C3 CANDIDATE / GOVERNANCE-STATIC PASS / FULL LIVE ACCEPTANCE NOT YET PROVEN",
+  "new_state": "ACCEPTED / ESTABLISHED",
+  "candidate": {
+    "filename": "EPD2_PILOT05_REPRESENTATIVE_DESK_AND_TRANSPARENCY_PILOT_CANDIDATE_0.1_C3.zip",
+    "sha256": "fc3f371bcf180e6559bc8ccc72cb74a88deef293f768424bcae7576731e8d8fb",
+    "archive_member_count": 3744
+  },
+  "authoritative_verification": {
+    "workflow_name": "PILOT-05 C3 terminal acceptance",
+    "workflow_path": ".github/workflows/pilot05-c3-terminal.yml",
+    "workflow_blob_asserted": false,
+    "workflow_blob_note": "The historical authoritative workflow is identified by run lineage/name/path; the current repository no longer exposes an exact blob at the run head, so this reconciliation does not invent one.",
+    "github_run_id": 32855264419,
+    "github_run_attempt": 1,
+    "conclusion": "success",
+    "head_sha": "126768f0ac66f809b93d96b215bc1b814592e364",
+    "job_id": 97825564426,
+    "job_conclusion": "success",
+    "validator_result": "PILOT05_C3_RESULT:PASS:/tmp/pilot05-c3-authoritative-evidence",
+    "mode": "FULL",
+    "static_only": false,
+    "database_runtime_prerequisites_present": true,
+    "test_totals": {
+      "passed": 3109,
+      "skipped": 1,
+      "failed": 0
+    },
+    "f01_adversarial": "9/9 PASS",
+    "f02_unlinkability": "8/8 PASS",
+    "governance_checks": "PASS",
+    "mandatory_execution": "PASS"
+  },
+  "artifacts": {
+    "authoritative_evidence": {
+      "name": "pilot05-c3-authoritative-evidence-32855264419",
+      "artifact_id": 9578226563,
+      "github_artifact_digest": "sha256:b36c48cc4c9ef27ab2adb64a3cda7a94b48824b6c2688fb3f5d1c9bae3e5af2d"
+    },
+    "exact_accepted_candidate": {
+      "name": "pilot05-c3-exact-accepted-candidate",
+      "artifact_id": 9578227300,
+      "github_artifact_digest": "sha256:16194743369291fc0699640539283946822a56bca42f07c99eb02a8a76f731ee"
+    }
+  },
+  "historical_environment_blocker": {
+    "state": "SUPERSEDED",
+    "detail": "An earlier full-validator attempt lacked EPD2_TEST_DATABASE_URL and failed closed before live proof. Run 32855264419 subsequently supplied the mandatory live prerequisites and passed, so the earlier environment condition is not an open product blocker."
+  },
+  "governance_reason": "The exact C3 candidate completed independent full live authoritative acceptance successfully. Its own CANDIDATE_NOT_ACCEPTED self-state is a no-self-acceptance safeguard; this separate post-run governance record supplies the acceptance/establishment decision.",
+  "scope": {
+    "pilot05": "ACCEPTED / ESTABLISHED",
+    "pilot06_opened": false,
+    "pilot07_opened": false,
+    "production_ready_claimed": false,
+    "legally_activated_claimed": false,
+    "integration_accepted_claimed": false,
+    "pilot04_c7_entry_pin_preserved": true,
+    "pilot04_c9_alignment_preserved": true
+  },
+  "open_blockers": [],
+  "next_primary_program_stage_unchanged": "API-02 — Authentication & Authorization Runtime"
+}

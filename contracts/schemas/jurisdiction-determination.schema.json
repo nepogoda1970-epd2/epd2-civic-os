@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/jurisdiction-determination.schema.json",
+  "title": "JurisdictionDetermination",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.JurisdictionDetermination). The recorded decision that a specific competent authority has jurisdiction over a specific case kind in a specific scope. Determinations are APPENDED, never rewritten: a challenge changes `status`, a transfer sets `valid_until` and `transferred_to_jurisdiction_id` while keeping the determination's own authority reference, so 'who was competent, and until when' stays answerable after any number of transfers (Framework 13.1, 'preserved jurisdiction history'). Only a determination in status asserted or confirmed, inside its validity window, permits a substantive decision. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "jurisdiction_id",
+    "case_id",
+    "organization_id",
+    "jurisdiction_type",
+    "case_kind",
+    "competent_authority_reference",
+    "status",
+    "determined_at",
+    "determined_by_authority_reference",
+    "valid_from",
+    "valid_until",
+    "basis_reference",
+    "transferred_to_jurisdiction_id",
+    "supersedes_jurisdiction_id",
+    "reason_code"
+  ],
+  "properties": {
+    "jurisdiction_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "jurisdiction_type": {
+      "type": "string",
+      "enum": [
+        "statutory",
+        "party_statute",
+        "delegated",
+        "appellate",
+        "arbitral"
+      ]
+    },
+    "case_kind": {
+      "type": "string",
+      "enum": [
+        "disciplinary",
+        "arbitration",
+        "internal_dispute",
+        "appeal",
+        "complaint",
+        "petition",
+        "data_subject_request",
+        "legal_request",
+        "compliance_review",
+        "protected_report"
+      ]
+    },
+    "competent_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "asserted",
+        "confirmed",
+        "challenged",
+        "declined",
+        "transferred",
+        "indeterminate"
+      ]
+    },
+    "determined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "determined_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "basis_reference": {
+      "type": "string"
+    },
+    "transferred_to_jurisdiction_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "supersedes_jurisdiction_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    }
+  }
+}

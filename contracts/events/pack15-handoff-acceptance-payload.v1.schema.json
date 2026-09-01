@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/pack15-handoff-acceptance-payload.v1.schema.json",
+  "title": "PACK-15 voting handoff acceptance event payload (v1)",
+  "description": "Produced by epd2_eligibility_service.voting_trust_events.build_handoff_event. Shared by voting_handoff_acceptance.accepted, voting_handoff_acceptance.rejected, voting_handoff_acceptance.expired and voting_handoff_acceptance.replay_rejected. It deliberately omits the account, the session and the handoff artifact digest that the acceptance was checked against, so an acceptance event names the origin and the reason for the outcome but never the participant who crossed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "acceptance_id",
+    "voting_context_reference",
+    "audience",
+    "origin",
+    "reason_code"
+  ],
+  "properties": {
+    "acceptance_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "voting_context_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "audience": {
+      "type": "string",
+      "minLength": 1
+    },
+    "origin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

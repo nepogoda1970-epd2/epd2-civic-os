@@ -1,0 +1,22 @@
+node_modules
+.next
+dist
+coverage
+.venv
+uv.lock
+package-lock.json
+*.csv
+.acceptance-run
+
+# Canonical document is frozen and must not be reformatted outside an
+# accepted ADR (see docs/canonical/README.md).
+docs/canonical/TZ-00-domain-event-canon.md
+
+# INFRA-01: normative/evidence artifacts whose exact accepted bytes are the
+# point — a formatter reflow would change their digests without changing
+# their meaning, which is exactly the kind of silent drift the acceptance
+# harness exists to refuse.
+docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.json
+docs/governance/EPD2_CRYPTOGRAPHIC_KEY_CLASSES_ALGORITHM_PROFILE_0.1.md
+docs/roadmap/EPD2_MASTER_V25_RECONCILIATION.json
+services/voting-service/tests/reference/crossimpl/independent_verifier.mjs

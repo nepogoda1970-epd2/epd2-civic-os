@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/recusal-recorded-payload.v1.schema.json",
+  "title": "recusal.recorded payload (v1)",
+  "description": "Wire payload of `recusal.recorded`. Publishes `blocks_decision_capability` and the COUNT of prior participations - never the participations themselves and never the recused party's handle. Capability is blocked; history is not erased. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assessment_outcome",
+    "blocks_decision_capability",
+    "case_id",
+    "conflict_declaration_id",
+    "effective_at",
+    "organization_id",
+    "prior_participation_count",
+    "recorded_at",
+    "recusal_id",
+    "replacement_assignment_id",
+    "supersedes_recusal_id"
+  ],
+  "properties": {
+    "assessment_outcome": {
+      "type": "string"
+    },
+    "blocks_decision_capability": {
+      "type": "boolean"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "conflict_declaration_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "effective_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "prior_participation_count": {
+      "type": "integer"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recusal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "replacement_assignment_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "supersedes_recusal_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

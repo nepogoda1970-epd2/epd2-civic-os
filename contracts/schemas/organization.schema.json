@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/organization.schema.json",
+  "title": "Organization",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 8.1 (unchanged field set) plus section 19e.4's additive lifecycle fields (organization_profile, effective_from/effective_until, dissolved_at, successor_reference, parent_reference), PACK-08 implementation round. Owned by organization-service (epd2_organization_service.domain.Organization). status is ONLY draft/active/restricted/archived (canon 8.1) - this implementation round's 'suspend'/'dissolve' workflow language maps onto restricted/archived respectively; there is no separate suspended/dissolved status value. parent_reference is a derived read model only (see docs/packs/PACK-08-IMPLEMENTATION.md) - OrganizationalRelation remains the sole authoritative source of hierarchy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "organization_id",
+    "name",
+    "legal_operator",
+    "organization_type",
+    "status",
+    "default_policy_version",
+    "organization_profile",
+    "effective_from",
+    "effective_until",
+    "dissolved_at",
+    "successor_reference",
+    "parent_reference"
+  ],
+  "properties": {
+    "organization_id": { "type": "string", "format": "uuid" },
+    "name": { "type": "string", "minLength": 1 },
+    "legal_operator": { "type": "string", "minLength": 1 },
+    "organization_type": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "restricted", "archived"]
+    },
+    "default_policy_version": { "type": "string", "minLength": 1 },
+    "organization_profile": { "type": "string", "minLength": 1 },
+    "effective_from": { "type": "string", "format": "date-time" },
+    "effective_until": { "type": ["string", "null"], "format": "date-time" },
+    "dissolved_at": { "type": ["string", "null"], "format": "date-time" },
+    "successor_reference": { "type": ["string", "null"], "format": "uuid" },
+    "parent_reference": { "type": ["string", "null"], "format": "uuid" }
+  }
+}

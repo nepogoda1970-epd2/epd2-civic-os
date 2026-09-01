@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/moderation-case-status-changed-payload.v1.schema.json",
+  "title": "moderation.case_opened / moderation.case_assigned event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.9. Produced by epd2_moderation_service.events.case_state_payload, shared verbatim by build_case_opened_event (moderation.case_opened) and build_case_assigned_event (moderation.case_assigned) - verified by reading events.py, both call the identical payload function. Deliberately excludes opened_by/trigger_type/policy_version (see case_full_state_payload for Audit Core's complete snapshot). assigned_moderator is nullable (null until case_assigned).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "moderation_case_id",
+    "target_type",
+    "target_id",
+    "status",
+    "assigned_moderator"
+  ],
+  "properties": {
+    "moderation_case_id": { "type": "string", "format": "uuid" },
+    "target_type": { "type": "string", "minLength": 1 },
+    "target_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "action_proposed",
+        "decided",
+        "appealed",
+        "closed"
+      ]
+    },
+    "assigned_moderator": { "type": ["string", "null"], "format": "uuid" }
+  }
+}

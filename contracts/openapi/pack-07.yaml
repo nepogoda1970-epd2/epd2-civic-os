@@ -1,0 +1,981 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-07 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the PACK-07 implementation round
+    (canon-0.6.0, ADR-026 through ADR-031): the business workflows layered
+    on top of the PACK-02 canon amendment. No production HTTP server ships
+    in this pack — these paths document, one-to-one, every real *public*
+    command/read function in epd2_eligibility_service.application (its new
+    PACK-07 additions) and epd2_membership_service.application (PACK-07's
+    one wholly new service), and are exercised in tests via those
+    application-layer functions directly, not over HTTP. Request bodies
+    list only genuine business fields — actor identity, authorization,
+    correlation/causation ids, the clock, and the idempotency event_id are
+    transport/session concerns, the same convention contracts/openapi/
+    pack-02.yaml through pack-06.yaml already follow.
+
+    Per ADR-027, `get_identity_participation_claims` and
+    `check_authentication_step_up_satisfied` (identity-service),
+    `get_membership_derived_claims` and
+    `read_participant_eligibility_decision` (membership-service) have NO
+    HTTP-shaped contract here at all — each is a narrow, internal,
+    cross-pack read one specific other service's own commands call
+    directly (mirroring `verify_role_assignment_for_action`'s own
+    precedent in contracts/openapi/pack-06.yaml), never invented as a
+    PACK-07 endpoint in its own right.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://eligibility.epd2.example
+    description: eligibility-service (not deployed in PACK-07 — contract only)
+  - url: https://membership.epd2.example
+    description: membership-service (not deployed in PACK-07 — contract only)
+
+paths:
+  # ==========================================================================
+  # eligibility-service — ParticipantEligibilityPolicy (canon 19d.4)
+  # ==========================================================================
+  /participant-eligibility-policies:
+    post:
+      operationId: proposeParticipantEligibilityPolicy
+      summary: Create a new draft ParticipantEligibilityPolicy version
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.propose_participant_eligibility_policy.
+        No canonical event — activation, not proposal, is the audited,
+        critical action.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [policy_id, policy_version, adopted_by_decision_id]
+              properties:
+                policy_id: { type: string, format: uuid }
+                policy_version: { type: integer, minimum: 1 }
+                scope_type: { type: ["string", "null"] }
+                scope_id: { type: ["string", "null"], format: uuid }
+                effective_from: { type: ["string", "null"], format: date-time }
+                effective_until: { type: ["string", "null"], format: date-time }
+                adopted_by_decision_id: { type: string, format: uuid }
+                signed_policy_digest_reference: { type: ["string", "null"] }
+                transparency_log_commitment_reference:
+                  { type: ["string", "null"] }
+      responses:
+        "201":
+          description: ParticipantEligibilityPolicy created in draft status
+
+  /participant-eligibility-policies/{policyId}/activate:
+    post:
+      operationId: activateParticipantEligibilityPolicy
+      summary: Activate a draft ParticipantEligibilityPolicy (canon 19d.7 four-gate rule)
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.activate_participant_eligibility_policy.
+        Fail-closed on any of the four activation gates.
+      tags: [eligibility-service]
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: ParticipantEligibilityPolicy transitioned to active
+        "403":
+          description: One or more activation gates failed (CRITICAL_POLICY_ACTIVATION_NOT_AUTHORIZED)
+
+  # ==========================================================================
+  # eligibility-service — ProcessEligibilityPolicy (canon 19d.5)
+  # ==========================================================================
+  /process-eligibility-policies:
+    post:
+      operationId: proposeProcessEligibilityPolicy
+      summary: Create a new draft ProcessEligibilityPolicy version
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.propose_process_eligibility_policy.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  policy_id,
+                  policy_version,
+                  process_type,
+                  jurisdiction,
+                  scope_type,
+                  scope_id,
+                  adopted_by,
+                ]
+              properties:
+                policy_id: { type: string, format: uuid }
+                policy_version: { type: integer, minimum: 1 }
+                process_type: { type: string, minLength: 1 }
+                jurisdiction: { type: string, minLength: 1 }
+                scope_type: { type: ["string", "null"] }
+                scope_id: { type: ["string", "null"], format: uuid }
+                adopted_by: { type: string, format: uuid }
+                eligible_citizenship_set:
+                  type: array
+                  items: { type: string, minLength: 1 }
+                minimum_age: { type: ["integer", "null"], minimum: 0 }
+                effective_from: { type: ["string", "null"], format: date-time }
+                effective_until: { type: ["string", "null"], format: date-time }
+                legal_basis: { type: ["string", "null"] }
+                decision_effect:
+                  type: string
+                  enum:
+                    [
+                      advisory,
+                      politically_binding,
+                      internally_binding,
+                      legally_final,
+                      requires_formal_confirmation,
+                    ]
+                formal_confirmation_required: { type: boolean }
+                formal_confirmation_authority: { type: ["string", "null"] }
+                secret_ballot_required: { type: boolean }
+                accessibility_profile: { type: ["string", "null"] }
+      responses:
+        "201":
+          description: ProcessEligibilityPolicy created in draft status
+
+  /process-eligibility-policies/{policyId}/activate:
+    post:
+      operationId: activateProcessEligibilityPolicy
+      summary: Activate a draft ProcessEligibilityPolicy (canon 19d.7 four-gate rule)
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.activate_process_eligibility_policy.
+      tags: [eligibility-service]
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: ProcessEligibilityPolicy transitioned to active
+        "403":
+          description: One or more activation gates failed
+
+  /process-eligibility-policies/resolve:
+    get:
+      operationId: resolveProcessEligibilityPolicy
+      summary: Resolve the single applicable ProcessEligibilityPolicy version (ADR-030 item 6)
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.resolve_process_eligibility_policy.
+        Plain, unaudited read. Historical reproducibility depends on the
+        caller recording the returned policy_version, never re-resolving
+        against a later version.
+      tags: [eligibility-service]
+      parameters:
+        - name: process_type
+          in: query
+          required: true
+          schema: { type: string }
+        - name: jurisdiction
+          in: query
+          required: true
+          schema: { type: string }
+        - name: scope_type
+          in: query
+          required: false
+          schema: { type: string }
+        - name: scope_id
+          in: query
+          required: false
+          schema: { type: string, format: uuid }
+        - name: effective_date
+          in: query
+          required: true
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: The single applicable active ProcessEligibilityPolicy, or null if none resolves
+
+  # ==========================================================================
+  # eligibility-service — StepUpAuthenticationRequirement (canon 19d.8)
+  # ==========================================================================
+  /step-up-authentication-requirements:
+    post:
+      operationId: proposeStepUpAuthenticationRequirement
+      summary: Create a new draft StepUpAuthenticationRequirement version
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.propose_step_up_authentication_requirement.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  requirement_id,
+                  requirement_version,
+                  action_code,
+                  required_authentication_context,
+                  fresh_authentication_required,
+                  reauthentication_reason,
+                ]
+              properties:
+                requirement_id: { type: string, format: uuid }
+                requirement_version: { type: integer, minimum: 1 }
+                action_code: { type: string, minLength: 1 }
+                required_authentication_context: { type: string, minLength: 1 }
+                fresh_authentication_required: { type: boolean }
+                reauthentication_reason: { type: string, minLength: 1 }
+                maximum_authentication_age_seconds:
+                  { type: ["integer", "null"], minimum: 0 }
+      responses:
+        "201":
+          description: StepUpAuthenticationRequirement created in draft status
+
+  /step-up-authentication-requirements/{requirementId}/activate:
+    post:
+      operationId: activateStepUpAuthenticationRequirement
+      summary: Activate a draft StepUpAuthenticationRequirement (canon 19d.7 four-gate rule)
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.activate_step_up_authentication_requirement.
+      tags: [eligibility-service]
+      parameters:
+        - name: requirementId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [adopted_by_decision_id]
+              properties:
+                adopted_by_decision_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: StepUpAuthenticationRequirement transitioned to active
+
+  /step-up-authentication/verify:
+    post:
+      operationId: authenticateStepUpForAction
+      summary: Verify an observed authentication state against the active step-up requirement for an action
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.authenticate_step_up_for_action.
+        Fail-closed, including when no active requirement resolves.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action_code, evaluated_at]
+              properties:
+                action_code: { type: string }
+                identity_assurance_level: { type: ["string", "null"] }
+                authentication_assurance_level: { type: ["string", "null"] }
+                session_authenticated_at:
+                  { type: ["string", "null"], format: date-time }
+                attribute_verified_at:
+                  { type: ["string", "null"], format: date-time }
+                evaluated_at: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Step-up requirement satisfied
+        "403":
+          description: STEP_UP_AUTHENTICATION_NOT_SATISFIED
+
+  # ==========================================================================
+  # eligibility-service — atomic capability / scoped capability token (canon 19d.14)
+  # ==========================================================================
+  /process-eligibility/atomic-capability-check:
+    post:
+      operationId: checkProcessEligibilityAtomicCapability
+      summary: Single-purpose atomic capability check for one (subject, process, action) question
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.check_process_eligibility_atomic_capability.
+        Never returns any claim other than the one boolean being asked about.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [claim_met, denial_reason_code]
+              properties:
+                claim_met: { type: boolean }
+                denial_reason_code: { type: string }
+      responses:
+        "200":
+          description: AtomicCapabilityResult
+
+  /process-eligibility/scoped-capability-tokens:
+    post:
+      operationId: deriveAndIssueScopedCapabilityToken
+      summary: Derive participation rights for one action and, if authorized, issue a scoped capability token
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.derive_and_issue_scoped_capability_token.
+        Always emits ParticipationRightsDerived, whether or not a token was
+        actually issued. Never persists or exposes a
+        ParticipationRightsProfile (canon 19d.1/19d.14).
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  subject_reference,
+                  process_id,
+                  action_code,
+                  claim_met,
+                  denial_reason_code,
+                  credential_id,
+                  credential_type,
+                  scope_type,
+                  scope_id,
+                  valid_from,
+                  expires_at,
+                  applicable_policy_version,
+                ]
+              properties:
+                subject_reference: { type: string, format: uuid }
+                process_id: { type: string, format: uuid }
+                action_code: { type: string }
+                claim_met: { type: boolean }
+                denial_reason_code: { type: string }
+                credential_id: { type: string, format: uuid }
+                credential_type:
+                  type: string
+                  enum:
+                    [
+                      space_access,
+                      initiative_support,
+                      ballot_access,
+                      delegation_access,
+                      audit_access,
+                    ]
+                scope_type: { type: string }
+                scope_id: { type: string, format: uuid }
+                valid_from: { type: string, format: date-time }
+                expires_at: { type: string, format: date-time }
+                usage_limit: { type: ["integer", "null"], minimum: 1 }
+                applicable_policy_version: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: ParticipationRightsDerived, with an issued credential_id if authorized
+
+  # ==========================================================================
+  # eligibility-service — DigitalDecision / AssemblyDecision (canon 19d.12)
+  # ==========================================================================
+  /digital-decisions:
+    post:
+      operationId: recordDigitalDecision
+      summary: Record a DigitalDecision, creating an AssemblyDecision if formal confirmation is required
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.record_digital_decision.
+        ADR-030 item 8. No silent auto-finalization on a missed deadline.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  digital_decision_id,
+                  process_reference,
+                  digital_result,
+                  decision_effect,
+                  formal_confirmation_required,
+                ]
+              properties:
+                digital_decision_id: { type: string, format: uuid }
+                process_reference: { type: object }
+                digital_result: { type: string, minLength: 1 }
+                decision_effect:
+                  type: string
+                  enum:
+                    [
+                      advisory,
+                      politically_binding,
+                      internally_binding,
+                      legally_final,
+                      requires_formal_confirmation,
+                    ]
+                formal_confirmation_required: { type: boolean }
+                confirming_authority: { type: ["string", "null"] }
+                legal_basis: { type: ["string", "null"] }
+                confirmation_deadline:
+                  { type: ["string", "null"], format: date-time }
+                protocol_or_evidence_reference: { type: ["string", "null"] }
+                assembly_decision_id: { type: ["string", "null"], format: uuid }
+      responses:
+        "201":
+          description: DigitalDecision recorded (final, or formal_confirmation_required)
+
+  /assembly-decisions/{assemblyDecisionId}/decide:
+    post:
+      operationId: recordAssemblyDecision
+      summary: Record the confirming authority's decision on a pending AssemblyDecision
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.record_assembly_decision.
+        A final_legal_decision diverging from the originating digital_result
+        requires a non-empty divergence_explanation.
+      tags: [eligibility-service]
+      parameters:
+        - name: assemblyDecisionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [new_status, final_legal_decision]
+              properties:
+                new_status:
+                  type: string
+                  enum: [confirmed, rejected, returned_for_revision]
+                final_legal_decision: { type: string, minLength: 1 }
+                divergence_explanation: { type: ["string", "null"] }
+      responses:
+        "200":
+          description: AssemblyDecision resolved
+        "422":
+          description: ASSEMBLY_DECISION_DIVERGENCE_EXPLANATION_REQUIRED
+
+  # ==========================================================================
+  # eligibility-service — process eligibility evaluation (canon 19d.3, ADR-027)
+  # ==========================================================================
+  /process-eligibility/evaluate:
+    post:
+      operationId: evaluateProcessEligibility
+      summary: Evaluate a subject's four separated electoral-eligibility claims for one process
+      description: >
+        Owned by eligibility-service. Maps to
+        epd2_eligibility_service.application.evaluate_process_eligibility.
+        Resolves the single applicable ProcessEligibilityPolicy version,
+        reads identity-service and (where relevant) membership-service's
+        narrow ADR-027 claims internally. Never a generic
+        electoral_eligibility_met field - always the four separated claims
+        (canon 19d.3). Returns null (fail-closed) when no applicable policy
+        resolves.
+      tags: [eligibility-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  subject_reference,
+                  identity_record_id,
+                  process_id,
+                  process_type,
+                  jurisdiction,
+                  effective_date,
+                ]
+              properties:
+                subject_reference: { type: string, format: uuid }
+                identity_record_id: { type: string, format: uuid }
+                process_id: { type: string, format: uuid }
+                process_type: { type: string }
+                jurisdiction: { type: string }
+                scope_type: { type: ["string", "null"] }
+                scope_id: { type: ["string", "null"], format: uuid }
+                effective_date: { type: string, format: date-time }
+                membership_subject_reference:
+                  { type: ["string", "null"], format: uuid }
+      responses:
+        "200":
+          description: ProcessEligibilityClaims plus applicable_policy_version, or null
+
+  # ==========================================================================
+  # membership-service — MembershipApplication (canon 19d.9)
+  # ==========================================================================
+  /membership-applications:
+    post:
+      operationId: submitMembershipApplication
+      summary: Submit a new MembershipApplication, entering eligibility_review
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.submit_membership_application.
+      tags: [membership-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [membership_application_id, subject_reference]
+              properties:
+                membership_application_id: { type: string, format: uuid }
+                subject_reference: { type: string, format: uuid }
+                supersedes_membership_application_id:
+                  { type: ["string", "null"], format: uuid }
+      responses:
+        "201":
+          description: MembershipApplication created and entered eligibility_review
+
+  /membership-applications/{membershipApplicationId}/evaluate-eligibility:
+    post:
+      operationId: evaluateMembershipApplicationEligibility
+      summary: Run Stage A's formal eligibility evaluation (recommendation only, never final)
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.evaluate_membership_application_eligibility.
+        Canon 19d.16: always transitions to human_decision_pending
+        regardless of the recommendation - never auto-approves or
+        auto-rejects.
+      tags: [membership-service]
+      parameters:
+        - name: membershipApplicationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [identity_record_id, effective_date]
+              properties:
+                identity_record_id: { type: string, format: uuid }
+                scope_type: { type: ["string", "null"] }
+                scope_id: { type: ["string", "null"], format: uuid }
+                effective_date: { type: string, format: date-time }
+      responses:
+        "200":
+          description: MembershipEligibilityEvaluated, transitioned to human_decision_pending
+
+  /membership-applications/{membershipApplicationId}/decision:
+    post:
+      operationId: recordMembershipHumanDecision
+      summary: Record the authorized human Stage B decision (approved or rejected)
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.record_membership_human_decision.
+        The ONLY operation that may move a MembershipApplication out of
+        human_decision_pending (canon 19d.16). approved does NOT itself
+        activate membership - see activateMembership.
+      tags: [membership-service]
+      parameters:
+        - name: membershipApplicationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  outcome,
+                  decision_authority_reference,
+                  applied_policy_version,
+                  reason_code,
+                ]
+              properties:
+                outcome: { type: string, enum: [approved, rejected] }
+                decision_authority_reference: { type: string, format: uuid }
+                applied_policy_version: { type: integer, minimum: 1 }
+                reason_code: { type: string }
+                membership_id: { type: ["string", "null"], format: uuid }
+                account_reference: { type: ["string", "null"], format: uuid }
+                organization_id: { type: ["string", "null"], format: uuid }
+                membership_type: { type: ["string", "null"] }
+                region_code: { type: ["string", "null"] }
+      responses:
+        "200":
+          description: MembershipDecisionRecorded
+
+  /memberships/{membershipId}/activate:
+    post:
+      operationId: activateMembership
+      summary: Activate an approved MembershipApplication (ADR-030 item 2's distinct final step)
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.activate_membership. The ONLY
+        operation that ever sets Membership.membership_status=active
+        (canon 19d.9's binding rule).
+      tags: [membership-service]
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  membership_application_id,
+                  account_reference,
+                  organization_id,
+                  membership_type,
+                ]
+              properties:
+                membership_application_id: { type: string, format: uuid }
+                account_reference: { type: string, format: uuid }
+                organization_id: { type: string, format: uuid }
+                membership_type: { type: string, minLength: 1 }
+                region_code: { type: ["string", "null"] }
+      responses:
+        "200":
+          description: MembershipActivated
+
+  /memberships/{membershipId}/suspend:
+    post:
+      operationId: suspendMembership
+      summary: Suspend an active Membership, gated on an authorized GovernanceDecision reference
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.suspend_membership. Canon
+        19d.16's third consequential outcome requiring a human decision
+        reference.
+      tags: [membership-service]
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision_authority_reference, reason_code]
+              properties:
+                decision_authority_reference: { type: string, format: uuid }
+                reason_code: { type: string }
+      responses:
+        "200":
+          description: MembershipSuspended
+
+  # ==========================================================================
+  # membership-service — AffiliationDeclaration (canon 19d.10)
+  # ==========================================================================
+  /affiliation-declarations:
+    post:
+      operationId: declareAffiliation
+      summary: Submit a new AffiliationDeclaration
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.declare_affiliation. Targeted -
+        exists only to feed ConflictAssessment, never a general
+        political-profiling system.
+      tags: [membership-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  affiliation_declaration_id,
+                  subject_reference,
+                  affiliation_type,
+                  declared_reference,
+                  valid_from,
+                ]
+              properties:
+                affiliation_declaration_id: { type: string, format: uuid }
+                subject_reference: { type: string, format: uuid }
+                affiliation_type:
+                  type: string
+                  enum:
+                    [
+                      other_party_membership,
+                      political_association_membership,
+                      public_office,
+                      elected_office,
+                      lobbying_or_interest_representation,
+                      organizational_leadership_or_employment,
+                      declared_incompatible_organization,
+                    ]
+                declared_reference: { type: string, minLength: 1 }
+                valid_from: { type: string, format: date-time }
+                valid_until: { type: ["string", "null"], format: date-time }
+                supersedes_declaration_id:
+                  { type: ["string", "null"], format: uuid }
+      responses:
+        "201":
+          description: AffiliationDeclared
+
+  /affiliation-declarations/{affiliationDeclarationId}/supersede:
+    post:
+      operationId: supersedeDeclaration
+      summary: Transition an acknowledged AffiliationDeclaration to superseded
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.supersede_declaration. A
+        correction is always a new declaration referencing this one, never
+        a rewrite of it.
+      tags: [membership-service]
+      parameters:
+        - name: affiliationDeclarationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: AffiliationDeclaration transitioned to superseded
+
+  # ==========================================================================
+  # membership-service — ConflictAssessment (canon 19d.11)
+  # ==========================================================================
+  /conflict-assessments:
+    post:
+      operationId: openConflictAssessment
+      summary: Open a new ConflictAssessment for a subject's declared affiliation
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.open_conflict_assessment. The
+        reviewer must never be the subject under assessment (canon 19d.11).
+      tags: [membership-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  conflict_assessment_id,
+                  subject_reference,
+                  conflict_type,
+                  reviewed_by_role_reference,
+                ]
+              properties:
+                conflict_assessment_id: { type: string, format: uuid }
+                subject_reference: { type: string, format: uuid }
+                conflict_type:
+                  type: string
+                  enum:
+                    [
+                      dual_party_membership,
+                      political_association_conflict,
+                      public_office_incompatibility,
+                      lobbying_role_incompatibility,
+                      organizational_affiliation_conflict,
+                      declared_incompatible_organization,
+                    ]
+                reviewed_by_role_reference: { type: string, format: uuid }
+                affiliation_declaration_id:
+                  { type: ["string", "null"], format: uuid }
+                evidence_references:
+                  type: array
+                  items: { type: string }
+      responses:
+        "201":
+          description: ConflictAssessmentOpened
+        "409":
+          description: CONFLICT_REVIEW_SELF_APPROVAL_PROHIBITED
+
+  /conflict-assessments/{conflictAssessmentId}/decision:
+    post:
+      operationId: recordConflictDecision
+      summary: Record the authorized human decision resolving a ConflictAssessment
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.record_conflict_decision.
+        decision_authority_reference is mandatory when new_status is
+        resolved_incompatible.
+      tags: [membership-service]
+      parameters:
+        - name: conflictAssessmentId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [new_status, incompatibility_level, reason_codes]
+              properties:
+                new_status:
+                  type: string
+                  enum:
+                    [
+                      under_review,
+                      resolved_no_conflict,
+                      resolved_conditional,
+                      resolved_incompatible,
+                      appealed,
+                      overturned,
+                      expired_reevaluation_due,
+                    ]
+                incompatibility_level:
+                  type: string
+                  enum:
+                    [
+                      none,
+                      disclosed_no_conflict,
+                      conditional_restriction,
+                      incompatible,
+                    ]
+                reason_codes:
+                  type: array
+                  items: { type: string }
+                decision_authority_reference:
+                  { type: ["string", "null"], format: uuid }
+                re_evaluation_due_at:
+                  { type: ["string", "null"], format: date-time }
+      responses:
+        "200":
+          description: ConflictDecisionRecorded
+        "422":
+          description: MEMBERSHIP_HUMAN_APPROVAL_REQUIRED (decision_authority_reference missing for resolved_incompatible)
+
+  # ==========================================================================
+  # membership-service — PartyMembershipEligibilityPolicy (canon 19d.6/19d.7)
+  # ==========================================================================
+  /party-membership-eligibility-policies/{policyId}/activate:
+    post:
+      operationId: activatePartyMembershipEligibilityPolicy
+      summary: Activate a draft PartyMembershipEligibilityPolicy (canon 19d.7 four-gate rule)
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.activate_party_membership_eligibility_policy.
+        This service's own critical-policy activation, mirroring
+        eligibility-service's own precedent.
+      tags: [membership-service]
+      parameters:
+        - name: policyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: PartyMembershipEligibilityPolicy transitioned to active
+        "403":
+          description: One or more activation gates failed
+
+  # ==========================================================================
+  # membership-service — Appeal (canon 14.3, reused, ADR-030 item 4)
+  # ==========================================================================
+  /membership-appeals:
+    post:
+      operationId: submitMembershipAppeal
+      summary: Submit an appeal against a MembershipApplication/ConflictAssessment decision
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.submit_membership_appeal.
+        Reuses canon's polymorphic Appeal (14.3) - decision_id is whichever
+        membership_application_id/conflict_assessment_id is being appealed.
+      tags: [membership-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [appeal_id, decision_id, submitted_by, grounds]
+              properties:
+                appeal_id: { type: string, format: uuid }
+                decision_id: { type: string, format: uuid }
+                submitted_by: { type: string, format: uuid }
+                grounds: { type: string, minLength: 1 }
+      responses:
+        "201":
+          description: Appeal created in submitted status
+
+  /membership-appeals/{appealId}/decide:
+    post:
+      operationId: decideMembershipAppeal
+      summary: Record the reviewer's final decision on a membership/conflict appeal
+      description: >
+        Owned by membership-service. Maps to
+        epd2_membership_service.application.decide_membership_appeal.
+        Canon 14.3's reviewer-separation rule: the reviewer must never be
+        the actor who made the original decision being appealed.
+      tags: [membership-service]
+      parameters:
+        - name: appealId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  reviewer_actor_id,
+                  original_decision_author_reference,
+                  outcome,
+                  result,
+                ]
+              properties:
+                reviewer_actor_id: { type: string, format: uuid }
+                original_decision_author_reference:
+                  { type: string, format: uuid }
+                outcome:
+                  { type: string, enum: [upheld, partially_upheld, rejected] }
+                result: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Appeal decided
+        "403":
+          description: PERMISSION_DENIED (reviewer is the original decision author)

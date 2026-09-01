@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/pack15-assertion-payload.v1.schema.json",
+  "title": "PACK-15 assertion-stream event payload (v1)",
+  "description": "Produced by epd2_eligibility_service.voting_trust_events.build_assertion_event. Shared by eligibility_assertion.minted, eligibility_assertion.released, eligibility_assertion.revoked, eligibility_assertion.expired, eligibility_assertion.redeemed, eligibility_assertion.replay_rejected and the four assertion_pickup.* types (created, redeemed, expired, replay_rejected); eligibility_assertion.queued uses pack15-assertion-queue-payload.v1.schema.json instead. It deliberately omits the assertion's nonce, its purpose and its required_assurance_satisfied flag, and carries no credential reference of any kind - an assertion reference and a credential reference never share a payload (ADR-093).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assertion_id",
+    "voting_context_reference",
+    "eligibility_class",
+    "organizational_scope",
+    "status",
+    "audience",
+    "expires_at_bucket"
+  ],
+  "properties": {
+    "assertion_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "voting_context_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eligibility_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "organizational_scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "minted",
+        "queued",
+        "released",
+        "picked_up",
+        "revoked",
+        "expired",
+        "redeemed",
+        "replay_rejected"
+      ]
+    },
+    "audience": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expires_at_bucket": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/interim-measure-decided-payload.v1.schema.json",
+  "title": "interim_measure.decided payload (v1)",
+  "description": "Wire payload of `interim_measure.decided`. Publishes `decided_by_actor_class` BY NAME so Framework hard invariant 69 (AI decides no consequential legal outcomes) is checkable by any subscriber, not only by this service's own tests. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "decided_at",
+    "decided_by_actor_class",
+    "ends_at",
+    "has_reasons_reference",
+    "legal_basis_reference",
+    "measure_id",
+    "measure_kind",
+    "organization_id",
+    "recorded_at",
+    "remedy_id",
+    "review_due_at",
+    "scope_description_code",
+    "starts_at",
+    "status"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "decided_by_actor_class": {
+      "type": "string"
+    },
+    "ends_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "has_reasons_reference": {
+      "type": "boolean"
+    },
+    "legal_basis_reference": {
+      "type": "string"
+    },
+    "measure_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "measure_kind": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "remedy_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "review_due_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "scope_description_code": {
+      "type": "string"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string"
+    }
+  }
+}

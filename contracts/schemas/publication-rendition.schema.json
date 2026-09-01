@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/publication-rendition.schema.json",
+  "title": "PublicationRendition",
+  "description": "PACK-11, ADR-053 interface requirement 4 and ADR-060. Owned by document-service (epd2_document_service.documents.PublicationRendition). A citable identifier for a published form of an approved version: 'produce a publication rendition identifier that a public view can cite without exposing document content'. `rendition_digest` identifies the rendition's bytes; the bytes live in the content store and never travel with the identifier. `source_version_hash` binds the rendition to exactly what it renders, so a citation can always be checked back. A rendition is DERIVED and non-authoritative - the authoritative object is the approved version. Several renditions of one version are legitimate (a PDF and an accessible HTML form of one approved minutes document are two renditions of one record).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rendition_id",
+    "document_id",
+    "organization_id",
+    "version_number",
+    "audience",
+    "media_type",
+    "rendition_digest",
+    "source_version_hash",
+    "issued_at",
+    "citation_reference"
+  ],
+  "properties": {
+    "rendition_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "document_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "audience": {
+      "type": "string",
+      "enum": ["public", "members", "body_internal", "addressee_only"],
+      "description": "Only `public` reaches the public transparency projection. 'Published to members' is a real publication and is not that surface."
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rendition_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_version_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "citation_reference": {
+      "type": "string",
+      "pattern": "^epd2-doc:"
+    }
+  }
+}

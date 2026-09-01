@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/ai-disclosure-package.schema.json",
+  "title": "AIDisclosurePackage",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19c.6 (added by canon 0.5.0, ADR-023/ADR-025). A contract/value object, not a canonical system-of-record entity - ai-processing-service constructs this and passes it as raw_content to transparency-service.publish_ledger_entry (PublicLedgerEntry.subject_type = ai_processing_record). Never persisted by either service; its only durable trace is the resulting PublicLedgerEntry row plus the opaque disclosure_package_reference/disclosure_receipt_reference fields recorded on the source AIProcessingRecord. Every field here is already public-safe by construction - no raw input, private output, hidden prompt, reviewer identity, RoleAssignment UUID, identity/credential/vote data, or hidden reasoning has a field on this object at all.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ai_processing_record_reference",
+    "purpose_code",
+    "approved_public_model_category",
+    "approved_public_model_version",
+    "processed_at",
+    "human_review_outcome",
+    "prompt_template_version",
+    "system_policy_version"
+  ],
+  "properties": {
+    "ai_processing_record_reference": { "type": "string", "format": "uuid" },
+    "purpose_code": {
+      "type": "string",
+      "enum": [
+        "summarization",
+        "classification",
+        "recommendation",
+        "drafting",
+        "anomaly_indication",
+        "policy_compliance_assistance"
+      ]
+    },
+    "approved_public_model_category": { "type": "string", "minLength": 1 },
+    "approved_public_model_version": { "type": "string", "minLength": 1 },
+    "processed_at": { "type": "string", "format": "date-time" },
+    "human_review_outcome": {
+      "type": "string",
+      "enum": ["approved", "approved_with_changes"]
+    },
+    "prompt_template_version": { "type": "string", "minLength": 1 },
+    "system_policy_version": { "type": "string" }
+  }
+}

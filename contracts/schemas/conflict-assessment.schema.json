@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/conflict-assessment.schema.json",
+  "title": "ConflictAssessment",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.11 (canon-0.6.0, PACK-07, ADR-030). Owned by membership-service (epd2_membership_service.domain.ConflictAssessment). decision_authority_reference is mandatory once status=resolved_incompatible (enforced fail-closed at construction) - the same Stage-B-style human-decision requirement MembershipApplication enforces for admission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conflict_assessment_id",
+    "subject_reference",
+    "conflict_type",
+    "incompatibility_level",
+    "status",
+    "reviewed_by_role_reference",
+    "affiliation_declaration_id",
+    "reason_codes",
+    "evidence_references",
+    "decision_authority_reference",
+    "decided_at",
+    "supersedes_conflict_assessment_id",
+    "re_evaluation_due_at"
+  ],
+  "properties": {
+    "conflict_assessment_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "subject_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "conflict_type": {
+      "type": "string",
+      "enum": [
+        "dual_party_membership",
+        "political_association_conflict",
+        "public_office_incompatibility",
+        "lobbying_role_incompatibility",
+        "organizational_affiliation_conflict",
+        "declared_incompatible_organization"
+      ]
+    },
+    "incompatibility_level": {
+      "type": "string",
+      "enum": [
+        "none",
+        "disclosed_no_conflict",
+        "conditional_restriction",
+        "incompatible"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "under_review",
+        "resolved_no_conflict",
+        "resolved_conditional",
+        "resolved_incompatible",
+        "appealed",
+        "overturned",
+        "expired_reevaluation_due"
+      ]
+    },
+    "reviewed_by_role_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "affiliation_declaration_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "evidence_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "decision_authority_reference": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "supersedes_conflict_assessment_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "re_evaluation_due_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

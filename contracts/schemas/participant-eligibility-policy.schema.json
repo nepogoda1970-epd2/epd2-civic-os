@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/participant-eligibility-policy.schema.json",
+  "title": "ParticipantEligibilityPolicy",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.4 (canon-0.6.0, PACK-07, ADR-026). Owned by eligibility-service (epd2_eligibility_service.domain.ParticipantEligibilityPolicy). A versioned, activatable critical policy of general platform participation eligibility - structurally separate from PartyMembershipEligibilityPolicy (membership-service, section 19d.6): neither is a special case of the other. signed_policy_digest_reference/transparency_log_commitment_reference are required once status=active (canon 19d.7's critical-policy activation gate), enforced at the application layer, not structurally by this schema (both stay nullable here to admit draft instances).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "policy_version",
+    "status",
+    "scope_type",
+    "scope_id",
+    "effective_from",
+    "effective_until",
+    "adopted_by_decision_id",
+    "age_thresholds",
+    "citizenship_conditions",
+    "residence_conditions",
+    "exemptions",
+    "transitional_rules",
+    "supersedes_policy_id",
+    "signed_policy_digest_reference",
+    "transparency_log_commitment_reference"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "superseded"]
+    },
+    "scope_type": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "scope_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "effective_from": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "effective_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "adopted_by_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "age_thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action_code", "minimum_age", "maximum_age"],
+        "properties": {
+          "action_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minimum_age": {
+            "type": ["integer", "null"]
+          },
+          "maximum_age": {
+            "type": ["integer", "null"]
+          }
+        }
+      }
+    },
+    "citizenship_conditions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "residence_conditions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "exemptions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "transitional_rules": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "supersedes_policy_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "signed_policy_digest_reference": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "transparency_log_commitment_reference": {
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

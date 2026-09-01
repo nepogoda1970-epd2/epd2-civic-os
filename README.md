@@ -1,0 +1,930 @@
+# EPD² Civic OS
+
+> **Текущее состояние репозитория:** `REPOSITORY_VERSION` — `0.16.0`,
+> `CANON_VERSION` — `0.8.0`.
+>
+> Последний раунд — **PACK-15 — Voting Trust Boundary, Eligibility &
+> Credential Separation**, **FINAL PASS**: внешний GitHub Actions прошёл
+> полностью (983/983 repository paths, forbidden paths — нет, version
+> consistency, Ruff format 436 файлов, Prettier, Ruff lint, ESLint, mypy —
+> PASS, Python 5343 passed / 4 skipped, epd2-types 3 passed, Node 41
+> passed, frontend 23 passed, Next.js production build — PASS, 48/48
+> static pages, browser/visual/accessibility 135 passed). Разделение между
+> «кто человек» и «голос подан» реализовано структурно: запись
+> потраченного nonce — это **множество** из трёх колонок без колонки
+> значения, поэтому ни одно хранилище, событие, лог, резервная копия или
+> выгрузка не содержит одновременно ссылку на assertion и ссылку на
+> credential (ADR-093). Семь отдельных файлов базы данных — по одному на
+> границу доверия, — поэтому внешний ключ через границу не выражается в
+> принципе. 22 endpoint'а версионированного API, десять ролей и восемь
+> структурных правил разделения обязанностей, 89 reason-кодов.
+>
+> Перед этим прогоном из дерева удалена устаревшая вложенная копия
+> репозитория `epd2-civic-os/` (версия `0.6.0`); счётчик Ruff изменился с
+> 609 на 436, и **все артефакты верификации для деревьев с этим каталогом
+> считаются устаревшими**. **NOT PRODUCTION READY. NOT LEGALLY
+> ACTIVATED.** См.
+> `docs/handover/PACK-15-FINAL-PASS-REPORT.md`,
+> `docs/handover/PACK-15-IMPLEMENTATION-REPORT.md`,
+> `docs/handover/PACK-15-TEST-EVIDENCE.md`,
+> `docs/handover/PACK-15-SECURITY-EVIDENCE.md`,
+> `docs/handover/PACK-15-PRIVACY-EVIDENCE.md` и
+> `docs/handover/PACK-15-TRACEABILITY-MATRIX.md`.
+>
+> Предыдущий раунд — **PACK-14 — Identity, Authentication & Account
+> Security**, **FINAL PASS**: внешний GitHub Actions прошёл полностью
+> (867/867 repository paths, forbidden paths — нет, version consistency,
+> Ruff format 566 файлов, Prettier, Ruff lint, ESLint, mypy по всем 23
+> группам, оба TypeScript typecheck — PASS, Python 4905 passed / 4
+> skipped, epd2-types 3 passed, Node 34 passed, frontend unit/render 16
+> passed, Next.js production build — PASS, 46/46 static pages,
+> browser/visual/accessibility 108 passed). См.
+> `docs/handover/PACK-14-FINAL-PASS-REPORT.md`,
+> `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION-RESULT.md` и
+> `docs/handover/PACK-14-EXTERNAL-CI-VERIFICATION.log`.
+>
+> **NOT PRODUCTION READY. NOT LEGALLY ACTIVATED.** У PACK-14 все четыре
+> security-порта не связаны и **отказывают**: ни WebAuthn-библиотека, ни
+> memory-hard password hasher, ни breached-password-корпус, ни
+> assertion-signature verifier не выбраны, поэтому без явной привязки
+> нельзя ни зарегистрировать, ни сменить пароль. Persistence — реальный
+> **reference**-путь на SQLite из стандартной библиотеки: миграции,
+> ограничения, транзакции и optimistic concurrency настоящие, но
+> production-БД не разворачивается и durability не заявляется. Границы
+> сервиса transport-agnostic: HTTP-поверхности, TLS и production-gateway
+> нет. Ни IAM, ни eID, ни email/SMS, ни HSM/KMS не интегрированы. См.
+> `docs/packs/PACK-14/PACK-14-OPEN-ITEMS.md`.
+>
+> Предыдущий раунд — **PACK-13 — Production Data Plane & Contract
+> Evolution**, **FINAL PASS** (800/800 repository paths, Python 4625
+> passed / 4 skipped, browser 108 passed). Каждый storage-адаптер
+> PACK-13 — in-memory. См.
+> `docs/handover/PACK-13-FINAL-PASS-REPORT.md`,
+> `docs/handover/PACK-13-EXTERNAL-CI-VERIFICATION-RESULT.md` и
+> `docs/handover/PACK-13-KNOWN-LIMITATIONS.md`.
+>
+> Зелёный pipeline подтверждает, что репозиторий собирается,
+> типизируется и проходит тесты; он не подтверждает production-готовность,
+> юридическую активацию, production-БД, реальный брокер, внешний schema
+> registry, production search engine, внешний IAM, реальный
+> DLP-провайдер, реальную доставку уведомлений, production session
+> assurance, backup/restore-готовность, multi-region-развёртывание или
+> что-либо в домене голосования.
+>
+> PACK-11 (`0.11.0`), PACK-12 (`0.12.0`) и PACK-13 (`0.13.0`) остаются
+> историческими PASS-базисами, от которых построен PACK-14.
+
+> FRONT-00 adds a frontend foundation **implementation candidate** to the existing
+> Next.js web shell. It does not change repository 0.9.0 or canon 0.7.0 and does
+> not activate a production or legally effective workflow. Documentation starts
+> at `docs/frontend/FRONT-00-SPECIFICATION.md`.
+
+## Назначение репозитория
+
+EPD² Civic OS — открытая цифровая инфраструктура для гражданского и партийного
+участия: идентификация, допуск, участие, обсуждение, голосование и проверяемая
+публичная документация решений.
+
+Настоящий репозиторий реализует **CLAUDE-PACK-01 — Repository Skeleton**,
+**CLAUDE-PACK-02 — Identity Separation and Audit Kernel**,
+**CLAUDE-PACK-03 — Participation and Decision Kernel**,
+**CLAUDE-PACK-04 — Transparency Context**,
+**CLAUDE-PACK-05 — Governance Context**,
+**CLAUDE-PACK-06 — AI Processing Context**,
+**CLAUDE-PACK-07 — Participation & Membership Context** и
+**CLAUDE-PACK-08 — Organization & Regional Scope Foundation**: стартовый
+монорепо-каркас платформы плюс шестнадцать независимых сервисов —
+account, identity, eligibility, credential, audit-core (PACK-02, участие
+и идентичность структурно разделены, каждое критическое действие
+записывается в append-only, hash-chained журнал аудита), initiative,
+deliberation, moderation, voting, tally, delegation (PACK-03, полный
+цикл гражданской инициативы, обсуждения, модерации, голосования, подсчёта
+и делегирования), transparency-service (PACK-04, публичный реестр,
+audit export, политика раскрытия данных, реестр лоббистских контактов),
+governance-service (PACK-05, роли участников, политики и решения органов
+управления, технические оспаривания и производный статус финальности
+результатов голосования), ai-processing-service (PACK-06,
+`AIProcessingRecord` с двумя независимыми статусными плоскостями,
+канонический встроенный `redaction_manifest`, производный
+`DisclosureStatus`, `AIDisclosurePackage`, шесть закрытых классов
+использования и обязательный протокол раскрытия — ИИ остаётся строго
+консультативным и никогда не получает полномочий на автономную мутацию
+Civic OS) и membership-service (PACK-07, `PartyMembershipEligibilityPolicy`,
+`Membership` — первая реальная реализация канон 8.3, `MembershipApplication`
+с двухэтапным жизненным циклом и жёстким инвариантом человеческого
+контроля, `AffiliationDeclaration`, `ConflictAssessment`, переиспользуемый
+полиморфный `Appeal`), плюс расширение уже существующих `eligibility-service`
+(`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+`StepUpAuthenticationRequirement`, `DigitalDecision`, `AssemblyDecision`,
+четыре раздельных признака избирательного права) и `identity-service`
+(`AuthenticationContext`, восемь новых полей `IdentityRecord`), а также
+**organization-service** (PACK-08, `Organization`/`CivicSpace` — канон
+8.1/8.2, шесть дополнительных полей `Organization` — плюс четыре новые
+сущности `OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`
+и `OrganizationalAuthority`: default-deny региональная
+scope-авторизация с шестью явными режимами доступа, временный надзор с
+90-дневным лимитом по умолчанию, институциональные полномочия с
+базовой матрицей несовместимости ролей, шестикатегорийная
+классификация `RoleAssignment.scope_id`; ADR-032–037, канон раздел
+19e). Остальная бизнес-логика (emergency actions, реальная
+eID-интеграция, географическая/избирательная привязка регионов сверх
+организационной модели PACK-08) пока не реализована — см.
+`docs/review/KNOWN_LIMITATIONS.md`.
+
+## Статус проекта
+
+- Этап: infrastructure skeleton (CLAUDE-PACK-01) — **PACK-01 PASS**, см.
+  `docs/handover/PACK-01-REPORT.md`.
+- Этап: identity separation and audit kernel (CLAUDE-PACK-02) — **PACK-02
+  PASS**, подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock` регенерирован по-настоящему (43 пакета, все 5
+  сервисов PACK-02, `hypothesis`/`jsonschema`/`types-PyYAML`), 363 Python-
+  теста пройдены (2 пропуска — ожидаемые CT-00-11/12 not-applicable
+  маркеры), TypeScript/frontend тесты и `next build` пройдены полностью.
+  См. `docs/handover/PACK-02-REPORT.md` для полного описания.
+- Этап: participation and decision kernel (CLAUDE-PACK-03) — **PACK-03
+  PASS**, подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock`/`package-lock.json` регенерированы по-настоящему,
+  1525 Python-тестов пройдены (2 пропуска — те же CT-00-11/12
+  not-applicable маркеры), TypeScript (3/3) и frontend (2/2) тесты и
+  `next build` пройдены полностью, Ruff/Prettier/ESLint/mypy — чисто, все
+  277 обязательных путей на месте, запрещённых файлов нет. Шесть новых
+  сервисов: initiative, deliberation, moderation, voting, tally,
+  delegation. См. `docs/handover/PACK-03-REPORT.md` для полного описания.
+- Этап: transparency context (CLAUDE-PACK-04) — **PACK-04 PASS**,
+  подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock`/`package-lock.json` регенерированы по-настоящему,
+  1599 Python-тестов пройдены (2 пропуска — те же CT-00-11/12
+  not-applicable маркеры), TypeScript и frontend тесты и `next build`
+  пройдены полностью, Ruff/Prettier/ESLint/mypy — чисто, все 305
+  обязательных путей на месте, запрещённых файлов нет. Один новый
+  сервис: `transparency-service` (`PublicLedgerEntry`,
+  `AuditExportPackage`, `DisclosurePolicy`, `LobbyLogEntry`; ADR-011–015,
+  канон раздел 19a). См. `docs/handover/PACK-04-REPORT.md` для полного
+  описания, `docs/handover/PACK-04-SPEC.md`,
+  `docs/adr/ADR-013-canon-0.3.0-transparency-context-additions.md`,
+  `docs/review/PACK-04-OWNER-DECISIONS.md`.
+- Этап: governance context (CLAUDE-PACK-05) — **PACK-05 PASS**,
+  подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: `uv.lock`/`package-lock.json` регенерированы по-настоящему,
+  1719 Python-тестов пройдены (2 пропуска — те же CT-00-11/12
+  not-applicable маркеры), TypeScript (3/3) и frontend (2/2) тесты и
+  `next build` пройдены полностью, Prettier/lint/typecheck — чисто, все
+  336 обязательных путей на месте, запрещённых файлов нет. Один новый
+  сервис: `governance-service` (`RoleAssignment`, `GovernancePolicy`,
+  `GovernanceDecision`, `TechnicalChallenge`, производный read model
+  `FinalityStatus`; ADR-016–020, канон раздел 19b). См.
+  `docs/handover/PACK-05-REPORT.md` для полного описания,
+  `docs/handover/PACK-05-SPEC.md`,
+  `docs/adr/ADR-018-canon-0.4.0-governance-context-additions.md`,
+  `docs/review/PACK-05-OWNER-DECISIONS.md`.
+- Этап: AI processing context (CLAUDE-PACK-06) — **PACK-06 PASS**,
+  подтверждено внешним прогоном GitHub Actions с реальным сетевым
+  доступом: 1822 Python-теста пройдены (3 пропуска — те же
+  CT-00-10/CT-00-12 not-applicable-in-earlier-packs маркеры; CT-00-11
+  для PACK-06 больше не в их числе — теперь полностью применим и
+  проходит), TypeScript (3/3) и frontend (2/2) тесты и `next build`
+  пройдены полностью, Prettier/Ruff/ESLint/mypy — чисто, все 363
+  обязательных путей на месте, запрещённых файлов нет. Один новый
+  сервис: `ai-processing-service` (`AIProcessingRecord` с плоскостями
+  `processing_status`/`human_review_status`, каноническим встроенным
+  `redaction_manifest`, производным read model `DisclosureStatus`,
+  контрактным объектом `AIDisclosurePackage`; ADR-021–025, канон раздел
+  19c). Один узкий read-зависимый переход в `governance-service`
+  (`verify_role_assignment_for_action`) и вызов
+  `transparency-service.publish_ledger_entry` для обязательного
+  протокола раскрытия — сам сервис никогда не пишет
+  `PublicLedgerEntry` напрямую. См. `docs/handover/PACK-06-REPORT.md`
+  для полного описания, `docs/handover/PACK-06-SPEC.md`,
+  `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
+  `docs/review/PACK-06-OWNER-DECISIONS.md`.
+- Этап: participation & membership context (CLAUDE-PACK-07,
+  implementation) — **PACK-07 PASS**, подтверждено внешним прогоном
+  GitHub Actions с реальным сетевым доступом: 2028 Python-тестов
+  пройдено, 4 пропущено, 0 неудачных; TypeScript (3/3) и frontend (2/2)
+  тесты и сборка Next.js 15.5.21 пройдены полностью; Ruff (формат: 359
+  файлов уже отформатированы; lint — чисто), Prettier, ESLint, mypy — все
+  чисто для всех сервисов; все 402 обязательных пути на месте;
+  запрещённых файлов нет; проверка согласованности версий пройдена. (В
+  ходе локальной разработки в этой песочнице без сетевого доступа было
+  получено 2020 Python-тестов пройдено / 5 пропущено — разница объясняется
+  тем, что внешняя среда устанавливает `hypothesis` по-настоящему и
+  стартует с чистого чекаута; см. `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`
+  раздел 6a/6b для полного сопоставления.) Один новый сервис: `membership-service`
+  (`PartyMembershipEligibilityPolicy`, `Membership`, `MembershipApplication`,
+  `AffiliationDeclaration`, `ConflictAssessment`, переиспользуемый
+  `Appeal`); расширение на месте `eligibility-service`
+  (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, четыре раздельных признака избирательного права,
+  атомарные capability-проверки, выпуск ограниченных capability-токенов)
+  и `identity-service` (`AuthenticationContext`, восемь новых полей
+  `IdentityRecord`); ADR-026–031, канон раздел 19d. См.
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md` для полного описания.
+- Canon version: `0.8.0` (`docs/canonical/TZ-00-domain-event-canon.md`),
+  с 2026-07-27 — CLAUDE-PACK-10 canon-amendment round под ADR-054
+  (**`proposed`**, канон-кандидат): новый раздел 19f (Party Finance &
+  Financial Accountability Context), новый подраздел 20.17 (72 события),
+  21 новая строка раздела 22, 25 новых записей раздела 23, 45 новых
+  reason codes раздела 24. `REPOSITORY_VERSION` остаётся `0.9.0`;
+  `finance-service` не создан.
+  Изменения текста канона: PACK-03 под ADR-010 (`0.1.0 → 0.2.0`,
+  добавление `Ballot.challenge_window_hours` /
+  `ResultPublication.challenge_deadline_at`); CLAUDE-PACK-04 под ADR-013
+  (`0.2.0 → 0.3.0`, раздел 19a Transparency Context); CLAUDE-PACK-05 под
+  ADR-018/ADR-020 (`0.3.0 → 0.4.0`, раздел 19b Governance Context —
+  `GovernancePolicy`, `GovernanceDecision`, `TechnicalChallenge`,
+  интеграция уже существующей `RoleAssignment`); CLAUDE-PACK-06
+  под ADR-023/ADR-025 (`0.4.0 → 0.5.0`, раздел 19c AI Processing
+  Context — расширение уже существующей `AIProcessingRecord` полями
+  `processing_status`, `supersedes_ai_processing_record_id`,
+  каноническим встроенным `redaction_manifest`, полями жизненного цикла
+  раскрытия и производным `DisclosureStatus`; `AIDisclosurePackage` как
+  договорной объект); CLAUDE-PACK-07 под ADR-026 через ADR-031 (`0.5.0 →
+0.6.0`, раздел 19d Participation & Membership Context — десять новых
+  сущностей (`ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, `PartyMembershipEligibilityPolicy`,
+  `AffiliationDeclaration`, `ConflictAssessment`, `MembershipApplication`,
+  `AuthenticationContext`); восемь новых полей `IdentityRecord`; четыре
+  раздельных признака избирательного права вместо обобщённого
+  `electoral_eligibility_met`; двухэтапный `MembershipApplication` без
+  перегрузки `Membership.membership_status`; расширенный до семи
+  категорий жёсткий инвариант человеческого контроля; активация
+  критической политики по четырём независимым условиям с заморозкой
+  версии; исключительно два механизма внешней авторизации). Канон не
+  изменялся при реализации самого сервиса `ai-processing-service` —
+  эта реализация использует уже принятый канон 0.5.0 и ADR-021–025 без
+  дальнейших правок текста канона (см.
+  `docs/adr/ADR-023-canon-0.5.0-ai-processing-context-additions.md`,
+  `docs/review/PACK-06-OWNER-DECISIONS.md`). CLAUDE-PACK-07's канонический
+  раунд (ADR-026–031, `docs/review/PACK-07-OWNER-DECISIONS.md`,
+  `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`) — также канон-только
+  изменение, подтверждённое внешним прогоном GitHub Actions (PASS: 1822
+  Python-теста пройдено, 3 пропущено, 0 неудачных; TypeScript 3/3;
+  frontend 2/2; успешная сборка Next.js; Prettier/Ruff/ESLint/mypy без
+  замечаний — см. раздел 7 `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`):
+  на момент того канонического раунда ни `membership-service`, ни
+  расширение `eligibility-service` ещё не были реализованы; оба теперь
+  реализованы в CLAUDE-PACK-07's implementation-раунде (см. запись выше и
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`). CLAUDE-PACK-08 под
+  ADR-032 через ADR-037 (`0.6.0 → 0.7.0`, раздел 19e Organization &
+  Regional Scope Context — расширение `Organization` (8.1) шестью
+  дополнительными полями; подтверждение `CivicSpace` (8.2) без
+  изменений; четыре новые сущности, владеемые `organization-service`
+  (`OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`),
+  плюс `OrganizationalAuthority` и переиспользуемый объект-значение
+  `OrganizationalScope`; множественные типизированные направленные
+  графы организационных отношений вместо простого дерева; default-deny
+  региональная scope-авторизация с шестью явными режимами; владение
+  политикой наследования; 90-дневный лимит временного надзора по
+  умолчанию; минимальная базовая матрица несовместимости
+  институциональных ролей; шестикатегорийная классификация
+  `RoleAssignment.scope_id` (8.4 без изменений полей/статуса/владельца)).
+  ADR-032 через ADR-036 приняты (`accepted`) в раунде коррекции
+  спецификации PACK-08, предшествовавшем настоящему каноническому
+  раунду; их принятие само по себе не авторизовало правку канона —
+  ADR-037 является тем отдельным, посвящённым каноническому раунду,
+  который эту правку авторизует и выполняет (тот же приём, что уже
+  применялся к ADR-010/013/018/020/023/025/028). Канон не изменялся при
+  реализации самого сервиса `organization-service` — такой реализации
+  ещё не существует; настоящий раунд — исключительно канонический/
+  документационный, без сервисного кода, схем, событийного транспорта
+  или production-интеграции (см.
+  `docs/adr/ADR-037-organization-and-regional-scope-canon-amendment.md`,
+  `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`,
+  `docs/packs/PACK-08-OPEN-DECISIONS.md`). Внешний прогон GitHub Actions
+  для PACK-08 не выполнялся ни на одном этапе, включая настоящий
+  канонический раунд — только честный локальный самоотчёт
+  (`docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md` раздел 6).
+- Этап: organization & regional scope foundation (CLAUDE-PACK-08,
+  implementation) — **локальный самоотчёт, без внешнего прогона GitHub
+  Actions**: 2141 Python-тест пройден, 5 пропущено, 0 неудачных (Ruff
+  lint/format, mypy — чисто для всех 16 сервисов и `tests/contract`);
+  все 445 обязательных путей на месте; запрещённых файлов нет; проверка
+  согласованности версий пройдена. Frontend: 11 TypeScript unit-тестов
+  пройдено (глобальный `tsx`-биндинг, без `node_modules`), `tsc
+--noEmit` — без реальных ошибок в новом коде (шум от отсутствующих
+  `@types/react`/`next` отфильтрован), Prettier — чисто; ESLint и
+  production-сборка Next.js не выполнялись в этой песочнице (нет
+  сетевого доступа к npm — тот же документированный разрыв, что и у
+  каждого предыдущего пакета). Один новый сервис:
+  `organization-service` (`Organization`/`CivicSpace`,
+  `OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`, `OrganizationalAuthority`; ADR-032
+  — ADR-037, канон раздел 19e); обязательная миграционная таблица
+  `RoleAssignment.scope_id` по всем 12 реальным значениям `role_code`
+  (`docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md` — ноль
+  заблокированных, ноль неоднозначных); минимальный read-only
+  frontend vertical slice `/organizations` (немецкий — авторитетный
+  текст, английский — только информационная подпись; статические
+  примерные данные, без бэкенда). См.
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md` и
+  `docs/packs/PACK-08-IMPLEMENTATION.md` для полного описания.
+- CLAUDE-PACK-09 (Compliance, Records Governance & Legal Workflows) —
+  **реализован**: `compliance-service` (одна новая служба, ADR-038) —
+  классификация записей и версионированные retention-политики
+  (`RetentionPolicy`, `RetentionStartEvent`, `GovernedRecord`),
+  контролируемое уничтожение через трёхшаговый workflow
+  (`DisposalEligibility` → `DestructionAuthorization` →
+  `DestructionEvidence`, ADR-039), Legal Hold с тремя состояниями
+  (`active`/`released`/`indeterminate`; неизвестное состояние —
+  fail-closed), Data Catalog и Processing Registry (`DataAsset`,
+  `ProcessingActivity`, `LegalBasis` как управляемое перечисление,
+  ADR-040), governed procedural cases и append-only сроки
+  (`ProceduralCase`, `DeadlineDefinition`, `ProceduralDeadline` с явной
+  IANA-таймзоной, ADR-041), запросы субъектов данных (статус
+  верификации личности без хранения самой личности), партийный арбитраж
+  и внутренние споры с проверяемой процессуальной независимостью
+  (ADR-042). Организационная изоляция — плоская: никакого наследования
+  по иерархии Bund/Land/Kreis, пересечение границы требует явно
+  предъявленного `CrossScopeAuthorityGrant`. См.
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md` и
+  `docs/packs/PACK-09-IMPLEMENTATION.md`.
+
+  **Дополнение (Architecture & Domain Framework 0.8.1).** С этого раунда
+  авторитетным документом объёма PACK-09 является Framework 0.8.1
+  (Roadmap Amendment). В ту же службу добавлены: общий legal-case
+  substrate (`LegalCase`, `JurisdictionDetermination`, `CaseParty`,
+  `RepresentationMandate`, `Filing` с неизменяемым docket, `Hearing`,
+  `InterimMeasure`, `ProceduralDecision` с раздельными effect / finality
+  / enforceability, `Remedy`); хуки отвода (`RecusalRecord`,
+  `ReplacementAssignment`); **официальное уведомление как отдельная
+  граница доверия** (ADR-043) — `OfficialNotice`, `ServiceAttempt`
+  (телеметрия провайдера) и `NoticeEffectDecision`, где только последний
+  может запустить процессуальный срок; records governance
+  (`RecordClass`, распространение Legal Hold на реплики/индексы/экспорты)
+  и data-protection governance с DPIA-гейтом, который fail-closed при
+  _отсутствии_ определения требования. Стабильные типизированные ссылки
+  для PACK-10/11/19/21-24 опубликованы в `references.py`; глобального
+  идентификатора лица там нет и быть не должно. Ограничения — в
+  `docs/handover/PACK-09-KNOWN-LIMITATIONS.md`.
+
+  **Статус: PACK-09 IMPLEMENTATION 0.9.0 — EXTERNAL CI PASS.** Полный
+  конвейер (frozen install, lint, format, type check, Python-тесты,
+  TypeScript- и frontend-тесты, production build Next.js) выполнен на
+  GitHub Actions и пройден: 2659 passed, 4 skipped, 0 failed; 556
+  required paths; no forbidden paths. Запись — раздел 3
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`, вывод раннера —
+  `docs/handover/PACK-09-EXTERNAL-CI-VERIFICATION.log`. Это утверждение
+  о верификации, а **не** о production-готовности, развёртывании или
+  юридической активации.
+
+  **Служба не заявляет автоматического юридического соответствия** GDPR,
+  BDSG или партийному законодательству: она предоставляет управляемый
+  workflow, ссылки на доказательства и auditability. Любое юридическое
+  решение остаётся за человеком вне системы.
+
+- CLAUDE-PACK-10 (Party Finance, Rechenschaftsbericht & Financial
+  External Influence) — **только спецификация, не реализовано.** Раунд
+  добавил нормативную спецификацию
+  (`docs/packs/PACK-10-SPECIFICATION.md`: одиннадцать групп
+  возможностей, 55 жёстких инвариантов, 21 авторитетный агрегат,
+  purpose-scoped финансовая ссылка на сторону без глобального
+  идентификатора лица, жизненный цикл `Rechenschaftsbericht`, где
+  подача не равна принятию, независимый финансовый аудит и производные
+  публичные представления), шесть ADR в статусе `proposed`
+  (ADR-048 – ADR-053), модель угроз, матрицу приёмки, план реализации,
+  межпакетные границы, открытые решения и **заключение о необходимости
+  поправки канона** (`0.7.0 → 0.8.0`, новый раздел 19f) —
+  `docs/packs/PACK-10-CANON-AMENDMENT-ASSESSMENT.md`,
+  `docs/packs/PACK-10-CANON-AMENDMENT-PROPOSAL.md`. **Код не написан,
+  служба `finance-service` не создана, runtime-контракты не изменены,
+  `REPOSITORY_VERSION` и `CANON_VERSION` не изменены.** Результат
+  раунда — **PACK-10 SPECIFICATION CANDIDATE** для архитектурного
+  ревью, а не PASS-релиз. См. `docs/handover/PACK-10-SPEC-REPORT.md`.
+
+- CLAUDE-PACK-10 Canon Amendment (`0.7.0 → 0.8.0`) — **канон изменён,
+  реализация не авторизована.** Раунд внёс в сам канон новый раздел 19f
+  ("Партийные финансы и финансовая отчётность"): 21 каноническая
+  сущность с владельцем `Finance Service`, регистр из 45 финансовых
+  инвариантов (`ФИН-01`–`ФИН-45`), четыре новых институциональных
+  `role_code` (`finance_administrator`, `payment_authorizer`,
+  `payment_executor`, `report_signatory`) и расширенная матрица
+  несовместимости, `FinancePartyHandle` (целевая ссылка на сторону без
+  глобального идентификатора лица), двенадцатистатусный жизненный цикл
+  `Rechenschaftsbericht` (подача ≠ подтверждение получения ≠ принятие ≠
+  публикация), управляемые датированные финансовые политики и безопасные
+  публичные финансовые представления; подраздел 20.17 (72 события);
+  21 строку раздела 22; 25 записей раздела 23; 45 reason codes раздела 24. `CANON_VERSION` `0.7.0 → 0.8.0`, **`REPOSITORY_VERSION` остаётся
+  `0.9.0`**, `canon-version.json` фиксирует
+  `finance_context_implementation_status = "not_implemented"`. **Ни один
+  файл реализации не добавлен:** нет `services/finance-service`, нет
+  миграций, OpenAPI-операций, runtime-схем, frontend-страниц и
+  бизнес-тестов. ADR-054 и ADR-048 – ADR-053 остаются `proposed`.
+  Результат — **PACK-10 CANON 0.8.0 CANDIDATE**, не PASS. См.
+  `docs/handover/PACK-10-CANON-0.8.0-REPORT.md`,
+  `docs/packs/PACK-10-CANON-0.8.0-COMPATIBILITY.md`,
+  `docs/packs/PACK-10-CANON-0.8.0-ACCEPTANCE-MATRIX.md`.
+
+- Repository version: `0.9.0` (CLAUDE-PACK-09 implementation:
+  `compliance-service` — `RetentionPolicy`, `GovernedRecord`,
+  `LegalHold`, `DestructionAuthorization`, `DestructionEvidence`,
+  `DataAsset`, `ProcessingActivity`, `ProceduralCase`,
+  `ProceduralDeadline`, `DataSubjectRequest`,
+  `ConflictOfInterestDeclaration`, `CrossScopeAuthorityGrant`; см.
+  `docs/handover/PACK-09-IMPLEMENTATION-REPORT.md`. PACK-09 не вносил
+  изменений в канон; `CANON_VERSION` оставался `0.7.0` до
+  канон-раунда PACK-10 (ADR-054, `0.7.0 → 0.8.0`), который не меняет
+  `REPOSITORY_VERSION`. Предыдущая
+  версия `0.8.0` соответствовала CLAUDE-PACK-08 implementation:
+  `organization-service` — `Organization`, `CivicSpace`,
+  `OrganizationalUnit`, `OrganizationalRelation`,
+  `OrganizationalHierarchyOverlapPolicy`,
+  `OrganizationalInheritancePolicy`, `OrganizationalAuthority`; см.
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`. Предыдущая версия
+  `0.7.0` соответствовала CLAUDE-PACK-07 implementation:
+  `membership-service` и расширение `eligibility-service`/
+  `identity-service` — `PartyMembershipEligibilityPolicy`, `Membership`,
+  `MembershipApplication`, `AffiliationDeclaration`, `ConflictAssessment`,
+  `ParticipantEligibilityPolicy`, `ProcessEligibilityPolicy`,
+  `StepUpAuthenticationRequirement`, `DigitalDecision`,
+  `AssemblyDecision`, `AuthenticationContext`; см.
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`. Предыдущая версия
+  `0.6.0` соответствовала CLAUDE-PACK-06 implementation:
+  `ai-processing-service` и связанные контракты/тесты —
+  `AIProcessingRecord`, `RedactionManifest`, `AIDisclosurePackage` и
+  производный read model `DisclosureStatus`; см.
+  `docs/handover/PACK-06-REPORT.md`. Версия до неё, `0.5.0`,
+  соответствовала CLAUDE-PACK-05 implementation (`governance-service`;
+  подтверждено внешним прогоном GitHub Actions, см.
+  `docs/handover/PACK-05-REPORT.md`).
+- База данных, event bus, аутентификация, deployment, реальная
+  eID-интеграция, географическая/избирательная привязка регионов сверх
+  организационной модели `organization-service` (PACK-08) пока не
+  реализованы.
+- Партийный финансовый учёт и Rechenschaftsbericht (PACK-10) и
+  управляемые документы с криптографической цепочкой версий (PACK-11)
+  реализованы в **справочной форме** (`reference_implementation`) —
+  см. `docs/handover/PACK-10-IMPLEMENTATION-REPORT.md` и
+  `docs/handover/PACK-11-IMPLEMENTATION-REPORT.md`.
+  Привилегированное JIT/break-glass администрирование и DLP
+  (PACK-12), production-БД / event bus / schema registry (PACK-13),
+  реальный IAM/eID и выпуск credential (PACK-14), криптографическое
+  голосование (PACK-15/16), production incident response (PACK-17) и
+  полноценные user-facing приложения (PACK-18) остаются намеренно
+  отложенными. PACK-09 содержит для них только типизированные ссылки
+  (`evidence_references`, `completion_evidence_reference`,
+  `identity_verification_reference`) — не реализации.
+
+## PACK-11 — Governed Documents & Evidence (`0.11.0`, FINAL PASS — исторический базис)
+
+`services/document-service` — одиннадцатый сервис и единственный владелец
+контура управляемых документов и доказательств, который канон 19f.22
+закрепляет за PACK-11: байты документов, авторитетные версии, подписи,
+криптографические цепочки версий, содержимое доказательств и цепочка
+ответственного хранения.
+
+Полностью реализует `FIR-ROADMAP-001` и `FIR-INV-010`. Для
+`FIR-DEC-001`, `FIR-DEC-002`, `FIR-CAND-001`, `FIR-COMM-001`,
+`FIR-PROG-002`, `FIR-INIT-021`, `FIR-PAY-003` и `FIR-DATA-003` даёт
+**только фундамент** — ни одна из этих записей не помечена как
+реализованная (`docs/packs/PACK-11-FIR-TRACEABILITY.md`).
+
+Три гарантии, на которых стоит всё остальное:
+
+1. **Сохранённая версия никогда не изменяется, и любое изменение
+   обнаруживается.** `version_hash = sha256(canonical_dumps(hashable_fields(v)) + previous_version_hash)`
+   — то же правило, что у `audit-core`, поэтому
+   одна процедура проверки покрывает обе цепочки. Три независимые защиты:
+   обнаружение, отказ выполнить и отказ строить поверх. Это tamper
+   **evidence**, а не tamper resistance — см.
+   `docs/handover/PACK-11-KNOWN-LIMITATIONS.md`.
+2. **Содержимое хранится здесь и не покидает контур.** Ни одно событие, ни
+   одно поле аудита, ни одна проекция не несут байтов, извлечённого
+   текста, рендиции, значения подписи или строки заголовка.
+3. **Не утверждается ничего, чего не решил уполномоченный.** Подписанность
+   и допустимость — записанные определения, привязанные к точному хешу
+   версии; отсутствие сообщается как явное `not_determined`.
+
+Канон не изменяется: `CANON_VERSION` остаётся `0.8.0`.
+`REPOSITORY_VERSION` на момент этого раунда — `0.11.0`; текущая версия
+репозитория — `0.12.0` (см. раздел PACK-12 ниже). Статус контура —
+`reference_implementation`: production-хранилище, event bus, внешний
+якорь для головы цепочки версий и проверка подписей отсутствуют и
+принадлежат PACK-12/13/14.
+
+PACK-11 — последний раунд, для которого внешний GitHub Actions вернул
+полный PASS. Он остаётся историческим базисом репозитория; PACK-12
+построен от него и **не** заменяет этот статус.
+
+## PACK-14 — Identity, Authentication & Account Security (`0.14.0`, FINAL PASS)
+
+> **PACK-14 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
+
+`services/identity-service` расширен **на месте**: шесть ограниченных
+контекстов, которые §4.1 спецификации закрепляет за ним — Account
+Registry, Credential Registry, Authentication, Session Security,
+координация восстановления и ссылки на identity proofing. **Отдельный
+сервис аутентификации не создавался**, владение каноническими `Account`
+(канон 7.2) и `IdentityRecord` (канон 7.3) не изменилось. 34 новых модуля
+исходного кода, 288 собственных тестов, 213 зарегистрированных
+reason-кодов, 59 типов событий на неизменённом конверте PACK-13.
+Спецификация и ADR-079 — ADR-088 приняты отдельным раундом
+(`docs/handover/PACK-14-SPEC-ADR-REPORT.md`, сохранён без изменений).
+
+**`FIR-INV-001` устоял в раунде, который угрожал ему больше всего:
+глобального user ID нет.** Пять пространств идентификаторов — различные
+типы Python; через границу домена проходит только
+`ScopedIdentityReference`, выведенный для конкретной цели и
+организационного scope из секрета развёртывания; две ссылки, выведенные
+для двух целей из одного аккаунта, не равны.
+
+Канонический перечень статусов **не расширялся**: `AccountLock`,
+`AccountRestriction` класса security, состояние `AccountClosureRequest` и
+исходы жизненного цикла несут то, что иначе стало бы `locked`,
+`closure_pending` и `deleted_or_anonymized` (OD-P14-01).
+`MfaFactorClass` **не содержит `sms_otp`**: SMS OTP не даёт никакого
+уровня уверенности (OD-P14-09). `VotingHandoffIssuance` **не содержит ни
+одного поля аккаунта** — это и есть свойство необратимости ADR-088,
+выраженное набором полей, и схема хранит его отсутствием колонки.
+
+Persistence — реальный **reference**-путь: десять SQL-артефактов
+миграций применяются по порядку в одной транзакции с записанной
+контрольной суммой SHA-256 и создают 29 таблиц и 35 индексов (9
+уникальных ограничений, 10 индексов истечения); одиннадцать durable-
+адаптеров, граница транзакции `UnitOfWork` и монотонная проверка
+optimistic concurrency. Всё это работает на SQLite из стандартной
+библиотеки — новых зависимостей раунд не добавил. In-memory-адаптеры
+остались **только как тестовые** и не являются runtime-привязкой по
+умолчанию; это проверяется отдельным тестом репозитория.
+
+### Чего PACK-14 не делает
+
+Не реализованы и не заявляются: production IAM, eID/KYC-схема,
+email- и SMS-доставка, HSM или KMS, production-БД и какая-либо
+операционная durability, HTTP-поверхность и production-gateway, Voting
+Client, выпуск credential для голосования, бюллетени и подсчёт, полная
+юридическая электронная подпись и Account & Security FRONT-PACK.
+Все четыре security-порта **отказывают** без явной привязки: без
+breached-password-корпуса нельзя ни зарегистрировать, ни сменить пароль.
+`OD-P14-07` (сроки хранения) остаётся открытым до юридического
+подтверждения; ни одно разрушающее действие не выполняется, пока флаг
+`duration_confirmed` равен `False`. `FIR-UX-011` остаётся **future**.
+
+## PACK-13 — Production Data Plane & Contract Evolution (`0.13.0`, FINAL PASS)
+
+> **PACK-13 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
+
+`services/data-plane-service` — тринадцатый сервис и единственный новый
+сервис раунда: **reference-реализация** production data plane и эволюции
+контрактов. **22 модуля исходного кода, 20 тестовых модулей**, 555
+собственных тестов. Спецификация и ADR-069 — ADR-078 приняты отдельным
+раундом (`docs/handover/PACK-13-SPEC-ADR-REPORT.md`, сохранён без
+изменений); этот раунд их реализует.
+
+Управляющее правило всего пакета — первое предложение спецификации:
+
+> **The data plane is infrastructure. It is not an authority.**
+> Persistence must not create a capability that the domain layer refuses.
+
+Что реализовано (в reference-форме):
+
+- **transactional persistence contracts** — `concurrency`: версия
+  агрегата, `ExpectedVersion` с раздельными «any» и «must not exist»,
+  reason-coded конфликт вместо тихой перезаписи, границы транзакции и
+  unit of work;
+- **canonical schema registry** — `registry` и `canonicalization`:
+  жизненный цикл, владелец-домен, обязательные fixtures, и главное —
+  **`content_digest` и `schema_version_id` разделены**: одинаковый
+  контент после format-specific канонизации даёт один digest, но
+  равенство digest не определяет identity версии;
+- **compatibility checker** — `compatibility`: детерминированный
+  структурный diff плюс восемь семантических классов, которые **всегда**
+  уходят на ручной разбор; `unknown` — полноценный исход, а не
+  «вероятно совместимо»;
+- **API/event contract evolution** — `contracts`: тринадцать
+  обязательных полей breaking change, окна сосуществования, готовность
+  потребителей, детерминированные upcaster'ы, которые **не выдумывают
+  юридических фактов**;
+- **migration framework** — `migrations`: неизменяемость применённой
+  миграции, checksum без пути авторемонта, детерминированный порядок,
+  expand/contract, пять **автоматических** gate'ов (scope, hold,
+  evidence linkage, global identifier, voting unlinkability);
+- **backfill runner** — `backfill`: детерминированный, перезапускаемый,
+  идемпотентный, с checkpoint'ами и очередью разбора; ничего не
+  домысливает;
+- **transactional outbox и delivery** — `outbox`, `delivery`: атомарная
+  запись состояния и outbox-записи, стабильный logical event ID,
+  раздельные «опубликовано» и «подтверждено брокером», **at-least-once
+  delivery с effectively-once consumer effect**;
+- **projection governance** — `projections`: read model не
+  авторитетен, не расширяет авторизацию источника, показывает
+  устаревание и распространяет удаление с доказательством;
+- **search/export contracts** — `integration`: политика остаётся за
+  PACK-12; **raw database export bypass отсутствует**;
+- **retention и legal hold** — `retention`: инфраструктура не
+  освобождена от PACK-09, а hold **сохраняет данные и не даёт доступа**;
+- **privileged operations** — `privileged`: scoped grant PACK-12,
+  separation of duties, отсутствие произвольного SQL, отсутствие
+  универсального администратора БД;
+- **структурные границы** — `boundaries`: audit-ingestion contract,
+  идентичность, семь запретов голосового домена.
+
+`contracts/reason-codes/pack-13.yml` — 125 записей (88 из каталога
+PACK-13 плюс 37 классификаций `*_RECORDED`). Ни одного универсального
+`DATA_ERROR` и ни одного универсального `CONFLICT`.
+
+Реестр: после внешнего CI PASS `FIR-ROADMAP-003` переведён в
+`implemented in reference form` — **не** в `implemented` без оговорки:
+контракты, gate'ы и отказы реальны и внешне проверены, production data
+plane не развёрнут. Отдельной документационной коррекцией в реестр
+добавлено утверждённое ранее требование `FIR-PROG-003` — Public
+Presentation of Adopted Programme and Projects (раздел 17, статус
+`approved`): это **future frontend obligation**, а не пункт реализации
+PACK-13; PASS по PACK-13 о нём ничего не говорит. Раундом FINAL PASS в
+реестр добавлены три новых cross-cutting раздела: **26 — Canonical Forms,
+Submissions & Official Renditions** (`FIR-FORM-001` … `FIR-FORM-005`),
+**27 — Cross-cutting procedural, trust and operational foundations**
+(`FIR-RULE-001`, `FIR-REF-001`, `FIR-DELIVERY-001`, `FIR-TRUST-001`,
+`FIR-REPRESENT-001`, `FIR-INCLUSION-001`, `FIR-QUALITY-001`,
+`FIR-CONFIG-001`, `FIR-IMPORT-001`, `FIR-SERVICE-001`) и **28 — Frontend
+design, visualization and interaction governance** (`FIR-UX-003` …
+`FIR-UX-010`). Раздел 28 фиксирует принятую реализацию FRONT-00/FRONT-01 —
+существующие публичные страницы, общие компоненты, фактические токены,
+типографику, ритм отступов, цвета, границы, радиусы, ширины, сетку,
+характер навигации и принятые скриншоты — как **авторитетный визуальный
+baseline**: «минималистичный дизайн EPD²» не означает разрешения нарисовать
+новый несвязанный минимализм с нуля. Это reference baseline, а не заморозка
+пикселей: обоснованные улучшения допустимы, несвязанный редизайн — нет. Все
+двадцать три записи — `approved`, ни одна не реализована и ни одна **не
+покрыта внешним CI-прогоном** (они написаны после него): это выявленный
+общесистемный future implementation debt, а не работа PACK-13.
+`docs/packs/PACK-13/PACK-13-FIR-COVERAGE-MATRIX.md` по-прежнему содержит
+ноль `implemented`, и это проверяется структурно
+(`tests/repository/test_pack13_fir_matrix.py`, `AC-P13-155`).
+
+### Чего PACK-13 не делает
+
+Не разворачивает и не заявляет: production PostgreSQL, облачную БД,
+реальный Kafka/RabbitMQ/NATS-брокер, внешний schema registry, production
+search engine, production IAM, multi-region-топологию. Не реализует
+identity-домен (PACK-14), eligibility/credential/voting/tally-домены
+(PACK-15/16) и backup recovery (PACK-17). Не создаёт универсальную
+админ-консоль и не выполняет произвольный SQL. Не является FRONT-PACK:
+административные поверхности здесь — контрактные view-модели, не
+интерфейс. Топология брокера, пулов соединений, имён сервисов и
+транспорта для голосового домена **сознательно не решается** — это
+PACK-15/16 вместе с их собственной моделью угроз.
+
+## PACK-12 — Privileged Admin, Search & Export (`0.12.0`, FINAL PASS)
+
+> **PACK-12 FINAL PASS · EXTERNAL GITHUB ACTIONS PASS**
+> **NOT PRODUCTION READY · NOT LEGALLY ACTIVATED**
+
+`services/privileged-access-service` — двенадцатый сервис: привилегированное
+администрирование, поиск с учётом авторизации и управляемый экспорт данных
+с DLP и статистическим контролем раскрытия. **17 модулей исходного кода,
+16 тестовых модулей**, 327 собственных тестов.
+
+Три логических bounded context живут в **одной** границе пакета, с **одним**
+командным фреймом и **одним** путём аудита (`OD-P12-04`). Они разделены по
+модулям, агрегатам и ролям, а не по деплойменту: второй деплоймент не дал бы
+ничего и стоил бы второго пути аудита — ровно того, что запрещает
+`OD-P12-06`.
+
+Что гарантируется структурно, а не декларативно:
+
+- **обхода не существует** — нет флага, переменной окружения, режима
+  развёртывания или гранта, отключающего инвариант, запись в аудит или
+  разделение обязанностей; break-glass — отдельный процесс, который только
+  **добавляет** обязательства (`roles.NO_BYPASS_NOTE`, FIR-INV-006);
+- **постоянный суперпользователь невыразим** — у `EffectiveWindow` нет
+  варианта «без конца», методов `renew`/`extend` не существует;
+- **универсальной консоли нет** — ни один набор ролей не достигает
+  содержимого бюллетеня и не изменяет запись аудита (FIR-INV-014);
+- **базис попарной несовместимости PACK-08 сохранён и ужесточён**, никогда
+  не ослаблен (канон 19e.16);
+- **аудит раньше события** — `_finish` пишет строку аудита, затем публикует
+  конверт, и только потом фиксирует идемпотентность;
+- **удаления нет** — ни один storage-порт не объявляет метод удаления, кроме
+  именованного исключения `SearchIndexStore.remove`, требующего
+  `IndexRemovalEvidence`;
+- **ни один тип ссылки на голосование не объявлен** — обратиться к типу,
+  которого не существует, нельзя (`P12-VOTE-001`).
+
+Канон не изменяется: `CANON_VERSION` остаётся `0.8.0`. `REPOSITORY_VERSION`
+— `0.12.0`. `FIR-ROADMAP-002` переведён в `scheduled`, **не** в
+`implemented`.
+
+### Статус верификации
+
+Внешний GitHub Actions прошёл полностью:
+
+| Проверка                    | Результат                     |
+| --------------------------- | ----------------------------- |
+| Repository path manifest    | PASS — 728 / 728              |
+| Forbidden paths             | PASS — нет                    |
+| Ruff format / Ruff lint     | PASS                          |
+| Prettier                    | PASS                          |
+| mypy / TypeScript typecheck | PASS                          |
+| Python tests                | PASS — 4062 passed, 4 skipped |
+| Browser / frontend          | PASS — 108 passed             |
+| Accessibility / visual      | PASS                          |
+
+Раунд прошёл через два CI-исправления до зелёного прогона: правку
+документации (устранение неверного утверждения «locally verified» и
+инвентаря модулей) и Prettier-форматирование, включая удаление лишнего
+дубликата `docs/handover/PACK-12-FIR-COVERAGE-MATRIX.md`. Канонический
+файл — только `docs/packs/PACK-12/PACK-12-FIR-COVERAGE-MATRIX.md`.
+Историю этапов см. в
+`docs/handover/PACK-12-IMPLEMENTATION-CANDIDATE-REPORT.md`, который
+сохранён без переписывания.
+
+Итог раунда — `docs/handover/PACK-12-FINAL-PASS-REPORT.md`; результаты
+внешнего прогона — `docs/handover/PACK-12-EXTERNAL-CI-VERIFICATION-RESULT.md`;
+ограничения — `docs/handover/PACK-12-KNOWN-LIMITATIONS.md`.
+
+### Чего PACK-12 не делает
+
+Не реализованы и не заявляются: production-БД, production search engine,
+внешний IAM/IdP, MFA, HSM/PKI, реальный DLP-провайдер, реальная доставка
+out-of-band уведомлений, production session assurance, голосование,
+юридическая активация и двенадцать административных frontend-поверхностей.
+Они принадлежат PACK-13, PACK-14, PACK-17 и FRONT-PACK. `AC-P12-090`
+остаётся **deferred**.
+
+## Архитектурный принцип
+
+Репозиторий организован как **модульный монорепозиторий** (см.
+`docs/adr/ADR-001-repository-strategy.md`):
+
+- каждая каноническая сущность имеет единственного модуля-владельца
+  (см. `docs/architecture/data-ownership.md`);
+- модули не обращаются напрямую к чужим таблицам или внутренним данным;
+- интеграция между будущими сервисами допускается только через
+  версионированные API, версионированные события, утверждённые read models
+  или audit export;
+- shared-пакеты (`packages/`) не содержат бизнес-логики — только
+  инфраструктурные типы и утилиты;
+- каждый будущий сервис потенциально отделяем в независимый деплой-юнит.
+
+Каноническая доменная модель и обязательные архитектурные инварианты
+зафиксированы в `docs/canonical/TZ-00-domain-event-canon.md` и не подлежат
+изменению без принятого ADR.
+
+## Требования
+
+- Python 3.12+
+- [`uv`](https://docs.astral.sh/uv/) для управления Python workspace и зависимостями
+- Node.js 22 LTS
+- GNU Make
+
+## Быстрый запуск
+
+```bash
+make setup      # установка Python и Node зависимостей
+make verify     # полный цикл проверок (repo checks, format, lint, typecheck, tests, build)
+```
+
+## Команды Make
+
+| Команда                 | Назначение                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------- |
+| `make setup`            | установка зависимостей (Python через `uv`, Node через `npm`)                     |
+| `make format`           | автоформатирование (Ruff format, Prettier)                                       |
+| `make lint`             | Ruff lint + ESLint                                                               |
+| `make typecheck`        | mypy + tsc                                                                       |
+| `make test`             | все тесты (Python, TypeScript, frontend)                                         |
+| `make test-python`      | тесты Python workspace                                                           |
+| `make test-typescript`  | тесты TypeScript пакетов                                                         |
+| `make test-frontend`    | тесты и smoke test frontend                                                      |
+| `make check-repository` | структурные проверки репозитория (обязательные файлы, запрещённые файлы, версии) |
+| `make verify`           | полный последовательный прогон всех проверок                                     |
+| `make clean`            | удаление сгенерированных артефактов                                              |
+
+## Структура каталогов
+
+```text
+epd2-civic-os/
+├── docs/                 # канон, архитектура, ADR, отчёты, открытые вопросы
+├── contracts/            # будущие контракты: OpenAPI, события, схемы, reason codes
+├── services/              # шестнадцать сервисов: account, identity,
+│                          # eligibility, credential, audit-core (PACK-02),
+│                          # initiative, deliberation, moderation, voting,
+│                          # tally, delegation (PACK-03), transparency
+│                          # (PACK-04), governance (PACK-05),
+│                          # ai-processing (PACK-06), membership (PACK-07),
+│                          # organization (PACK-08)
+├── packages/
+│   ├── python/epd2-core        # общий Python-пакет: версии, идентификаторы
+│   └── typescript/epd2-types   # общий TypeScript-пакет: версии
+├── frontend/web-shell     # минимальный Next.js frontend-каркас
+├── scripts/               # скрипты проверки структуры репозитория
+├── tests/repository/      # тесты уровня репозитория
+└── .github/               # CI workflow, шаблоны PR и issue
+```
+
+## Важное правило: запрет прямого доступа к чужим данным
+
+Ни один модуль (текущий или будущий) не должен:
+
+- читать таблицы другого модуля напрямую;
+- изменять чужие данные напрямую;
+- использовать общий ORM для всей платформы;
+- выполнять межсервисные SQL-запросы.
+
+Подробнее: `docs/architecture/service-boundaries.md`.
+
+## Документация
+
+- Канон: `docs/canonical/TZ-00-domain-event-canon.md`
+- Архитектура: `docs/architecture/`
+- ADR: `docs/adr/`
+- Правила разработки: `docs/development/`
+- Открытые вопросы: `docs/review/OPEN_QUESTIONS.md`
+- Известные ограничения: `docs/review/KNOWN_LIMITATIONS.md`
+- Отчёт по PACK-01: `docs/handover/PACK-01-REPORT.md`
+- Отчёт по PACK-02: `docs/handover/PACK-02-REPORT.md`
+- Threat model PACK-02: `docs/review/PACK-02-THREAT-MODEL.md`
+- Спецификация PACK-03: `docs/handover/PACK-03-SPEC.md`
+- Отчёт по PACK-03: `docs/handover/PACK-03-REPORT.md`
+- Спецификация PACK-04: `docs/handover/PACK-04-SPEC.md`
+- Отчёт по PACK-04: `docs/handover/PACK-04-REPORT.md`
+- Спецификация PACK-05: `docs/handover/PACK-05-SPEC.md`
+- Отчёт по PACK-05: `docs/handover/PACK-05-REPORT.md`
+- Governance ADR (PACK-05): `docs/adr/ADR-016` — `docs/adr/ADR-020`,
+  `docs/review/PACK-05-OWNER-DECISIONS.md`
+- Спецификация PACK-06: `docs/handover/PACK-06-SPEC.md`
+- Отчёт по PACK-06: `docs/handover/PACK-06-REPORT.md`
+- AI Processing Context ADR (PACK-06): `docs/adr/ADR-021` —
+  `docs/adr/ADR-025`, `docs/review/PACK-06-OWNER-DECISIONS.md`
+- Спецификация PACK-07 (финальная, консолидированная):
+  `docs/handover/PACK-07-SPEC-FINAL.md` (исходный черновик,
+  `docs/handover/PACK-07-SPEC.md`, помечен superseded)
+- Participation & Membership Context ADR (PACK-07): `docs/adr/ADR-026`
+  — `docs/adr/ADR-031`, `docs/review/PACK-07-OWNER-DECISIONS.md`
+- Отчёт о каноническом раунде PACK-07 (canon-only, без реализации
+  сервисов): `docs/handover/PACK-07-CANON-AMENDMENT-REPORT.md`
+- Отчёт о раунде реализации PACK-07 (`membership-service`, расширение
+  `eligibility-service`/`identity-service`):
+  `docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`
+- Спецификация PACK-08 (Organization & Regional Scope Foundation):
+  `docs/packs/PACK-08-SPECIFICATION.md`,
+  `docs/packs/PACK-08-MIGRATION-MATRIX.md`,
+  `docs/packs/PACK-08-OPEN-DECISIONS.md`
+- Organization & Regional Scope Context ADR (PACK-08): `docs/adr/ADR-032`
+  — `docs/adr/ADR-037`
+- Отчёт о раунде спецификации/ADR PACK-08:
+  `docs/handover/PACK-08-SPEC-REPORT.md`
+- Отчёт о каноническом раунде PACK-08 (canon-only, без реализации
+  сервисов): `docs/handover/PACK-08-CANON-AMENDMENT-REPORT.md`
+- Обязательная миграционная таблица `RoleAssignment.scope_id` (PACK-08):
+  `docs/packs/PACK-08-ROLE-SCOPE-MIGRATION-TABLE.md`
+- Технический справочник по реализации PACK-08 (`organization-service`,
+  контракты, frontend vertical slice):
+  `docs/packs/PACK-08-IMPLEMENTATION.md`
+- Отчёт о раунде реализации PACK-08 (`organization-service`, локальный
+  самоотчёт без внешнего прогона GitHub Actions):
+  `docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`
+- Локальная доверификация (генерация lock-файлов, `next build`): `LOCAL_VERIFICATION.md`
+- Одноразовая проверка на GitHub Actions (когда нет доступа к обычной
+  среде с интернетом): `GITHUB_ACTIONS_START.md`,
+  `.github/workflows/verify-and-package.yml`
+- Безопасность: `SECURITY.md`
+- Вклад в проект: `CONTRIBUTING.md`
+
+## Текущее ограничение
+
+Реализованы: Account, Identity, Eligibility, Credential, Audit Core
+(PACK-02), Initiative, Discussion (Deliberation), Moderation, Voting,
+Tally, Delegation (PACK-03), Transparency (PACK-04: `PublicLedgerEntry`,
+`AuditExportPackage`, `DisclosurePolicy`, `LobbyLogEntry`), Governance
+(PACK-05: `RoleAssignment`, `GovernancePolicy`, `GovernanceDecision`,
+`TechnicalChallenge`, производный read model `FinalityStatus`; канон
+раздел 19b, ADR-016 — ADR-020) и AI Processing (PACK-06:
+`ai-processing-service` — `AIProcessingRecord` с плоскостями
+`processing_status`/`human_review_status`, канонический встроенный
+`redaction_manifest`, производный read model `DisclosureStatus`,
+контрактный объект `AIDisclosurePackage`; канон раздел 19c, ADR-021 —
+ADR-025) и Participation & Membership (PACK-07: канон раздел 19d,
+ADR-026 — ADR-031, `membership-service` — `PartyMembershipEligibilityPolicy`,
+`Membership`, `MembershipApplication`, `AffiliationDeclaration`,
+`ConflictAssessment`, переиспользуемый `Appeal`; расширение
+`eligibility-service` — `ParticipantEligibilityPolicy`,
+`ProcessEligibilityPolicy`, `StepUpAuthenticationRequirement`,
+`DigitalDecision`, `AssemblyDecision`, четыре раздельных признака
+избирательного права; расширение `identity-service` —
+`AuthenticationContext`, восемь новых полей `IdentityRecord`; **PACK-07
+PASS**, подтверждено внешним прогоном GitHub Actions, см.
+`docs/handover/PACK-07-IMPLEMENTATION-REPORT.md`) и Organization &
+Regional Scope (PACK-08: канон раздел 19e, ADR-032 — ADR-037,
+`organization-service` — `Organization`/`CivicSpace`,
+`OrganizationalUnit`, `OrganizationalRelation`,
+`OrganizationalHierarchyOverlapPolicy`, `OrganizationalInheritancePolicy`,
+`OrganizationalAuthority`; default-deny региональная scope-авторизация
+с шестью режимами доступа, временный надзор, институциональные
+полномочия с базовой матрицей несовместимости ролей, обязательная
+миграционная таблица `RoleAssignment.scope_id`, минимальный read-only
+frontend vertical slice `/organizations`; **локальный самоотчёт, без
+внешнего прогона GitHub Actions**, см.
+`docs/handover/PACK-08-IMPLEMENTATION-REPORT.md`).
+**Ещё не реализованы**: Emergency/Crisis Override, реальная
+eID/eIDAS-интеграция, криптографические протоколы голосования,
+географическая/избирательная привязка регионов сверх организационной
+модели PACK-08 — см. `docs/review/KNOWN_LIMITATIONS.md`.

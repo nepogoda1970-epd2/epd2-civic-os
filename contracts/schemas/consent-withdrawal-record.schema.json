@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/consent-withdrawal-record.schema.json",
+  "title": "ConsentWithdrawalRecord",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.dataprotection.ConsentWithdrawalRecord). Withdrawal of consent is NOT automatic deletion: `retention_obligation_persists` records that a statutory retention duty or an active legal hold continues to apply to the affected record class. Conflating the two would let a withdrawal destroy evidence. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "withdrawal_id",
+    "activity_id",
+    "organization_id",
+    "withdrawn_at",
+    "subject_party_reference",
+    "affects_records_of_class",
+    "retention_obligation_persists"
+  ],
+  "properties": {
+    "withdrawal_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "affects_records_of_class": {
+      "type": "string"
+    },
+    "retention_obligation_persists": {
+      "type": "boolean"
+    }
+  }
+}

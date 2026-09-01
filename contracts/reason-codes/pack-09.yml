@@ -1,0 +1,1133 @@
+# Centralized PACK-09 reason-code registry (Compliance, Records
+# Governance & Legal Workflows; ADR-038 through ADR-042).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced by the PACK-09 implementation round: the codes
+# `compliance-service` raises for records governance, Legal Hold,
+# controlled disposal, the Data Catalog & Processing Registry, governed
+# procedural cases, deadlines, data-subject/legal requests and party
+# arbitration - plus the additive codes it uses for its own audit
+# bookkeeping, following the same pattern ADR-004/ADR-014/ADR-019/
+# ADR-024 and PACK-07's and PACK-08's own registries already established.
+# No PACK-09 code path may use a free-text string in place of a
+# registered code (canon section 24; PACK-09 required invariant 14,
+# "reason-coded denial").
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-08.yml (ADR-006 Option B precedent): codes multiple packs
+# need (PERMISSION_DENIED, VALIDATION_RECORD_NOT_FOUND) are independently
+# redeclared here rather than imported from an earlier pack's file, so
+# this file stays a complete, standalone source of truth for
+# `compliance-service`'s own scan
+# (`tests/contract/test_reason_codes_registry.py`'s PACK09_SERVICE_DIRS).
+# `compliance-service` is a single, wholly new service - no existing
+# PACK-02-through-PACK-08 service is extended in place this round - so
+# unlike PACK-07's file there is no "shared with an earlier pack's service
+# directory" union needed for the literal-usage check.
+#
+# `source: pack-09-service` entries are the codes this round introduced.
+# `source: pack-02-reused` entries are generic, pre-existing PACK-02 codes
+# reused verbatim by compliance-service (already registered in
+# pack-02.yml; independently redeclared here so this file stays complete).
+#
+# Every entry carries the seven fields
+# `epd2_core.reason_codes.ReasonCodeRegistry.load_from_yaml` requires
+# (code, meaning, severity, description, retryable, owner,
+# introduced_in_version); a missing field makes the whole registry fail to
+# load, which is why the pre-review draft of this file - which omitted
+# `description` and `retryable` - could not be loaded at all.
+
+# --- Records governance, retention and controlled destruction (ADR-039)
+
+- code: RETENTION_DISPOSITION_NOT_DUE
+  meaning: >-
+    The calculated retention due time has not been reached for this
+    governed record, so no disposition may be authorized or executed.
+  severity: error
+  description: This record's retention period has not expired yet.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: RETENTION_START_UNDETERMINED
+  meaning: >-
+    No retention start event has been recorded for this record, so its
+    due time cannot be calculated. The operation fails closed rather
+    than treating "no start" as "started at creation" (required
+    invariant 15).
+  severity: error
+  description: Retention has not been started for this record.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: RETENTION_POLICY_VERSION_CONFLICT
+  meaning: >-
+    A retention policy id/version pair is already registered with
+    different content, or a supersession skipped the required version
+    increment. Policy versions are append-only and are never rewritten
+    in place.
+  severity: error
+  description: This retention policy version already exists with different content.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: RETENTION_POLICY_REBIND_REQUIRES_REEVALUATION
+  meaning: >-
+    A governed record's effective retention policy version changed and
+    disposal eligibility has not been re-evaluated and re-authorized
+    under the new version. Rewriting a retention schedule never, by
+    itself, authorizes destruction of already-governed records (required
+    invariant 5).
+  severity: error
+  description: Re-evaluate and re-authorize disposal under the new policy version.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DESTRUCTION_AUTHORIZATION_REQUIRED
+  meaning: >-
+    Execution of a disposal or destruction was requested without a
+    valid, matching DestructionAuthorization. Governed records are never
+    removed by an ordinary delete; a separate, explicit authorization
+    step is mandatory (required invariant 4).
+  severity: error
+  description: This destruction has not been authorized.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DESTRUCTION_AUTHORIZATION_STALE
+  meaning: >-
+    The supplied DestructionAuthorization was issued against a different
+    retention policy version or a different record version than the
+    record now carries, so it no longer applies.
+  severity: error
+  description: This destruction authorization is no longer current.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DESTRUCTION_ALREADY_EXECUTED
+  meaning: >-
+    Destruction evidence already exists for this record and a second,
+    different execution was attempted. An identical replay is idempotent
+    and never produces this code.
+  severity: error
+  description: This record has already been destroyed with different evidence.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: GOVERNED_RECORD_DELETION_FORBIDDEN
+  meaning: >-
+    A caller attempted to remove a governed record through an ordinary
+    delete path instead of the controlled disposal workflow (required
+    invariant 4).
+  severity: error
+  description: Governed records cannot be deleted directly.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Legal Hold (ADR-039) ----------------------------------------------
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    At least one active Legal Hold applies to this record, so every
+    destructive disposition is refused regardless of retention state
+    (required invariant 3).
+  severity: error
+  description: An active Legal Hold protects this record.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: LEGAL_HOLD_SCOPE_MISMATCH
+  meaning: >-
+    A Legal Hold, or a retention start event, was applied to or
+    evaluated against a record in a different organizational scope.
+  severity: error
+  description: This Legal Hold does not cover that organization's records.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: LEGAL_HOLD_TRANSITION_INVALID
+  meaning: >-
+    A Legal Hold lifecycle transition is not permitted - for example
+    releasing an already-released hold, or marking a released hold
+    indeterminate.
+  severity: error
+  description: This Legal Hold transition is not allowed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: LEGAL_HOLD_STATE_UNKNOWN
+  meaning: >-
+    The hold state relevant to this record could not be established. The
+    operation is refused rather than assumed unheld (required invariant
+    15).
+  severity: error
+  description: Legal Hold state could not be determined; the operation was refused.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Data Catalog and Processing Registry (ADR-040) --------------------
+
+- code: PROCESSING_REGISTRY_INCOMPLETE
+  meaning: >-
+    A processing activity or data asset is missing a field the registry
+    requires - including its mandatory retention reference.
+  severity: error
+  description: This registry entry is incomplete.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: PROCESSING_ACTIVITY_TRANSITION_INVALID
+  meaning: >-
+    The requested processing-activity or data-asset lifecycle transition
+    is not permitted by the registry state machine.
+  severity: error
+  description: This registry lifecycle transition is not allowed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: PROCESSING_REGISTRY_IDENTITY_PAYLOAD_REJECTED
+  meaning: >-
+    A registry write carried a field this service refuses to store
+    because it would amount to holding identity data. compliance-service
+    never acquires or stores eID/KYC identity (required invariant 11).
+  severity: error
+  description: Identity attributes cannot be stored in the processing registry.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Governed procedural cases, deadlines and requests (ADR-041) -------
+
+- code: PROCEDURAL_CASE_TRANSITION_INVALID
+  meaning: >-
+    The requested procedural case, or governed record, state transition
+    is not permitted by its state machine.
+  severity: error
+  description: This case transition is not allowed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: PROCEDURAL_CASE_CLOSED
+  meaning: >-
+    A closed case cannot be modified by an ordinary command. Challenging
+    a decision is its own governed transition producing a separate
+    appeal case.
+  severity: error
+  description: This case is closed and cannot be modified.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DEADLINE_TRANSITION_INVALID
+  meaning: >-
+    The requested procedural deadline state transition is not permitted
+    - for example resuming a running deadline or expiring one before its
+    due time.
+  severity: error
+  description: This deadline transition is not allowed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DEADLINE_SILENT_REPLACEMENT_REJECTED
+  meaning: >-
+    A command would have created a second, competing deadline instance
+    for a (case, deadline_code) pair that already has a live one,
+    without an explicit supersession. A deadline is never silently
+    replaced or reset (required invariant 7).
+  severity: error
+  description: Name the deadline being replaced to supersede it explicitly.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DEADLINE_TIMEZONE_UNDETERMINED
+  meaning: >-
+    A deadline was supplied without an explicit IANA timezone, with an
+    unknown zone name, or with a naive datetime. Due-date arithmetic is
+    refused rather than silently assuming UTC (required invariant 15).
+  severity: error
+  description: An explicit, known IANA timezone is required for deadlines.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DATA_SUBJECT_REQUEST_TRANSITION_INVALID
+  meaning: >-
+    The requested data-subject or legal request state transition is not
+    permitted by its state machine.
+  severity: error
+  description: This request transition is not allowed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: IDENTITY_VERIFICATION_INSUFFICIENT
+  meaning: >-
+    A data-subject request cannot be answered because its identity
+    verification status is not verified. No identity payload is
+    requested or stored by this service to change that (required
+    invariant 11).
+  severity: error
+  description: Identity verification must complete before this request can be answered.
+  retryable: true
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Party arbitration, disputes and procedural independence (ADR-042) -
+
+- code: PROCEDURAL_INDEPENDENCE_VIOLATION
+  meaning: >-
+    The requested role assignment would breach independence: a party to
+    the dispute, or the current case handler, cannot become the
+    independent decision-maker, and nobody may appoint themselves
+    (required invariants 8 and 9).
+  severity: error
+  description: This appointment would breach procedural independence.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: PROCEDURAL_ROLE_CONFLICT
+  meaning: >-
+    One party reference would hold two procedural roles that must stay
+    separate: procedural authority, case handler and independent
+    decision-maker are three distinguishable roles (required invariant
+    8).
+  severity: error
+  description: These procedural roles must be held by different parties.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: CONFLICT_OF_INTEREST_BLOCKING
+  meaning: >-
+    A declared or confirmed conflict of interest makes this party
+    ineligible for the requested procedural role or decision. A conflict
+    is an explicit state that changes what the workflow permits, never
+    free text (required invariant 10).
+  severity: error
+  description: A declared conflict of interest blocks this party.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: CONFLICT_OF_INTEREST_UNDECLARED
+  meaning: >-
+    An independent decision-maker appointment was attempted before the
+    required conflict-of-interest declaration existed. The operation
+    fails closed (required invariants 10 and 15).
+  severity: error
+  description: A conflict-of-interest declaration is required first.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DECISION_AUTHORITY_DENIED
+  meaning: >-
+    The acting party holds no procedural role permitted to record this
+    decision. For arbitration and internal disputes only the assigned
+    independent decision-maker may decide.
+  severity: error
+  description: This party may not decide this case.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Organizational scope isolation and fail-closed guards -------------
+
+- code: CROSS_SCOPE_ACCESS_DENIED
+  meaning: >-
+    A write crossed its target's owning organizational scope without a
+    valid, explicitly-presented cross-scope authority grant. There is no
+    hierarchy-derived inheritance: a parent organization holds nothing
+    over a child's records automatically (required invariant 2).
+  severity: error
+  description: This operation crosses an organizational boundary without authority.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: ORGANIZATION_SCOPE_UNDETERMINED
+  meaning: >-
+    The requesting context carried no resolvable organizational scope,
+    or an entity was submitted without one. The operation is refused
+    rather than defaulted to any organization (required invariant 15).
+  severity: error
+  description: The organizational scope of this request could not be determined.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: CROSS_SCOPE_AUTHORITY_INVALID
+  meaning: >-
+    A cross-scope authority grant was presented but is unknown, expired,
+    revoked, issued by the wrong organization, or does not carry the
+    capability this operation needs.
+  severity: error
+  description: The presented cross-scope authority does not permit this operation.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: OPTIMISTIC_CONCURRENCY_CONFLICT
+  meaning: >-
+    The caller-supplied expected_version does not match the stored
+    record's current version; the record changed since it was read.
+  severity: error
+  description: This record changed since you read it; re-read and retry.
+  retryable: true
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_COMMAND_CONFLICT
+  meaning: >-
+    A command was replayed with the same event_id but different content,
+    or an idempotent replay found inconsistent stored state (the
+    CT-00-04 idempotency contract's conflict half).
+  severity: error
+  description: This event_id was already used for a different command.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Audit classifications for successfully-audited actions ------------
+
+- code: COMPLIANCE_GOVERNED_RECORD_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful governed-record action:
+    retention start recorded, disposal authorized, or destruction
+    executed.
+  severity: info
+  description: Governed record status changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_LEGAL_HOLD_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful Legal Hold action: issued
+    or released.
+  severity: info
+  description: Legal Hold status changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCESSING_REGISTRY_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful Data Catalog or
+    Processing Registry action.
+  severity: info
+  description: Processing registry entry status changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCEDURAL_CASE_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful governed-case action:
+    opened, role assigned, decision recorded, or status transitioned.
+  severity: info
+  description: Procedural case status changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCEDURAL_DEADLINE_STATE_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful deadline action: started,
+    suspended, resumed, extended, completed, escalated, expired or
+    superseded.
+  severity: info
+  description: Procedural deadline state changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_DATA_SUBJECT_REQUEST_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful data-subject or legal
+    request action.
+  severity: info
+  description: Data-subject request status changed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Generic PACK-02 codes reused verbatim by compliance-service -------
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The actor is not authorized to perform this operation. Reused
+    verbatim from pack-02.yml rather than given a PACK-09 synonym.
+  severity: error
+  description: You are not authorized to perform this action.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-02-reused
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    The referenced record does not exist for this caller. Deliberately
+    identical for "no such record anywhere" and "the record exists but
+    belongs to another organization and no cross-scope authority was
+    presented", so a foreign resource id discloses nothing beyond this
+    safe error.
+  severity: error
+  description: The referenced record was not found.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-02-reused
+
+# ---------------------------------------------------------------------------
+# Architecture & Domain Framework 0.8.1 additions (same 0.9.0 round).
+#
+# The refusal codes below make the Framework's own hard invariants
+# answerable at runtime: each one names a specific structural refusal
+# rather than a generic validation failure, so a denial can be audited,
+# reported to a party, and distinguished from every neighbouring denial.
+# ---------------------------------------------------------------------------
+
+- code: JURISDICTION_MISSING
+  meaning: >-
+    A case was asked to enter a substantive status - substantive
+    review, hearing or decided - while no jurisdiction determination is
+    bound to it. Framework hard invariant 52: no consequential outcome
+    without a competent authority. Refused rather than defaulted.
+  severity: error
+  description: This case has no confirmed jurisdiction.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: JURISDICTION_NOT_COMPETENT
+  meaning: >-
+    The bound jurisdiction determination exists but does not permit a
+    substantive decision at this instant: it is challenged, declined,
+    transferred, or outside its own validity window. A contested
+    competence does not keep producing binding outcomes while the
+    challenge is pending.
+  severity: error
+  description: The determined authority is not competent to decide this matter now.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: JURISDICTION_TRANSFER_REQUIRED
+  meaning: >-
+    A transfer was attempted without a successor determination that
+    names the determination it supersedes. Competence is never left
+    dangling: the outgoing determination must point at a specific
+    successor.
+  severity: error
+  description: A jurisdiction transfer requires a successor determination.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: JURISDICTION_SCOPE_MISMATCH
+  meaning: >-
+    A jurisdiction determination was submitted for a different case, a
+    different organization or a different case kind than the case it
+    was to be bound to. Scope is compared, never coerced.
+  severity: error
+  description: The jurisdiction determination does not match this case.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: REPRESENTATION_INVALID
+  meaning: >-
+    A representative acted without a mandate linking them to the
+    represented party on this case, or the mandate does not grant the
+    specific authority the act requires. Framework hard invariant 15: a
+    role name is not proof of authority.
+  severity: error
+  description: No valid representation mandate covers this act.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: REPRESENTATION_EXPIRED
+  meaning: >-
+    The mandate exists but the act falls outside its validity window.
+    Acts inside the window stay valid; only this act is refused.
+  severity: error
+  description: The representation mandate was not in force at that time.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: REPRESENTATION_REVOKED
+  meaning: >-
+    The mandate was revoked before the act. Revocation is
+    forward-looking: filings already accepted under the mandate remain
+    valid and are not rewritten.
+  severity: error
+  description: The representation mandate has been revoked.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: FILING_INADMISSIBLE
+  meaning: >-
+    A filing was refused at intake. It stays on the docket at its
+    original sequence in rejected state with this code; it is never
+    removed, because 'this was filed and refused' is itself part of the
+    record.
+  severity: error
+  description: This filing is not admissible.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: FILING_SEQUENCE_CONFLICT
+  meaning: >-
+    A filing claimed a docket position that is not the next one, tried
+    to supersede itself, or tried to be superseded by a filing at an
+    earlier position. The docket is append-only and strictly ordered; a
+    conflicting sequence is refused rather than silently corrected.
+  severity: error
+  description: The docket position for this filing is not available.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: HEARING_TRANSITION_INVALID
+  meaning: >-
+    A hearing transition was requested that its current status does not
+    permit - for example completing a cancelled hearing. Hearing status
+    is derived from an append-only history, so an invalid transition
+    cannot be written and then re-derived away.
+  severity: error
+  description: This hearing cannot make that transition.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: INTERIM_MEASURE_AUTHORITY_DENIED
+  meaning: >-
+    A granted interim measure was constructed without a human deciding
+    authority, without an end or review date, or without a reasons
+    reference. Framework hard invariant 69: AI decides no consequential
+    legal outcomes; an indefinite unreasoned measure is not
+    expressible.
+  severity: error
+  description: This interim measure cannot be granted as specified.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DECISION_NOT_EFFECTIVE
+  meaning: >-
+    An operation required the decision to be in legal effect and it is
+    not - it has not commenced, or its effect is suspended. Effect,
+    finality and enforceability are three separate facts and none is
+    derived from another.
+  severity: error
+  description: This decision is not in effect.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DECISION_NOT_FINAL
+  meaning: >-
+    An operation required the decision to be final - the remedy window
+    closed or exhausted - and it is not. Finality is not implied by
+    effect and is not implied by enforceability.
+  severity: error
+  description: This decision is not final.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DECISION_NOT_ENFORCEABLE
+  meaning: >-
+    Enforceability was requested while the decision is not in effect,
+    or was requested twice. A final decision whose effect is suspended
+    is not enforceable, and that combination is inexpressible rather
+    than merely discouraged.
+  severity: error
+  description: This decision is not enforceable.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: REMEDY_UNAVAILABLE
+  meaning: >-
+    A remedy was exercised outside its availability window - before it
+    opened or after it expired. Framework hard invariant 52 requires a
+    remedy route to exist; it does not make that route permanently
+    open.
+  severity: error
+  description: This remedy is not available now.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DUE_PROCESS_PREREQUISITE_MISSING
+  meaning: >-
+    A consequential decision was attempted with at least one of the six
+    named prerequisites absent: jurisdiction, legally effective notice,
+    an opportunity to respond, a human deciding actor, reasons, or an
+    available remedy. Framework hard invariant 52 in executable form;
+    the missing prerequisite is named in the message.
+  severity: error
+  description: A prerequisite for this decision is missing.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: RECUSAL_REQUIRED
+  meaning: >-
+    A conflict assessment concluded that the actor must not exercise
+    decision capability on this matter, and no replacement has been
+    assigned. The case cannot proceed through this actor.
+  severity: error
+  description: A recusal is required before this can proceed.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: RECUSED_ACTOR_DENIED
+  meaning: >-
+    The acting party is recused from this case with effect at or before
+    this act. Framework hard invariant 53: recusal blocks capability
+    without erasing history - the actor's earlier acts stay on the
+    record and are not invalidated.
+  severity: error
+  description: This actor is recused from this matter.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: NOTICE_METHOD_INVALID
+  meaning: >-
+    A service attempt used a method the notice does not authorize.
+    Refused at recording time rather than at determination time, so an
+    unauthorized channel never accumulates as evidence that later
+    resembles proof of service. Framework hard invariant 40.
+  severity: error
+  description: That service method is not authorized for this notice.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: SERVICE_NOT_PROVEN
+  meaning: >-
+    No reconciled attempt supports the deemed-service rule invoked, or
+    there were no attempts at all. This is the code that makes
+    'delivered' provider telemetry insufficient on its own: issuing a
+    notice is not serving it, and unreconciled telemetry is not proof.
+    Framework hard invariants 39 and 57.
+  severity: error
+  description: Service of this notice is not proven.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: NOTICE_EFFECT_UNDETERMINED
+  meaning: >-
+    Legal effect could not be established or refused on the evidence
+    available - every attempt's telemetry is unknown. Fail-closed: an
+    undetermined effect starts no deadline. Framework hard invariant
+    39.
+  severity: error
+  description: The legal effect of this notice is undetermined.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: NOTICE_EFFECT_ALREADY_ESTABLISHED
+  meaning: >-
+    A second effect determination was attempted for a notice that
+    already has one establishing legal effect. Legal effect is created
+    exactly once; an identical replay is handled idempotently above
+    this check and never reaches it. Framework hard invariant 59.
+  severity: error
+  description: The legal effect of this notice is already established.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DUPLICATE_LEGAL_EFFECT_PREVENTED
+  meaning: >-
+    A retry or replay tried to start a second deadline from a notice
+    effect that has already triggered one. Framework hard invariant 59:
+    retry and replay do not repeat a consequential legal effect.
+  severity: error
+  description: That legal effect has already been applied.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DEADLINE_TRIGGER_INVALID
+  meaning: >-
+    A deadline was asked to start from a source that is not a governed
+    trigger - delivery telemetry or read telemetry - or from a notice
+    effect that establishes no legal effect. Those telemetry sources
+    exist in the enum by name precisely so this refusal is explicit
+    rather than an omission. Framework hard invariant 39.
+  severity: error
+  description: That trigger cannot start a procedural deadline.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DPIA_REQUIRED
+  meaning: >-
+    A processing activity in a risk class that requires a data
+    protection impact assessment has none, or no requirement
+    determination has ever been recorded for it. Absence of the
+    determination is itself blocking: 'nobody asked' and 'we asked and
+    the answer was no' are different states.
+  severity: error
+  description: A data protection impact assessment is required first.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DPIA_NOT_APPROVED
+  meaning: >-
+    The assessment exists but is not in an activating state at this
+    instant - it is in draft, under review, rejected, expired, or past
+    its own validity date. An approved assessment past validity
+    activates nothing.
+  severity: error
+  description: The data protection impact assessment is not approved.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: PROCESSING_ACTIVATION_BLOCKED
+  meaning: >-
+    Activation of a processing activity was refused by the governance
+    gate. Nothing is written: the caller does not receive a
+    half-activated activity.
+  severity: error
+  description: This processing activity cannot be activated.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DPO_INDEPENDENCE_REQUIRED
+  meaning: >-
+    The assessment's reviewer is the controller or the process owner.
+    An assessment signed off by the party that wants the processing is
+    not a review.
+  severity: error
+  description: The reviewer must be independent of the controller and process owner.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: LEGAL_HOLD_PROPAGATION_UNRESOLVED
+  meaning: >-
+    At least one known derivative of a hold - a replica, index, export
+    or backup - is in an unknown, pending or failed propagation state.
+    A hold that has not reached its derivatives is not an effective
+    hold, and PACK-09 refuses on the derivatives it has been told
+    about.
+  severity: error
+  description: Legal hold propagation is not resolved.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: DESTRUCTION_BLOCKED_BY_HOLD
+  meaning: >-
+    Destruction was refused because a hold covering this record -
+    including one already released whose derivatives are still
+    outstanding - has not been fully resolved.
+  severity: error
+  description: Destruction is blocked by a legal hold.
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+# --- Additive audit classifications for the Framework 0.8.1 actions -------
+
+- code: COMPLIANCE_LEGAL_CASE_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful legal-case action:
+    opened, transitioned, or reopened into a successor case.
+  severity: info
+  description: "Compliance action recorded: a successful legal-case action: opened, transitioned, or reopened into a successor case."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_JURISDICTION_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a successful jurisdiction action:
+    determined, challenged, or transferred to a successor
+    determination.
+  severity: info
+  description: "Compliance action recorded: a successful jurisdiction action: determined, challenged, or transferred to a successor determination."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_CASE_PARTY_REGISTERED
+  meaning: >-
+    AuditEvent classification for a party registered on a case under a
+    per-case handle.
+  severity: info
+  description: "Compliance action recorded: a party registered on a case under a per-case handle."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_REPRESENTATION_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a representation mandate registered
+    or revoked.
+  severity: info
+  description: "Compliance action recorded: a representation mandate registered or revoked."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_FILING_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a filing received, decided admissible
+    or inadmissible, or superseded.
+  severity: info
+  description: "Compliance action recorded: a filing received, decided admissible or inadmissible, or superseded."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_HEARING_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a hearing scheduled, rescheduled,
+    cancelled or completed.
+  severity: info
+  description: "Compliance action recorded: a hearing scheduled, rescheduled, cancelled or completed."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_INTERIM_MEASURE_DECIDED
+  meaning: >-
+    AuditEvent classification for an interim measure granted, refused,
+    lapsed or revoked.
+  severity: info
+  description: "Compliance action recorded: an interim measure granted, refused, lapsed or revoked."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCEDURAL_DECISION_STATE_CHANGED
+  meaning: >-
+    AuditEvent classification for a procedural decision issued, or for
+    a change to its effect, finality or enforceability.
+  severity: info
+  description: "Compliance action recorded: a procedural decision issued, or for a change to its effect, finality or enforceability."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_REMEDY_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a remedy registered against a
+    decision or exercised.
+  severity: info
+  description: "Compliance action recorded: a remedy registered against a decision or exercised."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_RECUSAL_RECORDED
+  meaning: >-
+    AuditEvent classification for a recusal recorded or a replacement
+    assigned.
+  severity: info
+  description: "Compliance action recorded: a recusal recorded or a replacement assigned."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_OFFICIAL_NOTICE_ISSUED
+  meaning: >-
+    AuditEvent classification for an authorized notice object created.
+    Records issuance only - not service, and not legal effect.
+  severity: info
+  description: "Compliance action recorded: an authorized notice object created. Records issuance only - not service, and not legal effect."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_SERVICE_ATTEMPT_RECORDED
+  meaning: >-
+    AuditEvent classification for one recorded attempt to serve a
+    notice, with its provider telemetry. Explicitly not a legal effect.
+  severity: info
+  description: "Compliance action recorded: one recorded attempt to serve a notice, with its provider telemetry. Explicitly not a legal effect."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_NOTICE_EFFECT_DETERMINED
+  meaning: >-
+    AuditEvent classification for the governed determination of whether
+    a notice took legal effect - the only action that can establish it.
+  severity: info
+  description: "Compliance action recorded: the governed determination of whether a notice took legal effect - the only action that can establish it."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCEDURAL_DEADLINE_TRIGGERED
+  meaning: >-
+    AuditEvent classification for the recorded fact that a specific
+    governed trigger started a specific deadline, exactly once.
+  severity: info
+  description: "Compliance action recorded: the recorded fact that a specific governed trigger started a specific deadline, exactly once."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_RECORD_CLASS_REGISTERED
+  meaning: >-
+    AuditEvent classification for a record class registered with its
+    retention schedule, custodian, disposition authority and
+    search/export eligibility.
+  severity: info
+  description: "Compliance action recorded: a record class registered with its retention schedule, custodian, disposition authority and search/export eligibility."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_LEGAL_HOLD_PROPAGATION_REGISTERED
+  meaning: >-
+    AuditEvent classification for a recorded propagation state of a
+    hold to a replica, index, export or backup.
+  severity: info
+  description: "Compliance action recorded: a recorded propagation state of a hold to a replica, index, export or backup."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_DPIA_STATUS_CHANGED
+  meaning: >-
+    AuditEvent classification for a DPIA requirement determination or a
+    change to an assessment's status.
+  severity: info
+  description: "Compliance action recorded: a DPIA requirement determination or a change to an assessment's status."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service
+
+- code: COMPLIANCE_PROCESSING_ACTIVATION_DECIDED
+  meaning: >-
+    AuditEvent classification for a governed decision to activate,
+    block or revoke a processing activity.
+  severity: info
+  description: "Compliance action recorded: a governed decision to activate, block or revoke a processing activity."
+  retryable: false
+  owner: compliance-service
+  introduced_in_version: 0.9.0
+  source: pack-09-service

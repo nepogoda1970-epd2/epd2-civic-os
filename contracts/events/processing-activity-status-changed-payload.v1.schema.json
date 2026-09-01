@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/processing-activity-status-changed-payload.v1.schema.json",
+  "title": "processing_activity.status_changed event payload (v1)",
+  "description": "PACK-09, ADR-040. Produced by epd2_compliance_service.events. Minimum payload only: identifiers, enum values, timestamps and reason codes. It never carries a document or its bytes, a ballot/vote/tally/delegation reference, an authentication secret, an identity/eID/KYC attribute, a free-text case narrative, or the name of any natural person (PACK-09 required invariants 1, 11, 12 and 13). legal_basis appears as its managed classification value only; it asserts nothing about legal sufficiency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activity_id",
+    "organization_id",
+    "status",
+    "activity_version",
+    "legal_basis",
+    "retention_policy_reference",
+    "reason_code",
+    "recorded_at"
+  ],
+  "properties": {
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "suspended", "deprecated"]
+    },
+    "activity_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "legal_basis": {
+      "type": "string",
+      "enum": [
+        "consent",
+        "contract",
+        "legal_obligation",
+        "vital_interests",
+        "public_task",
+        "legitimate_interests",
+        "party_statute",
+        "other_documented"
+      ]
+    },
+    "retention_policy_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

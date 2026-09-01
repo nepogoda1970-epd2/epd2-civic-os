@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/initiative.schema.json",
+  "title": "Initiative",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 11.1. Owned by initiative-service (epd2_initiative_service.domain.Initiative). `current_version_id` is nullable (this service's own documented judgment call, README.md): an Initiative is created as a `draft` shell before its first InitiativeVersion exists, since InitiativeVersion.initiative_id must itself reference an already-existing Initiative.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "initiative_id",
+    "space_id",
+    "current_version_id",
+    "author_actor_id",
+    "initiative_type",
+    "workflow_id",
+    "status",
+    "support_count",
+    "created_at"
+  ],
+  "properties": {
+    "initiative_id": { "type": "string", "format": "uuid" },
+    "space_id": { "type": "string", "format": "uuid" },
+    "current_version_id": { "type": ["string", "null"], "format": "uuid" },
+    "author_actor_id": { "type": "string", "format": "uuid" },
+    "initiative_type": { "type": "string", "minLength": 1 },
+    "workflow_id": { "type": "string", "format": "uuid" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "completeness_review",
+        "revision_required",
+        "published",
+        "support_collection",
+        "qualified",
+        "deliberation",
+        "legal_review",
+        "ready_for_ballot",
+        "voting",
+        "adopted",
+        "rejected",
+        "withdrawn",
+        "archived"
+      ]
+    },
+    "support_count": { "type": "integer", "minimum": 0 },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

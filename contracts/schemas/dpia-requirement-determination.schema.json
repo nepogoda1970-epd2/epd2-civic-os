@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/dpia-requirement-determination.schema.json",
+  "title": "DPIARequirementDetermination",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.dataprotection.DPIARequirementDetermination). Recorded even when `dpia_required` is false, because the ABSENCE of a determination is what blocks activation: 'nobody ever asked' and 'we asked and the answer was no' are different states with different outcomes. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "determination_id",
+    "activity_id",
+    "organization_id",
+    "risk_class",
+    "dpia_required",
+    "determined_at",
+    "determined_by_party_reference",
+    "basis_reference"
+  ],
+  "properties": {
+    "determination_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "risk_class": {
+      "type": "string",
+      "enum": ["low", "standard", "high", "special_category"]
+    },
+    "dpia_required": {
+      "type": "boolean"
+    },
+    "determined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "determined_by_party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "basis_reference": {
+      "type": "string"
+    }
+  }
+}

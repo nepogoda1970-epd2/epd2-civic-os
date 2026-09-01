@@ -1,0 +1,27 @@
+[project]
+name = "epd2-voting-service"
+version = "0.1.0"
+description = "EPD2 Civic OS Voting Service — owns Ballot, BallotOption, VoteEnvelope, VoteReceipt (canon section 15.1-15.4, ADR-005)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "epd2-core",
+    "epd2-audit-core",
+    "epd2-credential-service",
+    "epd2-eligibility-service",
+    "epd2-governance-service",
+    # Vetted Ed25519 provider for bulletin-board checkpoint signatures
+    # (PACK-16D final correction §5). This replaced a hand-written
+    # implementation of the primitive; there is deliberately no fallback,
+    # so the reference package does not import without it. The floor is the
+    # version this repository's RFC 8032 conformance tests were run
+    # against; the ceiling excludes the next major.
+    "cryptography>=46.0.7,<47",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/epd2_voting_service"]

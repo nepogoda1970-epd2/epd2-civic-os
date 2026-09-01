@@ -1,0 +1,7 @@
+{
+  "schema": "epd2.infra01.packaging-allowlist/1",
+  "note": "The single canonical governed allowlist for freeze/package hygiene (INFRA01-HI-06). Only the entries below may be added to a candidate archive after the freeze inventory is taken, and only the listed archive-suffix exceptions (none) may appear inside a candidate. Every other deviation between tested tree and packaged tree is a fail-closed defect.",
+  "governed_additions": ["SHA256SUMS.txt", "ACCEPTANCE/FREEZE-INVENTORY.json"],
+  "allowed_nested_archives": [],
+  "allowed_empty_directories": ["contracts/fixtures"]
+}

@@ -1,0 +1,359 @@
+openapi: 3.1.0
+info:
+  title: EPD² Civic OS — CLAUDE-PACK-06 service contracts
+  version: "0.1.0"
+  description: >
+    Transport-neutral API contract for the one PACK-06 service
+    (ai-processing-service, ADR-021). No production HTTP server ships in
+    this pack — these paths document, one-to-one, every real command
+    function in epd2_ai_processing_service.application and are exercised
+    in tests via those application-layer functions directly, not over
+    HTTP. Request bodies list only genuine business fields — actor
+    identity, authorization, correlation/causation ids, the clock, and
+    the idempotency event_id are transport/session concerns, the same
+    convention contracts/openapi/pack-02.yaml through pack-05.yaml
+    already follow.
+
+    Per canon 19c.3 and ADR-022, no path or schema in this file ever
+    declares human_reviewer_reference as part of a *published event*
+    payload — it is an internal field, present only in the stored
+    AIProcessingRecord response body, never in
+    contracts/events/ai-processing-record-payload.v1.schema.json.
+
+    verify_role_assignment_for_action (governance-service, ADR-022) has
+    no HTTP-shaped contract here at all — it is a narrow, internal,
+    cross-pack read this pack's own commands call directly, documented
+    in contracts/openapi/pack-05.yaml under the governance-service tag
+    if at all, never invented as a PACK-06 endpoint.
+externalDocs:
+  description: Canonical domain model
+  url: ../../docs/canonical/TZ-00-domain-event-canon.md
+
+servers:
+  - url: https://ai-processing.epd2.example
+    description: ai-processing-service (not deployed in PACK-06 — contract only)
+
+paths:
+  # ==========================================================================
+  # ai-processing-service — AIProcessingRecord lifecycle
+  # ==========================================================================
+  /ai-processing-records:
+    post:
+      operationId: requestAiProcessing
+      summary: Create a new AIProcessingRecord in requested status
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.request_ai_processing.
+        purpose_code/target_type must be on this pack's own closed
+        allow-lists (ADR-025 §2). human_review_status is decided once,
+        here: pending if is_consequential, else not_required.
+      tags: [ai-processing-service]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  ai_processing_record_id,
+                  purpose_code,
+                  target_type,
+                  target_id,
+                  input_version,
+                  model_provider,
+                  model_name,
+                  model_version,
+                  prompt_template_version,
+                  is_consequential,
+                ]
+              properties:
+                ai_processing_record_id: { type: string, format: uuid }
+                purpose_code:
+                  type: string
+                  enum:
+                    [
+                      summarization,
+                      classification,
+                      recommendation,
+                      drafting,
+                      anomaly_indication,
+                      policy_compliance_assistance,
+                    ]
+                target_type: { type: string }
+                target_id: { type: string, format: uuid }
+                input_version: { type: string }
+                model_provider: { type: string }
+                model_name: { type: string }
+                model_version: { type: string }
+                prompt_template_version: { type: string }
+                is_consequential: { type: boolean }
+                disclosure_required: { type: boolean }
+                external_provider_flag: { type: boolean }
+                processing_region: { type: [string, "null"] }
+                data_retention_mode: { type: [string, "null"] }
+      responses:
+        "201":
+          description: AI processing requested; ai.processing_requested emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [record]
+                properties:
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
+                  event: { $ref: "../schemas/event-envelope.schema.json" }
+        "403":
+          description: PERMISSION_DENIED (CT-00-06).
+        "422":
+          description: AI_TARGET_REFERENCE_MALFORMED, AI_POLICY_CONFLICT — external-provider use not allowed for this use class/region/retention mode.
+
+  /ai-processing-records/{aiProcessingRecordId}/prepare-input:
+    post:
+      operationId: prepareInput
+      summary: requested -> input_prepared (or -> rejected_by_policy on redaction failure)
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.prepare_input.
+        ai-processing-service performs redaction/provenance validation
+        itself — a caller-supplied redaction_applied flag is never
+        accepted (required scope item 6).
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [input_reference, declared_input_classification]
+              properties:
+                input_reference: { type: string }
+                declared_input_classification: { type: string }
+      responses:
+        "200":
+          description: Input prepared or rejected by policy; ai.input_prepared or ai.processing_rejected_by_policy emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND.
+        "422":
+          description: AI_INPUT_PROVENANCE_UNVERIFIED, AI_REDACTION_MANIFEST_INVALID.
+
+  /ai-processing-records/{aiProcessingRecordId}/begin-processing:
+    post:
+      operationId: beginProcessing
+      summary: input_prepared -> processing (no canon event; audited only)
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.begin_processing.
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Processing begun.
+
+  /ai-processing-records/{aiProcessingRecordId}/complete:
+    post:
+      operationId: completeProcessingWithProvider
+      summary: processing -> completed, or -> failed on a provider error/low confidence
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.complete_processing_with_provider.
+        The provider is never given any callback/tool/command interface
+        capable of mutating Civic OS (required scope item 12).
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [prepared_input_reference, timeout_seconds]
+              properties:
+                prepared_input_reference: { type: string }
+                timeout_seconds: { type: number }
+                confidence_threshold: { type: number }
+      responses:
+        "200":
+          description: Completed or failed; ai.output_created or ai.processing_failed emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
+        "422":
+          description: AI_MODEL_UNAVAILABLE, AI_PROCESSING_TIMEOUT, AI_OUTPUT_MALFORMED, AI_MODEL_VERSION_UNSUPPORTED, AI_CONFIDENCE_BELOW_THRESHOLD.
+
+  /ai-processing-records/{aiProcessingRecordId}/review:
+    post:
+      operationId: reviewAiOutput
+      summary: pending -> {approved | approved_with_changes | rejected}
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.review_ai_output.
+        Reviewer authorization is always independently verified via
+        governance-service.verify_role_assignment_for_action (ADR-022)
+        — actor_is_authorized alone is never sufficient here.
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                [
+                  reviewer_role_assignment_id,
+                  reviewer_subject_scope_id,
+                  requesting_actor_reference,
+                  is_official_publication,
+                  outcome,
+                ]
+              properties:
+                reviewer_role_assignment_id: { type: string, format: uuid }
+                reviewer_subject_scope_id: { type: string, format: uuid }
+                requesting_actor_reference: { type: string, format: uuid }
+                is_official_publication: { type: boolean }
+                outcome:
+                  type: string
+                  enum: [approved, approved_with_changes, rejected]
+                corrected_output_reference: { type: [string, "null"] }
+      responses:
+        "200":
+          description: Reviewed; ai.output_accepted, ai.output_corrected, or ai.output_rejected emitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
+        "403":
+          description: AI_REVIEWER_ROLE_INVALID, AI_REVIEWER_SCOPE_MISMATCH, AI_REVIEW_SELF_APPROVAL_PROHIBITED.
+
+  /ai-processing-records/{aiProcessingRecordId}/disclosure-package:
+    post:
+      operationId: createDisclosurePackage
+      summary: Construct the immutable AIDisclosurePackage and record disclosure_package_reference
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.create_disclosure_package.
+        Requires verified human approval first (19c.7 step 1-2).
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [approved_public_model_category]
+              properties:
+                approved_public_model_category: { type: string }
+      responses:
+        "200":
+          description: Disclosure package created (never persisted); DisclosureStatus becomes pending_publication.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    { $ref: "../schemas/ai-disclosure-package.schema.json" }
+        "409":
+          description: AI_CONSEQUENTIAL_OUTPUT_NOT_REVIEWED, AI_HUMAN_REVIEWER_MISSING, AI_OUTPUT_REJECTED_BY_HUMAN.
+
+  /ai-processing-records/{aiProcessingRecordId}/disclosure-publish:
+    post:
+      operationId: publishAiDisclosure
+      summary: Publish the disclosure package via transparency-service; record disclosure_receipt_reference
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.publish_ai_disclosure.
+        Calls transparency-service.publish_ledger_entry directly —
+        ai-processing-service never writes PublicLedgerEntry itself
+        (19c.7 step 3-4).
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [published_by_role_id, subject_event_id]
+              properties:
+                published_by_role_id: { type: string, format: uuid }
+                subject_event_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Published; DisclosureStatus becomes published.
+        "424":
+          description: AI_PUBLIC_DISCLOSURE_REQUIRED — publication failed (fail-closed; no receipt recorded).
+
+  /ai-processing-records/{aiProcessingRecordId}:
+    get:
+      operationId: getAiProcessingRecord
+      summary: Plain, unaudited read of one AIProcessingRecord
+      description: >
+        Owned by ai-processing-service. Maps to
+        epd2_ai_processing_service.application.get_ai_processing_record.
+      tags: [ai-processing-service]
+      parameters:
+        - name: aiProcessingRecordId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: The record, if it exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  record:
+                    { $ref: "../schemas/ai-processing-record.schema.json" }
+        "404":
+          description: VALIDATION_RECORD_NOT_FOUND.

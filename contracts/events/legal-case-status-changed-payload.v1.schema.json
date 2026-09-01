@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/legal-case-status-changed-payload.v1.schema.json",
+  "title": "legal_case.status_changed payload (v1)",
+  "description": "Wire payload of `legal_case.status_changed`. Carries the newest transition entry's `sequence` and `reason_code` so a consumer can detect a gap. The status is derived from the append-only history and cannot disagree with the record. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_kind",
+    "case_version",
+    "closed_at",
+    "closure_reason_code",
+    "confidentiality_class",
+    "jurisdiction_id",
+    "legal_case_id",
+    "organization_id",
+    "reason_code",
+    "recorded_at",
+    "sequence",
+    "status"
+  ],
+  "properties": {
+    "case_kind": {
+      "type": "string"
+    },
+    "case_version": {
+      "type": "integer"
+    },
+    "closed_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "closure_reason_code": {
+      "type": ["string", "null"]
+    },
+    "confidentiality_class": {
+      "type": "string"
+    },
+    "jurisdiction_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "legal_case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "status": {
+      "type": "string"
+    }
+  }
+}

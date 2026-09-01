@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/data-asset.schema.json",
+  "title": "DataAsset",
+  "description": "PACK-09, ADR-040. Owned by compliance-service (epd2_compliance_service.domain.DataAsset). One Data Catalog entry: a governed store or dataset in one organization, tied to the record class and retention policy that govern it. No field here carries an identity attribute, a global person identifier, a document or its bytes, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13). Natural persons appear only as per-case party references minted by epd2_compliance_service.domain.mint_case_party_reference, which resolve to nothing inside or outside this service.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "organization_id",
+    "name",
+    "asset_class",
+    "system_reference",
+    "record_class",
+    "retention_policy_reference",
+    "status",
+    "valid_from",
+    "owner_authority_reference",
+    "asset_version"
+  ],
+  "properties": {
+    "asset_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "system_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retention_policy_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "suspended", "deprecated"]
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "asset_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

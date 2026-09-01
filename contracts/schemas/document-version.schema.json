@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/document-version.schema.json",
+  "title": "DocumentVersion",
+  "description": "PACK-11, FIR-INV-010 ('historical versions must never be rewritten; documents must preserve cryptographically linked history'). Owned by document-service (epd2_document_service.versions.DocumentVersion). One immutable version. `version_hash = sha256(canonical_dumps(hashable_fields(version)) + previous_version_hash)`, the same rule audit-core uses for the audit log (ADR-003), so one verification procedure covers both chains. Version 1 links to sixty-four zeros. `state` and `history` are deliberately OUTSIDE the hashed fields: a governed transition is a fact about a version, not a change to it, and hashing them would make every legitimate approval break the chain for every later version. The content descriptor serialises under `content_descriptor`, never `content`, because `content` is reserved for the bytes and the emission guard matches on key names. No field here carries document content, extracted text, a rendition, a signature value, a title string, an identity attribute or any ballot/vote/tally/delegation reference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_id",
+    "version_id",
+    "version_number",
+    "kind",
+    "sensitivity",
+    "title_reference",
+    "content_descriptor",
+    "provenance",
+    "recorded_at",
+    "recorded_by",
+    "previous_version_hash",
+    "version_hash",
+    "state",
+    "organization_id"
+  ],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version_number": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Gap-free from 1. A gap is either a lost version or a removed one, and this service cannot tell which."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "meeting_minutes",
+        "decision_record",
+        "agenda",
+        "motion_text",
+        "candidacy_document",
+        "nomination_package",
+        "initiative_attachment",
+        "programme_provision",
+        "legal_opinion",
+        "expert_opinion",
+        "ai_analysis_record",
+        "finance_evidence",
+        "official_correspondence",
+        "official_notice_proof",
+        "appeal_record",
+        "hearing_record",
+        "sepa_mandate_evidence",
+        "public_transparency_document",
+        "policy_document",
+        "statute_document",
+        "audit_working_paper",
+        "other_governed_document"
+      ]
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"]
+    },
+    "title_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content_descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_digest", "media_type", "byte_length"],
+      "properties": {
+        "content_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the submitter declared. Recording it is not a claim that this service parsed a valid file of that type."
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filename_reference": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provenance_kind",
+        "captured_at",
+        "recorded_at",
+        "source_system_reference"
+      ],
+      "properties": {
+        "provenance_kind": {
+          "type": "string",
+          "enum": [
+            "authored_in_platform",
+            "uploaded_by_participant",
+            "received_from_external_party",
+            "imported_from_source_system",
+            "generated_by_system",
+            "generated_by_ai_analysis",
+            "captured_from_proceeding"
+          ]
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_system_reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_party_reference": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A per-document handle that resolves to nothing inside this service. Emphatically not a person identifier (FIR-INV-001)."
+        },
+        "analysis_provenance_reference": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Required when provenance_kind is generated_by_ai_analysis: an AI output with no provenance contract is not attributable (FIR-AI-002)."
+        }
+      }
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "recorded_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_id", "role_code"],
+      "properties": {
+        "authority_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role_code": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "previous_version_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "version_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_review",
+        "returned_for_revision",
+        "approved",
+        "published",
+        "superseded",
+        "revoked"
+      ]
+    },
+    "corrects_version_number": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "A correction is a NEW version. The corrected version stays exactly where it was, in whatever state it reached."
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/official-notice-issued-payload.v1.schema.json",
+  "title": "official_notice.issued payload (v1)",
+  "description": "Wire payload of `official_notice.issued`. Carries `establishes_legal_effect: false` as a LITERAL field, so a subscriber that mistakenly wires this event to a deadline has to override an explicit denial rather than merely omit a check (Framework hard invariant 40). No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authorized_methods",
+    "case_id",
+    "establishes_legal_effect",
+    "issued_at",
+    "notice_id",
+    "notice_kind",
+    "organization_id",
+    "recipient_is_authorized_service_recipient",
+    "recorded_at"
+  ],
+  "properties": {
+    "authorized_methods": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "establishes_legal_effect": {
+      "type": "boolean"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "notice_kind": {
+      "type": "string"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recipient_is_authorized_service_recipient": {
+      "type": "boolean"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

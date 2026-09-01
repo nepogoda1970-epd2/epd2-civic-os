@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/evidence-bundle.schema.json",
+  "title": "EvidenceBundle",
+  "description": "PACK-11, ADR-058. Owned by document-service (epd2_document_service.evidence.EvidenceBundle). An ordered, sealable set of evidence items citable as one thing by a PACK-09 case, a PACK-19 candidacy appeal or a PACK-10 audit engagement. `bundle_digest` covers the bundle id and every item's ordinal, identity and version hash - INCLUDING ORDER, because a numbered exhibit list is not a set. Once sealed, the bundle takes no further items: a bundle that could still grow would make every prior citation of it ambiguous. An empty bundle cannot be sealed. This payload carries no provenance, no chain of custody and no matter substance - a consumer citing a bundle needs to know WHICH material, and who held it stays behind an authorized read.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundle_id",
+    "organization_id",
+    "matter_reference",
+    "purpose_reference",
+    "state",
+    "item_count"
+  ],
+  "properties": {
+    "bundle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "matter_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": ["open", "sealed"]
+    },
+    "item_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bundle_digest": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sealed_at": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "citation_reference": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^epd2-bundle:"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Available only once sealed: an open bundle has nothing stable to cite."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ordinal",
+          "evidence_id",
+          "document_id",
+          "version_number",
+          "version_hash"
+        ],
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "evidence_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "document_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

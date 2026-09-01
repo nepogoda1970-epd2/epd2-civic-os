@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/affiliation-declaration.schema.json",
+  "title": "AffiliationDeclaration",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.10 (canon-0.6.0, PACK-07, ADR-030). Owned by membership-service (epd2_membership_service.domain.AffiliationDeclaration). declared_reference is an opaque reference, never a free-text organization name at the schema level (canon). Targeted - exists only to feed ConflictAssessment, never a general political-profiling system (canon 19d.10's own framing).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "affiliation_declaration_id",
+    "subject_reference",
+    "affiliation_type",
+    "declared_reference",
+    "declared_at",
+    "status",
+    "valid_from",
+    "verification_status",
+    "supersedes_declaration_id",
+    "valid_until",
+    "verified_at",
+    "verified_by"
+  ],
+  "properties": {
+    "affiliation_declaration_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "subject_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "affiliation_type": {
+      "type": "string",
+      "enum": [
+        "other_party_membership",
+        "political_association_membership",
+        "public_office",
+        "elected_office",
+        "lobbying_or_interest_representation",
+        "organizational_leadership_or_employment",
+        "declared_incompatible_organization"
+      ]
+    },
+    "declared_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "acknowledged",
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": ["declared", "verified", "disputed", "unverifiable"]
+    },
+    "supersedes_declaration_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "valid_until": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "verified_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "verified_by": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/result-publication.schema.json",
+  "title": "ResultPublication",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 15.6, plus the ADR-010/canon-0.2.0 challenge_deadline_at addition. Owned by tally-service (epd2_tally_service.domain.ResultPublication). additionalProperties: false is a load-bearing identity-separation control (ADR-009 item 15): account_id, person_id, and identity_record_id are all forbidden and cannot appear on an instance that validates against this schema - only aggregate counts and administrative fields are ever carried here, never individual vote contents. No status/finality field exists here or anywhere in this service: per ADR-010, expiry of challenge_deadline_at is necessary but never by itself sufficient for finality, and no code path in tally-service ever declares a ResultPublication 'final'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result_publication_id",
+    "ballot_id",
+    "tally_id",
+    "eligible_count",
+    "credential_count",
+    "accepted_vote_count",
+    "rejected_vote_count",
+    "quorum_result",
+    "threshold_result",
+    "published_at",
+    "audit_package_reference",
+    "challenge_deadline_at"
+  ],
+  "properties": {
+    "result_publication_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "tally_id": { "type": "string", "format": "uuid" },
+    "eligible_count": { "type": "integer", "minimum": 0 },
+    "credential_count": { "type": "integer", "minimum": 0 },
+    "accepted_vote_count": { "type": "integer", "minimum": 0 },
+    "rejected_vote_count": { "type": "integer", "minimum": 0 },
+    "quorum_result": {
+      "type": "string",
+      "enum": ["quorum_met", "quorum_not_met", "not_required"]
+    },
+    "threshold_result": {
+      "type": "string",
+      "enum": ["threshold_met", "threshold_not_met", "tie_no_decision"]
+    },
+    "published_at": { "type": "string", "format": "date-time" },
+    "audit_package_reference": { "type": "string", "minLength": 1 },
+    "challenge_deadline_at": { "type": "string", "format": "date-time" }
+  }
+}

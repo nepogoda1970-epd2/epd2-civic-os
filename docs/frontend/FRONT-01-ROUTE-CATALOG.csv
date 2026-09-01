@@ -1,0 +1,32 @@
+page_id,route,title,workspace,maturity,dependent_pack,kind
+FRONT01-PAGE-001,/,Politische Beteiligung nachvollziehbar aufgebaut,WS-01,foundation_available,FRONT-00 / PACK-01–09,home
+FRONT01-PAGE-002,/ueber-uns,Über EPD²,WS-01,informational,PACK-08 / PACK-18,standard
+FRONT01-PAGE-003,/ziele,Ziele,WS-01,informational,PACK-18,standard
+FRONT01-PAGE-004,/grundsaetze,Grundsätze und Grenzen,WS-01,informational,PACK-18 / PACK-32,standard
+FRONT01-PAGE-005,/programm,Das offene Programm,WS-01,prototype,PACK-32,program
+FRONT01-PAGE-006,/programm/struktur,Programmstruktur,WS-01,prototype,PACK-32,program
+FRONT01-PAGE-007,/programm/status,Programmstatus,WS-01,not_activated,PACK-32,program-section
+FRONT01-PAGE-008,/mitmachen,Mitmachen,WS-01,informational,PACK-18,standard
+FRONT01-PAGE-009,/mitgliedschaft,Mitgliedschaft,WS-01,planned,PACK-18 / WS-02,standard
+FRONT01-PAGE-010,/organisation,Organisation,WS-01,informational,PACK-08 / PACK-28,standard
+FRONT01-PAGE-011,/struktur,Struktur und Regionen,WS-01,specified,PACK-08 / PACK-28,standard
+FRONT01-PAGE-012,/transparenz,Transparenz durch freigegebene Projektionen,WS-01,specified,PACK-28 / WS-10,transparency
+FRONT01-PAGE-013,/technologie,Technologie mit überprüfbaren Grenzen,WS-01,implemented_reference,PACK-01–09 / FRONT-00,technology
+FRONT01-PAGE-014,/sicherheit,Sicherheit ist ein Freigabeprozess,WS-01,production_blocked,PACK-15–17,technology
+FRONT01-PAGE-015,/datenschutz,Datenschutz und Zweckbindung,WS-01,informational,PACK-09 / PACK-18,standard
+FRONT01-PAGE-016,/barrierefreiheit,Barrierefreiheit,WS-01,foundation_available,FRONT-00 / FRONT-01,standard
+FRONT01-PAGE-017,/kontakt,Kontakt,WS-01,informational,PACK-18,standard
+FRONT01-PAGE-018,/impressum,Impressum,WS-01,informational,PACK-09,standard
+FRONT01-PAGE-019,/initiativen,Initiative und Umsetzung,WS-01,specified,PACK-03 / PACK-32,initiative
+FRONT01-PAGE-020,/beratung,Öffentliche Beratung,WS-01,specified,PACK-03,initiative
+FRONT01-PAGE-021,/abstimmungen,Abstimmungen,WS-01,not_activated,PACK-15 / PACK-16 / PACK-17,voting
+FRONT01-PAGE-022,/ki-assistenz,KI als beratendes Werkzeug,WS-01,specified,PACK-18 / PACK-32,initiative
+FRONT01-PAGE-023,/buergerbuero,Künftiges Bürgerbüro,WS-01,planned,PACK-33,citizen-office
+FRONT01-PAGE-024,/abgeordnetentisch,Offener Abgeordnetentisch,WS-01,planned,PACK-29,representatives
+FRONT01-PAGE-025,/finanzen,Finanztransparenz Zielbild,WS-01,specified,PACK-10,finance
+FRONT01-PAGE-026,/versammlungen,Versammlungen und Online-Teilnahme,WS-01,legally_blocked,PACK-21,standard
+FRONT01-PAGE-027,/kandidatur,Kandidatur und Nominierung,WS-01,planned,PACK-20,standard
+FRONT01-PAGE-028,/compliance,Compliance und Rechtsprozesse,WS-01,foundation_available,PACK-09 / WS-07,standard
+FRONT01-PAGE-029,/rechtsgovernance,Rechts- und Verfassungsgovernance,WS-01,planned,PACK-31,standard
+FRONT01-PAGE-030,/fortschritt,Entscheidungen und Programmfortschritt,WS-01,planned,PACK-32 / PACK-33,boards
+FRONT01-PAGE-031,/status,Reifegrad und Roadmap,WS-01,informational,FRONT-01,status

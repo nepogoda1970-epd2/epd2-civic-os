@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/delegation-snapshot.schema.json",
+  "title": "DelegationSnapshot",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 16.2. Owned by delegation-service (epd2_delegation_service.domain.DelegationSnapshot). additionalProperties: false is a load-bearing identity-separation control (mirrors Delegation): account_id, person_id, and identity_record_id are all forbidden and cannot appear on an instance that validates against this schema (epd2_delegation_service.domain.FORBIDDEN_FIELD_NAMES) - `resolved_weights` maps an opaque delegate_actor_id (as a string key) to an integer weight only, never an identity. Immutable once created - frozen by (ballot_id, input_hash), mirroring EligibilitySnapshot's own freeze pattern (canon prohibition #4, 'изменение snapshot после открытия голосования').",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delegation_snapshot_id",
+    "ballot_id",
+    "policy_version",
+    "created_at",
+    "input_hash",
+    "resolved_weights",
+    "cycle_records",
+    "snapshot_hash"
+  ],
+  "properties": {
+    "delegation_snapshot_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "policy_version": { "type": "integer", "minimum": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "input_hash": { "type": "string", "minLength": 1 },
+    "resolved_weights": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "cycle_records": { "type": "array", "items": { "type": "string" } },
+    "snapshot_hash": { "type": "string", "minLength": 1 }
+  }
+}

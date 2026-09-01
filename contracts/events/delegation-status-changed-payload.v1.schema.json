@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/delegation-status-changed-payload.v1.schema.json",
+  "title": "delegation.created / delegation.activated / delegation.revoked / delegation.expired event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 20.11. Produced by epd2_delegation_service.events.delegation_state_payload, shared verbatim by build_delegation_created_event (delegation.created), build_delegation_activated_event (delegation.activated), build_delegation_revoked_event (delegation.revoked), and build_delegation_expired_event (delegation.expired) - verified by reading events.py, all four call the shared private _build_delegation_event helper with the identical payload function and differ only in event_type. additionalProperties: false is a load-bearing identity-separation control: account_id, person_id, and identity_record_id are all forbidden and cannot appear on a payload that validates against this schema - only opaque delegator_actor_id/delegate_actor_id references are ever carried. valid_until is nullable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delegation_id",
+    "delegator_actor_id",
+    "delegate_actor_id",
+    "scope_type",
+    "scope_id",
+    "valid_from",
+    "valid_until",
+    "revocation_status",
+    "status"
+  ],
+  "properties": {
+    "delegation_id": { "type": "string", "format": "uuid" },
+    "delegator_actor_id": { "type": "string", "format": "uuid" },
+    "delegate_actor_id": { "type": "string", "format": "uuid" },
+    "scope_type": { "type": "string", "minLength": 1 },
+    "scope_id": { "type": "string", "format": "uuid" },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "revocation_status": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "revoked", "expired", "suspended", "invalid"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "canon_name": "EPD2 Canonical Domain and Event Model",
+  "canon_version": "0.8.0",
+  "status": "working-canon",
+  "repository_compatibility": ">=0.1.0 <0.17.0",
+  "minimum_repository_version": "0.9.0",
+  "amended_at_repository_version": "0.9.0",
+  "finance_context_implementation_status": "reference_implementation",
+  "document_context_implementation_status": "reference_implementation",
+  "privileged_access_context_implementation_status": "reference_implementation",
+  "data_plane_context_implementation_status": "reference_implementation",
+  "identity_context_implementation_status": "reference_implementation"
+}

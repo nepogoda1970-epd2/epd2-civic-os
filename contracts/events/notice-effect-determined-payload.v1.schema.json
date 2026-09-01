@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/notice-effect-determined-payload.v1.schema.json",
+  "title": "notice_effect.determined payload (v1)",
+  "description": "Wire payload of `notice_effect.determined` - the only notice event that can carry `establishes_legal_effect: true`. Supporting attempts appear as a COUNT; the attempt ids stay in the audit snapshot, so a consumer that needs to re-examine the evidence must come back through an authorized read rather than reconstruct it from a broadcast. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "decided_at",
+    "deemed_service_rule",
+    "effect_id",
+    "effective_at",
+    "establishes_legal_effect",
+    "has_proof_package",
+    "notice_id",
+    "organization_id",
+    "outcome",
+    "reason_code",
+    "recorded_at",
+    "rule_reference",
+    "supporting_attempt_count"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "deemed_service_rule": {
+      "type": "string"
+    },
+    "effect_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "effective_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "establishes_legal_effect": {
+      "type": "boolean"
+    },
+    "has_proof_package": {
+      "type": "boolean"
+    },
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rule_reference": {
+      "type": "string"
+    },
+    "supporting_attempt_count": {
+      "type": "integer"
+    }
+  }
+}

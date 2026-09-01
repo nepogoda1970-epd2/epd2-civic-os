@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/processing-activation-decided-payload.v1.schema.json",
+  "title": "processing_activity.activation_decided payload (v1)",
+  "description": "Wire payload of `processing_activity.activation_decided`. Blocked and revoked activations travel through this same event type with their reason code, so a consumer sees the refusal rather than silence. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "activation_decision_id",
+    "activity_id",
+    "decided_at",
+    "dpia_id",
+    "effective_from",
+    "organization_id",
+    "reason_code",
+    "recorded_at",
+    "revoked_at",
+    "state"
+  ],
+  "properties": {
+    "activation_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "activity_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "dpia_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "effective_from": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "state": {
+      "type": "string"
+    }
+  }
+}

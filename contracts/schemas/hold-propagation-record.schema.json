@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/hold-propagation-record.schema.json",
+  "title": "HoldPropagationRecord",
+  "description": "PACK-09, Framework 0.8.1 section 11. Owned by compliance-service (epd2_compliance_service.domain.HoldPropagationRecord). How far a Legal Hold has ACTUALLY reached: a hold that exists on the primary record but has not reached a replica, index, export or backup is not an effective hold. States unknown, pending and failed all block destruction of the primary record; recording an honest 'unknown' is more useful here than optimistic silence. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "propagation_id",
+    "hold_id",
+    "organization_id",
+    "derivative_kind",
+    "derivative_reference",
+    "state",
+    "recorded_at",
+    "evidence_reference",
+    "failure_reason_code"
+  ],
+  "properties": {
+    "propagation_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "hold_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "derivative_kind": {
+      "type": "string",
+      "enum": [
+        "replica",
+        "search_index",
+        "export_dataset",
+        "backup_set",
+        "cached_rendition"
+      ]
+    },
+    "derivative_reference": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": ["unknown", "pending", "confirmed", "failed", "not_applicable"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evidence_reference": {
+      "type": "string"
+    },
+    "failure_reason_code": {
+      "type": ["string", "null"]
+    }
+  }
+}

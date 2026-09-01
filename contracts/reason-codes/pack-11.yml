@@ -1,0 +1,898 @@
+# Centralized PACK-11 reason-code registry (Governed Documents &
+# Evidence; FIR-ROADMAP-001, FIR-INV-010; ADR-055 through ADR-060).
+#
+# This is the single source of truth for every `reason_code` string
+# literal introduced or used by the PACK-11 implementation round: the
+# codes `document-service` raises for the document register, immutable
+# hash-linked versions, document content, controlled review and approval,
+# the publication lifecycle, correction, supersession and revocation, the
+# governed signature and admissibility determinations, evidence with
+# provenance and chain of custody, sealed evidence bundles, and the
+# retention and legal-hold bindings it holds on PACK-09's behalf - plus
+# the additive codes it uses for its own audit bookkeeping, following the
+# same pattern ADR-004/ADR-014/ADR-019/ADR-024 and PACK-07's, PACK-08's,
+# PACK-09's and PACK-10's own registries already established. No PACK-11
+# code path may use a free-text string in place of a registered code.
+#
+# This is a SEPARATE registry file from contracts/reason-codes/pack-02.yml
+# through pack-10.yml (ADR-006 Option B precedent): codes several packs
+# need (PERMISSION_DENIED, VALIDATION_RECORD_NOT_FOUND) are independently
+# redeclared here rather than imported from an earlier pack's file, so
+# this file stays a complete, standalone source of truth for
+# `document-service`'s own scan
+# (`tests/contract/test_reason_codes_registry.py`'s PACK11_SERVICE_DIRS).
+# `document-service` is a single, wholly new service - no existing
+# PACK-02-through-PACK-10 service is extended in place this round - so,
+# like PACK-08's, PACK-09's and PACK-10's files, there is no
+# "shared with an earlier pack's service directory" union needed.
+#
+# **There are no `source: canon-0.8.0` entries in this file, and that is
+# the notable thing about it.** Canon section 24 registers no document or
+# evidence code at all: canon 19f.22 names PACK-11 as the owner of
+# document bytes, authoritative versions, signatures, cryptographic
+# version chains, evidence content and custody, but the canon round that
+# would give the context its own section never happened. `CANON_VERSION`
+# stays `0.8.0` here - this round amends no canon, it implements a
+# context canon already assigned - so every DOCUMENT_* code below is an
+# additive `source: pack-11-service` code justified in ADR-055, and each
+# one says in its own `meaning` what it refuses and why no existing code
+# expresses it.
+#
+# `source: pack-11-service` entries fall into two groups. Thirty-three are
+# refusals. Twenty are `AuditEvent.reason_code` classifications for
+# successfully-audited acts - canon's section-24 list is refusal-only and
+# contains no code that means "this succeeded", which is the same gap
+# ADR-004 recorded for PACK-02.
+#
+# `source: pack-0X-reused` entries are pre-existing generic codes reused
+# verbatim (already registered in that pack's own file; independently
+# redeclared here so this file stays complete). PACK-11 deliberately
+# reuses rather than shadowing: retention and legal hold remain PACK-09's
+# domain, organizational scope and authority remain PACK-08's, conflict of
+# interest remains PACK-07's, and publication/disclosure control remains
+# PACK-04's. A DOCUMENT_-prefixed duplicate of any of them would create
+# two codes for one fact and let the two drift apart.
+#
+# Every entry carries the seven fields
+# `epd2_core.reason_codes.ReasonCodeRegistry.load_from_yaml` requires
+# (code, meaning, severity, description, retryable, owner,
+# introduced_in_version); a missing field makes the whole registry fail to
+# load.
+
+# --- PACK-11 refusals (thirty-three) ---------------------------------
+
+- code: DOCUMENT_ACCESS_PROFILE_INSUFFICIENT
+  meaning: >-
+    The presented access profile does not cover this material's
+    sensitivity classification, or no profile was presented at all.
+    A missing profile denies: the caller who forgot to present one
+    is indistinguishable from the caller who has none.
+  severity: error
+  description: The access profile does not permit this material.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_ALREADY_PUBLISHED
+  meaning: >-
+    A second publication of the same version was attempted. A
+    republication is a new rendition of a new version, never a
+    silent overwrite of the published one.
+  severity: error
+  description: This version is already published.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_APPROVAL_MISSING
+  meaning: >-
+    Publication, a rendition or an evidence-grade use was attempted
+    on a version that carries no approval decision, or whose
+    approval names a different version hash than the stored version.
+  severity: error
+  description: No current approval exists for this version.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_AUDITOR_INDEPENDENCE_VIOLATION
+  meaning: >-
+    An independent read was requested by a reader who also holds an
+    operational role in that scope. Independence is re-verified at
+    the moment of the read and never assumed from the grant.
+  severity: error
+  description: The reader is not independent in this scope.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_AUTHORITY_MISSING
+  meaning: >-
+    No active, effective-dated, scope-matching document authority
+    exists for this action. A role_code string is never itself proof
+    of authority: it resolves to a live PACK-08 assignment through
+    the authorization port, or the action is refused.
+  severity: error
+  description: No document authority for this action in this scope.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CLASS_UNDETERMINED
+  meaning: >-
+    The document class could not be determined, so neither the
+    retention schedule nor the review requirements are knowable.
+  severity: error
+  description: The document class is undetermined.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CONTENT_DIGEST_MISMATCH
+  meaning: >-
+    Stored content does not hash to the digest recorded for it. The
+    content, the digest, or both have changed. Detected
+    independently of the version chain, because neither check alone
+    catches both attacks.
+  severity: error
+  description: Stored content does not match its recorded digest.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CONTENT_LEAK_PREVENTED
+  meaning: >-
+    Document content, extracted text or a rendition byte string
+    reached an event payload, an audit metadata field or a
+    projection. PACK-11 owns content; that ownership is precisely
+    why content must not travel.
+  severity: error
+  description: Document content may not leave through this surface.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CONTENT_MISSING
+  meaning: >-
+    A version references content the content store does not hold. A
+    version without retrievable content is not a governed document;
+    it is a claim about one.
+  severity: error
+  description: The referenced content is not stored.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CORRECTION_TARGET_INVALID
+  meaning: >-
+    The version a correction names is not correctable: it does not
+    exist in this document, it is not earlier than the correcting
+    version, or it has been revoked.
+  severity: error
+  description: The correction target is invalid.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_DETERMINATION_MISSING
+  meaning: >-
+    A governed determination (signature status, admissibility) was
+    required and none exists. This service never infers one: an
+    absent determination is reported as absent, exactly as ADR-053
+    requires of PACK-11's consumer interface.
+  severity: error
+  description: No governed determination exists.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_DETERMINATION_NOT_PERMITTED
+  meaning: >-
+    The actor recording or reading this determination does not hold
+    the authority the determination kind requires, or the
+    determination concerns a different procedure. A signature
+    determination is not a legal-admissibility determination.
+  severity: error
+  description: This determination may not be made or used here.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_DETERMINATION_STALE
+  meaning: >-
+    A determination exists but was made against a different state of
+    the document version than the one presented. A determination is
+    bound to the exact version it examined and does not travel
+    forward.
+  severity: error
+  description: The determination does not apply to this version.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_DISPOSITION_NOT_AUTHORIZED
+  meaning: >-
+    A disposition was attempted without the PACK-09 destruction
+    authorization it requires, or with one issued against a smaller
+    version count than the document now has. PACK-11 never
+    authorizes its own disposals.
+  severity: error
+  description: No current PACK-09 disposition authorization exists.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVENT_TYPE_UNKNOWN
+  meaning: >-
+    An event type outside this service's closed catalogue was built
+    or classified. An event nobody registered is an event no
+    consumer can handle and no schema covers.
+  severity: error
+  description: Unknown document event type.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_BUNDLE_INCOMPLETE
+  meaning: >-
+    A bundle was sealed or cited with no items, with duplicated
+    items, with ordinals that are not gap-free, or with an item
+    whose referenced version no longer verifies.
+  severity: error
+  description: The evidence bundle is incomplete or no longer verifies.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_BUNDLE_ALREADY_SEALED
+  meaning: >-
+    A sealed evidence bundle cannot take further items or be sealed
+    again. A bundle that could still grow would make every prior
+    citation of it ambiguous. Named ..._ALREADY_SEALED because
+    ..._SEALED classifies a successful seal, and one string meaning
+    both "this worked" and "this was refused" would make every audit
+    query over it ambiguous.
+  severity: error
+  description: The evidence bundle is already sealed.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_CUSTODY_BROKEN
+  meaning: >-
+    The chain of custody does not verify: a gap in the sequence, an
+    out-of-order transfer, a second acquisition, or a hand-off whose
+    recipient is not the next entry's holder.
+  severity: error
+  description: The chain of custody does not verify.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_PROVENANCE_MISSING
+  meaning: >-
+    An evidence item was recorded without provenance. Evidence with
+    no recorded origin is material, not evidence.
+  severity: error
+  description: Evidence requires recorded provenance.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_FIELD_INVALID
+  meaning: >-
+    A required structural field is absent, empty or malformed.
+  severity: error
+  description: A required field is invalid.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_FORBIDDEN_IDENTITY_LINKAGE
+  meaning: >-
+    A payload, projection or metadata field carries an identity
+    attribute or a global person identifier. Applied at every event-
+    construction, audit-metadata and projection boundary, including
+    nested positions.
+  severity: error
+  description: A prohibited identity linkage was detected.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_IDEMPOTENCY_CONFLICT
+  meaning: >-
+    The same event_id was presented for a different request, no
+    event_id was supplied, or a previous execution left an audit row
+    without a recorded command result and is not safely replayable.
+  severity: error
+  description: The command is not safely replayable under this event_id.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REFERENCE_INVALID
+  meaning: >-
+    A typed reference is absent, empty, or points outside the
+    organizational scope it was presented in.
+  severity: error
+  description: A required reference is absent or invalid.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REFERENCE_KIND_MISMATCH
+  meaning: >-
+    A reference of one governed kind was presented where another
+    kind is required. Kinds are not interchangeable: a legal opinion
+    is not SEPA mandate evidence even though both are documents.
+  severity: error
+  description: The reference is of the wrong governed kind.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_RETENTION_BINDING_MISSING
+  meaning: >-
+    A governed document exists with no PACK-09 record-class and
+    retention-policy binding, so no retention schedule can be
+    resolved for it and no disposition is possible.
+  severity: error
+  description: No retention binding exists for this document.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REVIEW_INCOMPLETE
+  meaning: >-
+    Approval was attempted before every mandatory review kind for
+    this document class had been recorded for this exact version, or
+    while a blocking review finding was unresolved.
+  severity: error
+  description: A mandatory review is missing or a blocking finding is open.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REVOCATION_INVALID
+  meaning: >-
+    A revocation was attempted on a version that cannot be revoked,
+    or without the reason code and authority a revocation requires.
+    A revocation removes effect, never the record.
+  severity: error
+  description: The revocation is invalid.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_SUPERSESSION_INVALID
+  meaning: >-
+    A supersession record does not describe a valid supersession:
+    the superseding version is not later than the superseded one,
+    the two belong to different documents, the superseding version
+    is not itself approved, or the target is already superseded.
+  severity: error
+  description: The supersession is invalid.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_TIMESTAMP_NOT_TIMEZONE_EXPLICIT
+  meaning: >-
+    A naive datetime reached a stored instant. Every recorded moment
+    is timezone-explicit; assuming UTC would invent a fact that then
+    travels into a tamper-evidence hash nobody can contradict.
+  severity: error
+  description: A timezone-explicit timestamp is required.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_CHAIN_BROKEN
+  meaning: >-
+    The cryptographically linked version history does not verify: a
+    link's previous_version_hash does not match its predecessor's
+    version_hash, or a recomputed hash differs from the stored one.
+    Every command that touches an existing document re-verifies the
+    chain before acting.
+  severity: error
+  description: The document version chain does not verify.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_IMMUTABLE
+  meaning: >-
+    An attempt to modify a stored document version, review,
+    approval, supersession, revocation or determination. Historical
+    versions are never rewritten (FIR-INV-010); a change becomes a
+    NEW version.
+  severity: error
+  description: A stored version is never modified.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_SEQUENCE_INVALID
+  meaning: >-
+    Version numbers must start at 1 and increase by exactly 1 with
+    no gaps. A gap is either a lost version or a removed one, and
+    this service cannot tell which, so it refuses rather than
+    guessing.
+  severity: error
+  description: The version sequence has a gap or does not start at 1.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VOTING_LINKAGE_FORBIDDEN
+  meaning: >-
+    A document record or payload was linked to a ballot, vote,
+    tally, delegation or participation credential. A minutes
+    document may record that a vote happened; it may never carry a
+    reference that could join a ballot to a person.
+  severity: error
+  description: A prohibited voting linkage was detected.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+# --- PACK-11 audit classifications for successful acts (twenty) ------
+
+- code: DOCUMENT_ADMISSIBILITY_DETERMINED
+  meaning: >-
+    A governed admissibility determination was recorded for one
+    procedure against an exact version hash.
+  severity: info
+  description: Admissibility determination recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_CUSTODY_TRANSFERRED
+  meaning: >-
+    A custody event was appended to an evidence item's chain, and
+    the whole chain re-verified.
+  severity: info
+  description: Evidence custody transferred.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_DISPOSITION_AUTHORIZED
+  meaning: >-
+    A PACK-09 destruction authorization was recorded against this
+    document and the document was closed.
+  severity: info
+  description: Disposition authorization recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_BUNDLE_SEALED
+  meaning: >-
+    An evidence bundle was assembled and sealed, fixing its digest
+    and making it citable.
+  severity: info
+  description: Evidence bundle sealed.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_EVIDENCE_REGISTERED
+  meaning: >-
+    A citable document version was registered as evidence and its
+    chain of custody opened.
+  severity: info
+  description: Evidence registered.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_LEGAL_HOLD_OBSERVED
+  meaning: >-
+    PACK-09's answer about a legal hold covering this document was
+    recorded, with the moment it was observed.
+  severity: info
+  description: Legal hold observation recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_PUBLICATION_AUTHORIZED
+  meaning: >-
+    Publication of an approved version was separately authorized
+    under a named disclosure obligation.
+  severity: info
+  description: Publication authorized.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_PUBLISHED
+  meaning: >-
+    An approved, publication-authorized version was published.
+  severity: info
+  description: Document version published.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REGISTERED
+  meaning: >-
+    A governed document was registered.
+  severity: info
+  description: Governed document registered.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_RENDITION_ISSUED
+  meaning: >-
+    A citable publication rendition identifier was issued for a
+    published version.
+  severity: info
+  description: Publication rendition issued.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_RETENTION_BOUND
+  meaning: >-
+    A document was bound to a PACK-09 record class and retention
+    policy version.
+  severity: info
+  description: Retention binding recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_RETURNED_FOR_REVISION
+  meaning: >-
+    A version in review was returned for revision. Terminal for that
+    version; the revision is a new version.
+  severity: info
+  description: Document version returned for revision.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_REVIEW_RECORDED
+  meaning: >-
+    One review of one document version was recorded.
+  severity: info
+  description: Document review recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_SIGNATURE_DETERMINED
+  meaning: >-
+    A governed signature determination was recorded against an exact
+    version hash.
+  severity: info
+  description: Signature determination recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_SUBMITTED_FOR_REVIEW
+  meaning: >-
+    A draft version was submitted for controlled review.
+  severity: info
+  description: Document version submitted for review.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_APPROVED
+  meaning: >-
+    A reviewed version was approved, bound to the exact version hash
+    approved.
+  severity: info
+  description: Document version approved.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_CORRECTED
+  meaning: >-
+    A new version was recorded that corrects an earlier one. The
+    corrected version is untouched.
+  severity: info
+  description: Document version corrected by a new version.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_RECORDED
+  meaning: >-
+    A new immutable document version was recorded and sealed into
+    the version chain.
+  severity: info
+  description: Document version recorded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_REVOKED
+  meaning: >-
+    A version's effect was withdrawn. The version, its content and
+    its place in the chain are untouched.
+  severity: info
+  description: Document version revoked.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+- code: DOCUMENT_VERSION_SUPERSEDED
+  meaning: >-
+    A later approved version was recorded as replacing an earlier
+    one.
+  severity: info
+  description: Document version superseded.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-11-service
+
+# --- Codes reused verbatim from earlier packs (eighteen) -------------
+
+- code: AUTHORITY_ROLE_INCOMPATIBLE
+  meaning: >-
+    The acting authority holds two roles the incompatibility matrix
+    forbids together in one scope, re-checked at the moment of the
+    act.
+  severity: error
+  description: The acting authority holds two roles the incompatibility matrix forbids together in one scope, re-checked at the moment of the act.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-08-reused
+
+- code: CONFLICT_OF_INTEREST_BLOCKING
+  meaning: >-
+    A declared, blocking conflict of interest forbids this actor
+    from taking this action.
+  severity: error
+  description: A declared, blocking conflict of interest forbids this actor from taking this action.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-07-reused
+
+- code: CONFLICT_OF_INTEREST_UNDECLARED
+  meaning: >-
+    A protected action was attempted with no conflict-of-interest
+    declaration. Silence is not 'no conflict'; it is unknown, and
+    unknown fails closed.
+  severity: error
+  description: A protected action was attempted with no conflict-of-interest declaration.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-07-reused
+
+- code: CONFLICT_REVIEW_SELF_APPROVAL_PROHIBITED
+  meaning: >-
+    The actor who authored, recorded, submitted, reviewed or
+    approved this version is the actor now trying to take the next
+    separated act.
+  severity: error
+  description: The actor who authored, recorded, submitted, reviewed or approved this version is the actor now trying to take the next separated act.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-07-reused
+
+- code: DISCLOSURE_POLICY_VIOLATION
+  meaning: >-
+    The requested projection would emit more than the material's
+    sensitivity classification and the applicable disclosure
+    obligation permit.
+  severity: error
+  description: The requested projection would emit more than the material's sensitivity classification and the applicable disclosure obligation permit.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-04-reused
+
+- code: EVENT_VERSION_UNSUPPORTED
+  meaning: >-
+    An event envelope carried a major version this service does not
+    support (CT-00-05).
+  severity: error
+  description: An event envelope carried a major version this service does not support (CT-00-05).
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: GOVERNED_RECORD_DELETION_FORBIDDEN
+  meaning: >-
+    A delete was attempted. There is no delete path in this service:
+    disposition is a PACK-09-authorized act that leaves evidence.
+  severity: error
+  description: A delete was attempted.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-09-reused
+
+- code: LEGAL_HOLD_STATE_UNKNOWN
+  meaning: >-
+    A legal hold covering this material is indeterminate. Unknown
+    fails closed and is a different refusal from a known active
+    hold.
+  severity: error
+  description: A legal hold covering this material is indeterminate.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-09-reused
+
+- code: OPTIMISTIC_CONCURRENCY_CONFLICT
+  meaning: >-
+    The caller's expected_*_version does not match the stored
+    version.
+  severity: error
+  description: The caller's expected_*_version does not match the stored version.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: ORGANIZATION_SCOPE_MISMATCH
+  meaning: >-
+    The presented scope is not the target record's scope. PACK-08
+    owns organizational scope; a DOCUMENT_-prefixed duplicate would
+    create two codes for one fact.
+  severity: error
+  description: The presented scope is not the target record's scope.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-08-reused
+
+- code: ORGANIZATION_SCOPE_UNDETERMINED
+  meaning: >-
+    The organizational scope of the request or the target could not
+    be determined. Undetermined denies; it never defaults.
+  severity: error
+  description: The organizational scope of the request or the target could not be determined.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-08-reused
+
+- code: PERMISSION_DENIED
+  meaning: >-
+    The generic denial. Carried by DocumentError itself so a
+    subclass that forgot to declare a code denies rather than
+    reporting a misleadingly specific cause.
+  severity: error
+  description: The generic denial.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: PUBLICATION_NOT_ALLOWED
+  meaning: >-
+    Publication was attempted without its own, separate publication
+    authorization. Approval is not publication.
+  severity: error
+  description: Publication was attempted without its own, separate publication authorization.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-04-reused
+
+- code: RECORD_UNDER_LEGAL_HOLD
+  meaning: >-
+    A destructive disposition was attempted on material an active
+    PACK-09 legal hold covers. Retention and legal hold remain
+    PACK-09's domain.
+  severity: error
+  description: A destructive disposition was attempted on material an active PACK-09 legal hold covers.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-09-reused
+
+- code: SERVICE_STATE_READ_ONLY
+  meaning: >-
+    Carried by DocumentTechnicalError so the base-class contract
+    holds. A technical failure is not a governed refusal and must
+    not be presented as one.
+  severity: error
+  description: Carried by DocumentTechnicalError so the base-class contract holds.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: VALIDATION_FORBIDDEN_TRANSITION
+  meaning: >-
+    A lifecycle transition the state machine does not allow.
+  severity: error
+  description: A lifecycle transition the state machine does not allow.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: VALIDATION_RECORD_NOT_FOUND
+  meaning: >-
+    No such document, version, evidence item or bundle in the
+    caller's scope. Deliberately the same code and message shape for
+    'does not exist' and 'exists in another organization'.
+  severity: error
+  description: No such document, version, evidence item or bundle in the caller's scope.
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused
+
+- code: VALIDATION_UNKNOWN_STATUS
+  meaning: >-
+    A state value outside the closed lifecycle vocabulary
+    (CT-00-02).
+  severity: error
+  description: A state value outside the closed lifecycle vocabulary (CT-00-02).
+  retryable: false
+  owner: document-service
+  introduced_in_version: 0.11.0
+  source: pack-02-reused

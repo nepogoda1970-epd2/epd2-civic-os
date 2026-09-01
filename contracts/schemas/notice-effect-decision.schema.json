@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/notice-effect-decision.schema.json",
+  "title": "NoticeEffectDecision",
+  "description": "PACK-09, Framework 0.8.1 hard invariants 39, 40 and 59. Owned by compliance-service (epd2_compliance_service.notices.NoticeEffectDecision). STEP 3 OF 3, and the ONLY object in this repository that can start a procedural deadline. It records which deemed-service rule was applied, under which rule reference, and which reconciled attempts support it. Created exactly once per notice through a create-once store, so a retry or replay cannot manufacture a second legal effect. An outcome of 'undetermined' establishes nothing and starts nothing - fail-closed. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "effect_id",
+    "notice_id",
+    "case_id",
+    "organization_id",
+    "outcome",
+    "decided_at",
+    "decided_by_authority_reference",
+    "deemed_service_rule",
+    "supporting_attempt_ids",
+    "rule_reference",
+    "effective_at",
+    "reason_code",
+    "proof_package_reference"
+  ],
+  "properties": {
+    "effect_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["effective", "not_effective", "undetermined"]
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decided_by_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "deemed_service_rule": {
+      "type": "string",
+      "enum": [
+        "actual_receipt_proven",
+        "registered_post_presumption",
+        "portal_availability_presumption",
+        "public_posting_period",
+        "recipient_acknowledgement"
+      ]
+    },
+    "supporting_attempt_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    "rule_reference": {
+      "type": "string"
+    },
+    "effective_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "proof_package_reference": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["id", "organization_id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "organization_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}

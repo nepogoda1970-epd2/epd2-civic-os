@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/vote-receipt.schema.json",
+  "title": "VoteReceipt",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 15.4. Owned by voting-service (epd2_voting_service.domain.VoteReceipt). additionalProperties: false is a load-bearing vote-linkability control (CT-00-09, canon section 15.3's 'Запрет', which applies to VoteReceipt exactly as it does to VoteEnvelope): account_id, person_id, identity_record_id, full_name, email, membership_id, and identity_provider_reference are all forbidden and cannot appear on an instance that validates against this schema. `receipt_hash` is built only from the referenced VoteEnvelope's own vote_envelope_id/integrity_hash - never from encrypted_or_encoded_choice - so a receipt proves inclusion without revealing the chosen option (epd2_voting_service.domain.compute_vote_receipt_hash).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "receipt_id",
+    "ballot_id",
+    "vote_envelope_reference",
+    "receipt_hash",
+    "issued_at",
+    "verification_status"
+  ],
+  "properties": {
+    "receipt_id": { "type": "string", "format": "uuid" },
+    "ballot_id": { "type": "string", "format": "uuid" },
+    "vote_envelope_reference": { "type": "string", "format": "uuid" },
+    "receipt_hash": { "type": "string", "minLength": 1 },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "verification_status": {
+      "type": "string",
+      "enum": ["issued", "verified", "invalid"]
+    }
+  }
+}

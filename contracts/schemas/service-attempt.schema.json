@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/service-attempt.schema.json",
+  "title": "ServiceAttempt",
+  "description": "PACK-09, Framework 0.8.1 hard invariants 39 and 57. Owned by compliance-service (epd2_compliance_service.notices.ServiceAttempt). STEP 2 OF 3: PROVIDER TELEMETRY, and nothing more. `delivery_status` and `read_status` are named 'telemetry' in the enum types precisely because they are NOT legal effect: 'delivered' is a provider's claim, not proof of service. `is_reconciled` is false until the attempt has been validated against an evidence-grade proof package, and an unreconciled attempt supports no deemed-service rule no matter what the provider reported. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attempt_id",
+    "notice_id",
+    "case_id",
+    "organization_id",
+    "method",
+    "attempted_at",
+    "delivery_status",
+    "read_status",
+    "provider_reference",
+    "is_reconciled",
+    "proof_package_reference",
+    "failure_reason_code",
+    "supersedes_attempt_id"
+  ],
+  "properties": {
+    "attempt_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "notice_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "registered_post",
+        "postal",
+        "electronic_portal",
+        "electronic_mail",
+        "personal_service",
+        "public_posting"
+      ]
+    },
+    "attempted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "delivery_status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "dispatched",
+        "delivered",
+        "bounced",
+        "refused",
+        "undeliverable"
+      ]
+    },
+    "read_status": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "not_read",
+        "read_reported",
+        "acknowledged_by_recipient"
+      ]
+    },
+    "provider_reference": {
+      "type": "string"
+    },
+    "is_reconciled": {
+      "type": "boolean"
+    },
+    "proof_package_reference": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["id", "organization_id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "organization_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "failure_reason_code": {
+      "type": ["string", "null"]
+    },
+    "supersedes_attempt_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/case-party.schema.json",
+  "title": "CaseParty",
+  "description": "PACK-09, Framework 0.8.1 section 13.1. Owned by compliance-service (epd2_compliance_service.casework.CaseParty). A party on ONE case. `party_reference` is a per-case handle minted by epd2_compliance_service.casework.mint_case_party_reference: it is meaningless, never reused across cases, and resolvable to a person by no service in this repository (Framework hard invariant 1, 'no global user ID'). `is_authorized_service_recipient` is the single fact that governs whether an official notice may be validly addressed to this party. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_party_id",
+    "case_id",
+    "organization_id",
+    "party_reference",
+    "role",
+    "registered_at",
+    "is_authorized_service_recipient",
+    "display_label_code"
+  ],
+  "properties": {
+    "case_party_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "party_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "applicant",
+        "claimant",
+        "respondent",
+        "affected_party",
+        "procedural_participant",
+        "representative"
+      ]
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_authorized_service_recipient": {
+      "type": "boolean"
+    },
+    "display_label_code": {
+      "type": "string"
+    }
+  }
+}

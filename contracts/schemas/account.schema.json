@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/account.schema.json",
+  "title": "Account",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 7.2. Owned by account-service (epd2_account_service.domain.Account). No PII fields - structurally cannot carry identity data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "account_id",
+    "email_status",
+    "mfa_status",
+    "account_status",
+    "created_at",
+    "last_login_at",
+    "locale",
+    "terms_version",
+    "consent_status"
+  ],
+  "properties": {
+    "account_id": { "type": "string", "format": "uuid" },
+    "email_status": { "type": "string", "minLength": 1 },
+    "mfa_status": { "type": "string", "minLength": 1 },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "restricted",
+        "suspended",
+        "recovery_pending",
+        "closed"
+      ]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "last_login_at": { "type": ["string", "null"], "format": "date-time" },
+    "locale": { "type": "string", "minLength": 1 },
+    "terms_version": { "type": "string", "minLength": 1 },
+    "consent_status": { "type": "string", "minLength": 1 }
+  }
+}

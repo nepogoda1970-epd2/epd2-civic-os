@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/membership-decision-recorded-payload.v1.schema.json",
+  "title": "membership.membership_decision_recorded event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.9 Stage B (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_membership_service.events.build_membership_decision_recorded_event - the authorized human decision itself, always carrying a non-null decision_authority_reference (canon 19d.16).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "membership_application_id",
+    "status",
+    "decision_authority_reference",
+    "reason_code"
+  ],
+  "properties": {
+    "membership_application_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "application_pending",
+        "eligibility_review",
+        "human_decision_pending",
+        "approved",
+        "rejected",
+        "activated"
+      ]
+    },
+    "decision_authority_reference": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"],
+      "minLength": 1
+    }
+  }
+}

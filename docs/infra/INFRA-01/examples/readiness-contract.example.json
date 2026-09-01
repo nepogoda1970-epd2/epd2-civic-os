@@ -1,0 +1,51 @@
+{
+  "schema": "epd2.infra01.readiness-contract/1",
+  "service": "identity-service",
+  "deployment_manifest_id": "example-staging-2026-08-31-001",
+  "evaluated_at": "2026-08-31T00:00:00+00:00",
+  "dimensions": {
+    "process_alive": {
+      "status": "READY",
+      "evidence": "liveness probe 200 for 60s"
+    },
+    "deployment_manifest_identity": {
+      "status": "READY",
+      "evidence": "running artifact digest matches approved manifest example-staging-2026-08-31-001"
+    },
+    "configuration_compatibility": {
+      "status": "READY",
+      "evidence": "cfg-2026-08-31-01 loaded; schema-validated against declared contract versions"
+    },
+    "schema_compatibility": {
+      "status": "READY",
+      "evidence": "migration head equals declared migration_set head"
+    },
+    "key_trust_anchor_readiness": {
+      "status": "READY",
+      "evidence": "signing keys and trust anchors loaded and validated"
+    },
+    "dependency_readiness": {
+      "status": "READY",
+      "evidence": "database and event broker reachable with compatible contract versions"
+    },
+    "projection_freshness": {
+      "status": "READY",
+      "evidence": "read-model watermark at required authoritative position",
+      "watermark": "0000000107",
+      "required_position": "0000000107"
+    },
+    "trusted_time": {
+      "status": "READY",
+      "evidence": "trusted time source healthy, skew < 50ms"
+    },
+    "migration_state": {
+      "status": "READY",
+      "evidence": "no pending migrations"
+    },
+    "restore_reconciliation_state": {
+      "status": "NOT_APPLICABLE_GOVERNED",
+      "governed_rule": "no restore event since last activation; OPS runbook INFRA-01 example"
+    }
+  },
+  "overall": "READY"
+}

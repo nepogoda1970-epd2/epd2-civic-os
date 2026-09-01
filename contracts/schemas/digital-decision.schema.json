@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/digital-decision.schema.json",
+  "title": "DigitalDecision",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.12 (canon-0.6.0, PACK-07, ADR-030). Owned by eligibility-service (epd2_eligibility_service.domain.DigitalDecision). status is set once, at construction, from the applicable ProcessEligibilityPolicy.decision_effect/formal_confirmation_required - never transitioned afterward by this entity itself.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "digital_decision_id",
+    "process_reference",
+    "digital_result",
+    "decision_effect",
+    "formal_confirmation_required",
+    "status",
+    "recorded_at"
+  ],
+  "properties": {
+    "digital_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "process_reference": {
+      "type": "object"
+    },
+    "digital_result": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_effect": {
+      "type": "string",
+      "enum": [
+        "advisory",
+        "politically_binding",
+        "internally_binding",
+        "legally_final",
+        "requires_formal_confirmation"
+      ]
+    },
+    "formal_confirmation_required": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["final", "formal_confirmation_required"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

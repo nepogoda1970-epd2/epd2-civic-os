@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/hearing-cancelled-payload.v1.schema.json",
+  "title": "hearing.cancelled payload (v1)",
+  "description": "Wire payload of `hearing.cancelled`. No field in this payload carries an identity attribute, a global person identifier, a party or authority handle, a document or its bytes, message content, an authentication secret, or any ballot/vote/tally/delegation reference (PACK-09 required invariants 1, 11, 12 and 13; Framework 0.8.1 section 11).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "agenda_code",
+    "attendance_record_count",
+    "case_id",
+    "has_minutes_reference",
+    "hearing_id",
+    "organization_id",
+    "reason_code",
+    "recorded_at",
+    "scheduled_at",
+    "scheduled_at_after",
+    "scheduled_at_before",
+    "sequence",
+    "status",
+    "submissions_deadline_id",
+    "timezone"
+  ],
+  "properties": {
+    "agenda_code": {
+      "type": "string"
+    },
+    "attendance_record_count": {
+      "type": "integer"
+    },
+    "case_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "has_minutes_reference": {
+      "type": "boolean"
+    },
+    "hearing_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "organization_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason_code": {
+      "type": ["string", "null"]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scheduled_at_after": {
+      "type": ["string", "null"]
+    },
+    "scheduled_at_before": {
+      "type": ["string", "null"]
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "status": {
+      "type": "string"
+    },
+    "submissions_deadline_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "timezone": {
+      "type": "string"
+    }
+  }
+}

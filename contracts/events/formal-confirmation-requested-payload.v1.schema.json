@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/formal-confirmation-requested-payload.v1.schema.json",
+  "title": "eligibility.formal_confirmation_requested event payload (v1)",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.12 (canon-0.6.0, PACK-07, ADR-030). Produced by epd2_eligibility_service.events.build_formal_confirmation_requested_event, emitted when a DigitalDecision.status=formal_confirmation_required produces its one AssemblyDecision row. Never carries digital_result itself - only the reference and deadline a confirming authority needs to act.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assembly_decision_id",
+    "digital_decision_id",
+    "confirming_authority",
+    "confirmation_deadline"
+  ],
+  "properties": {
+    "assembly_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "digital_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "confirming_authority": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confirmation_deadline": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

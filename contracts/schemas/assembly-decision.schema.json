@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/schemas/assembly-decision.schema.json",
+  "title": "AssemblyDecision",
+  "description": "docs/canonical/TZ-00-domain-event-canon.md, section 19d.12 (canon-0.6.0, PACK-07, ADR-030). Owned by eligibility-service (epd2_eligibility_service.domain.AssemblyDecision). Created only when a DigitalDecision has status=formal_confirmation_required. An expired confirmation_deadline never auto-transitions this record (canon 19d.12/INV-10: silence is never approval).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assembly_decision_id",
+    "digital_decision_id",
+    "confirming_authority",
+    "legal_basis",
+    "confirmation_deadline",
+    "protocol_or_evidence_reference",
+    "status",
+    "final_legal_decision",
+    "divergence_explanation",
+    "decided_at"
+  ],
+  "properties": {
+    "assembly_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "digital_decision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "confirming_authority": {
+      "type": "string",
+      "minLength": 1
+    },
+    "legal_basis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confirmation_deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "protocol_or_evidence_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "rejected", "returned_for_revision"]
+    },
+    "final_legal_decision": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "divergence_explanation": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "decided_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://epd2.example/contracts/events/pack15-voting-boundary-integrity-payload.v1.schema.json",
+  "title": "PACK-15 voting boundary integrity event payload (v1)",
+  "description": "Produced by epd2_eligibility_service.voting_trust_events.build_integrity_event. Shared by voting_boundary.cohort_threshold_not_met, voting_boundary.timing_profile_applied, voting_boundary.correlation_risk_detected and voting_boundary.integrity_violation_detected. It deliberately omits identity in every field: a detection names its own id, its context, a risk class, a severity and a reason code, and never the assertion, the credential, the cohort size or the participant that triggered it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "detection_id",
+    "voting_context_reference",
+    "risk_class",
+    "severity",
+    "reason_code"
+  ],
+  "properties": {
+    "detection_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "voting_context_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "risk_class": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

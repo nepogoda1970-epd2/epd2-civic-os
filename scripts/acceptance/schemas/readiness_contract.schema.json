@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "epd2.infra01.readiness-contract/1",
+  "title": "EPD2 runtime readiness contract (FIR-READY-001 foundation)",
+  "description": "Machine-checkable readiness state of one service instance. The governing invariant is 'process alive != runtime safe for consequential traffic': overall readiness is READY only when every mandatory dimension is READY, and an UNKNOWN dimension fails closed to NOT_READY.",
+  "$defs": {
+    "dimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["READY", "NOT_READY", "UNKNOWN", "NOT_APPLICABLE_GOVERNED"]
+        },
+        "evidence": { "type": "string" },
+        "governed_rule": { "type": "string" },
+        "watermark": { "type": "string" },
+        "required_position": { "type": "string" }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "service",
+    "deployment_manifest_id",
+    "evaluated_at",
+    "dimensions"
+  ],
+  "properties": {
+    "schema": { "const": "epd2.infra01.readiness-contract/1" },
+    "service": { "type": "string", "minLength": 1 },
+    "deployment_manifest_id": { "type": "string", "minLength": 8 },
+    "evaluated_at": { "type": "string" },
+    "dimensions": {
+      "type": "object",
+      "required": [
+        "process_alive",
+        "deployment_manifest_identity",
+        "configuration_compatibility",
+        "schema_compatibility",
+        "key_trust_anchor_readiness",
+        "dependency_readiness",
+        "projection_freshness",
+        "trusted_time",
+        "migration_state",
+        "restore_reconciliation_state"
+      ],
+      "additionalProperties": { "$ref": "#/$defs/dimension" }
+    },
+    "overall": {
+      "type": "string",
+      "enum": ["READY", "NOT_READY"]
+    }
+  }
+}
