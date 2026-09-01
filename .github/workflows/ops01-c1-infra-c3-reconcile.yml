@@ -1,0 +1,130 @@
+name: OPS-01 C1 INFRA-C3 Reconciliation
+
+on:
+  push:
+    branches:
+      - tmp/ops01-c2-build
+    paths:
+      - '.github/workflows/ops01-c1-infra-c3-reconcile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout OPS handoff source
+        uses: actions/checkout@v4
+        with:
+          path: opsrepo
+
+      - name: Checkout accepted INFRA-01 C3 source
+        uses: actions/checkout@v4
+        with:
+          ref: 38f7d13c8badf911e61d659adb2905d1089a64a5
+          path: infra
+
+      - name: Checkout current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: canonical
+
+      - name: Extract and verify exact C1
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$GITHUB_WORKSPACE/opsrepo/handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d"
+          rm -rf /tmp/ops-c1
+          mkdir -p /tmp/ops-c1
+          python - <<'PY'
+          import zipfile
+          p='opsrepo/handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip'
+          with zipfile.ZipFile(p) as z:
+              bad=z.testzip()
+              if bad:
+                  raise SystemExit(f'bad zip member: {bad}')
+              z.extractall('/tmp/ops-c1')
+          PY
+          echo 'C1_EXACT_BYTES=PASS'
+          echo 'C1_SHA256=3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d'
+
+      - name: Reconciliation inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          c1=Path('/tmp/ops-c1')
+          infra=Path('infra')
+          main=Path('canonical')
+          def h(p):
+              return hashlib.sha256(p.read_bytes()).hexdigest()
+          def files(root):
+              return {str(p.relative_to(root)):p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
+          A=files(c1); B=files(infra); M=files(main)
+          ops_owned_prefixes=(
+              'ops/','docs/ops/','tests/ops01/','packages/python/epd2-ops/',
+              'scripts/ops01/','validation/ops01/'
+          )
+          ops_owned_exact={
+              'OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json','CANDIDATE_NOT_ACCEPTED',
+              '.github/workflows/ops01-verify.yml','scripts/validation/validate_ops01.py'
+          }
+          common=set(A)&set(B)
+          diffs=[p for p in sorted(common) if h(A[p])!=h(B[p])]
+          nonops=[p for p in diffs if p not in ops_owned_exact and not p.startswith(ops_owned_prefixes)]
+          print('C1_FILES',len(A))
+          print('INFRA_C3_SOURCE_FILES',len(B))
+          print('COMMON_FILES',len(common))
+          print('ALL_COMMON_DIFFS',len(diffs))
+          print('NON_OPS_COMMON_DIFFS',len(nonops))
+          print('=== NON-OPS DIFF PATHS ===')
+          for p in nonops[:500]: print(p)
+          keys=[
+              '.github/workflows/infra01-accept.yml',
+              '.github/workflows/ci.yml',
+              'Makefile','pyproject.toml','uv.lock','scripts/check_repository.py',
+              'scripts/check_forbidden_files.py','scripts/verify_versions.py',
+              'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md',
+              'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',
+              'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md',
+              'docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json'
+          ]
+          print('=== KEY PATH HASH MATRIX ===')
+          for p in keys:
+              row={'path':p}
+              for name,D in [('c1',A),('infra',B),('main',M)]:
+                  row[name]=h(D[p]) if p in D else None
+              print(json.dumps(row,sort_keys=True))
+          print('=== C1 INFRA RECONCILIATION RECORD ===')
+          p=c1/'docs/ops/OPS-01/INFRA01_RECONCILIATION_RESULT.json'
+          print(p.read_text() if p.exists() else 'MISSING')
+          print('=== C1 KNOWN LIMITATIONS ===')
+          p=c1/'docs/ops/OPS-01/OPS01_KNOWN_LIMITATIONS.md'
+          print(p.read_text() if p.exists() else 'MISSING')
+          print('=== C1 DEVELOPER REPORT RECONCILIATION SECTION ===')
+          p=c1/'docs/ops/OPS-01/OPS01_DEVELOPER_REPORT.md'
+          if p.exists():
+              txt=p.read_text()
+              for i,line in enumerate(txt.splitlines(),1):
+                  if 'INFRA-01' in line or 'FINAL_SEAL' in line or 'reconcil' in line.lower():
+                      lo=max(1,i-3); hi=min(len(txt.splitlines()),i+5)
+                      print(f'-- lines {lo}-{hi} --')
+                      for n,x in enumerate(txt.splitlines()[lo-1:hi],lo): print(f'{n}: {x}')
+          PY
+
+      - name: Candidate self-verification contract snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/ops-c1
+          echo '=== MAKE verify-ops01 ==='
+          grep -n -A120 -B15 'verify-ops01' Makefile || true
+          echo '=== ops01 workflow ==='
+          cat .github/workflows/ops01-verify.yml
