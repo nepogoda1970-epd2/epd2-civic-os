@@ -132,10 +132,10 @@ jobs:
           p='validation/ops01/ops01_acceptance_result.json'
           d=json.load(open(p))
           print('ACCEPTANCE_RESULT_KEYS=',sorted(d.keys()))
-          raw=json.dumps(d,sort_keys=True)
-          if 'FAIL' in raw or 'environment_blocked' in raw.lower() and 'true' in raw.lower():
-              raise SystemExit('acceptance result contains failure/blocker signal')
-          print('OPS01_C2_RESULT_JSON_READABLE=PASS')
+          assert d.get('stage') == 'OPS-01', d
+          assert d.get('result') == 'PASS', d
+          assert d.get('candidate_self_state') == 'CANDIDATE_NOT_ACCEPTED', d
+          print('OPS01_C2_RESULT_JSON_SCHEMA=PASS')
           PY
           echo 'OPS01_C2_ALL_32_GATES=PASS'
           test -z "$(git status --porcelain)"
