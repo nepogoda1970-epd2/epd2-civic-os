@@ -1,0 +1,60 @@
+name: INFRA-01 C3 Final Source Refresh
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c3-final-refresh.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout transport branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reconstruct exact final C3 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d handoff/INFRA/transport/c3final-refresh.patch.gz.b64 > "$RUNNER_TEMP/c3final.patch.gz"
+          echo "6a3619440922941205b8704de9c04c9639fc539e957f7e76422bc34855c50ab4  $RUNNER_TEMP/c3final.patch.gz" | sha256sum -c -
+          gunzip -c "$RUNNER_TEMP/c3final.patch.gz" > "$RUNNER_TEMP/c3final.patch"
+          echo "c4fec1dda7312fbd2ec0a7bcc991710f74145350b18dfce356a28657a6f70166  $RUNNER_TEMP/c3final.patch" | sha256sum -c -
+
+          git fetch --no-tags origin tmp/infra01-c3-source-no-workflow
+          test "$(git rev-parse origin/tmp/infra01-c3-source-no-workflow)" = "a5dc13b57285e9332123e1356999cce5a6c6d9cb"
+          git switch -C tmp/infra01-c3-final-source origin/tmp/infra01-c3-source-no-workflow
+          git apply --check "$RUNNER_TEMP/c3final.patch"
+          git apply "$RUNNER_TEMP/c3final.patch"
+
+          test ! -e ACCEPTANCE/FREEZE-INVENTORY.json
+          test ! -e SHA256SUMS.txt
+          test "$(git ls-files | wc -l | tr -d ' ')" = "1459"
+          manifest=$(git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum | awk '{print $1}')
+          echo "TRACKED_MANIFEST=$manifest"
+          test "$manifest" = "7f0584fc7767691ace68cfdab123907bdc177a65843f6dccbf4af1cd3bbc988d"
+          echo "d0cbe5a533a938e2aab280baf165e810e98aeee9c8b30d412a8d0188fc6a1650  .github/workflows/infra01-acceptance.yml" | sha256sum -c -
+          echo "433bc802a4b0d62a836c0b436f0838d3179a73c09da9ea56d613d61e3781aaf7  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" | sha256sum -c -
+          echo "8ce71ebe473aae94b9ec77d1ca2a21dc6419dfa4ec61be35cc532a4c13f47e6b  docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json" | sha256sum -c -
+          echo "5722cf96af44bb478239f582b415d52b33654d18bb065a45ec7128beaa727a8e  docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json" | sha256sum -c -
+
+          git add -A
+          git config user.name "EPD2 independent acceptance"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "test(infra01): reconstruct exact final C3 source"
+          git push --force origin HEAD:refs/heads/tmp/infra01-c3-final-source
+
+      - name: Report final source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          git rev-parse HEAD^{tree}
+          git status --porcelain
+          git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum
