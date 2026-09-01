@@ -1,0 +1,226 @@
+name: API-03 C2 dependency-backed runtime verification
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c2-runtime-verify.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_DB: epd2_s2s
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d epd2_s2s"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      CANDIDATE_SHA256: 8f0a52464e05a8d66473b2c983fa4d5630a196e3f0368aac45862c9ef2bdabd6
+      CANDIDATE_ARTIFACT_ID: '9800499894'
+      C1_SHA256: 9bc0835ec7894db5f8fb1ed38e08e1fd6943ca042685e4a7ef6c5e1d599d6941
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+      EPD2_S2S_DSN: postgresql://postgres@127.0.0.1:55432/epd2_s2s
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify exact C2 candidate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip" -o /tmp/c2-artifact.zip
+          mkdir /tmp/a && unzip -q /tmp/c2-artifact.zip -d /tmp/a
+          C="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2.zip' -print -quit)"
+          test -n "$C"
+          echo "${CANDIDATE_SHA256}  ${C}" | sha256sum -c -
+          unzip -t "$C" >/dev/null
+          mkdir /tmp/c && unzip -q "$C" -d /tmp/c
+          ROOT="$(find /tmp/c -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$ROOT/API03_C2_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          test ! -e "$ROOT/API03_C1_STATUS.txt"
+          echo "C2ROOT=$ROOT" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+      - name: Frozen workspace dependency install and preserve voting cryptography 46.0.7
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/api03-workspace-env" uv sync --frozen --all-groups --python "$(command -v python)"
+          echo "WORKENV=${RUNNER_TEMP}/api03-workspace-env" >> "$GITHUB_ENV"
+          "${RUNNER_TEMP}/api03-workspace-env/bin/python" - <<'PY' | tee /tmp/api03-c2-workspace-crypto.log
+          import cryptography
+          assert cryptography.__version__ == '46.0.7', cryptography.__version__
+          print('WORKSPACE_CRYPTOGRAPHY', cryptography.__version__)
+          print('API03_C2_WORKSPACE_CRYPTO_PIN:PASS')
+          PY
+      - name: Build and prove isolated governed cryptography 49 environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          ./scripts/api03_bootstrap_crypto49.sh "${RUNNER_TEMP}/api03-crypto49" | tee /tmp/api03-c2-crypto-bootstrap.log
+          echo "CRYPTOENV=${RUNNER_TEMP}/api03-crypto49" >> "$GITHUB_ENV"
+          CRYPTO_SITE="$(${RUNNER_TEMP}/api03-crypto49/bin/python -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])')"
+          echo "CRYPTO_SITE=$CRYPTO_SITE" >> "$GITHUB_ENV"
+          "${RUNNER_TEMP}/api03-crypto49/bin/python" scripts/api03_crypto_probe.py --venv "${RUNNER_TEMP}/api03-crypto49" --output /tmp/api03-c2-crypto-isolation.json | tee /tmp/api03-c2-crypto-probe.log
+      - name: Prove exact PostgreSQL 16.15 and prepare isolated topology DB
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-c2-postgres.log
+          import os, psycopg
+          with psycopg.connect(os.environ['EPD2_S2S_DSN']) as conn:
+              with conn.cursor() as cur:
+                  cur.execute('SHOW server_version_num'); vn=cur.fetchone()[0]
+                  cur.execute('SHOW server_version'); v=cur.fetchone()[0]
+          assert vn=='160015',(vn,v)
+          with psycopg.connect('postgresql://postgres@127.0.0.1:55432/postgres',autocommit=True) as conn:
+              with conn.cursor() as cur:
+                  cur.execute('DROP DATABASE IF EXISTS epd2_s2s_topology WITH (FORCE)')
+                  cur.execute('CREATE DATABASE epd2_s2s_topology')
+          print('POSTGRES_VERSION_NUM',vn)
+          print('POSTGRES_VERSION',v)
+          print('API03_C2_POSTGRES:PASS')
+          PY
+      - name: Execute 98 API-03 tests against isolated crypto49 import path
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          export PYTHONNOUSERSITE=1
+          export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" - <<'PY'
+          import cryptography
+          assert cryptography.__version__=='49.0.0',cryptography.__version__
+          print('API03_TEST_PROCESS_CRYPTOGRAPHY',cryptography.__version__)
+          PY
+          "$WORKENV/bin/python" -m pytest tests/api03 -q -k 'not cross_instance_revoke_without_restart' --junitxml=/tmp/api03-c2-main.xml | tee /tmp/api03-c2-main.log
+      - name: Execute cross-instance topology test against fresh isolated PostgreSQL state
+        shell: bash
+        env:
+          EPD2_S2S_DSN: postgresql://postgres@127.0.0.1:55432/epd2_s2s_topology
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          export PYTHONNOUSERSITE=1
+          export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" -m pytest tests/api03/test_topology_r4.py::test_cross_instance_revoke_without_restart -q --junitxml=/tmp/api03-c2-topology-test.xml | tee /tmp/api03-c2-topology-test.log
+      - name: Assert complete 99-test API-03 execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-c2-99.log
+          import xml.etree.ElementTree as ET
+          def counts(p):
+              root=ET.parse(p).getroot(); suites=[root] if root.tag=='testsuite' else list(root.findall('testsuite'))
+              return tuple(sum(int(s.attrib.get(k,0)) for s in suites) for k in ('tests','failures','errors','skipped'))
+          a=counts('/tmp/api03-c2-main.xml'); b=counts('/tmp/api03-c2-topology-test.xml'); t=tuple(x+y for x,y in zip(a,b))
+          assert a==(98,0,0,0),a
+          assert b==(1,0,0,0),b
+          assert t==(99,0,0,0),t
+          print('API03_C2_TOTAL_COUNTS',t)
+          print('API03_C2_99_TESTS:PASS')
+          PY
+      - name: Execute governed R11 V23 suite on live PostgreSQL 16.15
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          export PYTHONNOUSERSITE=1
+          export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" scripts/api03_run_r11_v23_tests.py --dsn "$EPD2_S2S_DSN" --output /tmp/api03-c2-r11-v23.json | tee /tmp/api03-c2-r11-v23.log
+      - name: Execute governed multi-process topology proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          export PYTHONNOUSERSITE=1
+          export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" scripts/api03_run_topology.py --dsn "$EPD2_S2S_DSN" --venv "$CRYPTOENV" --output /tmp/api03-c2-topology-proof.json | tee /tmp/api03-c2-topology-proof.log
+      - name: Execute unchanged SEC-01 repository-wide crypto guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          "$WORKENV/bin/python" -m pytest packages/python/epd2-runtime/tests/test_sec01_security_controls.py::test_the_cryptography_apis_three_advisories_need_are_absent -q | tee /tmp/api03-c2-sec01.log
+      - name: Verify C2 lineage, reconciliation, and V23/V26 invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C2ROOT"
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-c2-static.log
+          import json,pathlib,os
+          r=pathlib.Path('.')
+          c1=json.load(open(r/'docs/api/API-03/API03_C1_EXACT_C13_DELTA_INVENTORY.json'))
+          c2=json.load(open(r/'docs/api/API-03/API03_C2_EXACT_C1_DELTA_INVENTORY.json'))
+          rec=json.load(open(r/'docs/api/API-03/API03_API02_RECONCILIATION_REQUIREMENTS.json'))
+          fix=json.load(open(r/'docs/api/API-03/API03_C2_CORRECTION_REPORT.json'))
+          assert c1['base_api02_c13_sha256']==os.environ['C13_SHA256']
+          assert c1['counts']=={'added':156,'modified':2,'removed':0}
+          assert c2['base_c1_sha256']==os.environ['C1_SHA256']
+          assert c2['counts']=={'added':2,'modified':2,'removed':1}
+          assert rec['accepted_predecessor']['sha256']==os.environ['C13_SHA256']
+          assert rec['accepted_predecessor']['authoritative_run']==33497989489
+          assert rec['open_reconciliation_blockers']==[] and rec['self_accepted'] is False
+          assert fix['runtime_behavior_changed'] is False and fix['sec01_guard_weakened'] is False
+          pc=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          ma=(r/'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md').read_text()
+          assert 'API-02 = ACCEPTED / CLOSED' in pc
+          assert 'API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in pc
+          assert 'FIR-VOTE-BSI-001' in ma
+          assertion=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/assertion.py').read_text()
+          legacy=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/legacy_token.py').read_text()
+          assert 'SERVICE_ASSERTION_ALG = "ES256"' in assertion
+          assert 'SERVICE_ASSERTION_TYP = "epd2-service+jwt"' in assertion
+          assert 'C1_ELIGIBLE_ACTIVE_AUTHENTICATION = False' in legacy
+          needles=('PolicyBuilder','load_pem_x509','load_der_x509','verify_directly_issued_by','ServerVerifier','ClientVerifier')
+          outside=[]; isolated=0
+          for base in ('packages','services','scripts'):
+              for p in (r/base).rglob('*.py'):
+                  if p.name=='test_sec01_security_controls.py': continue
+                  text=p.read_text(encoding='utf-8',errors='replace'); iso='epd2-s2s-crypto' in p.parts
+                  for n in needles:
+                      if n in text:
+                          if iso: isolated+=1
+                          else: outside.append(f'{p}:{n}')
+          assert outside==[],outside
+          assert isolated>0
+          print('API03_C2_STATIC:PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api03-c2-runtime-verification-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            /tmp/api03-c2-workspace-crypto.log
+            /tmp/api03-c2-crypto-bootstrap.log
+            /tmp/api03-c2-crypto-probe.log
+            /tmp/api03-c2-crypto-isolation.json
+            /tmp/api03-c2-postgres.log
+            /tmp/api03-c2-main.xml
+            /tmp/api03-c2-main.log
+            /tmp/api03-c2-topology-test.xml
+            /tmp/api03-c2-topology-test.log
+            /tmp/api03-c2-99.log
+            /tmp/api03-c2-r11-v23.json
+            /tmp/api03-c2-r11-v23.log
+            /tmp/api03-c2-topology-proof.json
+            /tmp/api03-c2-topology-proof.log
+            /tmp/api03-c2-sec01.log
+            /tmp/api03-c2-static.log
