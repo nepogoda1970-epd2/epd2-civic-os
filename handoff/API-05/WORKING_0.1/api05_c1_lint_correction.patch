@@ -1,0 +1,42 @@
+--- a/scripts/validate_api05.py
++++ b/scripts/validate_api05.py
+@@ -2,7 +2,14 @@
+ """API-05 C1 validator. Candidate PASS is not canonical acceptance."""
+ from __future__ import annotations
+ 
+-import argparse, hashlib, json, os, subprocess, sys, tempfile, zipfile
++import argparse
++import hashlib
++import json
++import os
++import subprocess
++import sys
++import tempfile
++import zipfile
+ from datetime import UTC, datetime
+ from pathlib import Path
+ 
+@@ -59,8 +66,10 @@
+         rel=p.relative_to(ROOT)
+         if any(x in {".venv","node_modules"} for x in rel.parts):
+             continue
+-        if p.is_dir() and p.name in {"__pycache__",".pytest_cache",".mypy_cache",".ruff_cache"}: bad.append(str(rel))
+-        elif p.is_file() and p.suffix in {".pyc",".pyo"}: bad.append(str(rel))
++        if (p.is_dir() and p.name in {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}) or (
++            p.is_file() and p.suffix in {".pyc", ".pyo"}
++        ):
++            bad.append(str(rel))
+     return {"name":"archive_hygiene", "result":"PASS" if not bad else "FAIL", "forbidden_generated_paths":bad[:100]}
+ 
+ 
+--- a/services/external-integration-runtime/src/epd2_external_integration_runtime/security.py
++++ b/services/external-integration-runtime/src/epd2_external_integration_runtime/security.py
+@@ -13,7 +13,7 @@
+ from typing import Protocol
+ from urllib.parse import urlparse
+ 
+-from .errors import CallbackRejected, CallbackReplay, CredentialUnavailable, EgressRefused
++from .errors import CallbackRejected, CredentialUnavailable, EgressRefused
+ from .models import ProviderProfile
+ 
+ 
