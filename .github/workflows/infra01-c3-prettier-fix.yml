@@ -1,0 +1,96 @@
+name: INFRA-01 C3 Minimal Prettier Correction
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c3-prettier-fix.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  correct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact failed authoritative C3 source
+        uses: actions/checkout@v4
+        with:
+          ref: f81b180eb3de62ce42b77fcd114ce20aa2c3c39b
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install exact locked Node dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Apply only the four diagnosed formatting corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx prettier --write \
+            docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+
+          # PCR byte identity changed only because Prettier normalized Markdown.
+          # Rebind candidate PCR SHA and reseal the reconciliation document
+          # using the exact canonical digest algorithm used by the harness.
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          pcr = Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          rec_path = Path('docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json')
+          rec = json.loads(rec_path.read_text(encoding='utf-8'))
+          rec['candidate']['pcr_sha256'] = hashlib.sha256(pcr.read_bytes()).hexdigest()
+          rec.pop('manifest_sha256', None)
+          canonical = (json.dumps(rec, sort_keys=True, ensure_ascii=True, separators=(',', ':')) + '\n').encode('utf-8')
+          rec['manifest_sha256'] = hashlib.sha256(canonical).hexdigest()
+          rec_path.write_text(json.dumps(rec, ensure_ascii=True, indent=2) + '\n', encoding='utf-8')
+          PY
+          npx prettier --write docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
+
+      - name: Prove correction is formatting-only and globally clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run format:check
+          changed=$(git diff --name-only | sort)
+          printf '%s\n' "$changed"
+          expected=$(printf '%s\n' \
+            docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | sort)
+          test "$changed" = "$expected"
+
+      - name: Commit exact corrected C3 source and report identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "EPD2 independent acceptance"
+          git config user.email "actions@users.noreply.github.com"
+          git add \
+            docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m "fix(infra01): normalize C3 governed formatting"
+          git push --force origin HEAD:refs/heads/tmp/infra01-c3-prettier-fixed
+          echo "CORRECTED_COMMIT=$(git rev-parse HEAD)"
+          echo "CORRECTED_TREE=$(git rev-parse HEAD^{tree})"
+          echo "FILE_COUNT=$(git ls-files | wc -l | tr -d ' ')"
+          manifest=$(git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum | awk '{print $1}')
+          echo "TRACKED_MANIFEST=$manifest"
+          sha256sum \
+            docs/infra/INFRA-01/INFRA01_C0_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_C2_TO_C3_EXACT_INVENTORY.json \
+            docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
