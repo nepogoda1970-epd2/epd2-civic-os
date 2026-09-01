@@ -1,0 +1,1 @@
+Trigger authoritative API-04 C1 acceptance after control binding.
