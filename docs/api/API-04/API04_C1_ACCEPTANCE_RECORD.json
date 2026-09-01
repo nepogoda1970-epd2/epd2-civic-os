@@ -1,0 +1,94 @@
+{
+  "schema": "epd2.api04.c1.acceptance-record/1",
+  "stage": "API-04",
+  "stage_title": "Events & Messaging Runtime",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-02",
+  "previous_state": "ACTIVE / IN DEVELOPMENT / NOT ACCEPTED",
+  "new_state": "ACCEPTED / CLOSED",
+  "api_layer_state": "OPEN until API-06 closes",
+  "candidate": {
+    "filename": "EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip",
+    "role": "C1",
+    "sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337",
+    "size_bytes": 43880523,
+    "sealed_files": 4240,
+    "artifact_id": 9824179973,
+    "artifact_outer_digest": "sha256:9a7a67c81061ce87225700398e6f90d5785e2a2ff8e7707c5facfe44ed40c509",
+    "builder_run_id": 33567509799,
+    "builder_job_id": 100053947908,
+    "builder_provenance_commit": "2878c3bbfeb11328adf294a2b59d631b851b43dd",
+    "self_state": "CANDIDATE_NOT_ACCEPTED",
+    "self_accepted": false
+  },
+  "accepted_predecessor": {
+    "stage": "API-03",
+    "role": "C5",
+    "sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55",
+    "authoritative_run_id": 33511256210,
+    "state": "ACCEPTED / CLOSED"
+  },
+  "sealed_workflow": {
+    "path": ".github/workflows/api04-accept.yml",
+    "git_blob": "72bd2608b520ead9bad1362f6b4eb94652a5a4ea",
+    "sha256": "3decc2dd0592800d7278ba83b3c6a88ed51177b78aa40b0966b62cac101e2bec"
+  },
+  "authoritative": {
+    "branch": "tmp/api04-c1-authoritative-accept",
+    "run_id": 33569092401,
+    "job_id": 100058880258,
+    "provenance_commit": "299d4f4bce52daf14961e5d4cdb23c81ada05734",
+    "conclusion": "SUCCESS",
+    "governed_gates_total": 28,
+    "failed_gates": 0,
+    "environment_blocked_gates": 0,
+    "terminal_marker": "API04_RESULT:PASS:validation/api04/authoritative_acceptance_result.json"
+  },
+  "authoritative_evidence_artifact": {
+    "name": "api04-c1-authoritative-acceptance-33569092401",
+    "id": 9824542224,
+    "size_bytes": 18286,
+    "digest": "sha256:0289b930353f74a7e263af3c55df24b0ebf8578e45238b6b56a2bfd90193109f",
+    "created_at": "2026-09-01T23:12:31Z",
+    "expires_at": "2026-11-30T23:01:40Z"
+  },
+  "builder_evidence_artifact": {
+    "name": "api04-c1-build-evidence-33567509799",
+    "id": 9824180398,
+    "digest": "sha256:a32c4abdc8bffafc21054578110b8f55cdc022dd35188bfcdea44d83f9ab3cd4"
+  },
+  "measured_evidence": {
+    "api04_tests_total": 623,
+    "api04_tests_failed": 0,
+    "api04_tests_skipped": 0,
+    "governed_gates": "28/28 PASS",
+    "postgresql": "16.15",
+    "rabbitmq": "3.12.1",
+    "service_principals": 8,
+    "service_identity": "RabbitMQ EXTERNAL/mTLS -> API-03 C5 TrustRegistry -> API-04 ACL",
+    "transactional_outbox": "PASS",
+    "durable_inbox_dedup": "PASS",
+    "ack_crash_redelivery": "PASS",
+    "schema_compatibility": "PASS",
+    "retry_dlq_quarantine": "PASS",
+    "replay_redrive_governance": "PASS",
+    "async_fir_auth_001": "PASS",
+    "voting_isolation": "PASS",
+    "api_chain_non_regression": "PASS",
+    "data_no_new_regression": "PASS",
+    "cross_service_failure_fixtures": "PASS",
+    "mutation_self_test": "PASS",
+    "no_api05_plus_scope_leakage": "PASS"
+  },
+  "candidate_self_state_resolution": "CANDIDATE_NOT_ACCEPTED is an intentional no-self-acceptance safeguard; the independent authoritative run and this post-run governance decision supersede it for canonical project state.",
+  "open_blockers": [],
+  "next_permitted_primary_stage": "API-05",
+  "nonclaims": [
+    "API layer closure before API-06",
+    "production readiness",
+    "legal activation",
+    "final security readiness",
+    "BSI certification",
+    "Common Criteria / EAL4 certification"
+  ]
+}
