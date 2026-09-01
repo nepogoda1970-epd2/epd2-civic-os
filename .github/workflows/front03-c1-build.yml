@@ -1,0 +1,159 @@
+name: FRONT-03 C1 governed candidate build
+on:
+  push:
+    branches: [tmp/front03-c1-closure]
+    paths: ['.github/workflows/front03-c1-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: front03-c1-build-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  PRESEAL_RUN_ID: '33502571022'
+  PRESEAL_ARTIFACT: front03-r3-preseal-exact-source
+  PRESEAL_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
+  PRESEAL_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
+  PRESEAL_SIZE: '17619496'
+  API02_BUILD_RUN_ID: '33495990810'
+  API02_ARTIFACT: api02-candidate
+  API02_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip
+  API02_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+  API02_SIZE: '34642386'
+  API02_ACCEPTANCE_RUN_ID: '33497989489'
+  API02_ACCEPTANCE_JOB_ID: '99824485228'
+  GOVERNANCE_SHA: 556821e0e5d550a4db601bbe92e4f4673a1bc3ff
+  OVERLAY_SHA256: 0ddbf06c0ba8d8bead2ddb8a1a9044d6e8e4a9ce42a664864e448c86a2c80599
+  CANDIDATE_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout build control branch
+        uses: actions/checkout@v4
+        with: {fetch-depth: 1, persist-credentials: false}
+      - name: Obtain exact R3 PRESEAL source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRESEAL_ARTIFACT }}
+          path: incoming/preseal
+          run-id: ${{ env.PRESEAL_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Obtain exact accepted API-02 C13 source bytes
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.API02_ARTIFACT }}
+          path: incoming/api02
+          run-id: ${{ env.API02_BUILD_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Verify immutable inputs before extraction
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_one() { local name="$1" root="$2" found; found="$(find "$root" -type f -name "$name" -print)"; test "$(printf '%s\n' "$found" | grep -c .)" -eq 1 || { echo "::error::$name expected exactly once"; exit 1; }; printf '%s' "$found"; }
+          PRE="$(find_one "$PRESEAL_NAME" incoming/preseal)"; API="$(find_one "$API02_NAME" incoming/api02)"
+          test "$(stat -c %s "$PRE")" = "$PRESEAL_SIZE"; test "$(stat -c %s "$API")" = "$API02_SIZE"
+          echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -; echo "$API02_SHA256  $API" | sha256sum -c -
+          unzip -t "$PRE" >/dev/null; unzip -t "$API" >/dev/null
+          echo "preseal=$(realpath "$PRE")" >> "$GITHUB_OUTPUT"; echo "api02=$(realpath "$API")" >> "$GITHUB_OUTPUT"
+      - name: Reconstruct and verify exact C1 overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat handoff/FRONT/c1-overlay/overlay.part*.b64 | tr -d '\r\n\t ' | base64 -d > "$RUNNER_TEMP/front03-c1-overlay.tar.gz"
+          echo "$OVERLAY_SHA256  $RUNNER_TEMP/front03-c1-overlay.tar.gz" | sha256sum -c -
+          tar -tzf "$RUNNER_TEMP/front03-c1-overlay.tar.gz" > "$RUNNER_TEMP/overlay-paths.txt"
+          test "$(grep -c . "$RUNNER_TEMP/overlay-paths.txt")" -eq 16
+          ! grep -E '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/overlay-paths.txt"
+      - name: Extract and bind canonical governance
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          C="$RUNNER_TEMP/front03-c1"; A="$RUNNER_TEMP/api02-c13"; mkdir -p "$C" "$A"
+          unzip -q "${{ steps.inputs.outputs.preseal }}" -d "$C"; unzip -q "${{ steps.inputs.outputs.api02 }}" -d "$A"
+          test -f "$C/package.json"
+          API_ROOT="$(find "$A" -mindepth 1 -maxdepth 1 -type d -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13' -print -quit)"; test -n "$API_ROOT"
+          tar -xzf "$RUNNER_TEMP/front03-c1-overlay.tar.gz" -C "$C"
+          git fetch --no-tags --depth=1 origin "$GOVERNANCE_SHA"
+          for rel in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json; do mkdir -p "$C/$(dirname "$rel")"; git show "$GOVERNANCE_SHA:$rel" > "$C/$rel"; done
+          grep -F 'API-02 is therefore `ACCEPTED / CLOSED`' "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"; grep -F "$API02_SHA256" "$C/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          echo "root=$C" >> "$GITHUB_OUTPUT"; echo "api02_root=$API_ROOT" >> "$GITHUB_OUTPUT"
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: ${{ steps.candidate.outputs.root }}/package-lock.json
+      - name: Locked dependency-backed execution
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          node --version; npm --version; npm ci
+          npm run --workspace=frontend/web-shell format:check
+          npm run typecheck --workspace=frontend/web-shell
+          npm run lint --workspace=frontend/web-shell
+          npm run test --workspace=frontend/web-shell
+          npm run build --workspace=frontend/web-shell
+      - name: Full browser visual accessibility keyboard and negative journeys
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: npm run test:browser --workspace=frontend/web-shell
+      - name: Preserve inherited R3 fail-closed evidence
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_front03.py .
+          python3 scripts/run_front03_mutations.py --output "$RUNNER_TEMP/front03-r3-mutations.json"
+          python3 scripts/run_front03_validator_adversarial.py --output "$RUNNER_TEMP/front03-r3-adversarial.json"
+          python3 scripts/validate_front03.py .
+      - name: Write execution evidence after execution gates
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          mkdir -p validation/front03-c1
+          python3 - <<'PY'
+          import json, os
+          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
+          open('validation/front03-c1/execution.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: C1 exact-C13 validator and mutation resistance
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_front03_c1.py . --api02-root "${{ steps.candidate.outputs.api02_root }}" | tee validation/front03-c1/validator.json
+          python3 scripts/run_front03_c1_mutations.py --root . --api02-root "${{ steps.candidate.outputs.api02_root }}" --output validation/front03-c1/mutations.json
+          python3 scripts/validate_front03_c1.py . --api02-root "${{ steps.candidate.outputs.api02_root }}" > "$RUNNER_TEMP/front03-c1-validator-final.json"
+      - name: Seal cumulative C1 candidate
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out; C="${{ steps.candidate.outputs.root }}"
+          (cd "$C" && zip -q -r "$GITHUB_WORKSPACE/out/$CANDIDATE_NAME" . -x 'node_modules/*' '*/node_modules/*' '.next/*' '*/.next/*' 'test-results/*' '*/test-results/*' 'playwright-report/*' '*/playwright-report/*' '__pycache__/*' '*/__pycache__/*' '*.pyc')
+          ZIP="out/$CANDIDATE_NAME"; unzip -t "$ZIP" >/dev/null; SHA="$(sha256sum "$ZIP"|awk '{print $1}')"; SIZE="$(stat -c %s "$ZIP")"
+          echo "candidate_sha256=$SHA" >> "$GITHUB_OUTPUT"; echo "candidate_size=$SIZE" >> "$GITHUB_OUTPUT"
+          python3 - "$ZIP" "$SHA" "$SIZE" <<'PY'
+          import json,os,sys
+          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'overlay_sha256':os.environ['OVERLAY_SHA256'],'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "FRONT03_C1_BUILD_RESULT:PASS:$SHA:$SIZE"
+      - name: Upload exact C1 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: front03-c1-candidate
+          path: out/${{ env.CANDIDATE_NAME }}
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload detached C1 build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: front03-c1-build-evidence-${{ github.run_id }}
+          path: |
+            out/front03-c1-build-evidence.json
+            ${{ runner.temp }}/front03-c1-validator-final.json
+            ${{ runner.temp }}/front03-r3-mutations.json
+            ${{ runner.temp }}/front03-r3-adversarial.json
+          if-no-files-found: error
+          retention-days: 90
