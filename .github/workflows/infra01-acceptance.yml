@@ -97,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: infra01-candidate-${{ github.run_id }}
-          path: ${{ env.RUN_DIR }}/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1.zip
+          path: ${{ env.RUN_DIR }}/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip
           if-no-files-found: error
           retention-days: 90
 
