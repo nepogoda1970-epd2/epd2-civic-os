@@ -1,0 +1,242 @@
+name: OPS-01 C2 Finalize
+
+on:
+  push:
+    branches:
+      - tmp/ops01-c2-build
+    paths:
+      - '.github/workflows/ops01-c2-finalize.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.ops01-c2-venv
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: '5432'
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+
+    steps:
+      - name: Checkout control
+        uses: actions/checkout@v4
+        with:
+          path: control
+          fetch-depth: 1
+      - name: Checkout C1 base
+        uses: actions/checkout@v4
+        with:
+          ref: 3d0b2fec5f86c491f36de1041caa66d983727480
+          path: c1base
+          fetch-depth: 1
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: c2
+          fetch-depth: 0
+
+      - name: Build exact reconciled C2 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python control/tools/ops01_c2_reconcile.py | tee /tmp/ops01-c2-reconcile.log
+          echo "C2_BASE_COMMIT=$(git -C c2 rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "C2_BASE_TREE=$(git -C c2 rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
+          cd c2
+          git config user.name epd2-governed-builder
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m 'ops01(c2): bind accepted INFRA-01 C3 and rebase onto canonical main'
+          echo "C2_SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "C2_SOURCE_TREE=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_ENV"
+          test "$(git rev-parse 'HEAD^{tree}')" = a91a290ae87a83bede5d3cfc0e53dc682379b8a3
+          test -z "$(git status --porcelain)"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Locked environment and quality checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          python -m pip install --disable-pip-version-check uv==0.12.5
+          uv sync --all-groups --frozen
+          psql -h 127.0.0.1 -U postgres -d postgres -c 'CREATE DATABASE epd2_ops01;' || true
+          v=$(psql -h 127.0.0.1 -U postgres -d postgres -Atc 'show server_version')
+          echo "POSTGRES_SERVER_VERSION=$v"
+          case "$v" in 16.15*) ;; *) exit 1;; esac
+          uv run ruff format --check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run ruff check packages/python/epd2-ops scripts/ops01 scripts/validation/validate_ops01.py tests/ops01
+          uv run mypy packages/python/epd2-ops/src packages/python/epd2-ops/tests tests/ops01 scripts/validation/validate_ops01.py scripts/ops01/seal_candidate.py
+          test -z "$(git status --porcelain)"
+
+      - name: Verify all 32 OPS-01 gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          rm -rf validation/ops01
+          make verify-ops01 | tee /tmp/ops01-c2-verify.log
+          grep -F 'OPS01_RESULT:PASS:validation/ops01/ops01_acceptance_result.json' /tmp/ops01-c2-verify.log
+          grep -F 'OPS-01 gates: 32/32 PASS' /tmp/ops01-c2-verify.log
+          test "$(grep -Ec '^\[PASS\] G[0-9][0-9] ' /tmp/ops01-c2-verify.log)" -eq 32
+          if grep -Eq '^\[(FAIL|SKIP|BLOCKED|ERROR)\]' /tmp/ops01-c2-verify.log; then exit 1; fi
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/ops01/ops01_acceptance_result.json'))
+          assert d['schema']=='epd2.ops01.acceptance/1',d
+          assert d['stage']=='OPS-01',d
+          assert d['verdict']=='PASS',d
+          assert d['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED',d
+          r=d['result']
+          assert r['gates_total']==32,r
+          assert r['gates_executed']==32,r
+          assert r['gates_passed']==32,r
+          assert r['gates_failed']==[],r
+          assert r['gates_missing']==[],r
+          assert r['skipped']==[],r
+          assert r['environment_blocked']==[],r
+          assert r['not_run']==[],r
+          assert r['manual_assume_pass']==[],r
+          assert all(x['verdict']=='PASS' for x in r['results']),r
+          assert {x['gate'] for x in r['results']}=={f'G{i:02d}' for i in range(1,33)},r
+          print('OPS01_C2_ACCEPTANCE_JSON=32_OF_32_PASS')
+          PY
+          test -z "$(git status --porcelain)"
+
+      - name: Reseal exact verified source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd c2
+          test "$(git rev-parse HEAD)" = "$C2_SOURCE_COMMIT"
+          test -z "$(git status --porcelain)"
+          rm -rf dist
+          make seal-ops01 | tee /tmp/ops01-c2-seal.log
+          python - <<'PY'
+          import hashlib,json,os,pathlib,stat,zipfile
+          z=pathlib.Path('dist/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip')
+          i=json.load(open('dist/OPS01_CANDIDATE_IDENTITY.json'))
+          raw=z.read_bytes(); s=hashlib.sha256(raw).hexdigest()
+          assert i['filename']==z.name,(i,z.name)
+          assert i['sha256']==s,(i,s)
+          assert i['size_bytes']==len(raw),(i,len(raw))
+          assert i['harness']=='PASS',i
+          assert i['working_tree_clean'] is True,i
+          assert i['same_bytes']['same_bytes'] is True,i
+          assert i['archive_verification']['clean'] is True,i
+          assert i['seal_commit']==os.environ['C2_SOURCE_COMMIT'],i
+          with zipfile.ZipFile(z) as f:
+              assert f.testzip() is None
+              names=f.namelist(); assert len(names)==len(set(names))
+              for n in ['CANDIDATE_NOT_ACCEPTED','OPS01_CANDIDATE_SELF_STATE.json','OPS01_FREEZE_MANIFEST.json']:
+                  assert n in names
+              assert not any(pathlib.PurePosixPath(n).is_absolute() or '..' in pathlib.PurePosixPath(n).parts for n in names)
+              assert not any(stat.S_ISLNK((x.external_attr>>16)&0xffff) for x in f.infolist())
+          print('C2_SHA256='+s)
+          print('C2_SIZE_BYTES='+str(len(raw)))
+          print('C2_MEMBER_COUNT='+str(i['member_count']))
+          print('C2_TREE_DIGEST='+i['tree_digest'])
+          print('C2_SEAL_COMMIT='+i['seal_commit'])
+          print('C2_SEAL_TREE='+i['seal_tree'])
+          print('C2_RESEAL_RESULT=PASS')
+          PY
+          test -z "$(git status --porcelain)"
+
+      - name: Package immutable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p publish/evidence
+          cd c2
+          git bundle create ../publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle HEAD ^"$C2_BASE_COMMIT"
+          git bundle verify ../publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle
+          cp dist/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip ../publish/
+          cp dist/OPS01_CANDIDATE_IDENTITY.json ../publish/
+          cp -r validation/ops01 ../publish/evidence/validation-ops01
+          cp docs/ops/OPS-01/INFRA01_RECONCILIATION_RESULT.json ../publish/evidence/
+          cp docs/ops/OPS-01/OPS01_ENTERING_BASELINE_IDENTITY.json ../publish/evidence/
+          cp docs/ops/OPS-01/OPS01_KNOWN_LIMITATIONS.md ../publish/evidence/
+          cd ..
+          cp /tmp/ops01-c2-reconcile.log publish/evidence/
+          cp /tmp/ops01-c2-verify.log publish/evidence/
+          cp /tmp/ops01-c2-seal.log publish/evidence/
+          sha256sum publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip > publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256
+          sha256sum publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle > publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle.sha256
+          cat > publish/OPS01_C2_PREACCEPTANCE_PROVENANCE.txt <<EOF
+          stage=OPS-01
+          state=CANDIDATE_NOT_ACCEPTED
+          c1_sha256=3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d
+          c2_entering_main_commit=$C2_BASE_COMMIT
+          c2_entering_main_tree=$C2_BASE_TREE
+          accepted_infra01_candidate_sha256=5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+          accepted_infra01_source_commit=38f7d13c8badf911e61d659adb2905d1089a64a5
+          accepted_infra01_authoritative_run=33556094346
+          accepted_infra01_authoritative_job=100017170812
+          accepted_api03_candidate_sha256=5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55
+          c2_source_commit=$C2_SOURCE_COMMIT
+          c2_source_tree=$C2_SOURCE_TREE
+          build_run=$GITHUB_RUN_ID
+          EOF
+
+      - name: Upload immutable preacceptance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops01-c2-preacceptance-${{ github.run_id }}
+          path: publish/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish C2 to handoff OPS incoming
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --branch handoff/ops --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" handoff
+          cp publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256 handoff/handoff/OPS/incoming/
+          cp publish/OPS01_CANDIDATE_IDENTITY.json handoff/handoff/OPS/incoming/OPS01_C2_CANDIDATE_IDENTITY.json
+          cp publish/OPS01_C2_PREACCEPTANCE_PROVENANCE.txt handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle handoff/handoff/OPS/incoming/
+          cp publish/EPD2_OPS01_C2_SOURCE_DELTA.bundle.sha256 handoff/handoff/OPS/incoming/
+          cd handoff
+          git config user.name epd2-governed-builder
+          git config user.email actions@users.noreply.github.com
+          git add handoff/OPS/incoming
+          git commit -m 'handoff(ops01): publish INFRA-bound C2 candidate'
+          git push origin handoff/ops
+          echo "HANDOFF_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Final verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'OPS01_C2_PREACCEPTANCE_RESULT:PASS'
+          echo "candidate_source_commit=$C2_SOURCE_COMMIT"
+          echo "candidate_source_tree=$C2_SOURCE_TREE"
+          echo "handoff_commit=$HANDOFF_COMMIT"
+          cat publish/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip.sha256
