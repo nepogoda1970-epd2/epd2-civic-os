@@ -9,9 +9,24 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_DB: epd2_s2s
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d epd2_s2s"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
       CANDIDATE_SHA256: 9bc0835ec7894db5f8fb1ed38e08e1fd6943ca042685e4a7ef6c5e1d599d6941
       CANDIDATE_ARTIFACT_ID: '9798416550'
+      EPD2_S2S_DSN: postgresql://postgres@127.0.0.1:55432/epd2_s2s
     steps:
       - uses: actions/checkout@v4
       - name: Download and verify exact C1 candidate
@@ -54,6 +69,23 @@ jobs:
           import cryptography
           assert cryptography.__version__ == '49.0.0', cryptography.__version__
           print('cryptography', cryptography.__version__)
+          PY
+      - name: Prove exact PostgreSQL 16.15 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$API03ENV/bin/python" - <<'PY' | tee /tmp/api03-c1-postgres.log
+          import os, psycopg
+          with psycopg.connect(os.environ['EPD2_S2S_DSN']) as conn:
+              with conn.cursor() as cur:
+                  cur.execute('SHOW server_version_num')
+                  version_num=cur.fetchone()[0]
+                  cur.execute('SHOW server_version')
+                  version=cur.fetchone()[0]
+          assert version_num == '160015', (version_num, version)
+          print('POSTGRES_VERSION_NUM', version_num)
+          print('POSTGRES_VERSION', version)
+          print('API03_C1_POSTGRES:PASS')
           PY
       - name: Execute complete API-03 test tree
         shell: bash
@@ -101,6 +133,7 @@ jobs:
           name: api03-c1-runtime-verification-${{ github.run_id }}
           if-no-files-found: warn
           path: |
+            /tmp/api03-c1-postgres.log
             /tmp/api03-c1-pytest.xml
             /tmp/api03-c1-pytest.log
             /tmp/api03-c1-sec01.log
