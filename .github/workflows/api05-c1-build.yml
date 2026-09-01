@@ -82,8 +82,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode handoff/API-05/WORKING_0.1/api05_c1_overlay.tar.gz.b64 > "$RUNNER_TEMP/api05-overlay.tar.gz"
-          echo "$API05_OVERLAY_SHA  $RUNNER_TEMP/api05-overlay.tar.gz" | sha256sum -c -
+          python3 - "$RUNNER_TEMP/api05-overlay.tar.gz" <<'PY'
+          import base64, hashlib, os, pathlib, sys
+          src = pathlib.Path('handoff/API-05/WORKING_0.1/api05_c1_overlay.tar.gz.b64').read_text(encoding='ascii')
+          compact = ''.join(src.split())
+          compact += '=' * ((-len(compact)) % 4)
+          raw = base64.b64decode(compact, validate=True)
+          got = hashlib.sha256(raw).hexdigest()
+          expected = os.environ['API05_OVERLAY_SHA']
+          assert got == expected, (got, expected)
+          pathlib.Path(sys.argv[1]).write_bytes(raw)
+          print(f'API05_OVERLAY_DECODE:PASS:{got}:{len(raw)}')
+          PY
           tar --no-same-owner -xzf "$RUNNER_TEMP/api05-overlay.tar.gz" -C '${{ steps.base.outputs.root }}'
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -print -quit | grep -q .
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type f \( -name '*.pyc' -o -name '*.pyo' \) -print -quit | grep -q .
