@@ -104,7 +104,12 @@ jobs:
           FRONT03_TEST_PROFILE: fixture
           NEXT_PUBLIC_FRONT03_FIXTURE: '1'
           EPD2_FRONT03_GOVERNED_TEST_CONTEXT: '1'
-        run: npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts tests/browser/front01.browser.spec.ts tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm exec --workspace web-shell playwright test -- tests/browser/front00.browser.spec.ts --grep-invert '@visual'
+          npm exec --workspace web-shell playwright test -- tests/browser/front01.browser.spec.ts --grep-invert '@front01-visual'
+          npm exec --workspace web-shell playwright test -- tests/browser/front02.browser.spec.ts tests/browser/pack15.browser.spec.ts tests/browser/front03.browser.spec.ts --grep-invert '@visual'
       - name: C1 exact API-02 production adapter browser proof
         working-directory: ${{ steps.candidate.outputs.root }}
         env:
