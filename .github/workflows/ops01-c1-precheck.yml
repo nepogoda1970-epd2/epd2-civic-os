@@ -1,0 +1,145 @@
+name: ops01-c1-precheck
+
+on:
+  push:
+    branches:
+      - handoff/ops
+    paths:
+      - 'handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip'
+      - '.github/workflows/ops01-c1-precheck.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Structural exact-byte inspection
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip'
+          python - <<'PY'
+          import hashlib, os, pathlib, stat, zipfile
+          zpath=pathlib.Path('handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip')
+          data=zpath.read_bytes()
+          print('CANDIDATE_SIZE_BYTES=', len(data))
+          print('CANDIDATE_SHA256=', hashlib.sha256(data).hexdigest())
+          print('CANDIDATE_GIT_COMMIT=', os.environ.get('GITHUB_SHA'))
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'ops01-candidate'
+          out.mkdir(parents=True, exist_ok=True)
+          bad=[]; seen=set(); casefold=set(); nested=[]; syms=[]
+          with zipfile.ZipFile(zpath) as z:
+              corrupt=z.testzip()
+              if corrupt: bad.append(f'CRC:{corrupt}')
+              infos=z.infolist()
+              for i in infos:
+                  p=pathlib.PurePosixPath(i.filename)
+                  if p.is_absolute() or '..' in p.parts or '\\' in i.filename:
+                      bad.append(f'UNSAFE_PATH:{i.filename}')
+                  if i.filename in seen: bad.append(f'DUPLICATE:{i.filename}')
+                  seen.add(i.filename)
+                  cf=i.filename.casefold()
+                  if cf in casefold and i.filename not in seen: bad.append(f'CASE_COLLISION:{i.filename}')
+                  casefold.add(cf)
+                  mode=(i.external_attr >> 16) & 0xFFFF
+                  if stat.S_ISLNK(mode): syms.append(i.filename)
+                  if i.filename.lower().endswith(('.zip','.7z','.rar','.tar','.tgz','.tar.gz')): nested.append(i.filename)
+              print('ZIP_ENTRIES=', len(infos))
+              print('ZIP_SYMLINKS=', len(syms), syms[:20])
+              print('NESTED_ARCHIVES=', len(nested), nested[:20])
+              if bad:
+                  print('STRUCTURAL_FAIL=', bad[:100])
+                  raise SystemExit(2)
+              z.extractall(out)
+          tops=sorted([p.name for p in out.iterdir()])
+          print('TOP_LEVEL=', tops)
+          dirs=[p for p in out.iterdir() if p.is_dir()]
+          files=[p for p in out.iterdir() if p.is_file()]
+          root=dirs[0] if len(dirs)==1 and not files else out
+          print('CANDIDATE_ROOT=', root)
+          with open(os.environ['GITHUB_ENV'],'a') as f: f.write(f'CANDIDATE_ROOT={root}\n')
+          print('STRUCTURAL_RESULT=PASS')
+          PY
+
+      - name: Candidate governance and evidence discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          echo '=== TOP LEVEL ==='
+          find . -maxdepth 2 -type f | sort | head -250
+          echo '=== OPS01 / OPS-01 FILES ==='
+          find . -type f \( -iname '*OPS01*' -o -iname '*OPS-01*' -o -path '*/ops01/*' -o -path '*/OPS-01/*' \) | sort | head -500
+          echo '=== VALIDATION / EVIDENCE / MANIFEST FILES ==='
+          find . -type f \( -iname '*validation*' -o -iname '*evidence*' -o -iname '*manifest*' -o -iname '*inventory*' -o -iname '*sha256*' -o -iname '*report*' -o -iname '*handover*' \) | sort | head -500
+          echo '=== OPS01 STATUS TOKENS ==='
+          grep -RInE --exclude-dir=.git --exclude-dir=node_modules --exclude='*.lock' --exclude='*.zip' '(OPS-01|OPS01|CANDIDATE_NOT_ACCEPTED|ACCEPTED / CLOSED|RESULT:PASS|RESULT:FAIL|EXTERNAL|CANONICAL|incident|recovery|change control)' docs validation tests scripts 2>/dev/null | head -1200 || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          python -m pip install --disable-pip-version-check 'uv==0.12.5'
+          if [ -f uv.lock ] && [ -f pyproject.toml ]; then
+            uv sync --all-groups --frozen
+          else
+            echo 'LOCKED_PYTHON_ENV=NOT_AVAILABLE'
+          fi
+
+      - name: Repository governance checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          if [ -f scripts/check_repository.py ]; then uv run python scripts/check_repository.py; fi
+          if [ -f scripts/check_forbidden_files.py ]; then uv run python scripts/check_forbidden_files.py; fi
+          if [ -f scripts/verify_versions.py ]; then uv run python scripts/verify_versions.py; fi
+
+      - name: OPS-01 focused tests and validators
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          mapfile -t TESTS < <(find tests -type f \( -iname '*ops01*.py' -o -iname '*ops_01*.py' -o -iname '*ops-01*.py' \) 2>/dev/null | sort)
+          echo "OPS01_TEST_FILE_COUNT=${#TESTS[@]}"
+          printf '%s\n' "${TESTS[@]}"
+          if [ ${#TESTS[@]} -gt 0 ]; then uv run pytest -q "${TESTS[@]}"; else echo 'OPS01_TESTS=NONE_DISCOVERED'; fi
+          mapfile -t VALS < <(find scripts validation -type f \( -iname '*ops01*.py' -o -iname '*ops_01*.py' -o -iname '*ops-01*.py' \) 2>/dev/null | sort)
+          echo "OPS01_VALIDATOR_FILE_COUNT=${#VALS[@]}"
+          printf '%s\n' "${VALS[@]}"
+          for v in "${VALS[@]}"; do
+            case "$v" in
+              *test*) continue ;;
+            esac
+            if grep -q '__main__' "$v" 2>/dev/null; then
+              echo "RUN_VALIDATOR=$v"
+              uv run python "$v"
+            fi
+          done
+
+      - name: General Python regression smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          if [ -d tests/repository ]; then uv run pytest -q tests/repository; fi
+
+      - name: Final candidate identity
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          ZIP='handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip'
+          sha256sum "$ZIP" || true
+          stat -c '%s bytes' "$ZIP" || true
