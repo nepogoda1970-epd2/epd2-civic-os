@@ -1,0 +1,24 @@
+name: INFRA-01 Authority Probe
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-authority-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Probe current authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          echo "MAIN=$(git rev-parse origin/main)"
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > /tmp/pcr.md
+          git show origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md > /tmp/master.md
+          sha256sum /tmp/pcr.md /tmp/master.md
