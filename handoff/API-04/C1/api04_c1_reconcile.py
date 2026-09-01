@@ -22,7 +22,14 @@ def apply_correction_patch(out: Path, patch_file: Path) -> None:
     import subprocess
     subprocess.run(['patch','-p1','--batch','--forward','-i',str(patch_file)], cwd=out, check=True)
     setup=out/'scripts/api04_ci_setup.sh'
-    if setup.exists(): setup.chmod(0o755)
+    if setup.exists():
+        s=setup.read_text()
+        # GitHub-hosted RabbitMQ 3.12.x CLI refuses non-root execution. Normalize
+        # every CLI invocation deterministically while keeping the exact-version gate.
+        s=s.replace('sudo rabbitmqctl','rabbitmqctl').replace('rabbitmqctl','sudo rabbitmqctl')
+        s='\n'.join(line for line in s.splitlines() if not ('.erlang.cookie' in line and 'chmod 644' in line))+'\n'
+        setup.write_text(s)
+        setup.chmod(0o755)
     legacy=out/'services/events-messaging-runtime/src/epd2_events_messaging_runtime/identity/api03_r13_adapter.py'
     if legacy.exists(): legacy.unlink()
 
