@@ -1,0 +1,86 @@
+{
+  "accepted_scope": [
+    "bounded FRONT-03 WS-02 Applicant & Member Core implementation stage",
+    "exact API-02 C13 production adapter binding used by FRONT-03 C1",
+    "Applicant-to-Member server-governed promotion boundary",
+    "organization scope reauthorization and stale-scope refusal",
+    "session/security projection non-disclosure",
+    "WS-02 to WS-03 voting-handoff isolation without persistent identity",
+    "inherited FRONT-00/01/02 and PACK-15 browser/a11y/keyboard/reflow regression scope exercised by independent acceptance",
+    "27-shot immutable FRONT-03 visual baseline"
+  ],
+  "bsi_certification_readiness": {
+    "candidate_evidence": [
+      "docs/frontend/FRONT-03-BSI-VOTING-READINESS-DELTA.md",
+      "validation/front03/bsi-voting-readiness-delta.json"
+    ],
+    "deferred_items_remain_governed": true,
+    "hard_freeze_preserved": "no persistent member/person identifier inside voting domain",
+    "new_unrecorded_blocker_introduced": false,
+    "status": "PREPARATORY ONLY / NOT CERTIFIED / NOT A CONFORMANCE CLAIM"
+  },
+  "candidate": {
+    "candidate_state_inside_sealed_bytes": "C1_CANDIDATE_NOT_ACCEPTED",
+    "filename": "EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip",
+    "self_acceptance": false,
+    "sha256": "fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26",
+    "size_bytes": 17646011
+  },
+  "canonical_master": {
+    "blob_sha": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+    "changed_by_this_decision": false,
+    "maintenance": "V26",
+    "reason": "bounded FRONT-03 acceptance changes current execution state but does not create, supersede, or close a Master future requirement"
+  },
+  "decision": "ACCEPTED / CLOSED",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Project Owner requested governed completion; independent sealed-byte GitHub acceptance completed successfully before this governance record.",
+  "decision_date": "2026-09-01",
+  "entering_canonical_main": "3d0b2fec5f86c491f36de1041caa66d983727480",
+  "exclusions": [
+    "This decision does not close the entire FRONT layer.",
+    "Final integrated FRONT closure remains dependent on the canonical sequence API \u2192 INFRA \u2192 OPS \u2192 CTRL \u2192 FRONT.",
+    "This decision does not close API-04 or the API layer.",
+    "This decision does not declare production readiness or legal activation.",
+    "This decision does not claim BSI certification, CC conformance, EAL4 certification, or security certification."
+  ],
+  "execution_and_seal": {
+    "finalize_job_id": 99921554491,
+    "finalize_run_id": 33527376449,
+    "runtime_proof_job_id": 99918246676,
+    "runtime_proof_run_id": 33526403812
+  },
+  "independent_review": {
+    "conclusion": "success",
+    "evidence_artifact": "front03-c1-acceptance-evidence-33528038712",
+    "evidence_artifact_digest": "sha256:27dad0fb37c18bdeeda2d7d2b3670f5d0972a320b2956c8038dfe888f993e152",
+    "evidence_artifact_id": 9808685208,
+    "fresh_gates": {
+      "c1_exact_api02_production_browser": "12/12 PASS",
+      "c1_mutations": "9/9 DETECTED",
+      "c1_validator": "14/14 PASS",
+      "exact_candidate_sha_size_crc": "PASS",
+      "immutable_front03_visual_baseline": "27/27 PASS",
+      "inherited_nonvisual_browser": "195/195 PASS",
+      "locked_dependencies_format_typecheck_lint_unit_build": "PASS",
+      "production_fail_closed_browser": "6/6 PASS",
+      "tap_tests": "58/58 PASS",
+      "vitest_tests": "30/30 PASS"
+    },
+    "job_id": 99923795567,
+    "result_marker": "FRONT03_C1_ACCEPTANCE_RESULT:PASS:fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26:17646011",
+    "run_id": 33528038712,
+    "workflow": "FRONT-03 C1 governed finalize / independent-accept wrapper",
+    "workflow_commit": "8fb650b5b82611926664474b93f6155d4c70d2de"
+  },
+  "next_permitted_status": "FRONT-03 C1 is the accepted bounded WS-02 baseline for later governed integration; current primary program work remains controlled by the live PCR.",
+  "schema": "epd2.front03.acceptance-record/1",
+  "stage": "FRONT-03 \u2014 WS-02 Applicant & Member Core",
+  "technical_lineage": {
+    "accepted_api02_c13_sha256": "9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9",
+    "accepted_api02_run_id": 33497989489,
+    "accepted_front02_c2_1_sha256": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179",
+    "api03_dependency_discovered_for_c1": false,
+    "front03_preseal_sha256": "da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294"
+  }
+}
