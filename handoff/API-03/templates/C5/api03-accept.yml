@@ -1,0 +1,273 @@
+name: API-03 C5 authoritative acceptance
+on:
+  push:
+    branches: [tmp/api03-c5-authoritative-accept]
+    paths:
+      - 'handoff/API-03/authoritative_control.json'
+      - '.github/workflows/api03-accept.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_DB: epd2_s2s
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['55432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d epd2_s2s"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      EPD2_S2S_DSN: postgresql://postgres@127.0.0.1:55432/epd2_s2s
+      ACCEPTED_API02_C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+      ACCEPTED_API02_RUN_ID: '33497989489'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read fail-closed external authoritative control
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, os
+          p=pathlib.Path('handoff/API-03/authoritative_control.json')
+          assert p.is_file(), 'missing authoritative control'
+          x=json.loads(p.read_text())
+          required={
+            'schema':'epd2.api03.authoritative-control/1',
+            'candidate_role':'C5',
+            'candidate_filename':'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip',
+            'accepted_api02_c13_sha256':os.environ['ACCEPTED_API02_C13_SHA256'],
+            'accepted_api02_authoritative_run_id':int(os.environ['ACCEPTED_API02_RUN_ID']),
+          }
+          for k,v in required.items(): assert x.get(k)==v,(k,x.get(k),v)
+          sha=x.get('candidate_sha256',''); assert len(sha)==64 and all(c in '0123456789abcdef' for c in sha)
+          aid=x.get('candidate_artifact_id'); assert isinstance(aid,int) and aid>0
+          brid=x.get('candidate_builder_run_id'); assert isinstance(brid,int) and brid>0
+          wf=x.get('sealed_workflow_sha256',''); assert len(wf)==64 and all(c in '0123456789abcdef' for c in wf)
+          for k in ('c4_verification_run_id','c4_verification_job_id','c4_verification_evidence_artifact_id'):
+            assert isinstance(x.get(k),int) and x[k]>0,k
+          assert x['c4_verification_run_id']==33509385291
+          assert x['c4_verification_job_id']==99861098139
+          assert x['c4_verification_evidence_artifact_id']==9800985043
+          assert x.get('c4_verification_evidence_digest')=='sha256:1a8074c08631910f28833a95cef45d8f85f0b9b0762740a65bfa050f5f80555f'
+          env=pathlib.Path(os.environ['GITHUB_ENV'])
+          with env.open('a') as f:
+            f.write(f"CANDIDATE_SHA256={sha}\nCANDIDATE_ARTIFACT_ID={aid}\nCANDIDATE_BUILDER_RUN_ID={brid}\nSEALED_WORKFLOW_SHA256={wf}\n")
+          print('API03_CONTROL:PASS')
+          PY
+      - name: Download exact sealed C5 and verify external archive identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/api03-c5-artifact /tmp/api03-c5-extract /tmp/api03-authoritative-evidence
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${CANDIDATE_ARTIFACT_ID}/zip" -o /tmp/api03-c5-artifact.zip
+          unzip -q /tmp/api03-c5-artifact.zip -d /tmp/api03-c5-artifact
+          CANDIDATE="$(find /tmp/api03-c5-artifact -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip' -print -quit)"
+          test -n "$CANDIDATE"
+          echo "${CANDIDATE_SHA256}  ${CANDIDATE}" | sha256sum -c -
+          unzip -t "$CANDIDATE" >/dev/null
+          python - "$CANDIDATE" <<'PY'
+          import sys,zipfile,pathlib
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); assert names
+          for n in names:
+            p=pathlib.PurePosixPath(n)
+            assert not p.is_absolute() and '..' not in p.parts and '\\' not in n and not n.startswith('/'),n
+            mode=(z.getinfo(n).external_attr>>16)&0o170000
+            assert mode not in (0o120000,0o060000),n
+          roots={pathlib.PurePosixPath(n).parts[0] for n in names if pathlib.PurePosixPath(n).parts}
+          assert roots=={'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5'},roots
+          print('API03_ZIP_HYGIENE:PASS',len(names))
+          PY
+          unzip -q "$CANDIDATE" -d /tmp/api03-c5-extract
+          ROOT="$(find /tmp/api03-c5-extract -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$ROOT"
+          echo "C5ROOT=$ROOT" >> "$GITHUB_ENV"
+      - name: Verify complete seal accounting and no-self-acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python "$C5ROOT/scripts/api03_verify_seal.py" "$C5ROOT" | tee /tmp/api03-authoritative-evidence/seal_verification.log
+          test "$(cat "$C5ROOT/API03_C5_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          test ! -e "$C5ROOT/API03_C4_STATUS.txt"
+      - name: Bind current workflow byte-for-byte to sealed workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp -s .github/workflows/api03-accept.yml "$C5ROOT/.github/workflows/api03-accept.yml"
+          ACTUAL="$(sha256sum .github/workflows/api03-accept.yml | awk '{print $1}')"
+          test "$ACTUAL" = "$SEALED_WORKFLOW_SHA256"
+          grep -F "${ACTUAL}  .github/workflows/api03-accept.yml" "$C5ROOT/SHA256SUMS.txt" >/dev/null
+          echo "API03_WORKFLOW_BINDING:PASS ${ACTUAL}" | tee /tmp/api03-authoritative-evidence/workflow_binding.log
+      - name: Verify sealed lineage and external control consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee /tmp/api03-authoritative-evidence/lineage_control.log
+          import json, pathlib, os
+          r=pathlib.Path(os.environ['C5ROOT'])
+          c=json.loads(pathlib.Path('handoff/API-03/authoritative_control.json').read_text())
+          s=json.loads((r/'docs/api/API-03/API03_C5_SEAL_RECORD.json').read_text())
+          assert s['candidate_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert s['builder_run_id']==int(os.environ['CANDIDATE_BUILDER_RUN_ID'])
+          assert s['source_c4']['sha256']=='09531e9b64dd66c558e3c2478ea897e020adfd4814a7237cd8eab7f18b568a86'
+          assert s['source_c4']['builder_run_id']==33509225312
+          assert s['source_c4']['runtime_verification_run_id']==33509385291
+          assert s['source_c4']['runtime_verification_job_id']==99861098139
+          assert s['source_c4']['runtime_verification_evidence_artifact_id']==9800985043
+          assert s['source_c4']['runtime_verification_evidence_digest']=='sha256:1a8074c08631910f28833a95cef45d8f85f0b9b0762740a65bfa050f5f80555f'
+          assert s['accepted_predecessor']['sha256']==os.environ['ACCEPTED_API02_C13_SHA256']
+          assert s['accepted_predecessor']['authoritative_run_id']==int(os.environ['ACCEPTED_API02_RUN_ID'])
+          assert s['sealed_workflow_sha256']==os.environ['SEALED_WORKFLOW_SHA256']
+          assert c['candidate_builder_run_id']==s['builder_run_id']
+          assert c['sealed_workflow_sha256']==s['sealed_workflow_sha256']
+          assert s['open_blockers']==['independent authoritative acceptance']
+          print('API03_LINEAGE_CONTROL:PASS')
+          PY
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.5'}
+      - name: Frozen workspace install and preserve voting cryptography 46.0.7
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"
+          UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/api03-workspace-env" uv sync --frozen --all-groups --python "$(command -v python)"
+          echo "WORKENV=${RUNNER_TEMP}/api03-workspace-env" >> "$GITHUB_ENV"
+          "${RUNNER_TEMP}/api03-workspace-env/bin/python" - <<'PY' | tee /tmp/api03-authoritative-evidence/workspace_crypto.log
+          import cryptography
+          assert cryptography.__version__=='46.0.7',cryptography.__version__
+          print('API03_WORKSPACE_CRYPTO_PIN:PASS',cryptography.__version__)
+          PY
+      - name: Offline isolated cryptography 49 bootstrap and probe
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"
+          ./scripts/api03_bootstrap_crypto49.sh "${RUNNER_TEMP}/api03-crypto49" | tee /tmp/api03-authoritative-evidence/crypto49_bootstrap.log
+          echo "CRYPTOENV=${RUNNER_TEMP}/api03-crypto49" >> "$GITHUB_ENV"
+          CRYPTO_SITE="$(${RUNNER_TEMP}/api03-crypto49/bin/python -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])')"
+          echo "CRYPTO_SITE=$CRYPTO_SITE" >> "$GITHUB_ENV"
+          "${RUNNER_TEMP}/api03-crypto49/bin/python" scripts/api03_crypto_probe.py --venv "${RUNNER_TEMP}/api03-crypto49" --output /tmp/api03-authoritative-evidence/crypto49_probe.json | tee /tmp/api03-authoritative-evidence/crypto49_probe.log
+      - name: Prove exact PostgreSQL 16.15 and prepare isolated topology database
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-authoritative-evidence/postgres.log
+          import os,psycopg
+          with psycopg.connect(os.environ['EPD2_S2S_DSN']) as c:
+            with c.cursor() as q:
+              q.execute('SHOW server_version_num');vn=str(q.fetchone()[0]);q.execute('SHOW server_version');v=str(q.fetchone()[0])
+          assert vn=='160015',(vn,v)
+          with psycopg.connect('postgresql://postgres@127.0.0.1:55432/postgres',autocommit=True) as c:
+            with c.cursor() as q:
+              q.execute('DROP DATABASE IF EXISTS epd2_s2s_topology WITH (FORCE)');q.execute('CREATE DATABASE epd2_s2s_topology')
+          print('API03_POSTGRES:PASS',vn,v)
+          PY
+      - name: Execute 98 API-03 tests in isolated crypto49 process path
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"; export PYTHONNOUSERSITE=1; export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" - <<'PY'
+          import cryptography
+          assert cryptography.__version__=='49.0.0',cryptography.__version__
+          PY
+          "$WORKENV/bin/python" -m pytest tests/api03 -q -k 'not cross_instance_revoke_without_restart' --junitxml=/tmp/api03-authoritative-evidence/api03-main.xml | tee /tmp/api03-authoritative-evidence/api03-main.log
+      - name: Execute isolated cross-instance revoke topology test
+        shell: bash
+        env: {EPD2_S2S_DSN: 'postgresql://postgres@127.0.0.1:55432/epd2_s2s_topology'}
+        run: |
+          set -euo pipefail; cd "$C5ROOT"; export PYTHONNOUSERSITE=1; export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" -m pytest tests/api03/test_topology_r4.py::test_cross_instance_revoke_without_restart -q --junitxml=/tmp/api03-authoritative-evidence/api03-topology.xml | tee /tmp/api03-authoritative-evidence/api03-topology.log
+      - name: Assert exact 99 of 99 API-03 tests
+        shell: bash
+        run: |
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-authoritative-evidence/api03-99.log
+          import xml.etree.ElementTree as E
+          def c(p):
+            r=E.parse(p).getroot();s=[r] if r.tag=='testsuite' else list(r.findall('testsuite'));return tuple(sum(int(x.attrib.get(k,0)) for x in s) for k in ('tests','failures','errors','skipped'))
+          a=c('/tmp/api03-authoritative-evidence/api03-main.xml');b=c('/tmp/api03-authoritative-evidence/api03-topology.xml');t=tuple(x+y for x,y in zip(a,b))
+          assert a==(98,0,0,0),a;assert b==(1,0,0,0),b;assert t==(99,0,0,0),t
+          print('API03_99_TESTS:PASS',t)
+          PY
+      - name: Execute governed R11 V23 runtime suite
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"; export PYTHONNOUSERSITE=1; export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" scripts/api03_run_r11_v23_tests.py --dsn "$EPD2_S2S_DSN" --output /tmp/api03-authoritative-evidence/r11_v23.json | tee /tmp/api03-authoritative-evidence/r11_v23.log
+          "$WORKENV/bin/python" - <<'PY'
+          import json
+          x=json.load(open('/tmp/api03-authoritative-evidence/r11_v23.json'))
+          assert x['executed'] is True and x['ok'] is True and x['failed']==0 and x['skipped_mandatory']==0 and x['tls13'] is True and x['postgres_jti_durable'] is True,x
+          print('API03_R11_V23:PASS',x['counts'])
+          PY
+      - name: Execute governed real multi-process mTLS topology proof
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"; export PYTHONNOUSERSITE=1; export PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD"
+          "$WORKENV/bin/python" scripts/api03_run_topology.py --dsn "$EPD2_S2S_DSN" --venv "$CRYPTOENV" --output /tmp/api03-authoritative-evidence/topology.json | tee /tmp/api03-authoritative-evidence/topology.log
+          "$WORKENV/bin/python" - <<'PY'
+          import json
+          x=json.load(open('/tmp/api03-authoritative-evidence/topology.json'))
+          assert x['executed'] is True and x['ok'] is True and x['server_version'].startswith('16.15'),x
+          assert x['caller_a']['result'].get('ok') is True and x['caller_b']['result'].get('reason')=='REPLAY_DETECTED' and x['restart']['result'].get('reason')=='REPLAY_DETECTED',x
+          print('API03_TOPOLOGY:PASS')
+          PY
+      - name: Execute unchanged SEC-01 repository-wide crypto guard
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"
+          "$WORKENV/bin/python" -m pytest packages/python/epd2-runtime/tests/test_sec01_security_controls.py::test_the_cryptography_apis_three_advisories_need_are_absent -q | tee /tmp/api03-authoritative-evidence/sec01.log
+      - name: Verify accepted predecessor, cumulative correction lineage, and current governance invariants
+        shell: bash
+        run: |
+          set -euo pipefail; cd "$C5ROOT"
+          "$WORKENV/bin/python" - <<'PY' | tee /tmp/api03-authoritative-evidence/static_lineage.log
+          import json,pathlib,os,hashlib
+          r=pathlib.Path('.')
+          c1=json.load(open(r/'docs/api/API-03/API03_C1_EXACT_C13_DELTA_INVENTORY.json'));c2=json.load(open(r/'docs/api/API-03/API03_C2_EXACT_C1_DELTA_INVENTORY.json'));c3=json.load(open(r/'docs/api/API-03/API03_C3_EXACT_C2_DELTA_INVENTORY.json'));c4=json.load(open(r/'docs/api/API-03/API03_C4_EXACT_C3_DELTA_INVENTORY.json'));c5=json.load(open(r/'docs/api/API-03/API03_C5_EXACT_C4_DELTA_INVENTORY.json'))
+          rec=json.load(open(r/'docs/api/API-03/API03_API02_RECONCILIATION_REQUIREMENTS.json'))
+          assert c1['base_api02_c13_sha256']==os.environ['ACCEPTED_API02_C13_SHA256'] and c1['counts']=={'added':156,'modified':2,'removed':0}
+          assert c2['counts']=={'added':2,'modified':2,'removed':1};assert c3['counts']=={'added':3,'modified':3,'removed':1};assert c4['counts']=={'added':2,'modified':3,'removed':1}
+          assert c5['base_c4_sha256']=='09531e9b64dd66c558e3c2478ea897e020adfd4814a7237cd8eab7f18b568a86'
+          assert rec['accepted_predecessor']['sha256']==os.environ['ACCEPTED_API02_C13_SHA256'] and rec['accepted_predecessor']['authoritative_run']==int(os.environ['ACCEPTED_API02_RUN_ID']) and rec['open_reconciliation_blockers']==[] and rec['self_accepted'] is False
+          pc=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text();assert 'API-02 = ACCEPTED / CLOSED' in pc and 'API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in pc
+          wh=r/'packages/python/epd2-s2s-crypto/wheelhouse';m=json.load(open(r/'packages/python/epd2-s2s-crypto/wheelhouse.manifest.json'));a={p.name:(p.stat().st_size,hashlib.sha256(p.read_bytes()).hexdigest()) for p in wh.glob('*.whl')};e={w['filename']:(w['bytes'],w['sha256']) for w in m['wheels']};assert a==e
+          print('API03_STATIC_LINEAGE:PASS')
+          PY
+      - name: Write terminal authoritative PASS evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/api03-authoritative-evidence/validation/api03
+          "$WORKENV/bin/python" - <<'PY'
+          import json,os,pathlib,hashlib,datetime
+          c=json.loads(pathlib.Path('handoff/API-03/authoritative_control.json').read_text())
+          result={
+            'schema':'epd2.api03.authoritative-acceptance-result/1',
+            'stage':'API-03','stage_title':'Service-to-Service Authentication & Authorization Runtime','candidate_role':'C5',
+            'candidate_filename':c['candidate_filename'],'candidate_sha256':c['candidate_sha256'],'candidate_artifact_id':c['candidate_artifact_id'],'candidate_builder_run_id':c['candidate_builder_run_id'],
+            'acceptance_run_id':int(os.environ['GITHUB_RUN_ID']),'acceptance_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),'acceptance_provenance_commit':os.environ['GITHUB_SHA'],'event':os.environ['GITHUB_EVENT_NAME'],
+            'accepted_predecessor':{'stage':'API-02','role':'C13','sha256':os.environ['ACCEPTED_API02_C13_SHA256'],'authoritative_run_id':int(os.environ['ACCEPTED_API02_RUN_ID'])},
+            'environment':{'python':'3.12','workspace_cryptography':'46.0.7','isolated_cryptography':'49.0.0','postgresql_server_version_num':'160015','postgresql_required':'16.15'},
+            'gates':{'external_archive_identity':'PASS','zip_integrity_hygiene':'PASS','complete_seal_accounting':'PASS','workflow_byte_binding':'PASS','no_self_acceptance':'PASS','frozen_workspace':'PASS','crypto_isolation':'PASS','postgresql_16_15':'PASS','api03_tests_99_of_99':'PASS','r11_v23_runtime':'PASS','multi_process_mtls_topology':'PASS','sec01_repository_guard':'PASS','cumulative_lineage':'PASS'},
+            'api03_test_counts':{'executed':99,'passed':99,'failed':0,'errors':0,'skipped':0},
+            'topology_expectations':{'caller_a':'ALLOW','caller_b':'REPLAY_DETECTED','restart':'REPLAY_DETECTED'},
+            'self_accepted':False,'technical_verdict':'PASS','governance_state_change_performed':False,'open_technical_blockers':[],
+            'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()
+          }
+          p=pathlib.Path('/tmp/api03-authoritative-evidence/validation/api03/authoritative_acceptance_result.json');p.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print('API03_RESULT:PASS:validation/api03/authoritative_acceptance_result.json')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api03-c5-authoritative-acceptance-${{ github.run_id }}
+          if-no-files-found: warn
+          path: /tmp/api03-authoritative-evidence
