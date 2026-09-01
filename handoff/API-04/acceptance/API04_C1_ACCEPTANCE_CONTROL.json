@@ -1,0 +1,15 @@
+{
+  "schema": "epd2.api04.c1.acceptance-control/1",
+  "stage": "API-04",
+  "candidate_role": "C1",
+  "candidate_run_id": 33567509799,
+  "candidate_sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337",
+  "candidate_size_bytes": 43880523,
+  "builder_commit": "2878c3bbfeb11328adf294a2b59d631b851b43dd",
+  "candidate_artifact_id": 9824179973,
+  "candidate_artifact_digest": "sha256:9a7a67c81061ce87225700398e6f90d5785e2a2ff8e7707c5facfe44ed40c509",
+  "sealed_workflow_sha256": "3decc2dd0592800d7278ba83b3c6a88ed51177b78aa40b0966b62cac101e2bec",
+  "accepted_api03_sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55",
+  "decision_before_run": "NOT_ACCEPTED",
+  "note": "Independent authoritative acceptance control. Candidate remains CANDIDATE_NOT_ACCEPTED until this workflow succeeds."
+}
