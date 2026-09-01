@@ -1,0 +1,150 @@
+name: API-03 C3 wheelhouse correction build
+on:
+  push:
+    branches: [tmp/api03-c1-runtime-verify]
+    paths: ['.github/workflows/api03-c3-wheelhouse-build.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      C2_SHA256: 8f0a52464e05a8d66473b2c983fa4d5630a196e3f0368aac45862c9ef2bdabd6
+      C2_ARTIFACT_ID: '9800499894'
+      C1_SHA256: 9bc0835ec7894db5f8fb1ed38e08e1fd6943ca042685e4a7ef6c5e1d599d6941
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download and verify exact C2
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${C2_ARTIFACT_ID}/zip" -o /tmp/c2-artifact.zip
+          mkdir /tmp/a && unzip -q /tmp/c2-artifact.zip -d /tmp/a
+          C2="$(find /tmp/a -maxdepth 2 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C2.zip' -print -quit)"
+          test -n "$C2"
+          echo "${C2_SHA256}  ${C2}" | sha256sum -c -
+          unzip -t "$C2" >/dev/null
+          mkdir /tmp/src && unzip -q "$C2" -d /tmp/src
+          C2ROOT="$(find /tmp/src -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test "$(cat "$C2ROOT/API03_C2_STATUS.txt")" = CANDIDATE_NOT_ACCEPTED
+          echo "C2ROOT=$C2ROOT" >> "$GITHUB_ENV"
+      - name: Add exact CPython 3.12 cffi wheel and repair lock manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          C3ROOT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C3
+          cp -a "$C2ROOT" "$C3ROOT"
+          rm "$C3ROOT/API03_C2_STATUS.txt"
+          printf 'CANDIDATE_NOT_ACCEPTED\n' > "$C3ROOT/API03_C3_STATUS.txt"
+          printf 'SUPERSEDED_BY_API03_C3_STATUS\n' > "$C3ROOT/API03_PRESEAL_STATUS.txt"
+          WH="$C3ROOT/packages/python/epd2-s2s-crypto/wheelhouse"
+          python -m pip download --disable-pip-version-check --only-binary=:all: --no-deps --dest "$WH" 'cffi==2.0.0'
+          CFFI312="$(find "$WH" -maxdepth 1 -type f -name 'cffi-2.0.0-cp312-*.whl' -print -quit)"
+          test -n "$CFFI312"
+          CFFI312_SHA="$(sha256sum "$CFFI312" | awk '{print $1}')"
+          CFFI312_BYTES="$(stat -c '%s' "$CFFI312")"
+          echo "CFFI312_SHA=$CFFI312_SHA" >> "$GITHUB_ENV"
+          echo "CFFI312_FILE=$(basename "$CFFI312")" >> "$GITHUB_ENV"
+          echo "CFFI312_BYTES=$CFFI312_BYTES" >> "$GITHUB_ENV"
+          C3ROOT="$C3ROOT" CFFI312_SHA="$CFFI312_SHA" CFFI312_FILE="$(basename "$CFFI312")" CFFI312_BYTES="$CFFI312_BYTES" C2_SHA256="$C2_SHA256" C1_SHA256="$C1_SHA256" C13_SHA256="$C13_SHA256" python - <<'PY'
+          import json, os, pathlib
+          r=pathlib.Path(os.environ['C3ROOT'])
+          lock=r/'packages/python/epd2-s2s-crypto/requirements.lock'
+          text=lock.read_text()
+          old="cffi==2.0.0; python_version >= '3.13' --hash=sha256:79839c89c79eabc6f2cbc52733436c81a89b026b8a4eb3cc69f3454236e1bb8f"
+          assert old in text
+          new=("cffi==2.0.0 "
+               f"--hash=sha256:{os.environ['CFFI312_SHA']} "
+               "--hash=sha256:79839c89c79eabc6f2cbc52733436c81a89b026b8a4eb3cc69f3454236e1bb8f")
+          lock.write_text(text.replace(old,new))
+          mp=r/'packages/python/epd2-s2s-crypto/wheelhouse.manifest.json'
+          m=json.load(open(mp))
+          assert not any(w['filename']==os.environ['CFFI312_FILE'] for w in m['wheels'])
+          m['revision']='C3_PY312_WHEELHOUSE_CORRECTED'
+          m['generated_by']='api03-c3-wheelhouse-correction-builder'
+          m['wheels'].append({'filename':os.environ['CFFI312_FILE'],'bytes':int(os.environ['CFFI312_BYTES']),'sha256':os.environ['CFFI312_SHA']})
+          m['wheels']=sorted(m['wheels'],key=lambda x:x['filename'])
+          mp.write_text(json.dumps(m,indent=2,sort_keys=True)+'\n')
+          report={
+            'schema':'epd2.api03.c3.py312-wheelhouse-correction/1',
+            'candidate_state':'CANDIDATE_NOT_ACCEPTED',
+            'source_c2_sha256':os.environ['C2_SHA256'],
+            'source_c1_sha256':os.environ['C1_SHA256'],
+            'accepted_api02_c13_sha256':os.environ['C13_SHA256'],
+            'triggering_verification_run':33508493329,
+            'failure':'offline cryptography 49 bootstrap on Python 3.12 could not satisfy cffi>=2.0.0 because wheelhouse contained only a CPython 3.13 cffi wheel',
+            'correction':'add exact CPython 3.12 cffi 2.0.0 wheel and authorize both CPython 3.12 and 3.13 cffi wheel hashes in the isolated requirements lock',
+            'cffi_cp312':{'filename':os.environ['CFFI312_FILE'],'bytes':int(os.environ['CFFI312_BYTES']),'sha256':os.environ['CFFI312_SHA']},
+            'runtime_source_changed':False,
+            'workspace_crypto_pin_changed':False,
+            'isolated_crypto_version_changed':False,
+            'open_blockers':['independent dependency-backed C3 verification','seal','independent authoritative acceptance']
+          }
+          (r/'docs/api/API-03/API03_C3_CORRECTION_REPORT.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          inv={
+            'schema':'epd2.api03.c3.c2-delta/1',
+            'base_c2_sha256':os.environ['C2_SHA256'],
+            'added':['API03_C3_STATUS.txt','docs/api/API-03/API03_C3_CORRECTION_REPORT.json',f"packages/python/epd2-s2s-crypto/wheelhouse/{os.environ['CFFI312_FILE']}"],
+            'modified':['API03_PRESEAL_STATUS.txt','packages/python/epd2-s2s-crypto/requirements.lock','packages/python/epd2-s2s-crypto/wheelhouse.manifest.json'],
+            'removed':['API03_C2_STATUS.txt'],
+            'counts':{'added':3,'modified':3,'removed':1},
+            'inventory_excludes_self':True
+          }
+          (r/'docs/api/API-03/API03_C3_EXACT_C2_DELTA_INVENTORY.json').write_text(json.dumps(inv,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "C3ROOT=$C3ROOT" >> "$GITHUB_ENV"
+      - name: Offline bootstrap C3 before packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C3ROOT"
+          ./scripts/api03_bootstrap_crypto49.sh /tmp/c3-offline-crypto
+          /tmp/c3-offline-crypto/bin/python - <<'PY'
+          import cryptography,cffi
+          assert cryptography.__version__=='49.0.0',cryptography.__version__
+          assert cffi.__version__=='2.0.0',cffi.__version__
+          print('API03_C3_OFFLINE_CRYPTO49_BOOTSTRAP:PASS')
+          PY
+          python - <<'PY'
+          import hashlib,json,pathlib,os
+          r=pathlib.Path(os.environ['C3ROOT']); wh=r/'packages/python/epd2-s2s-crypto/wheelhouse'
+          m=json.load(open(r/'packages/python/epd2-s2s-crypto/wheelhouse.manifest.json'))
+          actual={p.name:(p.stat().st_size,hashlib.sha256(p.read_bytes()).hexdigest()) for p in wh.glob('*.whl')}
+          expected={w['filename']:(w['bytes'],w['sha256']) for w in m['wheels']}
+          assert actual==expected,(set(actual)^set(expected))
+          assert any(n.startswith('cffi-2.0.0-cp312-') for n in actual)
+          assert any(n.startswith('cffi-2.0.0-cp313-') for n in actual)
+          print('API03_C3_WHEELHOUSE_MANIFEST:PASS',len(actual))
+          PY
+      - name: Pack exact C3 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C3.zip
+          C3ROOT="$C3ROOT" python - <<'PY'
+          from pathlib import Path
+          import zipfile,os
+          root=Path(os.environ['C3ROOT']); out=Path('/tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C3.zip')
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(root.rglob('*')):
+                  if p.is_file(): z.write(p,arcname=f'{root.name}/{p.relative_to(root).as_posix()}')
+          PY
+          unzip -t "$OUT" >/dev/null
+          sha256sum "$OUT" | tee /tmp/API03_C3.sha256
+          stat -c '%s' "$OUT" | tee /tmp/API03_C3.size
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-c3-corrected-candidate
+          compression-level: 0
+          path: |
+            /tmp/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C3.zip
+            /tmp/API03_C3.sha256
+            /tmp/API03_C3.size
