@@ -1,0 +1,87 @@
+name: FRONT-03 C1 TypeScript repair
+on:
+  push:
+    branches: [tmp/front03-c1-closure]
+    paths: ['.github/workflows/front03-c1-typescript-repair.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PRESEAL_RUN_ID: '33502571022'
+      PRESEAL_ARTIFACT: front03-r3-preseal-exact-source
+      PRESEAL_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
+      PRESEAL_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
+      ENTERING_RUN_ID: '33509482398'
+      ENTERING_ARTIFACT: front03-c1-overlay-formatted
+      ENTERING_SHA256: 47dede36db313ff19bb4c34e135209527cfc445e3f29c4e4be6a8a98cb24ddbe
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRESEAL_ARTIFACT }}
+          path: incoming/preseal
+          run-id: ${{ env.PRESEAL_RUN_ID }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ENTERING_ARTIFACT }}
+          path: incoming/overlay
+          run-id: ${{ env.ENTERING_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Verify exact entering sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          PRE="incoming/preseal/$PRESEAL_NAME"; OVL="incoming/overlay/front03-c1-overlay-formatted.tar.gz"
+          echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -
+          echo "$ENTERING_SHA256  $OVL" | sha256sum -c -
+          tar -tzf "$OVL" > "$RUNNER_TEMP/paths.txt"; test "$(grep -c . "$RUNNER_TEMP/paths.txt")" -eq 16
+          mkdir "$RUNNER_TEMP/tree"; unzip -q "$PRE" -d "$RUNNER_TEMP/tree"; tar -xzf "$OVL" -C "$RUNNER_TEMP/tree"
+      - name: Apply exact compile-time import correction
+        working-directory: ${{ runner.temp }}/tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/web-shell/member/MemberWorkspace.tsx')
+          s=p.read_text()
+          old='  ApplicantCase,\n  InitiativeDraft,'
+          new='  ApplicantCase,\n  CapabilityStatus,\n  InitiativeDraft,'
+          if old not in s: raise SystemExit('expected import anchor absent')
+          if '  CapabilityStatus,\n' in s: raise SystemExit('CapabilityStatus already imported unexpectedly')
+          p.write_text(s.replace(old,new,1))
+          PY
+          grep -n 'CapabilityStatus' frontend/web-shell/member/MemberWorkspace.tsx
+      - uses: actions/setup-node@v4
+        with: {node-version: '22.16.0'}
+      - name: Locked formatter and full TypeScript verification
+        working-directory: ${{ runner.temp }}/tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          ./node_modules/.bin/prettier --write frontend/web-shell/member/MemberWorkspace.tsx
+          ./node_modules/.bin/prettier --check frontend/web-shell/member/MemberWorkspace.tsx
+          npm run typecheck --workspace=frontend/web-shell
+      - name: Seal repaired overlay from same 16-path inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/tree"
+          tar -czf "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" -T "$RUNNER_TEMP/paths.txt"
+          sha256sum "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" | tee "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.sha256"
+          test "$(tar -tzf "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" | grep -c .)" -eq 16
+      - uses: actions/upload-artifact@v4
+        with:
+          name: front03-c1-overlay-tsfixed
+          path: |
+            front03-c1-overlay-tsfixed.tar.gz
+            front03-c1-overlay-tsfixed.sha256
+          if-no-files-found: error
+          retention-days: 7
