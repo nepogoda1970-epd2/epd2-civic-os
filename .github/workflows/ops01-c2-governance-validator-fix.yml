@@ -1,0 +1,40 @@
+name: OPS-01 Governance Validator Repair
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: [.github/workflows/ops01-c2-governance-validator-fix.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/ops
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Repair untracked-aware delta inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/ops01-c2-governance-accept.yml')
+          s=p.read_text()
+          old='''          test "$(git diff --name-only | sort | tr '\\n' ' ')" = "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "'''
+          new='''          changed=$( { git diff --name-only; git ls-files --others --exclude-standard; } | sort | tr '\\n' ' ')
+          test "$changed" = "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "'''
+          assert s.count(old)==1, s.count(old)
+          p.write_text(s.replace(old,new,1))
+          PY
+          git diff --check
+          git diff -- .github/workflows/ops01-c2-governance-accept.yml
+          git config user.name 'EPD2 verifier repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add .github/workflows/ops01-c2-governance-accept.yml
+          git commit -m 'ci(ops01): make governance delta inventory untracked-aware'
+          git push origin HEAD:handoff/ops
