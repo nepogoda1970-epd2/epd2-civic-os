@@ -1,0 +1,254 @@
+name: FRONT04 C2 Authoritative Acceptance
+
+on:
+  push:
+    branches: [handoff/front]
+    paths:
+      - '.github/workflows/front04-c2-authoritative-accept.yml'
+      - 'handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+      - 'handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip.sha256'
+      - 'handoff/FRONT/incoming/FRONT04_C2_ACCEPTANCE_TRIGGER.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CANDIDATE: handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip
+      SIDECAR: handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip.sha256
+      EXPECTED_SHA256: 1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8
+      EXPECTED_SIZE: '21448756'
+      EXPECTED_SOURCE_TREE: eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e
+      EXPECTED_TEST_SOURCE: 90a76c25177137d22bd6c8b10cffb383dc2877e0e76ae2829560a0350406667d
+      EXPECTED_CONFIG: c33c473b54b86b64c176f9848913a4e022a22204e3ca4c209f016cce79f248f8
+      EXPECTED_VALIDATOR: cfcae27fcaef98f8a4f168c29d8380e28ab4675df109bdefc241bea85ca96457
+      EXPECTED_LOCK: a300a24a43b4b99a4e0eddd739acca8eff87113af1a59eedac42970d9f06bbd2
+      EXPECTED_CONTRACT: b5bfab8f8d74cfe0028a435a6bfbf94d116ff232781c55b5f72532caded76cc2
+    steps:
+      - name: Checkout exact reviewed ref
+        uses: actions/checkout@v4
+
+      - name: Pin exact sealed bytes and detached identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$CANDIDATE"
+          test -f "$SIDECAR"
+          ACTUAL_SHA=$(sha256sum "$CANDIDATE" | awk '{print $1}')
+          ACTUAL_SIZE=$(stat -c '%s' "$CANDIDATE")
+          SIDECAR_SHA=$(awk '{print $1}' "$SIDECAR")
+          SIDECAR_NAME=$(awk '{print $2}' "$SIDECAR")
+          echo "ACTUAL_SHA256=$ACTUAL_SHA"
+          echo "ACTUAL_SIZE=$ACTUAL_SIZE"
+          echo "SIDECAR_SHA256=$SIDECAR_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA256"
+          test "$ACTUAL_SIZE" = "$EXPECTED_SIZE"
+          test "$SIDECAR_SHA" = "$EXPECTED_SHA256"
+          test "$SIDECAR_NAME" = "$(basename "$CANDIDATE")"
+          unzip -t "$CANDIDATE" >/tmp/front04-ziptest.log
+
+      - name: Archive hygiene and extraction
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+          import stat
+          z=Path('handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip')
+          with ZipFile(z) as f:
+              names=f.namelist(); dup=len(names)-len(set(names))
+              traversal=[]; syms=[]; contam=[]
+              for i in f.infolist():
+                  p=PurePosixPath(i.filename)
+                  if p.is_absolute() or '..' in p.parts: traversal.append(i.filename)
+                  mode=(i.external_attr >> 16) & 0xffff
+                  if stat.S_ISLNK(mode): syms.append(i.filename)
+                  low=i.filename.lower()
+                  if '/node_modules/' in '/'+low or '/.next/' in '/'+low or '__pycache__' in low or low.endswith(('.pyc','.pyo')) or low.endswith('/.ds_store'):
+                      contam.append(i.filename)
+              print('entries=',len(names),'duplicates=',dup,'traversal=',len(traversal),'symlinks=',len(syms),'contamination=',len(contam))
+              assert dup == 0 and not traversal and not syms and not contam
+          PY
+          rm -rf /tmp/front04-c2-authoritative
+          mkdir -p /tmp/front04-c2-authoritative
+          unzip -q "$CANDIDATE" -d /tmp/front04-c2-authoritative
+
+      - name: Verify governance identity, contract and corrected report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, re
+          from pathlib import Path
+          r=Path('/tmp/front04-c2-authoritative')
+          ident=json.loads((r/'validation/front04/candidate_identity.json').read_text())
+          auth=json.loads((r/'validation/front04/authoritative_candidate_result.json').read_text())
+          assert auth['stage']=='FRONT-04 — WS-03 Voting Client'
+          assert auth['candidate_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert auth['self_acceptance'] is False
+          assert auth['state']=='PASS_FOR_INDEPENDENT_ACCEPTANCE'
+          assert auth['status']=='PASS'
+          assert auth['gates_total']==29 and auth['gates_passed']==29
+          assert auth['stage_contract']['contract_version']=='1.0.0'
+          assert auth['stage_contract']['contract_digest']==os.environ['EXPECTED_CONTRACT']
+          assert auth['stage_contract']['ratification_status']=='PROPOSED_FOR_GOVERNED_RATIFICATION'
+          b=auth['binding']
+          assert b['source_tree_digest']==os.environ['EXPECTED_SOURCE_TREE']
+          assert b['test_source_digest']==os.environ['EXPECTED_TEST_SOURCE']
+          assert b['configuration_digest']==os.environ['EXPECTED_CONFIG']
+          assert b['validator_source_digest']==os.environ['EXPECTED_VALIDATOR']
+          assert b['package_lock_sha256']==os.environ['EXPECTED_LOCK']
+          assert b['source_file_count']==95
+          assert ident['source_tree_digest']==os.environ['EXPECTED_SOURCE_TREE']
+          report=(r/'FRONT04_C2_DEVELOPER_REPORT.md').read_text()
+          stale='c44f1304'
+          assert stale not in report.lower()
+          refs=sorted(set(re.findall(r'(?i)source_tree_digest[^\n]*?([0-9a-f]{8,64})',report)))
+          allowed={os.environ['EXPECTED_SOURCE_TREE'],os.environ['EXPECTED_SOURCE_TREE'][:8]}
+          assert refs and all(x in allowed for x in refs), refs
+          # No self-acceptance / prohibited certification claim may be introduced by the report.
+          low=report.lower()
+          assert 'front-04 accepted' not in low
+          assert 'front-04 closed' not in low
+          print('REPORT_SOURCE_TREE_DIGEST_REFS=',refs)
+          print('GOVERNANCE_IDENTITY=PASS')
+          PY
+
+      - name: Reproduce authoritative validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2-authoritative
+          python3 scripts/validate_front04.py | tee /tmp/front04-authoritative-validator.log
+          grep -q '"gates_total": 29' /tmp/front04-authoritative-validator.log
+          grep -q '"gates_passed": 29' /tmp/front04-authoritative-validator.log
+          grep -q '"status": "PASS"' /tmp/front04-authoritative-validator.log
+
+      - name: Reproduce full mutation resistance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2-authoritative
+          python3 scripts/run_front04_mutations.py --root . --output /tmp/front04-authoritative-mutations.json | tee /tmp/front04-authoritative-mutations.log
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/front04-authoritative-mutations.json'))
+          assert d.get('baseline_failing_gates')==[], d
+          assert d.get('count')==32, d
+          assert d.get('detected')==32, d
+          assert d.get('implementation_family')==24, d
+          assert d.get('evidence_chain_family')==8, d
+          assert d.get('status')=='PASS', d
+          print('MUTATION_RESISTANCE=32/32 PASS')
+          PY
+
+      - name: Independent stale-evidence attacks
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=/tmp/front04-c2-authoritative
+          attack() {
+            name="$1"; mode="$2"
+            d="/tmp/front04-authoritative-attack-$name"
+            rm -rf "$d"; cp -a "$BASE" "$d"; cd "$d"
+            case "$mode" in
+              source) f='frontend/voting-client/components/ReceiptSurface.tsx'; test -f "$f"; printf '\nTHIS_IS_NOT_VALID_TYPESCRIPT !!!\n' >> "$f" ;;
+              lock) printf '\n ' >> package-lock.json ;;
+              testsrc) f=$(find frontend/voting-client -type f \( -name '*.test.ts' -o -name '*.spec.ts' -o -name '*.spec.tsx' \) -print -quit); test -n "$f"; printf '\n// stale-test-attack\n' >> "$f" ;;
+              validator) printf '\n# validator-stale-attack\n' >> scripts/validate_front04.py ;;
+              raw) f=$(find validation/front04/raw -type f -print -quit); test -n "$f"; printf '\nstale-raw-attack\n' >> "$f" ;;
+              contract) printf '\n ' >> docs/frontend/FRONT-04-STAGE-CONTRACT.json ;;
+            esac
+            set +e
+            python3 scripts/validate_front04.py > "/tmp/front04-${name}.log" 2>&1
+            rc=$?
+            set -e
+            echo "ATTACK_${name}_EXIT=$rc"
+            test "$rc" -ne 0
+          }
+          attack source source
+          attack package_lock lock
+          attack test_source testsrc
+          attack validator_source validator
+          attack raw_evidence raw
+          attack stage_contract contract
+          echo 'STALE_EVIDENCE_ATTACKS=6/6 PASS'
+
+      - name: Voting safety and BSI-readiness nonclaim gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/front04-c2-authoritative
+          test -f validation/front04/bsi-voting-readiness-delta.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('validation/front04/bsi-voting-readiness-delta.json')
+          d=json.loads(p.read_text())
+          raw=p.read_text().lower()
+          # The candidate must preserve the hard-freeze evidence and may not manufacture certification.
+          for forbidden in ['eal4 certified','cc certified','bsi certified','production voting approved']:
+              assert forbidden not in raw, forbidden
+          print('BSI_READINESS_DELTA_PRESENT=PASS')
+          print('BSI_CERTIFICATION_NONCLAIM=PASS')
+          PY
+          # Mutation M-F04-19 already proves removal of BSI hard-freeze evidence is detected.
+          grep -q '"detected": 32' /tmp/front04-authoritative-mutations.json
+
+      - name: Build authoritative evidence record
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          e={
+            'schema':'epd2.front04.authoritative-acceptance-evidence/1',
+            'stage':'FRONT-04 — WS-03 Voting Client',
+            'candidate':'EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip',
+            'candidate_sha256':os.environ['EXPECTED_SHA256'],
+            'candidate_size_bytes':int(os.environ['EXPECTED_SIZE']),
+            'source_tree_digest':os.environ['EXPECTED_SOURCE_TREE'],
+            'test_source_digest':os.environ['EXPECTED_TEST_SOURCE'],
+            'configuration_digest':os.environ['EXPECTED_CONFIG'],
+            'validator_source_digest':os.environ['EXPECTED_VALIDATOR'],
+            'package_lock_sha256':os.environ['EXPECTED_LOCK'],
+            'stage_contract_digest':os.environ['EXPECTED_CONTRACT'],
+            'validator':{'passed':29,'total':29,'status':'PASS'},
+            'mutations':{'detected':32,'total':32,'status':'PASS'},
+            'stale_evidence_attacks':{'passed':6,'total':6,'status':'PASS'},
+            'archive_hygiene':'PASS',
+            'report_identity_consistency':'PASS',
+            'bsi_readiness_nonclaim':'PASS',
+            'candidate_state_before_governed_decision':'CANDIDATE_NOT_ACCEPTED',
+            'stage_contract_ratification_before_governed_decision':'PROPOSED_FOR_GOVERNED_RATIFICATION',
+            'workflow_run_id':os.environ.get('GITHUB_RUN_ID'),
+            'workflow_ref':os.environ.get('GITHUB_WORKFLOW_REF'),
+            'reviewed_commit':os.environ.get('GITHUB_SHA'),
+            'decision':'PASS_FOR_GOVERNED_ACCEPTANCE_RECORD'
+          }
+          Path('/tmp/FRONT04_C2_AUTHORITATIVE_ACCEPTANCE_EVIDENCE.json').write_text(json.dumps(e,indent=2)+'\n')
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Upload acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: front04-c2-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            /tmp/FRONT04_C2_AUTHORITATIVE_ACCEPTANCE_EVIDENCE.json
+            /tmp/front04-authoritative-validator.log
+            /tmp/front04-authoritative-mutations.json
+            /tmp/front04-authoritative-mutations.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Final authoritative marker
+        shell: bash
+        run: |
+          echo "FRONT04_C2_AUTHORITATIVE_RESULT:PASS:${EXPECTED_SHA256}:${EXPECTED_SIZE}"
