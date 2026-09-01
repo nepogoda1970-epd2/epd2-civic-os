@@ -35,6 +35,7 @@ jobs:
 
           test ! -e ACCEPTANCE/FREEZE-INVENTORY.json
           test ! -e SHA256SUMS.txt
+          git add -A
           test "$(git ls-files | wc -l | tr -d ' ')" = "1459"
           manifest=$(git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum | awk '{print $1}')
           echo "TRACKED_MANIFEST=$manifest"
@@ -44,7 +45,6 @@ jobs:
           echo "8ce71ebe473aae94b9ec77d1ca2a21dc6419dfa4ec61be35cc532a4c13f47e6b  docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json" | sha256sum -c -
           echo "5722cf96af44bb478239f582b415d52b33654d18bb065a45ec7128beaa727a8e  docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json" | sha256sum -c -
 
-          git add -A
           git config user.name "EPD2 independent acceptance"
           git config user.email "actions@users.noreply.github.com"
           git commit -m "test(infra01): reconstruct exact final C3 source"
@@ -59,4 +59,4 @@ jobs:
           git status --porcelain
           git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum
 
-# trigger: exact final C3 source refresh
+# trigger: final C3 exact-source refresh v2
