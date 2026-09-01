@@ -9,10 +9,10 @@ permissions:
   contents: read
 
 env:
-  C3_COMMIT: f81b180eb3de62ce42b77fcd114ce20aa2c3c39b
-  C3_TRACKED_MANIFEST: 7f0584fc7767691ace68cfdab123907bdc177a65843f6dccbf4af1cd3bbc988d
+  C3_COMMIT: 38f7d13c8badf911e61d659adb2905d1089a64a5
+  C3_TRACKED_MANIFEST: 1591d85ebaffc6f1b253e1787472225fd99ccac94eb9816590b40f675bc3dbd2
   C3_WORKFLOW_SHA256: d0cbe5a533a938e2aab280baf165e810e98aeee9c8b30d412a8d0188fc6a1650
-  C3_FREEZE_TREE_DIGEST: 47377d7f930f7d2306ee85d6e15e13ce632dc871da03ac918cff1dd8dfb2c30d
+  C3_FREEZE_TREE_DIGEST: d022822dbf3a127919595848cc7688053b2601210c56fa9d01aed54172fd4db6
   C3_FREEZE_FILE_COUNT: "1459"
   TARGET_MAIN: c333b9dd12e0c13dd402222cc958d95e779b8488
   TARGET_PCR_SHA256: c985cd17eb79ea4390a5c183581629a4d729e37f1485f1fba935cce2d5cc825d
@@ -24,14 +24,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
-      - name: Checkout exact final C3 source commit
+      - name: Checkout exact corrected C3 source commit
         uses: actions/checkout@v4
         with:
           ref: ${{ env.C3_COMMIT }}
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Prove exact final C3 source identity
+      - name: Prove exact corrected C3 source identity
         shell: bash
         run: |
           set -euo pipefail
@@ -43,8 +43,8 @@ jobs:
           wf=$(sha256sum .github/workflows/infra01-acceptance.yml | awk '{print $1}')
           echo "PACKAGED_WORKFLOW_SHA256=$wf"
           test "$wf" = "$C3_WORKFLOW_SHA256"
-          echo "433bc802a4b0d62a836c0b436f0838d3179a73c09da9ea56d613d61e3781aaf7  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" | sha256sum -c -
-          echo "8ce71ebe473aae94b9ec77d1ca2a21dc6419dfa4ec61be35cc532a4c13f47e6b  docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json" | sha256sum -c -
+          echo "70cb13f029dd1954ea5d1f069b8a99b59f5881bb9bcf1a683fc38e3a626901c1  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" | sha256sum -c -
+          echo "0e4c4fecbeeb23f927a6df9714ea4e9fc65912dfcce07768fbd8ca82792d4168  docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json" | sha256sum -c -
           echo "5722cf96af44bb478239f582b415d52b33654d18bb065a45ec7128beaa727a8e  docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json" | sha256sum -c -
           test -z "$(git status --porcelain)"
 
@@ -146,4 +146,4 @@ jobs:
           echo "INFRA-01 bounded stage may proceed to separate post-run governance decision."
           echo "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. INFRA LAYER NOT CLOSED BY THIS RUN."
 
-# trigger: final exact C3 authoritative review
+# trigger: corrected exact C3 authoritative review
