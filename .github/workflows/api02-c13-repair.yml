@@ -18,39 +18,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Download exact C12 artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: api02-candidate
           path: /tmp/candidate
           run-id: 33490942304
           github-token: ${{ github.token }}
-      - name: Inspect sealed C12 repair surface
+      - name: Inspect C12 lineage and finalizer
         shell: bash
         run: |
           set -euo pipefail
           CAND=/tmp/candidate/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12.zip
-          echo '=== CANDIDATE SHA ==='
-          sha256sum "$CAND"
           rm -rf /tmp/c12 && mkdir /tmp/c12
           unzip -q "$CAND" -d /tmp/c12
           ROOT=/tmp/c12/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12
           cd "$ROOT"
-          echo '=== API02 SCRIPT FILES ==='
-          find scripts/api02 -maxdepth 1 -type f -printf '%f\n' | sort
-          echo '=== SEALED CANDIDATE IDENTITY RESULT ==='
-          cat validation/api02/candidate_identity_result.json || true
-          echo
-          echo '=== EVIDENCE STATE ==='
-          cat docs/api/API-02/API02_EVIDENCE_STATE.json || true
-          echo
-          echo '=== LINEAGE CONSTANT HITS ==='
-          grep -R -n --exclude='*.pyc' -E 'CANDIDATE_ROLE|CANDIDATE_NAME|ENTERING_CANDIDATE|C12|C11' scripts/api02 docs/api/API-02/.github 2>/dev/null | head -n 240 || true
-          echo '=== IDENTITY GENERATOR HITS ==='
-          grep -R -n --exclude='*.pyc' -E 'candidate_identity_result|sealed-archive|expected_candidate|candidate_root' scripts/api02 | head -n 240 || true
-          echo '=== PACKAGING/SEAL HITS ==='
-          grep -R -n --exclude='*.pyc' -E 'SEALED_FILE_MANIFEST|SHA256SUMS|transition_inventory|CORRECTION|package_candidate|zipfile' scripts docs/api/API-02 | head -n 320 || true
-          echo '=== API02 DOC FILES ==='
-          find docs/api/API-02 -maxdepth 1 -type f -printf '%f\n' | sort
-          echo '=== WORKFLOW STEP 27 ==='
-          grep -n -A55 -B8 '27 Assert the published evidence' .github/workflows/api02-accept.yml || true
+          echo '=== LINEAGE CONSTANTS 100-280 ==='
+          sed -n '100,280p' scripts/api02/lineage_gates.py
+          echo '=== IDENTITY GATE 1840-1940 ==='
+          sed -n '1840,1940p' scripts/api02/lineage_gates.py
+          echo '=== FINALIZER CLI / TAIL ==='
+          grep -n -E 'def main|ArgumentParser|add_argument|if __name__' scripts/api02/finalize_candidate.py || true
+          sed -n '560,760p' scripts/api02/finalize_candidate.py
+          echo '=== CORRECTION BUILDER ==='
+          sed -n '1,260p' scripts/api02/build_correction_inventory.py
+          echo '=== EXACT INVENTORY CURRENT ROUND ==='
+          sed -n '70,135p' scripts/api02/build_exact_inventories.py
+          sed -n '960,1045p' scripts/api02/build_exact_inventories.py
+          echo '=== VALIDATOR CLI TAIL ==='
+          grep -n -E 'def main|ArgumentParser|add_argument|if __name__' scripts/validate_api02.py | tail -n 60 || true
+          sed -n '5390,5485p' scripts/validate_api02.py
+          sed -n '5735,5815p' scripts/validate_api02.py
+          echo '=== CURRENT C12 PROSE HITS IN DOSSIER ==='
+          grep -R -n --exclude='*.json' -E '\bC12\b|C11 → C12|C11 -> C12|C11_TO_C12|What C12 corrects' docs/api/API-02 scripts/api02 .github/workflows/api02-accept.yml | head -n 320 || true
