@@ -1,0 +1,113 @@
+name: FRONT04 C2 Independent Review Pass2
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract exact sealed C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip'
+          sha256sum "$ZIP"
+          stat -c '%s bytes' "$ZIP"
+          rm -rf /tmp/c2 && mkdir /tmp/c2 && unzip -q "$ZIP" -d /tmp/c2
+          echo 'DETACHED_SIDECAR_IN_REPO:'
+          if test -f "${ZIP}.sha256"; then cat "${ZIP}.sha256"; else echo MISSING; fi
+          echo 'REPORT_DIGEST_REFERENCES:'
+          grep -n -E 'source_tree_digest|SHA-256|Size' /tmp/c2/FRONT04_C2_DEVELOPER_REPORT.md | tail -80 || true
+          echo 'RUNNER_HELP:'
+          python3 /tmp/c2/scripts/run_front04_verification.py --help || true
+
+      - name: Independent static validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/c2
+          python3 scripts/validate_front04.py | tee /tmp/validator.log
+
+      - name: Independent mutation suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/c2
+          python3 scripts/run_front04_mutations.py --root . --output /tmp/front04_mutations_independent.json | tee /tmp/mutations.log
+          cat /tmp/front04_mutations_independent.json
+
+      - name: Independent stale-evidence attacks
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=/tmp/c2
+          attack() {
+            name="$1"; mode="$2"
+            d="/tmp/attack-$name"; rm -rf "$d"; cp -a "$BASE" "$d"; cd "$d"
+            case "$mode" in
+              source) printf '\nTHIS_IS_NOT_VALID_TYPESCRIPT !!!\n' >> frontend/voting-client/components/ReceiptSurface.tsx ;;
+              lock) printf '\n ' >> package-lock.json ;;
+              testsrc) printf '\n// independent stale test mutation\n' >> frontend/voting-client/tests/front04.journey.test.ts ;;
+              validator) printf '\n# independent validator mutation\n' >> scripts/validate_front04.py ;;
+              raw) printf '\nindependent raw evidence mutation\n' >> validation/front04/raw/browser.log ;;
+              contract) printf '\nindependent contract mutation\n' >> docs/frontend/FRONT-04-STAGE-CONTRACT.md ;;
+            esac
+            set +e
+            python3 scripts/validate_front04.py > "/tmp/${name}.log" 2>&1
+            rc=$?
+            set -e
+            echo "ATTACK_${name}_EXIT=$rc"
+            tail -60 "/tmp/${name}.log" || true
+            if [ "$rc" -eq 0 ]; then echo "SURVIVED_ATTACK=$name"; exit 70; fi
+          }
+          attack source source
+          attack package_lock lock
+          attack test_source testsrc
+          attack validator_source validator
+          attack raw_evidence raw
+          attack contract_source contract
+          echo FRONT04_C2_BINDING_ATTACKS=PASS
+
+      - name: Identity consistency and archive hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,re,hashlib,zipfile,stat
+          from pathlib import Path,PurePosixPath
+          root=Path('/tmp/c2')
+          ident=json.loads((root/'validation/front04/candidate_identity.json').read_text())
+          auth=json.loads((root/'validation/front04/authoritative_candidate_result.json').read_text())
+          report=(root/'FRONT04_C2_DEVELOPER_REPORT.md').read_text()
+          actual=ident['source_tree_digest']
+          print('IDENTITY_SOURCE_TREE_DIGEST=',actual)
+          print('AUTH_SOURCE_TREE_DIGEST=',auth['binding']['source_tree_digest'])
+          refs=sorted(set(re.findall(r'(?i)source_tree_digest[^\n]*?([0-9a-f]{8,64})',report)))
+          print('REPORT_SOURCE_TREE_DIGEST_REFS=',refs)
+          if auth['binding']['source_tree_digest']!=actual: raise SystemExit('identity/auth digest mismatch')
+          z=Path('handoff/FRONT/incoming/EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip')
+          h=hashlib.sha256(z.read_bytes()).hexdigest(); print('ARCHIVE_SHA256=',h); print('ARCHIVE_SIZE=',z.stat().st_size)
+          with zipfile.ZipFile(z) as f:
+            names=f.namelist(); traversal=[]; syms=[]; contam=[]
+            for i in f.infolist():
+              p=PurePosixPath(i.filename)
+              if p.is_absolute() or '..' in p.parts: traversal.append(i.filename)
+              mode=(i.external_attr>>16)&0xffff
+              if stat.S_ISLNK(mode): syms.append(i.filename)
+              low=i.filename.lower()
+              if '/node_modules/' in '/'+low or '/.next/' in '/'+low or '__pycache__' in low or low.endswith('.pyc'): contam.append(i.filename)
+            dup=len(names)-len(set(names))
+            print('ZIP_ENTRIES=',len(names),'DUP=',dup,'TRAVERSAL=',len(traversal),'SYMLINK=',len(syms),'CONTAM=',len(contam))
+            if dup or traversal or syms or contam: raise SystemExit('archive hygiene fail')
+          PY
+
+      - name: PASS marker
+        run: echo FRONT04_C2_INDEPENDENT_CORE_PASS2=PASS
