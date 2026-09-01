@@ -30,7 +30,7 @@ jobs:
           base64 -d "$OUT" > "$RUNNER_TEMP/c2.patch.gz"
           echo "98f7a6b7a73f96e297bb181422ad479c00edc14587d5472b82a6bac2222065d4  $RUNNER_TEMP/c2.patch.gz" | sha256sum -c -
           gunzip -c "$RUNNER_TEMP/c2.patch.gz" > "$RUNNER_TEMP/c2.patch"
-          echo "311ee1290d935471b1b466d6000b792daf8a10cbf55a4959f2e70ac2f0ec43dd  $RUNNER_TEMP/c2.patch" | sha256sum -c -
+          echo "302b346d77abd34f80151f7edf83812e05c2d7da62bca106319e94ddc64704fd  $RUNNER_TEMP/c2.patch" | sha256sum -c -
 
           git fetch --no-tags origin tmp/infra01-c0-source-20260901
           git switch -C tmp/infra01-c2-source-no-workflows origin/tmp/infra01-c0-source-20260901
