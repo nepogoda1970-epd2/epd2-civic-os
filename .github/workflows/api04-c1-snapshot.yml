@@ -1,0 +1,48 @@
+name: api04-c1-snapshot
+on:
+  push:
+    branches: [tmp/api04-c1-reconcile-build]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconstruct patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat handoff/API-04/C1/api04_c1.patch.zlib.b64.part* | tr -d '\n' | base64 -d | python3 -c 'import sys,zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read()))' > "$RUNNER_TEMP/api04_c1.patch"
+      - uses: actions/download-artifact@v4
+        with:
+          name: api04-preseal-exact-input-33528603078
+          path: incoming/r2
+          run-id: 33528603078
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: api03-c5-resealed-candidate
+          path: incoming/api03
+          run-id: 33511140504
+          github-token: ${{ github.token }}
+      - name: Reconcile exact tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          R2=$(find incoming/r2 -type f -name 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_WORKING_0.2_PRESEAL.zip')
+          A3=$(find incoming/api03 -type f -name 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip')
+          mkdir -p extracted/r2 extracted/api03
+          unzip -q "$R2" -d extracted/r2
+          unzip -q "$A3" -d extracted/api03
+          R2ROOT=$(find extracted/r2 -mindepth 1 -maxdepth 1 -type d | head -1)
+          A3ROOT=$(find extracted/api03 -mindepth 1 -maxdepth 1 -type d | head -1)
+          OUT="$RUNNER_TEMP/API04_C1_SNAPSHOT"
+          python3 handoff/API-04/C1/api04_c1_reconcile.py --api03-root "$A3ROOT" --r2-root "$R2ROOT" --repo-root "$PWD" --out-root "$OUT" --patch-file "$RUNNER_TEMP/api04_c1.patch"
+          tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/API04_C1_SNAPSHOT.tar.gz" API04_C1_SNAPSHOT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api04-c1-reconciled-snapshot-${{ github.run_id }}
+          path: ${{ runner.temp }}/API04_C1_SNAPSHOT.tar.gz
+          compression-level: 0
