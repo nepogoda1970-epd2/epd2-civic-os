@@ -1,0 +1,32 @@
+{
+  "schema": "epd2.infra01.exact-delta-inventory/2",
+  "note": "Exact path delta measured against archive bytes with no exclusions: every path of the delivered ZIP is accounted, including generated checksum/manifest metadata (classified generated_metadata; regenerated at every sealing, hence always modified) and this inventory document itself (modified_or_self; it cannot contain its own final digest). Verify with: uv run python -m scripts.acceptance verify-delta --predecessor <predecessor zip> --candidate <candidate zip> --inventory <this file>.",
+  "predecessor": {
+    "filename": "EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C1.zip",
+    "sha256": "085373b7a6ba623e9a3e661c7c0cedfca1506a2903505dbc7ace56de54f27452"
+  },
+  "counts": {
+    "added": 4,
+    "modified": 10,
+    "removed": 1,
+    "unchanged": 1442
+  },
+  "added": [
+    "docs/infra/INFRA-01/INFRA-01-C2-CORRECTION-REPORT.md",
+    "docs/infra/INFRA-01/INFRA01_C0_TO_C2_EXACT_INVENTORY.json",
+    "docs/infra/INFRA-01/INFRA01_C1_TO_C2_EXACT_INVENTORY.json",
+    "scripts/acceptance/delta.py"
+  ],
+  "modified_or_self": [
+    "docs/infra/INFRA-01/INFRA-01-ACCEPTANCE-MATRIX.md",
+    "docs/infra/INFRA-01/INFRA-01-C1-CORRECTION-REPORT.md",
+    "docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json",
+    "scripts/acceptance/__main__.py",
+    "scripts/acceptance/codes.py",
+    "scripts/acceptance/governance.py",
+    "scripts/check_repository.py",
+    "tests/repository/test_infra01_mutation_suite.py"
+  ],
+  "generated_metadata": ["ACCEPTANCE/FREEZE-INVENTORY.json", "SHA256SUMS.txt"],
+  "removed": ["docs/infra/INFRA-01/INFRA01_C0_TO_C1_EXACT_INVENTORY.json"]
+}

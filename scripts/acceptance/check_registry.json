@@ -1,6 +1,6 @@
 {
   "schema": "epd2.infra01.check-registry/1",
-  "registry_version": "1.0.0",
+  "registry_version": "1.1.0",
   "note": "The machine-readable governed check registry (INFRA01-HI-03). Every governed check of the canonical acceptance path is declared here with an explicit mandatory flag and execution expectation. A mandatory check can never silently disappear: the manifest must account for every entry with PASS, FAIL, BLOCKED or NOT_APPLICABLE_GOVERNED, and unknown or missing execution fails closed.",
   "stages": [
     {
@@ -46,6 +46,12 @@
           "mandatory": true
         },
         {
+          "id": "governance.freshness-reconciliation",
+          "title": "Governance currency: candidate reconciled to the governed target authority (C1)",
+          "kind": "internal",
+          "mandatory": true
+        },
+        {
           "id": "governance.pilot-roadmap-lock",
           "title": "PILOT roadmap lock detector self-check",
           "kind": "command",
@@ -58,7 +64,9 @@
             "--self-check"
           ],
           "timeout_seconds": 300,
-          "expects": { "sentinel": "PILOT roadmap lock self-check PASS" }
+          "expects": {
+            "sentinel": "PILOT roadmap lock self-check PASS"
+          }
         }
       ]
     },
@@ -74,7 +82,9 @@
           "mandatory": true,
           "command": ["uv", "run", "python", "scripts/check_repository.py"],
           "timeout_seconds": 300,
-          "expects": { "sentinel": "OK: all .* required paths are present" }
+          "expects": {
+            "sentinel": "OK: all .* required paths are present"
+          }
         },
         {
           "id": "repository.forbidden-paths",
@@ -88,7 +98,9 @@
             "scripts/check_forbidden_files.py"
           ],
           "timeout_seconds": 300,
-          "expects": { "sentinel": "OK: no forbidden paths found" }
+          "expects": {
+            "sentinel": "OK: no forbidden paths found"
+          }
         },
         {
           "id": "repository.version-consistency",
@@ -97,7 +109,9 @@
           "mandatory": true,
           "command": ["uv", "run", "python", "scripts/verify_versions.py"],
           "timeout_seconds": 120,
-          "expects": { "sentinel": "OK: all version sources are consistent" }
+          "expects": {
+            "sentinel": "OK: all version sources are consistent"
+          }
         },
         {
           "id": "repository.canon-0-8-0",
@@ -182,7 +196,14 @@
           "mandatory": true,
           "command": ["uv", "run", "pytest"],
           "timeout_seconds": 14400,
-          "expects": { "parsers": [{ "type": "pytest", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "pytest",
+                "min": 1
+              }
+            ]
+          }
         },
         {
           "id": "backend.security-suites",
@@ -199,7 +220,14 @@
             "services/voting-service/tests/reference/test_invariants.py"
           ],
           "timeout_seconds": 7200,
-          "expects": { "parsers": [{ "type": "pytest", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "pytest",
+                "min": 1
+              }
+            ]
+          }
         }
       ]
     },
@@ -266,7 +294,14 @@
             "--workspace=packages/typescript/epd2-types"
           ],
           "timeout_seconds": 1800,
-          "expects": { "parsers": [{ "type": "nodetest", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "nodetest",
+                "min": 1
+              }
+            ]
+          }
         },
         {
           "id": "frontend.test-web-shell",
@@ -277,8 +312,14 @@
           "timeout_seconds": 3600,
           "expects": {
             "parsers": [
-              { "type": "nodetest", "min": 1 },
-              { "type": "vitest", "min": 1 }
+              {
+                "type": "nodetest",
+                "min": 1
+              },
+              {
+                "type": "vitest",
+                "min": 1
+              }
             ]
           }
         }
@@ -319,7 +360,14 @@
             "--workspace=frontend/web-shell"
           ],
           "timeout_seconds": 7200,
-          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "playwright",
+                "min": 1
+              }
+            ]
+          }
         }
       ]
     },
@@ -340,7 +388,14 @@
             "--workspace=frontend/web-shell"
           ],
           "timeout_seconds": 3600,
-          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "playwright",
+                "min": 1
+              }
+            ]
+          }
         }
       ]
     },
@@ -361,7 +416,14 @@
             "--workspace=frontend/web-shell"
           ],
           "timeout_seconds": 3600,
-          "expects": { "parsers": [{ "type": "playwright", "min": 1 }] }
+          "expects": {
+            "parsers": [
+              {
+                "type": "playwright",
+                "min": 1
+              }
+            ]
+          }
         }
       ]
     },

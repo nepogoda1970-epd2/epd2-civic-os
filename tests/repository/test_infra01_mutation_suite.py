@@ -19,11 +19,19 @@ from pathlib import Path
 import pytest
 from scripts.acceptance import codes
 from scripts.acceptance.canonical import load_json, seal_document, sha256_file, write_canonical_json
+from scripts.acceptance.delta import archive_file_hashes, compute_delta, verify_inventory
 from scripts.acceptance.evidence import build_manifest, emit_manifest, verify_evidence
 from scripts.acceptance.executor import CheckResult, evaluate_output
 from scripts.acceptance.freeze import FreezeInventory, take_inventory
 from scripts.acceptance.frozen import verify_tree
-from scripts.acceptance.governance import verify_governance
+from scripts.acceptance.governance import (
+    PCR_FILE,
+    RECONCILIATION_FILE,
+    build_reconciliation_record,
+    compare_target_authority,
+    verify_freshness,
+    verify_governance,
+)
 from scripts.acceptance.hygiene import scan_archive
 from scripts.acceptance.identity import CandidateIdentity, lock_mismatches
 from scripts.acceptance.package import build_archive, verify_archive_against_inventory
@@ -499,3 +507,321 @@ def test_emitted_manifest_validates_against_execution_manifest_schema(tmp_path: 
     )
     manifest = load_json(run_dir / "EXECUTION-MANIFEST.json")
     jsonschema.Draft202012Validator(schema).validate(manifest)
+
+
+# -- C1: governance-freshness mutations M17-M20 ----------------------------
+#
+# INFRA01-C1-02: 'canonical files exist != unique != current'. These
+# fixtures prove the freshness/reconciliation gate fails closed on stale or
+# tampered current-state governance and, just as deliberately, does NOT
+# reject preserved audit history (M20 is a positive fixture).
+
+_FRESHNESS_FACTS: list[dict[str, object]] = [
+    {
+        "id": "api02-closed-primary",
+        "region": "primary_position",
+        "must_include": ["API-02 = ACCEPTED / CLOSED"],
+        "must_exclude": ["API-02 = ACTIVE / IN DEVELOPMENT"],
+    },
+    {
+        "id": "api03-active-primary",
+        "region": "primary_position",
+        "must_include": ["API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],
+        "must_exclude": [],
+    },
+]
+
+
+def _pcr_text(api02_current: str, historical_line: str = "") -> str:
+    return (
+        "# EPD2 Program Control Register (fixture)\n\n"
+        "**Updated:** 2026-09-01\n\n"
+        f"{historical_line}"
+        "## 2. Program phase state\n\n"
+        "| Layer | State |\n| --- | --- |\n"
+        f"| API | API-01 ACCEPTED / CLOSED; {api02_current.replace(' = ', ' ')} |\n\n"
+        "Canonical primary closure sequence\n\n"
+        "Current primary position:\n\n"
+        "```text\n"
+        "DATA = CLOSED\n"
+        "API-01 = ACCEPTED / CLOSED\n"
+        f"{api02_current}\n"
+        "API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED\n"
+        "```\n\n"
+        "### 2.1 Execution path\n\n"
+        "## 9. Immediate execution decision\n\n"
+        "Primary implementation: API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED.\n\n"
+        "## 10. Next section\n"
+    )
+
+
+def _freshness_fixture(
+    tmp_path: Path,
+    pcr_text: str,
+    facts: list[dict[str, object]] | None = None,
+) -> Path:
+    """A mini candidate root with a sealed reconciliation record."""
+    pcr = tmp_path / PCR_FILE
+    pcr.parent.mkdir(parents=True, exist_ok=True)
+    pcr.write_text(pcr_text, encoding="utf-8")
+    record = build_reconciliation_record(
+        target_authority={
+            "repository": "example/epd2",
+            "branch": "main",
+            "commit": "5568" * 10,
+            "tree": "95fb" * 10,
+            "pcr_git_blob": "2269" * 10,
+            "pcr_sha256": sha256_file(pcr),
+        },
+        candidate_pcr_sha256=sha256_file(pcr),
+        expected_current_state=list(facts) if facts is not None else list(_FRESHNESS_FACTS),
+        reconciled_at="2026-09-01T00:00:00+00:00",
+        target_commit_timestamp="2026-08-31T23:00:00+00:00",
+    )
+    target = tmp_path / RECONCILIATION_FILE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    write_canonical_json(target, record)
+    return tmp_path
+
+
+def test_freshness_gate_passes_on_reconciled_fixture(tmp_path: Path) -> None:
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    assert verify_freshness(root) == []
+
+
+def test_m17_stale_pcr_current_state_regression_is_detected(tmp_path: Path) -> None:
+    """M17: the register regressed and was re-hashed into the record.
+
+    The attacker reconciles the record to the stale bytes (hash binding is
+    satisfied), but the recorded expected facts semantically contradict the
+    regressed current state — a stale register cannot be made self-valid
+    merely by hashing it into its own record.
+    """
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACTIVE / IN DEVELOPMENT"))
+    findings = verify_freshness(root)
+    found = {finding.code for finding in findings}
+    assert codes.STALE_GOVERNANCE_STATE in found
+
+
+def test_m18_target_authority_identity_mismatch_is_detected(tmp_path: Path) -> None:
+    """M18: the recorded target identity is edited without re-reconciling."""
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    record_path = root / RECONCILIATION_FILE
+    record = load_json(record_path)
+    record["target_authority"]["commit"] = "beef" * 10
+    write_canonical_json(record_path, record)  # tampered, not resealed
+    findings = verify_freshness(root)
+    assert {finding.code for finding in findings} == {codes.RECONCILIATION_INTEGRITY_FAILURE}
+
+
+def test_m18b_current_target_register_mismatch_fails_closed(tmp_path: Path) -> None:
+    """M18 (authoritative-path side): the current target register differs
+    from the recorded one — the target advanced, re-reconciliation required."""
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    findings = compare_target_authority(root, b"a newer target register\n")
+    assert [finding.code for finding in findings] == [codes.TARGET_AUTHORITY_MISMATCH]
+
+
+def test_m19_missing_newer_transition_is_detected(tmp_path: Path) -> None:
+    """M19: the target authority records a newer transition; the candidate
+    register lacks it although all canonical files exist exactly once and
+    versions are internally consistent."""
+    facts: list[dict[str, object]] = [
+        {
+            "id": "api04-closed-primary",
+            "region": "primary_position",
+            "must_include": ["API-04 = ACCEPTED / CLOSED"],
+            "must_exclude": [],
+        }
+    ]
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"), facts=facts)
+    findings = verify_freshness(root)
+    assert {finding.code for finding in findings} == {codes.GOVERNANCE_TRANSITION_MISSING}
+
+
+def test_m20_preserved_historical_text_is_not_mistaken_for_current_state(
+    tmp_path: Path,
+) -> None:
+    """M20 (positive): an old historical `API-02 = ACTIVE` statement remains
+    outside the current-state regions while current state is correct — the
+    validator must accept preserved audit history."""
+    historical = (
+        "Historical note (2026-08-27): API-02 = ACTIVE / IN DEVELOPMENT was "
+        "recorded here and is preserved as history.\n\n"
+    )
+    root = _freshness_fixture(
+        tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED", historical_line=historical)
+    )
+    assert verify_freshness(root) == []
+
+
+def test_pcr_edited_after_reconciliation_is_detected(tmp_path: Path) -> None:
+    """Drift binding: editing the register after sealing the record (without
+    re-reconciling) fails closed even when the edit is not itself stale."""
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    pcr = root / PCR_FILE
+    pcr.write_text(pcr_text_new := pcr.read_text() + "\nappended line\n", encoding="utf-8")
+    assert pcr_text_new
+    findings = verify_freshness(root)
+    assert codes.GOVERNANCE_RECONCILIATION_MISMATCH in {finding.code for finding in findings}
+
+
+#: C1 extension of the class -> detector map (M20 is a positive fixture and
+#: therefore has no detector).
+EXPECTED_DETECTORS_C1: dict[str, str] = {
+    "M17-stale-pcr-current-state-regression": codes.STALE_GOVERNANCE_STATE,
+    "M18-target-authority-identity-mismatch": codes.RECONCILIATION_INTEGRITY_FAILURE,
+    "M19-branch-silently-overwrites-newer-target-state": codes.GOVERNANCE_TRANSITION_MISSING,
+}
+
+
+def test_every_c1_mutation_class_has_its_own_detector() -> None:
+    combined = {**EXPECTED_DETECTORS, **EXPECTED_DETECTORS_C1}
+    assert len(combined) == 19
+    assert len(set(combined.values())) == 19, (
+        "C1 freshness mutation classes must not share a detector with each "
+        "other or with M01-M16; a shared poison marker would fake coverage"
+    )
+
+
+# -- C2: exact-delta accounting and temporal provenance (M21, M22) ---------
+
+
+def _mini_archive(path: Path, members: dict[str, bytes], root: str = "CAND") -> Path:
+    with zipfile.ZipFile(path, "w") as bundle:
+        for rel, data in sorted(members.items()):
+            bundle.writestr(f"{root}/{rel}", data)
+    return path
+
+
+def _delta_fixture(tmp_path: Path) -> tuple[dict[str, str], dict[str, str]]:
+    pred = _mini_archive(
+        tmp_path / "pred.zip",
+        {
+            "src/module.py": b"VALUE = 1\n",
+            "docs/report.md": b"old\n",
+            "SHA256SUMS.txt": b"aaa  src/module.py\n",
+            "ACCEPTANCE/FREEZE-INVENTORY.json": b'{"v":1}\n',
+        },
+    )
+    cand = _mini_archive(
+        tmp_path / "cand.zip",
+        {
+            "src/module.py": b"VALUE = 1\n",
+            "docs/report.md": b"new\n",
+            "docs/added.md": b"fresh\n",
+            "SHA256SUMS.txt": b"bbb  src/module.py\n",
+            "ACCEPTANCE/FREEZE-INVENTORY.json": b'{"v":2}\n',
+        },
+    )
+    return archive_file_hashes(pred), archive_file_hashes(cand)
+
+
+def test_delta_is_computed_from_archive_bytes(tmp_path: Path) -> None:
+    pred, cand = _delta_fixture(tmp_path)
+    delta = compute_delta(pred, cand)
+    assert delta.counts() == {"added": 1, "modified": 3, "removed": 0, "unchanged": 1}
+    assert "SHA256SUMS.txt" in delta.modified
+    assert "ACCEPTANCE/FREEZE-INVENTORY.json" in delta.modified
+
+
+def test_complete_inventory_with_classified_metadata_passes(tmp_path: Path) -> None:
+    pred, cand = _delta_fixture(tmp_path)
+    declared = {
+        "counts": {"added": 1, "modified": 3, "removed": 0, "unchanged": 1},
+        "added": ["docs/added.md"],
+        "modified": ["docs/report.md"],
+        "generated_metadata": ["SHA256SUMS.txt", "ACCEPTANCE/FREEZE-INVENTORY.json"],
+        "removed": [],
+    }
+    assert verify_inventory(declared, pred, cand) == []
+
+
+def test_m21_omitted_packaging_metadata_is_detected(tmp_path: Path) -> None:
+    """M21: an inventory that excludes changed checksum/manifest metadata
+    (the exact C1 defect) is refused — classification is free, omission is
+    not."""
+    pred, cand = _delta_fixture(tmp_path)
+    declared = {
+        "counts": {"added": 1, "modified": 1, "removed": 0, "unchanged": 1},
+        "added": ["docs/added.md"],
+        "modified": ["docs/report.md"],
+        "removed": [],
+        "note": "packaging metadata are not source paths",  # the false C1 rationale
+    }
+    findings = verify_inventory(declared, pred, cand)
+    found = {finding.code for finding in findings}
+    assert found == {codes.CORRECTION_INVENTORY_MISMATCH}
+    subjects = {finding.subject for finding in findings}
+    assert "SHA256SUMS.txt" in subjects
+    assert "ACCEPTANCE/FREEZE-INVENTORY.json" in subjects
+    assert "counts.modified" in subjects
+
+
+def test_m21b_phantom_and_wrong_counts_are_detected(tmp_path: Path) -> None:
+    pred, cand = _delta_fixture(tmp_path)
+    declared = {
+        "counts": {"added": 2, "modified": 3, "removed": 1, "unchanged": 1},
+        "added": ["docs/added.md", "docs/never-existed.md"],
+        "modified": ["docs/report.md"],
+        "generated_metadata": ["SHA256SUMS.txt", "ACCEPTANCE/FREEZE-INVENTORY.json"],
+        "removed": ["docs/ghost.md"],
+    }
+    findings = verify_inventory(declared, pred, cand)
+    assert {finding.code for finding in findings} == {codes.CORRECTION_INVENTORY_MISMATCH}
+
+
+def test_m22_reconciliation_timestamp_predating_target_is_detected(tmp_path: Path) -> None:
+    """M22: temporally impossible provenance — the sealed record claims
+    reconciliation happened before its own target commit existed."""
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    record_path = root / RECONCILIATION_FILE
+    record = load_json(record_path)
+    record["reconciled_at"] = "2026-09-01T01:30:00+00:00"
+    record["target_commit_timestamp"] = "2026-09-01T11:10:51+00:00"
+    write_canonical_json(
+        record_path, seal_document({k: v for k, v in record.items() if k != "manifest_sha256"})
+    )
+    findings = verify_freshness(root)
+    assert codes.RECONCILIATION_TIME_INVALID in {finding.code for finding in findings}
+
+
+def test_m22b_future_reconciliation_timestamp_is_detected(tmp_path: Path) -> None:
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    record_path = root / RECONCILIATION_FILE
+    record = load_json(record_path)
+    record["reconciled_at"] = "2099-01-01T00:00:00+00:00"
+    record["target_commit_timestamp"] = "2026-09-01T11:10:51+00:00"
+    write_canonical_json(
+        record_path, seal_document({k: v for k, v in record.items() if k != "manifest_sha256"})
+    )
+    findings = verify_freshness(root)
+    assert codes.RECONCILIATION_TIME_INVALID in {finding.code for finding in findings}
+
+
+def test_record_without_temporal_fields_fails_closed(tmp_path: Path) -> None:
+    root = _freshness_fixture(tmp_path, _pcr_text("API-02 = ACCEPTED / CLOSED"))
+    record_path = root / RECONCILIATION_FILE
+    record = load_json(record_path)
+    record.pop("target_commit_timestamp")
+    write_canonical_json(
+        record_path, seal_document({k: v for k, v in record.items() if k != "manifest_sha256"})
+    )
+    findings = verify_freshness(root)
+    assert codes.RECONCILIATION_TIME_INVALID in {finding.code for finding in findings}
+
+
+#: C2 extension of the class -> detector map.
+EXPECTED_DETECTORS_C2: dict[str, str] = {
+    "M21-packaging-metadata-omitted-from-exact-delta": codes.CORRECTION_INVENTORY_MISMATCH,
+    "M22-reconciliation-timestamp-predates-target": codes.RECONCILIATION_TIME_INVALID,
+}
+
+
+def test_every_c2_mutation_class_has_its_own_detector() -> None:
+    combined = {**EXPECTED_DETECTORS, **EXPECTED_DETECTORS_C1, **EXPECTED_DETECTORS_C2}
+    assert len(combined) == 21
+    assert len(set(combined.values())) == 21, (
+        "C2 mutation classes must not share a detector with each other or "
+        "with M01-M19; a shared poison marker would fake coverage"
+    )

@@ -35,6 +35,7 @@ from scripts.acceptance.canonical import (
     sha256_file,
     write_canonical_json,
 )
+from scripts.acceptance.delta import verify_inventory_between_archives
 from scripts.acceptance.deployment_manifest import validate_manifest
 from scripts.acceptance.evidence import (
     LOG_DIR_NAME,
@@ -50,7 +51,11 @@ from scripts.acceptance.freeze import (
     take_inventory,
     tracked_files,
 )
-from scripts.acceptance.governance import verify_governance
+from scripts.acceptance.governance import (
+    compare_target_authority,
+    verify_freshness,
+    verify_governance,
+)
 from scripts.acceptance.hygiene import scan_archive as hygiene_scan_archive
 from scripts.acceptance.identity import (
     CandidateIdentity,
@@ -70,7 +75,7 @@ from scripts.acceptance.secrets_scan import (
     scan_archive as secrets_scan_archive,
 )
 
-CANDIDATE_NAME = "EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1"
+CANDIDATE_NAME = "EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C2"
 DISCLAIMER = (
     "LOCAL CANONICAL HARNESS RESULT ONLY. EXTERNAL GOVERNED ACCEPTANCE: NOT PERFORMED. "
     "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED."
@@ -109,6 +114,7 @@ class _Pipeline:
             "bootstrap.registry-integrity": self._check_registry_integrity,
             "bootstrap.frozen-pre-test": self._check_frozen_tree,
             "governance.canonical-registers": self._check_governance,
+            "governance.freshness-reconciliation": self._check_governance_freshness,
             "dependencies.locks-unchanged": self._check_locks_unchanged,
             "secrets.tree-scan": self._check_secrets_tree,
             "frozen.post-test": self._check_frozen_tree,
@@ -156,6 +162,9 @@ class _Pipeline:
     def _check_governance(self) -> list[str]:
         tracked = tracked_files(self.root)
         return [f"{f.code}: {f.path}: {f.detail}" for f in verify_governance(self.root, tracked)]
+
+    def _check_governance_freshness(self) -> list[str]:
+        return [f"{f.code}: {f.path}: {f.detail}" for f in verify_freshness(self.root)]
 
     def _check_locks_unchanged(self) -> list[str]:
         return lock_mismatches(self.root, self.identity.lock_hashes)
@@ -361,6 +370,27 @@ def _cmd_evaluate_readiness(args: argparse.Namespace) -> int:
     return 0 if verdict.overall == "READY" else 1
 
 
+def _cmd_verify_reconciliation(args: argparse.Namespace) -> int:
+    root = Path(args.root).resolve()
+    findings = verify_freshness(root)
+    if args.target_pcr:
+        findings.extend(compare_target_authority(root, Path(args.target_pcr).read_bytes()))
+    for finding in findings:
+        print(f"{finding.code}: {finding.path}: {finding.detail}")
+    print(f"INFRA01_RECONCILIATION_RESULT:{'PASS' if not findings else 'FAIL'}")
+    return 0 if not findings else 1
+
+
+def _cmd_verify_delta(args: argparse.Namespace) -> int:
+    findings = verify_inventory_between_archives(
+        Path(args.inventory), Path(args.predecessor), Path(args.candidate)
+    )
+    for finding in findings:
+        print(finding.describe())
+    print(f"INFRA01_DELTA_RESULT:{'PASS' if not findings else 'FAIL'}")
+    return 0 if not findings else 1
+
+
 def _cmd_registry(_args: argparse.Namespace) -> int:
     registry = load_registry()
     for stage in registry.stages:
@@ -402,6 +432,27 @@ def main(argv: list[str] | None = None) -> int:
     )
     readiness_parser.add_argument("contract")
     readiness_parser.set_defaults(func=_cmd_evaluate_readiness)
+
+    reconciliation_parser = sub.add_parser(
+        "verify-reconciliation",
+        help="verify governance currency; optionally compare against the current target register",
+    )
+    reconciliation_parser.add_argument("--root", default=".")
+    reconciliation_parser.add_argument(
+        "--target-pcr",
+        default=None,
+        help="path to the current target Program Control Register to compare against",
+    )
+    reconciliation_parser.set_defaults(func=_cmd_verify_reconciliation)
+
+    delta_parser = sub.add_parser(
+        "verify-delta",
+        help="recompute the exact archive-byte delta and verify a declared inventory",
+    )
+    delta_parser.add_argument("--predecessor", required=True, help="exact predecessor ZIP")
+    delta_parser.add_argument("--candidate", required=True, help="exact candidate ZIP")
+    delta_parser.add_argument("--inventory", required=True, help="declared inventory JSON")
+    delta_parser.set_defaults(func=_cmd_verify_delta)
 
     registry_parser = sub.add_parser("registry", help="print the governed check registry")
     registry_parser.set_defaults(func=_cmd_registry)

@@ -329,3 +329,69 @@ rewriting of historical acceptance evidence, no weakening of existing
 checks. INFRA-01 remains `PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`; INFRA
 closure is not proposed and remains blocked on the governed predecessor
 sequence (API layer completion per the Program Control Register).
+
+---
+
+## 6. C1 correction round — governance freshness (2026-09-01)
+
+The independent review of the C0 candidate (`3bb42509…3210`) returned
+`REJECTED / CORRECTION REQUIRED` with two findings; both are corrected in
+this candidate.
+
+**INFRA01-C1-01 — stale current execution state.** The C0 candidate's
+Program Control Register (`Updated: 2026-08-30`) still interpreted
+`API-02 = ACTIVE / IN DEVELOPMENT` after the target `main` had advanced
+(`556821e0e5d550a4db601bbe92e4f4673a1bc3ff`, "gov(api02): close C13 and
+advance primary API stage"). C1 reconciles the candidate to that target
+authority as base: the register now carries `API-01 = ACCEPTED / CLOSED`,
+`API-02 = ACCEPTED / CLOSED` with the exact C13 identity and authoritative
+evidence (candidate SHA `9363561271…dfc6a9`, run `33497989489`, artifact
+`ac5f940b…1857`, decision record `docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json`
+carried into the candidate), `API-03 = ACTIVE / IN DEVELOPMENT / NOT
+ACCEPTED`, and `INFRA-01 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED`.
+Historical statements remain preserved as history. No API-02/API-03 runtime
+code was imported: reconciliation is governance-only, per the correction
+scope and §8 of the C1 assignment.
+
+**INFRA01-C1-02 — the harness did not detect stale governance.** The
+reviewer proved `verify_governance()` returned `finding_count = 0` on a
+candidate whose current API-02 state was stale-mutated. C1 adds a
+fail-closed governance-freshness mechanism distinguishing `canonical files
+exist != unique != current`: a sealed machine-readable reconciliation
+record (`docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json`)
+binding target repository/branch/commit/tree and the exact canonical-file
+identities used at seal, the exact reconciled candidate-register bytes, and
+region-anchored expected current-state facts. The new mandatory registry
+check `governance.freshness-reconciliation` (registry 1.1.0) validates the
+record's integrity, the register's byte binding, and every fact against the
+register's _current-state regions only_ (primary position, program-layer
+table, immediate execution decision), so preserved audit history is never
+judged as current state. Dedicated detectors: `RECONCILIATION_RECORD_MISSING`,
+`RECONCILIATION_INTEGRITY_FAILURE`, `GOVERNANCE_RECONCILIATION_MISMATCH`,
+`STALE_GOVERNANCE_STATE`, `GOVERNANCE_TRANSITION_MISSING`,
+`GOVERNANCE_REGION_MISSING`, `TARGET_AUTHORITY_MISMATCH`. A stale register
+cannot be made self-valid by rehashing it into the record: hash-rebinding
+attacks are caught semantically by the recorded facts (mutation M17), and
+rewriting the facts/authority themselves changes exactly the fields the
+authoritative path compares against the reviewer-fetched current target
+(`verify-reconciliation --target-pcr`, wired as a mandatory workflow step).
+The reviewer's exact reproduction now fails closed with
+`GOVERNANCE_RECONCILIATION_MISMATCH` + `GOVERNANCE_TRANSITION_MISSING`
+(`finding_count = 2`, previously `0`).
+
+**New adversarial coverage.** M17 (stale current-state regression, rehashed
+record) → `STALE_GOVERNANCE_STATE`; M18 (target-authority identity edited
+without reseal) → `RECONCILIATION_INTEGRITY_FAILURE`, plus the
+authoritative-side variant → `TARGET_AUTHORITY_MISMATCH`; M19 (candidate
+lacks a newer target transition while all canonical files exist exactly
+once and versions are consistent) → `GOVERNANCE_TRANSITION_MISSING`; M20
+(preserved historical `API-02 = ACTIVE` text with correct current state)
+passes. The 19 negative classes map onto 19 distinct detector codes; the
+47-test regression floor of the two harness test files is preserved and
+extended, not diluted.
+
+**Exact change accounting.** The complete machine-readable C0→C1 path delta
+is `docs/infra/INFRA-01/INFRA01_C0_TO_C1_EXACT_INVENTORY.json` (no
+exclusions: workflows, harness code, tests, governance docs, evidence and
+checksum metadata all accounted). The concise correction report is
+`docs/infra/INFRA-01/INFRA-01-C1-CORRECTION-REPORT.md`.
