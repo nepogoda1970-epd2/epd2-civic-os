@@ -93,7 +93,7 @@ jobs:
         run: |
           set -euo pipefail
           export UV_PROJECT_ENVIRONMENT="${RUNNER_TEMP}/c12-format-env"
-          export RUFF_NO_CACHE=1
+          export RUFF_NO_CACHE=true
           uv sync --frozen --all-groups --python 3.12.12
           uv run --frozen ruff format scripts/api02/build_stale_audit.py scripts/api02/validator_selftest.py scripts/validate_api02.py
           uv run --frozen ruff format --check scripts/api02/build_stale_audit.py scripts/api02/validator_selftest.py scripts/validate_api02.py
