@@ -1,0 +1,103 @@
+{
+  "schema": "epd2.front04.acceptance-record/1",
+  "stage": "FRONT-04 — WS-03 Voting Client",
+  "decision_date": "2026-09-01",
+  "decision": "ACCEPTED",
+  "closure": "CLOSED_BOUNDED_STAGE",
+  "authority": "POST_RUN_GOVERNANCE_DECISION",
+  "candidate": {
+    "filename": "EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip",
+    "sha256": "1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8",
+    "size_bytes": 21448756,
+    "source_tree_digest": "eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e",
+    "test_source_digest": "90a76c25177137d22bd6c8b10cffb383dc2877e0e76ae2829560a0350406667d",
+    "configuration_digest": "c33c473b54b86b64c176f9848913a4e022a22204e3ca4c209f016cce79f248f8",
+    "validator_source_digest": "cfcae27fcaef98f8a4f168c29d8380e28ab4675df109bdefc241bea85ca96457",
+    "package_lock_sha256": "a300a24a43b4b99a4e0eddd739acca8eff87113af1a59eedac42970d9f06bbd2",
+    "source_file_count": 95
+  },
+  "stage_contract": {
+    "version": "1.0.0",
+    "digest": "b5bfab8f8d74cfe0028a435a6bfbf94d116ff232781c55b5f72532caded76cc2",
+    "candidate_predecision_state": "PROPOSED_FOR_GOVERNED_RATIFICATION",
+    "governance_disposition": "RATIFIED_FOR_FRONT04_C2_BOUNDED_ACCEPTANCE"
+  },
+  "authoritative_review": {
+    "workflow": ".github/workflows/front04-c2-authoritative-accept.yml",
+    "run_id": 33569268417,
+    "job_id": 100059427183,
+    "reviewed_commit": "66a65f2303d2a0d18fb8396887a35d6c14df1d92",
+    "conclusion": "success",
+    "validator": {
+      "passed": 29,
+      "total": 29,
+      "status": "PASS"
+    },
+    "mutations": {
+      "detected": 32,
+      "total": 32,
+      "status": "PASS"
+    },
+    "stale_evidence_attacks": {
+      "passed": 6,
+      "total": 6,
+      "status": "PASS"
+    },
+    "archive_hygiene": "PASS",
+    "report_identity_consistency": "PASS",
+    "bsi_hard_freeze_gate": "PASS",
+    "terminal_marker": "FRONT04_C2_AUTHORITATIVE_RESULT:PASS:1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8:21448756",
+    "evidence_artifact": {
+      "name": "front04-c2-authoritative-acceptance-33569268417",
+      "artifact_id": 9824319414,
+      "artifact_zip_sha256": "83ac65e0d72686fcabad7314f040d445d3543e0621bf9bf2db408e8fcb05aec2",
+      "size_bytes": 4197
+    }
+  },
+  "independent_corroboration": {
+    "workflow": ".github/workflows/front04-c2-independent-review.yml",
+    "run_id": 33569270616,
+    "job_id": 100059434289,
+    "conclusion": "success"
+  },
+  "reseal_provenance": {
+    "superseded_unaccepted_c2_sha256": "04d71eaed46bd4278f742823b244ff42fe5fa55be16b7688ae2029c5231e3a98",
+    "reason": "developer-report source_tree_digest was stale; exact report identity was reconciled and execution byproducts excluded before reseal",
+    "run_id": 33568939594,
+    "job_id": 100058414374,
+    "resulting_commit": "bbe05f28f354f21725805b0b7b1c223114c0bd42"
+  },
+  "accepted_predecessor_context": {
+    "FRONT-02_C2_1_sha256": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179",
+    "FRONT-03_C1_sha256": "fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26",
+    "FRONT-03_authoritative_run": 33528038712,
+    "FRONT-03_authoritative_job": 99923795567
+  },
+  "bsi_disposition": {
+    "bootstrap_applied": true,
+    "readiness_delta_present": true,
+    "persistent_member_person_identifier_hard_freeze_preserved": true,
+    "validator_gate_F418": "PASS",
+    "certification_state": "PREPARATORY_PARALLEL_WORK_NOT_CERTIFIED",
+    "claims_excluded": [
+      "BSI certification",
+      "Common Criteria certification",
+      "EAL4 certification",
+      "production voting approval"
+    ]
+  },
+  "accepted_scope": "WS-03 frontend, voting-client isolation and fail-closed boundary only",
+  "explicit_nonclaims": [
+    "not acceptance of a complete executable production voting system",
+    "not acceptance of voting cryptographic mechanisms",
+    "not legal activation of binding digital voting",
+    "not BSI/Common Criteria/EAL4 certification",
+    "not production readiness",
+    "not final security acceptance",
+    "not closure of the entire FRONT layer",
+    "does not alter the canonical primary program stage"
+  ],
+  "canonical_main_at_governance_start": "1634fe7917eb5e14fa24ac27fc1cd8b9b701c01a",
+  "candidate_self_state_before_decision": "CANDIDATE_NOT_ACCEPTED",
+  "no_self_acceptance_preserved": true
+}
