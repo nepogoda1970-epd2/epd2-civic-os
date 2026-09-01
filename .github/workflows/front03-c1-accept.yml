@@ -1,3 +1,4 @@
+# governed registration trigger
 name: FRONT-03 C1 independent governed acceptance
 on:
   push:
