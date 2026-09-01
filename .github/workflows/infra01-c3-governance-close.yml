@@ -167,7 +167,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --check
-          changed=$(git status --porcelain | awk '{print $2}' | sort)
+          changed=$({ git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)
           expected=$(printf '%s\n' \
             docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json \
             docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | sort)
