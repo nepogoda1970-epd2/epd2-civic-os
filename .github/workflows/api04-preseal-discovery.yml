@@ -42,16 +42,10 @@ jobs:
           if [ "$count" -eq 1 ] && [ "$files" -eq 0 ]; then ROOT=$(find /tmp/api04 -mindepth 1 -maxdepth 1 -type d | head -1); fi
           echo "API04_ROOT=$ROOT"
           echo "API04_FILE_COUNT=$(find "$ROOT" -type f | wc -l)"
-          echo '--- top level ---'
-          find "$ROOT" -maxdepth 2 -mindepth 1 -printf '%P\n' | sort | head -250
           echo '--- api04 dossier ---'
           find "$ROOT/docs/api/API-04" -maxdepth 1 -type f -printf '%f\n' 2>/dev/null | sort || true
-          echo '--- api04 related runtime/tests/scripts ---'
-          find "$ROOT" -type f \( -iname '*api04*' -o -iname '*messag*' -o -iname '*outbox*' -o -iname '*inbox*' -o -iname '*broker*' \) -printf '%P\n' | sort | head -500
           echo '--- lineage ---'
           cat "$ROOT/docs/api/API-04/API04_LINEAGE.json" 2>/dev/null || true
-          echo '--- executive result ---'
-          sed -n '1,220p' "$ROOT/docs/api/API-04/01_EXECUTIVE_RESULT.md" 2>/dev/null || true
           echo '--- open gaps ---'
           sed -n '1,260p' "$ROOT/docs/api/API-04/18_OPEN_GAPS.md" 2>/dev/null || true
           echo '--- validator header/usage ---'
@@ -71,15 +65,10 @@ jobs:
           if [ "$count" -eq 1 ] && [ "$files" -eq 0 ]; then ROOT=$(find /tmp/api04-run -mindepth 1 -maxdepth 1 -type d | head -1); fi
           cd "$ROOT"
           python --version
-          if [ -f scripts/validate_api04.py ]; then
-            python scripts/validate_api04.py 2>&1 | tee /tmp/api04-validator.log
-            rc=${PIPESTATUS[0]}
-            echo "API04_NATIVE_VALIDATOR_RC=$rc"
-            exit "$rc"
-          else
-            echo 'API04_NATIVE_VALIDATOR_MISSING'
-            exit 99
-          fi
+          python scripts/validate_api04.py 2>&1 | tee /tmp/api04-validator.log
+          rc=${PIPESTATUS[0]}
+          echo "API04_NATIVE_VALIDATOR_RC=$rc"
+          exit "$rc"
 
       - name: Enumerate test and dependency entrypoints
         if: always()
@@ -93,9 +82,14 @@ jobs:
           count=$(find /tmp/api04-enum -mindepth 1 -maxdepth 1 -type d | wc -l)
           files=$(find /tmp/api04-enum -mindepth 1 -maxdepth 1 -type f | wc -l)
           if [ "$count" -eq 1 ] && [ "$files" -eq 0 ]; then ROOT=$(find /tmp/api04-enum -mindepth 1 -maxdepth 1 -type d | head -1); fi
-          echo '--- dependency manifests ---'
-          find "$ROOT" -maxdepth 3 -type f \( -name 'pyproject.toml' -o -name 'uv.lock' -o -name 'requirements*.txt' -o -name 'package.json' -o -name 'package-lock.json' \) -printf '%P\n' | sort
-          echo '--- API04 test files ---'
+          find "$ROOT" -maxdepth 3 -type f \( -name 'pyproject.toml' -o -name 'uv.lock' -o -name 'requirements*.txt' \) -printf '%P\n' | sort
           find "$ROOT" -type f \( -iname 'test*api04*.py' -o -path '*api04*test*.py' -o -iname '*messag*test*.py' -o -iname 'test*outbox*.py' -o -iname 'test*inbox*.py' \) -printf '%P\n' | sort | head -500
-          echo '--- compose/container references ---'
-          grep -RIlE 'rabbitmq|nats|kafka|postgres:16\.15|postgresql' "$ROOT" --include='*.yml' --include='*.yaml' --include='*.json' --include='*.toml' --include='*.md' 2>/dev/null | sed "s#^$ROOT/##" | head -300 || true
+
+      - name: Export exact GitHub input bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api04-preseal-exact-input-${{ github.run_id }}
+          path: handoff/API-04/incoming/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_WORKING_0.2_PRESEAL.zip
+          if-no-files-found: error
+          retention-days: 30
