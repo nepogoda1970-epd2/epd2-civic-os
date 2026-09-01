@@ -1,0 +1,224 @@
+name: api04-c1-seal-fix
+
+on:
+  push:
+    branches:
+      - tmp/api04-c1-seal-fix
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  seal-fix-build-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout seal-fix provenance
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download exact reconciled snapshot
+        uses: actions/download-artifact@v4
+        with:
+          name: api04-c1-reconciled-snapshot-33560224146
+          path: snapshot
+          run-id: 33560224146
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-03 C5 predecessor
+        uses: actions/download-artifact@v4
+        with:
+          name: api03-c5-resealed-candidate
+          path: incoming/api03
+          run-id: 33511140504
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-02 C13
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: incoming/api02
+          run-id: 33495990810
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-01 C5
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-candidate
+          path: incoming/api01
+          run-id: 32964804390
+          github-token: ${{ github.token }}
+
+      - name: Download accepted DATA-06 anchor
+        uses: actions/download-artifact@v4
+        with:
+          name: api01-anchors
+          path: incoming/api01-anchors
+          run-id: 32964804390
+          github-token: ${{ github.token }}
+
+      - name: Materialize exact snapshot and apply seal correction
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/api04-c1-seal-fix"
+          tar -xzf snapshot/API04_C1_SNAPSHOT.tar.gz -C "$RUNNER_TEMP/api04-c1-seal-fix"
+          ROOT="$RUNNER_TEMP/api04-c1-seal-fix/API04_C1_SNAPSHOT"
+          python3 handoff/API-04/C1/api04_c1_seal_fix.py "$ROOT"
+          cmp --silent docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          cmp --silent docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json "$ROOT/docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json"
+          test -z "$(find "$ROOT" -type d -name __pycache__ -print -quit)"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+
+      - name: Verify exact predecessor identities
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          one(){ local n="$1"; shift; local f; f=$(find "$@" -type f -name "$n" | head -n2); [ "$(printf '%s\n' "$f" | grep -c .)" -eq 1 ] || exit 1; printf '%s' "$f"; }
+          A3=$(one 'EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C5.zip' incoming/api03)
+          A2=$(one 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip' incoming/api02)
+          A1=$(one 'EPD2_API01_PRODUCTION_API_GATEWAY_AND_BFF_BOUNDARIES_CANDIDATE_0.1_C5.zip' incoming/api01)
+          D6=$(one 'EPD2_DATA_SERIES_CANONICAL_BASELINE_0.1_FINAL.zip' incoming/api01-anchors)
+          echo '5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55  '"$A3" | sha256sum -c -
+          echo '9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9  '"$A2" | sha256sum -c -
+          echo 'cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27  '"$A1" | sha256sum -c -
+          echo '8cba01997e4943f6d3c2b3fc1fe11e2c3527cd6c39123171a827fb8e3669cbf1  '"$D6" | sha256sum -c -
+          echo "a3=$(realpath "$A3")" >> "$GITHUB_OUTPUT"
+          echo "a2=$(realpath "$A2")" >> "$GITHUB_OUTPUT"
+          echo "a1=$(realpath "$A1")" >> "$GITHUB_OUTPUT"
+          echo "d6=$(realpath "$D6")" >> "$GITHUB_OUTPUT"
+
+      - name: Install uv 0.12.5
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: Provision exact live PostgreSQL RabbitMQ and mTLS
+        shell: bash
+        run: |
+          set -euo pipefail
+          source '${{ steps.candidate.outputs.root }}/scripts/api04_ci_setup.sh' '${{ steps.candidate.outputs.root }}'
+
+      - name: Bind accepted archives for PRESEAL
+        shell: bash
+        run: |
+          {
+            echo 'API04_ACCEPTED_API01_ZIP=${{ steps.inputs.outputs.a1 }}'
+            echo 'API04_ACCEPTED_API02_ZIP=${{ steps.inputs.outputs.a2 }}'
+            echo 'API04_ACCEPTED_API03_ZIP=${{ steps.inputs.outputs.a3 }}'
+            echo 'API04_ACCEPTED_DATA06_ZIP=${{ steps.inputs.outputs.d6 }}'
+            echo 'API04_SEALED_CANDIDATE=0'
+          } >> "$GITHUB_ENV"
+
+      - name: Full corrected PRESEAL verification G0 G27
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/c1_seal_fix_preseal_result.json | tee /tmp/api04-c1-seal-fix-preseal.out
+          grep -q '^API04_PRESEAL_RESULT:PASS:validation/api04/c1_seal_fix_preseal_result.json$' /tmp/api04-c1-seal-fix-preseal.out
+          python3 - <<'PY'
+          import json
+          r=json.load(open('validation/api04/c1_seal_fix_preseal_result.json'))
+          assert r['result']=='PASS' and r['gate_count']==28
+          assert r['failed_gates']==[] and r['environment_blocked_gates']==[]
+          assert all(g['result']=='PASS' for g in r['gates'])
+          assert r['suite']['failed']==0 and r['suite']['skipped']==0
+          print('API04_C1_CORRECTED_PRESEAL:28/28 PASS', r['suite'])
+          PY
+
+      - name: Finalize exact internal C1
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.candidate.outputs.root }}'
+          python3 handoff/API-04/C1/api04_c1_reconcile.py --finalize --out-root "$ROOT" --workflow-template handoff/API-04/C1/api04-accept.yml
+          echo 'API04_SEALED_CANDIDATE=1' >> "$GITHUB_ENV"
+
+      - name: Full corrected sealed candidate verification G0 G27
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          "$UV_PROJECT_ENVIRONMENT/bin/python" scripts/validate_api04.py --out validation/api04/c1_seal_fix_candidate_result.json | tee /tmp/api04-c1-seal-fix-candidate.out
+          grep -q '^API04_RESULT:PASS:validation/api04/c1_seal_fix_candidate_result.json$' /tmp/api04-c1-seal-fix-candidate.out
+          python3 - <<'PY'
+          import json
+          r=json.load(open('validation/api04/c1_seal_fix_candidate_result.json'))
+          assert r['result']=='PASS' and r['gate_count']==28
+          assert r['failed_gates']==[] and r['environment_blocked_gates']==[]
+          assert all(g['result']=='PASS' for g in r['gates'])
+          assert r['suite']['failed']==0 and r['suite']['skipped']==0
+          print('API04_C1_CORRECTED_SEALED:28/28 PASS', r['suite'])
+          PY
+
+      - name: Reseal after final candidate evidence
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.candidate.outputs.root }}'
+          python3 handoff/API-04/C1/api04_c1_reconcile.py --finalize --out-root "$ROOT" --workflow-template handoff/API-04/C1/api04-accept.yml
+          cd "$ROOT"
+          sha256sum --quiet -c SHA256SUMS.txt
+          listed=$(grep -c . SHA256SUMS.txt); actual=$(find . -type f ! -path ./SHA256SUMS.txt | wc -l)
+          [ "$listed" = "$actual" ]
+          test -z "$(find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache \) -print -quit)"
+          WF_SHA=$(sha256sum handoff/API-04/templates/C1/api04-accept.yml | cut -d' ' -f1)
+          [ "$WF_SHA" = "$(sha256sum "$GITHUB_WORKSPACE/handoff/API-04/C1/api04-accept.yml" | cut -d' ' -f1)" ]
+          echo "workflow_sha=$WF_SHA" >> "$GITHUB_OUTPUT"
+          echo "files=$actual" >> "$GITHUB_OUTPUT"
+          echo 'API04_C1_CORRECTED_SEAL:PASS'
+
+      - name: Package exact C1 archive
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.candidate.outputs.root }}'
+          FINALROOT="$RUNNER_TEMP/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1"
+          rm -rf "$FINALROOT" && mv "$ROOT" "$FINALROOT"
+          ZIP="$RUNNER_TEMP/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip"
+          (cd "$RUNNER_TEMP" && zip -q -r -X "$ZIP" "$(basename "$FINALROOT")")
+          SHA=$(sha256sum "$ZIP" | cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "API04_C1_SHA256=$SHA"
+          echo "API04_C1_SIZE=$SIZE"
+          echo "API04_C1_FILES=${{ steps.seal.outputs.files }}"
+          echo "API04_C1_WORKFLOW_SHA=${{ steps.seal.outputs.workflow_sha }}"
+
+      - name: Publish exact C1 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: api04-c1-candidate
+          path: ${{ steps.package.outputs.zip }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Publish C1 build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: api04-c1-seal-fix-evidence-${{ github.run_id }}
+          path: |
+            /tmp/api04-c1-seal-fix-preseal.out
+            /tmp/api04-c1-seal-fix-candidate.out
+            ${{ runner.temp }}/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1/validation/api04/
+            ${{ runner.temp }}/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1/docs/api/API-04/API04_C1_SEAL_RECORD.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Final corrected builder result
+        shell: bash
+        run: |
+          echo 'API04_C1_CORRECTED_BUILDER:PASS'
+          echo 'candidate remains CANDIDATE_NOT_ACCEPTED; independent acceptance required'
