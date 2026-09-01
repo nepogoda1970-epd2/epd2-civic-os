@@ -1,0 +1,45 @@
+name: INFRA-01 C2 Freshness Proof
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c2-freshness-proof.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact C2 canonical source
+        uses: actions/checkout@v4
+        with:
+          ref: tmp/infra01-c2-canonical-20260901
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Record current target authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          echo "TARGET_COMMIT=$(git rev-parse origin/main)"
+          echo "TARGET_TREE=$(git rev-parse origin/main^{tree})"
+          echo "TARGET_TIMESTAMP=$(git show -s --format=%cI origin/main)"
+          echo "TARGET_MESSAGE=$(git show -s --format=%s origin/main)"
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > "$RUNNER_TEMP/target-pcr.md"
+          git show origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md > "$RUNNER_TEMP/target-master.md"
+          echo "TARGET_PCR_BLOB=$(git rev-parse origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md)"
+          echo "TARGET_MASTER_BLOB=$(git rev-parse origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md)"
+          sha256sum "$RUNNER_TEMP/target-pcr.md" "$RUNNER_TEMP/target-master.md"
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+      - name: Execute exact C2 freshness gate against current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --frozen python -m scripts.acceptance verify-reconciliation --target-pcr "$RUNNER_TEMP/target-pcr.md"
