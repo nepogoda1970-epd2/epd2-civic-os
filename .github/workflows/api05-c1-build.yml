@@ -34,6 +34,7 @@ jobs:
       API05_API04_SHA: 8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337
       API05_ACCEPT_WF_SHA: 6b2fba5dba895594ac246547ace3b62074b9a80f3c76b3fc3e4a88da8173e106
       API05_OVERLAY_SHA: 47447de97d1d463c3d7f9ce98ced6978aa021dbd1de18b2e3a5e96415a4f7acf
+      API05_LINT_PATCH_SHA: 702be125037732d98023d99f50b8c698e8cefebe4dbc3505c6faab303e4d9ffc
 
     steps:
       - name: Checkout builder control
@@ -94,8 +95,7 @@ jobs:
           assert got==os.environ['API05_OVERLAY_SHA'], (got,os.environ['API05_OVERLAY_SHA'])
           out=pathlib.Path(sys.argv[1]); out.write_bytes(raw)
           with tarfile.open(out,'r:gz') as t:
-              members=t.getmembers()
-              assert members
+              members=t.getmembers(); assert members
               for m in members:
                   p=pathlib.PurePosixPath(m.name)
                   assert not p.is_absolute() and '..' not in p.parts, m.name
@@ -105,6 +105,15 @@ jobs:
           tar --no-same-owner -xzf "$RUNNER_TEMP/api05-overlay.tar.gz" -C '${{ steps.base.outputs.root }}'
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -print -quit | grep -q .
           ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type f \( -name '*.pyc' -o -name '*.pyo' \) -print -quit | grep -q .
+
+      - name: Apply SHA-guarded C1 lint correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          PATCH="$GITHUB_WORKSPACE/handoff/API-05/WORKING_0.1/api05_c1_lint_correction.patch"
+          echo "$API05_LINT_PATCH_SHA  $PATCH" | sha256sum -c -
+          (cd '${{ steps.base.outputs.root }}' && patch -p1 --batch --forward < "$PATCH")
+          echo 'API05_LINT_CORRECTION:PASS'
 
       - name: Bind canonical API-04 closure governance
         shell: bash
@@ -158,8 +167,11 @@ jobs:
         working-directory: ${{ steps.base.outputs.root }}
         run: |
           set -euo pipefail
-          uv run --frozen ruff format services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
-          uv run --frozen ruff check services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
+          TARGETS='services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py'
+          uv run --frozen ruff format $TARGETS
+          uv run --frozen ruff check $TARGETS
+          uv run --frozen ruff format --check $TARGETS
+          echo 'API05_RUFF:PASS'
 
       - name: Run complete API-05 C1 validator
         shell: bash
@@ -192,9 +204,9 @@ jobs:
             'schema':'epd2.api05.c1.seal/1','stage':'API-05','candidate_role':'C1',
             'candidate_self_state':'CANDIDATE_NOT_ACCEPTED','self_accepted':False,
             'accepted_predecessor':{'stage':'API-04','role':'C1','sha256':os.environ['API05_API04_SHA'],'size_bytes':43880523,'authoritative_run_id':33569092401,'authoritative_job_id':100058880258},
-            'builder':{'run_id':os.environ['GITHUB_RUN_ID'],'provenance_commit':os.environ['GITHUB_SHA'],'overlay_sha256':os.environ['API05_OVERLAY_SHA']},
+            'builder':{'run_id':os.environ['GITHUB_RUN_ID'],'provenance_commit':os.environ['GITHUB_SHA'],'overlay_sha256':os.environ['API05_OVERLAY_SHA'],'lint_correction_sha256':os.environ['API05_LINT_PATCH_SHA'],'ruff_version':'0.15.22'},
             'sealed_acceptance_workflow':{'path':'handoff/API-05/templates/C1/api05-accept.yml','sha256':got},
-            'corrections':['dns_connection_pinning','query_bound_allowlist','recursive_identifier_isolation','semantic_before_replay','idempotent_callback_recovery','retry_reauthorization','generated_cache_hygiene','dependency_version_preservation'],
+            'corrections':['dns_connection_pinning','query_bound_allowlist','recursive_identifier_isolation','semantic_before_replay','idempotent_callback_recovery','retry_reauthorization','generated_cache_hygiene','dependency_version_preservation','lint_correction'],
             'acceptance_requirement':'Independent workflow must verify the complete seal, exact accepted API-04 C1 bytes, locked dependencies, PostgreSQL 16, full API-05 suite and all governed gates.'
           }
           pathlib.Path('docs/api/API-05/API05_C1_SEAL_RECORD.json').write_text(json.dumps(payload,indent=2)+'\n')
