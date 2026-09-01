@@ -1,0 +1,70 @@
+{
+  "stage": "API-02 — Authentication & Authorization Runtime",
+  "candidate_role": "C13",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-01",
+  "previous_state": "API-02 ACTIVE / IN DEVELOPMENT",
+  "new_state": "API-02 ACCEPTED / CLOSED",
+  "candidate": {
+    "filename": "EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip",
+    "sha256": "9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9",
+    "size_bytes": 34642386,
+    "builder_run_id": 33495990810,
+    "builder_head_sha": "a378ac688e550de6907b7f8ea8ef19851837c1de",
+    "runtime_delta_from_c12_paths": []
+  },
+  "authoritative_acceptance": {
+    "workflow": ".github/workflows/api02-accept.yml",
+    "workflow_git_blob": "55bcb7571d60eaaaf9c11f15f35c2a27d3961ee9",
+    "workflow_sha256": "9c93f870deaa8b6da4c74f9baa958285043d35adc19c5989cf42fe0a56f3292b",
+    "run_id": 33497989489,
+    "job_id": 99824485228,
+    "run_attempt": 1,
+    "provenance_commit": "ac76811912ab41772e75bd3fe366eb98bb2cddbd",
+    "conclusion": "success",
+    "validator_terminal_result": "API02_RESULT:PASS:validation/api02/validator_result.json",
+    "gates_total": 32,
+    "gates_passed": 32,
+    "failed_gates": 0,
+    "environment_blocked_gates": 0
+  },
+  "measured_evidence": {
+    "sealed_file_count": 3953,
+    "postgresql_server_version": "16.15",
+    "postgresql_constraint_violation_probes": 10,
+    "postgresql_constraint_violation_probes_refused": 10,
+    "browser": {
+      "product": "Google Chrome for Testing 151.0.7922.34",
+      "playwright_version": "1.62.0",
+      "passed": 41,
+      "skipped": 1,
+      "failed": 0,
+      "did_not_run": 0
+    },
+    "runtime_derived_routes": 91,
+    "commit_time_reauthorization_refusal_cases": 9,
+    "mutation_fixtures": 81,
+    "stale_audit_hits": 1437,
+    "stale_audit_unclassified": 0,
+    "candidate_identity": "C13"
+  },
+  "authoritative_evidence_artifact": {
+    "name": "api02-c13-acceptance-evidence-33497989489",
+    "artifact_id": 9797383573,
+    "size_bytes": 782435,
+    "github_artifact_zip_sha256": "ac5f940b98b58d18d1c7cde42314079bb1890bea3596cd5cad3997eeb1818f57"
+  },
+  "governance_decision": {
+    "candidate_self_state_superseded": "CANDIDATE_NOT_ACCEPTED",
+    "basis": "Independent authoritative GitHub acceptance run 33497989489 completed successfully on the exact sealed C13 bytes; the register-maintainer decision records the resulting stage transition.",
+    "open_blockers": [],
+    "next_permitted_primary_stage": "API-03 — Service-to-Service Authentication & Authorization Runtime",
+    "api03_predecessor_requirement": "Reconcile/rebase API-03 to the exact accepted API-02 C13 bytes before API-03 seal and independent acceptance.",
+    "scope_exclusions": [
+      "This decision does not accept or close API-03.",
+      "This decision does not close the API layer; API-03 through API-06 remain governed stages.",
+      "This decision does not claim production readiness or legal activation.",
+      "This decision does not claim security certification, BSI certification, or Common Criteria certification."
+    ]
+  }
+}
