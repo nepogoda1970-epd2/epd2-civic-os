@@ -1,0 +1,50 @@
+name: INFRA-01 C2 Source Bootstrap
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [.github/workflows/infra01-c2-source-bootstrap.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout handoff branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact C0 transport and materialize tracked source
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="handoff/INFRA/incoming/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1.zip"
+          EXPECTED="3bb42509a9db56d34db2bade38a3e73af1a202599392e257c91f3b3627743210"
+          echo "${EXPECTED}  ${ZIP}" | sha256sum -c -
+          rm -rf "$RUNNER_TEMP/c0"
+          mkdir -p "$RUNNER_TEMP/c0"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/c0"
+          ROOT="$RUNNER_TEMP/c0/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1"
+          test -d "$ROOT"
+          rm -f "$ROOT/SHA256SUMS.txt" "$ROOT/ACCEPTANCE/FREEZE-INVENTORY.json"
+          rmdir "$ROOT/ACCEPTANCE" 2>/dev/null || true
+
+          git switch --orphan tmp/infra01-c0-source-20260901
+          git rm -rf . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$ROOT"/. .
+          git add -A
+          git config user.name "EPD2 independent acceptance"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "test(infra01): materialize exact C0 tracked source"
+          git push --force origin HEAD:refs/heads/tmp/infra01-c0-source-20260901
+
+      - name: Report source identity
+        run: |
+          git rev-parse HEAD
+          git rev-parse HEAD^{tree}
+          git status --porcelain
