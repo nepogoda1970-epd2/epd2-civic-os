@@ -1,0 +1,140 @@
+name: API-03 C1 reconcile build
+on:
+  push:
+    branches: [tmp/api03-c1-reconcile-build]
+    paths: ['.github/workflows/api03-c1-reconcile-build.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      C13_SHA256: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+      R13_SHA256: a612a6f8b239ad01112c0349ec440d0b10163b710e547468e44e5364894242fe
+      C13_ARTIFACT_ID: '9795808003'
+      R13_ARTIFACT_ID: '9798227169'
+      CANDIDATE: EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1.zip
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact governed predecessors
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${C13_ARTIFACT_ID}/zip" -o /tmp/c13-artifact.zip
+          curl -fL -H "Authorization: Bearer ${GH_TOKEN}" -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${R13_ARTIFACT_ID}/zip" -o /tmp/r13-artifact.zip
+          mkdir /tmp/c13a /tmp/r13a
+          unzip -q /tmp/c13-artifact.zip -d /tmp/c13a
+          unzip -q /tmp/r13-artifact.zip -d /tmp/r13a
+          C13="$(find /tmp/c13a -type f -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip' -print -quit)"
+          R13="$(find /tmp/r13a -type f -name 'API 03_R13.zip' -print -quit)"
+          test -n "$C13" && test -n "$R13"
+          echo "${C13_SHA256}  ${C13}" | sha256sum -c -
+          echo "${R13_SHA256}  ${R13}" | sha256sum -c -
+          echo "C13=$C13" >> "$GITHUB_ENV"
+          echo "R13=$R13" >> "$GITHUB_ENV"
+      - name: Assemble exact C13 plus R13 technical delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir /tmp/c13 /tmp/r13 /tmp/c1
+          unzip -q "$C13" -d /tmp/c13
+          unzip -q "$R13" -d /tmp/r13
+          C13ROOT="$(find /tmp/c13 -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          R13ROOT="$(find /tmp/r13 -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          cp -a "$C13ROOT/." /tmp/c1/
+          export C13ROOT R13ROOT
+          python - <<'PY'
+          import json, os, pathlib, shutil, hashlib
+          C=pathlib.Path(os.environ['C13ROOT']); R=pathlib.Path(os.environ['R13ROOT']); O=pathlib.Path('/tmp/c1')
+          inv=json.load(open(R/'validation/api03/inventory_result.json'))
+          imported=[]; same=[]
+          for rel in inv['added']:
+              rp=R/rel; cp=C/rel; op=O/rel
+              if cp.exists():
+                  if rp.read_bytes()!=cp.read_bytes(): raise SystemExit(f'CONFLICT_ADDED:{rel}')
+                  same.append(rel); continue
+              op.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(rp,op); imported.append(rel)
+          # R13's only shared technical modification. A byte diff proves the remainder of this file is identical.
+          sec='packages/python/epd2-runtime/tests/test_sec01_security_controls.py'
+          shutil.copy2(R/sec,O/sec)
+          # Governance must come from current canonical main lineage, not stale R13 V24.
+          shutil.copy2('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',O/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          # Master in exact accepted C13 must remain current V26 and must equal current main.
+          if (C/'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md').read_bytes()!=pathlib.Path('docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md').read_bytes():
+              raise SystemExit('MASTER_DRIFT_FROM_ACCEPTED_C13')
+          (O/'API03_PRESEAL_STATUS.txt').write_text('SUPERSEDED_BY_API03_C1_STATUS\n')
+          (O/'API03_C1_STATUS.txt').write_text('CANDIDATE_NOT_ACCEPTED\n')
+          (O/'docs/api/API-03/03_ENTERING_BASELINE_AND_PARALLEL_MODE.md').write_text('''# Entering baseline and governed C1 mode\n\nExact technical predecessor: independently accepted API-02 C13.\n\n`EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip`\n\nSHA-256 `9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9`\n\nAPI-02 is `ACCEPTED / CLOSED` by authoritative GitHub run `33497989489`. API-03 C1 is a governed candidate and remains `CANDIDATE_NOT_ACCEPTED` until a separate independent acceptance run succeeds and the register maintainer records that run.\n''')
+          req={
+            'schema':'epd2.api03.api02-c13-reconciliation/1','status':'CANDIDATE_NOT_ACCEPTED',
+            'accepted_predecessor':{'candidate':'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip','sha256':os.environ.get('C13_SHA256','9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'),'authoritative_run':33497989489,'state':'ACCEPTED / CLOSED'},
+            'r13_source':{'sha256':os.environ.get('R13_SHA256','a612a6f8b239ad01112c0349ec440d0b10163b710e547468e44e5364894242fe'),'external_review_run':33280355709,'state':'PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED'},
+            'resolved_requirements':['exact accepted API-02 archive known','R13 rebased onto exact accepted API-02 bytes','human identity remains separate from ServicePrincipal','privileged session/cookie semantics preserved from C13','legacy transitional service token remains disabled','exact C13-to-C1 inventory generated','independent acceptance still required'],
+            'open_reconciliation_blockers':[],'self_accepted':False}
+          p=O/'docs/api/API-03/API03_API02_RECONCILIATION_REQUIREMENTS.json'; p.write_text(json.dumps(req,indent=2,sort_keys=True)+'\n')
+          (O/'docs/api/API-03/01_EXECUTIVE_RESULT.md').write_text('''# API-03 Executive Result — C1 reconciled candidate\n\n`CANDIDATE_NOT_ACCEPTED`\n\nC1 rebases the independently reviewed R13 API-03 service-to-service technical delta onto the exact independently accepted API-02 C13 bytes (`9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9`). It preserves API-02 human authentication/session/authorization authority and keeps `ServicePrincipal` separate from `AuthenticatedPrincipal`. No self-acceptance claim is made.\n\nThe prior API-02 predecessor blocker is resolved. Remaining authority gate: independent C1 GitHub acceptance on these exact sealed bytes followed by a separate Program Control transition.\n''')
+          report={'schema':'epd2.api03.c1.reconciliation/1','candidate_state':'CANDIDATE_NOT_ACCEPTED','api02_c13_sha256':os.environ.get('C13_SHA256','9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'),'r13_sha256':os.environ.get('R13_SHA256','a612a6f8b239ad01112c0349ec440d0b10163b710e547468e44e5364894242fe'),'r13_added_total':len(inv['added']),'r13_added_already_in_c13_identical':same,'r13_added_imported':imported,'shared_technical_modification':[sec],'governance_resolution':'Program Control from current main; Master preserved byte-identical from accepted C13/V26','self_accepted':False}
+          (O/'docs/api/API-03/API03_C1_API02_C13_RECONCILIATION.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          # Exact base inventory. Only added API03 material plus Program Control and SEC-01 hunk may differ from C13.
+          def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          cfiles={str(p.relative_to(C)):sha(p) for p in C.rglob('*') if p.is_file()}
+          ofiles={str(p.relative_to(O)):sha(p) for p in O.rglob('*') if p.is_file()}
+          added=sorted(set(ofiles)-set(cfiles)); removed=sorted(set(cfiles)-set(ofiles)); modified=sorted(p for p in set(cfiles)&set(ofiles) if cfiles[p]!=ofiles[p])
+          allowed_modified=['docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',sec]
+          if removed: raise SystemExit('REMOVED_FROM_C13:'+repr(removed))
+          if modified!=sorted(allowed_modified): raise SystemExit('UNEXPECTED_C13_MODIFIED:'+repr(modified))
+          exact={'schema':'epd2.api03.c1.c13-delta/1','base_api02_c13_sha256':os.environ.get('C13_SHA256','9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'),'counts':{'added':len(added),'modified':len(modified),'removed':0},'added':added,'modified':modified,'removed':[]}
+          (O/'docs/api/API-03/API03_C1_EXACT_C13_DELTA_INVENTORY.json').write_text(json.dumps(exact,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: C1 reconciliation fail-closed assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/c1
+          python - <<'PY'
+          import json, pathlib, re
+          r=pathlib.Path('.')
+          assert (r/'API03_C1_STATUS.txt').read_text().strip()=='CANDIDATE_NOT_ACCEPTED'
+          rec=json.load(open(r/'docs/api/API-03/API03_API02_RECONCILIATION_REQUIREMENTS.json'))
+          assert rec['accepted_predecessor']['sha256']=='9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9'
+          assert rec['open_reconciliation_blockers']==[] and rec['self_accepted'] is False
+          inv=json.load(open(r/'docs/api/API-03/API03_C1_EXACT_C13_DELTA_INVENTORY.json'))
+          assert inv['removed']==[]
+          assert inv['modified']==['docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md','packages/python/epd2-runtime/tests/test_sec01_security_controls.py']
+          pc=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          assert 'API-02 = ACCEPTED / CLOSED' in pc and 'API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in pc
+          s=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/assertion.py').read_text()
+          assert 'SERVICE_ASSERTION_ALG = "ES256"' in s and 'SERVICE_ASSERTION_TYP = "epd2-service+jwt"' in s
+          assert 'hmac.new(' not in '\n'.join(p.read_text(errors='ignore') for p in (r/'packages/python/epd2-runtime/src/epd2_runtime/s2s').glob('*.py'))
+          legacy=(r/'packages/python/epd2-runtime/src/epd2_runtime/s2s/legacy_token.py').read_text()
+          assert 'C1_ELIGIBLE_ACTIVE_AUTHENTICATION = False' in legacy
+          print('API03_C1_RECONCILIATION:PASS')
+          print(inv['counts'])
+          PY
+      - name: Pack reconciled C1 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/package && mkdir -p /tmp/package/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1
+          cp -a /tmp/c1/. /tmp/package/EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1/
+          find /tmp/package -type d -name __pycache__ -prune -exec rm -rf {} + || true
+          find /tmp/package -type d -name .pytest_cache -prune -exec rm -rf {} + || true
+          find /tmp/package -type f -name '*.pyc' -delete
+          (cd /tmp/package && zip -X -q -r "$GITHUB_WORKSPACE/$CANDIDATE" EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1)
+          sha256sum "$CANDIDATE" | tee API03_C1_CANDIDATE.sha256
+          stat -c 'size_bytes=%s' "$CANDIDATE" | tee API03_C1_CANDIDATE.size
+          unzip -t "$CANDIDATE" >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api03-c1-reconciled-candidate
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            EPD2_API03_SERVICE_TO_SERVICE_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C1.zip
+            API03_C1_CANDIDATE.sha256
+            API03_C1_CANDIDATE.size
