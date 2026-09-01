@@ -26,7 +26,7 @@ jobs:
         run: |
           set -euo pipefail
           cat handoff/API-04/C1/api04_c1.patch.zlib.b64.part* | tr -d '\n' | base64 -d | python3 -c 'import sys,zlib; sys.stdout.buffer.write(zlib.decompress(sys.stdin.buffer.read()))' > "$RUNNER_TEMP/api04_c1.patch"
-          python3 -m py_compile handoff/API-04/C1/api04_c1_reconcile.py
+          python3 -m py_compile handoff/API-04/C1/api04_c1_reconcile.py handoff/API-04/C1/api04_c1_postfix.py
 
       - name: Download exact API-04 R2 PRESEAL input
         uses: actions/download-artifact@v4
@@ -108,6 +108,7 @@ jobs:
             --r2-root '${{ steps.inputs.outputs.r2root }}' \
             --repo-root "$PWD" --out-root "$OUT" \
             --patch-file "$RUNNER_TEMP/api04_c1.patch"
+          python3 handoff/API-04/C1/api04_c1_postfix.py "$OUT"
           echo "root=$OUT" >> "$GITHUB_OUTPUT"
           grep -q 'API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' "$OUT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
           grep -q '5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55' "$OUT/docs/api/API-04/API04_LINEAGE.json"
