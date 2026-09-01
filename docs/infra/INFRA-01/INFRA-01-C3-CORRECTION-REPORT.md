@@ -17,16 +17,16 @@ A second packaging-identity defect was discovered during independent preparation
 
 - repository: `nepogoda1970-epd2/epd2-civic-os`
 - branch: `main`
-- commit: `3d0b2fec5f86c491f36de1041caa66d983727480`
-- tree: `684a5777cee8ef608716d12514e9b7dc673048d5`
-- commit timestamp: `2026-09-01T13:20:03Z`
-- commit message: `gov(api03): close C5 and advance primary API-04`
-- Program Control Register Git blob: `cee1163943023ddafe942c032309e7967fb7883c`
-- Program Control Register SHA-256: `0a4acf40b5254405e6ff3abeaf6671c845d765225f422322b8b0b0f09d3083a0`
+- commit: `c333b9dd12e0c13dd402222cc958d95e779b8488`
+- tree: `bc58993ff881a23c2193afdfe6b71e30e945f4f8`
+- commit timestamp: `2026-09-01T17:13:28Z`
+- commit message: `gov(front03): accept C1 and close bounded FRONT-03 stage`
+- Program Control Register Git blob: `addcbc09d99c53bc8f0f39e4568949cac4dd2cf0`
+- Program Control Register SHA-256: `c985cd17eb79ea4390a5c183581629a4d729e37f1485f1fba935cce2d5cc825d`
 - Master Register Git blob: `7f5c6a9a88f8e653b43dc542a595ac37bf7a0692`
 - Master Register SHA-256: `3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d`
 
-The two commits that advanced main after the C2 target are narrowly preserved: `f3f59563cf5397106c74034b26ab6f23534f3897` adds the exact API-03 C5 acceptance record, and `3d0b2fec5f86c491f36de1041caa66d983727480` advances the canonical PCR to API-03 CLOSED / API-04 ACTIVE.
+The API-03 C5 acceptance and API-04 activation remain preserved. During C3 pre-acceptance preparation, `main` advanced once more to `c333b9dd12e0c13dd402222cc958d95e779b8488` solely for bounded FRONT-03 C1 acceptance. Because no authoritative C3 PASS had yet occurred, C3 was refreshed in the same correction round rather than creating C4. The exact FRONT-03 acceptance record is carried and the candidate PCR preserves that new state while leaving the overall FRONT layer open.
 
 ## 3. C3 changes
 
@@ -34,8 +34,8 @@ C3 does not alter INFRA-01 execution semantics, fail-closed detector semantics, 
 
 C3 only:
 
-1. carries the exact current `docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json` bytes from main;
-2. reconciles current PCR state to API-03 CLOSED / API-04 ACTIVE while preserving the INFRA-01 pre-seal candidate state;
+1. carries the exact current `docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json` and `docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json` bytes from main;
+2. reconciles current PCR state to API-03 CLOSED / API-04 ACTIVE and bounded FRONT-03 C1 ACCEPTED/CLOSED while preserving the INFRA-01 pre-seal candidate state;
 3. reseals `INFRA01_GOVERNANCE_RECONCILIATION.json` against current main;
 4. updates the harness candidate package identity from C2 to C3;
 5. fixes the packaged workflow upload path to that same C3 identity;

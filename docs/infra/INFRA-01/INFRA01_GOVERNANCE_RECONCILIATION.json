@@ -1,1 +1,110 @@
-{"candidate":{"pcr_path":"docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md","pcr_sha256":"2f86cb4cd78b08391a71af5df3e70c5f5f7a89b8f1d99402890438abdb267de7"},"expected_current_state":[{"id":"api01-closed","must_exclude":[],"must_include":["API-01 = ACCEPTED / CLOSED"],"region":"primary_position"},{"id":"api02-closed","must_exclude":["API-02 = ACTIVE / IN DEVELOPMENT","API-02 = NEXT"],"must_include":["API-02 = ACCEPTED / CLOSED"],"region":"primary_position"},{"id":"api03-closed-primary","must_exclude":["API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED","API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"],"must_include":["API-03 = ACCEPTED / CLOSED"],"region":"primary_position"},{"id":"api04-active-primary","must_exclude":[],"must_include":["API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],"region":"primary_position"},{"id":"api-layer-current","must_exclude":["API-03 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],"must_include":["API-03 ACCEPTED / CLOSED","API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],"region":"layer_table"},{"id":"infra01-preseal-row","must_exclude":[],"must_include":["INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"],"region":"layer_table"},{"id":"api03-c5-identity","must_exclude":[],"must_include":["5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55"],"region":"immediate_execution"},{"id":"api04-primary-execution","must_exclude":["API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"],"must_include":["API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED","API-03 = ACCEPTED / CLOSED"],"region":"immediate_execution"}],"manifest_sha256":"b716ae538c95a92a33d073b6e3941e6b833d00ac6cf15b900f7994cd91735fec","note":"INFRA-01 C3 re-reconciliation after target advanced from API-03 ACTIVE to API-03 ACCEPTED/CLOSED and API-04 ACTIVE. Runtime/harness semantics unchanged; exact current API-03 acceptance record is carried; package identity is C3. Target authority was independently re-fetched immediately before C3 construction.","reconciled_at":"2026-09-01T17:05:00+00:00","schema":"epd2.infra01.governance-reconciliation/2","target_authority":{"branch":"main","commit":"3d0b2fec5f86c491f36de1041caa66d983727480","commit_message":"gov(api03): close C5 and advance primary API-04","master_git_blob":"7f5c6a9a88f8e653b43dc542a595ac37bf7a0692","master_sha256":"3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d","pcr_git_blob":"cee1163943023ddafe942c032309e7967fb7883c","pcr_sha256":"0a4acf40b5254405e6ff3abeaf6671c845d765225f422322b8b0b0f09d3083a0","repository":"nepogoda1970-epd2/epd2-civic-os","tree":"684a5777cee8ef608716d12514e9b7dc673048d5"},"target_commit_timestamp":"2026-09-01T13:20:03+00:00"}
+{
+  "schema": "epd2.infra01.governance-reconciliation/2",
+  "reconciled_at": "2026-09-01T17:29:00+00:00",
+  "target_commit_timestamp": "2026-09-01T17:13:28+00:00",
+  "note": "INFRA-01 C3 final pre-acceptance freshness refresh after concurrent bounded FRONT-03 C1 acceptance on main. API-03 remains CLOSED and API-04 remains ACTIVE; the candidate preserves the newly accepted FRONT-03 state and exact acceptance record while retaining INFRA-01 as PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED. This is the same C3 correction round because no authoritative C3 PASS had occurred before the target advanced. Runtime, harness, detector, mutation, and security semantics are unchanged.",
+  "target_authority": {
+    "branch": "main",
+    "commit": "c333b9dd12e0c13dd402222cc958d95e779b8488",
+    "commit_message": "gov(front03): accept C1 and close bounded FRONT-03 stage",
+    "master_git_blob": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+    "master_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+    "pcr_git_blob": "addcbc09d99c53bc8f0f39e4568949cac4dd2cf0",
+    "pcr_sha256": "c985cd17eb79ea4390a5c183581629a4d729e37f1485f1fba935cce2d5cc825d",
+    "repository": "nepogoda1970-epd2/epd2-civic-os",
+    "tree": "bc58993ff881a23c2193afdfe6b71e30e945f4f8"
+  },
+  "candidate": {
+    "pcr_path": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md",
+    "pcr_sha256": "433bc802a4b0d62a836c0b436f0838d3179a73c09da9ea56d613d61e3781aaf7"
+  },
+  "expected_current_state": [
+    {
+      "id": "api01-closed",
+      "region": "primary_position",
+      "must_include": [
+        "API-01 = ACCEPTED / CLOSED"
+      ],
+      "must_exclude": []
+    },
+    {
+      "id": "api02-closed-primary",
+      "region": "primary_position",
+      "must_include": [
+        "API-02 = ACCEPTED / CLOSED"
+      ],
+      "must_exclude": [
+        "API-02 = ACTIVE / IN DEVELOPMENT",
+        "API-02 = NEXT"
+      ]
+    },
+    {
+      "id": "api03-closed-primary",
+      "region": "primary_position",
+      "must_include": [
+        "API-03 = ACCEPTED / CLOSED"
+      ],
+      "must_exclude": [
+        "API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED",
+        "API-03 = PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
+      ]
+    },
+    {
+      "id": "api04-active-primary",
+      "region": "primary_position",
+      "must_include": [
+        "API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+      ],
+      "must_exclude": []
+    },
+    {
+      "id": "api-layer-row-current",
+      "region": "layer_table",
+      "must_include": [
+        "API-02 ACCEPTED / CLOSED",
+        "API-03 ACCEPTED / CLOSED",
+        "API-04 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+      ],
+      "must_exclude": [
+        "API-03 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+      ]
+    },
+    {
+      "id": "infra01-preseal-row",
+      "region": "layer_table",
+      "must_include": [
+        "INFRA-01 PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED"
+      ],
+      "must_exclude": []
+    },
+    {
+      "id": "front03-accepted-row",
+      "region": "layer_table",
+      "must_include": [
+        "FRONT-03 C1 ACCEPTED / CLOSED"
+      ],
+      "must_exclude": [
+        "FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE / NOT_STARTED_FINAL"
+      ]
+    },
+    {
+      "id": "api03-c5-identity-preserved",
+      "region": "immediate_execution",
+      "must_include": [
+        "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55"
+      ],
+      "must_exclude": []
+    },
+    {
+      "id": "api04-primary-execution-decision",
+      "region": "immediate_execution",
+      "must_include": [
+        "API-04 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+      ],
+      "must_exclude": [
+        "API-03 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED"
+      ]
+    }
+  ],
+  "manifest_sha256": "260999435e2528b4702838677cf20f5622b7796b22b906b137153bac83e2cd8b"
+}
