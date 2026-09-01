@@ -1,4 +1,4 @@
-name: FRONT-03 C1 TypeScript repair
+name: FRONT-03 C1 TypeScript and C105 semantic repair
 on:
   push:
     branches: [tmp/front03-c1-closure]
@@ -57,9 +57,32 @@ jobs:
           if '  CapabilityStatus,\n' in s: raise SystemExit('CapabilityStatus already imported unexpectedly')
           p.write_text(s.replace(old,new,1))
           PY
-          grep -n 'CapabilityStatus' frontend/web-shell/member/MemberWorkspace.tsx
+      - name: Harden C105 semantic detection and mutation
+        working-directory: ${{ runner.temp }}/tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          v=Path('scripts/validate_front03_c1.py')
+          s=v.read_text()
+          old="if 'membership.is_governed_membership ? \"member\" : \"applicant\"' not in adapter: e.append(\"member-promotion-not-server-governed\")"
+          new="if not re.search(r'membership\\.is_governed_membership\\s*\\?\\s*\"member\"\\s*:\\s*\"applicant\"', adapter): e.append(\"member-promotion-not-server-governed\")"
+          if old not in s: raise SystemExit('C105 validator anchor absent')
+          v.write_text(s.replace(old,new,1))
+
+          m=Path('scripts/run_front03_c1_mutations.py')
+          s=m.read_text()
+          if 'import re\n' not in s:
+              s=s.replace('import json\n', 'import json\nimport re\n', 1)
+          old='("member-local-promotion", "frontend/web-shell/member/api02Runtime.ts", lambda s: s.replace(\'membership.is_governed_membership ? "member" : "applicant"\', \'true ? "member" : "applicant"\', 1)),'
+          new='("member-local-promotion", "frontend/web-shell/member/api02Runtime.ts", lambda s: re.sub(r\'membership\\.is_governed_membership\\s*\\?\\s*"member"\\s*:\\s*"applicant"\', \'true ? "member" : "applicant"\', s, count=1)),'
+          if old not in s: raise SystemExit('C105 mutation anchor absent')
+          m.write_text(s.replace(old,new,1))
+          PY
+          grep -n 'C105\|member-local-promotion' scripts/validate_front03_c1.py scripts/run_front03_c1_mutations.py
       - uses: actions/setup-node@v4
-        with: {node-version: '22.16.0'}
+        with: {node-version: '22.17.0'}
       - name: Locked formatter and full TypeScript verification
         working-directory: ${{ runner.temp }}/tree
         shell: bash
@@ -69,19 +92,20 @@ jobs:
           ./node_modules/.bin/prettier --write frontend/web-shell/member/MemberWorkspace.tsx
           ./node_modules/.bin/prettier --check frontend/web-shell/member/MemberWorkspace.tsx
           npm run typecheck --workspace=frontend/web-shell
+          python3 -m py_compile scripts/validate_front03_c1.py scripts/run_front03_c1_mutations.py
       - name: Seal repaired overlay from same 16-path inventory
         shell: bash
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP/tree"
-          tar -czf "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" -T "$RUNNER_TEMP/paths.txt"
-          sha256sum "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" | tee "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.sha256"
-          test "$(tar -tzf "$GITHUB_WORKSPACE/front03-c1-overlay-tsfixed.tar.gz" | grep -c .)" -eq 16
+          tar -czf "$GITHUB_WORKSPACE/front03-c1-overlay-c105fixed.tar.gz" -T "$RUNNER_TEMP/paths.txt"
+          sha256sum "$GITHUB_WORKSPACE/front03-c1-overlay-c105fixed.tar.gz" | tee "$GITHUB_WORKSPACE/front03-c1-overlay-c105fixed.sha256"
+          test "$(tar -tzf "$GITHUB_WORKSPACE/front03-c1-overlay-c105fixed.tar.gz" | grep -c .)" -eq 16
       - uses: actions/upload-artifact@v4
         with:
-          name: front03-c1-overlay-tsfixed
+          name: front03-c1-overlay-c105fixed
           path: |
-            front03-c1-overlay-tsfixed.tar.gz
-            front03-c1-overlay-tsfixed.sha256
+            front03-c1-overlay-c105fixed.tar.gz
+            front03-c1-overlay-c105fixed.sha256
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
