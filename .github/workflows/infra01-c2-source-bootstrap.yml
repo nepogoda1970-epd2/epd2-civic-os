@@ -24,8 +24,8 @@ jobs:
           set -euo pipefail
           OUT="$RUNNER_TEMP/c2patch.b64"
           : > "$OUT"
-          for n in 00 01 02 03 04 05; do
-            cat "handoff/INFRA/transport/c2patch.part${n}" >> "$OUT"
+          for f in c2patch.part00 c2patch.part01 c2patch.part02 c2patch.part03 c2patch.part04 c2patch.part04b c2patch.part05; do
+            cat "handoff/INFRA/transport/${f}" >> "$OUT"
           done
           base64 -d "$OUT" > "$RUNNER_TEMP/c2.patch.gz"
           echo "98f7a6b7a73f96e297bb181422ad479c00edc14587d5472b82a6bac2222065d4  $RUNNER_TEMP/c2.patch.gz" | sha256sum -c -
