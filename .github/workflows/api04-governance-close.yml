@@ -29,7 +29,7 @@ jobs:
           git config user.name "epd2-governance-bot"
           git config user.email "epd2-governance-bot@users.noreply.github.com"
           git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
-          git diff --cached --check
+          git diff --cached --quiet && { echo "no governance delta"; exit 1; } || true
           git commit -m "governance(api04): close API-04 and activate API-05"
           git push origin HEAD:main
 
