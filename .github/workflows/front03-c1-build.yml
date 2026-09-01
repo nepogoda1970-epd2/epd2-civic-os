@@ -24,9 +24,9 @@ env:
   API02_ACCEPTANCE_RUN_ID: '33497989489'
   API02_ACCEPTANCE_JOB_ID: '99824485228'
   GOVERNANCE_SHA: 556821e0e5d550a4db601bbe92e4f4673a1bc3ff
-  FORMAT_RUN_ID: '33509482398'
-  FORMAT_ARTIFACT: front03-c1-overlay-formatted
-  OVERLAY_SHA256: 47dede36db313ff19bb4c34e135209527cfc445e3f29c4e4be6a8a98cb24ddbe
+  REPAIR_RUN_ID: '33509886484'
+  REPAIR_ARTIFACT: front03-c1-overlay-tsfixed
+  OVERLAY_SHA256: a037167b2543decc6efe925d3ae0be79036d56fcf170b6503d5ce15cec1495c1
   CANDIDATE_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip
 jobs:
   build:
@@ -50,12 +50,12 @@ jobs:
           path: incoming/api02
           run-id: ${{ env.API02_BUILD_RUN_ID }}
           github-token: ${{ github.token }}
-      - name: Obtain exact formatter-corrected C1 overlay
+      - name: Obtain exact TypeScript-repaired C1 overlay
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.FORMAT_ARTIFACT }}
+          name: ${{ env.REPAIR_ARTIFACT }}
           path: incoming/overlay
-          run-id: ${{ env.FORMAT_RUN_ID }}
+          run-id: ${{ env.REPAIR_RUN_ID }}
           github-token: ${{ github.token }}
       - name: Verify immutable inputs before extraction
         id: inputs
@@ -63,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
           find_one() { local name="$1" root="$2" found; found="$(find "$root" -type f -name "$name" -print)"; test "$(printf '%s\n' "$found" | grep -c .)" -eq 1 || { echo "::error::$name expected exactly once"; exit 1; }; printf '%s' "$found"; }
-          PRE="$(find_one "$PRESEAL_NAME" incoming/preseal)"; API="$(find_one "$API02_NAME" incoming/api02)"; OVL="$(find_one 'front03-c1-overlay-formatted.tar.gz' incoming/overlay)"
+          PRE="$(find_one "$PRESEAL_NAME" incoming/preseal)"; API="$(find_one "$API02_NAME" incoming/api02)"; OVL="$(find_one 'front03-c1-overlay-tsfixed.tar.gz' incoming/overlay)"
           test "$(stat -c %s "$PRE")" = "$PRESEAL_SIZE"; test "$(stat -c %s "$API")" = "$API02_SIZE"
           echo "$PRESEAL_SHA256  $PRE" | sha256sum -c -; echo "$API02_SHA256  $API" | sha256sum -c -; echo "$OVERLAY_SHA256  $OVL" | sha256sum -c -
           unzip -t "$PRE" >/dev/null; unzip -t "$API" >/dev/null
@@ -86,7 +86,7 @@ jobs:
       - name: Set up exact Node runtime
         uses: actions/setup-node@v4
         with:
-          node-version: '22.16.0'
+          node-version: '22.17.0'
       - name: Locked dependency-backed execution
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
@@ -114,7 +114,7 @@ jobs:
           mkdir -p validation/front03-c1
           python3 - <<'PY'
           import json, os
-          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'formatted_overlay_sha256':os.environ['OVERLAY_SHA256'],'format_run_id':int(os.environ['FORMAT_RUN_ID']),'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
+          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay_sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID']),'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
           open('validation/front03-c1/execution.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
       - name: C1 exact-C13 validator and mutation resistance
@@ -135,7 +135,7 @@ jobs:
           echo "candidate_sha256=$SHA" >> "$GITHUB_OUTPUT"; echo "candidate_size=$SIZE" >> "$GITHUB_OUTPUT"
           python3 - "$ZIP" "$SHA" "$SIZE" <<'PY'
           import json,os,sys
-          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'formatted_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'format_run_id':int(os.environ['FORMAT_RUN_ID'])},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID'])},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
           echo "FRONT03_C1_BUILD_RESULT:PASS:$SHA:$SIZE"
       - name: Upload exact C1 candidate
