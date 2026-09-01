@@ -1,0 +1,34 @@
+{
+  "archive_verification": {
+    "clean": true,
+    "digest_mismatches": [],
+    "hygiene_offenders": [],
+    "member_count": 1489,
+    "missing_members": [],
+    "unaccounted_members": []
+  },
+  "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+  "created_at": "2026-09-01T21:25:51.671177+00:00",
+  "entering_base_commit": "e89778667ee65e38001874b01681eff64c11354f",
+  "entering_base_tree": "5c2c1fddcdafdf73c38ad68d5494590d33a5b97d",
+  "filename": "EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip",
+  "harness": "PASS",
+  "member_count": 1489,
+  "same_bytes": {
+    "added": [],
+    "changed": [],
+    "removed": [],
+    "same_bytes": true,
+    "tree_digest_after": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+    "tree_digest_before": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613"
+  },
+  "schema": "epd2.ops01.candidate-identity/1",
+  "seal_commit": "a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc",
+  "seal_tree": "a91a290ae87a83bede5d3cfc0e53dc682379b8a3",
+  "sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+  "size_bytes": 16457357,
+  "stage": "OPS-01",
+  "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "tree_digest": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+  "working_tree_clean": true
+}
