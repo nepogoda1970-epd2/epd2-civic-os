@@ -1,0 +1,57 @@
+name: PB01-I09 PostgreSQL 16 runtime
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "PB01-I09-PG16-TRIGGER.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  package-pg16:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure PostgreSQL 16 runtime
+        run: |
+          set -euxo pipefail
+          if [ ! -x /usr/lib/postgresql/16/bin/postgres ]; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-16 postgresql-client-16
+          fi
+          /usr/lib/postgresql/16/bin/postgres --version | tee postgresql-version.txt
+          test "$(/usr/lib/postgresql/16/bin/postgres --version | awk '{print $3}' | cut -d. -f1)" = "16"
+      - name: Package PostgreSQL 16 runtime with shared libraries
+        run: |
+          set -euxo pipefail
+          mkdir -p pg16-runtime/usr/lib/postgresql pg16-runtime/usr/share/postgresql pg16-runtime/lib
+          sudo cp -a /usr/lib/postgresql/16 pg16-runtime/usr/lib/postgresql/
+          sudo cp -a /usr/share/postgresql/16 pg16-runtime/usr/share/postgresql/
+          : > postgresql-ldd.txt
+          for exe in postgres initdb pg_ctl psql pg_dump pg_restore createdb dropdb pg_isready; do
+            bin="/usr/lib/postgresql/16/bin/$exe"
+            [ -x "$bin" ] || continue
+            echo "### $exe" >> postgresql-ldd.txt
+            ldd "$bin" | tee -a postgresql-ldd.txt
+            ldd "$bin" | awk '/=> \/|^\// {for(i=1;i<=NF;i++) if($i ~ /^\//) print $i}' >> /tmp/pg16-libs.txt
+          done
+          sort -u /tmp/pg16-libs.txt > /tmp/pg16-libs.unique
+          while IFS= read -r lib; do
+            [ -f "$lib" ] || continue
+            cp -L "$lib" "pg16-runtime/lib/$(basename "$lib")"
+          done < /tmp/pg16-libs.unique
+          tar -C pg16-runtime -czf postgresql-16-runtime.tgz usr lib
+          sha256sum postgresql-16-runtime.tgz > postgresql-runtime-sha256.txt
+      - name: Upload PostgreSQL runtime artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pb01-i09-postgresql-16-runtime
+          path: |
+            postgresql-16-runtime.tgz
+            postgresql-version.txt
+            postgresql-ldd.txt
+            postgresql-runtime-sha256.txt
+          retention-days: 2

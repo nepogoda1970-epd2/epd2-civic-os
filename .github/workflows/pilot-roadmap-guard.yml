@@ -1,0 +1,37 @@
+name: PILOT Roadmap Guard
+
+on:
+  push:
+    branches:
+      - main
+      - pilot02-verify
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  roadmap-scope:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify locked roadmap
+        run: python scripts/check_pilot_roadmap.py --self-check
+
+      - name: Verify any PILOT-03 candidate archives in repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          candidates=(EPD2_PILOT03*.zip EPD2_PILOT-03*.zip)
+          for candidate in "${candidates[@]}"; do
+            python scripts/check_pilot_roadmap.py --zip "$candidate"
+          done
+
+      - name: Guard result
+        run: echo 'PILOT roadmap guard PASS'

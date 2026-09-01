@@ -1,0 +1,110 @@
+# INFRA-01 — canonical CI acceptance workflow.
+#
+# GitHub Actions invokes the exact same canonical repository harness a
+# developer runs locally (`uv run python -m scripts.acceptance run`); it does
+# NOT implement a second version of acceptance logic. The harness executes
+# the governed check registry, proves tested bytes == packaged bytes, scans
+# for secrets, and emits the sealed execution manifest plus evidence bundle,
+# which this workflow uploads together with the produced candidate archive.
+#
+# A green run here is a canonical harness PASS on the exact tested commit.
+# It is NOT external governed acceptance, NOT production readiness and NOT
+# legal activation; those remain separate governed decisions.
+
+name: infra01-acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/infra01-acceptance.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra01-acceptance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  acceptance:
+    name: Canonical acceptance harness
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Bind current target authority (governance-freshness reconciliation)
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            > "$RUNNER_TEMP/target-pcr.md"
+          uv run --frozen python -m scripts.acceptance verify-reconciliation \
+            --target-pcr "$RUNNER_TEMP/target-pcr.md"
+
+      - name: Run the canonical acceptance harness
+        id: harness
+        run: uv run --frozen python -m scripts.acceptance run --output "$RUNNER_TEMP/acceptance"
+
+      - name: Locate evidence bundle
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_dir=$(find "$RUNNER_TEMP/acceptance" -maxdepth 1 -mindepth 1 -type d -name 'run-*' | head -n 1)
+          if [ -z "$run_dir" ]; then
+            echo "no evidence run directory produced" >&2
+            exit 1
+          fi
+          echo "RUN_DIR=$run_dir" >> "$GITHUB_ENV"
+
+      - name: Upload evidence bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: infra01-acceptance-evidence-${{ github.run_id }}
+          path: |
+            ${{ env.RUN_DIR }}/EXECUTION-MANIFEST.json
+            ${{ env.RUN_DIR }}/EXECUTION-MANIFEST.sha256
+            ${{ env.RUN_DIR }}/FREEZE-INVENTORY.json
+            ${{ env.RUN_DIR }}/logs/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload candidate archive
+        if: steps.harness.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: infra01-candidate-${{ github.run_id }}
+          path: ${{ env.RUN_DIR }}/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1.zip
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Result semantics
+        if: always()
+        run: |
+          echo "Harness outcome: ${{ steps.harness.outcome }}"
+          echo "A PASS here is a canonical harness execution result on this exact commit."
+          echo "EXTERNAL GOVERNED ACCEPTANCE: NOT PERFORMED BY THIS WORKFLOW."
+          echo "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED."

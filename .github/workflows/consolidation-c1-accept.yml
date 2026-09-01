@@ -1,0 +1,185 @@
+name: CONSOLIDATION-01 C1 authoritative acceptance
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  accept:
+    if: startsWith(github.head_ref, 'tmp/consolidation-c1-authoritative-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      CONS_EXPECTED_SHA: f8cc21c1701593c57ae9c069a7d61b57dd53ae7c60cf2b697062b67dcfd2981d
+      CONS_TRANSPORT_SHA: 523fd846c77b98716afd223ca965c1ad9450e3973cf23c5322ca4b82192ef01a
+      CONS_C9_SHA: 7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664
+      CONS_DATA03_SHA: 2a00c01c1cbfa9cb9be3e3db7fa1307128cd320b42058ee9f1a096b8ee53083a
+      CONS_PB01_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
+      DATA03_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
+      DATA02_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
+      DATA03_BOOTSTRAP_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_bootstrap
+      DATA03_UPGRADE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_cons_upgrade
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: true
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+      - name: Download accepted PILOT-04 C9 exact artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pilot04-c9-exact-accepted-candidate
+          path: sources/c9
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: "32601698352"
+      - name: Download frozen PB01 exact artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pb01-i10-c6-exact-candidate
+          path: sources/pb01
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: "32388797195"
+      - name: Reconstruct exact consolidated candidate
+        run: |
+          cat verification/consolidation-c1/transport.part* > verification/consolidation-c1/transport.tar.xz
+          echo "${CONS_TRANSPORT_SHA}  verification/consolidation-c1/transport.tar.xz" | sha256sum -c -
+          C9=$(find sources/c9 -type f -name '*.zip' -print -quit)
+          PB=$(find sources/pb01 -type f -name '*.zip' -print -quit)
+          echo "${CONS_C9_SHA}  ${C9}" | sha256sum -c -
+          echo "${CONS_PB01_SHA}  ${PB}" | sha256sum -c -
+          python verification/consolidation-c1/reconstruct.py \
+            --c9 "${C9}" --pb01 "${PB}" \
+            --bundle verification/consolidation-c1/transport.tar.xz \
+            --work "$RUNNER_TEMP/cons-reconstruct" \
+            --out "$RUNNER_TEMP/CONSOLIDATION_C1.zip"
+          echo "${CONS_EXPECTED_SHA}  $RUNNER_TEMP/CONSOLIDATION_C1.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/cons-extract"
+          unzip -q "$RUNNER_TEMP/CONSOLIDATION_C1.zip" -d "$RUNNER_TEMP/cons-extract"
+          ROOT=$(find "$RUNNER_TEMP/cons-extract" -mindepth 1 -maxdepth 1 -type d -print -quit)
+          echo "CONS_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "CONS_ZIP=$RUNNER_TEMP/CONSOLIDATION_C1.zip" >> "$GITHUB_ENV"
+          echo "REPO=$ROOT/repo" >> "$GITHUB_ENV"
+          echo "DATA01_PB01_ZIP=$ROOT/anchors/EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip" >> "$GITHUB_ENV"
+      - name: Exact package preflight
+        run: |
+          python "$CONS_ROOT/governance/validate_consolidation.py"
+          python verification/consolidation-c1/package_preflight.py "$CONS_ZIP"
+      - name: Canonical environment
+        run: |
+          python --version | grep -Fx 'Python 3.12.12'
+          node --version | grep -Fx 'v22.16.0'
+          npm --version | tail -1 | grep -Fx '10.9.2'
+          uv --version | grep -Fx 'uv 0.12.5 (x86_64-unknown-linux-gnu)'
+          psql -h 127.0.0.1 -U postgres -d postgres -Atqc 'SHOW server_version_num' | grep -Fx '160015'
+          createdb -h 127.0.0.1 -U postgres epd2_cons_bootstrap
+          createdb -h 127.0.0.1 -U postgres epd2_cons_upgrade
+      - name: Frozen dependency install
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv sync --frozen --all-groups --all-extras
+          npm ci --no-audit --no-fund
+      - name: Repository quality gates
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+          make typecheck
+          npm run format:check
+      - name: DATA-03 source and PostgreSQL convergence
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run python - <<'PY'
+          from scripts import data03_validate as d
+          print(d.tool_versions())
+          print(d.check_source())
+          print(d.live_bootstrap_upgrade())
+          PY
+          uv run pytest -q tests/data03/test_data03_postgresql.py
+          uv run pytest -q tests/data02 tests/data01
+      - name: PILOT-04 mandatory security properties A-F
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run pytest -q tests/pilot04c3/test_witness_custody.py tests/pilot04c2/test_decryption_authority.py
+          uv run pytest -q tests/pilot04c2/test_guardian_credential_isolation.py
+          uv run pytest -q tests/pilot04c2/test_verification_authority_independence.py
+          uv run pytest -q tests/pilot04c2/test_network_correlation.py tests/pilot04c2/test_submission_mix.py
+          uv run pytest -q tests/pilot04c3/test_operation_binding.py tests/pilot04c3/test_parity.py
+      - name: Full repository regression
+        working-directory: ${{ env.REPO }}
+        run: uv run pytest -q
+      - name: Install Playwright Chromium
+        working-directory: ${{ env.REPO }}
+        run: npx playwright install --with-deps chromium
+      - name: Browser regression
+        working-directory: ${{ env.REPO }}
+        run: bash scripts/data01_browser_acceptance.sh
+      - name: Frozen PB01 integrity execution
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run python - <<'PY'
+          import json
+          from scripts import data01_validate as d
+          result=d.run_pb01_integrity()
+          assert result['status']=='PASS' and result['executed'] is True
+          print(json.dumps(result,sort_keys=True))
+          PY
+      - name: Cross-boundary integration assertions
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run pytest -q tests/data03 tests/data02 tests/data01 tests/pilot04c9 tests/pilot04c8
+      - name: Write authoritative evidence
+        if: success()
+        run: |
+          python verification/consolidation-c1/write_evidence.py "$CONS_ZIP" CONSOLIDATION_C1_ACCEPTANCE_EVIDENCE.json
+          python verification/consolidation-c1/verify_evidence.py CONSOLIDATION_C1_ACCEPTANCE_EVIDENCE.json
+          echo CONSOLIDATION_C1_GITHUB_AUTHORITATIVE_PASS
+      - name: Upload authoritative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidation-c1-authoritative-evidence
+          path: |
+            CONSOLIDATION_C1_ACCEPTANCE_EVIDENCE.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Upload exact accepted candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidation-c1-exact-accepted-candidate
+          path: ${{ env.CONS_ZIP }}
+          if-no-files-found: error
+          retention-days: 90

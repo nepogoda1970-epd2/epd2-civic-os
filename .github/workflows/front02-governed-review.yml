@@ -1,0 +1,110 @@
+name: front02-governed-review
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/front02-governed-review.yml]
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Transport branch that contains the sealed ZIP
+        required: true
+        default: handoff/front
+        type: string
+      candidate_sha256:
+        description: Exact SHA-256 of the sealed candidate
+        required: true
+        default: aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Independent sealed-candidate precheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || 'handoff/front' }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify exact transport bytes before extraction
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="handoff/FRONT/incoming/EPD2_FRONT02_IMPLEMENTATION_CANDIDATE_0.1_C2.1_2026-08-30.zip"
+          expected="${{ inputs.candidate_sha256 || 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179' }}"
+          test -f "$candidate"
+          echo "$expected  $candidate" | sha256sum -c -
+          python3 - "$candidate" "$expected" <<'PY'
+          import hashlib, os, sys
+          candidate, expected = sys.argv[1:]
+          assert os.path.getsize(candidate) > 0
+          assert hashlib.sha256(open(candidate, "rb").read()).hexdigest() == expected
+          PY
+          echo "path=$candidate" >> "$GITHUB_OUTPUT"
+
+      - name: Safely extract the sealed candidate
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "${{ steps.candidate.outputs.path }}" "$RUNNER_TEMP/candidate" <<'PY'
+          import pathlib, stat, sys, zipfile
+          archive, destination = sys.argv[1:]
+          with zipfile.ZipFile(archive) as z:
+              assert z.testzip() is None, "CRC failure"
+              for info in z.infolist():
+                  path = pathlib.PurePosixPath(info.filename)
+                  assert not path.is_absolute() and ".." not in path.parts, "unsafe ZIP path"
+                  assert not stat.S_ISLNK(info.external_attr >> 16), "symlink rejected"
+              z.extractall(destination)
+          PY
+          echo "root=$RUNNER_TEMP/candidate" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.17.0
+
+      - name: Verify governed evidence and frozen dependencies
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          node scripts/validate_front02_package.mjs .
+          npm ci
+          npm run --workspace web-shell validate:front02
+          npm run --workspace web-shell format:check
+          npm run --workspace web-shell typecheck
+          npm run --workspace web-shell lint
+          npm run --workspace web-shell test
+
+      - name: Run candidate-only and inherited regression browser gates
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          npm run --workspace web-shell test:browser -- tests/browser/front02.browser.spec.ts
+          npm run --workspace web-shell test:visual
+          npm run --workspace web-shell test:browser -- tests/browser/front01.browser.spec.ts --project=desktop
+
+      - name: Publish run-owned review evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/front02-review"
+          cat > "$RUNNER_TEMP/front02-review/RESULT.json" <<EOF
+          {"stage":"FRONT-02","candidate_sha256":"${{ inputs.candidate_sha256 || 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179' }}","result":"PRECHECK_PASS_ONLY_IF_JOB_SUCCEEDS","acceptance":"NOT_GRANTED","governance":"independent GitHub Actions execution"}
+          EOF
+          cp "${{ steps.candidate.outputs.path }}" "$RUNNER_TEMP/front02-review/" || true
+          cp -r "${{ steps.extract.outputs.root }}/evidence/front02" "$RUNNER_TEMP/front02-review/" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: front02-governed-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/front02-review
+          if-no-files-found: error
+          retention-days: 30
