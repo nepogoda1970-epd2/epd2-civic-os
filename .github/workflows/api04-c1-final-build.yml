@@ -112,6 +112,8 @@ jobs:
           grep -q 'RECONCILED_AGAINST_EXACT_ACCEPTED_API03_C5' "$ROOT/services/events-messaging-runtime/tests/unit/test_readiness_and_lag.py"
           grep -q 'FORWARD_SCOPE_EXEMPT) <= 8' "$ROOT/services/events-messaging-runtime/tests/unit/test_validator_exemptions.py"
           grep -q 'human_credential_is_structurally_refused_at_verified_principal_boundary' "$ROOT/services/events-messaging-runtime/tests/unit/test_identity.py"
+          find "$ROOT" -type d -name __pycache__ -prune -exec rm -rf {} +
+          test -z "$(find "$ROOT" -type d -name __pycache__ -print -quit)"
           echo "root=$ROOT" >> "$GITHUB_OUTPUT"
 
       - name: Verify exact predecessor identities
@@ -236,7 +238,7 @@ jobs:
       - name: Publish exact C1 candidate
         uses: actions/upload-artifact@v4
         with:
-          name: api04-c1-final-candidate
+          name: api04-c1-candidate
           path: ${{ steps.package.outputs.zip }}
           if-no-files-found: error
           retention-days: 90
