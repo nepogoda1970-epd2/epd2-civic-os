@@ -9,12 +9,13 @@ permissions:
   contents: read
 
 env:
-  C3_COMMIT: a5dc13b57285e9332123e1356999cce5a6c6d9cb
-  C3_TRACKED_MANIFEST: e47bc7cc554d0f1d15b80cbba7884dee4ea1817a87ba4bae6b1d633350f5e8ce
+  C3_COMMIT: f81b180eb3de62ce42b77fcd114ce20aa2c3c39b
+  C3_TRACKED_MANIFEST: 7f0584fc7767691ace68cfdab123907bdc177a65843f6dccbf4af1cd3bbc988d
   C3_WORKFLOW_SHA256: d0cbe5a533a938e2aab280baf165e810e98aeee9c8b30d412a8d0188fc6a1650
-  C3_FREEZE_TREE_DIGEST: 9f7d8ddd4dcfff5de50370bc3bbdb9e0e98412b708a3585a13f5cc9738d9eaef
-  TARGET_MAIN: 3d0b2fec5f86c491f36de1041caa66d983727480
-  TARGET_PCR_SHA256: 0a4acf40b5254405e6ff3abeaf6671c845d765225f422322b8b0b0f09d3083a0
+  C3_FREEZE_TREE_DIGEST: 47377d7f930f7d2306ee85d6e15e13ce632dc871da03ac918cff1dd8dfb2c30d
+  C3_FREEZE_FILE_COUNT: "1459"
+  TARGET_MAIN: c333b9dd12e0c13dd402222cc958d95e779b8488
+  TARGET_PCR_SHA256: c985cd17eb79ea4390a5c183581629a4d729e37f1485f1fba935cce2d5cc825d
   TARGET_MASTER_SHA256: 3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d
 
 jobs:
@@ -23,27 +24,31 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
-      - name: Checkout exact C3 source commit
+      - name: Checkout exact final C3 source commit
         uses: actions/checkout@v4
         with:
           ref: ${{ env.C3_COMMIT }}
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Prove exact C3 source identity
+      - name: Prove exact final C3 source identity
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$C3_COMMIT"
+          test "$(git ls-files | wc -l | tr -d ' ')" = "$C3_FREEZE_FILE_COUNT"
           manifest=$(git ls-files -z | sort -z | while IFS= read -r -d '' f; do sha256sum "$f"; done | sha256sum | awk '{print $1}')
           echo "TRACKED_MANIFEST=$manifest"
           test "$manifest" = "$C3_TRACKED_MANIFEST"
           wf=$(sha256sum .github/workflows/infra01-acceptance.yml | awk '{print $1}')
           echo "PACKAGED_WORKFLOW_SHA256=$wf"
           test "$wf" = "$C3_WORKFLOW_SHA256"
+          echo "433bc802a4b0d62a836c0b436f0838d3179a73c09da9ea56d613d61e3781aaf7  docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" | sha256sum -c -
+          echo "8ce71ebe473aae94b9ec77d1ca2a21dc6419dfa4ec61be35cc532a4c13f47e6b  docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json" | sha256sum -c -
+          echo "5722cf96af44bb478239f582b415d52b33654d18bb065a45ec7128beaa727a8e  docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json" | sha256sum -c -
           test -z "$(git status --porcelain)"
 
-      - name: Bind current target authority
+      - name: Bind exact current target authority
         shell: bash
         run: |
           set -euo pipefail
@@ -81,32 +86,35 @@ jobs:
         id: harness
         run: uv run --frozen python -m scripts.acceptance run --output "$RUNNER_TEMP/acceptance"
 
-      - name: Locate and independently verify evidence
-        if: always()
+      - name: Locate and independently verify authoritative evidence
+        if: steps.harness.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
           run_dir=$(find "$RUNNER_TEMP/acceptance" -maxdepth 1 -mindepth 1 -type d -name 'run-*' | head -n 1)
           test -n "$run_dir"
           echo "RUN_DIR=$run_dir" >> "$GITHUB_ENV"
-          if [ "${{ steps.harness.outcome }}" = "success" ]; then
-            uv run --frozen python -m scripts.acceptance verify-evidence --run-dir "$run_dir" --expect-commit "$C3_COMMIT"
-            python - "$run_dir" "$C3_FREEZE_TREE_DIGEST" <<'PY'
-          import json, pathlib, sys
-          run = pathlib.Path(sys.argv[1]); expected = sys.argv[2]
+          uv run --frozen python -m scripts.acceptance verify-evidence --run-dir "$run_dir" --expect-commit "$C3_COMMIT"
+          python - "$run_dir" "$C3_FREEZE_TREE_DIGEST" "$C3_FREEZE_FILE_COUNT" <<'PY'
+          import hashlib, json, pathlib, sys
+          run = pathlib.Path(sys.argv[1]); expected_tree = sys.argv[2]; expected_count = int(sys.argv[3])
           inv = json.loads((run/'FREEZE-INVENTORY.json').read_text())
+          assert inv['tree_digest'] == expected_tree, (inv['tree_digest'], expected_tree)
+          assert inv['file_count'] == expected_count, (inv['file_count'], expected_count)
+          manifest = json.loads((run/'EXECUTION-MANIFEST.json').read_text())
+          archive = run / 'EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip'
+          assert archive.is_file(), archive
+          digest = hashlib.sha256(archive.read_bytes()).hexdigest()
           print('FREEZE_TREE_DIGEST='+inv['tree_digest'])
           print('FREEZE_FILE_COUNT='+str(inv['file_count']))
-          assert inv['tree_digest'] == expected
-          manifest = json.loads((run/'EXECUTION-MANIFEST.json').read_text())
           print('OVERALL='+str(manifest.get('overall')))
-          print('ARCHIVE_SHA256='+str(manifest.get('archive',{}).get('sha256','')))
-          print('ARCHIVE_PATH='+str(manifest.get('archive',{}).get('path','')))
+          print('AUTHORITATIVE_CANDIDATE_SHA256='+digest)
+          print('AUTHORITATIVE_CANDIDATE_SIZE='+str(archive.stat().st_size))
+          print('AUTHORITATIVE_CANDIDATE_PATH='+str(archive))
           PY
-          fi
 
       - name: Upload authoritative evidence
-        if: always()
+        if: steps.harness.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: infra01-c3-authoritative-evidence-${{ github.run_id }}
@@ -135,4 +143,7 @@ jobs:
           echo "HARNESS_OUTCOME=${{ steps.harness.outcome }}"
           test "${{ steps.harness.outcome }}" = "success"
           echo "INFRA01_C3_AUTHORITATIVE_RESULT:PASS"
-          echo "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. INFRA LAYER NOT CLOSED."
+          echo "INFRA-01 bounded stage may proceed to separate post-run governance decision."
+          echo "NOT PRODUCTION READY. NOT LEGALLY ACTIVATED. INFRA LAYER NOT CLOSED BY THIS RUN."
+
+# trigger: final exact C3 authoritative review
