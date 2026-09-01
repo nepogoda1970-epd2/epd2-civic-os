@@ -1,0 +1,46 @@
+name: OPS-01 C2 Contract Inspection
+
+on:
+  push:
+    branches:
+      - tmp/ops01-c2-build
+    paths:
+      - '.github/workflows/ops01-c2-inspect-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: repo
+      - name: Extract exact C1 and inspect stage-owned state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import zipfile, pathlib, shutil, hashlib
+          z=pathlib.Path('repo/handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip')
+          assert hashlib.sha256(z.read_bytes()).hexdigest()=='3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d'
+          out=pathlib.Path('/tmp/c1'); shutil.rmtree(out,ignore_errors=True); out.mkdir()
+          with zipfile.ZipFile(z) as f: f.extractall(out)
+          PY
+          cd /tmp/c1
+          echo '=== SELF STATE ==='
+          cat OPS01_CANDIDATE_SELF_STATE.json
+          echo '=== FREEZE MANIFEST HEAD ==='
+          python - <<'PY'
+          import json
+          d=json.load(open('OPS01_FREEZE_MANIFEST.json'))
+          print(json.dumps(d,indent=2)[:20000])
+          PY
+          echo '=== SEALER ==='
+          cat scripts/ops01/seal_candidate.py
+          echo '=== VALIDATOR RECONCILIATION REFERENCES ==='
+          grep -n -C 5 -E 'INFRA01|FINAL_SEAL|reconciliation|CANDIDATE_NOT_ACCEPTED|KNOWN_LIMITATIONS|freeze' scripts/validation/validate_ops01.py | head -500
+          echo '=== OPS README SEAL / ACCEPTANCE ==='
+          grep -n -C 6 -E 'seal|accept|CANDIDATE_NOT_ACCEPTED|OPS01_RESULT' docs/ops/README.md | head -400
