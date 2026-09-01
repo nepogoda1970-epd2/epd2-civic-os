@@ -1,0 +1,103 @@
+name: OPS-01 C2 Dry Merge
+
+on:
+  push:
+    branches:
+      - tmp/ops01-c2-build
+    paths:
+      - '.github/workflows/ops01-c2-drymerge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drymerge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: opsrepo
+      - uses: actions/checkout@v4
+        with:
+          ref: 3d0b2fec5f86c491f36de1041caa66d983727480
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: c2
+      - name: Extract exact C1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, zipfile, pathlib, shutil
+          z=pathlib.Path('opsrepo/handoff/OPS/incoming/EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C1.zip')
+          assert hashlib.sha256(z.read_bytes()).hexdigest()=='3031b99cab662f59a5b61120101b41e536a10313de6f0cdb6815b3929d390f5d'
+          out=pathlib.Path('/tmp/c1')
+          shutil.rmtree(out,ignore_errors=True); out.mkdir()
+          with zipfile.ZipFile(z) as f:
+              assert f.testzip() is None
+              f.extractall(out)
+          PY
+      - name: Derive C1 delta and dry-merge onto current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, shutil, subprocess, json, os
+          base=Path('base'); c1=Path('/tmp/c1'); cur=Path('c2')
+          def fmap(root):
+              return {str(p.relative_to(root)):p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
+          def h(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          B=fmap(base); C=fmap(c1); N=fmap(cur)
+          added=sorted(set(C)-set(B)); deleted=sorted(set(B)-set(C)); modified=sorted(p for p in set(B)&set(C) if h(B[p])!=h(C[p]))
+          print('BASE_COMMIT',subprocess.check_output(['git','-C','base','rev-parse','HEAD'],text=True).strip())
+          print('CURRENT_MAIN',subprocess.check_output(['git','-C','c2','rev-parse','HEAD'],text=True).strip())
+          print('DELTA_ADDED',len(added)); print('\n'.join(added))
+          print('DELTA_MODIFIED',len(modified)); print('\n'.join(modified))
+          print('DELTA_DELETED',len(deleted)); print('\n'.join(deleted))
+          protected={
+            'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md',
+            'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',
+            'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'
+          }
+          conflicts=[]; merged=[]; copied=[]; skipped=[]
+          for p in added:
+              if p in protected or p.startswith('docs/infra/'): skipped.append((p,'protected-current-main')); continue
+              dst=cur/p; dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(C[p],dst); copied.append(p)
+          for p in deleted:
+              if p in protected or p.startswith('docs/infra/'): skipped.append((p,'protected-current-main')); continue
+              if p in N and h(N[p])==h(B[p]): (cur/p).unlink()
+              elif p in N: conflicts.append((p,'delete-vs-current-change'))
+          for p in modified:
+              if p in protected or p.startswith('docs/infra/'): skipped.append((p,'protected-current-main')); continue
+              dst=cur/p
+              if not dst.exists(): conflicts.append((p,'missing-on-current')); continue
+              nh=h(dst); bh=h(B[p]); ch=h(C[p])
+              if nh==bh:
+                  shutil.copy2(C[p],dst); copied.append(p); continue
+              if nh==ch:
+                  continue
+              # textual 3-way merge: current=ours, base=ancestor, C1=theirs
+              try:
+                  dst.read_text(); B[p].read_text(); C[p].read_text()
+              except Exception:
+                  conflicts.append((p,'binary-divergence')); continue
+              proc=subprocess.run(['git','merge-file','-p',str(dst),str(B[p]),str(C[p])],text=True,capture_output=True)
+              if proc.returncode==0:
+                  dst.write_text(proc.stdout); merged.append(p)
+              else:
+                  conflicts.append((p,'text-conflict'))
+                  print('=== CONFLICT',p,'===')
+                  print(proc.stdout[:12000])
+          print('COPIED',json.dumps(copied,indent=2))
+          print('THREE_WAY_MERGED',json.dumps(merged,indent=2))
+          print('SKIPPED',json.dumps(skipped,indent=2))
+          print('CONFLICTS',json.dumps(conflicts,indent=2))
+          print('=== STATUS ===')
+          subprocess.run(['git','-C','c2','status','--short'])
+          if conflicts: raise SystemExit(3)
+          PY
