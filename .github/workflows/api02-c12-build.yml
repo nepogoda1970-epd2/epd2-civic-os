@@ -116,7 +116,7 @@ jobs:
           python3 scripts/api02/build_correction_inventory.py
           python3 scripts/api02/acceptance_path_identity.py --root .
 
-      - name: '10 Converge fixed-point seal and require complete acceptance-path PASS'
+      - name: '10 Generate acceptance-path evidence, then converge the final fixed-point seal'
         working-directory: work/${{ env.C12_ROOT }}
         env:
           API02_ACCEPTED_API01_C5_ZIP: ${{ steps.inputs.outputs.api01 }}
@@ -128,6 +128,11 @@ jobs:
           set -euo pipefail
           python3 scripts/api02/build_evidence_state.py
           python3 -c 'import sys;sys.path.insert(0,"scripts/api02");import finalize_candidate as f;f.write_validation_txt()'
+          # This validator intentionally writes four current-run evidence files.
+          # It must run before the final seal; otherwise the package contains files
+          # that are absent from SHA256SUMS.txt and the sealed manifest.
+          python3 scripts/validate_api02.py --acceptance-path-only
+
           converged=0
           for pass in 1 2 3 4 5 6; do
             echo "SEAL_FIXED_POINT_PASS=$pass"
@@ -143,8 +148,15 @@ jobs:
             if python3 scripts/api02/finalize_candidate.py --check; then converged=1; break; fi
           done
           [ "$converged" = 1 ]
+          # Everything after this point is read-only with respect to the candidate.
           python3 scripts/api02/acceptance_path_identity.py --root .
-          python3 scripts/validate_api02.py --acceptance-path-only
+          python3 scripts/api02/finalize_candidate.py --check
+          listed="$(grep -c . SHA256SUMS.txt)"
+          actual="$(find . -type f ! -path ./SHA256SUMS.txt ! -path ./docs/api/API-02/API02_SEALED_FILE_MANIFEST.json | wc -l)"
+          [ "$listed" = "$actual" ] || {
+            echo "sealed census mismatch: SHA256SUMS=$listed tree=$actual" >&2
+            exit 1
+          }
 
       - name: '11 Targeted N5/N6 adversarial proof before publication'
         working-directory: work/${{ env.C12_ROOT }}
