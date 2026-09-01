@@ -1,0 +1,219 @@
+name: API-05 C1 sealed candidate build
+
+on:
+  push:
+    branches:
+      - tmp/api05-working-0.1-preseal
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api05-c1-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: api05
+          POSTGRES_PASSWORD: api05-synthetic-ci-only
+          POSTGRES_DB: epd2_api05
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U api05 -d epd2_api05"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_API05_DATABASE_URL: postgresql://api05:api05-synthetic-ci-only@127.0.0.1:5432/epd2_api05
+      API05_API04_SHA: 8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337
+      API05_ACCEPT_WF_SHA: 6b2fba5dba895594ac246547ace3b62074b9a80f3c76b3fc3e4a88da8173e106
+      API05_OVERLAY_SHA: 47447de97d1d463c3d7f9ce98ced6978aa021dbd1de18b2e3a5e96415a4f7acf
+
+    steps:
+      - name: Checkout API-05 builder control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Download exact accepted API-04 C1
+        uses: actions/download-artifact@v4
+        with:
+          name: api04-c1-candidate
+          path: incoming/api04
+          run-id: 33567509799
+          github-token: ${{ github.token }}
+
+      - name: Verify and extract exact accepted predecessor
+        id: base
+        shell: bash
+        run: |
+          set -euo pipefail
+          A4=$(find incoming/api04 -type f -name 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip')
+          test -n "$A4"
+          echo "$API05_API04_SHA  $A4" | sha256sum -c -
+          test "$(stat -c%s "$A4")" = '43880523'
+          rm -rf "$RUNNER_TEMP/api05" && mkdir -p "$RUNNER_TEMP/api05"
+          python3 - "$A4" "$RUNNER_TEMP/api05" <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); roots={n.split('/',1)[0] for n in names if n}
+          assert roots=={'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1'},roots
+          assert z.testzip() is None
+          assert all(not n.startswith('/') and '..' not in n.split('/') for n in names)
+          z.extractall(sys.argv[2])
+          PY
+          ROOT="$RUNNER_TEMP/api05/EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1"
+          (cd "$ROOT" && sha256sum --quiet -c SHA256SUMS.txt)
+          cp "$ROOT/uv.lock" "$RUNNER_TEMP/api04-uv.lock"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo "a4=$(realpath "$A4")" >> "$GITHUB_OUTPUT"
+
+      - name: Apply corrected API-05-only overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode handoff/API-05/WORKING_0.1/api05_c1_overlay.tar.gz.b64 > "$RUNNER_TEMP/api05-overlay.tar.gz"
+          echo "$API05_OVERLAY_SHA  $RUNNER_TEMP/api05-overlay.tar.gz" | sha256sum -c -
+          tar --no-same-owner -xzf "$RUNNER_TEMP/api05-overlay.tar.gz" -C '${{ steps.base.outputs.root }}'
+          ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -print -quit | grep -q .
+          ! find '${{ steps.base.outputs.root }}/services/external-integration-runtime' -type f \( -name '*.pyc' -o -name '*.pyo' \) -print -quit | grep -q .
+
+      - name: Overlay current canonical API-04 closure governance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin main
+          ROOT='${{ steps.base.outputs.root }}'
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          mkdir -p "$ROOT/docs/api/API-04"
+          git show origin/main:docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json > "$ROOT/docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json"
+          python3 - "$ROOT" <<'PY'
+          import json,pathlib,sys
+          r=pathlib.Path(sys.argv[1])
+          a=json.loads((r/'docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json').read_text())
+          assert a['decision']=='ACCEPTED_CLOSED'
+          assert a['candidate']['sha256']=='8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337'
+          assert a['authoritative']['run_id']==33569092401
+          p=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          assert 'API-04 = ACCEPTED / CLOSED' in p and 'API-05 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in p
+          PY
+
+      - name: Install exact toolchain
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: Regenerate lock without predecessor dependency drift
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv lock
+          python3 - "$RUNNER_TEMP/api04-uv.lock" uv.lock <<'PY'
+          import sys,tomllib
+          def versions(p):
+              d=tomllib.loads(open(p).read()); return {x['name']:x.get('version') for x in d['package']}
+          before,after=versions(sys.argv[1]),versions(sys.argv[2])
+          changed={k:(v,after.get(k)) for k,v in before.items() if after.get(k)!=v}
+          assert changed=={}, changed
+          assert after.get('epd2-external-integration-runtime')=='0.1.0'
+          assert after.get('psycopg')=='3.3.4' and after.get('psycopg-binary')=='3.3.4'
+          print('API05_LOCK_ADDITION_ONLY:PASS')
+          PY
+          uv sync --frozen --all-groups
+
+      - name: Format API-05 authored Python and re-check
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv run --frozen ruff format services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
+          uv run --frozen ruff check services/external-integration-runtime scripts/run_api05_network_harness.py scripts/run_api05_mutations.py scripts/validate_api05.py
+
+      - name: Run C1 validator against exact accepted API-04 bytes
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        env:
+          API05_ACCEPTED_API04_ZIP: ${{ steps.base.outputs.a4 }}
+        run: |
+          set -euo pipefail
+          .venv/bin/python scripts/validate_api05.py --out validation/api05/candidate_validator_result.json | tee /tmp/api05-c1-validator.log
+          grep -q '^API05_CANDIDATE_RESULT:PASS:validation/api05/candidate_validator_result.json$' /tmp/api05-c1-validator.log
+          jq -e '.result=="PASS" and .failed_gates==[] and .environment_blocked_gates==[]' validation/api05/candidate_validator_result.json
+
+      - name: Freeze exact C1 and seal
+        id: package
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        run: |
+          set -euo pipefail
+          ROOT="$PWD"
+          rm -rf .venv .pytest_cache .mypy_cache .ruff_cache
+          find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
+          find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+          rm -f SHA256SUMS.txt
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          wf=pathlib.Path('handoff/API-05/templates/C1/api05-accept.yml')
+          got=hashlib.sha256(wf.read_bytes()).hexdigest(); assert got==os.environ['API05_ACCEPT_WF_SHA']
+          payload={
+            'schema':'epd2.api05.c1.seal/1','stage':'API-05','candidate_role':'C1',
+            'candidate_self_state':'CANDIDATE_NOT_ACCEPTED','self_accepted':False,
+            'accepted_predecessor':{'stage':'API-04','role':'C1','sha256':os.environ['API05_API04_SHA'],'size_bytes':43880523,'authoritative_run_id':33569092401,'authoritative_job_id':100058880258},
+            'builder':{'run_id':os.environ['GITHUB_RUN_ID'],'provenance_commit':os.environ['GITHUB_SHA'],'overlay_sha256':os.environ['API05_OVERLAY_SHA']},
+            'sealed_acceptance_workflow':{'path':'handoff/API-05/templates/C1/api05-accept.yml','sha256':got},
+            'corrections':['dns_connection_pinning','query_bound_allowlist','recursive_identifier_isolation','semantic_before_replay','idempotent_callback_recovery','retry_reauthorization','generated_cache_hygiene','dependency_version_preservation'],
+            'acceptance_requirement':'Independent workflow must verify the complete seal, exact accepted API-04 C1 bytes, locked dependencies, PostgreSQL 16, full API-05 suite and all governed gates.'
+          }
+          pathlib.Path('docs/api/API-05/API05_C1_SEAL_RECORD.json').write_text(json.dumps(payload,indent=2)+'\n')
+          PY
+          find . -type f ! -path './SHA256SUMS.txt' -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+          sha256sum --quiet -c SHA256SUMS.txt
+          listed=$(grep -c . SHA256SUMS.txt); actual=$(find . -type f ! -path './SHA256SUMS.txt' | wc -l); test "$listed" = "$actual"
+          FINAL="$RUNNER_TEMP/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1"
+          rm -rf "$FINAL"; mv "$ROOT" "$FINAL"
+          ZIP="$RUNNER_TEMP/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip"
+          (cd "$RUNNER_TEMP" && zip -q -r -X "$ZIP" "$(basename "$FINAL")")
+          SHA=$(sha256sum "$ZIP"|cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
+          printf '%s  %s\n' "$SHA" "$(basename "$ZIP")" > "$ZIP.sha256"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "sha_file=$ZIP.sha256" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "API05_C1_SHA256=$SHA"; echo "API05_C1_SIZE=$SIZE"
+
+      - name: Upload sealed C1 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: api05-c1-candidate
+          path: |
+            ${{ steps.package.outputs.zip }}
+            ${{ steps.package.outputs.sha_file }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Upload C1 build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: api05-c1-build-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/docs/api/API-05/
+            ${{ runner.temp }}/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/validation/api05/
+            /tmp/api05-c1-validator.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Developer result
+        run: |
+          echo 'API05_C1_DEVELOPER_RESULT:PASS'
+          echo 'state=CANDIDATE_NOT_ACCEPTED; independent authoritative acceptance still required'
