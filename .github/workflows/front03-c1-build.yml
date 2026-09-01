@@ -86,8 +86,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.16.0'
-          cache: npm
-          cache-dependency-path: ${{ steps.candidate.outputs.root }}/package-lock.json
       - name: Locked dependency-backed execution
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
