@@ -1,0 +1,172 @@
+name: FRONT04 C2 Governance Closure Record
+
+on:
+  push:
+    branches: [gov/front04-c2-acceptance-20260901]
+    paths:
+      - '.github/workflows/front04-c2-governance-close.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  record-governed-decision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gov/front04-c2-acceptance-20260901
+          fetch-depth: 0
+
+      - name: Write authoritative acceptance record and reconcile PCR
+        shell: bash
+        env:
+          ACCEPT_RUN: '33569268417'
+          ACCEPT_JOB: '100059427183'
+          ACCEPT_COMMIT: '66a65f2303d2a0d18fb8396887a35d6c14df1d92'
+          INDEPENDENT_RUN: '33569270616'
+          INDEPENDENT_JOB: '100059434289'
+          RESEAL_RUN: '33568939594'
+          RESEAL_JOB: '100058414374'
+          RESEAL_COMMIT: 'bbe05f28f354f21725805b0b7b1c223114c0bd42'
+          MAIN_AT_START: '1634fe7917eb5e14fa24ac27fc1cd8b9b701c01a'
+          CANDIDATE_SHA: '1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8'
+          CANDIDATE_SIZE: '21448756'
+          SOURCE_TREE: 'eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e'
+          TEST_SOURCE: '90a76c25177137d22bd6c8b10cffb383dc2877e0e76ae2829560a0350406667d'
+          CONFIG_DIGEST: 'c33c473b54b86b64c176f9848913a4e022a22204e3ca4c209f016cce79f248f8'
+          VALIDATOR_DIGEST: 'cfcae27fcaef98f8a4f168c29d8380e28ab4675df109bdefc241bea85ca96457'
+          LOCK_DIGEST: 'a300a24a43b4b99a4e0eddd739acca8eff87113af1a59eedac42970d9f06bbd2'
+          CONTRACT_DIGEST: 'b5bfab8f8d74cfe0028a435a6bfbf94d116ff232781c55b5f72532caded76cc2'
+          ARTIFACT_ID: '9824319414'
+          ARTIFACT_DIGEST: '83ac65e0d72686fcabad7314f040d445d3543e0621bf9bf2db408e8fcb05aec2'
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          record_path = Path('docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json')
+          record_path.parent.mkdir(parents=True, exist_ok=True)
+          record = {
+            'schema': 'epd2.front04.acceptance-record/1',
+            'stage': 'FRONT-04 — WS-03 Voting Client',
+            'decision_date': '2026-09-01',
+            'decision': 'ACCEPTED',
+            'closure': 'CLOSED_BOUNDED_STAGE',
+            'authority': 'POST_RUN_GOVERNANCE_DECISION',
+            'candidate': {
+              'filename': 'EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip',
+              'sha256': os.environ['CANDIDATE_SHA'],
+              'size_bytes': int(os.environ['CANDIDATE_SIZE']),
+              'source_tree_digest': os.environ['SOURCE_TREE'],
+              'test_source_digest': os.environ['TEST_SOURCE'],
+              'configuration_digest': os.environ['CONFIG_DIGEST'],
+              'validator_source_digest': os.environ['VALIDATOR_DIGEST'],
+              'package_lock_sha256': os.environ['LOCK_DIGEST'],
+              'source_file_count': 95
+            },
+            'stage_contract': {
+              'version': '1.0.0',
+              'digest': os.environ['CONTRACT_DIGEST'],
+              'candidate_predecision_state': 'PROPOSED_FOR_GOVERNED_RATIFICATION',
+              'governance_disposition': 'RATIFIED_FOR_FRONT04_C2_BOUNDED_ACCEPTANCE'
+            },
+            'authoritative_review': {
+              'workflow': '.github/workflows/front04-c2-authoritative-accept.yml',
+              'run_id': int(os.environ['ACCEPT_RUN']),
+              'job_id': int(os.environ['ACCEPT_JOB']),
+              'reviewed_commit': os.environ['ACCEPT_COMMIT'],
+              'conclusion': 'success',
+              'validator': {'passed': 29, 'total': 29, 'status': 'PASS'},
+              'mutations': {'detected': 32, 'total': 32, 'status': 'PASS'},
+              'stale_evidence_attacks': {'passed': 6, 'total': 6, 'status': 'PASS'},
+              'archive_hygiene': 'PASS',
+              'report_identity_consistency': 'PASS',
+              'bsi_hard_freeze_gate': 'PASS',
+              'terminal_marker': f"FRONT04_C2_AUTHORITATIVE_RESULT:PASS:{os.environ['CANDIDATE_SHA']}:{os.environ['CANDIDATE_SIZE']}",
+              'evidence_artifact': {
+                'name': f"front04-c2-authoritative-acceptance-{os.environ['ACCEPT_RUN']}",
+                'artifact_id': int(os.environ['ARTIFACT_ID']),
+                'artifact_zip_sha256': os.environ['ARTIFACT_DIGEST'],
+                'size_bytes': 4197
+              }
+            },
+            'independent_corroboration': {
+              'workflow': '.github/workflows/front04-c2-independent-review.yml',
+              'run_id': int(os.environ['INDEPENDENT_RUN']),
+              'job_id': int(os.environ['INDEPENDENT_JOB']),
+              'conclusion': 'success'
+            },
+            'reseal_provenance': {
+              'superseded_unaccepted_c2_sha256': '04d71eaed46bd4278f742823b244ff42fe5fa55be16b7688ae2029c5231e3a98',
+              'reason': 'developer-report source_tree_digest was stale; exact report identity was reconciled and execution byproducts excluded before reseal',
+              'run_id': int(os.environ['RESEAL_RUN']),
+              'job_id': int(os.environ['RESEAL_JOB']),
+              'resulting_commit': os.environ['RESEAL_COMMIT']
+            },
+            'accepted_predecessor_context': {
+              'FRONT-02_C2_1_sha256': 'aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179',
+              'FRONT-03_C1_sha256': 'fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26',
+              'FRONT-03_authoritative_run': 33528038712,
+              'FRONT-03_authoritative_job': 99923795567
+            },
+            'bsi_disposition': {
+              'bootstrap_applied': True,
+              'readiness_delta_present': True,
+              'persistent_member_person_identifier_hard_freeze_preserved': True,
+              'validator_gate_F418': 'PASS',
+              'certification_state': 'PREPARATORY_PARALLEL_WORK_NOT_CERTIFIED',
+              'claims_excluded': ['BSI certification', 'Common Criteria certification', 'EAL4 certification', 'production voting approval']
+            },
+            'accepted_scope': 'WS-03 frontend, voting-client isolation and fail-closed boundary only',
+            'explicit_nonclaims': [
+              'not acceptance of a complete executable production voting system',
+              'not acceptance of voting cryptographic mechanisms',
+              'not legal activation of binding digital voting',
+              'not BSI/Common Criteria/EAL4 certification',
+              'not production readiness',
+              'not final security acceptance',
+              'not closure of the entire FRONT layer',
+              'does not alter the canonical primary program stage'
+            ],
+            'canonical_main_at_governance_start': os.environ['MAIN_AT_START'],
+            'candidate_self_state_before_decision': 'CANDIDATE_NOT_ACCEPTED',
+            'no_self_acceptance_preserved': True
+          }
+          record_path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + '\n')
+
+          pcr_path = Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          pcr = pcr_path.read_text()
+          marker = '**INFRA-01 authoritative acceptance and bounded stage closure (2026-09-01):**'
+          if marker not in pcr:
+              raise SystemExit('PCR insertion anchor missing; fail closed')
+          if '**FRONT-04 authoritative acceptance and bounded stage closure (2026-09-01):**' in pcr:
+              raise SystemExit('FRONT-04 closure already present; refusing duplicate')
+
+          paragraph = (
+            "**FRONT-04 authoritative acceptance and bounded stage closure (2026-09-01):** exact corrected sealed candidate "
+            "`EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip`, SHA-256 `1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8`, "
+            "size `21,448,756` bytes, passed the exact-byte GitHub Actions workflow `.github/workflows/front04-c2-authoritative-accept.yml`, authoritative run `33569268417`, job `100059427183`, reviewed commit `66a65f2303d2a0d18fb8396887a35d6c14df1d92`, conclusion `success`. The run independently pinned candidate SHA/size and detached sidecar, verified clean archive hygiene (`1693` entries, `0` duplicates/traversal/symlinks/runtime contamination), reconciled the corrected report identity to source-tree digest `eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e`, reproduced all `29/29` FRONT-04 gates, detected all `32/32` governed mutations, rejected all `6/6` independent stale-evidence attacks, and passed the BSI voting hard-freeze gate including validator `F418`. The terminal marker is `FRONT04_C2_AUTHORITATIVE_RESULT:PASS:1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8:21448756`. Authoritative evidence artifact `front04-c2-authoritative-acceptance-33569268417`, artifact ID `9824319414`, artifact ZIP SHA-256 `83ac65e0d72686fcabad7314f040d445d3543e0621bf9bf2db408e8fcb05aec2`; repaired independent corroboration run `33569270616`, job `100059434289`, also concluded `success`. The earlier C2 SHA `04d71eaed46bd4278f742823b244ff42fe5fa55be16b7688ae2029c5231e3a98` was never accepted and is superseded by the corrected reseal; reseal run `33568939594`, job `100058414374`, resulting commit `bbe05f28f354f21725805b0b7b1c223114c0bd42`. The candidate's `CANDIDATE_NOT_ACCEPTED` self-state remains the intentional no-self-acceptance safeguard and is superseded only by this post-run governance record. Stage contract `1.0.0`, digest `b5bfab8f8d74cfe0028a435a6bfbf94d116ff232781c55b5f72532caded76cc2`, is ratified for this bounded C2 acceptance. Governance decision is recorded in `docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json`. **FRONT-04 C2 is therefore `ACCEPTED / CLOSED` as the bounded WS-03 Voting Client stage.** This accepts only the WS-03 frontend, voting-client isolation and fail-closed boundary. It does **not** accept a complete executable production voting system or voting cryptography, does not legally activate binding digital voting, does not claim BSI/Common Criteria/EAL4 certification, production readiness or final security acceptance, does not close the entire FRONT layer, and does not alter the canonical primary program stage.\n\n"
+          )
+          pcr = pcr.replace(marker, paragraph + marker, 1)
+          pcr_path.write_text(pcr)
+          print('FRONT04_GOVERNANCE_RECORD_WRITTEN=PASS')
+          print('FRONT04_PCR_RECONCILIATION_WRITTEN=PASS')
+          PY
+
+          python3 -m json.tool docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json >/dev/null
+          grep -q 'FRONT-04 C2 is therefore `ACCEPTED / CLOSED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -q '1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8' docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json
+
+      - name: Commit governed decision
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'epd2-governance-maintainer'
+          git config user.email 'actions@users.noreply.github.com'
+          git add docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m 'docs(front04): record authoritative C2 acceptance'
+          git push origin HEAD:gov/front04-c2-acceptance-20260901
