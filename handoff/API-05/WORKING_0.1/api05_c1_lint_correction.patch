@@ -29,6 +29,18 @@
      return {"name":"archive_hygiene", "result":"PASS" if not bad else "FAIL", "forbidden_generated_paths":bad[:100]}
  
  
+@@ -127,5 +136,11 @@
+              "claims":{"accepted":False,"closed":False,"production_ready":False,"legally_activated":False,"voting_provider_enabled":False}}
+     out=ROOT/args.out; out.parent.mkdir(parents=True,exist_ok=True); out.write_text(json.dumps(payload,indent=2,sort_keys=True)+"\n")
+     print(f"API05_CANDIDATE_RESULT:{result}:{args.out}")
++    if result != "PASS":
++        print("API05_FAILED_GATES:" + json.dumps(failures, sort_keys=True))
++        print("API05_BLOCKED_GATES:" + json.dumps(blocked, sort_keys=True))
++        for gate in gates:
++            if gate["result"] != "PASS":
++                print("API05_GATE_DETAIL:" + json.dumps(gate, sort_keys=True))
+     return 0 if result=="PASS" else 1
+ if __name__=="__main__": raise SystemExit(main())
 --- a/services/external-integration-runtime/src/epd2_external_integration_runtime/security.py
 +++ b/services/external-integration-runtime/src/epd2_external_integration_runtime/security.py
 @@ -13,7 +13,7 @@
