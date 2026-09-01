@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/api02-c13-build.yml'
       - 'handoff/API-02/tools/build_api02_c13.py'
+      - 'handoff/API-02/tools/c13_followup_fix.py'
 
 permissions:
   contents: read
@@ -84,6 +85,7 @@ jobs:
           unzip -q "${{ steps.inputs.outputs.c12 }}" -d work
           mv "work/EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C12" "work/$C13_ROOT"
           python3 handoff/API-02/tools/build_api02_c13.py --patch-only --root "work/$C13_ROOT" --out out
+          python3 handoff/API-02/tools/c13_followup_fix.py --root "work/$C13_ROOT"
 
       - name: '08 Frozen-format corrected Python files and prove formatter currentness'
         working-directory: work/${{ env.C13_ROOT }}
