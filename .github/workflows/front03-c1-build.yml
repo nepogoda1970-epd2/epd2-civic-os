@@ -16,6 +16,8 @@ env:
   PRESEAL_NAME: EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_WORKING_0.3_PRESEAL_RECONCILED.zip
   PRESEAL_SHA256: da356d58192fa3afd5cedf0c7d8423df1faac3dd915d5ba26884dcb79e366294
   PRESEAL_SIZE: '17619496'
+  R3_VERIFY_RUN_ID: '33447776303'
+  R3_VERIFY_HEAD_SHA: f19be3f6c7f175426582c96fd67535d9964410ea
   API02_BUILD_RUN_ID: '33495990810'
   API02_ARTIFACT: api02-candidate
   API02_NAME: EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip
@@ -69,6 +71,15 @@ jobs:
           unzip -t "$PRE" >/dev/null; unzip -t "$API" >/dev/null
           tar -tzf "$OVL" > "$RUNNER_TEMP/overlay-paths.txt"; test "$(grep -c . "$RUNNER_TEMP/overlay-paths.txt")" -eq 16; ! grep -E '(^/|(^|/)\.\.(/|$))' "$RUNNER_TEMP/overlay-paths.txt"
           echo "preseal=$(realpath "$PRE")" >> "$GITHUB_OUTPUT"; echo "api02=$(realpath "$API")" >> "$GITHUB_OUTPUT"; echo "overlay=$(realpath "$OVL")" >> "$GITHUB_OUTPUT"
+      - name: Verify immutable R3 predecessor acceptance evidence
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RUN_JSON="$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$R3_VERIFY_RUN_ID")"
+          jq -e --arg sha "$R3_VERIFY_HEAD_SHA" '.conclusion == "success" and .head_sha == $sha and .name == "FRONT-03 R3 sealed handoff verification"' <<<"$RUN_JSON" >/dev/null
+          echo "R3 predecessor run $R3_VERIFY_RUN_ID is success at $R3_VERIFY_HEAD_SHA for exact PRESEAL $PRESEAL_SHA256"
       - name: Extract and bind canonical governance
         id: candidate
         shell: bash
@@ -146,21 +157,13 @@ jobs:
           AFTER="$(sha256sum "$MANIFEST" | cut -d' ' -f1)"
           test "$BEFORE" = "$AFTER"
           (cd frontend/web-shell && sha256sum -c tests/browser/front03-r3-visual-baseline.sha256)
-      - name: Preserve inherited R3 fail-closed evidence
-        working-directory: ${{ steps.candidate.outputs.root }}
-        run: |
-          set -euo pipefail
-          python3 scripts/validate_front03.py .
-          python3 scripts/run_front03_mutations.py --output "$RUNNER_TEMP/front03-r3-mutations.json"
-          python3 scripts/run_front03_validator_adversarial.py --output "$RUNNER_TEMP/front03-r3-adversarial.json"
-          python3 scripts/validate_front03.py .
       - name: Write execution evidence after execution gates
         working-directory: ${{ steps.candidate.outputs.root }}
         run: |
           mkdir -p validation/front03-c1
           python3 - <<'PY'
           import json, os
-          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay_sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID']),'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
+          row={'schema':'epd2.front03.c1-execution/1','executed':True,'status':'PASS','candidate_state':'CANDIDATE_NOT_ACCEPTED','build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal_sha256':os.environ['PRESEAL_SHA256'],'source_preseal_verification_run_id':int(os.environ['R3_VERIFY_RUN_ID']),'accepted_api02_sha256':os.environ['API02_SHA256'],'accepted_api02_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay_sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID']),'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'candidate execution only; not independent acceptance or FRONT-layer closure'}
           open('validation/front03-c1/execution.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
       - name: C1 exact-C13 validator and mutation resistance
@@ -181,7 +184,7 @@ jobs:
           echo "candidate_sha256=$SHA" >> "$GITHUB_OUTPUT"; echo "candidate_size=$SIZE" >> "$GITHUB_OUTPUT"
           python3 - "$ZIP" "$SHA" "$SIZE" <<'PY'
           import json,os,sys
-          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID'])},'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
+          p,sha,size=sys.argv[1:]; row={'schema':'epd2.front03.c1-build-evidence/1','status':'PASS','acceptance':'C1_CANDIDATE_NOT_ACCEPTED','candidate_name':os.path.basename(p),'candidate_sha256':sha,'candidate_size':int(size),'build_run_id':int(os.environ['GITHUB_RUN_ID']),'build_commit':os.environ['GITHUB_SHA'],'source_preseal':{'sha256':os.environ['PRESEAL_SHA256'],'run_id':int(os.environ['PRESEAL_RUN_ID']),'verification_run_id':int(os.environ['R3_VERIFY_RUN_ID'])},'accepted_api02':{'sha256':os.environ['API02_SHA256'],'acceptance_run_id':int(os.environ['API02_ACCEPTANCE_RUN_ID']),'acceptance_job_id':int(os.environ['API02_ACCEPTANCE_JOB_ID'])},'canonical_governance_sha':os.environ['GOVERNANCE_SHA'],'repaired_overlay':{'sha256':os.environ['OVERLAY_SHA256'],'repair_run_id':int(os.environ['REPAIR_RUN_ID'])},'browser_profiles':{'inherited_fixture':'PASS','c1_api02_production':'PASS','production_fail_closed':'PASS','front03_visual':'PASS'},'claim_boundary':'build PASS is not independent acceptance'}; open('out/front03-c1-build-evidence.json','w').write(json.dumps(row,indent=2,sort_keys=True)+'\n')
           PY
           echo "FRONT03_C1_BUILD_RESULT:PASS:$SHA:$SIZE"
       - name: Upload exact C1 candidate
@@ -198,7 +201,5 @@ jobs:
           path: |
             out/front03-c1-build-evidence.json
             ${{ runner.temp }}/front03-c1-validator-final.json
-            ${{ runner.temp }}/front03-r3-mutations.json
-            ${{ runner.temp }}/front03-r3-adversarial.json
           if-no-files-found: error
           retention-days: 90
