@@ -1,0 +1,49 @@
+name: FRONT04 PCR Summary State Sync
+
+on:
+  push:
+    branches: [gov/front04-c2-pcr-state-sync-20260901]
+    paths:
+      - '.github/workflows/front04-pcr-state-sync.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gov/front04-c2-pcr-state-sync-20260901
+          fetch-depth: 0
+      - name: Synchronize canonical FRONT summary row
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          text=p.read_text()
+          old='| FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE; FRONT-03 C1 ACCEPTED / CLOSED; NOT_STARTED_FINAL` | Exact FRONT-02 C2.1 and bounded FRONT-03 C1 are accepted governed frontend baselines. The overall FRONT layer remains open; final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |'
+          new='| FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE; FRONT-03 C1 ACCEPTED / CLOSED; FRONT-04 C2 ACCEPTED / CLOSED; NOT_STARTED_FINAL` | Exact FRONT-02 C2.1, bounded FRONT-03 C1, and bounded FRONT-04 C2 are accepted governed frontend baselines. The overall FRONT layer remains open; final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one old FRONT summary row, got {text.count(old)}')
+          if 'FRONT-04 C2 ACCEPTED / CLOSED; NOT_STARTED_FINAL' in text:
+              raise SystemExit('summary already synchronized; refusing duplicate/ambiguous update')
+          text=text.replace(old,new,1)
+          p.write_text(text)
+          print('FRONT04_PCR_SUMMARY_SYNC=PASS')
+          PY
+          grep -Fq 'FRONT-04 C2 ACCEPTED / CLOSED; NOT_STARTED_FINAL' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          grep -Fq 'FRONT-04 C2 is therefore `ACCEPTED / CLOSED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --check
+      - name: Commit synchronization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'epd2-governance-maintainer'
+          git config user.email 'actions@users.noreply.github.com'
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m 'docs(front04): sync PCR summary with C2 closure'
+          git push origin HEAD:gov/front04-c2-pcr-state-sync-20260901
