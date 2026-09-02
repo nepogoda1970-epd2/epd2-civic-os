@@ -1,0 +1,26 @@
+{
+  "schema": "epd2.infra03.network-flow-inventory/1",
+  "note": "Every allowed network flow of the preview runtime (assignment section 19). Anything not listed is denied: the supervisor configures only these paths, services enforce mTLS/TLS identity on each, and the flow verifier probes both the allowed flows (must work) and representative undeclared flows (must be refused). External egress is empty by policy (section 22): the preview runtime itself declares no external destinations; canonical-harness package/advisory egress belongs to the CI environment, not to the deployed runtime.",
+  "environment": "preview",
+  "default_policy": "DENY_UNDECLARED",
+  "flows": [
+    {"id":"F01","source":"preview-user","destination":"ingress-gateway","protocol":"HTTPS/TLS1.2+","port":8443,"purpose":"single public entry point of the preview environment","owning_requirement":"INFRA03 section 21 (ingress)"},
+    {"id":"F02","source":"ingress-gateway","destination":"identity-runtime-shell","protocol":"HTTPS/mTLS (application CA)","port":8451,"purpose":"routed application traffic to the identity slot","owning_requirement":"INFRA03 section 24 (mTLS east-west)"},
+    {"id":"F03","source":"ingress-gateway","destination":"membership-runtime-shell","protocol":"HTTPS/mTLS (application CA)","port":8452,"purpose":"routed application traffic to the membership slot","owning_requirement":"INFRA03 section 24 (mTLS east-west)"},
+    {"id":"F04","source":"identity-runtime-shell","destination":"postgres-preview","protocol":"PostgreSQL/TLS (verify-full, scram-sha-256)","port":8432,"purpose":"identity database access as role rt_identity, database epd2_identity","owning_requirement":"INFRA03 section 12 (PostgreSQL), section 15 (credential separation)"},
+    {"id":"F05","source":"membership-runtime-shell","destination":"postgres-preview","protocol":"PostgreSQL/TLS (verify-full, scram-sha-256)","port":8432,"purpose":"membership database access as role rt_membership, database epd2_membership","owning_requirement":"INFRA03 section 12, section 15"},
+    {"id":"F06","source":"voting-runtime-shell","destination":"postgres-preview","protocol":"PostgreSQL/TLS (verify-full, scram-sha-256)","port":8432,"purpose":"voting database access as role rt_voting, database epd2_voting; the only flow crossing into the voting segment's data, isolated by role/database","owning_requirement":"INFRA03 section 20 (voting isolation), section 12"},
+    {"id":"F07","source":"identity-runtime-shell","destination":"observability-collector","protocol":"HTTPS/mTLS (application CA)","port":8461,"purpose":"privacy-safe logs/metrics from the identity slot","owning_requirement":"INFRA03 section 38 (observability)"},
+    {"id":"F08","source":"membership-runtime-shell","destination":"observability-collector","protocol":"HTTPS/mTLS (application CA)","port":8461,"purpose":"privacy-safe logs/metrics from the membership slot","owning_requirement":"INFRA03 section 38"},
+    {"id":"F09","source":"ingress-gateway","destination":"observability-collector","protocol":"HTTPS/mTLS (application CA)","port":8461,"purpose":"privacy-safe access logs from the ingress boundary","owning_requirement":"INFRA03 section 38"},
+    {"id":"F10","source":"supervisor","destination":"postgres-preview","protocol":"PostgreSQL over local unix socket (peer auth, instance directory)","port":null,"purpose":"cluster administration, migrations, seed/reset — admin plane, never a TCP exposure","owning_requirement":"INFRA03 section 13 (DB ownership), section 48 (access boundary)"},
+    {"id":"F11","source":"supervisor","destination":"every declared service probe endpoint","protocol":"HTTPS (TLS or mTLS per service declaration)","port":null,"purpose":"liveness/readiness/health probing and drift verification","owning_requirement":"INFRA03 sections 28-31, 40"}
+  ],
+  "explicitly_denied_examples": [
+    "preview-user -> any application/data/voting/observability port (only F01 is public)",
+    "ingress-gateway -> voting-runtime-shell (voting is not routable from ingress in preview)",
+    "voting-runtime-shell -> observability-collector (voting observability is private by policy)",
+    "any service -> external egress (no declared external destination exists)",
+    "application-CA client identity -> voting-runtime-shell (wrong trust domain)"
+  ]
+}
