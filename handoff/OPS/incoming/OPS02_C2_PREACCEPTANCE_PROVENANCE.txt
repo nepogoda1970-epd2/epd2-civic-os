@@ -1,0 +1,20 @@
+EPD2 OPS-02 preacceptance provenance
+
+candidate            : EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip
+sha256               : 061a7daf8823070067e2167c9e87822114f609e4a04755d0f82b839e574a12a1
+size_bytes           : 16632518
+member_count         : 1541
+freeze_file_count    : 1536
+freeze_tree_digest   : c4d4700e4a6f491d664cd439821870510f8e5198d51b7f7a4bef4926a1e0ebf0
+entering main commit : 2b840017e8cdabcb9af78e3ae25f79e7e75c73f8
+entering main tree   : 6ea207cf907136aba9935f4f400bab8c776ea72a
+seal commit          : 18025735637d90eedac0875d61614699bb351895
+seal tree            : 9bf0b032d5a819054408a5f96d0c25e4e6a2feaf
+accepted OPS-01 C2   : 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27
+accepted INFRA-01 C3 : 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+harness              : PASS
+created_at           : 2026-09-02T00:19:13.132564+00:00
+self-state           : CANDIDATE_NOT_ACCEPTED
+
+This archive does not accept itself, does not close the OPS layer, and does
+not open the System Trial Preview. Acceptance is an independent governed act.
