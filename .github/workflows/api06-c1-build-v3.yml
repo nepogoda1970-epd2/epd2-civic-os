@@ -135,7 +135,7 @@ jobs:
           uv sync --frozen --all-groups
           uv pip install --python .venv/bin/python pika==1.3.2
           rm -rf "$RUNNER_TEMP/api03-crypto49"
-          ./scripts/api03_bootstrap_crypto49.sh "$RUNNER_TEMP/api03-crypto49"
+          bash scripts/api03_bootstrap_crypto49.sh "$RUNNER_TEMP/api03-crypto49"
           CRYPTO_SITE="$($RUNNER_TEMP/api03-crypto49/bin/python -c 'import sysconfig;print(sysconfig.get_paths()["purelib"])')"
           PYTHONNOUSERSITE=1 PYTHONPATH="$CRYPTO_SITE:$PWD/packages/python/epd2-s2s-crypto/src:$PWD/packages/python/epd2-runtime/src:$PWD" .venv/bin/python - <<'PY'
           import cryptography
