@@ -85,14 +85,17 @@ def assert_no_source_overlap(repo: Path) -> None:
     changed = run("git", "diff", "--name-only", P1_BASE_MAIN, BASE_MAIN, cwd=repo).splitlines()
     overlap = [p for p in changed if any(p == x or p.startswith(x) for x in DELTA_PREFIXES)]
     if overlap:
-        raise SystemExit("P1/current-main source overlap requires manual reconciliation: " + ", ".join(overlap))
+        raise SystemExit(
+            "P1/current-main source overlap requires manual reconciliation: " + ", ".join(overlap)
+        )
 
 
 def replace_mapping(text: str, name: str, mapping: dict[str, str]) -> str:
     pattern = rf"{re.escape(name)}: dict\[str, str\] = \{{.*?\n\}}"
-    replacement = name + ": dict[str, str] = {\n" + "".join(
-        f"    {k!r}: {v!r},\n" for k, v in mapping.items()
-    ) + "}"
+    rows: list[str] = []
+    for key, value in mapping.items():
+        rows.extend([f"    {key!r}: (", f"        {value!r}", "    ),"])
+    replacement = name + ": dict[str, str] = {\n" + "\n".join(rows) + "\n}"
     new, n = re.subn(pattern, replacement, text, count=1, flags=re.S)
     if n != 1:
         raise SystemExit(f"unable to replace {name}")
@@ -156,15 +159,19 @@ def patch_validator(path: Path) -> None:
     )
     t = t.replace(
         '"reconcile exact accepted API-06 identity or record it as not yet accepted",',
-        '"keep API-06 explicitly NEXT / NOT ACCEPTED unless a later authoritative record exists",',
+        '"keep API-06 NEXT / NOT ACCEPTED unless later authoritative acceptance exists",',
     )
     t = t.replace(
         '"API-04": "event/messaging semantics not consumed by CTRL-01 preseal work",\n                "INFRA-01":',
-        '"API-04": "event/messaging semantics not consumed by CTRL-01 bounded work",\n                "API-05": "accepted external-integration authority record is reconciled but not treated as an implementation dependency",\n                "INFRA-01":',
+        '"API-04": "event/messaging semantics not consumed by CTRL-01 bounded work",\n'
+        '                "API-05": "accepted API-05 C1 authority record",\n'
+        '                "INFRA-01":',
     )
     t = t.replace(
         '"OPS-01": "incident, recovery and change-control separation-of-duties conventions",',
-        '"INFRA-02": "accepted bounded CI/CD and supply-chain integrity foundation",\n                "OPS-01": "incident, recovery and change-control separation-of-duties conventions",\n                "OPS-02": "accepted bounded preview-operations implementation; checkpoint opening remains separately governed",',
+        '"INFRA-02": "accepted bounded CI/CD and supply-chain foundation",\n'
+        '                "OPS-01": "incident/recovery/change-control SoD conventions",\n'
+        '                "OPS-02": "accepted bounded OPS-02 implementation",',
     )
     path.write_text(t)
 
@@ -172,18 +179,21 @@ def patch_validator(path: Path) -> None:
 def patch_trial(path: Path) -> None:
     t = path.read_text()
     replacements = {
-        '"API-05": "API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED.",':
-            '"API-05": "API-05 C1 is ACCEPTED / CLOSED and is not a current checkpoint blocker.",',
-        '"INFRA-02": "INFRA preview-readiness minimum is not recorded as met.",':
-            '"INFRA-02": "INFRA-02 is ACCEPTED / CLOSED as a bounded stage; explicit joint preview-readiness remains separately governed while API-06 is open.",',
-        '{"item": "remaining API surface", "source": "API-05 / API-06", "state": "NOT_ACCEPTED"}':
-            '{"item": "remaining API surface", "source": "API-06", "state": "NEXT_NOT_ACCEPTED"}',
+        '"API-05": "API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED.",': (
+            '"API-05": "API-05 C1 is ACCEPTED / CLOSED; not a current checkpoint blocker.",'
+        ),
+        '"INFRA-02": "INFRA preview-readiness minimum is not recorded as met.",': (
+            '"INFRA-02": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed.",'
+        ),
+        '{"item": "remaining API surface", "source": "API-05 / API-06", "state": "NOT_ACCEPTED"}': (
+            '{"item": "remaining API surface", "source": "API-06", "state": "NEXT_NOT_ACCEPTED"}'
+        ),
     }
     for old, new in replacements.items():
         t = t.replace(old, new)
     t = t.replace(
         '"OPS preview-readiness minimum (deploy, observe, recover, reset) is not recorded as met."',
-        '"OPS-02 C3 is ACCEPTED / CLOSED as a bounded stage; explicit joint preview-readiness remains a governance checkpoint downstream of API-06."',
+        '"OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."',
     )
     path.write_text(t)
 
@@ -196,11 +206,27 @@ def patch_text_doc(path: Path) -> None:
     t = path.read_text()
     t = t.replace(P1_BASE_MAIN, BASE_MAIN)
     t = t.replace("1ea6161335044dc4d1e50a6b1588bad6627f7af5", BASE_TREE)
-    t = t.replace("`API-05`, `API-06`, `INFRA-02` and `OPS-02` are **not accepted**", "`API-05`, `INFRA-02` and `OPS-02` are **ACCEPTED / CLOSED as bounded stages**; `API-06` remains **NEXT / NOT ACCEPTED**")
-    t = t.replace("`API-05`, `API-06`, `INFRA-02` and `OPS-02` are not accepted.", "`API-05`, `INFRA-02` and `OPS-02` are accepted/closed as bounded stages; `API-06` remains NEXT / NOT ACCEPTED.")
-    t = t.replace("API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED", "API-05 C1 is ACCEPTED / CLOSED")
-    t = t.replace("reconcile exact accepted API-05 identity or record it as not yet accepted", "preserve the exact accepted API-05 C1 identity")
-    t = t.replace("reconcile INFRA-02 and OPS-02 if either is accepted by then", "preserve the exact accepted INFRA-02 and OPS-02 identities")
+    t = t.replace(
+        "`API-05`, `API-06`, `INFRA-02` and `OPS-02` are **not accepted**",
+        "`API-05`, `INFRA-02` and `OPS-02` are **ACCEPTED / CLOSED as bounded stages**; "
+        "`API-06` remains **NEXT / NOT ACCEPTED**",
+    )
+    t = t.replace(
+        "`API-05`, `API-06`, `INFRA-02` and `OPS-02` are not accepted.",
+        "`API-05`, `INFRA-02` and `OPS-02` are accepted/closed as bounded stages; "
+        "`API-06` remains NEXT / NOT ACCEPTED.",
+    )
+    t = t.replace(
+        "API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED", "API-05 C1 is ACCEPTED / CLOSED"
+    )
+    t = t.replace(
+        "reconcile exact accepted API-05 identity or record it as not yet accepted",
+        "preserve the exact accepted API-05 C1 identity",
+    )
+    t = t.replace(
+        "reconcile INFRA-02 and OPS-02 if either is accepted by then",
+        "preserve the exact accepted INFRA-02 and OPS-02 identities",
+    )
     if "CTRL-01 C1 canonical reconciliation" not in t:
         first_nl = t.find("\n")
         if first_nl >= 0:
@@ -270,7 +296,9 @@ def overlay(p1: Path, repo: Path) -> None:
         "accepted_predecessor_blobs": ACCEPTED_PREDECESSOR_BLOBS,
         "unreconciled_dependencies": {"API-06": "NEXT / NOT ACCEPTED"},
         "source_overlap_with_p1_to_current_governance_delta": [],
-        "bounded_acceptance_semantics": "CTRL-01 may be accepted independently; CTRL layer remains open/not closed",
+        "bounded_acceptance_semantics": (
+            "CTRL-01 may be accepted independently; CTRL layer remains open/not closed"
+        ),
         "system_trial_preview": "CHECKPOINT_NOT_OPEN",
     }
     out = repo / "validation/ctrl01/canonical_reconciliation.json"
@@ -281,7 +309,13 @@ def overlay(p1: Path, repo: Path) -> None:
 
 def copy_tree(src: Path, dst: Path) -> None:
     def ignore(_dir: str, names: list[str]) -> set[str]:
-        return {n for n in names if n in {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"} or n.endswith(".pyc")}
+        return {
+            n
+            for n in names
+            if n in {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+            or n.endswith(".pyc")
+        }
+
     shutil.copytree(src, dst, ignore=ignore)
 
 
@@ -306,10 +340,17 @@ def package(repo: Path, out: Path, run_id: str) -> None:
         copy_tree(repo / "services/control-plane-service", root / "services/control-plane-service")
         copy_tree(repo / "docs/ctrl/CTRL-01", root / "docs/ctrl/CTRL-01")
         (root / "scripts").mkdir(parents=True, exist_ok=True)
-        for name in ["ctrl01_validator.py", "ctrl01_registry_export.py", "system_trial_preview_prepare.py"]:
+        for name in [
+            "ctrl01_validator.py",
+            "ctrl01_registry_export.py",
+            "system_trial_preview_prepare.py",
+        ]:
             shutil.copy2(repo / "scripts" / name, root / "scripts" / name)
         copy_tree(repo / "validation/ctrl01", root / "validation/ctrl01")
-        copy_tree(repo / "validation/system_trial_preview", root / "validation/system_trial_preview")
+        copy_tree(
+            repo / "validation/system_trial_preview",
+            root / "validation/system_trial_preview",
+        )
         shutil.copy2(repo / "CTRL01_CANDIDATE_README.md", root / "README.md")
 
         identity = {
@@ -325,11 +366,17 @@ def package(repo: Path, out: Path, run_id: str) -> None:
             "ctrl_layer_state": "OPEN / NOT CLOSED",
             "generated_by_workflow_run": int(run_id),
         }
-        (root / "candidate_identity.json").write_text(json.dumps(identity, indent=2, sort_keys=True) + "\n")
+        (root / "candidate_identity.json").write_text(
+            json.dumps(identity, indent=2, sort_keys=True) + "\n"
+        )
 
         members = sorted(
-            p for p in root.rglob("*")
-            if p.is_file() and p.name != "SHA256SUMS.txt" and "__pycache__" not in p.parts and not p.name.endswith(".pyc")
+            p
+            for p in root.rglob("*")
+            if p.is_file()
+            and p.name != "SHA256SUMS.txt"
+            and "__pycache__" not in p.parts
+            and not p.name.endswith(".pyc")
         )
         sums = "".join(f"{sha256(p)}  {p.relative_to(root).as_posix()}\n" for p in members)
         (root / "SHA256SUMS.txt").write_text(sums)
