@@ -1,0 +1,49 @@
+name: ctrl02-validator-inspect
+
+on:
+  push:
+    branches: [handoff/ctrl]
+    paths: ['.github/workflows/ctrl02-validator-inspect.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/ctrl
+      - name: Persist validator identity contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
+          rm -rf /tmp/c02vi && mkdir -p /tmp/c02vi
+          python3 - <<'PY'
+          import pathlib,zipfile
+          zp=pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
+          d=pathlib.Path('/tmp/c02vi')
+          with zipfile.ZipFile(zp) as z: z.extractall(d)
+          root=next(p for p in d.iterdir() if p.is_dir())
+          out=pathlib.Path('handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md')
+          parts=['# CTRL-02 validator contract snippets','']
+          for rel in ['scripts/ctrl02_validator.py','scripts/ctrl02_mutation_suite.py','scripts/verify_ctrl02_package.py','scripts/build_ctrl02_preseal.py','validation/ctrl02/source_identity_result.json','validation/ctrl02/freeze_manifest.json','validation/ctrl02/ctrl02_preseal_result.json']:
+              p=root/rel
+              if not p.exists(): continue
+              text=p.read_text('utf-8')
+              if rel=='scripts/ctrl02_validator.py':
+                  lines=text.splitlines(); text='\n'.join(f'{i+1}: {lines[i]}' for i in range(max(0,180),min(len(lines),330)))
+              elif rel.startswith('scripts/'):
+                  lines=text.splitlines(); text='\n'.join(f'{i+1}: {lines[i]}' for i in range(0,min(len(lines),220)))
+              parts += [f'## `{rel}`','```text',text[:50000],'```','']
+          out.write_text('\n'.join(parts),encoding='utf-8')
+          print('SNIPPET_BYTES',out.stat().st_size)
+          PY
+          test -s handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md
+          git config user.name epd2-ctrl02-verifier
+          git config user.email actions@users.noreply.github.com
+          git add handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md
+          git commit -m 'CTRL-02: persist validator identity contract snippet'
+          git push origin HEAD:handoff/ctrl
