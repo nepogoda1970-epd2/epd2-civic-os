@@ -1,7 +1,27 @@
-# CTRL-02 validator contract snippets
+# CTRL-02 validator source identity contract
 
 ## `scripts/ctrl02_validator.py`
 ```text
+161:     path = VALIDATION / "freeze_manifest.json"
+162:     current = manifest()
+163:     if record:
+164:         write(
+165:             "freeze_manifest.json",
+166:             {
+167:                 "schema": "epd2.ctrl02.freeze-manifest/1",
+168:                 "mode": MODE,
+169:                 "files": current,
+170:                 "scope_digest": hashlib.sha256(
+171:                     json.dumps(current, sort_keys=True, separators=(",", ":")).encode()
+172:                 ).hexdigest(),
+173:             },
+174:         )
+175:         return True
+176:     if not path.exists():
+177:         return False
+178:     frozen = json.loads(path.read_text())
+179:     return frozen["files"] == current
+180: 
 181: 
 182: def main() -> int:
 183:     parser = argparse.ArgumentParser()
@@ -378,73 +398,6 @@
 220:         "if supplied < self._last_time:\n            return self._last_time",
 ```
 
-## `scripts/verify_ctrl02_package.py`
-```text
-1: #!/usr/bin/env python3
-2: """Independently verify CTRL-02 archive safety, contents and same-byte manifest."""
-3: 
-4: from __future__ import annotations
-5: 
-6: import argparse
-7: import hashlib
-8: import json
-9: import tempfile
-10: import zipfile
-11: from pathlib import Path
-12: 
-13: FORBIDDEN_PARTS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache"}
-14: 
-15: 
-16: def digest(path: Path) -> str:
-17:     value = hashlib.sha256()
-18:     with path.open("rb") as stream:
-19:         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-20:             value.update(chunk)
-21:     return value.hexdigest()
-22: 
-23: 
-24: def main() -> int:
-25:     parser = argparse.ArgumentParser()
-26:     parser.add_argument("archive", type=Path)
-27:     args = parser.parse_args()
-28:     if not args.archive.is_file():
-29:         raise SystemExit("archive missing")
-30:     with zipfile.ZipFile(args.archive) as archive:
-31:         names = archive.namelist()
-32:         if not names or any(Path(name).is_absolute() or ".." in Path(name).parts for name in names):
-33:             raise SystemExit("unsafe archive path")
-34:         if any(set(Path(name).parts) & FORBIDDEN_PARTS for name in names):
-35:             raise SystemExit("archive hygiene failure")
-36:         roots = {Path(name).parts[0] for name in names}
-37:         if len(roots) != 1:
-38:             raise SystemExit("archive must have one root")
-39:         with tempfile.TemporaryDirectory(prefix="ctrl02-verify-") as td:
-40:             archive.extractall(td)
-41:             root = Path(td) / roots.pop()
-42:             manifest = root / "SHA256SUMS.txt"
-43:             if not manifest.is_file():
-44:                 raise SystemExit("manifest missing")
-45:             for line in manifest.read_text().splitlines():
-46:                 expected, relative = line.split("  ", 1)
-47:                 target = root / relative
-48:                 if not target.is_file() or digest(target) != expected:
-49:                     raise SystemExit(f"same-byte mismatch: {relative}")
-50:             result = json.loads((root / "validation/ctrl02/ctrl02_preseal_result.json").read_text())
-51:             if result["gates_passed"] != 45 or result["gates_blocked_for_final_seal"] != ["G04"]:
-52:                 raise SystemExit("gate evidence mismatch")
-53:             if result["self_state"] != "NOT_ACCEPTED":
-54:                 raise SystemExit("developer self-acceptance forbidden")
-55:             mutation = json.loads((root / "validation/ctrl02/mutation_result.json").read_text())
-56:             if mutation["detected"] != 40 or mutation["undetected"]:
-57:                 raise SystemExit("mutation evidence mismatch")
-58:     print(f"CTRL02_PACKAGE_VERIFY:PASS:{digest(args.archive)}:{args.archive.stat().st_size}")
-59:     return 0
-60: 
-61: 
-62: if __name__ == "__main__":
-63:     raise SystemExit(main())
-```
-
 ## `scripts/build_ctrl02_preseal.py`
 ```text
 1: #!/usr/bin/env python3
@@ -561,353 +514,355 @@
 112:     raise SystemExit(main())
 ```
 
-## `validation/ctrl02/freeze_manifest.json`
-```text
-{
-  "files": {
-    "contracts/control/ctrl02_control_console.json": "b280429e9525adcac69bfab83254e74e7ede59bc754ff622048e8c9ca37e4e13",
-    "docs/ctrl/CTRL-02/CTRL02_DEVELOPER_REPORT.md": "088d551578cd3a4f7f315dd201cffaccfa8a362ea9721441d5e2983513e8d078",
-    "docs/ctrl/CTRL-02/CTRL02_STAGE_CONTRACT.md": "ab0adcaa8da6e6bf572cd200bfa929eb62de3fd48b331e848269bd3c14d52a52",
-    "scripts/build_ctrl02_preseal.py": "cc74641f7ceca612ba9d635956e27810f6674f6502cf03d0b24a079ba8a2f2c6",
-    "scripts/ctrl02_mutation_suite.py": "a5f19e4458df18676203aa671e126254d4697f1115a865160bcc1e5fa0a42611",
-    "scripts/ctrl02_validator.py": "034f326be16c1dca29d92538a7deeaf906a9e7ba80e085d4be1306a72a9eada5",
-    "scripts/verify_ctrl02_package.py": "037db6afae963f57fb0b49df5bf66e6e7e17ead57bfafb41118328481e8f5240",
-    "services/control-plane-service/src/epd2_control_plane_service/__init__.py": "99d97e1d109865f5b028681f9227a27b1d7e285a384e55053ec3cd70d0f47aef",
-    "services/control-plane-service/src/epd2_control_plane_service/api.py": "d355434e31eb5b16d7a6ce805fe23e10ca83ece5c4e511d06732e5a4e3279d4d",
-    "services/control-plane-service/src/epd2_control_plane_service/application.py": "69d818295ee2682ba42d8322e8d9ff017236a8936d885ec6e9e5f4db51cef64d",
-    "services/control-plane-service/src/epd2_control_plane_service/audit.py": "2f7a3d2ccc77f5488e9329c37bf09e7c535c5f159595f7df66d52e07232a95b1",
-    "services/control-plane-service/src/epd2_control_plane_service/authority.py": "2f5284c7ee170a4309451c1d152e1a96e84e1ca62dc5e1e074239f4594aa4736",
-    "services/control-plane-service/src/epd2_control_plane_service/breakglass.py": "d103d26c4f8f2be65c282e7c2da26b976f8db4c86bae58af809e09e39a297fa6",
-    "services/control-plane-service/src/epd2_control_plane_service/domain.py": "46a207d342fea329f1db4c63d01ff527d60b1b963c5737be0fb87b2634fad5de",
-    "services/control-plane-service/src/epd2_control_plane_service/exceptions.py": "fb559e1f12c6d169eba96474ffa58ccae4837d4acf293a7a15988c49013df4f0",
-    "services/control-plane-service/src/epd2_control_plane_service/freeze.py": "d5d2733eb0adf83f77a34ccf96a929760dd7683afe2fe56ebb0fb325ecb5557b",
-    "services/control-plane-service/src/epd2_control_plane_service/intervention.py": "05a0ad2430dde8ea0dddad51f4c114e66a98e1e6d20e4c806463b078044a01b4",
-    "services/control-plane-service/src/epd2_control_plane_service/inventory.py": "fd4b687a3449289c5e12e3ea576fbe19405c70e88a647154cc1e35e101abebbf",
-    "services/control-plane-service/src/epd2_control_plane_service/mutations.py": "e33843d8b1b4d5809ce5e33ffe887a091d179416da8e9e7dd6b421eec5adca65",
-    "services/control-plane-service/src/epd2_control_plane_service/policy.py": "8b1636a2f78bbd35ca14f01417960a72b79212f536830b38cfa41ea0e3a4bb39",
-    "services/control-plane-service/src/epd2_control_plane_service/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "services/control-plane-service/src/epd2_control_plane_service/reference_world.py": "72b23a8ea41a08b94feb1ccd1ef740780867c025c702117107e109644d41939a",
-    "services/control-plane-service/src/epd2_control_plane_service/regional_operations.py": "aad08bcc67912d3ae1a23d7438ac8d036c897d512f32ba6b6850e99c41185286",
-    "services/control-plane-service/src/epd2_control_plane_service/routes.py": "80d13c0a9731932f49bfaaff51d3cb904cf15828a38806e67ece24c282b713ea",
-    "services/control-plane-service/src/epd2_control_plane_service/sod.py": "376fe29dc549cae4513257346f3b62f710616971f09b9cd0a9bbba6f4e5735ac",
-    "services/control-plane-service/src/epd2_control_plane_service/verification.py": "04776b71688e8c23c1663e527521ea2ed43e42342ae6777d3be3c4b14f992c91",
-    "services/control-plane-service/tests/_control_plane_builders.py": "c1e23e84e0e6b9977bf2aab332c88944058f29508745a845c882608bb120358a",
-    "services/control-plane-service/tests/_ctrl02_builders.py": "482b56032ec40f928145f7fd44b52399f2b7b06f72a507020fe2b6351502e323",
-    "services/control-plane-service/tests/conftest.py": "cb2bf1653e6aabd40efb1936ba157a0c7e383d8a36bcf8e0a457949825de2533",
-    "services/control-plane-service/tests/test_audit_evidence.py": "1933fa965c12470dd7cd689a5a29637b276d9728d9ebb3928e4883e4926adeb9",
-    "services/control-plane-service/tests/test_breakglass.py": "554b5c37cdde5a186128f0e4b20efd0333973a99c7b0921a824fed43f9c9e8e8",
-    "services/control-plane-service/tests/test_commit_time_reauthorization.py": "1886cc0158a85891cbed09351a28b9c80124bc4c013c638c2cd89011fa9d063f",
-    "services/control-plane-service/tests/test_ctrl02_authorization.py": "cefb4fa15f7229d78f1a7cdfa1d8f96d54421f632a27b8aed788478f0936c836",
-    "services/control-plane-service/tests/test_ctrl02_inventory_evidence.py": "f7358da07e67d2ac0232631f749627dad2556d4e4de71a9c9ca20e3d8c9dfd93",
-    "services/control-plane-service/tests/test_ctrl02_lifecycle.py": "752fbf255f63ff17eaf29a5385de9fa00693caedb330996205c13f5732867779",
-    "services/control-plane-service/tests/test_ctrl02_privilege_and_recovery.py": "ba5f2bad1d9fa602465d2a98f5f5e40f936d302677ddd43df9b90d966493d61a",
-    "services/control-plane-service/tests/test_intervention.py": "f763d1353e391ddd35b057ee29057ff3e8e9d28534b40b73cc5fda11fc4fe5ce",
-    "services/control-plane-service/tests/test_inventory_and_contracts.py": "b754fec922e810454ab39bffb548e5486aab77fd4f11a63329324bbae8029dd3",
-    "services/control-plane-service/tests/test_lifecycle.py": "a5724b8fce02379b18f2d99bcd930560e6f3190ccf38e0af78f90a87b4d28435",
-    "services/control-plane-service/tests/test_mutation_suite.py": "9d65629d62fa2b33d31234dcee0afcb51fe8f4bf0d8244a45fb3ce3451b5559a",
-    "services/control-plane-service/tests/test_negative_authorization.py": "c4ceeb5f52c4881bfae392c94b372b737f4d0c0d48a50a35f1141202ddd801ef",
-    "services/control-plane-service/tests/test_sod.py": "437694f3eb248812f6703fa377a66f331e7b0f44cb3fbf46a9c530dd44f5a2cc"
-  },
-  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
-  "schema": "epd2.ctrl02.freeze-manifest/1",
-  "scope_digest": "3a0b65699498b39fd9bacaf1e709dbdaa5fe12b698c7fe6f044175da50ab4509"
-}
-
-```
+## `validation/ctrl02/source_identity_result.json`
+MISSING
 
 ## `validation/ctrl02/ctrl02_preseal_result.json`
 ```text
-{
-  "gates": [
-    {
-      "executed": true,
-      "id": "G01",
-      "name": "bootstrap_freshness",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G02",
-      "name": "baseline_identity",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G03",
-      "name": "ctrl01_dependency_inventory",
-      "status": "PASS"
-    },
-    {
-      "executed": false,
-      "id": "G04",
-      "name": "ctrl01_reconciliation",
-      "status": "BLOCKED_FOR_FINAL_SEAL"
-    },
-    {
-      "executed": true,
-      "id": "G05",
-      "name": "intervention_model",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G06",
-      "name": "session_quarantine",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G07",
-      "name": "authority_suspension",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G08",
-      "name": "regional_restriction",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G09",
-      "name": "temporary_supervision",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G10",
-      "name": "bund_boundary",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G11",
-      "name": "regional_autonomy",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G12",
-      "name": "request_authority",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G13",
-      "name": "approval_authority",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G14",
-      "name": "four_eyes",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G15",
-      "name": "quorum",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G16",
-      "name": "self_approval_rejection",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G17",
-      "name": "commit_reauth",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G18",
-      "name": "jit",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G19",
-      "name": "breakglass",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G20",
-      "name": "breakglass_expiry",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G21",
-      "name": "no_silent_renewal",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G22",
-      "name": "execution_separation",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G23",
-      "name": "secret_visibility",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G24",
-      "name": "service_credential",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G25",
-      "name": "key_trust",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G26",
-      "name": "voting_boundary",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G27",
-      "name": "immutable_history",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G28",
-      "name": "read_model",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G29",
-      "name": "console_contracts",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G30",
-      "name": "action_inventory",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G31",
-      "name": "negative_authorization",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G32",
-      "name": "stale_state",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G33",
-      "name": "idempotency",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G34",
-      "name": "concurrency",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G35",
-      "name": "time_expiry",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G36",
-      "name": "recovery",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G37",
-      "name": "fail_closed",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G38",
-      "name": "audit",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G39",
-      "name": "post_use_review",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G40",
-      "name": "escalation",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G41",
-      "name": "restoration",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G42",
-      "name": "scope_precedence",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G43",
-      "name": "privacy_observability",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G44",
-      "name": "fir_bsi",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G45",
-      "name": "mutation_suite",
-      "status": "PASS"
-    },
-    {
-      "executed": true,
-      "id": "G46",
-      "name": "freeze_same_bytes",
-      "status": "PASS"
-    }
-  ],
-  "gates_blocked_for_final_seal": [
-    "G04"
-  ],
-  "gates_failed": [],
-  "gates_passed": 45,
-  "gates_total": 46,
-  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
-  "mutation_result": "40/40 DETECTED",
-  "overall": "DEVELOPMENT_PASS_FINAL_SEAL_BLOCKED",
-  "schema": "epd2.ctrl02.preseal-result/1",
-  "self_state": "NOT_ACCEPTED",
-  "stage": "CTRL-02"
-}
-
+1: {
+2:   "gates": [
+3:     {
+4:       "executed": true,
+5:       "id": "G01",
+6:       "name": "bootstrap_freshness",
+7:       "status": "PASS"
+8:     },
+9:     {
+10:       "executed": true,
+11:       "id": "G02",
+12:       "name": "baseline_identity",
+13:       "status": "PASS"
+14:     },
+15:     {
+16:       "executed": true,
+17:       "id": "G03",
+18:       "name": "ctrl01_dependency_inventory",
+19:       "status": "PASS"
+20:     },
+21:     {
+22:       "executed": false,
+23:       "id": "G04",
+24:       "name": "ctrl01_reconciliation",
+25:       "status": "BLOCKED_FOR_FINAL_SEAL"
+26:     },
+27:     {
+28:       "executed": true,
+29:       "id": "G05",
+30:       "name": "intervention_model",
+31:       "status": "PASS"
+32:     },
+33:     {
+34:       "executed": true,
+35:       "id": "G06",
+36:       "name": "session_quarantine",
+37:       "status": "PASS"
+38:     },
+39:     {
+40:       "executed": true,
+41:       "id": "G07",
+42:       "name": "authority_suspension",
+43:       "status": "PASS"
+44:     },
+45:     {
+46:       "executed": true,
+47:       "id": "G08",
+48:       "name": "regional_restriction",
+49:       "status": "PASS"
+50:     },
+51:     {
+52:       "executed": true,
+53:       "id": "G09",
+54:       "name": "temporary_supervision",
+55:       "status": "PASS"
+56:     },
+57:     {
+58:       "executed": true,
+59:       "id": "G10",
+60:       "name": "bund_boundary",
+61:       "status": "PASS"
+62:     },
+63:     {
+64:       "executed": true,
+65:       "id": "G11",
+66:       "name": "regional_autonomy",
+67:       "status": "PASS"
+68:     },
+69:     {
+70:       "executed": true,
+71:       "id": "G12",
+72:       "name": "request_authority",
+73:       "status": "PASS"
+74:     },
+75:     {
+76:       "executed": true,
+77:       "id": "G13",
+78:       "name": "approval_authority",
+79:       "status": "PASS"
+80:     },
+81:     {
+82:       "executed": true,
+83:       "id": "G14",
+84:       "name": "four_eyes",
+85:       "status": "PASS"
+86:     },
+87:     {
+88:       "executed": true,
+89:       "id": "G15",
+90:       "name": "quorum",
+91:       "status": "PASS"
+92:     },
+93:     {
+94:       "executed": true,
+95:       "id": "G16",
+96:       "name": "self_approval_rejection",
+97:       "status": "PASS"
+98:     },
+99:     {
+100:       "executed": true,
+101:       "id": "G17",
+102:       "name": "commit_reauth",
+103:       "status": "PASS"
+104:     },
+105:     {
+106:       "executed": true,
+107:       "id": "G18",
+108:       "name": "jit",
+109:       "status": "PASS"
+110:     },
+111:     {
+112:       "executed": true,
+113:       "id": "G19",
+114:       "name": "breakglass",
+115:       "status": "PASS"
+116:     },
+117:     {
+118:       "executed": true,
+119:       "id": "G20",
+120:       "name": "breakglass_expiry",
+121:       "status": "PASS"
+122:     },
+123:     {
+124:       "executed": true,
+125:       "id": "G21",
+126:       "name": "no_silent_renewal",
+127:       "status": "PASS"
+128:     },
+129:     {
+130:       "executed": true,
+131:       "id": "G22",
+132:       "name": "execution_separation",
+133:       "status": "PASS"
+134:     },
+135:     {
+136:       "executed": true,
+137:       "id": "G23",
+138:       "name": "secret_visibility",
+139:       "status": "PASS"
+140:     },
+141:     {
+142:       "executed": true,
+143:       "id": "G24",
+144:       "name": "service_credential",
+145:       "status": "PASS"
+146:     },
+147:     {
+148:       "executed": true,
+149:       "id": "G25",
+150:       "name": "key_trust",
+151:       "status": "PASS"
+152:     },
+153:     {
+154:       "executed": true,
+155:       "id": "G26",
+156:       "name": "voting_boundary",
+157:       "status": "PASS"
+158:     },
+159:     {
+160:       "executed": true,
+161:       "id": "G27",
+162:       "name": "immutable_history",
+163:       "status": "PASS"
+164:     },
+165:     {
+166:       "executed": true,
+167:       "id": "G28",
+168:       "name": "read_model",
+169:       "status": "PASS"
+170:     },
+171:     {
+172:       "executed": true,
+173:       "id": "G29",
+174:       "name": "console_contracts",
+175:       "status": "PASS"
+176:     },
+177:     {
+178:       "executed": true,
+179:       "id": "G30",
+180:       "name": "action_inventory",
+181:       "status": "PASS"
+182:     },
+183:     {
+184:       "executed": true,
+185:       "id": "G31",
+186:       "name": "negative_authorization",
+187:       "status": "PASS"
+188:     },
+189:     {
+190:       "executed": true,
+191:       "id": "G32",
+192:       "name": "stale_state",
+193:       "status": "PASS"
+194:     },
+195:     {
+196:       "executed": true,
+197:       "id": "G33",
+198:       "name": "idempotency",
+199:       "status": "PASS"
+200:     },
+201:     {
+202:       "executed": true,
+203:       "id": "G34",
+204:       "name": "concurrency",
+205:       "status": "PASS"
+206:     },
+207:     {
+208:       "executed": true,
+209:       "id": "G35",
+210:       "name": "time_expiry",
+211:       "status": "PASS"
+212:     },
+213:     {
+214:       "executed": true,
+215:       "id": "G36",
+216:       "name": "recovery",
+217:       "status": "PASS"
+218:     },
+219:     {
+220:       "executed": true,
+221:       "id": "G37",
+222:       "name": "fail_closed",
+223:       "status": "PASS"
+224:     },
+225:     {
+226:       "executed": true,
+227:       "id": "G38",
+228:       "name": "audit",
+229:       "status": "PASS"
+230:     },
+231:     {
+232:       "executed": true,
+233:       "id": "G39",
+234:       "name": "post_use_review",
+235:       "status": "PASS"
+236:     },
+237:     {
+238:       "executed": true,
+239:       "id": "G40",
+240:       "name": "escalation",
+241:       "status": "PASS"
+242:     },
+243:     {
+244:       "executed": true,
+245:       "id": "G41",
+246:       "name": "restoration",
+247:       "status": "PASS"
+248:     },
+249:     {
+250:       "executed": true,
+251:       "id": "G42",
+252:       "name": "scope_precedence",
+253:       "status": "PASS"
+254:     },
+255:     {
+256:       "executed": true,
+257:       "id": "G43",
+258:       "name": "privacy_observability",
+259:       "status": "PASS"
+260:     },
+261:     {
+262:       "executed": true,
+263:       "id": "G44",
+264:       "name": "fir_bsi",
+265:       "status": "PASS"
+266:     },
+267:     {
+268:       "executed": true,
+269:       "id": "G45",
+270:       "name": "mutation_suite",
+271:       "status": "PASS"
+272:     },
+273:     {
+274:       "executed": true,
+275:       "id": "G46",
+276:       "name": "freeze_same_bytes",
+277:       "status": "PASS"
+278:     }
+279:   ],
+280:   "gates_blocked_for_final_seal": [
+281:     "G04"
+282:   ],
+283:   "gates_failed": [],
+284:   "gates_passed": 45,
+285:   "gates_total": 46,
+286:   "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+287:   "mutation_result": "40/40 DETECTED",
+288:   "overall": "DEVELOPMENT_PASS_FINAL_SEAL_BLOCKED",
+289:   "schema": "epd2.ctrl02.preseal-result/1",
+290:   "self_state": "NOT_ACCEPTED",
+291:   "stage": "CTRL-02"
+292: }
 ```
+
+## `validation/ctrl02/freeze_manifest.json`
+```text
+1: {
+2:   "files": {
+3:     "contracts/control/ctrl02_control_console.json": "b280429e9525adcac69bfab83254e74e7ede59bc754ff622048e8c9ca37e4e13",
+4:     "docs/ctrl/CTRL-02/CTRL02_DEVELOPER_REPORT.md": "088d551578cd3a4f7f315dd201cffaccfa8a362ea9721441d5e2983513e8d078",
+5:     "docs/ctrl/CTRL-02/CTRL02_STAGE_CONTRACT.md": "ab0adcaa8da6e6bf572cd200bfa929eb62de3fd48b331e848269bd3c14d52a52",
+6:     "scripts/build_ctrl02_preseal.py": "cc74641f7ceca612ba9d635956e27810f6674f6502cf03d0b24a079ba8a2f2c6",
+7:     "scripts/ctrl02_mutation_suite.py": "a5f19e4458df18676203aa671e126254d4697f1115a865160bcc1e5fa0a42611",
+8:     "scripts/ctrl02_validator.py": "034f326be16c1dca29d92538a7deeaf906a9e7ba80e085d4be1306a72a9eada5",
+9:     "scripts/verify_ctrl02_package.py": "037db6afae963f57fb0b49df5bf66e6e7e17ead57bfafb41118328481e8f5240",
+10:     "services/control-plane-service/src/epd2_control_plane_service/__init__.py": "99d97e1d109865f5b028681f9227a27b1d7e285a384e55053ec3cd70d0f47aef",
+11:     "services/control-plane-service/src/epd2_control_plane_service/api.py": "d355434e31eb5b16d7a6ce805fe23e10ca83ece5c4e511d06732e5a4e3279d4d",
+12:     "services/control-plane-service/src/epd2_control_plane_service/application.py": "69d818295ee2682ba42d8322e8d9ff017236a8936d885ec6e9e5f4db51cef64d",
+13:     "services/control-plane-service/src/epd2_control_plane_service/audit.py": "2f7a3d2ccc77f5488e9329c37bf09e7c535c5f159595f7df66d52e07232a95b1",
+14:     "services/control-plane-service/src/epd2_control_plane_service/authority.py": "2f5284c7ee170a4309451c1d152e1a96e84e1ca62dc5e1e074239f4594aa4736",
+15:     "services/control-plane-service/src/epd2_control_plane_service/breakglass.py": "d103d26c4f8f2be65c282e7c2da26b976f8db4c86bae58af809e09e39a297fa6",
+16:     "services/control-plane-service/src/epd2_control_plane_service/domain.py": "46a207d342fea329f1db4c63d01ff527d60b1b963c5737be0fb87b2634fad5de",
+17:     "services/control-plane-service/src/epd2_control_plane_service/exceptions.py": "fb559e1f12c6d169eba96474ffa58ccae4837d4acf293a7a15988c49013df4f0",
+18:     "services/control-plane-service/src/epd2_control_plane_service/freeze.py": "d5d2733eb0adf83f77a34ccf96a929760dd7683afe2fe56ebb0fb325ecb5557b",
+19:     "services/control-plane-service/src/epd2_control_plane_service/intervention.py": "05a0ad2430dde8ea0dddad51f4c114e66a98e1e6d20e4c806463b078044a01b4",
+20:     "services/control-plane-service/src/epd2_control_plane_service/inventory.py": "fd4b687a3449289c5e12e3ea576fbe19405c70e88a647154cc1e35e101abebbf",
+21:     "services/control-plane-service/src/epd2_control_plane_service/mutations.py": "e33843d8b1b4d5809ce5e33ffe887a091d179416da8e9e7dd6b421eec5adca65",
+22:     "services/control-plane-service/src/epd2_control_plane_service/policy.py": "8b1636a2f78bbd35ca14f01417960a72b79212f536830b38cfa41ea0e3a4bb39",
+23:     "services/control-plane-service/src/epd2_control_plane_service/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+24:     "services/control-plane-service/src/epd2_control_plane_service/reference_world.py": "72b23a8ea41a08b94feb1ccd1ef740780867c025c702117107e109644d41939a",
+25:     "services/control-plane-service/src/epd2_control_plane_service/regional_operations.py": "aad08bcc67912d3ae1a23d7438ac8d036c897d512f32ba6b6850e99c41185286",
+26:     "services/control-plane-service/src/epd2_control_plane_service/routes.py": "80d13c0a9731932f49bfaaff51d3cb904cf15828a38806e67ece24c282b713ea",
+27:     "services/control-plane-service/src/epd2_control_plane_service/sod.py": "376fe29dc549cae4513257346f3b62f710616971f09b9cd0a9bbba6f4e5735ac",
+28:     "services/control-plane-service/src/epd2_control_plane_service/verification.py": "04776b71688e8c23c1663e527521ea2ed43e42342ae6777d3be3c4b14f992c91",
+29:     "services/control-plane-service/tests/_control_plane_builders.py": "c1e23e84e0e6b9977bf2aab332c88944058f29508745a845c882608bb120358a",
+30:     "services/control-plane-service/tests/_ctrl02_builders.py": "482b56032ec40f928145f7fd44b52399f2b7b06f72a507020fe2b6351502e323",
+31:     "services/control-plane-service/tests/conftest.py": "cb2bf1653e6aabd40efb1936ba157a0c7e383d8a36bcf8e0a457949825de2533",
+32:     "services/control-plane-service/tests/test_audit_evidence.py": "1933fa965c12470dd7cd689a5a29637b276d9728d9ebb3928e4883e4926adeb9",
+33:     "services/control-plane-service/tests/test_breakglass.py": "554b5c37cdde5a186128f0e4b20efd0333973a99c7b0921a824fed43f9c9e8e8",
+34:     "services/control-plane-service/tests/test_commit_time_reauthorization.py": "1886cc0158a85891cbed09351a28b9c80124bc4c013c638c2cd89011fa9d063f",
+35:     "services/control-plane-service/tests/test_ctrl02_authorization.py": "cefb4fa15f7229d78f1a7cdfa1d8f96d54421f632a27b8aed788478f0936c836",
+36:     "services/control-plane-service/tests/test_ctrl02_inventory_evidence.py": "f7358da07e67d2ac0232631f749627dad2556d4e4de71a9c9ca20e3d8c9dfd93",
+37:     "services/control-plane-service/tests/test_ctrl02_lifecycle.py": "752fbf255f63ff17eaf29a5385de9fa00693caedb330996205c13f5732867779",
+38:     "services/control-plane-service/tests/test_ctrl02_privilege_and_recovery.py": "ba5f2bad1d9fa602465d2a98f5f5e40f936d302677ddd43df9b90d966493d61a",
+39:     "services/control-plane-service/tests/test_intervention.py": "f763d1353e391ddd35b057ee29057ff3e8e9d28534b40b73cc5fda11fc4fe5ce",
+40:     "services/control-plane-service/tests/test_inventory_and_contracts.py": "b754fec922e810454ab39bffb548e5486aab77fd4f11a63329324bbae8029dd3",
+41:     "services/control-plane-service/tests/test_lifecycle.py": "a5724b8fce02379b18f2d99bcd930560e6f3190ccf38e0af78f90a87b4d28435",
+42:     "services/control-plane-service/tests/test_mutation_suite.py": "9d65629d62fa2b33d31234dcee0afcb51fe8f4bf0d8244a45fb3ce3451b5559a",
+43:     "services/control-plane-service/tests/test_negative_authorization.py": "c4ceeb5f52c4881bfae392c94b372b737f4d0c0d48a50a35f1141202ddd801ef",
+44:     "services/control-plane-service/tests/test_sod.py": "437694f3eb248812f6703fa377a66f331e7b0f44cb3fbf46a9c530dd44f5a2cc"
+45:   },
+46:   "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+47:   "schema": "epd2.ctrl02.freeze-manifest/1",
+48:   "scope_digest": "3a0b65699498b39fd9bacaf1e709dbdaa5fe12b698c7fe6f044175da50ab4509"
+49: }
+```
+
