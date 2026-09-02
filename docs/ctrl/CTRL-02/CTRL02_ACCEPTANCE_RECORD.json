@@ -1,0 +1,37 @@
+{
+  "stage": "CTRL-02 — Regional Intervention & Privileged Operations",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-02",
+  "previous_state": "CTRL-02 GOVERNED ACCEPTANCE PASS / CANON PASS; canonical installation pending",
+  "new_state": "CTRL-02 ACCEPTED / CLOSED",
+  "candidate": {
+    "filename": "EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.2_PRESEAL.zip",
+    "sha256": "ef3860d9b2f65f444c1c602c9efb9a32a2a07b9e8024161ba7fd6d26c8ed8a",
+    "size_bytes": 16729241
+  },
+  "authoritative_acceptance": {
+    "run_id": 33633224296,
+    "provenance_commit": "b9fcd46b0fcf9f4b8a63e7c6f3e7c48c20e1b85",
+    "conclusion": "success",
+    "result": "GOVERNED_ACCEPTANCE_PASS / CANON_PASS"
+  },
+  "measured_evidence": {
+    "predecessor_ctrl01_gates": "22/22 PASS",
+    "mutation_verification": "40/40 kills",
+    "contract_validator": "46/46 PASS",
+    "baseline_reconstruction": "PASS",
+    "freeze_verification": "PASS",
+    "package_identity": "PASS"
+  },
+  "governance_decision": {
+    "basis": "Independent authoritative GitHub governed acceptance run 33633224296 completed successfully for the exact CTRL-02 candidate identity recorded above. This post-run governance record installs that already-earned PASS into canonical project state; it does not alter or re-run the accepted candidate.",
+    "open_blockers": [],
+    "next_permitted_primary_stage": "CTRL-03 — Credential Trust & Key Lifecycle Control",
+    "scope_exclusions": [
+      "This decision does not accept or close CTRL-03 or any later CTRL stage.",
+      "This decision does not by itself close the CTRL layer.",
+      "This decision does not claim production readiness or legal activation.",
+      "This decision does not claim BSI/Common Criteria or other security certification."
+    ]
+  }
+}
