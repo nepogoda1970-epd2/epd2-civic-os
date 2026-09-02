@@ -1,0 +1,32 @@
+name: API-06 exact snapshot export
+
+on:
+  push:
+    branches:
+      - tmp/api06-snapshot-export-20260902
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify and stage exact snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          F='handoff/API-06/incoming/EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_DEVELOPMENT_SNAPSHOT_0.1.zip'
+          test -f "$F"
+          sha256sum "$F"
+          stat -c '%s' "$F"
+          unzip -t "$F" >/dev/null
+          mkdir -p /tmp/export
+          cp "$F" /tmp/export/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: api06-snapshot-exact-${{ github.run_id }}
+          path: /tmp/export/EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_DEVELOPMENT_SNAPSHOT_0.1.zip
+          if-no-files-found: error
+          retention-days: 7
