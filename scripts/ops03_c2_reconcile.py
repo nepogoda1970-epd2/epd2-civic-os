@@ -121,6 +121,52 @@ def assert_lock_superset(ours: pathlib.Path, theirs: pathlib.Path) -> None:
         raise RuntimeError("OPS packages missing from C1 uv.lock")
 
 
+def carry_missing_workspace_members(
+    out_root: pathlib.Path, ops02_root: pathlib.Path, c1_root: pathlib.Path
+) -> list[str]:
+    """Carry accepted predecessor workspace members that current main does not install.
+
+    OPS-03 C1 was built on top of accepted OPS-02. A pure delta application is not
+    sufficient when current canonical main intentionally records OPS acceptance
+    governance without installing every predecessor workspace package. The C2 lock
+    remains frozen, so every declared local workspace member must be physically
+    present. Missing members are copied byte-for-byte from accepted OPS-02 first,
+    with C1 as a fail-safe source only when the predecessor archive lacks the path.
+    Existing current-canonical paths are never overwritten here.
+    """
+    pyproject = out_root / "pyproject.toml"
+    with pyproject.open("rb") as fh:
+        data = tomllib.load(fh)
+    members = data.get("tool", {}).get("uv", {}).get("workspace", {}).get("members", [])
+    if not isinstance(members, list):
+        raise RuntimeError("tool.uv.workspace.members must be a list")
+
+    carried: list[str] = []
+    for member in members:
+        if not isinstance(member, str) or not member:
+            raise RuntimeError(f"invalid workspace member: {member!r}")
+        if any(ch in member for ch in "*?["):
+            # Existing repositories may use workspace globs. They are already
+            # represented in current main; do not guess a predecessor expansion.
+            continue
+        target = out_root / member
+        if target.exists():
+            continue
+        source: pathlib.Path | None = None
+        for root in (ops02_root, c1_root):
+            candidate = root / member
+            if candidate.exists() and candidate.is_dir():
+                source = candidate
+                break
+        if source is None:
+            raise RuntimeError(f"frozen workspace member missing from all governed inputs: {member}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, target, symlinks=False)
+        carried.append(member)
+
+    return carried
+
+
 def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathlib.Path) -> dict[str, object]:
     base, c1, ours = file_map(base_root), file_map(c1_root), file_map(out_root)
     added: list[str] = []
@@ -261,6 +307,9 @@ def main() -> int:
     shutil.copytree(main_root, out_root, symlinks=False)
 
     delta = apply_delta(ops02_root, c1_root, out_root)
+    delta["carried_predecessor_workspace"] = carry_missing_workspace_members(
+        out_root, ops02_root, c1_root
+    )
 
     for name in (".git", ".venv", ".pytest_cache", ".ruff_cache", ".mypy_cache"):
         shutil.rmtree(out_root / name, ignore_errors=True)
