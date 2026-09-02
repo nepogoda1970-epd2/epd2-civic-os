@@ -171,6 +171,8 @@ jobs:
           uv run --frozen ruff format $TARGETS
           uv run --frozen ruff check $TARGETS
           uv run --frozen ruff format --check $TARGETS
+          find . -type d -name .ruff_cache -prune -exec rm -rf {} +
+          ! find . -type d -name .ruff_cache -print -quit | grep -q .
           echo 'API05_RUFF:PASS'
 
       - name: Run complete API-05 C1 validator
