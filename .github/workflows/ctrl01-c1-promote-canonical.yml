@@ -1,0 +1,271 @@
+name: CTRL-01 C1 Canonical Promotion
+
+on:
+  push:
+    branches: ["ctrl01/canonical-c1"]
+    paths: [".github/workflows/ctrl01-c1-promote-canonical.yml"]
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  REPO: nepogoda1970-epd2/epd2-civic-os
+  BASE_MAIN: 217559b7f21c338d6fe8d4e4676082cd3840251c
+  ACCEPTANCE_RUN_ID: "33618683269"
+  ACCEPTANCE_WORKFLOW_COMMIT: 246824a099fd1e7359e79650a7107d7cfa8ddb43
+  BUILD_JOB_ID: "100210392348"
+  AUTHORITATIVE_JOB_ID: "100210596079"
+  CANDIDATE_ARTIFACT: ctrl01-c1-sealed-candidate-33618683269
+  AUTH_EVIDENCE_ARTIFACT: ctrl01-c1-authoritative-evidence-33618683269
+  CANDIDATE_FILE: EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip
+  CANDIDATE_SHA256: 07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5
+  CANDIDATE_SIZE: "190099"
+  P1_SHA256: 490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71
+  CANDIDATE_ARTIFACT_ID: "9842006799"
+  BUILD_EVIDENCE_ARTIFACT_ID: "9842007526"
+  AUTH_EVIDENCE_ARTIFACT_ID: "9842027832"
+  CANDIDATE_ARTIFACT_DIGEST: 12898d5a9ad7658aefe02c0ad62be4c91328e2420e41c7c56291647afd05dbb3
+  BUILD_EVIDENCE_ARTIFACT_DIGEST: a722f8a2bb614a69e089d63a14a494b3466588791ba1bc018d252bdd1c3d7b7e
+  AUTH_EVIDENCE_ARTIFACT_DIGEST: 4f4454f9cbdf17059882136ee7588e470e61458636795885adb8c74c03ae82ef
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Fail closed on canonical drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$BASE_MAIN"
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+
+      - name: Download exact independently accepted candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.CANDIDATE_ARTIFACT }}
+          path: ${{ runner.temp }}/candidate
+          repository: ${{ env.REPO }}
+          run-id: ${{ env.ACCEPTANCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Download exact authoritative evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.AUTH_EVIDENCE_ARTIFACT }}
+          path: ${{ runner.temp }}/evidence
+          repository: ${{ env.REPO }}
+          run-id: ${{ env.ACCEPTANCE_RUN_ID }}
+          github-token: ${{ github.token }}
+
+      - name: Verify acceptance evidence and sealed bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
+          test -f "$candidate"
+          test "$(sha256sum "$candidate" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c '%s' "$candidate")" = "$CANDIDATE_SIZE"
+          mkdir -p "$RUNNER_TEMP/extracted"
+          unzip -q "$candidate" -d "$RUNNER_TEMP/extracted"
+          root="$RUNNER_TEMP/extracted/EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt)
+          ROOT="$root" EVIDENCE="$RUNNER_TEMP/evidence/ctrl01_c1_authoritative_acceptance_result.json" python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          root = Path(os.environ["ROOT"])
+          identity = json.loads((root / "candidate_identity.json").read_text())
+          assert identity["self_state"] == "CANDIDATE_NOT_ACCEPTED", identity
+          assert identity["base_main_commit"] == os.environ["BASE_MAIN"], identity
+          assert identity["api06_state"] == "NEXT / NOT ACCEPTED", identity
+          assert identity["system_trial_preview"] == "CHECKPOINT_NOT_OPEN", identity
+          assert identity["ctrl_layer_state"] == "OPEN / NOT CLOSED", identity
+
+          evidence = json.loads(Path(os.environ["EVIDENCE"]).read_text())
+          assert evidence["conclusion"] == "PASS", evidence
+          assert evidence["candidate_sha256"] == os.environ["CANDIDATE_SHA256"], evidence
+          assert evidence["candidate_size"] == int(os.environ["CANDIDATE_SIZE"]), evidence
+          assert evidence["base_main"] == os.environ["BASE_MAIN"], evidence
+          assert evidence["run_id"] == int(os.environ["ACCEPTANCE_RUN_ID"]), evidence
+          assert evidence["job"] == "authoritative-review", evidence
+          assert evidence["gates"] == "22/22 PASS", evidence
+          assert evidence["mutations"] == "37/37 DETECTED", evidence
+          assert evidence["self_acceptance"] is False, evidence
+          assert set(evidence["unreconciled_dependencies"]) == {"API-06"}, evidence
+          assert evidence["system_trial_preview"] == "CHECKPOINT_NOT_OPEN / API-06 BLOCKED", evidence
+          assert evidence["ctrl_layer_state"] == "OPEN / NOT CLOSED", evidence
+          expected = f"CTRL01_C1_AUTHORITATIVE_RESULT:PASS:{os.environ['CANDIDATE_SHA256']}:{os.environ['CANDIDATE_SIZE']}"
+          assert evidence["terminal_marker"] == expected, evidence
+          PY
+
+      - name: Install exact accepted CTRL-01 bounded payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/extracted/EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1"
+          rm -rf services/control-plane-service docs/ctrl/CTRL-01 validation/ctrl01 validation/system_trial_preview
+          mkdir -p services docs/ctrl scripts validation
+          cp -a "$root/services/control-plane-service" services/control-plane-service
+          cp -a "$root/docs/ctrl/CTRL-01" docs/ctrl/CTRL-01
+          cp "$root/scripts/ctrl01_validator.py" scripts/ctrl01_validator.py
+          cp "$root/scripts/ctrl01_registry_export.py" scripts/ctrl01_registry_export.py
+          cp "$root/scripts/system_trial_preview_prepare.py" scripts/system_trial_preview_prepare.py
+          cp -a "$root/validation/ctrl01" validation/ctrl01
+          cp -a "$root/validation/system_trial_preview" validation/system_trial_preview
+
+      - name: Record post-run governance acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          record = {
+              "schema": "epd2.ctrl01.acceptance-record/1",
+              "stage": "CTRL-01 — Governed Control Plane",
+              "decision": "ACCEPTED / CLOSED",
+              "decision_date": "2026-09-02",
+              "authority": "Project Owner",
+              "scope": "BOUNDED_CTRL01_STAGE_ONLY",
+              "overall_ctrl_layer": "OPEN / NOT CLOSED",
+              "system_trial_preview": "CHECKPOINT_NOT_OPEN / API-06 BLOCKED",
+              "production_readiness": "NOT_ASSERTED",
+              "legal_activation": "NOT_ASSERTED",
+              "certification": "NOT_ASSERTED",
+              "candidate": {
+                  "file": "EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip",
+                  "sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+                  "size_bytes": 190099,
+                  "base_main": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+                  "p1_sha256": "490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71",
+                  "self_state_before_governance_decision": "CANDIDATE_NOT_ACCEPTED"
+              },
+              "authoritative_review": {
+                  "workflow": ".github/workflows/ctrl01-c1-canonical.yml",
+                  "workflow_commit": "246824a099fd1e7359e79650a7107d7cfa8ddb43",
+                  "run_id": 33618683269,
+                  "build_job_id": 100210392348,
+                  "authoritative_job_id": 100210596079,
+                  "conclusion": "PASS",
+                  "terminal_marker": "CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099",
+                  "candidate_artifact": {
+                      "name": "ctrl01-c1-sealed-candidate-33618683269",
+                      "id": 9842006799,
+                      "artifact_zip_sha256": "12898d5a9ad7658aefe02c0ad62be4c91328e2420e41c7c56291647afd05dbb3"
+                  },
+                  "build_evidence_artifact": {
+                      "name": "ctrl01-c1-build-evidence-33618683269",
+                      "id": 9842007526,
+                      "artifact_zip_sha256": "a722f8a2bb614a69e089d63a14a494b3466588791ba1bc018d252bdd1c3d7b7e"
+                  },
+                  "authoritative_evidence_artifact": {
+                      "name": "ctrl01-c1-authoritative-evidence-33618683269",
+                      "id": 9842027832,
+                      "artifact_zip_sha256": "4f4454f9cbdf17059882136ee7588e470e61458636795885adb8c74c03ae82ef"
+                  }
+              },
+              "verification": {
+                  "ruff": "PASS",
+                  "mypy": "PASS / 17 source files",
+                  "pytest_build": "178 passed",
+                  "pytest_authoritative": "178 passed",
+                  "governance_gates": "22/22 PASS",
+                  "mutations": "37/37 DETECTED",
+                  "commit_time_reauthorization_mutations": 43,
+                  "same_bytes_and_internal_sha256s": "PASS",
+                  "self_acceptance": False
+              },
+              "dependencies": {
+                  "API-06": "NEXT / NOT ACCEPTED; API layer remains open until API-06 closes"
+              },
+              "master_future_register": {
+                  "changed": False,
+                  "reason": "No FIR status promotion is requested or evidenced by bounded CTRL-01 C1 acceptance."
+              },
+              "nonclaims": [
+                  "overall CTRL layer closure",
+                  "System Trial Preview opening",
+                  "production readiness",
+                  "legal activation",
+                  "BSI/Common Criteria/EAL4 certification",
+                  "final security acceptance"
+              ]
+          }
+          out = Path("docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json")
+          out.write_text(json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+          PY
+
+      - name: Synchronize Program Control Register
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path("docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md")
+          text = p.read_text()
+          old = "| CTRL | `NOT_STARTED` | Control-plane specifications may be prepared; integrated closure follows OPS/INFRA. |"
+          new = "| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1 Governed Control Plane is accepted/closed. The overall CTRL layer remains open; API-06 remains NEXT / NOT ACCEPTED and System Trial Preview remains CHECKPOINT_NOT_OPEN. Later CTRL work and whole-layer closure remain separately governed. |"
+          if text.count(old) != 1:
+              raise SystemExit(f"unexpected CTRL row count: {text.count(old)}")
+          text = text.replace(old, new, 1)
+
+          marker = "\n\n## 2. Program phase state"
+          note = """
+
+**CTRL-01 authoritative acceptance and bounded stage closure (2026-09-02):** exact sealed candidate `EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip`, SHA-256 `07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5`, size `190,099` bytes, passed independent exact-byte GitHub Actions review in `.github/workflows/ctrl01-c1-canonical.yml`, authoritative run `33618683269`, build job `100210392348`, authoritative job `100210596079`, workflow commit `246824a099fd1e7359e79650a7107d7cfa8ddb43`, conclusion `success`. The independent replay verified the complete internal SHA-256 seal, locked dependencies, Ruff, mypy, `178/178` runtime tests, all `22/22` governed CTRL gates, `37/37` mutation attacks detected, and `43` commit-time reauthorization mutations. Terminal marker: `CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099`. Authoritative evidence artifact `ctrl01-c1-authoritative-evidence-33618683269`, artifact ID `9842027832`, artifact ZIP SHA-256 `4f4454f9cbdf17059882136ee7588e470e61458636795885adb8c74c03ae82ef`. The sealed candidate correctly retained `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded module by `docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json`. **CTRL-01 C1 is therefore `ACCEPTED / CLOSED` as a bounded Governed Control Plane stage.** The overall CTRL layer remains **OPEN / NOT CLOSED**. `API-06` remains `NEXT / NOT ACCEPTED`; the API layer remains open and System Trial Preview remains **CHECKPOINT_NOT_OPEN**. No production-readiness, legal-activation, BSI/Common Criteria/EAL4 or final-security claim follows.
+"""
+          if text.count(marker) != 1:
+              raise SystemExit(f"unexpected phase marker count: {text.count(marker)}")
+          text = text.replace(marker, note + marker, 1)
+          p.write_text(text)
+          PY
+
+      - name: Canonical consistency assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          record = json.loads(Path("docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json").read_text())
+          assert record["decision"] == "ACCEPTED / CLOSED"
+          assert record["scope"] == "BOUNDED_CTRL01_STAGE_ONLY"
+          assert record["overall_ctrl_layer"] == "OPEN / NOT CLOSED"
+          assert record["system_trial_preview"] == "CHECKPOINT_NOT_OPEN / API-06 BLOCKED"
+          assert record["authoritative_review"]["conclusion"] == "PASS"
+          assert record["verification"]["governance_gates"] == "22/22 PASS"
+          assert record["verification"]["mutations"] == "37/37 DETECTED"
+          assert record["verification"]["self_acceptance"] is False
+
+          pcr = Path("docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md").read_text()
+          assert "| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL LAYER OPEN` |" in pcr
+          assert "API-06` remains `NEXT / NOT ACCEPTED`" in pcr
+          assert "System Trial Preview remains **CHECKPOINT_NOT_OPEN**" in pcr
+          PY
+          git diff --check
+
+      - name: Commit governed canonical state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "epd2-governance-bot"
+          git config user.email "epd2-governance-bot@users.noreply.github.com"
+          git add services/control-plane-service docs/ctrl/CTRL-01 scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py validation/ctrl01 validation/system_trial_preview docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --cached --quiet && { echo "no canonical delta" >&2; exit 1; }
+          git commit -m "governance(ctrl01): accept and close bounded CTRL-01 C1"
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN"
+          git push origin HEAD:main
+          echo "CTRL01_C1_CANONICAL_PROMOTION:PASS:$(git rev-parse HEAD)"
