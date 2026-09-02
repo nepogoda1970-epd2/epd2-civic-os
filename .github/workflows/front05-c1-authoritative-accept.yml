@@ -79,6 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/run_front05_verification.py --root .
+          rm -rf node_modules frontend/representative-workspace/node_modules frontend/representative-workspace/.next frontend/representative-workspace/test-results frontend/representative-workspace/playwright-report
           python3 scripts/build_front05_report.py .
           python3 scripts/validate_front05.py . --output validation/front05/authoritative_preseal_result.json | tee /tmp/front05-validator-before-mutations.log
           python3 scripts/run_front05_mutations.py --root . --output validation/front05/mutation_report.json | tee /tmp/front05-mutations.log
