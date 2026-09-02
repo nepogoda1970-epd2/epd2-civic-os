@@ -1,0 +1,208 @@
+name: OPS-02 C2 Reconcile Build v2
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: ['.github/workflows/ops02-c2-reconcile-build-v2.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile-build:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      C1: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip
+      ENTERING_C1: 2878c3bbfeb11328adf294a2b59d631b851b43dd
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: '5432'
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: '5432'
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: handoff/ops
+
+      - name: Reconcile exact C1 implementation delta onto current canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence c1
+          git fetch origin main
+          BASE=$(git rev-parse origin/main)
+          TREE=$(git rev-parse origin/main^{tree})
+          echo "$BASE" | tee evidence/base-main.commit
+          echo "$TREE" | tee evidence/base-main.tree
+          git merge-base --is-ancestor "$ENTERING_C1" "$BASE"
+          sha256sum "$C1" | tee evidence/c1.sha256
+          test "$(sha256sum "$C1" | awk '{print $1}')" = "495ed0bfc5168b20455005d8d53ea15b906ba1367e803c327c2f3ae046262b6b"
+          unzip -t "$C1" > evidence/c1-unzip-test.log
+          unzip -q "$C1" -d c1
+          ROOT=c1
+          n=$(find c1 -mindepth 1 -maxdepth 1 -type d | wc -l); f=$(find c1 -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$n" -eq 1 ] && [ "$f" -eq 0 ]; then ROOT=$(find c1 -mindepth 1 -maxdepth 1 -type d | head -n1); fi
+          echo "$ROOT" > evidence/c1-root.txt
+          git worktree add --detach entering "$ENTERING_C1"
+          git worktree add -b tmp/ops02-c2-local work "$BASE"
+          ROOT="$ROOT" BASE="$BASE" TREE="$TREE" python - <<'PY' | tee evidence/reconciliation.json
+          import os,json,hashlib,shutil,subprocess
+          from pathlib import Path
+          root=Path(os.environ['ROOT']); entering=Path('entering'); work=Path('work')
+          base=os.environ['BASE']; tree=os.environ['TREE']
+          def inv(p):
+              d={}
+              for f in p.rglob('*'):
+                  if not f.is_file(): continue
+                  rel=f.relative_to(p).as_posix()
+                  if rel=='.git' or rel.startswith('.git/'): continue
+                  d[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+              return d
+          a,b=inv(entering),inv(root)
+          added=sorted(set(b)-set(a)); deleted=sorted(set(a)-set(b)); modified=sorted(k for k in set(a)&set(b) if a[k]!=b[k])
+          counts={'added':len(added),'modified':len(modified),'deleted':len(deleted)}
+          assert counts=={'added':111,'modified':5,'deleted':0}, counts
+          advanced=set(subprocess.check_output(['git','diff','--name-only',f"{os.environ.get('ENTERING_C1','2878c3bbfeb11328adf294a2b59d631b851b43dd')}..{base}"],text=True).splitlines())
+          delta=set(added)|set(modified)|set(deleted)
+          overlap=sorted(delta & advanced)
+          if overlap: raise SystemExit('SOURCE_DELTA_CONFLICT: '+', '.join(overlap))
+          candidate_only={'CANDIDATE_NOT_ACCEPTED','OPS02_BSI_READINESS_DISPOSITION.json','OPS02_CANDIDATE_SELF_STATE.json','OPS02_FREEZE_MANIFEST.json','OPS02_PREVIEW_READINESS_PREREQUISITES.json'}
+          for rel in added+modified:
+              if rel in candidate_only: continue
+              dst=work/rel; dst.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(root/rel,dst)
+          for rel in deleted:
+              if rel in candidate_only: continue
+              p=work/rel
+              if p.exists(): p.unlink()
+          p=work/'docs/ops/OPS-02/OPS02_ENTERING_BASELINE_IDENTITY.json'
+          x=json.loads(p.read_text())
+          x['entering_main_commit']=base; x['entering_main_tree']=tree
+          x['canonical_advanced_since_assignment']=True
+          x['canonical_advance_reconciliation']='C2 freshness reconciliation: exact C1 implementation delta replayed without overlap onto canonical main '+base+'; current canonical authority and concurrent accepted stage records are preserved.'
+          x['accepted_api04_candidate_sha256']='8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337'
+          x['api_state_at_entry']='API-01/02/03/04 ACCEPTED/CLOSED; API-05 ACTIVE / IN DEVELOPMENT / NOT ACCEPTED; API layer OPEN'
+          x['recorded_at']='2026-09-02'
+          p.write_text(json.dumps(x,indent=2)+'\n')
+          r=work/'docs/ops/OPS-02/OPS02_OPS01_RECONCILIATION.json'
+          y=json.loads(r.read_text())
+          y['binding']='OPS-02 C2 carries accepted OPS-01 C2 and replays exact OPS-02 C1 implementation delta onto canonical main '+base+'.'
+          y['recorded_at']='2026-09-02'
+          for item in y.get('changed_accepted_files',[]):
+              if item.get('path')=='docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md':
+                  item['sha256_ops02']=hashlib.sha256((work/item['path']).read_bytes()).hexdigest()
+                  item['reason']='C2 preserves current canonical PCR from main@'+base+'; this is not an OPS-02 implementation edit.'
+          r.write_text(json.dumps(y,indent=2,sort_keys=True)+'\n')
+          for rel in ['docs/ops/OPS-02/OPS02_DEVELOPER_REPORT.md','docs/ops/OPS-02/OPS02_KNOWN_LIMITATIONS.md']:
+              q=work/rel; s=q.read_text()
+              if '## C2 canonical-freshness reconciliation' not in s:
+                  s += '\n\n## C2 canonical-freshness reconciliation\n\nC2 changes no OPS-02 runtime control. The exact C1 implementation delta was replayed without overlap onto canonical main `'+base+'`. API-05 is active; API-06 and API-layer closure remain governance prerequisites for opening the System Trial Preview.\n'
+              q.write_text(s)
+          s=work/'scripts/ops02/seal_candidate.py'; t=s.read_text()
+          t=t.replace('CANDIDATE_0.1_C1.zip','CANDIDATE_0.1_C2.zip').replace('OPS02_C1_CANDIDATE_IDENTITY.json','OPS02_C2_CANDIDATE_IDENTITY.json').replace('OPS02_C1_PREACCEPTANCE_PROVENANCE.txt','OPS02_C2_PREACCEPTANCE_PROVENANCE.txt')
+          s.write_text(t)
+          print(json.dumps({'base_main':base,'base_tree':tree,'delta_counts':counts,'canonical_advanced_paths':sorted(advanced),'overlap':overlap,'classification':'NO_SOURCE_DELTA_CONFLICT'},indent=2))
+          PY
+
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Verify reconciled source before seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work
+          uv sync --all-groups --frozen
+          uv run ruff format --check packages/python/epd2-preview tests/ops02 scripts/validation/validate_ops02.py scripts/ops02
+          uv run ruff check packages/python/epd2-preview tests/ops02 scripts/validation/validate_ops02.py scripts/ops02
+          uv run mypy packages/python/epd2-preview/src scripts/validation scripts/ops02
+          uv run mypy packages/python/epd2-preview/tests
+          uv run mypy tests/ops02
+          uv run pytest -q packages/python/epd2-preview/tests tests/ops02 | tee ../evidence/preseal-tests.log
+          uv run python scripts/validation/validate_ops02.py | tee ../evidence/preseal-validator.log
+
+      - name: Commit exact source and create reproducible source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work
+          git config user.name 'EPD2 OPS-02 reconciliation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'build(ops02): reconcile C1 onto canonical main for C2'
+          SRC=$(git rev-parse HEAD); TREE=$(git rev-parse HEAD^{tree}); BASE=$(cat ../evidence/base-main.commit)
+          echo "$SRC" | tee ../evidence/c2-source.commit
+          echo "$TREE" | tee ../evidence/c2-source.tree
+          test -z "$(git status --porcelain)"
+          git bundle create ../evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle HEAD ^"$BASE"
+          git bundle verify ../evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle | tee ../evidence/source-bundle-verify.log
+          sha256sum ../evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle | tee ../evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle.sha256
+
+      - name: Seal exact C2 with candidate-native protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work
+          uv run python scripts/ops02/seal_candidate.py --output dist | tee ../evidence/seal.log
+          sha256sum dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip | tee ../evidence/c2.sha256
+          stat -c '%s' dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip | tee ../evidence/c2.size
+          unzip -t dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip > ../evidence/c2-unzip-test.log
+
+      - name: Verify exact extracted C2 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir extracted-c2
+          unzip -q work/dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip -d extracted-c2
+          cd extracted-c2
+          uv sync --all-groups --frozen
+          uv run pytest -q packages/python/epd2-preview/tests tests/ops02 | tee ../evidence/extracted-tests.log
+          uv run python scripts/validation/validate_ops02.py | tee ../evidence/extracted-validator.log
+          cp validation/ops02/ops02_acceptance_result.json ../evidence/extracted-acceptance-result.json
+          cp OPS02_BSI_READINESS_DISPOSITION.json ../evidence/c2-bsi.json
+          cp OPS02_PREVIEW_READINESS_PREREQUISITES.json ../evidence/c2-preview.json
+          cp OPS02_CANDIDATE_SELF_STATE.json ../evidence/c2-self-state.json
+          cp OPS02_FREEZE_MANIFEST.json ../evidence/c2-freeze.json
+
+      - name: Publish exact C2 and source bundle to OPS handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp work/dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip handoff/OPS/incoming/
+          cp work/dist/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip.sha256 handoff/OPS/incoming/
+          cp work/dist/OPS02_C2_CANDIDATE_IDENTITY.json handoff/OPS/incoming/
+          cp work/dist/OPS02_C2_PREACCEPTANCE_PROVENANCE.txt handoff/OPS/incoming/
+          cp evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle handoff/OPS/incoming/
+          cp evidence/EPD2_OPS02_C2_SOURCE_DELTA.bundle.sha256 handoff/OPS/incoming/
+          git config user.name 'EPD2 OPS-02 reconciliation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C2.zip.sha256 handoff/OPS/incoming/OPS02_C2_CANDIDATE_IDENTITY.json handoff/OPS/incoming/OPS02_C2_PREACCEPTANCE_PROVENANCE.txt handoff/OPS/incoming/EPD2_OPS02_C2_SOURCE_DELTA.bundle handoff/OPS/incoming/EPD2_OPS02_C2_SOURCE_DELTA.bundle.sha256
+          git commit -m 'handoff(ops02): publish reconciled sealed C2 candidate'
+          git push origin HEAD:handoff/ops
+          git rev-parse HEAD | tee evidence/handoff-publish.commit
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ops02-c2-reconcile-build-v2-${{ github.run_id }}
+          path: |
+            evidence/
+            work/dist/
+          if-no-files-found: error
