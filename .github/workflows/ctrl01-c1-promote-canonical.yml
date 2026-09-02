@@ -40,8 +40,10 @@ jobs:
           set -euo pipefail
           git fetch origin main
           trigger="$(git rev-parse HEAD)"
-          test "$(git rev-parse HEAD^)" = "$BASE_MAIN"
           test "$(git rev-parse origin/main)" = "$trigger"
+          git merge-base --is-ancestor "$BASE_MAIN" HEAD
+          extras="$(git diff --name-only "$BASE_MAIN"..HEAD | grep -v '^\.github/workflows/ctrl01-c1-promote-canonical\.yml$' || true)"
+          test -z "$extras" || { echo "unexpected canonical drift before promotion:" >&2; echo "$extras" >&2; exit 1; }
           echo "PROMOTION_TRIGGER_COMMIT=$trigger" >> "$GITHUB_ENV"
 
       - name: Download exact independently accepted candidate
