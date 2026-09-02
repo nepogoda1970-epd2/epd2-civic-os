@@ -1,0 +1,220 @@
+name: CTRL-01 C1 Canonical Reconciliation and Acceptance
+
+on:
+  push:
+    branches: ["ctrl01/canonical-c1"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BASE_MAIN: 217559b7f21c338d6fe8d4e4676082cd3840251c
+  P1_SHA256: 490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71
+  CANDIDATE_FILE: EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip
+
+jobs:
+  build-sealed-candidate:
+    runs-on: ubuntu-24.04
+    outputs:
+      candidate_sha256: ${{ steps.identity.outputs.sha256 }}
+      candidate_size: ${{ steps.identity.outputs.size }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+      - name: Fetch exact P1 transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/ctrl:refs/remotes/origin/handoff/ctrl
+          git show origin/handoff/ctrl:handoff/CTRL/incoming/EPD2_CTRL01_AND_SYSTEM_TRIAL_PREP_PRESEAL_0.1_P1.zip > "$RUNNER_TEMP/p1.zip"
+          test "$(sha256sum "$RUNNER_TEMP/p1.zip" | awk '{print $1}')" = "$P1_SHA256"
+      - name: Reconcile P1 onto pinned canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/work" "$BASE_MAIN"
+          python scripts/ctrl01_c1_reconcile_builder.py overlay --p1 "$RUNNER_TEMP/p1.zip" --repo "$RUNNER_TEMP/work"
+      - name: Locked environment
+        working-directory: ${{ runner.temp }}/work
+        run: uv sync --all-groups --frozen
+      - name: Quality and CTRL-01 tests
+        working-directory: ${{ runner.temp }}/work
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format --check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
+          uv run ruff check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
+          uv run mypy services/control-plane-service/src/epd2_control_plane_service
+          uv run pytest services/control-plane-service/tests -q | tee "$RUNNER_TEMP/ctrl01-tests-build.log"
+      - name: Generate governed evidence and record freeze
+        working-directory: ${{ runner.temp }}/work
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run python scripts/ctrl01_registry_export.py
+          uv run python scripts/system_trial_preview_prepare.py
+          uv run python scripts/ctrl01_validator.py --record-freeze | tee "$RUNNER_TEMP/ctrl01-record-freeze.log"
+          uv run python scripts/ctrl01_validator.py | tee "$RUNNER_TEMP/ctrl01-build-validator.log"
+          grep -q 'CTRL01_RESULT:PASS:' "$RUNNER_TEM@/ctrl01-build-validator.log"
+          python - <<'PY'
+          import json
+          d=json.load(open('validation/ctrl01/ctrl01_preseal_result.json'))
+          assert d['overall']=='PASS' and d['gates_total']==22 and d['gates_passed']==22 and d['gates_failed']==0 and d['gates_skipped']==0, d
+          dep=json.load(open('validation/ctrl01/dependency_reconciliation.json'))
+          assert set(dep['unreconciled_dependencies'])=={'API-06'}, dep['unreconciled_dependencies']
+          assert not dep['observed_governance_conflicts'], dep['observed_governance_conflicts']
+          PY
+      - name: Package exact C1 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ctrl01_c1_reconcile_builder.py package --repo "$RUNNER_TEMP/work" --out "$RUNNER_TEMP/$CANDIDATE_FILE" --run-id "$GITHUB_RUN_ID" | tee "$RUNNER_TEMP/candidate-build.json"
+      - id: identity
+        name: Bind candidate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(sha256sum "$RUNNER_TEMP/$CANDIDATE_FILE" | awk '{print $1}')"
+          size="$(stat -c '%s' "$RUNNER_TEMP/$CANDIDATE_FILE")"
+          echo "sha256=$sha" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'CTRL01_C1_BUILD_RESULT:PASS:%s:%s\n' "$sha" "$size"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ctrl01-c1-sealed-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ctrl01-c1-build-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/ctrl01-tests-build.log
+            ${{ runner.temp }}/ctrl01-record-freeze.log
+            ${{ runner.temp }}/ctrl01-build-validator.log
+            ${{ runner.temp }}/candidate-build.json
+            ${{ runner.temp }}/work/validation/ctrl01
+            ${{ runner.temp }}/work/validation/system_trial_preview
+          if-no-files-found: error
+          retention-days: 90
+
+  authoritative-review:
+    needs: build-sealed-candidate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+      - uses: actions/download-artifact@v4
+        with:
+          name: ctrl01-c1-sealed-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/candidate
+      - name: Exact transport and complete internal seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
+          sha="$(sha255sum "$candidate" | awk '{print $1}')"
+          size="$(stat -c '%s' "$candidate")"
+          test "$sha" = "${{ needs.build-sealed-candidate.outputs.candidate_sha256 }}"
+          test "$size" = "${{ needs.build-sealed-candidate.outputs.candidate_size }}"
+          mkdir -p "$RUNNER_TEMP/extracted"
+          unzip -q "$candidate" -d "$RUNNER_TEMP/extracted"
+          root="$RUNNER_TEMP/extracted/EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt)
+          ROOT="$root" python - <<'PY'
+          import json, os
+          from pathlib import Path
+          r=Path(os.environ['ROOT'])
+          d=json.loads((r/'candidate_identity.json').read_text())
+          assert d['self_state']=='CANDIDATE_NOT_ACCEPTED', d
+          assert d['base_main_commit']==os.environ['BASE_MAIN'], d
+          assert d['api06_state']=='NEXT / NOT ACCEPTED', d
+          assert d['system_trial_preview']=='CHECKPOINT_NOT_OPEN', d
+          PY
+      - name: Reconstruct exact base plus sealed candidate delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach "$RUNNER_TEMP/review" "$BASE_MAIN"
+          root="$RUNNER_TEMP/extracted/EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1"
+          cp -a "$root/services/control-plane-service" "$RUNNER_TEMP/review/services/"
+          cp -a "$root/docs/ctrl" "$RUNNER_TEMP/review/docs/"
+          cp "$root/scripts/ctrl01_validator.py" "$RUNNER_TEMP/review/scripts/"
+          cp "$root/scripts/ctrl01_registry_export.py" "$RUNNER_TEMP/review/scripts/"
+          cp "$root/scripts/system_trial_preview_prepare.py" "$RUNNER_TEMP/review/scripts/"
+          mkdir -p "$RUNNER_TEMP/review/validation/ctrl01"
+          cp "$root/validation/ctrl01/freeze_manifest.json" "$RUNNER_TEMP/review/validation/ctrl01/freeze_manifest.json"
+      - name: Independent locked execution
+        working-directory: ${{ runner.temp }}/review
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          uv run ruff format --check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
+          uv run ruff check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
+          uv run mypy services/control-plane-service/src/epd2_control_plane_service
+          uv run pytest services/control-plane-service/tests -q | tee "$RUNNER_TEMP/ctrl01-tests-authoritative.log"
+          uv run python scripts/ctrl01_registry_export.py
+          uv run python scripts/system_trial_preview_prepare.py
+          uv run python scripts/ctrl01_validator.py | tee "$RUNNER_TEMP/ctrl01-authoritative-validator.log"
+          grep -q 'CTRL01_RESULT:PASS:' "$RUNNER_TEMP/ctrl01-authoritative-validator.log"
+      - name: Authoritative evidence assertions
+        working-directory: ${{ runner.temp }}/review
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/authoritative-evidence"
+          CAND_SHA="$(sha256sum "$RUNNER_TEMP/candidate/$CANDIDATE_FILE" | awk '{print $1}')" \
+          CAND_SIZE="$(stat -c '%s' "$RUNNER_TEMP/candidate/$CANDIDATE_FILE")" \
+          python - <<'PY'
+          import hashlib, json, os, pathlib
+          v=pathlib.Path('validation/ctrl01')
+          r=json.loads((v/'ctrl01_preseal_result.json').read_text())
+          dep=json.loads((v/'dependency_reconciliation.json').read_text())
+          mut=json.loads((v/'mutation_result.json').read_text())
+          rea=json.loads((v/'commit_time_reauthorization_result.json').read_text())
+          assert r['overall']=='PASS' and r['gates_total']==22 and r['gates_passed']===22 and not r['gates_failed'], r
+          assert not dep['observed_governance_conflicts'], dep['observed_governance_conflicts']
+          assert set(dep['unreconciled_dependencies'])=={'API-06'}, dep['unreconciled_dependencies']
+          assert mut['undetected']==[] and mut['detected']==mut['mutations_total'], mut
+          result={
+            'schema':'epd2.ctrl01.authoritative-acceptance-result/1',
+            'stage':'CTRL-01','candidate_sha256':os.environ['CAND_SHA'],'candidate_size':int(os.environ['CAND_SIZE']),
+            'base_main':os.environ['BASE_MAIN'],'run_id':int(os.environ['GITHUB_RUN_ID']),
+            'job':'authoritative-review','conclusion':'PASS','gates':'22/22 PASS',
+            'mutations':f"{mut['detected']}/{mut['mutations_total']} DETECTED",
+            'commit_time_reauthorization':rea,
+            'unreconciled_dependencies':dep['unreconciled_dependencies'],
+            'system_trial_preview':'CHECKPOINT_NOT_OPEN / API-06 BLOCKED',
+            'self_acceptance':False,
+            'terminal_marker':f"CTRL01_C1_AUTHORITATIVE_RESULT:PASS:{os.environ['CAND_SHA']}:{os.environ['CAND_SIZE']}"
+          }
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'authoritative-evidence'/'ctrl01_c1_authoritative_acceptance_result.json'
+          out.write_text(json.dumps(result,indent=2)+'\n')
+          print(result['terminal_marker'])
+          PY
+          cp "$RUNNER_TEMP/ctrl01-tests-authoritative.log" "$RUNNER_TEMP/authoritative-evidence/"
+          cp "$RUNNER_TEMP/ctrl01-authoritative-validator.log" "$RUNNER_TEMP/authoritative-evidence/"
+          cp -a validation/ctrl01 "$RUNNER_TEMP/authoritative-evidence/validation-ctrl01"
+          cp -a validation/system_trial_preview "$RUNNER_TEMP/authoritative-evidence/validation-system-trial-preview"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ctrl01-c1-authoritative-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/authoritative-evidence
+          if-no-files-found: error
+          retention-days: 90
