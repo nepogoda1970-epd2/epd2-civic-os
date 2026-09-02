@@ -14,6 +14,7 @@ PROTECTED_PREFIXES = (
     "docs/api/API-06/",
     "docs/ctrl/CTRL-01/",
     "docs/roadmap/",
+    "scripts/check_repository.py",
     "Makefile",
 )
 EXCLUDED_FREEZE_PREFIXES = (
