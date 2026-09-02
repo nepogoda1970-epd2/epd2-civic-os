@@ -1,0 +1,91 @@
+{
+  "schema": "epd2.infra02.acceptance-record/1",
+  "stage": "INFRA-02 — CI/CD & Software Supply-Chain Integrity",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-02",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Independent exact-byte authoritative GitHub acceptance plus post-run governance reconciliation.",
+  "scope": {
+    "bounded_stage": "INFRA-02",
+    "overall_infra_layer": "OPEN",
+    "primary_program_stage_unchanged": "API-06 NEXT"
+  },
+  "entering_canonical_main": {
+    "repository": "nepogoda1970-epd2/epd2-civic-os",
+    "branch": "main",
+    "commit": "4b95cc952897bd78fe912a2737f53e66264d6ff1"
+  },
+  "candidate": {
+    "filename": "EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip",
+    "sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+    "size_bytes": 15980332,
+    "git_blob_sha1": "bc08c9d3b27cc580d7598b5b63b4c1bd37ded54d",
+    "source_commit": "3e27fa7b427d252a4fcbe4d093139bd1bd14219f",
+    "source_tree": "63a675e7cf9593ed623bf1aa926bd4876c453e8f",
+    "freeze_tree_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+    "archive_member_count": 1496,
+    "source_file_count": 1494,
+    "candidate_self_acceptance": false
+  },
+  "predecessor": {
+    "stage": "INFRA-01 C3",
+    "filename": "EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip",
+    "sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+    "size_bytes": 15854311,
+    "authoritative_candidate_artifact_id": 9819612258
+  },
+  "authoritative_review": {
+    "workflow": "INFRA-02 Independent Authoritative Review",
+    "run_id": 33574647511,
+    "job_id": 100075828121,
+    "conclusion": "success",
+    "freshness_target_commit": "b359c575b224727a9b69cabc1ea3f3bf63a2f64c",
+    "freshness_target_tree": "04891ced573661614a6e288a816dd71ce645d7ad",
+    "exact_transport": "PASS",
+    "seal_hygiene": "PASS",
+    "predecessor_delta": {
+      "added": 35,
+      "modified": 11,
+      "removed": 0,
+      "unchanged": 1450
+    },
+    "targeted_tests": "146/146 PASS",
+    "canonical_harness": "51/51 PASS; 0 FAIL; 0 BLOCKED",
+    "evidence_verification": "INFRA01_EVIDENCE_RESULT:PASS",
+    "package_content_identity": "INFRA02_PACKAGE_CONTENT_IDENTITY:PASS:1496",
+    "terminal_marker": "INFRA02_AUTHORITATIVE_RESULT:PASS:d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c:15980332",
+    "evidence_artifact": {
+      "name": "infra02-authoritative-evidence-33574647511",
+      "id": 9826333069,
+      "wrapper_sha256": "4fada409e8fe58f861a0615e2606d5e26615e815b2da6126f430a583b045e5b1"
+    },
+    "candidate_artifact": {
+      "name": "infra02-authoritative-candidate-33574647511",
+      "id": 9826333641,
+      "wrapper_sha256": "69bdcf1210f7ef371513f41d22d32bed42bf25ab81dd2aa5a244aca95ec17ab6"
+    }
+  },
+  "post_run_reconciliation": {
+    "authoritative_gate_main": "b359c575b224727a9b69cabc1ea3f3bf63a2f64c",
+    "governance_decision_main": "4b95cc952897bd78fe912a2737f53e66264d6ff1",
+    "concurrent_commits": [
+      "2b840017e8cdabcb9af78e3ae25f79e7e75c73f8",
+      "4b95cc952897bd78fe912a2737f53e66264d6ff1"
+    ],
+    "changed_paths": [
+      "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md",
+      "scripts/api05_governance_close.py"
+    ],
+    "classification": "NO_INFRA02_CONTROLLING_CONFLICT",
+    "disposition": "Preserve newer API-05 ACCEPTED/CLOSED and API-06 NEXT state; record INFRA-02 acceptance on top without resealing the accepted candidate."
+  },
+  "open_blockers": [],
+  "exclusions": [
+    "This decision closes only bounded INFRA-02; it does not close the overall INFRA layer.",
+    "It does not accept or close INFRA-03 through INFRA-07.",
+    "It does not close the API layer or change API-06 from NEXT.",
+    "It does not select a hosting provider or establish production secrets/key custody.",
+    "It is not a production-readiness or legal-activation decision.",
+    "It is not BSI/Common-Criteria/EAL4 or final security certification."
+  ]
+}
