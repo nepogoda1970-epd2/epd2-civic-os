@@ -29,6 +29,8 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.12.5"
+      - name: Validate reconciliation builder
+        run: python -m py_compile scripts/ctrl01_c1_reconcile_builder.py
       - name: Fetch exact P1 transport
         shell: bash
         run: |
@@ -63,7 +65,7 @@ jobs:
           uv run python scripts/system_trial_preview_prepare.py
           uv run python scripts/ctrl01_validator.py --record-freeze | tee "$RUNNER_TEMP/ctrl01-record-freeze.log"
           uv run python scripts/ctrl01_validator.py | tee "$RUNNER_TEMP/ctrl01-build-validator.log"
-          grep -q 'CTRL01_RESULT:PASS:' "$RUNNER_TEM@/ctrl01-build-validator.log"
+          grep -q 'CTRL01_RESULT:PASS:' "$RUNNER_TEMP/ctrl01-build-validator.log"
           python - <<'PY'
           import json
           d=json.load(open('validation/ctrl01/ctrl01_preseal_result.json'))
@@ -128,7 +130,7 @@ jobs:
         run: |
           set -euo pipefail
           candidate="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
-          sha="$(sha255sum "$candidate" | awk '{print $1}')"
+          sha="$(sha256sum "$candidate" | awk '{print $1}')"
           size="$(stat -c '%s' "$candidate")"
           test "$sha" = "${{ needs.build-sealed-candidate.outputs.candidate_sha256 }}"
           test "$size" = "${{ needs.build-sealed-candidate.outputs.candidate_size }}"
@@ -145,6 +147,7 @@ jobs:
           assert d['base_main_commit']==os.environ['BASE_MAIN'], d
           assert d['api06_state']=='NEXT / NOT ACCEPTED', d
           assert d['system_trial_preview']=='CHECKPOINT_NOT_OPEN', d
+          assert d['ctrl_layer_state']=='OPEN / NOT CLOSED', d
           PY
       - name: Reconstruct exact base plus sealed candidate delta
         shell: bash
@@ -182,30 +185,36 @@ jobs:
           CAND_SHA="$(sha256sum "$RUNNER_TEMP/candidate/$CANDIDATE_FILE" | awk '{print $1}')" \
           CAND_SIZE="$(stat -c '%s' "$RUNNER_TEMP/candidate/$CANDIDATE_FILE")" \
           python - <<'PY'
-          import hashlib, json, os, pathlib
+          import json, os, pathlib
           v=pathlib.Path('validation/ctrl01')
           r=json.loads((v/'ctrl01_preseal_result.json').read_text())
           dep=json.loads((v/'dependency_reconciliation.json').read_text())
           mut=json.loads((v/'mutation_result.json').read_text())
           rea=json.loads((v/'commit_time_reauthorization_result.json').read_text())
-          assert r['overall']=='PASS' and r['gates_total']==22 and r['gates_passed']===22 and not r['gates_failed'], r
+          assert r['overall']=='PASS' and r['gates_total']==22 and r['gates_passed']==22 and r['gates_failed']==0 and r['gates_skipped']==0, r
           assert not dep['observed_governance_conflicts'], dep['observed_governance_conflicts']
           assert set(dep['unreconciled_dependencies'])=={'API-06'}, dep['unreconciled_dependencies']
           assert mut['undetected']==[] and mut['detected']==mut['mutations_total'], mut
           result={
             'schema':'epd2.ctrl01.authoritative-acceptance-result/1',
-            'stage':'CTRL-01','candidate_sha256':os.environ['CAND_SHA'],'candidate_size':int(os.environ['CAND_SIZE']),
-            'base_main':os.environ['BASE_MAIN'],'run_id':int(os.environ['GITHUB_RUN_ID']),
-            'job':'authoritative-review','conclusion':'PASS','gates':'22/22 PASS',
+            'stage':'CTRL-01',
+            'candidate_sha256':os.environ['CAND_SHA'],
+            'candidate_size':int(os.environ['CAND_SIZE']),
+            'base_main':os.environ['BASE_MAIN'],
+            'run_id':int(os.environ['GITHUB_RUN_ID']),
+            'job':'authoritative-review',
+            'conclusion':'PASS',
+            'gates':'22/22 PASS',
             'mutations':f"{mut['detected']}/{mut['mutations_total']} DETECTED",
             'commit_time_reauthorization':rea,
             'unreconciled_dependencies':dep['unreconciled_dependencies'],
             'system_trial_preview':'CHECKPOINT_NOT_OPEN / API-06 BLOCKED',
+            'ctrl_layer_state':'OPEN / NOT CLOSED',
             'self_acceptance':False,
             'terminal_marker':f"CTRL01_C1_AUTHORITATIVE_RESULT:PASS:{os.environ['CAND_SHA']}:{os.environ['CAND_SIZE']}"
           }
           out=pathlib.Path(os.environ['RUNNER_TEMP'])/'authoritative-evidence'/'ctrl01_c1_authoritative_acceptance_result.json'
-          out.write_text(json.dumps(result,indent=2)+'\n')
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
           print(result['terminal_marker'])
           PY
           cp "$RUNNER_TEMP/ctrl01-tests-authoritative.log" "$RUNNER_TEMP/authoritative-evidence/"
