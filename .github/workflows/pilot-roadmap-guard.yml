@@ -44,4 +44,4 @@ jobs:
         env:
           CTRL01_CANDIDATE_DIR: ${{ runner.temp }}/ctrl01-candidate
           CTRL01_EVIDENCE_DIR: ${{ runner.temp }}/ctrl01-evidence
-        run: python scripts/ctrl01_canonical_promote.py
+        run: python scripts/ctrl01_canonical_promote_fix.py
