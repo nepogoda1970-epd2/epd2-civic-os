@@ -116,6 +116,22 @@ jobs:
           unzip -q -o packages/python/epd2-s2s-crypto/wheelhouse/cryptography-49.0.0-cp311-abi3-manylinux_2_34_x86_64.whl -d .api03-crypto
           echo "API06_API03_CRYPTO_PATH=$PWD/.api03-crypto" >> "$GITHUB_ENV"
 
+      - name: Provision accepted API-04 live regression environment
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          source scripts/api04_ci_setup.sh "$PWD"
+          test -s "$API04_BROKER_TLS_BINDINGS"
+          test -s "$API04_BROKER_SECRETS"
+          python3 - "$API04_BROKER_TLS_BINDINGS" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert 'membership-service' in d and d['membership-service'].get('fingerprint')
+          assert all(v.get('fingerprint') for v in d.values())
+          print(f'API06_API04_RUNTIME_BINDINGS:PASS:{len(d)}')
+          PY
+
       - name: Re-run complete authoritative API-06 40-gate validator
         shell: bash
         working-directory: ${{ steps.candidate.outputs.root }}
