@@ -47,9 +47,13 @@ jobs:
       - name: Locked environment
         working-directory: ${{ runner.temp }}/work
         run: uv sync --all-groups --frozen
-      - name: Canonicalize generated Python formatting
+      - name: Canonicalize safe source style fixes
         working-directory: ${{ runner.temp }}/work
-        run: uv run ruff format scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py services/control-plane-service
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff check --fix --exit-zero services/control-plane-service
+          uv run ruff format scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py services/control-plane-service
       - name: Quality and CTRL-01 tests
         working-directory: ${{ runner.temp }}/work
         shell: bash
