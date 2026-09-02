@@ -1,0 +1,37 @@
+name: API-05 governance closure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/api05-governance-close.yml
+
+permissions:
+  contents: write
+
+jobs:
+  close:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Patch canonical control state
+        run: python3 scripts/api05_governance_close.py
+
+      - name: Commit canonical closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "epd2-governance-bot"
+          git config user.email "epd2-governance-bot@users.noreply.github.com"
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --cached --quiet && { echo "no governance delta"; exit 1; } || true
+          git commit -m "governance(api05): close API-05 and advance API-06 to NEXT"
+          git push origin HEAD:main
+
+      - name: Result
+        run: echo API05_GOVERNANCE_CLOSURE_PASS
