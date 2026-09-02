@@ -10,27 +10,29 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect exact CTRL-02 candidate
+        with:
+          ref: handoff/ctrl
+      - name: Inspect exact CTRL-02 candidate and persist evidence
         shell: bash
         run: |
           set -euo pipefail
           ZIP='handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
-          test -f "$ZIP"
-          sha256sum "$ZIP"
-          stat -c 'SIZE=%s' "$ZIP"
+          OUT='handoff/CTRL/evidence/CTRL02_DISCOVERY.txt'
+          mkdir -p "$(dirname "$OUT")"
           rm -rf /tmp/ctrl02 && mkdir -p /tmp/ctrl02
-          python - <<'PY'
-          import hashlib, pathlib, zipfile, re, sys
+          python - <<'PY' > "$OUT"
+          import hashlib, pathlib, zipfile, re, os
           p=pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
-          h=hashlib.sha256(p.read_bytes()).hexdigest()
-          print('CTRL02_ARCHIVE_SHA256='+h)
+          print('CTRL02_DISCOVERY_EVIDENCE_V2')
+          print('CANDIDATE='+str(p))
+          print('CTRL02_ARCHIVE_SHA256='+hashlib.sha256(p.read_bytes()).hexdigest())
           print('CTRL02_ARCHIVE_SIZE='+str(p.stat().st_size))
           with zipfile.ZipFile(p) as z:
               bad=z.testzip()
@@ -42,39 +44,42 @@ jobs:
                   if pp.is_absolute() or '..' in pp.parts: raise SystemExit('ZIP_PATH_TRAVERSAL:'+n)
               print('ZIP_ENTRIES='+str(len(names)))
               nested=[n for n in names if n.lower().endswith(('.zip','.tar','.tgz','.tar.gz','.7z'))]
-              print('NESTED_ARCHIVES='+repr(nested[:50]))
-              print('--- RELEVANT PATHS ---')
-              pats=re.compile(r'(ctrl|control|handover|handoff|accept|verify|valid|test|report|lineage|candidate|entrypoint|program_control|master_future|readme|pyproject|makefile)',re.I)
+              print('NESTED_ARCHIVES='+repr(nested))
+              print('\n--- ALL TOP-LEVEL PATHS ---')
+              roots=sorted({pathlib.PurePosixPath(n).parts[0] for n in names if pathlib.PurePosixPath(n).parts})
+              for n in roots: print(n)
+              print('\n--- RELEVANT PATHS ---')
+              pats=re.compile(r'(ctrl|control|handover|handoff|accept|verify|valid|test|report|lineage|candidate|entrypoint|program_control|master_future|readme|pyproject|makefile|package\.json|workflow)',re.I)
               rel=[n for n in names if pats.search(n)]
-              for n in rel[:600]: print(n)
-              if len(rel)>600: print(f'... {len(rel)-600} more relevant paths')
+              for n in rel: print(n)
               z.extractall('/tmp/ctrl02')
-          roots=[x for x in pathlib.Path('/tmp/ctrl02').iterdir()]
-          print('--- EXTRACT ROOT ---')
-          for x in roots: print(x)
-          PY
-          echo '--- CANONICAL / CTRL TEXT MATCHES ---'
-          python - <<'PY'
-          import pathlib,re
           root=pathlib.Path('/tmp/ctrl02')
-          files=list(root.rglob('*'))
-          text=[]
-          for p in files:
-              if not p.is_file() or p.stat().st_size>2_000_000: continue
-              if p.suffix.lower() not in {'.md','.json','.yml','.yaml','.toml','.txt','.py','.ps1','.sh'} and p.name not in {'Makefile'}: continue
-              try: s=p.read_text('utf-8')
+          print('\n--- EXTRACT ROOT ---')
+          for x in sorted(root.iterdir()): print(x)
+          print('\n--- KEY DOCUMENT CONTENTS ---')
+          keyname=re.compile(r'(PROJECT_ENTRYPOINT|PROGRAM_CONTROL_REGISTER|MASTER_FUTURE_IMPLEMENTATION_REGISTER|CTRL[-_]?0?2|CTRL02|HANDOVER|HANDOFF|LINEAGE|ACCEPT|VERIFY|VALID|README|pyproject\.toml|package\.json|Makefile)',re.I)
+          allowed={'.md','.json','.yml','.yaml','.toml','.txt','.py','.ps1','.sh'}
+          total=0
+          for f in sorted(root.rglob('*')):
+              if not f.is_file(): continue
+              if not keyname.search(f.name) and not keyname.search(str(f.parent)): continue
+              if f.suffix.lower() not in allowed and f.name not in {'Makefile'}: continue
+              if f.stat().st_size>300_000: continue
+              try: s=f.read_text('utf-8')
               except Exception: continue
-              if re.search(r'CTRL[-_ ]?0?2|regional intervention|privileged operations|FIR-GOV-004|Program Control Register',s,re.I):
-                  text.append((str(p),s))
-          for path,s in text[:80]:
-              print('\n### FILE',path)
-              lines=s.splitlines()
-              hits=[i for i,l in enumerate(lines) if re.search(r'CTRL[-_ ]?0?2|regional intervention|privileged operations|FIR-GOV-004|CTRL =|CTRL-',l,re.I)]
-              shown=set()
-              for i in hits[:80]:
-                  a=max(0,i-2); b=min(len(lines),i+4)
-                  for j in range(a,b):
-                      if j not in shown:
-                          print(f'{j+1}: {lines[j]}'); shown.add(j)
+              if total+len(s)>1_500_000: continue
+              print('\n===== FILE '+str(f.relative_to(root))+' =====')
+              print(s)
+              total += len(s)
+          print('\nCTRL02_DISCOVERY_PASS')
           PY
-          echo 'CTRL02_DISCOVERY_PASS'
+          cat "$OUT"
+          git config user.name 'epd2-ctrl02-verifier'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$OUT"
+          if git diff --cached --quiet; then
+            echo 'Evidence unchanged.'
+          else
+            git commit -m 'CTRL-02: persist exact candidate discovery evidence'
+            git push origin HEAD:handoff/ctrl
+          fi
