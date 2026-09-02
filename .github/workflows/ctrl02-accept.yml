@@ -26,160 +26,130 @@ jobs:
           ref: handoff/ctrl
           fetch-depth: 1
 
-      - name: Pin exact candidate identity and extract safely
+      - name: Pin identity and safe extract
         shell: bash
         run: |
           set -euo pipefail
           test -f "$CTRL02_ZIP"
-          ACTUAL_SHA="$(sha256sum "$CTRL02_ZIP" | awk '{print $1}')"
-          ACTUAL_SIZE="$(stat -c '%s' "$CTRL02_ZIP")"
-          test "$ACTUAL_SHA" = "$EXPECTED_SHA256"
-          test "$ACTUAL_SIZE" = "$EXPECTED_SIZE"
-          rm -rf /tmp/ctrl02_accept
-          mkdir -p /tmp/ctrl02_accept
+          test "$(sha256sum "$CTRL02_ZIP" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          test "$(stat -c '%s' "$CTRL02_ZIP")" = "$EXPECTED_SIZE"
+          realpath "$CTRL02_ZIP" > /tmp/ctrl02_archive
+          rm -rf /tmp/ctrl02_accept && mkdir -p /tmp/ctrl02_accept
           python3 - <<'PY'
-          import os, pathlib, zipfile
-          zp=pathlib.Path(os.environ['CTRL02_ZIP'])
-          dest=pathlib.Path('/tmp/ctrl02_accept')
-          with zipfile.ZipFile(zp) as z:
-              bad=z.testzip()
-              if bad: raise SystemExit('ZIP_CRC_FAIL='+bad)
+          import os,pathlib,zipfile
+          zpath=pathlib.Path(os.environ['CTRL02_ZIP']); dest=pathlib.Path('/tmp/ctrl02_accept')
+          with zipfile.ZipFile(zpath) as z:
+              if (bad:=z.testzip()): raise SystemExit('ZIP_CRC_FAIL='+bad)
               names=z.namelist()
               if len(names)!=len(set(names)): raise SystemExit('ZIP_DUPLICATE_PATHS')
               for n in names:
                   p=pathlib.PurePosixPath(n)
-                  if p.is_absolute() or '..' in p.parts:
-                      raise SystemExit('ZIP_PATH_TRAVERSAL='+n)
+                  if p.is_absolute() or '..' in p.parts: raise SystemExit('ZIP_PATH_TRAVERSAL='+n)
               z.extractall(dest)
           roots=[p for p in dest.iterdir() if p.is_dir()]
           if len(roots)!=1: raise SystemExit(f'EXPECTED_ONE_ROOT_GOT_{len(roots)}')
           root=roots[0]
-          required=[
-            'pyproject.toml','uv.lock','package.json','package-lock.json',
-            'scripts/ctrl02_validator.py','scripts/ctrl02_mutation_suite.py','scripts/verify_ctrl02_package.py','scripts/build_ctrl02_preseal.py',
-            'contracts/control/ctrl02_control_console.json',
-            'validation/ctrl02/ctrl02_preseal_result.json','validation/ctrl02/freeze_manifest.json',
-            'validation/ctrl02/package_identity_result.json','validation/ctrl02/ctrl01_reconciliation_result.json',
-            'validation/ctrl02/fir_reconciliation.json','validation/ctrl02/test_result.json','validation/ctrl02/mutation_result.json'
-          ]
+          required=['pyproject.toml','uv.lock','package.json','package-lock.json','scripts/ctrl02_validator.py','scripts/ctrl02_mutation_suite.py','scripts/verify_ctrl02_package.py','scripts/build_ctrl02_preseal.py','contracts/control/ctrl02_control_console.json','validation/ctrl02/ctrl02_preseal_result.json','validation/ctrl02/freeze_manifest.json','validation/ctrl02/package_identity_result.json','validation/ctrl02/ctrl01_reconciliation_result.json','validation/ctrl02/fir_reconciliation.json','validation/ctrl02/test_result.json','validation/ctrl02/mutation_result.json']
           missing=[x for x in required if not (root/x).is_file()]
           if missing: raise SystemExit('MISSING_REQUIRED_FILES='+repr(missing))
           pathlib.Path('/tmp/ctrl02_root').write_text(str(root))
-          print('CTRL02_ROOT='+str(root))
           print('CTRL02_ARCHIVE_IDENTITY_PASS')
           PY
 
-      - name: Validate embedded evidence is parseable and not self-declared FAIL
+      - name: Parse embedded CTRL-02 evidence
         shell: bash
         run: |
           set -euo pipefail
           ROOT="$(cat /tmp/ctrl02_root)"
           ROOT="$ROOT" python3 - <<'PY'
-          import json, os, pathlib
-          root=pathlib.Path(os.environ['ROOT'])
-          files=list((root/'validation/ctrl02').glob('*.json'))
+          import json,os,pathlib
+          d=pathlib.Path(os.environ['ROOT'])/'validation/ctrl02'; files=list(d.glob('*.json'))
           if len(files)<10: raise SystemExit('INSUFFICIENT_CTRL02_EVIDENCE_FILES')
-          bad=[]
           for p in files:
-              try: obj=json.loads(p.read_text('utf-8'))
-              except Exception as e: raise SystemExit(f'INVALID_JSON {p}: {e}')
-              text=json.dumps(obj,sort_keys=True).lower()
-              # Explicit terminal FAIL/FAILED fields are not admissible in a candidate claiming preseal readiness.
-              if any(x in text for x in ['"status": "fail"','"status": "failed"','"result": "fail"','"result": "failed"','"verdict": "fail"','"verdict": "failed"']):
-                  bad.append(p.name)
-          if bad: raise SystemExit('EMBEDDED_FAILURE_RESULTS='+repr(bad))
+              obj=json.loads(p.read_text('utf-8')); text=json.dumps(obj,sort_keys=True).lower()
+              if any(x in text for x in ['"status": "fail"','"status": "failed"','"result": "fail"','"result": "failed"','"verdict": "fail"','"verdict": "failed"']): raise SystemExit('EMBEDDED_FAIL='+p.name)
           print('CTRL02_JSON_EVIDENCE_COUNT='+str(len(files)))
-          print('CTRL02_EMBEDDED_EVIDENCE_PARSE_PASS')
+          print('CTRL02_EMBEDDED_EVIDENCE_PASS')
           PY
 
-      - name: Install frozen Python dependencies
+      - name: Frozen dependency sync
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
+          cd "$(cat /tmp/ctrl02_root)"
           python3 -m pip install --disable-pip-version-check --quiet uv
           uv sync --all-groups --frozen
           echo CTRL02_FROZEN_PYTHON_SYNC_PASS
 
-      - name: Verify sealed package before execution
+      - name: Package verifier pre-execution
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
-          uv run python scripts/verify_ctrl02_package.py
+          ARCHIVE="$(cat /tmp/ctrl02_archive)"
+          cd "$(cat /tmp/ctrl02_root)"
+          uv run python scripts/verify_ctrl02_package.py "$ARCHIVE"
           echo CTRL02_PACKAGE_VERIFY_PRE_PASS
 
-      - name: Execute candidate-owned CTRL-02 validator
+      - name: Candidate validator
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
+          cd "$(cat /tmp/ctrl02_root)"
           uv run python scripts/ctrl02_validator.py
           echo CTRL02_VALIDATOR_RUNTIME_PASS
 
-      - name: Execute candidate-owned mutation suite
+      - name: Candidate mutation suite
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
+          cd "$(cat /tmp/ctrl02_root)"
           uv run python scripts/ctrl02_mutation_suite.py
           echo CTRL02_MUTATION_RUNTIME_PASS
 
-      - name: Execute CTRL-02 focused tests
+      - name: CTRL-02 runtime tests
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
+          cd "$(cat /tmp/ctrl02_root)"
           mapfile -t TESTS < <(find tests services -type f -name 'test_*.py' 2>/dev/null | grep -Ei 'ctrl02|regional|intervention|privileged|control.?plane|breakglass|reauthor|four.?eyes|quorum|authority|suspension' || true)
           if [ "${#TESTS[@]}" -eq 0 ]; then
-            echo 'No filename-focused tests found; executing repository tests to avoid a silent zero-test pass.'
+            echo 'No filename-focused tests found; running repository pytest suite.'
             uv run pytest -q
           else
-            printf 'CTRL02_FOCUSED_TEST_FILE=%s\n' "${TESTS[@]}"
+            printf 'CTRL02_TEST=%s\n' "${TESTS[@]}"
             uv run pytest -q "${TESTS[@]}"
           fi
           echo CTRL02_RUNTIME_TESTS_PASS
 
-      - name: Verify Node lockfile reproducibility and tests
+      - name: Node frozen install and tests
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
+          cd "$(cat /tmp/ctrl02_root)"
           npm ci --ignore-scripts
           npm test --if-present
           echo CTRL02_NODE_LOCK_AND_TEST_PASS
 
-      - name: Verify sealed package after execution
+      - name: Package verifier post-execution
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          cd "$ROOT"
-          uv run python scripts/verify_ctrl02_package.py
+          ARCHIVE="$(cat /tmp/ctrl02_archive)"
+          cd "$(cat /tmp/ctrl02_root)"
+          uv run python scripts/verify_ctrl02_package.py "$ARCHIVE"
           echo CTRL02_PACKAGE_VERIFY_POST_PASS
 
-      - name: Require terminal candidate result consistency
+      - name: Terminal result consistency
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$(cat /tmp/ctrl02_root)"
-          ROOT="$ROOT" python3 - <<'PY'
-          import json, os, pathlib
-          root=pathlib.Path(os.environ['ROOT'])
-          names=['ctrl02_preseal_result.json','test_result.json','mutation_result.json','package_identity_result.json','ctrl01_reconciliation_result.json','fir_reconciliation.json']
-          for name in names:
-              p=root/'validation/ctrl02'/name
-              obj=json.loads(p.read_text('utf-8'))
-              text=json.dumps(obj,sort_keys=True).lower()
-              fail_tokens=['"status": "fail"','"status": "failed"','"result": "fail"','"result": "failed"','"verdict": "fail"','"verdict": "failed"','"pass": false']
-              if any(t in text for t in fail_tokens):
-                  raise SystemExit('TERMINAL_RESULT_NOT_PASS='+name)
+          ROOT="$(cat /tmp/ctrl02_root)"; ROOT="$ROOT" python3 - <<'PY'
+          import json,os,pathlib
+          d=pathlib.Path(os.environ['ROOT'])/'validation/ctrl02'
+          for name in ['ctrl02_preseal_result.json','test_result.json','mutation_result.json','package_identity_result.json','ctrl01_reconciliation_result.json','fir_reconciliation.json']:
+              obj=json.loads((d/name).read_text('utf-8')); text=json.dumps(obj,sort_keys=True).lower()
+              bad=['"status": "fail"','"status": "failed"','"result": "fail"','"result": "failed"','"verdict": "fail"','"verdict": "failed"','"pass": false']
+              if any(x in text for x in bad): raise SystemExit('TERMINAL_RESULT_NOT_PASS='+name)
               print('TERMINAL_RESULT_ACCEPTED='+name)
           print('CTRL02_TERMINAL_RESULTS_PASS')
           PY
@@ -191,35 +161,18 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          OUT='handoff/CTRL/evidence/CTRL02_CANONICAL_ACCEPTANCE_V1.json'
+          OUT='handoff/CTRL/evidence/CTRL02_CANONICAL_ACCEPTANCE_V2.json'
           mkdir -p "$(dirname "$OUT")"
           python3 - <<'PY'
-          import json, os, pathlib
-          p=pathlib.Path('handoff/CTRL/evidence/CTRL02_CANONICAL_ACCEPTANCE_V1.json')
-          obj={
-            'schema':'epd2.ctrl02.canonical_acceptance.v1',
-            'module':'CTRL-02',
-            'artifact':'EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip',
-            'artifact_sha256':os.environ['EXPECTED_SHA256'],
-            'artifact_size':int(os.environ['EXPECTED_SIZE']),
-            'source_upload_commit':'38edc71816dd54ee13eee97e01cbac07a9ace821',
-            'acceptance_workflow':'ctrl02-accept',
-            'acceptance_run_id':int(os.environ['RUN_ID']),
-            'workflow_head_sha':os.environ['HEAD_SHA'],
-            'gates':{
-              'archive_identity':'PASS','zip_integrity':'PASS','required_contract':'PASS','embedded_evidence':'PASS',
-              'frozen_python_sync':'PASS','package_verify_pre':'PASS','ctrl02_validator':'PASS','mutation_suite':'PASS',
-              'runtime_tests':'PASS','node_lock_and_tests':'PASS','package_verify_post':'PASS','terminal_results':'PASS'
-            },
-            'status':'CANON_PASS'
-          }
-          p.write_text(json.dumps(obj,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          import json,os,pathlib
+          obj={'schema':'epd2.ctrl02.canonical_acceptance.v2','module':'CTRL-02','artifact':'EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip','artifact_sha256':os.environ['EXPECTED_SHA256'],'artifact_size':int(os.environ['EXPECTED_SIZE']),'source_upload_commit':'38edc71816dd54ee13eee97e01cbac07a9ace821','acceptance_workflow':'ctrl02-accept','acceptance_run_id':int(os.environ['RUN_ID']),'workflow_head_sha':os.environ['HEAD_SHA'],'gates':{'archive_identity':'PASS','zip_integrity':'PASS','embedded_evidence':'PASS','frozen_python_sync':'PASS','package_verify_pre':'PASS','ctrl02_validator':'PASS','mutation_suite':'PASS','runtime_tests':'PASS','node_lock_and_tests':'PASS','package_verify_post':'PASS','terminal_results':'PASS'},'status':'CANON_PASS'}
+          pathlib.Path('handoff/CTRL/evidence/CTRL02_CANONICAL_ACCEPTANCE_V2.json').write_text(json.dumps(obj,indent=2,sort_keys=True)+'\n',encoding='utf-8')
           PY
           python3 -m json.tool "$OUT" >/dev/null
           grep -q '"status": "CANON_PASS"' "$OUT"
           git config user.name 'epd2-ctrl02-acceptance'
           git config user.email 'actions@users.noreply.github.com'
           git add "$OUT"
-          git commit -m 'CTRL-02: publish canonical acceptance evidence'
+          git commit -m 'CTRL-02: publish canonical acceptance V2 evidence'
           git push origin HEAD:handoff/ctrl
           echo CTRL02_CANON_PASS
