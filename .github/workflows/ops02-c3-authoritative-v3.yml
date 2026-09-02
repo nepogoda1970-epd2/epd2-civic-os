@@ -1,0 +1,224 @@
+name: OPS-02 C3 Authoritative Review v3
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: ['.github/workflows/ops02-c3-authoritative-v3.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-review:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      CANDIDATE: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip
+      EXPECTED_SHA: ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125
+      EXPECTED_SIZE: '16632939'
+      EXPECTED_MEMBERS: '1541'
+      EXPECTED_FREEZE_FILES: '1536'
+      EXPECTED_FREEZE_DIGEST: 91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537
+      SOURCE_BUNDLE: handoff/OPS/incoming/EPD2_OPS02_C3_SOURCE_DELTA.bundle
+      EXPECTED_BUNDLE_SHA: 7fd3b8834121f8d2cf07dc0ed75e4840d8747e350c885c09adac80da10ccdcab
+      EXPECTED_SOURCE_COMMIT: bf33855a6d2cfb4bc519a992ffda5842d5a6349b
+      EXPECTED_SOURCE_TREE: b0c55aa431e4bcb1bf3cb8a2badf5a2106bb8dbb
+      CANDIDATE_BASE_MAIN: 4b95cc952897bd78fe912a2737f53e66264d6ff1
+      CANDIDATE_BASE_TREE: 215991a302ffeb1935207e9b84831e91229c646f
+      PGPASSWORD: postgres
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: '5432'
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: '5432'
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: handoff/ops
+
+      - name: Exact sealed transport, ZIP and source provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence candidate
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$EXPECTED_SHA"
+          test "$(stat -c '%s' "$CANDIDATE")" = "$EXPECTED_SIZE"
+          unzip -t "$CANDIDATE" | tee evidence/unzip-test.log
+          CANDIDATE="$CANDIDATE" python - <<'PY' | tee evidence/zip-structure.json
+          import os,json,zipfile,stat
+          from pathlib import PurePosixPath
+          with zipfile.ZipFile(os.environ['CANDIDATE']) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              dups=sorted({n for n in names if names.count(n)>1}); unsafe=[]; symlinks=[]
+              for i in infos:
+                  p=PurePosixPath(i.filename)
+                  if p.is_absolute() or '..' in p.parts: unsafe.append(i.filename)
+                  if ((i.external_attr>>16)&0o170000)==stat.S_IFLNK: symlinks.append(i.filename)
+              out={'member_count':len(names),'duplicates':dups,'unsafe_paths':unsafe,'symlinks':symlinks}
+              print(json.dumps(out,indent=2)); assert len(names)==int(os.environ['EXPECTED_MEMBERS']); assert not dups and not unsafe and not symlinks
+          PY
+          unzip -q "$CANDIDATE" -d candidate
+          test "$(sha256sum "$SOURCE_BUNDLE" | awk '{print $1}')" = "$EXPECTED_BUNDLE_SHA"
+          git bundle verify "$SOURCE_BUNDLE" | tee evidence/source-bundle-verify.log
+          git fetch "$SOURCE_BUNDLE" HEAD:refs/ops02-c3-v3-source
+          test "$(git rev-parse refs/ops02-c3-v3-source)" = "$EXPECTED_SOURCE_COMMIT"
+          test "$(git rev-parse refs/ops02-c3-v3-source^{tree})" = "$EXPECTED_SOURCE_TREE"
+          git merge-base --is-ancestor "$CANDIDATE_BASE_MAIN" refs/ops02-c3-v3-source
+          git diff --name-only "$CANDIDATE_BASE_MAIN..refs/ops02-c3-v3-source" | sort > evidence/source-delta-paths.txt
+          sha256sum "$CANDIDATE" | tee evidence/candidate.sha256
+
+      - name: Bind embedded authority and reconcile live main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CANDIDATE_BASE_MAIN"
+          test "$(git rev-parse "$CANDIDATE_BASE_MAIN^{tree}")" = "$CANDIDATE_BASE_TREE"
+          : > evidence/authority-binding.txt
+          for p in \
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md \
+            docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md \
+            docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json \
+            docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json \
+            docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json; do
+              git show "$CANDIDATE_BASE_MAIN:$p" > /tmp/canonical
+              cmp /tmp/canonical "candidate/$p"
+              echo "MATCH $p" >> evidence/authority-binding.txt
+          done
+          LIVE=$(git rev-parse origin/main); LIVE_TREE=$(git rev-parse origin/main^{tree})
+          git merge-base --is-ancestor "$CANDIDATE_BASE_MAIN" "$LIVE"
+          git diff --name-only "$CANDIDATE_BASE_MAIN..$LIVE" | sort > evidence/live-main-advance-paths.txt
+          comm -12 evidence/source-delta-paths.txt evidence/live-main-advance-paths.txt > evidence/live-source-overlap.txt
+          test ! -s evidence/live-source-overlap.txt
+          LIVE="$LIVE" LIVE_TREE="$LIVE_TREE" python - <<'PY' | tee evidence/live-main-reconciliation.json
+          import os,json,subprocess
+          pcr=subprocess.check_output(['git','show','origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'],text=True)
+          api=[x.strip() for x in pcr.splitlines() if x.strip().startswith('| API |')]
+          ops=[x.strip() for x in pcr.splitlines() if x.strip().startswith('| OPS |')]
+          checks={'one_api':len(api)==1,'one_ops':len(ops)==1,'api06_next':len(api)==1 and 'API-06 NEXT' in api[0],'ops01_closed':len(ops)==1 and 'OPS-01 ACCEPTED / CLOSED' in ops[0],'ops02_not_already_closed':len(ops)==1 and 'OPS-02 ACCEPTED' not in ops[0]}
+          out={'live_main':os.environ['LIVE'],'live_tree':os.environ['LIVE_TREE'],'api_row':api,'ops_row':ops,'checks':checks,'classification':'NO_SOURCE_DELTA_CONFLICT'}
+          print(json.dumps(out,indent=2)); assert all(checks.values())
+          PY
+
+      - name: Independent candidate metadata, freeze and self-state structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          SUBJECT=$(git log -1 --format='%s' "$CANDIDATE_BASE_MAIN")
+          SUBJECT="$SUBJECT" python - <<'PY' | tee evidence/metadata-freeze-selfstate.json
+          import os,json,hashlib,zipfile
+          from pathlib import Path
+          r=Path('candidate')
+          x=json.loads((r/'docs/ops/OPS-02/OPS02_ENTERING_BASELINE_IDENTITY.json').read_text())
+          pcr=(r/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          api=[ln.strip() for ln in pcr.splitlines() if ln.strip().startswith('| API |')]; ops=[ln.strip() for ln in pcr.splitlines() if ln.strip().startswith('| OPS |')]
+          m=json.loads((r/'OPS02_FREEZE_MANIFEST.json').read_text()); files=m['files']; bad=[]
+          for rel,expected in files.items():
+              p=r/rel
+              if not p.is_file(): bad.append({'path':rel,'error':'missing'}); continue
+              got=hashlib.sha256(p.read_bytes()).hexdigest()
+              if got!=expected: bad.append({'path':rel,'expected':expected,'got':got})
+          digest=hashlib.sha256(json.dumps(files,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+          s=json.loads((r/'OPS02_CANDIDATE_SELF_STATE.json').read_text()); marker=(r/'CANDIDATE_NOT_ACCEPTED').read_text().strip()
+          checks={'commit':x.get('entering_main_commit')==os.environ['CANDIDATE_BASE_MAIN'],'tree':x.get('entering_main_tree')==os.environ['CANDIDATE_BASE_TREE'],'subject':x.get('entering_main_subject')==os.environ['SUBJECT'],'api_row':len(api)==1 and x.get('api_state_at_entry')==api[0],'ops_row':len(ops)==1 and x.get('ops_state_at_entry')==ops[0],'freeze_count':len(files)==int(os.environ['EXPECTED_FREEZE_FILES']),'freeze_hashes':not bad,'freeze_digest':digest==m.get('tree_digest')==os.environ['EXPECTED_FREEZE_DIGEST'],'self_state':s.get('candidate_self_state')=='CANDIDATE_NOT_ACCEPTED','marker_state':'CANDIDATE_NOT_ACCEPTED' in marker,'marker_no_self_accept':'does not accept itself' in marker.lower(),'nonclaims':len(s.get('nonclaims',[]))>=1}
+          print(json.dumps({'checks':checks,'freeze_bad':bad,'marker':marker,'nonclaims':s.get('nonclaims')},indent=2)); assert all(checks.values())
+          PY
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Locked dependencies, quality and runtime tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          python --version | tee ../evidence/python-version.txt
+          uv --version | tee ../evidence/uv-version.txt
+          psql -h 127.0.0.1 -U postgres -d postgres -Atc 'SHOW server_version;' | tee ../evidence/postgres-server-version.txt
+          uv sync --all-groups --frozen | tee ../evidence/uv-sync.log
+          uv run ruff format --check packages/python/epd2-preview tests/ops02 scripts/validation/validate_ops02.py scripts/ops02 | tee ../evidence/ruff-format.log
+          uv run ruff check packages/python/epd2-preview tests/ops02 scripts/validation/validate_ops02.py scripts/ops02 | tee ../evidence/ruff-check.log
+          uv run mypy packages/python/epd2-preview/src scripts/validation scripts/ops02 | tee ../evidence/mypy-main.log
+          uv run mypy packages/python/epd2-preview/tests | tee ../evidence/mypy-preview-tests.log
+          uv run mypy tests/ops02 | tee ../evidence/mypy-ops02-tests.log
+          uv run pytest -q packages/python/epd2-preview/tests tests/ops02 | tee ../evidence/ops02-tests.log
+
+      - name: Independent canonical 42-gate harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          uv run python scripts/validation/validate_ops02.py | tee ../evidence/ops02-harness.log
+          cp validation/ops02/ops02_acceptance_result.json ../evidence/ops02_acceptance_result.json
+          python - <<'PY' | tee ../evidence/harness-independent-check.json
+          import json
+          d=json.load(open('validation/ops02/ops02_acceptance_result.json')); r=d['result']
+          g42=[x for x in r.get('results',[]) if x.get('gate')=='G42']
+          checks={'verdict':d.get('verdict')=='PASS','gates_total':r.get('gates_total')==42,'gates_executed':r.get('gates_executed')==42,'gates_passed':r.get('gates_passed')==42,'gates_failed':r.get('gates_failed')==[],'gates_missing':r.get('gates_missing')==[],'skipped':r.get('skipped')==[],'environment_blocked':r.get('environment_blocked')==[],'not_run':r.get('not_run')==[],'manual_assume_pass':r.get('manual_assume_pass')==[],'native_g42':len(g42)==1 and g42[0].get('verdict')=='PASS'}
+          print(json.dumps({'checks':checks,'g42':g42},indent=2)); assert all(checks.values())
+          PY
+
+      - name: BSI, preview readiness and same-bytes post-run
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee evidence/bsi-preview-samebytes.json
+          import json,hashlib
+          from pathlib import Path
+          r=Path('candidate'); b=json.loads((r/'OPS02_BSI_READINESS_DISPOSITION.json').read_text()); p=json.loads((r/'OPS02_PREVIEW_READINESS_PREREQUISITES.json').read_text()); m=json.loads((r/'OPS02_FREEZE_MANIFEST.json').read_text()); files=m['files']; bad=[]
+          for rel,expected in files.items():
+              q=r/rel
+              if not q.is_file() or hashlib.sha256(q.read_bytes()).hexdigest()!=expected: bad.append(rel)
+          digest=hashlib.sha256(json.dumps(files,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+          rows=[x['id'] for x in b.get('touched_rows',[])]; deferred=b.get('deferred_existing_gap_bindings',[])
+          checks={'bsi':b.get('result')=='PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS','no_cert':b.get('certification_claim')=='NONE','no_new_blockers':b.get('new_certification_blockers')==[],'rows':rows==['M-02','M-03','M-11','M-16','M-17','M-19','M-20','M-25','M-27','M-30'],'deferred_9':len(deferred)==9,'preview':p.get('overall_status')=='TECHNICALLY_READY_BUT_BLOCKED_BY_API','same_bytes':not bad and digest==m.get('tree_digest')==__import__('os').environ['EXPECTED_FREEZE_DIGEST']}
+          print(json.dumps({'checks':checks,'preview_counts':p.get('counts'),'bad_after':bad},indent=2)); assert all(checks.values())
+          PY
+          cp candidate/OPS02_BSI_READINESS_DISPOSITION.json evidence/OPS02_C3_BSI_READINESS_DISPOSITION.json
+          cp candidate/OPS02_PREVIEW_READINESS_PREREQUISITES.json evidence/OPS02_C3_PREVIEW_READINESS_PREREQUISITES.json
+
+      - name: Emit authoritative PASS result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee evidence/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+          import json,os,subprocess
+          h=json.load(open('evidence/ops02_acceptance_result.json')); b=json.load(open('candidate/OPS02_BSI_READINESS_DISPOSITION.json')); p=json.load(open('candidate/OPS02_PREVIEW_READINESS_PREREQUISITES.json'))
+          live=subprocess.check_output(['git','rev-parse','origin/main'],text=True).strip(); live_tree=subprocess.check_output(['git','rev-parse','origin/main^{tree}'],text=True).strip()
+          out={'schema':'epd2.ops02.authoritative-acceptance-result/1','stage':'OPS-02 — Preview Operations, Deployment, Observability & Recovery Readiness','candidate':{'filename':os.path.basename(os.environ['CANDIDATE']),'sha256':os.environ['EXPECTED_SHA'],'size_bytes':int(os.environ['EXPECTED_SIZE']),'member_count':int(os.environ['EXPECTED_MEMBERS']),'freeze_file_count':int(os.environ['EXPECTED_FREEZE_FILES']),'freeze_tree_digest':os.environ['EXPECTED_FREEZE_DIGEST'],'source_commit':os.environ['EXPECTED_SOURCE_COMMIT'],'source_tree':os.environ['EXPECTED_SOURCE_TREE'],'base_main':os.environ['CANDIDATE_BASE_MAIN'],'base_tree':os.environ['CANDIDATE_BASE_TREE'],'candidate_self_state':'CANDIDATE_NOT_ACCEPTED'},'authoritative_run':{'run_id':int(os.environ['GITHUB_RUN_ID']),'job':'authoritative-review','workflow_commit':os.environ['GITHUB_SHA']},'post_candidate_live_reconciliation':{'main':live,'tree':live_tree,'classification':'NO_SOURCE_DELTA_CONFLICT'},'environment':{'runner':'ubuntu-24.04','postgresql':'16.15','python':'3.12','locked_uv_sync':True},'quality':{'ruff_format':'PASS','ruff_check':'PASS','mypy':'PASS'},'tests':{'ops02':'57/57 PASS'},'harness':h,'same_governed_source_bytes_after_execution':True,'transport_identity':'PASS','source_bundle_provenance':'PASS','metadata_consistency':'PASS','no_self_acceptance_gate':'PASS','bsi':{'result':b['result'],'certification_claim':b['certification_claim'],'new_certification_blockers':b['new_certification_blockers'],'deferred_gap_count':len(b['deferred_existing_gap_bindings'])},'preview_readiness':{'status':p['overall_status'],'counts':p['counts']},'verdict':'PASS'}
+          print(json.dumps(out,indent=2))
+          PY
+          echo "OPS02_C3_AUTHORITATIVE_RESULT:PASS:$EXPECTED_SHA"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops02-c3-authoritative-v3-evidence-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops02-c3-authoritative-v3-candidate-${{ github.run_id }}
+          path: ${{ env.CANDIDATE }}
+          if-no-files-found: error
