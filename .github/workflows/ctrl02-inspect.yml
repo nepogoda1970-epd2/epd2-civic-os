@@ -1,15 +1,11 @@
 name: ctrl02-inspect
-
 on:
   push:
     branches: [handoff/ctrl]
-    paths:
-      - '.github/workflows/ctrl02-inspect.yml'
+    paths: ['.github/workflows/ctrl02-inspect.yml']
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   inspect:
     runs-on: ubuntu-latest
@@ -17,41 +13,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: handoff/ctrl
-          fetch-depth: 1
-      - name: Persist validator source identity contract
+      - name: Capture complete CTRL-02 reconciliation contract
         shell: bash
         run: |
           set -euo pipefail
           ZIP='handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
-          OUT='handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md'
-          rm -rf /tmp/c02inspect && mkdir -p /tmp/c02inspect
+          OUT='handoff/CTRL/evidence/CTRL02_RECONCILIATION_CONTRACT_FULL.md'
+          rm -rf /tmp/c02full && mkdir -p /tmp/c02full
           python3 - <<'PY'
           import pathlib,zipfile
           zp=pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
-          d=pathlib.Path('/tmp/c02inspect')
-          with zipfile.ZipFile(zp) as z: z.extractall(d)
-          roots=[p for p in d.iterdir() if p.is_dir()]
-          if len(roots)!=1: raise SystemExit('BAD_ROOT_COUNT')
-          root=roots[0]
-          out=pathlib.Path('handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md')
-          parts=['# CTRL-02 validator source identity contract','']
-          specs=[('scripts/ctrl02_validator.py',160,330),('scripts/ctrl02_mutation_suite.py',0,220),('scripts/build_ctrl02_preseal.py',0,260),('validation/ctrl02/source_identity_result.json',0,500),('validation/ctrl02/ctrl02_preseal_result.json',0,500),('validation/ctrl02/freeze_manifest.json',0,500)]
-          for rel,a,b in specs:
+          d=pathlib.Path('/tmp/c02full')
+          with zipfile.ZipFile(zp) as z:z.extractall(d)
+          root=next(p for p in d.iterdir() if p.is_dir())
+          wanted=['scripts/ctrl02_validator.py','scripts/build_ctrl02_preseal.py','scripts/verify_ctrl02_package.py','validation/ctrl02/ctrl01_reconciliation_result.json','validation/ctrl02/source_identity_result.json','validation/ctrl02/ctrl02_preseal_result.json','validation/ctrl02/freeze_manifest.json','validation/ctrl02/package_identity_result.json','validation/ctrl02/fir_reconciliation.json']
+          parts=['# CTRL-02 reconciliation contract full','']
+          for rel in wanted:
               p=root/rel
-              if not p.is_file():
-                  parts += [f'## `{rel}`','MISSING','']; continue
-              lines=p.read_text('utf-8').splitlines()
-              excerpt='\n'.join(f'{i+1}: {lines[i]}' for i in range(a,min(len(lines),b)))
-              parts += [f'## `{rel}`','```text',excerpt,'```','']
-          out.parent.mkdir(parents=True,exist_ok=True)
-          out.write_text('\n'.join(parts)+'\n',encoding='utf-8')
-          print('CTRL02_VALIDATOR_SNIPPET_BYTES='+str(out.stat().st_size))
+              parts += [f'## `{rel}`','```text',p.read_text('utf-8') if p.is_file() else 'MISSING','```','']
+          out=pathlib.Path('handoff/CTRL/evidence/CTRL02_RECONCILIATION_CONTRACT_FULL.md'); out.parent.mkdir(parents=True,exist_ok=True); out.write_text('\n'.join(parts))
+          print(out.stat().st_size)
           PY
           test -s "$OUT"
-          grep -q 'git_head' "$OUT"
-          git config user.name 'epd2-ctrl02-verifier'
-          git config user.email 'actions@users.noreply.github.com'
+          grep -q 'BLOCKED_FOR_FINAL_SEAL' "$OUT"
+          git config user.name epd2-ctrl02-verifier
+          git config user.email actions@users.noreply.github.com
           git add "$OUT"
-          git commit -m 'CTRL-02: persist validator source identity contract'
+          git commit -m 'CTRL-02: persist full reconciliation contract'
           git push origin HEAD:handoff/ctrl
-          echo CTRL02_VALIDATOR_CONTRACT_PASS
