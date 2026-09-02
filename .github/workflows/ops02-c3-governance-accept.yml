@@ -1,0 +1,274 @@
+name: OPS-02 C3 Post-Run Governance Acceptance
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths: ['.github/workflows/ops02-c3-governance-accept.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip
+      EXPECTED_SHA: ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125
+      EXPECTED_SIZE: '16632939'
+      EXPECTED_MEMBERS: '1541'
+      EXPECTED_FREEZE_FILES: '1536'
+      EXPECTED_FREEZE_DIGEST: 91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537
+      EXPECTED_SOURCE_COMMIT: bf33855a6d2cfb4bc519a992ffda5842d5a6349b
+      EXPECTED_SOURCE_TREE: b0c55aa431e4bcb1bf3cb8a2badf5a2106bb8dbb
+      SOURCE_BUNDLE: handoff/OPS/incoming/EPD2_OPS02_C3_SOURCE_DELTA.bundle
+      EXPECTED_BUNDLE_SHA: 7fd3b8834121f8d2cf07dc0ed75e4840d8747e350c885c09adac80da10ccdcab
+      CANDIDATE_BASE_MAIN: 4b95cc952897bd78fe912a2737f53e66264d6ff1
+      CANDIDATE_BASE_TREE: 215991a302ffeb1935207e9b84831e91229c646f
+      AUTHORITATIVE_RUN: '33610516469'
+      AUTHORITATIVE_JOB: '100184288996'
+      AUTHORITATIVE_WORKFLOW_COMMIT: dc788b0fc7bad54a2ea2a055398a6ccd8bd36b04
+      EVIDENCE_ARTIFACT_ID: '9838829213'
+      EVIDENCE_ARTIFACT_DIGEST: sha256:91a178f2f255db7761d49d86f0d0384aa2326b2a56981332ed44c0efb0124f93
+      CANDIDATE_ARTIFACT_ID: '9838830658'
+      CANDIDATE_ARTIFACT_DIGEST: sha256:2d9cd097e5844395ac18f59d76d1fdd98c72f2e5ebab23c7abf52314a093647e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: handoff/ops
+
+      - name: Verify authoritative run and exact artifacts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p gov-evidence /tmp/auth
+          RUN_JSON=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${AUTHORITATIVE_RUN}")
+          echo "$RUN_JSON" > gov-evidence/authoritative-run.json
+          echo "$RUN_JSON" | jq -e '.status=="completed" and .conclusion=="success" and .head_sha==env.AUTHORITATIVE_WORKFLOW_COMMIT' >/dev/null
+          JOBS_JSON=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${AUTHORITATIVE_RUN}/jobs?per_page=100")
+          echo "$JOBS_JSON" > gov-evidence/authoritative-jobs.json
+          echo "$JOBS_JSON" | jq -e --argjson jid "$AUTHORITATIVE_JOB" '.jobs[] | select(.id==$jid) | .conclusion=="success"' >/dev/null
+          ARTS_JSON=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${AUTHORITATIVE_RUN}/artifacts?per_page=100")
+          echo "$ARTS_JSON" > gov-evidence/authoritative-artifacts.json
+          echo "$ARTS_JSON" | jq -e --argjson aid "$EVIDENCE_ARTIFACT_ID" --arg dig "$EVIDENCE_ARTIFACT_DIGEST" '.artifacts[] | select(.id==$aid) | .digest==$dig and .expired==false' >/dev/null
+          echo "$ARTS_JSON" | jq -e --argjson aid "$CANDIDATE_ARTIFACT_ID" --arg dig "$CANDIDATE_ARTIFACT_DIGEST" '.artifacts[] | select(.id==$aid) | .digest==$dig and .expired==false' >/dev/null
+          curl -fsSL -L -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${EVIDENCE_ARTIFACT_ID}/zip" -o /tmp/auth.zip
+          unzip -q /tmp/auth.zip -d /tmp/auth
+          test -f /tmp/auth/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+          jq -e --arg sha "$EXPECTED_SHA" --argjson run "$AUTHORITATIVE_RUN" '.verdict=="PASS" and .candidate.sha256==$sha and .authoritative_run.run_id==$run and .harness.verdict=="PASS" and .harness.result.gates_total==42 and .harness.result.gates_passed==42 and .harness.result.gates_failed==[] and .harness.result.gates_missing==[] and .harness.result.skipped==[] and .harness.result.environment_blocked==[] and .harness.result.not_run==[] and .harness.result.manual_assume_pass==[] and .tests.ops02=="57/57 PASS" and .same_governed_source_bytes_after_execution==true and .no_self_acceptance_gate=="PASS" and .bsi.result=="PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS" and .bsi.certification_claim=="NONE" and .bsi.new_certification_blockers==[]' /tmp/auth/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json >/dev/null
+          cp /tmp/auth/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json gov-evidence/
+          echo "AUTHORITATIVE_V3_BINDING=PASS" | tee gov-evidence/authoritative-binding.txt
+
+      - name: Pin live main and fail-closed reconcile candidate lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          ENTERING=$(git rev-parse origin/main)
+          ENTERING_TREE=$(git rev-parse origin/main^{tree})
+          echo "$ENTERING" | tee gov-evidence/entering-main.commit
+          echo "$ENTERING_TREE" | tee gov-evidence/entering-main.tree
+          git merge-base --is-ancestor "$CANDIDATE_BASE_MAIN" "$ENTERING"
+          test "$(git rev-parse "$CANDIDATE_BASE_MAIN^{tree}")" = "$CANDIDATE_BASE_TREE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$EXPECTED_SHA"
+          test "$(stat -c '%s' "$CANDIDATE")" = "$EXPECTED_SIZE"
+          test "$(sha256sum "$SOURCE_BUNDLE" | awk '{print $1}')" = "$EXPECTED_BUNDLE_SHA"
+          git bundle verify "$SOURCE_BUNDLE" | tee gov-evidence/source-bundle-verify.log
+          git fetch "$SOURCE_BUNDLE" HEAD:refs/ops02-c3-gov-source
+          test "$(git rev-parse refs/ops02-c3-gov-source)" = "$EXPECTED_SOURCE_COMMIT"
+          test "$(git rev-parse refs/ops02-c3-gov-source^{tree})" = "$EXPECTED_SOURCE_TREE"
+          git diff --name-only "$CANDIDATE_BASE_MAIN..refs/ops02-c3-gov-source" | sort > gov-evidence/candidate-source-delta-paths.txt
+          git diff --name-only "$CANDIDATE_BASE_MAIN..$ENTERING" | sort > gov-evidence/main-advance-paths.txt
+          comm -12 gov-evidence/candidate-source-delta-paths.txt gov-evidence/main-advance-paths.txt > gov-evidence/source-overlap.txt
+          test ! -s gov-evidence/source-overlap.txt
+          git worktree add -b tmp/ops02-c3-governance work "$ENTERING"
+          ENTERING="$ENTERING" ENTERING_TREE="$ENTERING_TREE" python - <<'PY' | tee gov-evidence/reconciliation.json
+          import os,json
+          from pathlib import Path
+          p=Path('work/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          api=[x.strip() for x in p.splitlines() if x.strip().startswith('| API |')]
+          ops=[x.strip() for x in p.splitlines() if x.strip().startswith('| OPS |')]
+          checks={
+            'api_row_unique':len(api)==1,
+            'ops_row_unique':len(ops)==1,
+            'api06_next':len(api)==1 and 'API-06 NEXT' in api[0],
+            'api_layer_not_closed':len(api)==1 and 'API-06 NEXT' in api[0],
+            'ops01_accepted':len(ops)==1 and 'OPS-01 ACCEPTED / CLOSED' in ops[0],
+            'ops02_not_preaccepted':len(ops)==1 and 'OPS-02 ACCEPTED' not in ops[0],
+            'ops_layer_open':len(ops)==1 and 'OPS LAYER OPEN' in ops[0],
+          }
+          out={'entering_main':os.environ['ENTERING'],'entering_tree':os.environ['ENTERING_TREE'],'api_row':api,'ops_row':ops,'source_delta_overlap':[],'classification':'NO_CONTROLLING_AUTHORITY_CONFLICT / NO_SOURCE_DELTA_CONFLICT','checks':checks}
+          print(json.dumps(out,indent=2)); assert all(checks.values())
+          PY
+
+      - name: Write bounded OPS-02 canonical acceptance records
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -q "$CANDIDATE" -d /tmp/candidate
+          mkdir -p work/docs/ops/OPS-02
+          cp /tmp/auth/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json work/docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+          cp /tmp/candidate/OPS02_BSI_READINESS_DISPOSITION.json work/docs/ops/OPS-02/OPS02_C3_BSI_READINESS_DISPOSITION.json
+          cp /tmp/candidate/OPS02_PREVIEW_READINESS_PREREQUISITES.json work/docs/ops/OPS-02/OPS02_C3_PREVIEW_READINESS_DISPOSITION.json
+          cp /tmp/candidate/docs/ops/OPS-02/OPS02_FIR_DISPOSITION.json gov-evidence/OPS02_FIR_DISPOSITION.json
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          fir=json.loads(Path('gov-evidence/OPS02_FIR_DISPOSITION.json').read_text())
+          requested=[x['fir_id'] for x in fir['firs'] if x.get('status_change_requested')]
+          assert requested==[], requested
+          rec={
+            'schema':'epd2.ops02.acceptance-record/1',
+            'stage':'OPS-02 — Preview Operations, Deployment, Observability & Recovery Readiness',
+            'decision':'ACCEPTED / CLOSED',
+            'decision_date':'2026-09-02',
+            'authority':'Project Owner',
+            'scope':'BOUNDED_OPS02_STAGE_ONLY',
+            'overall_ops_layer':'OPEN',
+            'system_trial_preview':'NOT_OPENED',
+            'production_readiness':'NOT_CLAIMED',
+            'legal_activation':'NOT_CLAIMED',
+            'certification_claim':'NONE',
+            'candidate':{
+              'filename':Path(os.environ['CANDIDATE']).name,
+              'sha256':os.environ['EXPECTED_SHA'],
+              'size_bytes':int(os.environ['EXPECTED_SIZE']),
+              'member_count':int(os.environ['EXPECTED_MEMBERS']),
+              'freeze_file_count':int(os.environ['EXPECTED_FREEZE_FILES']),
+              'freeze_tree_digest':os.environ['EXPECTED_FREEZE_DIGEST'],
+              'source_commit':os.environ['EXPECTED_SOURCE_COMMIT'],
+              'source_tree':os.environ['EXPECTED_SOURCE_TREE'],
+              'source_bundle_sha256':os.environ['EXPECTED_BUNDLE_SHA'],
+              'base_main':os.environ['CANDIDATE_BASE_MAIN'],
+              'base_tree':os.environ['CANDIDATE_BASE_TREE'],
+              'sealed_self_state':'CANDIDATE_NOT_ACCEPTED'
+            },
+            'authoritative_review':{
+              'workflow':'.github/workflows/ops02-c3-authoritative-v3.yml',
+              'workflow_commit':os.environ['AUTHORITATIVE_WORKFLOW_COMMIT'],
+              'run_id':int(os.environ['AUTHORITATIVE_RUN']),
+              'job_id':int(os.environ['AUTHORITATIVE_JOB']),
+              'conclusion':'success',
+              'terminal_result':'OPS02_C3_AUTHORITATIVE_RESULT:PASS:'+os.environ['EXPECTED_SHA'],
+              'evidence_artifact':{'id':int(os.environ['EVIDENCE_ARTIFACT_ID']),'name':'ops02-c3-authoritative-v3-evidence-'+os.environ['AUTHORITATIVE_RUN'],'digest':os.environ['EVIDENCE_ARTIFACT_DIGEST']},
+              'candidate_artifact':{'id':int(os.environ['CANDIDATE_ARTIFACT_ID']),'name':'ops02-c3-authoritative-v3-candidate-'+os.environ['AUTHORITATIVE_RUN'],'digest':os.environ['CANDIDATE_ARTIFACT_DIGEST']}
+            },
+            'verification':{
+              'runtime_tests':'57/57 PASS',
+              'gates':'42/42 PASS',
+              'postgresql':'16.15',
+              'ruff_format':'PASS',
+              'ruff_check':'PASS',
+              'mypy':'PASS',
+              'same_governed_source_bytes_after_execution':True,
+              'transport_identity':'PASS',
+              'source_bundle_provenance':'PASS',
+              'metadata_consistency':'PASS',
+              'no_self_acceptance_gate':'PASS'
+            },
+            'bsi_readiness':{
+              'result':'PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS',
+              'new_certification_blockers':[],
+              'deferred_existing_gap_count':9,
+              'touched_rows':['M-02','M-03','M-11','M-16','M-17','M-19','M-20','M-25','M-27','M-30'],
+              'certification_claim':'NONE'
+            },
+            'preview_readiness':{
+              'candidate_time_status':'TECHNICALLY_READY_BUT_BLOCKED_BY_API',
+              'current_governance_dependency':'API-06 remains NEXT; API layer remains open',
+              'system_trial_preview_opened':False
+            },
+            'post_candidate_reconciliation':json.loads(Path('gov-evidence/reconciliation.json').read_text()),
+            'master_future_implementation_register':{
+              'changed':False,
+              'reason':'OPS02_FIR_DISPOSITION records status_change_requested=false for all 10 reconciled FIRs; no FIR status promotion is authorized by this bounded acceptance.'
+            },
+            'nonclaims':['overall OPS-layer closure','System Trial Preview opening','production readiness','legal activation','BSI certification','Common Criteria certification','EAL4 certification']
+          }
+          Path('work/docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json').write_text(json.dumps(rec,indent=2)+'\n')
+          PY
+
+      - name: Update Program Control Register without changing primary API state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re,os
+          p=Path('work/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          s=p.read_text()
+          rows=[ln for ln in s.splitlines() if ln.strip().startswith('| OPS |')]
+          assert len(rows)==1, rows
+          old=rows[0]
+          assert 'OPS-01 ACCEPTED / CLOSED' in old and 'OPS-02 ACCEPTED' not in old and 'OPS LAYER OPEN' in old
+          new='| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. Exact bounded OPS-02 Preview Operations, Deployment, Observability & Recovery Readiness is accepted/closed at C3. The overall OPS layer remains open; this transition does not open System Trial Preview and final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |'
+          s=s.replace(old,new,1)
+          marker='**OPS-02 authoritative acceptance and bounded closure (2026-09-02):**'
+          assert marker not in s
+          para=(
+            marker+' exact sealed candidate `EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip`, '
+            'SHA-256 `'+os.environ['EXPECTED_SHA']+'`, size `16,632,939` bytes, passed independent sealed-byte workflow `.github/workflows/ops02-c3-authoritative-v3.yml`, authoritative run `'+os.environ['AUTHORITATIVE_RUN']+'`, job `'+os.environ['AUTHORITATIVE_JOB']+'`, conclusion `success`. '
+            'The run independently verified exact transport and source-bundle provenance, canonical-authority binding, metadata/freeze integrity, locked dependencies, PostgreSQL `16.15`, Ruff/mypy, `57/57` OPS-02 runtime tests, all `42/42` governed gates with no failed/missing/skipped/environment-blocked/not-run/manual-assume-pass gate, privacy-safe observability and voting-isolation controls, BSI disposition `PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS`, and the same governed source bytes after live execution. '
+            'Authoritative evidence artifact `ops02-c3-authoritative-v3-evidence-'+os.environ['AUTHORITATIVE_RUN']+'`, artifact ID `'+os.environ['EVIDENCE_ARTIFACT_ID']+'`, digest `'+os.environ['EVIDENCE_ARTIFACT_DIGEST']+'`; exact candidate artifact ID `'+os.environ['CANDIDATE_ARTIFACT_ID']+'`, digest `'+os.environ['CANDIDATE_ARTIFACT_DIGEST']+'`. '
+            'The sealed candidate correctly retains `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded stage by `docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json`. **OPS-02 is therefore `ACCEPTED / CLOSED` as a bounded stage.** The overall OPS layer remains **OPEN**. Candidate preview status remains `TECHNICALLY_READY_BUT_BLOCKED_BY_API`; API-06/API-layer governance prerequisites are not waived and System Trial Preview is **NOT OPENED**. No production-readiness, legal-activation, BSI/CC/EAL4 or final security claim follows.\n\n'
+          )
+          pos=s.find('\n## 2.')
+          assert pos!=-1
+          s=s[:pos]+'\n\n'+para+s[pos:]
+          p.write_text(s)
+          PY
+
+      - name: Validate exact governance delta and race guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rec=json.loads(Path('docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json').read_text())
+          auth=json.loads(Path('docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json').read_text())
+          bsi=json.loads(Path('docs/ops/OPS-02/OPS02_C3_BSI_READINESS_DISPOSITION.json').read_text())
+          assert rec['decision']=='ACCEPTED / CLOSED'
+          assert rec['overall_ops_layer']=='OPEN'
+          assert rec['system_trial_preview']=='NOT_OPENED'
+          assert auth['verdict']=='PASS' and auth['candidate']['sha256']=='ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125'
+          assert bsi['certification_claim']=='NONE' and bsi['new_certification_blockers']==[]
+          pcr=Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          assert pcr.count('| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN` |')==1
+          assert 'API-06 NEXT' in pcr
+          assert 'OPS-02 authoritative acceptance and bounded closure (2026-09-02)' in pcr
+          PY
+          git add docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-02/OPS02_C3_BSI_READINESS_DISPOSITION.json docs/ops/OPS-02/OPS02_C3_PREVIEW_READINESS_DISPOSITION.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          CHANGED=$(git diff --cached --name-only | sort)
+          printf '%s\n' "$CHANGED" | tee ../gov-evidence/governance-changed-paths.txt
+          EXPECTED=$(printf '%s\n' docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-02/OPS02_C3_BSI_READINESS_DISPOSITION.json docs/ops/OPS-02/OPS02_C3_PREVIEW_READINESS_DISPOSITION.json docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md | sort)
+          test "$CHANGED" = "$EXPECTED"
+          test -z "$(git diff --cached --name-only -- docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md)"
+          ENTERING=$(cat ../gov-evidence/entering-main.commit)
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$ENTERING"
+
+      - name: Commit and push canonical bounded acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd work
+          git config user.name 'epd2-governance-bot'
+          git config user.email 'epd2-governance-bot@users.noreply.github.com'
+          git commit -m 'governance(ops02): accept and close bounded OPS-02 C3'
+          FINAL=$(git rev-parse HEAD); FINAL_TREE=$(git rev-parse HEAD^{tree})
+          echo "$FINAL" | tee ../gov-evidence/final-governance.commit
+          echo "$FINAL_TREE" | tee ../gov-evidence/final-governance.tree
+          git push origin HEAD:main
+          echo "OPS02_C3_POSTRUN_GOVERNANCE_DECISION:ACCEPTED_CLOSED_BOUNDED_STAGE"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops02-c3-postrun-governance-${{ github.run_id }}
+          path: gov-evidence/
+          if-no-files-found: error
