@@ -1,0 +1,27 @@
+name: API-05 governance format helper
+
+on:
+  push:
+    branches:
+      - tmp/api05-governance-format-helper
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: false
+      - name: Sync locked tools
+        run: uv sync --all-groups --frozen
+      - name: Produce exact Ruff diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format scripts/api05_governance_close.py
+          git diff -- scripts/api05_governance_close.py
+          echo API05_FORMAT_HELPER_PASS
