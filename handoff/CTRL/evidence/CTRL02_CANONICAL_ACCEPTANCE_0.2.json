@@ -1,0 +1,29 @@
+{
+  "acceptance_run_id": 33690561259,
+  "acceptance_workflow": "ctrl02-accept",
+  "artifact": "EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.2_PRESEAL.zip",
+  "artifact_sha256": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+  "artifact_size": 16720456,
+  "candidate_commit": "a6a9ab2",
+  "gates": "46/46 PASS",
+  "git_baseline_commit": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+  "git_baseline_tree": "eb8a3254c2b8a30feff71318d4377eff2435605c",
+  "module": "CTRL-02",
+  "mutations": "40/40 DETECTED",
+  "package_post": "PASS",
+  "package_pre": "PASS",
+  "predecessor": {
+    "candidate_sha256": "c9c666d01e17fe615f78c2e408169ce4b6434d3b8dec23dfda889b2ce91e3c49",
+    "candidate_size": 190092,
+    "run_id": 33619101714,
+    "stage": "CTRL-01",
+    "status": "PASS",
+    "workflow_head_sha": "f4c09fca58d1699bf14b46e077f2972b9cb4b92f"
+  },
+  "runtime_quality": "PASS",
+  "schema": "epd2.ctrl02.authoritative-acceptance/1",
+  "self_acceptance": false,
+  "status": "CANON_PASS",
+  "terminal_marker": "CTRL02_AUTHORITATIVE_RESULT:PASS:f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e:16720456",
+  "workflow_head_sha": "a70e2bfef7a668ee5158475712827bbc50f6d5fd"
+}
