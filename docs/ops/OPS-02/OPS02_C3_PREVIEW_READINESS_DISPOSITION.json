@@ -1,0 +1,461 @@
+{
+  "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+  "canonical_path": [
+    "API-06 authoritative acceptance",
+    "API layer CLOSED",
+    "explicit INFRA/OPS preview-readiness minimum",
+    "SYSTEM TRIAL PREVIEW"
+  ],
+  "counts": {
+    "blocked_by_api": 3,
+    "blocked_by_infra": 0,
+    "blocked_by_ops": 1,
+    "governance_blocked": 4,
+    "implementation_blocked": 0,
+    "not_applicable": 0,
+    "pass": 15,
+    "total": 19
+  },
+  "governance_observed": {
+    "api06_accepted": false,
+    "api_layer_closed": false,
+    "api_row": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+    "ops_row": "| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |",
+    "preview_minimum_recorded": false,
+    "system_trial_preview_open": false
+  },
+  "nonclaims": [
+    "OPS-02 does not declare the System Trial Preview open",
+    "OPS-02 does not close the OPS layer",
+    "a dependency block is not a technical failure and is not reported as one"
+  ],
+  "overall_status": "TECHNICALLY_READY_BUT_BLOCKED_BY_API",
+  "prerequisites": [
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G09",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G25",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G09",
+        "G25"
+      ],
+      "id": "PRQ-OPS-01",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "A deployable preview environment exists with a governed lifecycle",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G07",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G08",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G07",
+        "G08"
+      ],
+      "id": "PRQ-OPS-02",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Release-to-deployment identity is provable from accepted bytes to running workload",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G10",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G12",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G13",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G10",
+        "G12",
+        "G13"
+      ],
+      "id": "PRQ-OPS-03",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Authoritative readiness is derived from real dependencies and fails closed",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G11",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G11"
+      ],
+      "id": "PRQ-OPS-04",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Consequential traffic activation is explicit and separately authorized",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G14",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G15",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G16",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G14",
+        "G15",
+        "G16"
+      ],
+      "id": "PRQ-OPS-05",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Observability detects failure without becoming surveillance",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G17",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G18",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G19",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G17",
+        "G18",
+        "G19"
+      ],
+      "id": "PRQ-OPS-06",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Critical objectives are owned, bound to runbooks, and were made to fire",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G20",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G21",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G22",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G20",
+        "G21",
+        "G22"
+      ],
+      "id": "PRQ-OPS-07",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Backup, authorized destructive restore and restored-data integrity are executable",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G23",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G24",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G23",
+        "G24"
+      ],
+      "id": "PRQ-OPS-08",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "A failed or regressed release can be refused and rolled back to an exact target",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G25",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G25"
+      ],
+      "id": "PRQ-OPS-09",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Environment reset is a first-class operation and redeployment works after it",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G26",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G27",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G28",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G29",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G26",
+        "G27",
+        "G28",
+        "G29"
+      ],
+      "id": "PRQ-OPS-10",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "Dependency, time, credential and overload failures degrade deterministically",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G30",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G31",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G32",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G30",
+        "G31",
+        "G32"
+      ],
+      "id": "PRQ-OPS-11",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "OPS-01 incident and change controls operate against the running environment",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G33",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G33"
+      ],
+      "id": "PRQ-OPS-12",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "A voting-sensitive operational incident is handled without creating a linkage",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G34",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G35",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G36",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G37",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G34",
+        "G35",
+        "G36",
+        "G37"
+      ],
+      "id": "PRQ-OPS-13",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "The verifier detects deliberate weakening of any of the above",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G40",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G41",
+          "verdict": "PASS"
+        },
+        {
+          "gate": "G42",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G40",
+        "G41",
+        "G42"
+      ],
+      "id": "PRQ-OPS-14",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "OPS",
+      "requirement": "The candidate is frozen, byte-verifiable and does not accept itself",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "",
+      "evidence": [
+        {
+          "gate": "G03",
+          "verdict": "PASS"
+        }
+      ],
+      "gates": [
+        "G03"
+      ],
+      "id": "PRQ-INFRA-01",
+      "kind": "IMPLEMENTATION",
+      "owning_layer": "INFRA",
+      "requirement": "An accepted INFRA-01 release-integrity foundation is bound, not duplicated",
+      "status": "PASS"
+    },
+    {
+      "blocking_reason": "the canonical Program Control Register does not record this yet",
+      "depends_on": "",
+      "evidence": [
+        {
+          "observed": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+          "source": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+        }
+      ],
+      "gates": [],
+      "id": "PRQ-API-01",
+      "kind": "GOVERNANCE_DECISION",
+      "owning_layer": "API",
+      "requirement": "API-06 has authoritative acceptance",
+      "status": "BLOCKED_BY_API"
+    },
+    {
+      "blocking_reason": "the canonical Program Control Register does not record this yet; downstream of PRQ-API-01",
+      "depends_on": "PRQ-API-01",
+      "evidence": [
+        {
+          "observed": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+          "source": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+        }
+      ],
+      "gates": [],
+      "id": "PRQ-API-02",
+      "kind": "GOVERNANCE_DECISION",
+      "owning_layer": "API",
+      "requirement": "The API layer is CLOSED",
+      "status": "BLOCKED_BY_API"
+    },
+    {
+      "blocking_reason": "the canonical Program Control Register does not record this yet; downstream of PRQ-API-02",
+      "depends_on": "PRQ-API-02",
+      "evidence": [
+        {
+          "observed": "| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |",
+          "source": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+        }
+      ],
+      "gates": [],
+      "id": "PRQ-GOV-01",
+      "kind": "GOVERNANCE_DECISION",
+      "owning_layer": "OPS",
+      "requirement": "The explicit INFRA/OPS preview-readiness minimum is recorded by governance",
+      "status": "BLOCKED_BY_OPS"
+    },
+    {
+      "blocking_reason": "the canonical Program Control Register does not record this yet; downstream of PRQ-GOV-01",
+      "depends_on": "PRQ-GOV-01",
+      "evidence": [
+        {
+          "observed": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+          "source": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+        }
+      ],
+      "gates": [],
+      "id": "PRQ-GOV-02",
+      "kind": "GOVERNANCE_DECISION",
+      "owning_layer": "API",
+      "requirement": "SYSTEM TRIAL PREVIEW is opened by the Program Control Register",
+      "status": "BLOCKED_BY_API"
+    }
+  ],
+  "schema": "epd2.ops02.preview-readiness-prerequisites/1",
+  "stage": "OPS-02"
+}

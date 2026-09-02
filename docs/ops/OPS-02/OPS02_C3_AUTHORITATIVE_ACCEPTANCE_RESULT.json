@@ -1,0 +1,948 @@
+{
+  "schema": "epd2.ops02.authoritative-acceptance-result/1",
+  "stage": "OPS-02 \u2014 Preview Operations, Deployment, Observability & Recovery Readiness",
+  "candidate": {
+    "filename": "EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip",
+    "sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+    "size_bytes": 16632939,
+    "member_count": 1541,
+    "freeze_file_count": 1536,
+    "freeze_tree_digest": "91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537",
+    "source_commit": "bf33855a6d2cfb4bc519a992ffda5842d5a6349b",
+    "source_tree": "b0c55aa431e4bcb1bf3cb8a2badf5a2106bb8dbb",
+    "base_main": "4b95cc952897bd78fe912a2737f53e66264d6ff1",
+    "base_tree": "215991a302ffeb1935207e9b84831e91229c646f",
+    "candidate_self_state": "CANDIDATE_NOT_ACCEPTED"
+  },
+  "authoritative_run": {
+    "run_id": 33610516469,
+    "job": "authoritative-review",
+    "workflow_commit": "dc788b0fc7bad54a2ea2a055398a6ccd8bd36b04"
+  },
+  "post_candidate_live_reconciliation": {
+    "main": "9435ec2ef381488ec7b51b4bee43efa0698ca9d5",
+    "tree": "23aca7bafaf2d310cb8eee1622bb00be4ce30e19",
+    "classification": "NO_SOURCE_DELTA_CONFLICT"
+  },
+  "environment": {
+    "runner": "ubuntu-24.04",
+    "postgresql": "16.15",
+    "python": "3.12",
+    "locked_uv_sync": true
+  },
+  "quality": {
+    "ruff_format": "PASS",
+    "ruff_check": "PASS",
+    "mypy": "PASS"
+  },
+  "tests": {
+    "ops02": "57/57 PASS"
+  },
+  "harness": {
+    "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+    "generated_at": "2026-09-02T08:48:21.124562+00:00",
+    "result": {
+      "environment_blocked": [],
+      "evidence_hashes": {
+        "alert_execution_result.json": "9396bcd5bb13a2fbcabe0e6ed197d8b68173919475b162ba68dfb339fc4cc9d8",
+        "authoritative_readiness_result.json": "8e144df79fc71420e7ae3d6b3415f12fd66da6d220701944178559dda25b18a3",
+        "backup_restore_result.json": "6111a6a6fed992f44e728440638b1b3c08e5f38d18822946af8cb629fb1161b1",
+        "bsi_readiness_disposition.json": "1f32858d6bd7c60cd8d200acc6066c8b43b4458cb13cfc46204001608a0922bb",
+        "change_control_result.json": "1a5d42eb2ed51fadd88c076938ae24d1d3cbc3ab137dfa86b83ec0a871078a8b",
+        "correlation_guard_result.json": "95726e9df12d39c18fa1f85088bbd68f916e4a97a2537610e86d0d9699c69d7e",
+        "credential_incident_result.json": "33215abc78c3d0b69037d1d4ecf6140b0194e4c74aedd879c2cc4bc7133e5d63",
+        "dependency_failure_result.json": "48217b72a8acf30db6a5ccb478abce33e023ee0c75ec2c5a11586de2a7fecb24",
+        "dependency_readiness_result.json": "3984d3b2fdfbe7dbdb36a82f6f11c41599302e7544c403883bc6c1e5f6a604ae",
+        "deployment_identity_result.json": "fbfc05af5ef242eacd28e12df2a81c80c35940df15b43bcfea1a3502ba77e78c",
+        "environment_lifecycle_result.json": "a95e10427ee49d355027c133659f6bd768880b38afc5212c11c42f79e0062ca8",
+        "environment_reset_result.json": "850bddfab3c4e8f283bdbc7f5271865e676fbb5ab951beea8b82e12d24720cd9",
+        "freeze_result.json": "47b7b3fe27f83e5fe332f4b0e07a1e7160e010cd3ab3e8dceb9a339062176f58",
+        "incident_execution_result.json": "4ebc3a1c781e9670dedeffeb312094f4e06054d84bf9b79cebab2f08b8179dac",
+        "infra01_binding_result.json": "5eaddb1d5752ad39463f09e26b824902ccaf3fd1d44432d5c9d0ad2838db375f",
+        "mutation_suite_result.json": "3963bdac4615de9ab7ec42152b5e9adcd3a8ea2e7092d7430be3df7157fbad9b",
+        "ops01_binding_result.json": "17679282a230b2d2c38990d867d96f2f095f42215897598e8b0bb12b11aac6e4",
+        "ops02_acceptance_result.json": "3f9cf61c31cac254f245ae7a6919b8239a0c4f8ad256ef33503da3fde700f48f",
+        "overload_result.json": "2d574d30f234aec1952a1a1d490a55b6abc178c399a6da01ba0fb1122b55669c",
+        "preview_readiness_prerequisites.json": "34b2b38e2cd4ee85907de2c216b1da30fbf800ba45a9d8feb41203d605eb5060",
+        "privacy_safe_telemetry_result.json": "c61e35c87e2e47ce0152903f9111d17bae8ea8309a822fe6a1f385743de565ff",
+        "release_provenance_result.json": "fbb9ade1457739a59709a87635347725ae155e465519fac970f954e8ca10a06c",
+        "rollback_result.json": "0f22b51d9f8b3293b55c70f8e0d62c1c134d30db226fd7bc1c2f8d6cb9a1176e",
+        "schema_readiness_result.json": "3042ba69777dfe951698fe151b05314e729480c580c4271fb7794d3370aa6487",
+        "secret_scan_result.json": "79dbcd4f4e2a457f7575b13f909294dbb4bec0dedb989cfef75da02f0bff379d",
+        "slo_definitions_result.json": "3e9d30709a0a2cf1994c308d6f783358d34aec6c6425f1da67ae6f05300fe74d",
+        "sod_result.json": "cec0f10beb1750379ec43180e14acc589c1b02de8ffdb052661ba96046d00df3",
+        "time_failure_result.json": "0bdb61f2cf15062c35c4355e12cca5df92be82803a4ca31460decb9f5aefbc7c",
+        "traffic_activation_result.json": "14de2788a31ec66e1c54ded298df150c1186a016e9cf5ab50b0ae271efca312b",
+        "voting_incident_result.json": "51599fba37affd8ff3f736f7a92ed4c451ff7cc5cc7941593e9951e02e08cecc",
+        "voting_isolation_result.json": "65bbec83e3dfaed3854810b73b6ee8e13182ac706d1cab9ccea1dce2413abd91"
+      },
+      "finished_at": "2026-09-02T08:48:21.124558+00:00",
+      "gates_executed": 42,
+      "gates_failed": [],
+      "gates_missing": [],
+      "gates_passed": 42,
+      "gates_total": 42,
+      "manual_assume_pass": [],
+      "mutation_gate_coverage": {
+        "G06": 2,
+        "G07": 2,
+        "G08": 1,
+        "G09": 1,
+        "G10": 1,
+        "G12": 1,
+        "G13": 1,
+        "G14": 2,
+        "G18": 1,
+        "G19": 1,
+        "G21": 2,
+        "G24": 1,
+        "G31": 1,
+        "G32": 1,
+        "G42": 2
+      },
+      "nonclaims": [
+        "OPS-02 acceptance",
+        "OPS layer closure",
+        "System Trial Preview opening",
+        "production readiness",
+        "security certification",
+        "BSI, Common Criteria or EAL4 certification",
+        "legal activation"
+      ],
+      "not_run": [],
+      "preview_readiness": "TECHNICALLY_READY_BUT_BLOCKED_BY_API",
+      "results": [
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G01",
+          "measurements": {
+            "baseline": {
+              "accepted_api03_candidate_sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55",
+              "accepted_api04_candidate_sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337",
+              "accepted_infra01_authoritative_run": 33556094346,
+              "accepted_infra01_candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+              "accepted_infra01_source_commit": "38f7d13c8badf911e61d659adb2905d1089a64a5",
+              "accepted_ops01_authoritative_run": 33564968274,
+              "accepted_ops01_candidate": "EPD2_OPS01_OPERATIONAL_READINESS_INCIDENT_RECOVERY_AND_CHANGE_CONTROL_CANDIDATE_0.1_C2.zip",
+              "accepted_ops01_candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+              "accepted_ops01_freeze_tree_digest": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+              "accepted_ops01_source_commit": "a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc",
+              "accepted_ops01_source_tree": "a91a290ae87a83bede5d3cfc0e53dc682379b8a3",
+              "api_state_at_entry": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+              "assignment_reference_commit": "43a0b083116f6fd94e6718b08a6f04ebb08767f0",
+              "assignment_reference_tree": "25248456c0238680fb1ccd4e354b65bf2a311ea1",
+              "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+              "canonical_advance_reconciliation": "C3 canonical-freshness correction: exact C1 implementation delta replayed without overlap onto live canonical main 4b95cc952897bd78fe912a2737f53e66264d6ff1. Current PCR is preserved byte-for-byte from that main. API/OPS state is bound to the exact PCR rows below rather than stale narrative text.",
+              "canonical_advanced_since_assignment": true,
+              "entering_main_commit": "4b95cc952897bd78fe912a2737f53e66264d6ff1",
+              "entering_main_subject": "style(api05): Ruff-format governance closure helper",
+              "entering_main_tree": "215991a302ffeb1935207e9b84831e91229c646f",
+              "ops02_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+              "ops_state_at_entry": "| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |",
+              "recorded_at": "2026-09-02",
+              "repository": "nepogoda1970-epd2/epd2-civic-os",
+              "schema": "epd2.ops02.entering-baseline/1",
+              "stage": "OPS-02",
+              "stage_title": "Preview Operations, Deployment, Observability & Recovery Readiness",
+              "toolchain_observed": {
+                "os": "Ubuntu 24.04 (noble)",
+                "postgresql_client": "16.15",
+                "postgresql_server": "16.15",
+                "python": "3.12.11",
+                "ruff": "0.15.22",
+                "uv": "workspace resolution, uv.lock extended with epd2-preview"
+              }
+            },
+            "identity_source": "candidate self-state",
+            "observed": {
+              "commit": "UNAVAILABLE",
+              "source_digest": "8013f3d69cc3a4c7a41dc7b55ce95f2c9867454b83ed2b7450ff5c4ecc2d7e0b",
+              "tree": "UNAVAILABLE"
+            }
+          },
+          "observations": [],
+          "title": "Canonical entering baseline",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G02",
+          "measurements": {
+            "accepted_ops01": {
+              "authoritative_run": 33564968274,
+              "candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+              "freeze_tree_digest": "e08ef203c096e17779592407d7b48c843c84f4f27d99e6e7514ddb7491a11613",
+              "source_commit": "a12d990d76fc4ebf7d0d08634b4cad0fbc5862cc"
+            },
+            "ops01_non_regression": {
+              "gates_failed": [],
+              "gates_passed": 32,
+              "gates_total": 32,
+              "verdict": "PASS"
+            },
+            "reconciliation": {
+              "binding": "OPS-02 C3 carries accepted OPS-01 C2 and replays the exact OPS-02 C1 implementation delta without overlap onto live canonical main 4b95cc952897bd78fe912a2737f53e66264d6ff1.",
+              "changed_accepted_files": 4
+            }
+          },
+          "observations": [],
+          "title": "Accepted OPS-01 binding",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G03",
+          "measurements": {
+            "accepted_infra01_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+            "reuses_accepted_freeze_implementation": true
+          },
+          "observations": [],
+          "title": "Accepted INFRA-01 binding",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G04",
+          "measurements": {
+            "governance": {
+              "api06_accepted": false,
+              "api_layer_closed": false,
+              "api_row": "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |",
+              "ops_row": "| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |",
+              "preview_minimum_recorded": false,
+              "system_trial_preview_open": false
+            },
+            "ops02_owned_files": 36
+          },
+          "observations": [],
+          "title": "Repository governance freshness",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G05",
+          "measurements": {
+            "checked": 1539,
+            "clean": true,
+            "offenders": []
+          },
+          "observations": [],
+          "title": "Archive and source hygiene",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G06",
+          "measurements": {
+            "allowlist_entries_with_no_finding": [],
+            "allowlisted_without_marker": [],
+            "clean": true,
+            "files_scanned": 1539,
+            "high_confidence_findings": [],
+            "non_allowlistable_patterns": [
+              "aws_access_key",
+              "jwt",
+              "openssh_private_key",
+              "pgp_private_key",
+              "private_key_block"
+            ],
+            "secret_contract_entries": 5
+          },
+          "observations": [],
+          "title": "Secret leakage",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G07",
+          "measurements": {
+            "questions_answered": {
+              "was_the_environment_mutated_after_verification": false,
+              "what_configuration_profile_is_active": "preview-local",
+              "what_exact_candidate_is_running": "1034186808f13d875a87112670aa91e732244dde9014c051627c9006fba12aa6",
+              "what_release_manifest_was_verified": "43a48c49793868115ccdb2d636ed7731769b1e28ccde7c2d7a208ad12a64bfdf",
+              "what_schema_level_is_active": 3,
+              "what_service_versions_are_active": [
+                "rel-A-known-good"
+              ],
+              "what_source_produced_it": "dc788b0fc7bad54a2ea2a055398a6ccd8bd36b04"
+            }
+          },
+          "observations": [],
+          "title": "Release provenance",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G08",
+          "measurements": {
+            "mutation_detected": true
+          },
+          "observations": [],
+          "title": "Deployment identity",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G10",
+          "measurements": {
+            "induced_conditions": 10
+          },
+          "observations": [],
+          "title": "Authoritative readiness",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G11",
+          "measurements": {
+            "refusal_reasons": [
+              "NOT_AUTHORITATIVELY_READY",
+              "TRAFFIC_DISABLED",
+              "TRAFFIC_SHED"
+            ]
+          },
+          "observations": [],
+          "title": "Traffic activation",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G12",
+          "measurements": {
+            "states_observed": [
+              "AHEAD",
+              "DIVERGED",
+              "MATCHED",
+              "STALE"
+            ]
+          },
+          "observations": [],
+          "title": "Migration and schema readiness",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G13",
+          "measurements": {
+            "dependency_named": true
+          },
+          "observations": [],
+          "title": "Dependency readiness",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G14",
+          "measurements": {
+            "composed_field_count": 39,
+            "injections": 9
+          },
+          "observations": [],
+          "title": "Privacy-safe telemetry",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G15",
+          "measurements": {
+            "audit": {
+              "distinct_values": 40,
+              "global_person_key_present": false,
+              "observation_count": 40,
+              "values_spanning_domains": [],
+              "values_spanning_requests": []
+            }
+          },
+          "observations": [],
+          "title": "Cross-domain correlation guard",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G16",
+          "measurements": {
+            "linkage_possible": false
+          },
+          "observations": [],
+          "title": "Voting observability isolation",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G17",
+          "measurements": {
+            "objectives": [
+              "PREVIEW-AVAILABILITY",
+              "PREVIEW-BACKLOG",
+              "PREVIEW-DEPENDENCY",
+              "PREVIEW-DEPLOYMENT-INTEGRITY",
+              "PREVIEW-ERROR-RATE",
+              "PREVIEW-READINESS",
+              "PREVIEW-RECOVERY-TIME",
+              "PREVIEW-SCHEMA-DRIFT"
+            ]
+          },
+          "observations": [],
+          "title": "SLO definitions",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G18",
+          "measurements": {
+            "fired": [
+              "PREVIEW-AVAILABILITY",
+              "PREVIEW-BACKLOG",
+              "PREVIEW-DEPENDENCY",
+              "PREVIEW-DEPLOYMENT-INTEGRITY",
+              "PREVIEW-ERROR-RATE",
+              "PREVIEW-READINESS",
+              "PREVIEW-RECOVERY-TIME",
+              "PREVIEW-SCHEMA-DRIFT"
+            ]
+          },
+          "observations": [],
+          "title": "Alert execution",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G19",
+          "measurements": {
+            "ownership": {
+              "role:platform-operations": [
+                "PREVIEW-AVAILABILITY",
+                "PREVIEW-BACKLOG",
+                "PREVIEW-DEPENDENCY",
+                "PREVIEW-SCHEMA-DRIFT"
+              ],
+              "role:restore-operator": [
+                "PREVIEW-RECOVERY-TIME"
+              ],
+              "role:security-reviewer": [
+                "PREVIEW-DEPLOYMENT-INTEGRITY"
+              ],
+              "role:service-owner": [
+                "PREVIEW-ERROR-RATE",
+                "PREVIEW-READINESS"
+              ]
+            }
+          },
+          "observations": [],
+          "title": "Operational ownership",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G20",
+          "measurements": {
+            "backup": {
+              "created_at": "2026-09-02T08:48:02.283616+00:00",
+              "file": "preview.dump",
+              "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+              "sha256": "50aca13c8a889219e4bf18974cf2f7a2fed2f98e303327ff6889c1cd92a46288",
+              "size_bytes": 12943,
+              "tool": "pg_dump (PostgreSQL) 16.15 (Ubuntu 16.15-1.pgdg24.04+2)"
+            }
+          },
+          "observations": [],
+          "title": "Backup execution",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G21",
+          "measurements": {
+            "tampered_backup_refused": true
+          },
+          "observations": [],
+          "title": "Destructive restore authorization",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G22",
+          "measurements": {
+            "measured_restore_seconds": 0.066
+          },
+          "observations": [],
+          "title": "Restored-data integrity",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G23",
+          "measurements": {
+            "candidate_promoted": false
+          },
+          "observations": [],
+          "title": "Failed-deployment rollback",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G24",
+          "measurements": {
+            "identity_after_rollback": "rel-A-known-good"
+          },
+          "observations": [],
+          "title": "Post-readiness regression rollback",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G25",
+          "measurements": {
+            "reset": {
+              "deploy_root_present": false,
+              "phase": "RESET",
+              "schema_present": false,
+              "service_running": false
+            }
+          },
+          "observations": [],
+          "title": "Environment reset",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G26",
+          "measurements": {
+            "fabricated_success": false
+          },
+          "observations": [],
+          "title": "Dependency failure injection",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G27",
+          "measurements": {
+            "consequential_reason": "NOT_AUTHORITATIVELY_READY"
+          },
+          "observations": [],
+          "title": "Authoritative-time failure",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G28",
+          "measurements": {
+            "secret_values_in_evidence": []
+          },
+          "observations": [],
+          "title": "Credential and secret incident",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G29",
+          "measurements": {
+            "queue": {
+              "accepted": 163,
+              "bounded": true,
+              "explicit_shedding": true,
+              "max_depth_observed": 64,
+              "offered": 400,
+              "queue_capacity": 64,
+              "shed": 237,
+              "shed_by_reason": {
+                "QUEUE_FULL": 237
+              },
+              "unbounded_growth": false
+            }
+          },
+          "observations": [],
+          "title": "Overload and degradation",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G30",
+          "measurements": {
+            "scenarios": 9
+          },
+          "observations": [],
+          "title": "Incident lifecycle integration",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G31",
+          "measurements": {
+            "unrecorded_mutation_detected": true
+          },
+          "observations": [],
+          "title": "Change-control evidence",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G32",
+          "measurements": {
+            "matrix_audit": {
+              "incompatible_pair_count": 8,
+              "role_count": 16,
+              "roles_holding_incompatible_duties": {},
+              "universal_operator_present": false
+            }
+          },
+          "observations": [],
+          "title": "Separation of duties and independent approval",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G33",
+          "measurements": {
+            "no_identifier_introduced": true
+          },
+          "observations": [],
+          "title": "Voting-sensitive incident exercise",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G09",
+          "measurements": {
+            "coverage": {
+              "complete": true,
+              "operations_exercised": [
+                "ACTIVATE",
+                "CONFIGURE",
+                "CREATE",
+                "DEGRADE",
+                "DEPLOY",
+                "OBSERVE",
+                "RECOVER",
+                "RESET",
+                "ROLLBACK",
+                "TEARDOWN",
+                "VERIFY"
+              ],
+              "operations_missing": [],
+              "operations_total": 11
+            },
+            "phase": "RECOVERING"
+          },
+          "observations": [],
+          "title": "Environment lifecycle",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G34",
+          "measurements": {
+            "mutations": [
+              {
+                "description": "The running workload reports a different candidate digest than the release",
+                "detail": "the running workload does not report the release that was deployed",
+                "detected": true,
+                "mutation_id": "M03",
+                "target_gate": "G07"
+              },
+              {
+                "description": "A deployed file is changed after the release was verified",
+                "detail": "{\"release_id\": \"rel-mutation\", \"verified\": false, \"added\": [], \"removed\": [], \"modified\": [\"payload.txt\"], \"manifest_digest\": \"16cc1b174861b442aa8d40646ea8cddf0875f9209aa5f9b6096275acf4a03b94\", \"observed_digest\": \"e6a7af6c4d90d01c2acbea3b6b71d8b7e61c7d782740f55b69e8aa3eeba632f2\", \"mutated_after_verification\": true}",
+                "detected": true,
+                "mutation_id": "M04",
+                "target_gate": "G08"
+              },
+              {
+                "description": "A release manifest is edited after it was written",
+                "detail": "ReleaseIdentityError: release manifest m20-manifest.json does not match its recorded digest",
+                "detected": true,
+                "mutation_id": "M20",
+                "target_gate": "G07"
+              }
+            ]
+          },
+          "observations": [],
+          "title": "Deployment mutation detection",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G35",
+          "measurements": {
+            "mutations": [
+              {
+                "description": "A readiness report claims authoritative readiness while a condition is unsatisfied",
+                "detail": "only 1 readiness failure conditions were induced; schema_stale: the environment reported ready despite the failure; schema_stale: the failure did not name schema_level",
+                "detected": true,
+                "mutation_id": "M01",
+                "target_gate": "G10"
+              },
+              {
+                "description": "The dependency readiness condition is removed from the authoritative set",
+                "detail": "ReadinessError: authoritative readiness is missing required condition(s): dependency_readiness",
+                "detected": true,
+                "mutation_id": "M02",
+                "target_gate": "G13"
+              },
+              {
+                "description": "The environment reports ready while its schema level is stale",
+                "detail": "a schema state other than MATCHED was treated as ready",
+                "detected": true,
+                "mutation_id": "M14",
+                "target_gate": "G12"
+              }
+            ]
+          },
+          "observations": [],
+          "title": "Readiness mutation detection",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G36",
+          "measurements": {
+            "mutations": [
+              {
+                "description": "A secret value is written into an evidence document",
+                "detail": "leaked secrets detected: ['preview_service_credential']",
+                "detected": true,
+                "mutation_id": "M06",
+                "target_gate": "G06"
+              },
+              {
+                "description": "A persistent member identifier is inserted into environment telemetry",
+                "detail": "TelemetryPolicyViolation: field 'member_id' is classified FORBIDDEN and may never be emitted",
+                "detected": true,
+                "mutation_id": "M07",
+                "target_gate": "G14"
+              },
+              {
+                "description": "OPS-02 redeclares an OPS-01 FORBIDDEN field as OPERATIONAL",
+                "detail": "TelemetryCompositionError: OPS-02 redeclares OPS-01 telemetry field(s) with different policy: member_id",
+                "detected": true,
+                "mutation_id": "M17",
+                "target_gate": "G14"
+              },
+              {
+                "description": "A secret value is committed into the secret contract",
+                "detail": "ConfigurationBoundaryError: secret 'preview_database_credential' carries value-bearing key(s): value",
+                "detected": true,
+                "mutation_id": "M19",
+                "target_gate": "G06"
+              }
+            ]
+          },
+          "observations": [],
+          "title": "Telemetry privacy mutation detection",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G37",
+          "measurements": {
+            "mutations": [
+              {
+                "description": "A destructive restore is executed with no independent approval",
+                "detail": "a restore could be approved by the actor who executes it",
+                "detected": true,
+                "mutation_id": "M09",
+                "target_gate": "G21"
+              },
+              {
+                "description": "A backup whose bytes do not match its manifest is restored anyway",
+                "detail": "a backup whose bytes do not match its manifest was restored anyway",
+                "detected": true,
+                "mutation_id": "M10",
+                "target_gate": "G21"
+              }
+            ]
+          },
+          "observations": [],
+          "title": "Backup and restore mutation detection",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G40",
+          "measurements": {
+            "file_count": 1539,
+            "tree_digest": "8013f3d69cc3a4c7a41dc7b55ce95f2c9867454b83ed2b7450ff5c4ecc2d7e0b"
+          },
+          "observations": [],
+          "title": "Freeze manifest",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G41",
+          "measurements": {
+            "same_bytes": {
+              "added": [],
+              "changed": [],
+              "removed": [],
+              "same_bytes": true,
+              "tree_digest_after": "8013f3d69cc3a4c7a41dc7b55ce95f2c9867454b83ed2b7450ff5c4ecc2d7e0b",
+              "tree_digest_before": "8013f3d69cc3a4c7a41dc7b55ce95f2c9867454b83ed2b7450ff5c4ecc2d7e0b"
+            }
+          },
+          "observations": [],
+          "title": "Same-bytes verification",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G42",
+          "measurements": {
+            "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+            "package_dry_run": {
+              "member_count": 1540,
+              "path": "/tmp/ops02-harness-0aa84bwe/package/ops02-freeze-check.zip",
+              "sha256": "b166f200ea7da77b2a64fc372b233c45850c66b4b7b62d0d948f79bb8628a241",
+              "size_bytes": 16686396
+            },
+            "package_verification": {
+              "clean": true,
+              "digest_mismatches": [],
+              "hygiene_offenders": [],
+              "member_count": 1540,
+              "missing_members": [],
+              "unaccounted_members": []
+            }
+          },
+          "observations": [],
+          "title": "Package identity and no self-acceptance",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G38",
+          "measurements": {
+            "counts": {
+              "blocked_by_api": 3,
+              "blocked_by_infra": 0,
+              "blocked_by_ops": 1,
+              "governance_blocked": 4,
+              "implementation_blocked": 0,
+              "not_applicable": 0,
+              "pass": 15,
+              "total": 19
+            },
+            "governance_blocked": [
+              "PRQ-API-01",
+              "PRQ-API-02",
+              "PRQ-GOV-01",
+              "PRQ-GOV-02"
+            ],
+            "overall_status": "TECHNICALLY_READY_BUT_BLOCKED_BY_API"
+          },
+          "observations": [],
+          "title": "Preview-readiness prerequisite report",
+          "verdict": "PASS"
+        },
+        {
+          "evidence_hashes": {},
+          "failures": [],
+          "gate": "G39",
+          "measurements": {
+            "preserved_gaps": [
+              "OPS01-BSI-M02-P0",
+              "OPS01-BSI-M03-PROD-AUTH",
+              "OPS01-BSI-M16-TIME-AUDIT",
+              "OPS01-BSI-M17-AUDIT-PROTECTION",
+              "OPS01-BSI-M19-SECURE-STATE",
+              "OPS01-BSI-M20-MGMT",
+              "OPS01-BSI-M25-CM",
+              "OPS01-BSI-M27-AGD",
+              "OPS01-BSI-M30-TR03169"
+            ],
+            "rows": [
+              "M-02",
+              "M-03",
+              "M-11",
+              "M-16",
+              "M-17",
+              "M-19",
+              "M-20",
+              "M-25",
+              "M-27",
+              "M-30"
+            ]
+          },
+          "observations": [],
+          "title": "BSI readiness disposition",
+          "verdict": "PASS"
+        }
+      ],
+      "skipped": [],
+      "started_at": "2026-09-02T08:47:29.779244+00:00"
+    },
+    "schema": "epd2.ops02.acceptance-result/1",
+    "stage": "OPS-02",
+    "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+    "stage_title": "Preview Operations, Deployment, Observability & Recovery Readiness",
+    "verdict": "PASS"
+  },
+  "same_governed_source_bytes_after_execution": true,
+  "transport_identity": "PASS",
+  "source_bundle_provenance": "PASS",
+  "metadata_consistency": "PASS",
+  "no_self_acceptance_gate": "PASS",
+  "bsi": {
+    "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS",
+    "certification_claim": "NONE",
+    "new_certification_blockers": [],
+    "deferred_gap_count": 9
+  },
+  "preview_readiness": {
+    "status": "TECHNICALLY_READY_BUT_BLOCKED_BY_API",
+    "counts": {
+      "blocked_by_api": 3,
+      "blocked_by_infra": 0,
+      "blocked_by_ops": 1,
+      "governance_blocked": 4,
+      "implementation_blocked": 0,
+      "not_applicable": 0,
+      "pass": 15,
+      "total": 19
+    }
+  },
+  "verdict": "PASS"
+}

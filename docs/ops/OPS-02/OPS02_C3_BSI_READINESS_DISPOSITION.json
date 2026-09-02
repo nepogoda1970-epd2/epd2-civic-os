@@ -1,0 +1,222 @@
+{
+  "candidate_sha256": "PENDING_SEAL",
+  "certification_claim": "NONE",
+  "deferred_existing_gap_bindings": [
+    {
+      "id": "OPS01-BSI-M02-P0",
+      "matrix_row": "M-02",
+      "owner": "BSI/ITSEF + Voting architecture",
+      "required_closure_stage": "P0 pre-evaluation before certification-oriented voting freeze",
+      "required_evidence": "written recognised-evaluator position on non-identifying election-scoped eligibility representation"
+    },
+    {
+      "id": "OPS01-BSI-M03-PROD-AUTH",
+      "matrix_row": "M-03",
+      "owner": "SEC / CTRL / Voting governance",
+      "required_closure_stage": "final production authorization integration before BSI pre-evaluation",
+      "required_evidence": "production role mapping and enforced election-board/quorum authorization evidence"
+    },
+    {
+      "id": "OPS01-BSI-M16-TIME-AUDIT",
+      "matrix_row": "M-16",
+      "owner": "INFRA / OPS / SEC",
+      "required_closure_stage": "production infrastructure and final SEC",
+      "required_evidence": "reliable-time deployment plus audit anti-correlation proof"
+    },
+    {
+      "id": "OPS01-BSI-M17-AUDIT-PROTECTION",
+      "matrix_row": "M-17",
+      "owner": "OPS / SEC",
+      "required_closure_stage": "final SEC / certification evidence assembly",
+      "required_evidence": "protected audit storage, storage-full behavior, authorized review, retention and external anchoring evidence"
+    },
+    {
+      "id": "OPS01-BSI-M19-SECURE-STATE",
+      "matrix_row": "M-19",
+      "owner": "Voting / INFRA / OPS / SEC",
+      "required_closure_stage": "production voting integration before certification pre-evaluation",
+      "required_evidence": "TOE startup/phase/resume self-tests and governed recoverable/unrecoverable secure-state evidence"
+    },
+    {
+      "id": "OPS01-BSI-M20-MGMT",
+      "matrix_row": "M-20",
+      "owner": "CTRL / SEC / Voting governance",
+      "required_closure_stage": "CTRL closure + final SEC",
+      "required_evidence": "production management plane with phase transitions and quorum-authorized critical actions"
+    },
+    {
+      "id": "OPS01-BSI-M25-CM",
+      "matrix_row": "M-25",
+      "owner": "INFRA / OPS / SEC",
+      "required_closure_stage": "certification lifecycle evidence assembly",
+      "required_evidence": "certification-grade CM, controlled build/release, development security and delivery evidence"
+    },
+    {
+      "id": "OPS01-BSI-M27-AGD",
+      "matrix_row": "M-27",
+      "owner": "OPS / SEC",
+      "required_closure_stage": "certification guidance evidence assembly",
+      "required_evidence": "evaluator-ready preparative and operational guidance"
+    },
+    {
+      "id": "OPS01-BSI-M30-TR03169",
+      "matrix_row": "M-30",
+      "owner": "INFRA / OPS / SEC",
+      "required_closure_stage": "production infrastructure + final SEC",
+      "required_evidence": "hardened deployment, segmentation, reliable time, monitoring, admin controls, availability, incident/recovery and TR-03169 deployment profile"
+    }
+  ],
+  "new_certification_blockers": [],
+  "nonclaims": [
+    "no BSI certification claim",
+    "no Common Criteria conformance claim",
+    "no EAL4 claim",
+    "no evaluator position is asserted or implied",
+    "no existing deferred certification gap is closed by OPS-02"
+  ],
+  "preserved_from_accepted_ops01_c2": {
+    "candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+    "deferred_gap_count": 9,
+    "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS"
+  },
+  "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS",
+  "schema": "epd2.ops02.bsi-readiness-disposition/1",
+  "stage": "OPS-02",
+  "stronger_epd2_invariants_preserved": [
+    "identity_ballot_unlinkability",
+    "independent_verification",
+    "no_intermediate_tally",
+    "no_persistent_person_member_identifier_in_voting_domain"
+  ],
+  "touched_rows": [
+    {
+      "effect": "UNCHANGED",
+      "evidence": [
+        "G14",
+        "G15",
+        "G16"
+      ],
+      "id": "M-02",
+      "note": "The preview environment introduces no persistent person or member identifier and no election-scoped eligibility representation of any kind. The evaluator P0 question is untouched by operating a preview environment.",
+      "ops01_c2_effect": "PRESERVED_NO_REGRESSION",
+      "ops01_c2_readiness": "RED / P0"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G11",
+        "G31",
+        "G32"
+      ],
+      "id": "M-03",
+      "note": "Consequential traffic activation is now an authorized, independently approved act with its own change record, exercised against a running environment. Production election-board and quorum authorization remain outside OPS-02.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "YELLOW"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G14",
+        "G15",
+        "G16",
+        "G33"
+      ],
+      "id": "M-11",
+      "note": "Environment-wide telemetry was composed from the accepted OPS-01 registry and probed adversarially: no join candidate between member-domain and voting streams, positive control detecting, and a voting-sensitive incident closed without introducing an identifier. Infrastructure-layer unlinkability remains INFRA's.",
+      "ops01_c2_effect": "PRESERVED_AND_OPERATIONALLY_STRENGTHENED",
+      "ops01_c2_readiness": "GREEN"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G10",
+        "G27"
+      ],
+      "id": "M-16",
+      "note": "Authoritative time is now a readiness condition of a running environment: losing it stops consequential traffic rather than degrading quietly. Production reliable-time deployment and the final anti-correlation audit design remain open.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "YELLOW"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G22",
+        "G30",
+        "G31"
+      ],
+      "id": "M-17",
+      "note": "Operational evidence continuity is now verified across a real destroy-and-restore of the environment, and every environment incident closes with a chained record. Protected production storage and external anchoring remain open.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "RED"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G10",
+        "G12",
+        "G20",
+        "G21",
+        "G22",
+        "G23",
+        "G24",
+        "G25",
+        "G26",
+        "G27"
+      ],
+      "id": "M-19",
+      "note": "Startup, readiness, degraded, recovery, rollback and reset behaviour are exercised on a deployable environment with eleven authoritative-readiness conditions, all fail-closed. TOE production secure-state behaviour remains open.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "RED"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G09",
+        "G11",
+        "G25",
+        "G32"
+      ],
+      "id": "M-20",
+      "note": "An explicit environment management plane exists with eleven governed lifecycle operations, authorization on the consequential ones and a first-class reset. Production quorum-authorized critical actions remain CTRL/SEC work.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "RED"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G07",
+        "G08",
+        "G40",
+        "G41",
+        "G42"
+      ],
+      "id": "M-25",
+      "note": "Release-to-deployment provenance is now byte-verified end to end, and a mutated deployment fails readiness. Certification-grade configuration management, controlled build and delivery evidence remain INFRA/SEC work.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "YELLOW"
+    },
+    {
+      "effect": "PARTIALLY_IMPROVED",
+      "evidence": [
+        "G17",
+        "G18",
+        "G19"
+      ],
+      "id": "M-27",
+      "note": "Every objective is bound to an owning role, a runbook and a stated operator action, and every critical objective was made to fire. Evaluator-ready preparative and operational guidance remains to be assembled.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "YELLOW"
+    },
+    {
+      "effect": "UNCHANGED",
+      "evidence": [
+        "G16",
+        "G33"
+      ],
+      "id": "M-30",
+      "note": "No intermediate tally capability is introduced, and no operational path was created that could reconstruct a voter identity from telemetry. OPS-02 changes nothing in this row's certification position.",
+      "ops01_c2_effect": "PARTIALLY_IMPROVED",
+      "ops01_c2_readiness": "RED"
+    }
+  ]
+}

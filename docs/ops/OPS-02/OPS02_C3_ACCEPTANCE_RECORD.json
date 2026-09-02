@@ -1,0 +1,115 @@
+{
+  "schema": "epd2.ops02.acceptance-record/1",
+  "stage": "OPS-02 \u2014 Preview Operations, Deployment, Observability & Recovery Readiness",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-02",
+  "authority": "Project Owner",
+  "scope": "BOUNDED_OPS02_STAGE_ONLY",
+  "overall_ops_layer": "OPEN",
+  "system_trial_preview": "NOT_OPENED",
+  "production_readiness": "NOT_CLAIMED",
+  "legal_activation": "NOT_CLAIMED",
+  "certification_claim": "NONE",
+  "candidate": {
+    "filename": "EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip",
+    "sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+    "size_bytes": 16632939,
+    "member_count": 1541,
+    "freeze_file_count": 1536,
+    "freeze_tree_digest": "91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537",
+    "source_commit": "bf33855a6d2cfb4bc519a992ffda5842d5a6349b",
+    "source_tree": "b0c55aa431e4bcb1bf3cb8a2badf5a2106bb8dbb",
+    "source_bundle_sha256": "7fd3b8834121f8d2cf07dc0ed75e4840d8747e350c885c09adac80da10ccdcab",
+    "base_main": "4b95cc952897bd78fe912a2737f53e66264d6ff1",
+    "base_tree": "215991a302ffeb1935207e9b84831e91229c646f",
+    "sealed_self_state": "CANDIDATE_NOT_ACCEPTED"
+  },
+  "authoritative_review": {
+    "workflow": ".github/workflows/ops02-c3-authoritative-v3.yml",
+    "workflow_commit": "dc788b0fc7bad54a2ea2a055398a6ccd8bd36b04",
+    "run_id": 33610516469,
+    "job_id": 100184288996,
+    "conclusion": "success",
+    "terminal_result": "OPS02_C3_AUTHORITATIVE_RESULT:PASS:ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+    "evidence_artifact": {
+      "id": 9838829213,
+      "name": "ops02-c3-authoritative-v3-evidence-33610516469",
+      "digest": "sha256:91a178f2f255db7761d49d86f0d0384aa2326b2a56981332ed44c0efb0124f93"
+    },
+    "candidate_artifact": {
+      "id": 9838830658,
+      "name": "ops02-c3-authoritative-v3-candidate-33610516469",
+      "digest": "sha256:2d9cd097e5844395ac18f59d76d1fdd98c72f2e5ebab23c7abf52314a093647e"
+    }
+  },
+  "verification": {
+    "runtime_tests": "57/57 PASS",
+    "gates": "42/42 PASS",
+    "postgresql": "16.15",
+    "ruff_format": "PASS",
+    "ruff_check": "PASS",
+    "mypy": "PASS",
+    "same_governed_source_bytes_after_execution": true,
+    "transport_identity": "PASS",
+    "source_bundle_provenance": "PASS",
+    "metadata_consistency": "PASS",
+    "no_self_acceptance_gate": "PASS"
+  },
+  "bsi_readiness": {
+    "result": "PASS_WITH_EXPLICIT_EXISTING_DEFERRED_GAPS",
+    "new_certification_blockers": [],
+    "deferred_existing_gap_count": 9,
+    "touched_rows": [
+      "M-02",
+      "M-03",
+      "M-11",
+      "M-16",
+      "M-17",
+      "M-19",
+      "M-20",
+      "M-25",
+      "M-27",
+      "M-30"
+    ],
+    "certification_claim": "NONE"
+  },
+  "preview_readiness": {
+    "candidate_time_status": "TECHNICALLY_READY_BUT_BLOCKED_BY_API",
+    "current_governance_dependency": "API-06 remains NEXT; API layer remains open",
+    "system_trial_preview_opened": false
+  },
+  "post_candidate_reconciliation": {
+    "entering_main": "9435ec2ef381488ec7b51b4bee43efa0698ca9d5",
+    "entering_tree": "23aca7bafaf2d310cb8eee1622bb00be4ce30e19",
+    "api_row": [
+      "| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |"
+    ],
+    "ops_row": [
+      "| OPS | `OPS-01 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. The overall OPS layer remains open; final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |"
+    ],
+    "source_delta_overlap": [],
+    "classification": "NO_CONTROLLING_AUTHORITY_CONFLICT / NO_SOURCE_DELTA_CONFLICT",
+    "checks": {
+      "api_row_unique": true,
+      "ops_row_unique": true,
+      "api06_next": true,
+      "api_layer_not_closed": true,
+      "ops01_accepted": true,
+      "ops02_not_preaccepted": true,
+      "ops_layer_open": true
+    }
+  },
+  "master_future_implementation_register": {
+    "changed": false,
+    "reason": "OPS02_FIR_DISPOSITION records status_change_requested=false for all 10 reconciled FIRs; no FIR status promotion is authorized by this bounded acceptance."
+  },
+  "nonclaims": [
+    "overall OPS-layer closure",
+    "System Trial Preview opening",
+    "production readiness",
+    "legal activation",
+    "BSI certification",
+    "Common Criteria certification",
+    "EAL4 certification"
+  ]
+}
