@@ -1,0 +1,229 @@
+name: OPS-03 C2 authoritative acceptance
+
+on:
+  push:
+    branches: [tmp/ops03-c2-authoritative-accept]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  authoritative-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+
+    steps:
+      - name: Checkout independent acceptance control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Load external candidate control
+        id: ctl
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=handoff/OPS-03/acceptance/OPS03_C2_ACCEPTANCE_CONTROL.json
+          test -f "$C"
+          jq -e '.stage=="OPS-03" and .candidate_role=="C2" and .self_acceptance==false' "$C"
+          echo "run=$(jq -r .builder_run_id "$C")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r .candidate_sha256 "$C")" >> "$GITHUB_OUTPUT"
+          echo "size=$(jq -r .candidate_size_bytes "$C")" >> "$GITHUB_OUTPUT"
+          echo "artifact=$(jq -r .artifact_name "$C")" >> "$GITHUB_OUTPUT"
+          echo "wf_sha=$(jq -r .sealed_workflow_sha256 "$C")" >> "$GITHUB_OUTPUT"
+
+      - name: Download exact sealed OPS-03 C2
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.ctl.outputs.artifact }}
+          path: incoming/ops03
+          run-id: ${{ steps.ctl.outputs.run }}
+          github-token: ${{ github.token }}
+
+      - name: Verify exact candidate identity, freeze and workflow
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP=$(find incoming/ops03 -type f -name 'EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip' -print -quit)
+          test -n "$ZIP"
+          echo "${{ steps.ctl.outputs.sha }}  $ZIP" | sha256sum -c -
+          test "$(stat -c%s "$ZIP")" = '${{ steps.ctl.outputs.size }}'
+          rm -rf "$RUNNER_TEMP/ops03" && mkdir -p "$RUNNER_TEMP/ops03"
+          unzip -q "$ZIP" -d "$RUNNER_TEMP/ops03"
+          ROOT="$RUNNER_TEMP/ops03"
+          jq -e '.stage=="OPS-03" and .candidate_role=="C2" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and .harness=="PASS" and .handoff_state=="READY_FOR_INDEPENDENT_GOVERNED_REVIEW" and (.declared_blockers|length)==0 and .accepted_api06_candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c"' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
+          python3 - "$ROOT" <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); f=json.loads((root/'OPS03_FREEZE_MANIFEST.json').read_text())
+          assert f['schema']=='epd2.ops03.freeze-manifest/1'
+          bad=[]
+          for rel,digest in f['files'].items():
+              p=root/rel
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=digest: bad.append(rel)
+          assert not bad,bad[:20]
+          canon=json.dumps(dict(sorted(f['files'].items())),sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
+          assert hashlib.sha256(canon).hexdigest()==f['tree_digest']
+          print(f"OPS03_C2_FREEZE:PASS:{f['file_count']}:{f['tree_digest']}")
+          PY
+          test "$(sha256sum "$ROOT/handoff/OPS-03/templates/C2/ops03-accept.yml" | cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          test "$(sha256sum .github/workflows/ops03-accept.yml | cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo 'OPS03_C2_SEALED_IDENTITY:PASS'
+
+      - name: Verify current canonical entering baseline still matches C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin main
+          ROOT='${{ steps.candidate.outputs.root }}'
+          test "$(git rev-parse origin/main)" = "$(jq -r .base_commit "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json")"
+          test "$(git rev-parse origin/main^{tree})" = "$(jq -r .base_tree "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json")"
+          for P in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json docs/api/API-06/API06_C1_CANONICAL_INSTALLATION_MANIFEST.json; do
+            git show "origin/main:$P" > "$RUNNER_TEMP/canonical-file"
+            cmp --silent "$RUNNER_TEMP/canonical-file" "$ROOT/$P"
+          done
+          echo 'OPS03_C2_CANONICAL_BASELINE:PASS'
+
+      - name: Materialize exact accepted OPS-02 C3 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/ops
+          mkdir -p "$RUNNER_TEMP/accepted"
+          P='handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip'
+          git show "origin/handoff/ops:$P" > "$RUNNER_TEMP/accepted/$(basename "$P")"
+          echo 'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125  '"$RUNNER_TEMP/accepted/$(basename "$P")" | sha256sum -c -
+          test "$(stat -c%s "$RUNNER_TEMP/accepted/$(basename "$P")")" = '16632939'
+          echo "EPD2_OPS03_ACCEPTED_ARTIFACTS=$RUNNER_TEMP/accepted" >> "$GITHUB_ENV"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up exact uv toolchain
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.14"
+          enable-cache: false
+
+      - name: Install locked workspace and PostgreSQL client
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client-16
+          python --version
+          uv --version
+          psql --version
+          PGPASSWORD= psql -h 127.0.0.1 -U postgres -tAc 'show server_version'
+
+      - name: Independent lint, type and unit suites
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv run --frozen ruff format --check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen ruff check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests
+          uv run --frozen mypy tests/ops03
+          uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+
+      - name: Independent predecessor non-regression
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv run --frozen python scripts/validation/validate_ops01.py
+          uv run --frozen python scripts/validation/validate_ops02.py
+
+      - name: Re-run complete authoritative OPS-03 50-gate harness
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          rm -rf "$RUNNER_TEMP/ops03-authoritative-evidence"
+          mkdir -p "$RUNNER_TEMP/ops03-authoritative-evidence"
+          uv run --frozen python scripts/validation/validate_ops03.py --repo-root "$PWD" --output-dir "$RUNNER_TEMP/ops03-authoritative-evidence" | tee "$RUNNER_TEMP/ops03-authoritative.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/ops03-authoritative.log"
+          jq -e '.verdict=="PASS" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.gates_missing==[] and .result.environment_blocked==[] and .result.skipped==[] and .result.not_run==[] and .result.manual_assume_pass==[] and .result.same_governed_source_bytes_after_execution==true' "$RUNNER_TEMP/ops03-authoritative-evidence/ops03_acceptance_result.json"
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0 and (.result.defects|length)==0' "$RUNNER_TEMP/ops03-authoritative-evidence/mutation_suite_result.json"
+
+      - name: Prove sealed governed bytes unchanged
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - "$PWD" <<'PY'
+          import hashlib,json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); f=json.loads((root/'OPS03_FREEZE_MANIFEST.json').read_text())
+          bad=[]
+          for rel,digest in f['files'].items():
+              p=root/rel
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=digest: bad.append(rel)
+          assert not bad,bad[:20]
+          print('OPS03_C2_SEALED_SOURCE_UNCHANGED:PASS')
+          PY
+
+      - name: Write external authoritative result
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.candidate.outputs.root }}'
+          OUT="$RUNNER_TEMP/ops03-authoritative-evidence/external_authoritative_result.json"
+          python3 - "$ROOT" "$OUT" <<'PY'
+          import json,os,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          state=json.loads((root/'OPS03_CANDIDATE_SELF_STATE.json').read_text())
+          result=json.loads((out.parent/'ops03_acceptance_result.json').read_text())
+          mutation=json.loads((out.parent/'mutation_suite_result.json').read_text())
+          doc={'schema':'epd2.ops03.c2.external-authoritative/1','stage':'OPS-03','candidate_role':'C2','result':'PASS','self_acceptance':False,'candidate_sha256':'${{ steps.ctl.outputs.sha }}','candidate_size_bytes':int('${{ steps.ctl.outputs.size }}'),'builder_run_id':int('${{ steps.ctl.outputs.run }}'),'authoritative_run_id':int(os.environ['GITHUB_RUN_ID']),'authoritative_job':'authoritative-acceptance','provenance_commit':os.environ['GITHUB_SHA'],'entering_main_commit':state['entering_main_commit'],'accepted_api06_candidate_sha256':state['accepted_api06_candidate_sha256'],'governed_gates_total':50,'passed_gates':result['result']['gates_passed'],'failed_gates':result['result']['gates_failed'],'blocked_gates':result['result']['environment_blocked'],'mutations_total':mutation['result']['total'],'mutations_detected':mutation['result']['detected'],'mutations_undetected':mutation['result']['undetected'],'sealed_source_unchanged':True,'terminal_marker':'OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json'}
+          out.write_text(json.dumps(doc,indent=2)+'\n')
+          PY
+          jq -e '.result=="PASS" and .self_acceptance==false and .passed_gates==50 and .failed_gates==[] and .blocked_gates==[] and .mutations_total==24 and .mutations_detected==24 and .mutations_undetected==0 and .sealed_source_unchanged==true' "$OUT"
+
+      - name: Upload authoritative acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/ops03-authoritative-evidence/
+            ${{ runner.temp }}/ops03-authoritative.log
+            ${{ steps.candidate.outputs.root }}/OPS03_CANDIDATE_SELF_STATE.json
+            ${{ steps.candidate.outputs.root }}/OPS03_FREEZE_MANIFEST.json
+            ${{ steps.candidate.outputs.root }}/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Authoritative result
+        run: echo 'OPS03_C2_AUTHORITATIVE_RESULT:PASS:${{ steps.ctl.outputs.sha }}:${{ steps.ctl.outputs.size }}'
