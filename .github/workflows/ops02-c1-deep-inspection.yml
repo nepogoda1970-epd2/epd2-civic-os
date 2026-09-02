@@ -1,0 +1,178 @@
+name: OPS-02 C1 Deep Inspection
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths:
+      - '.github/workflows/ops02-c1-deep-inspection.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-inspect:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: epd2
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d epd2"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CANDIDATE: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip
+      ENTERING_MAIN: 2878c3bbfeb11328adf294a2b59d631b851b43dd
+      CANON_MAIN: ef8c96c4b61020a0f2f75aef102cd6ba00c37f8b
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: epd2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence c1
+          sha256sum "$CANDIDATE" | tee evidence/candidate.sha256
+          stat -c '%s' "$CANDIDATE" | tee evidence/candidate.size
+          unzip -t "$CANDIDATE" > evidence/unzip-test.log
+          unzip -q "$CANDIDATE" -d c1
+          ROOT=c1
+          n=$(find c1 -mindepth 1 -maxdepth 1 -type d | wc -l)
+          f=$(find c1 -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$n" -eq 1 ] && [ "$f" -eq 0 ]; then ROOT=$(find c1 -mindepth 1 -maxdepth 1 -type d | head -n1); fi
+          echo "$ROOT" | tee evidence/root.txt
+
+      - name: Derive exact C1 source delta versus entering canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          rm -rf entering
+          git worktree add --detach entering "$ENTERING_MAIN"
+          python - <<'PY' | tee evidence/c1-vs-entering-delta.json
+          import os, json, hashlib
+          from pathlib import Path
+          root=Path(open('evidence/root.txt').read().strip())
+          base=Path('entering')
+          def inventory(p):
+              out={}
+              for f in p.rglob('*'):
+                  if not f.is_file(): continue
+                  rel=f.relative_to(p).as_posix()
+                  if rel.startswith('.git/') or rel=='.git': continue
+                  out[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+              return out
+          a=inventory(base); b=inventory(root)
+          added=sorted(set(b)-set(a)); deleted=sorted(set(a)-set(b)); modified=sorted(k for k in set(a)&set(b) if a[k]!=b[k])
+          print(json.dumps({'added':added,'modified':modified,'deleted':deleted,'counts':{'added':len(added),'modified':len(modified),'deleted':len(deleted)}},indent=2))
+          PY
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Exact runtime versions and locked sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          cd "$ROOT"
+          python --version | tee ../evidence/python-version.txt
+          uv --version | tee ../evidence/uv-version.txt
+          psql "$DATABASE_URL" -Atc 'SHOW server_version;' | tee ../evidence/postgres-server-version.txt
+          uv sync --all-groups --frozen | tee ../evidence/uv-sync.log
+
+      - name: OPS-02 tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          cd "$ROOT"
+          uv run pytest -q packages/python/epd2-preview/tests tests/ops02 | tee ../evidence/ops02-tests.log
+
+      - name: OPS-02 authoritative harness dry run
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          cd "$ROOT"
+          uv run python scripts/validation/validate_ops02.py | tee ../evidence/validator.log
+          cp -a validation/ops02 ../evidence/validation-ops02
+
+      - name: OPS-02 targeted quality
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          cd "$ROOT"
+          uv run ruff format --check packages/python/epd2-preview scripts/ops02 scripts/validation/validate_ops02.py tests/ops02 | tee ../evidence/ruff-format.log
+          uv run ruff check packages/python/epd2-preview scripts/ops02 scripts/validation/validate_ops02.py tests/ops02 | tee ../evidence/ruff-check.log
+          uv run mypy packages/python/epd2-preview/src scripts/ops02 | tee ../evidence/mypy-main.log
+          uv run mypy packages/python/epd2-preview/tests | tee ../evidence/mypy-preview-tests.log
+          uv run mypy tests/ops02 | tee ../evidence/mypy-ops02-tests.log
+
+      - name: Freeze manifest independent verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          python - <<'PY' | tee evidence/freeze-independent.json
+          import json, hashlib
+          from pathlib import Path
+          root=Path(open('evidence/root.txt').read().strip())
+          m=json.loads((root/'OPS02_FREEZE_MANIFEST.json').read_text())
+          files=m.get('files',{})
+          bad=[]
+          for rel,exp in files.items():
+              p=root/rel
+              if not p.is_file(): bad.append({'path':rel,'error':'missing'}); continue
+              got=hashlib.sha256(p.read_bytes()).hexdigest()
+              if got!=exp: bad.append({'path':rel,'expected':exp,'got':got})
+          records=''.join(f'{rel}\0{files[rel]}\n' for rel in sorted(files))
+          d=hashlib.sha256(records.encode()).hexdigest()
+          print(json.dumps({'manifest_file_count':len(files),'bad':bad,'computed_tree_digest':d,'declared_tree_digest':m.get('tree_digest') or m.get('freeze_tree_digest'),'all_file_hashes_match':not bad},indent=2))
+          if bad: raise SystemExit(1)
+          PY
+
+      - name: Candidate authority freshness classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/root.txt)
+          : > evidence/authority-freshness.txt
+          for p in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json; do
+            git show "$CANON_MAIN:$p" > /tmp/canon
+            if cmp -s /tmp/canon "$ROOT/$p"; then echo "MATCH $p"; else echo "DIFF $p"; fi
+          done | tee evidence/authority-freshness.txt
+
+      - name: Capture key OPS-02 documents
+        if: always()
+        shell: bash
+        run: |
+          ROOT=$(cat evidence/root.txt)
+          for p in OPS02_CANDIDATE_SELF_STATE.json OPS02_PREVIEW_READINESS_PREREQUISITES.json OPS02_BSI_READINESS_DISPOSITION.json docs/ops/OPS-02/OPS02_DEVELOPER_REPORT.md docs/ops/OPS-02/OPS02_ENTERING_BASELINE_IDENTITY.json docs/ops/OPS-02/OPS02_FIR_DISPOSITION.json docs/ops/OPS-02/OPS02_KNOWN_LIMITATIONS.md docs/ops/OPS-02/OPS02_OPS01_RECONCILIATION.json .github/workflows/ops02-verify.yml; do
+            if [ -f "$ROOT/$p" ]; then echo "===== $p =====" >> evidence/key-docs.txt; cat "$ROOT/$p" >> evidence/key-docs.txt; echo >> evidence/key-docs.txt; fi
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ops02-c1-deep-inspection-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
