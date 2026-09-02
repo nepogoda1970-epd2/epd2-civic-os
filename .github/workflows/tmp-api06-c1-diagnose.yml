@@ -1,0 +1,114 @@
+name: API-06 C1 diagnostic for INFRA-03 prerequisite
+on:
+  push:
+    branches: [tmp/api06-c1-diagnose-infra03-prereq]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: api06
+          POSTGRES_PASSWORD: api06-synthetic-ci-only
+          POSTGRES_DB: epd2_api06
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U api06 -d epd2_api06"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_API06_DATABASE_URL: postgresql://api06:api06-synthetic-ci-only@127.0.0.1:5432/epd2_api06
+      API06_API05_SHA: 38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: api05-c1-candidate
+          path: incoming/api05
+          run-id: 33574093099
+          github-token: ${{ github.token }}
+      - name: Construct corrected API-06 source
+        id: base
+        shell: bash
+        run: |
+          set -euo pipefail
+          A5=$(find incoming/api05 -type f -name 'EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$A5"; echo "$API06_API05_SHA  $A5" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/api06" "$RUNNER_TEMP/api05-pristine"
+          python3 - "$A5" "$RUNNER_TEMP/api06" "$RUNNER_TEMP/api05-pristine" <<'PY'
+          import pathlib,shutil,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); root={n.split('/',1)[0] for n in z.namelist() if n}.pop(); z.extractall(sys.argv[2]); src=pathlib.Path(sys.argv[2])/root; shutil.copytree(src,pathlib.Path(sys.argv[3])/'base')
+          PY
+          ROOT="$RUNNER_TEMP/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1"
+          cp "$ROOT/uv.lock" /tmp/api05-uv.lock
+          git fetch --no-tags origin fd3c4a2073a38709c4d007a4d8c3f3c750a6f5cb
+          git show fd3c4a2073a38709c4d007a4d8c3f3c750a6f5cb:handoff/API-06/WORKING_0.1/api06_overlay.tar.gz.b64 | base64 --decode > "$RUNNER_TEMP/overlay.tar.gz"
+          tar --no-same-owner -xzf "$RUNNER_TEMP/overlay.tar.gz" -C "$ROOT"
+          python3 - "$ROOT" "$RUNNER_TEMP/api05-pristine/base" <<'PY'
+          import pathlib,shutil,sys
+          root=pathlib.Path(sys.argv[1]); base=pathlib.Path(sys.argv[2])
+          for p in base.rglob('*'):
+              if p.is_file():
+                  q=root/p.relative_to(base); q.parent.mkdir(parents=True,exist_ok=True); shutil.copy2(p,q)
+          PY
+          python3 handoff/API-06/C1/api06_c1_correction.py "$ROOT"
+          git fetch --depth=1 origin main
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          git show origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md > "$ROOT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"
+          git show origin/main:docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json > "$ROOT/docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo "API06_CURRENT_MAIN_COMMIT=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_MAIN_TREE=$(git rev-parse origin/main^{tree})" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_PCR_SHA256=$(sha256sum "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"|cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_MASTER_SHA256=$(sha256sum "$ROOT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"|cut -d' ' -f1)" >> "$GITHUB_ENV"
+      - name: Build governed API-06 artifacts
+        working-directory: ${{ steps.base.outputs.root }}
+        run: python3 scripts/api06/build_api06_artifacts.py
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: "0.12.5", enable-cache: false}
+      - name: Install exact inherited environment
+        working-directory: ${{ steps.base.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv lock --check; cmp --silent uv.lock /tmp/api05-uv.lock
+          uv sync --frozen --all-groups
+          uv pip install --python .venv/bin/python pika==1.3.2
+          mkdir -p .api03-crypto
+          unzip -q -o packages/python/epd2-s2s-crypto/wheelhouse/cryptography-49.0.0-cp311-abi3-manylinux_2_34_x86_64.whl -d .api03-crypto
+          echo "API06_API03_CRYPTO_PATH=$PWD/.api03-crypto" >> "$GITHUB_ENV"
+      - name: Run validator nonfatally and expose exact failures
+        working-directory: ${{ steps.base.outputs.root }}
+        shell: bash
+        run: |
+          set +e
+          .venv/bin/python scripts/validation/validate_api06.py --out validation/api06/api06_acceptance_result.json | tee /tmp/api06-diagnostic.log
+          RC=${PIPESTATUS[0]}
+          echo "validator_rc=$RC"
+          python3 - <<'PY'
+          import json
+          p=json.load(open('validation/api06/api06_acceptance_result.json'))
+          print('RESULT',p.get('result'),'PASSED',p.get('passed_gates'))
+          print('FAILED_GATES',json.dumps(p.get('failed_gates'),indent=2))
+          print('ENV_BLOCKED',json.dumps(p.get('environment_blocked_runs'),indent=2))
+          for key in ('gates','checks','results'):
+              v=p.get(key)
+              if isinstance(v,list):
+                  for x in v:
+                      if isinstance(x,dict) and str(x.get('state') or x.get('status') or x.get('result')).upper() not in ('PASS','PASSED','SUCCESS','OK'):
+                          print('NONPASS',json.dumps(x,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: api06-c1-diagnostic-${{ github.run_id }}
+          path: |
+            ${{ steps.base.outputs.root }}/validation/api06/
+            /tmp/api06-diagnostic.log
+          if-no-files-found: error
+          retention-days: 7
