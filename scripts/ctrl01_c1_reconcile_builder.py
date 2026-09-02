@@ -1,80 +1,128 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse, hashlib, json, re, shutil, subprocess, tempfile, zipfile
+import argparse
+import hashlib
+import json
+import re
+import shutil
+import subprocess
+import tempfile
+import zipfile
 from pathlib import Path
 
-P1_SHA256 = '490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71'
-BASE_MAIN = '217559b7f21c338d6fe8d4e4676082cd3840251c'
-BASE_TREE = 'eb8a3254c2b8a30feff71318d4377eff2435605c'
-CANDIDATE_NAME = 'EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1'
+P1_SHA256 = "490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71"
+P1_BASE_MAIN = "cb02b231e701d0b4f12db89c86bc56a9fe11f71a"
+BASE_MAIN = "217559b7f21c338d6fe8d4e4676082cd3840251c"
+BASE_TREE = "eb8a3254c2b8a30feff71318d4377eff2435605c"
+CANDIDATE_NAME = "EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1"
 
-CANONICAL_BLOBS = {
-    'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md': '4b69cf500f2171399f7fb0b4213cb1bddcc8cf07',
-    'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md': 'aad828e377889e96f0bce16245f4e9ed1d97ed4a',
-    'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md': '7f5c6a9a88f8e653b43dc542a595ac37bf7a0692',
-    'docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md': '15dd290a1bcb6f44b4242e7c33b71119e404553a',
+CANONICAL_BLOBS: dict[str, str] = {
+    "docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md": "4b69cf500f2171399f7fb0b4213cb1bddcc8cf07",
+    "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md": "aad828e377889e96f0bce16245f4e9ed1d97ed4a",
+    "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+    "docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md": "15dd290a1bcb6f44b4242e7c33b71119e404553a",
 }
-ACCEPTED = {
-    'docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json': '7f8b16ca16a11f4916f1988ef53243b977e1862d',
-    'docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json': '0f41555a4aa5f0bf80fa7a1a95be905c02d692c5',
-    'docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json': 'fab2833e6769bc9e71876e47b168848e6c386e96',
-    'docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json': 'e35f0ff0438419db445580f8739575ccba3f6551',
-    'docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json': '5eb35c0699434f1f93c63bfc23a87097c609ca06',
-    'docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json': '',
-    'docs/frontend/FRONT-02-C2.1-ACCEPTANCE-RECORD.json': '',
-    'docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json': '',
-    'docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json': '95df6e5c5288b16aee62621157fc28a790b68bfc',
-    'docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json': '',
-    'docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json': '3d4baa96b957693244507aaa76f2d685226f88b6',
+
+ACCEPTED_PREDECESSOR_BLOBS: dict[str, str] = {
+    "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json": "7f8b16ca16a11f4916f1988ef53243b977e1862d",
+    "docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json": "0f41555a4aa5f0bf80fa7a1a95be905c02d692c5",
+    "docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json": "fab2833e6769bc9e71876e47b168848e6c386e96",
+    "docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json": "e35f0ff0438419db445580f8739575ccba3f6551",
+    "docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json": "5eb35c0699434f1f93c63bfc23a87097c609ca06",
+    "docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json": "ced7d78a779343b5507a5cd612ad8620e8c821cd",
+    "docs/frontend/FRONT-02-C2.1-ACCEPTANCE-RECORD.json": "8f22eab702d7d674be115916defb2e12e63d7680",
+    "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json": "5618144cf503b55bea96550c80d80cac78580963",
+    "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json": "95df6e5c5288b16aee62621157fc28a790b68bfc",
+    "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json": "0b23469ac20c34fa7891653cb41d0eaa44437ac6",
+    "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json": "3d4baa96b957693244507aaa76f2d685226f88b6",
 }
+
+DELTA_PREFIXES = (
+    "services/control-plane-service/",
+    "docs/ctrl/CTRL-01/",
+    "scripts/ctrl01_validator.py",
+    "scripts/ctrl01_registry_export.py",
+    "scripts/system_trial_preview_prepare.py",
+)
 
 
 def sha256(path: Path) -> str:
-    h=hashlib.sha256()
-    with path.open('rb') as f:
-        for chunk in iter(lambda:f.read(1<<20), b''): h.update(chunk)
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
     return h.hexdigest()
 
+
 def run(*cmd: str, cwd: Path) -> str:
-    p=subprocess.run(cmd,cwd=cwd,text=True,capture_output=True,check=True)
+    p = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, check=True)
     return p.stdout.strip()
 
-def replace_block(text: str, start: str, end: str, replacement: str) -> str:
-    a=text.index(start); b=text.index(end,a)
-    return text[:a]+replacement+text[b:]
 
-def py_dict(name: str, mapping: dict[str,str], comment_after: str) -> str:
-    body = name + ': dict[str, str] = {\n' + ''.join(f'    {k!r}: {v!r},\n' for k,v in mapping.items()) + '}\n\n'
-    return body + comment_after
+def git_blob(repo: Path, rel: str) -> str:
+    return run("git", "rev-parse", f"HEAD:{rel}", cwd=repo)
+
+
+def assert_base(repo: Path) -> None:
+    head = run("git", "rev-parse", "HEAD", cwd=repo)
+    tree = run("git", "rev-parse", "HEAD^{tree}", cwd=repo)
+    if head != BASE_MAIN:
+        raise SystemExit(f"wrong base main: {head} != {BASE_MAIN}")
+    if tree != BASE_TREE:
+        raise SystemExit(f"wrong base tree: {tree} != {BASE_TREE}")
+    for rel, expected in {**CANONICAL_BLOBS, **ACCEPTED_PREDECESSOR_BLOBS}.items():
+        actual = git_blob(repo, rel)
+        if actual != expected:
+            raise SystemExit(f"canonical blob drift: {rel}: {actual} != {expected}")
+
+
+def assert_no_source_overlap(repo: Path) -> None:
+    try:
+        run("git", "cat-file", "-e", f"{P1_BASE_MAIN}^{{commit}}", cwd=repo)
+    except subprocess.CalledProcessError:
+        return
+    changed = run("git", "diff", "--name-only", P1_BASE_MAIN, BASE_MAIN, cwd=repo).splitlines()
+    overlap = [p for p in changed if any(p == x or p.startswith(x) for x in DELTA_PREFIXES)]
+    if overlap:
+        raise SystemExit("P1/current-main source overlap requires manual reconciliation: " + ", ".join(overlap))
+
+
+def replace_mapping(text: str, name: str, mapping: dict[str, str]) -> str:
+    pattern = rf"{re.escape(name)}: dict\[str, str\] = \{{.*?\n\}}"
+    replacement = name + ": dict[str, str] = {\n" + "".join(
+        f"    {k!r}: {v!r},\n" for k, v in mapping.items()
+    ) + "}"
+    new, n = re.subn(pattern, replacement, text, count=1, flags=re.S)
+    if n != 1:
+        raise SystemExit(f"unable to replace {name}")
+    return new
+
 
 def patch_validator(path: Path) -> None:
-    t=path.read_text()
-    start='CANONICAL_BLOBS: dict[str, str] = {'
-    end='ACCEPTED_PREDECESSOR_BLOBS: dict[str, str] = {'
-    repl=py_dict('CANONICAL_BLOBS', CANONICAL_BLOBS, '')
-    t=replace_block(t,start,end,repl+'ACCEPTED_PREDECESSOR_BLOBS: dict[str, str] = {')
-    # replace accepted dict cleanly
-    a=t.index('ACCEPTED_PREDECESSOR_BLOBS: dict[str, str] = {')
-    b=t.index('\n}\n\n#: Stages CTRL-01 consumes',a)+3
-    accepted='ACCEPTED_PREDECESSOR_BLOBS: dict[str, str] = {\n'+''.join(f'    {k!r}: {v!r},\n' for k,v in ACCEPTED.items())+'}'
-    t=t[:a]+accepted+t[b:]
-    # unreconciled block
-    a=t.index('UNRECONCILED_DEPENDENCIES: dict[str, str] = {')
-    b=t.index('\n}\n\n#: The FIR reconciliation targets',a)+3
-    t=t[:a]+'''UNRECONCILED_DEPENDENCIES: dict[str, str] = {
-    "API-06": "NEXT / NOT ACCEPTED; API layer remains open until API-06 closes",
-}'''+t[b:]
-    t=re.sub(r'BASELINE_COMMIT = "[0-9a-f]{40}"', f'BASELINE_COMMIT = "{BASE_MAIN}"', t)
-    # current PCR has no material contradictory state; require the current facts instead.
-    a=t.index('def _register_conflicts()')
-    b=t.index('\n\ndef _write(',a)
-    t=t[:a]+'''def _register_conflicts() -> list[dict[str, str]]:
-    """Return material current-state conflicts only.
+    t = path.read_text()
+    t = replace_mapping(t, "CANONICAL_BLOBS", CANONICAL_BLOBS)
+    t = replace_mapping(t, "ACCEPTED_PREDECESSOR_BLOBS", ACCEPTED_PREDECESSOR_BLOBS)
+    t = replace_mapping(
+        t,
+        "UNRECONCILED_DEPENDENCIES",
+        {"API-06": "NEXT / NOT ACCEPTED; API layer remains open until API-06 closes"},
+    )
+    t, n = re.subn(
+        r'BASELINE_COMMIT = "[0-9a-f]{40}"',
+        f'BASELINE_COMMIT = "{BASE_MAIN}"',
+        t,
+        count=1,
+    )
+    if n != 1:
+        raise SystemExit("unable to replace BASELINE_COMMIT")
 
-    Historical placement/section-shape omissions are not promoted to current-state
-    conflicts when the PCR, post-run acceptance record and phase table agree.
-    """
+    start = t.find("def _register_conflicts()")
+    end = t.find("\n\ndef _write(", start)
+    if start < 0 or end < 0:
+        raise SystemExit("unable to locate _register_conflicts")
+    replacement = '''def _register_conflicts() -> list[dict[str, str]]:
+    """Fail closed on material current-state disagreement only."""
     register = REPO_ROOT / "docs" / "roadmap" / "EPD2_PROGRAM_CONTROL_REGISTER.md"
     if not register.exists():
         return [{"conflict_id": "PCR-MISSING", "statement_a": "PCR missing"}]
@@ -82,8 +130,9 @@ def patch_validator(path: Path) -> None:
     required = {
         "PCR-API05": "API-05 = ACCEPTED / CLOSED",
         "PCR-API06": "API-06 = NEXT",
-        "PCR-INFRA02": "INFRA-02 authoritative acceptance and bounded stage closure",
-        "PCR-OPS02": "OPS-02 authoritative acceptance and bounded stage closure",
+        "PCR-INFRA02": "INFRA-02 ACCEPTED / CLOSED",
+        "PCR-OPS02": "OPS-02 ACCEPTED / CLOSED",
+        "PCR-CTRL": "| CTRL | `NOT_STARTED` |",
     }
     conflicts: list[dict[str, str]] = []
     for cid, needle in required.items():
@@ -94,93 +143,234 @@ def patch_validator(path: Path) -> None:
                 "ctrl01_position": "fail closed pending governed reconciliation",
             })
     return conflicts
-'''+t[b:]
-    # current seal preconditions
-    t=t.replace('"reconcile exact accepted API-05 identity or record it as not yet accepted",\n                ', '')
-    t=t.replace('"reconcile INFRA-02 and OPS-02 if accepted before CTRL-01 seal",\n                ', '')
-    t=t.replace('"reconcile exact accepted API-06 identity or record it as not yet accepted",', '"keep API-06 explicitly NEXT / NOT ACCEPTED unless a later authoritative record exists",')
-    # consumed surface now names the accepted additions
-    t=t.replace('"API-04": "event/messaging semantics not consumed by CTRL-01 preseal work",\n                "INFRA-01":', '"API-04": "event/messaging semantics not consumed by CTRL-01 bounded work",\n                "API-05": "external-integration authority semantics reconciled by accepted C1 record only",\n                "INFRA-01":')
-    t=t.replace('"OPS-01": "incident, recovery and change-control separation-of-duties conventions",', '"INFRA-02": "accepted CI/CD and supply-chain integrity boundary",\n                "OPS-01": "incident, recovery and change-control separation-of-duties conventions",\n                "OPS-02": "accepted preview-operations readiness implementation; checkpoint remains governance-closed",')
+'''
+    t = t[:start] + replacement + t[end:]
+
+    t = t.replace(
+        '"reconcile exact accepted API-05 identity or record it as not yet accepted",\n                ',
+        "",
+    )
+    t = t.replace(
+        '"reconcile INFRA-02 and OPS-02 if accepted before CTRL-01 seal",\n                ',
+        "",
+    )
+    t = t.replace(
+        '"reconcile exact accepted API-06 identity or record it as not yet accepted",',
+        '"keep API-06 explicitly NEXT / NOT ACCEPTED unless a later authoritative record exists",',
+    )
+    t = t.replace(
+        '"API-04": "event/messaging semantics not consumed by CTRL-01 preseal work",\n                "INFRA-01":',
+        '"API-04": "event/messaging semantics not consumed by CTRL-01 bounded work",\n                "API-05": "accepted external-integration authority record is reconciled but not treated as an implementation dependency",\n                "INFRA-01":',
+    )
+    t = t.replace(
+        '"OPS-01": "incident, recovery and change-control separation-of-duties conventions",',
+        '"INFRA-02": "accepted bounded CI/CD and supply-chain integrity foundation",\n                "OPS-01": "incident, recovery and change-control separation-of-duties conventions",\n                "OPS-02": "accepted bounded preview-operations implementation; checkpoint opening remains separately governed",',
+    )
     path.write_text(t)
+
 
 def patch_trial(path: Path) -> None:
-    t=path.read_text()
-    t=t.replace('"API-05": "API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED.",', '"API-05": "API-05 C1 is ACCEPTED / CLOSED and is not a current checkpoint blocker.",')
-    t=t.replace('"INFRA-02": "INFRA preview-readiness minimum is not recorded as met.",', '"INFRA-02": "INFRA-02 is ACCEPTED / CLOSED as a bounded stage; the explicit joint INFRA/OPS preview-readiness minimum remains unrecorded while API-06 is open.",')
-    old='''"OPS-02": (
-        "OPS preview-readiness minimum (deploy, observe, recover, reset) is not recorded as met."
-    ),'''
-    new='''"OPS-02": (
-        "OPS-02 C3 is ACCEPTED / CLOSED and technically ready; the explicit joint preview-readiness minimum remains a governance decision downstream of API-06."
-    ),'''
-    t=t.replace(old,new)
-    t=t.replace('{"item": "remaining API surface", "source": "API-05 / API-06", "state": "NOT_ACCEPTED"}', '{"item": "remaining API surface", "source": "API-06", "state": "NEXT_NOT_ACCEPTED"}')
+    t = path.read_text()
+    replacements = {
+        '"API-05": "API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED.",':
+            '"API-05": "API-05 C1 is ACCEPTED / CLOSED and is not a current checkpoint blocker.",',
+        '"INFRA-02": "INFRA preview-readiness minimum is not recorded as met.",':
+            '"INFRA-02": "INFRA-02 is ACCEPTED / CLOSED as a bounded stage; explicit joint preview-readiness remains separately governed while API-06 is open.",',
+        '{"item": "remaining API surface", "source": "API-05 / API-06", "state": "NOT_ACCEPTED"}':
+            '{"item": "remaining API surface", "source": "API-06", "state": "NEXT_NOT_ACCEPTED"}',
+    }
+    for old, new in replacements.items():
+        t = t.replace(old, new)
+    t = t.replace(
+        '"OPS preview-readiness minimum (deploy, observe, recover, reset) is not recorded as met."',
+        '"OPS-02 C3 is ACCEPTED / CLOSED as a bounded stage; explicit joint preview-readiness remains a governance checkpoint downstream of API-06."',
+    )
     path.write_text(t)
 
-def patch_docs(root: Path) -> None:
-    repl={
-        'cb02b231e701d0b4f12db89c86bc56a9fe11f71a': BASE_MAIN,
-        '1ea6161335044dc4d1e50a6b1588bad6627f7af5': BASE_TREE,
-    }
-    for rel in ['README.md','docs/ctrl/CTRL-01/CTRL-01-DEVELOPER-REPORT.md','docs/ctrl/CTRL-01/CTRL-01-SPECIFICATION.md']:
-        p=root/rel; t=p.read_text()
-        for a,b in repl.items(): t=t.replace(a,b)
-        t=t.replace('`API-05`, `API-06`, `INFRA-02` and `OPS-02` are **not accepted**', '`API-05`, `INFRA-02` and `OPS-02` are now **ACCEPTED / CLOSED as bounded stages**; `API-06` remains **NEXT / NOT ACCEPTED**')
-        t=t.replace('`API-05`, `API-06`, `INFRA-02` and `OPS-02` are not accepted.', '`API-05`, `INFRA-02` and `OPS-02` are accepted/closed as bounded stages; `API-06` remains NEXT / NOT ACCEPTED.')
-        t=t.replace('reconcile exact accepted API-05 identity or record it as not yet accepted', 'preserve the exact accepted API-05 C1 identity')
-        t=t.replace('reconcile INFRA-02 and OPS-02 if either is accepted by then', 'preserve the exact accepted INFRA-02 and OPS-02 identities')
-        p.write_text(t)
-    # Replace stale report sections with explicit current reconciliation.
-    p=root/'docs/ctrl/CTRL-01/CTRL-01-DEVELOPER-REPORT.md'; t=p.read_text()
-    a=t.index('## 5. Observed conditions in the canonical baseline'); b=t.index('## 7. Before any future seal')
-    replacement=f'''## 5. Reconciliation to canonical main {BASE_MAIN[:12]}\n\nThe P1 baseline was superseded by nine governance commits. The implementation\ndelta itself has no path overlap with those commits. Current canonical state records\nAPI-05 C1, INFRA-02 and OPS-02 C3 as independently ACCEPTED / CLOSED bounded\nstages. API-06 remains `NEXT / NOT ACCEPTED`| so the API layer and System Trial\nPreview remain open/closed respectively exactly as the Program Control Register\nstates. No current canonical Master or BSI bootstrap byte changed across the\nreconciliation.\n\nThe earlier P1 observations about API-04 table drift are historical and are not\ncarried forward as current-state conflicts: the current PCR table, current-primary\nposition and API-04 acceptance record agree.\n\n## 6. Dependencies not relied upon\n\nExact API-05 C1, INFRA-02 and OPS-02 C3 acceptance records are bound by Git blob\nidentity. API-06 is explicitly not treated as accepted. Its absence is a System\nTrial/API-layer closure blocker, not silently converted into a CTRL-01 PASS condition.\n\n'''t[b:]
-    p.write_text(t)
+
+def reconciliation_banner() -> str:
+    return f'''\n> **CTRL-01 C1 canonical reconciliation â€” 2026-09-02.** This candidate is\n> reconciled to canonical `main@{BASE_MAIN}`. P1 statements that API-05,\n> INFRA-02 or OPS-02 were not accepted are historical and superseded for current-state\n> interpretation. Their exact accepted governance records are bound by Git blob identity.\n> API-06 remains `NEXT / NOT ACCEPTED`; the API layer remains open and System Trial\n> Preview remains `CHECKPOINT_NOT_OPEN`. This bounded CTRL-01 acceptance does not claim\n> `CTRL CLOSED`, production readiness, legal activation, or BSI/Common Criteria certification.\n\n'''
+
+
+def patch_text_doc(path: Path) -> None:
+    t = path.read_text()
+    t = t.replace(P1_BASE_MAIN, BASE_MAIN)
+    t = t.replace("1ea6161335044dc4d1e50a6b1588bad6627f7af5", BASE_TREE)
+    t = t.replace("`API-05`, `API-06`, `INFRA-02` and `OPS-02` are **not accepted**", "`API-05`, `INFRA-02` and `OPS-02` are **ACCEPTED / CLOSED as bounded stages**; `API-06` remains **NEXT / NOT ACCEPTED**")
+    t = t.replace("`API-05`, `API-06`, `INFRA-02` and `OPS-02` are not accepted.", "`API-05`, `INFRA-02` and `OPS-02` are accepted/closed as bounded stages; `API-06` remains NEXT / NOT ACCEPTED.")
+    t = t.replace("API-05 is ACTIVE / IN DEVELOPMENT / NOT ACCEPTED", "API-05 C1 is ACCEPTED / CLOSED")
+    t = t.replace("reconcile exact accepted API-05 identity or record it as not yet accepted", "preserve the exact accepted API-05 C1 identity")
+    t = t.replace("reconcile INFRA-02 and OPS-02 if either is accepted by then", "preserve the exact accepted INFRA-02 and OPS-02 identities")
+    if "CTRL-01 C1 canonical reconciliation" not in t:
+        first_nl = t.find("\n")
+        if first_nl >= 0:
+            t = t[: first_nl + 1] + reconciliation_banner() + t[first_nl + 1 :]
+        else:
+            t = reconciliation_banner() + t
+    path.write_text(t)
+
 
 def overlay(p1: Path, repo: Path) -> None:
-    if sha256(p1) != P1_SHA256: raise SystemExit('P1 SHA mismatch')
-    if run('git','rev-parse','HEAD',cwd=repo) != BASE_MAIN: raise SystemExit('wrong base main')
-    if run('git','rev-parse','HEADN{tree}',cwd=repo) != BASE_TREE: raise SystemExit('wrong base tree')
-    with tempfile.TemporaryDirectory() as td:
-        with zipfile.ZipFile(p1) as z: z.extractall(td)
-        roots=[p for p in Path(td).iterdir() if p.is_dir()]
-        if len(roots)!=1: raise SystemExit('unexpected P1 root')
-        src=roots[0]
-        for rel in ['services/control-plane-service','docs/ctrl/CTRL-01']:
-            dst=repo/rel
-            if dst.exists(): shutil.rmtree(dst)
-            shutil.copytree(src/rel,dst)
-        for rel in ['scripts/ctrl01_validator.py','scripts/ctrl01_registry_export.py','scripts/system_trial_preview_prepare.py']:
-            (repo/rel).parent.mkdir(parents=True,exist_ok=True); shutil.copy2(src/rel,repo/rel)
-        shutil.copy2(src/'README.md',repo/'CTRL01_CANDIDATE_README.md')
-    patch_validator(repo/'scripts/ctrl01_validator.py')
-    patch_trial(repo/'scripts/system_trial_preview_prepare.py')
-    # docs patch expects README.md under root; temporarily point candidate readme
-    shutil.copy2(repo/'CTRL01_CANDIDATE_README.md', repo/'README.ctrl01.tmp')
-    # patch packaged docs separately
-    for rel in ['docs/ctrl/CTRL-01/CTRL-01-DEVELOPER-REPORT.md','docs/ctrl/CTRL-01/CTRL-01-SPECIFICATION.md']:
-        p=repo/rel; t=p.read_text().replace('cb02b231e701d0b4f12db89c86bc56a9fe11f71a',BASE_MAIN).replace('1ea6161335044dc4d1e50a6b1588bad6627f7af5',BASE_TREE); p.write_text(t)
-    # apply report section and general current wording by temporary root structure
-    tmpread=repo/'CTRL01_CANDIDATE_README.md'; t=tmpread.read_text().replace('cb02b231e701d0b4f12db89c86bc56a9fe11f71a',BASE_MAIN).replace('1ea6161335044dc4d1e50a6b1588bad6627f7af5',BASE_TREE)
-    t=t.replace('`API-05`, `API-06`, `INFRA-02` and `OPS-02` are not accepted.', '`API-05`, `INFRA-02` and `OPS-02` are accepted/closed as bounded stages; `API-06` remains NEXT / NOT ACCEPTED.')
-    tmpread.write_text(t)
-    # report surgical replacement
-    p=repo/'docs/ctrl/CTRL-01/CTRL-01-DEVELOPER-REPORT.md'; t=p.read_text(); a=t.index('## 5. Observed conditions in the canonical baseline'); b=t.index('## 7. Before any future seal')
-    t=t[:a]+f'''## 5. Reconciliation to canonical main `{BASE_MAIN}`\n\nThe P1 baseline was superseded by nine governance commits. The CTRL-01 source\ndelta has no path overlap with those commits. Current canonical state records\nAPI-05 C1, INFRA-02 and OPS-02 C3 as independently `ACCEPTED / CLOSEd` bounded\nstages. API-06 remains `NEXT / NOT ACCEPTED`, the API layer remains open and the\nSystem Trial Preview checkpoint remains closed. The Master and BSI bootstrap\nbytes are unchanged from P1.\n\nThe earlier P1 API-04 table inconsistency is historical, not a current-state\nconflict: the current PCR phase table, primary-position statement and acceptance\nrecord agree that API-04 is closed.\n\n## 6. Dependencies not relied upon\n\nAPI-05 C1, INFRA-02 and OPS-02 C3 are bound by their exact accepted governance\nrecords. API-06 is explicitly not treated as accepted. Its absence blocks API\nlayer closure and System Trial Preview opening; it is not silently converted\ninto a CTRL-01 acceptance fact.\n\n''+t[b:]
-    t=t.replace('reconcile exact accepted API-05 identity or record it as not yet accepted','preserve the exact accepted API-05 C1 identity').replace('reconcile INFRA-02 and OPS-02 if either is accepted by then','preserve the exact accepted INFRA-02 and OPS-02 identities')
-    p.write_text(t)
-    p=repo/'docs/ctrl/CTRL-01/CTRL-01-SPECIFICATION.md'; t=p.read_text(); t=t.replace('`API-05`, `API-06`, `INFRA-02` and `OPS-02`, none of which is\n  accepted.','`API-05`, `INFRA-02` and `OPS-02`, all now accepted as bounded stages;\n  `API-06` remains NEXT / NOT ACCEPTED and blocks API-layer/System-Trial closure.')
-    t=t.replace('Reconcile the exact accepted identity of API-05 and API-06, or record each\n,\n   explicitly as not yet accepted.','Preserve the exact accepted API-05 C1 identity and keep API-06 explicitly\n   NEXT / NOT ACCEPTED unless an authoritative later acceptance exists.')
-    t=t.replace('Reconcile INFRA-02 and OPS-02 if either is accepted by then.','Preserve the exact accepted INFRA-02 and OPS-02 identities.')
-    p.write_text(t)
-    (repo/'README.ctrl01.tmp').unlinj[Z\ÜÚ[™×ÛÚÏUYJB‚™YˆXÚØYÙJ™\Îˆ]Ý]ˆ][—ÚYˆÝŠHOˆ›Û™N‚ˆ[˜ÛYYV×Bˆ›Üˆ˜\ÙH[ˆÉÜÙ\šXÙ\ËØÛÛ›Û\[™K\Ù\šXÙIË	ÙØÜËØÝ›ÐÕ“LIË	Ý˜[Y][Û‹ØÝ›IË	Ý˜[Y][Û‹ÜÞ\Ý[WÝšX[Ü™]šY]É×N‚ˆ›Üˆ[ˆÛÜY
+    if sha256(p1) != P1_SHA256:
+        raise SystemExit("P1 SHA mismatch")
+    assert_base(repo)
+    assert_no_source_overlap(repo)
 
-™\ËØ˜\ÙJKœ™ÛØŠ	Ê‰ÊJN‚ˆYˆš\×Ùš[J
-H[™	××ÜXØXÚW×ÉÈ›Ý[ˆœ\È[™›Ý›˜[YK™[™ÝÚ]
-	ËœXÉÊNˆ[˜ÛYY˜\[™
-
-Bˆ›Üˆ™[[ˆÉÜØÜš\ËØÝ›WÝ˜[Y]Ü‹œIË	ÜØÜš\ËØÝ›WÜ™YÚ\ÝžWÙ^ÜœIË	ÜØÜš\ËÜÞ\Ý[WÝšX[Ü™]šY]×Ü™\\™KœI×N‚ˆ[˜ÛYY˜\[™
-™\ËÜ™[
-BˆØ[™\™\ËÉ×ØÝ›WØØ[™Y]IÎÈÚ][œ›]™YJØ[™YÛ›Ü™WÙ\œ›ÜœÏUYJNÈØ[™›ZÙ\Š
-Bˆ›Üˆ[ˆ[˜ÛYY‚ˆ™[\œ™[]]™WÝÊ™\ÊNÈÝXØ[™Ü™[ÈÝœ\™[›ZÙ\Š\™[ÏUYK^\ÝÛÚÏUYJNÈÚ][˜ÛÜLŠÝ
-BˆY[]O^Âˆ	ÜØÚ[XIÎ‰Ù\‹˜Ý›K˜Ø[™Y]KZY[]KÌIË	ÜÝYÙIÎ‰ÐÕ“LIË	Ü›ÛIÎ‰ÐÌIËˆ	ÜÙ[—ÜÝ]IÎ‰ÐÐS‘QUWÓ“ÕÐPÐÑTQ	Ë	Ø˜\ÙWÛXZ[—ØÛÛ[Z]	ÎTÑWÓPRS‹v&6UöÖ–å÷G&VRs¤$4UõE$TRÀ¢w÷6†#Sbs¥õ4„#SbÂv'V–ÆFW%÷'Våö–Bs§'Våö–BÀ¢vg&VW¦UöÖæ–fW7EöF–vW7Bs¦†6†Æ–"ç6†#Sb‚†6æBòwfÆ–FF–öâö7G&Ãög&VW¦UöÖæ–fW7Bæ§6öâr’ç&VEö'—FW2‚’’æ†W†F–vW7B‚’À¢v“e÷7FFRs¢täU…BòäõB44UDTBrÂw7—7FVÕ÷G&–Å÷&Wf–Wrs¢t4„T4µô”åEôäõEôõTâp¢Ð¢†6æBòv6æF–FFUö–FVçF—G’æ§6öâr’çw&—FU÷FW‡B†§6öâæGV×2†–FVçF—G’Æ–æFVçCÓ"’²uÆâr¢&VFÖSÒ‡&Wòòt5E$Ãô4äD”DDUõ$TDÔRæÖBr’ç&VE÷FW‡B‚’¶brruÆâ223&V6öæ6–Æ–F–öåÆåÆä'V–ÇBv–ç7B6æöæ–6ÂÖ–ä´$4UôÔ”çÖgFW"W†7B&V6öæ6–Æ–F–öâöb66WFVEÆä’ÓR3Â”äe$Ó"æBõ2Ó"32&V6÷&G2â’Ób&VÖ–ç2äU…BòäõB44UDTBråÆåF†—26æF–FFRFöW2æ÷B÷VâF†R7—7FVÒG&–Â&Wf–WræBFöW2æ÷B66WB—G6VÆbåÆârrp¢†6æBòu$TDÔRæÖBr’çw&—FU÷FW‡B‡&VFÖR¢7V×3ÕµÐ¢f÷"–â6÷'FVB†6æBç&vÆö"‚r¢r’“ ¢–bæ—5öf–ÆR‚’æBææÖRÒu4„#Se5TÕ2çG‡Bs¢7V×2æVæB†bw·6†#Sb‡—Ò·ç&VÆF—fU÷Fò†6æB’æ5÷÷6—‚‚—Òr¢†6æBòu4„#Se5TÕ2çG‡Br’çw&—FU÷FW‡B‚uÆâræ¦ö–â‡7V×2’²uÆâr¢÷WBç&VçBæÖ¶F—"‡&VçG3ÕG'VRÆW†—7Eöö³ÕG'VR¢v—F‚¦—f–ÆRå¦—f–ÆR†÷WBÂwrrÆ6ö×&W76–öã×¦—f–ÆRå¤•ôDTdÄDTBÆ6ö×&W76ÆWfVÃÓ’’2£ ¢f÷"–â6÷'FVB†6æBç&vÆö"‚r¢r’“ ¢–bæ÷Bæ—5öf–ÆR‚“¢6öçF–çVP¢&3Öbw´4äD”DDUôäÔWÒ÷·ç&VÆF—fU÷Fò†6æB’æ5÷÷6—‚‚—Òp¢–æfó×¦—f–ÆRå¦—–æfò†&2Âƒ##bÃ’Ã"ÃÃÃ’“²–æfòæ6ö×&W75÷G—S×¦—f–ÆRå¤•ôDTdÄDTC²–æfòæW‡FW&æÅöGG#ÓócCCÃÃ`¢¢çw&—FW7G"†–æfòÇç&VEö'—FW2‚’Æ6ö×&W75÷G—S×¦—f–ÆRå¤•ôDTdÄDTBÆ6ö×&W76ÆWfVÃÓ’¢&–çB†§6öâæGV×2‡²v6æF–FFRs¦÷WBææÖRÂw6†#Sbs§6†#Sb†÷WB’Âw6—¦Rs¦÷WBç7FB‚’ç7E÷6—¦WÒÇ6W&F÷'3Ò‚rÂrÂs¢r’’ ¦FVbÖ–â‚“ ¢Ö&w'6Rä&wVÖVçE'6W"‚“²7V#ÖæFE÷7V''6W'2†FW7CÒv6ÖBrÇ&WV—&VCÕG'VR¢ó×7V"æFE÷'6W'2‚v÷fW&Æ’r“²òæFEö&wVÖVçB‚rÒ×rÇG—SÕF‚Ç&WV—&VCÕG'VR“²òæFEö&wVÖVçB‚rÒ×&WòrÇG—SÕF‚Ç&WV—&VCÕG'VR¢×7V"æFE÷'6W"‚w6¶vRr“²æFEö&wVÖVçB‚rÒ×&WòrÇG—SÕF‚Ç&WV—&VCÕG'VR“²æFEö&wVÖVçB‚rÒÖ÷WBrÇG—SÕF‚Ç&WV—&VCÕG'VR“²æFEö&wVÖVçB‚rÒ×'VâÖ–BrÇ&WV—&VCÕG'VR¢Öç'6Uö&w2‚¢–bæ6ÖCÓÒv÷fW&Æ’s¢÷fW&Æ’†çÆç&Wò¢VÇ6S¢6¶vR†ç&WòÆæ÷WBÆç'Våö–B¦–bõöæÖUõóÓÒuõöÖ–åõòs¢Ö–â‚
+    with tempfile.TemporaryDirectory() as td:
+        with zipfile.ZipFile(p1) as z:
+            bad = z.testzip()
+            if bad is not None:
+                raise SystemExit(f"P1 CRC failure: {bad}")
+            z.extractall(td)
+        roots = [p for p in Path(td).iterdir() if p.is_dir()]
+        if len(roots) != 1:
+            raise SystemExit("unexpected P1 root")
+        src = roots[0]
+        required = [
+            "services/control-plane-service",
+            "docs/ctrl/CTRL-01",
+            "scripts/ctrl01_validator.py",
+            "scripts/ctrl01_registry_export.py",
+            "scripts/system_trial_preview_prepare.py",
+            "README.md",
+        ]
+        missing = [rel for rel in required if not (src / rel).exists()]
+        if missing:
+            raise SystemExit("P1 missing required paths: " + ", ".join(missing))
+
+        for rel in ["services/control-plane-service", "docs/ctrl/CTRL-01"]:
+            dst = repo / rel
+            if dst.exists():
+                shutil.rmtree(dst)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(src / rel, dst)
+        for rel in [
+            "scripts/ctrl01_validator.py",
+            "scripts/ctrl01_registry_export.py",
+            "scripts/system_trial_preview_prepare.py",
+        ]:
+            dst = repo / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src / rel, dst)
+        shutil.copy2(src / "README.md", repo / "CTRL01_CANDIDATE_README.md")
+
+    patch_validator(repo / "scripts/ctrl01_validator.py")
+    patch_trial(repo / "scripts/system_trial_preview_prepare.py")
+    patch_text_doc(repo / "CTRL01_CANDIDATE_README.md")
+    for p in sorted((repo / "docs/ctrl/CTRL-01").glob("*.md")):
+        patch_text_doc(p)
+
+    reconcile = {
+        "schema": "epd2.ctrl01.canonical-reconciliation/1",
+        "p1_sha256": P1_SHA256,
+        "p1_base_main": P1_BASE_MAIN,
+        "canonical_base_main": BASE_MAIN,
+        "canonical_base_tree": BASE_TREE,
+        "canonical_blobs": CANONICAL_BLOBS,
+        "accepted_predecessor_blobs": ACCEPTED_PREDECESSOR_BLOBS,
+        "unreconciled_dependencies": {"API-06": "NEXT / NOT ACCEPTED"},
+        "source_overlap_with_p1_to_current_governance_delta": [],
+        "bounded_acceptance_semantics": "CTRL-01 may be accepted independently; CTRL layer remains open/not closed",
+        "system_trial_preview": "CHECKPOINT_NOT_OPEN",
+    }
+    out = repo / "validation/ctrl01/canonical_reconciliation.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(reconcile, indent=2, sort_keys=True) + "\n")
+    print("CTRL01_C1_RECONCILIATION:READY")
+
+
+def copy_tree(src: Path, dst: Path) -> None:
+    def ignore(_dir: str, names: list[str]) -> set[str]:
+        return {n for n in names if n in {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"} or n.endswith(".pyc")}
+    shutil.copytree(src, dst, ignore=ignore)
+
+
+def package(repo: Path, out: Path, run_id: str) -> None:
+    required = [
+        repo / "services/control-plane-service",
+        repo / "docs/ctrl/CTRL-01",
+        repo / "scripts/ctrl01_validator.py",
+        repo / "scripts/ctrl01_registry_export.py",
+        repo / "scripts/system_trial_preview_prepare.py",
+        repo / "validation/ctrl01",
+        repo / "validation/system_trial_preview",
+        repo / "CTRL01_CANDIDATE_README.md",
+    ]
+    missing = [str(p.relative_to(repo)) for p in required if not p.exists()]
+    if missing:
+        raise SystemExit("cannot package; missing: " + ", ".join(missing))
+
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td) / CANDIDATE_NAME
+        root.mkdir()
+        copy_tree(repo / "services/control-plane-service", root / "services/control-plane-service")
+        copy_tree(repo / "docs/ctrl/CTRL-01", root / "docs/ctrl/CTRL-01")
+        (root / "scripts").mkdir(parents=True, exist_ok=True)
+        for name in ["ctrl01_validator.py", "ctrl01_registry_export.py", "system_trial_preview_prepare.py"]:
+            shutil.copy2(repo / "scripts" / name, root / "scripts" / name)
+        copy_tree(repo / "validation/ctrl01", root / "validation/ctrl01")
+        copy_tree(repo / "validation/system_trial_preview", root / "validation/system_trial_preview")
+        shutil.copy2(repo / "CTRL01_CANDIDATE_README.md", root / "README.md")
+
+        identity = {
+            "schema": "epd2.ctrl01.candidate-identity/1",
+            "stage": "CTRL-01",
+            "candidate": CANDIDATE_NAME,
+            "self_state": "CANDIDATE_NOT_ACCEPTED",
+            "p1_sha256": P1_SHA256,
+            "base_main_commit": BASE_MAIN,
+            "base_main_tree": BASE_TREE,
+            "api06_state": "NEXT / NOT ACCEPTED",
+            "system_trial_preview": "CHECKPOINT_NOT_OPEN",
+            "ctrl_layer_state": "OPEN / NOT CLOSED",
+            "generated_by_workflow_run": int(run_id),
+        }
+        (root / "candidate_identity.json").write_text(json.dumps(identity, indent=2, sort_keys=True) + "\n")
+
+        members = sorted(
+            p for p in root.rglob("*")
+            if p.is_file() and p.name != "SHA256SUMS.txt" and "__pycache__" not in p.parts and not p.name.endswith(".pyc")
+        )
+        sums = "".join(f"{sha256(p)}  {p.relative_to(root).as_posix()}\n" for p in members)
+        (root / "SHA256SUMS.txt").write_text(sums)
+
+        out.parent.mkdir(parents=True, exist_ok=True)
+        if out.exists():
+            out.unlink()
+        with zipfile.ZipFile(out, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+            for p in sorted(root.rglob("*")):
+                if p.is_file():
+                    arc = f"{CANDIDATE_NAME}/{p.relative_to(root).as_posix()}"
+                    z.write(p, arc)
+
+    result = {
+        "schema": "epd2.ctrl01.candidate-build/1",
+        "candidate_file": out.name,
+        "sha256": sha256(out),
+        "size": out.stat().st_size,
+        "base_main": BASE_MAIN,
+        "run_id": int(run_id),
+        "self_state": "CANDIDATE_NOT_ACCEPTED",
+    }
+    print(json.dumps(result, sort_keys=True))
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("overlay")
+    p.add_argument("--p1", type=Path, required=True)
+    p.add_argument("--repo", type=Path, required=True)
+    p = sub.add_parser("package")
+    p.add_argument("--repo", type=Path, required=True)
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--run-id", required=True)
+    args = ap.parse_args()
+    if args.cmd == "overlay":
+        overlay(args.p1, args.repo)
+    else:
+        package(args.repo, args.out, args.run_id)
+
+
+if __name__ == "__main__":
+    main()
