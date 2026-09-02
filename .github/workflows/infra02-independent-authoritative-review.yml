@@ -1,0 +1,268 @@
+name: INFRA-02 Independent Authoritative Review
+on:
+  push:
+    branches: [handoff/infra]
+    paths: [".github/workflows/infra02-independent-authoritative-review.yml"]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: infra02-independent-authoritative-review
+  cancel-in-progress: false
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    env:
+      CANDIDATE_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+      CANDIDATE_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+      CANDIDATE_SIZE: "15980332"
+      CANDIDATE_GIT_BLOB: bc08c9d3b27cc580d7598b5b63b4c1bd37ded54d
+      PREDECESSOR_ARTIFACT_ID: "9819612258"
+      PREDECESSOR_SHA256: 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131
+      PREDECESSOR_SIZE: "15854311"
+    steps:
+      - name: Checkout handoff transport
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with:
+          enable-cache: true
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Verify exact submitted ZIP transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$CANDIDATE_PATH"
+          test "$(sha256sum "$CANDIDATE_PATH" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c '%s' "$CANDIDATE_PATH")" = "$CANDIDATE_SIZE"
+          test "$(git hash-object "$CANDIDATE_PATH")" = "$CANDIDATE_GIT_BLOB"
+          unzip -t "$CANDIDATE_PATH" >/dev/null
+          echo "INFRA02_EXACT_TRANSPORT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
+
+      - name: Download exact accepted INFRA-01 C3 predecessor artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/predecessor-wrapper" "$RUNNER_TEMP/predecessor"
+          curl -fL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${PREDECESSOR_ARTIFACT_ID}/zip" \
+            -o "$RUNNER_TEMP/predecessor-wrapper.zip"
+          unzip -q "$RUNNER_TEMP/predecessor-wrapper.zip" -d "$RUNNER_TEMP/predecessor-wrapper"
+          PRE=$(find "$RUNNER_TEMP/predecessor-wrapper" -type f -name 'EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip' | head -n1)
+          test -n "$PRE"
+          test "$(sha256sum "$PRE" | awk '{print $1}')" = "$PREDECESSOR_SHA256"
+          test "$(stat -c '%s' "$PRE")" = "$PREDECESSOR_SIZE"
+          cp "$PRE" "$RUNNER_TEMP/predecessor/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip"
+          echo "PREDECESSOR_ZIP=$RUNNER_TEMP/predecessor/EPD2_INFRA01_CI_ACCEPTANCE_HARNESS_CANDIDATE_0.1_C3.zip" >> "$GITHUB_ENV"
+          echo "INFRA01_C3_PREDECESSOR:PASS:$PREDECESSOR_SHA256:$PREDECESSOR_SIZE"
+
+      - name: Extract and independently verify seal hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/candidate"
+          unzip -q "$CANDIDATE_PATH" -d "$RUNNER_TEMP/candidate"
+          ROOT=$(find "$RUNNER_TEMP/candidate" -mindepth 1 -maxdepth 1 -type d | head -n1)
+          test -n "$ROOT"
+          echo "CANDIDATE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          python - "$CANDIDATE_PATH" "$ROOT" <<'PY'
+          import hashlib, json, os, stat, sys, zipfile
+          from pathlib import Path
+          zpath=Path(sys.argv[1]); root=Path(sys.argv[2])
+          with zipfile.ZipFile(zpath) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              roots={n.split('/')[0] for n in names if n}
+              assert len(roots)==1
+              assert z.testzip() is None
+              assert len(names)==len(set(names))
+              low={}
+              for i in infos:
+                  n=i.filename
+                  assert not n.startswith('/') and '\\' not in n and '..' not in n.split('/')
+                  mode=(i.external_attr>>16)&0xffff
+                  assert not stat.S_ISLNK(mode)
+                  key=n.lower(); assert key not in low or low[key]==n; low[key]=n
+                  parts=n.split('/')
+                  assert not any(p in {'.git','node_modules','.venv','target','.ruff_cache','__pycache__','.pytest_cache'} for p in parts)
+          sums=(root/'SHA256SUMS.txt').read_text().splitlines()
+          covered=set()
+          for line in sums:
+              if not line.strip(): continue
+              h,p=line.split(maxsplit=1); p=p.lstrip('*'); covered.add(p)
+              f=root/p; assert f.is_file(); assert hashlib.sha256(f.read_bytes()).hexdigest()==h
+          allfiles={str(f.relative_to(root)).replace(os.sep,'/') for f in root.rglob('*') if f.is_file()}
+          assert allfiles-covered=={'SHA256SUMS.txt'}
+          inv=json.loads((root/'ACCEPTANCE/FREEZE-INVENTORY.json').read_text())
+          assert inv['file_count']==len(inv['files'])
+          for p,h in inv['files'].items():
+              f=root/p; assert f.is_file(); assert hashlib.sha256(f.read_bytes()).hexdigest()==h
+          assert allfiles-set(inv['files'])=={'SHA256SUMS.txt','ACCEPTANCE/FREEZE-INVENTORY.json'}
+          blob=''.join(f'{p}\0{h}\n' for p,h in sorted(inv['files'].items())).encode()
+          assert hashlib.sha256(blob).hexdigest()==inv['tree_digest']
+          print(f"INFRA02_SEAL_HYGIENE:PASS:{len(allfiles)}:{inv['tree_digest']}")
+          PY
+
+      - name: Verify exact predecessor to candidate delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$CANDIDATE_ROOT"
+          uv run --frozen python -m scripts.acceptance verify-delta \
+            --predecessor "$PREDECESSOR_ZIP" \
+            --candidate "$GITHUB_WORKSPACE/$CANDIDATE_PATH" \
+            --inventory "$CANDIDATE_ROOT/docs/infra/INFRA-02/INFRA01_C3_TO_INFRA02_EXACT_INVENTORY.json"
+
+      - name: Reconstruct exact tested source bytes from submitted ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a "$CANDIDATE_ROOT" "$RUNNER_TEMP/source"
+          rm "$RUNNER_TEMP/source/SHA256SUMS.txt"
+          rm "$RUNNER_TEMP/source/ACCEPTANCE/FREEZE-INVENTORY.json"
+          cd "$RUNNER_TEMP/source"
+          git init
+          git config user.name "EPD2 independent INFRA-02 reviewer"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "review(infra02): exact submitted source bytes"
+          git branch -M candidate
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --no-tags origin main
+          git update-ref refs/heads/main refs/remotes/origin/main
+          test -z "$(git status --porcelain)"
+          echo "SOURCE_ROOT=$RUNNER_TEMP/source" >> "$GITHUB_ENV"
+          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "SOURCE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+          python - "$GITHUB_WORKSPACE/$CANDIDATE_PATH" "$RUNNER_TEMP/source" <<'PY'
+          import hashlib, sys, zipfile
+          from pathlib import Path
+          zpath=Path(sys.argv[1]); root=Path(sys.argv[2])
+          with zipfile.ZipFile(zpath) as z:
+              top=next(iter({n.split('/')[0] for n in z.namelist() if n}))
+              count=0
+              for i in z.infolist():
+                  if i.is_dir(): continue
+                  rel=i.filename[len(top)+1:]
+                  if rel in {'SHA256SUMS.txt','ACCEPTANCE/FREEZE-INVENTORY.json'}: continue
+                  f=root/rel
+                  assert f.is_file(), rel
+                  assert hashlib.sha256(f.read_bytes()).digest()==hashlib.sha256(z.read(i)).digest(), rel
+                  count+=1
+          print(f'INFRA02_EXACT_SOURCE_BINDING:PASS:{count}')
+          PY
+
+      - name: Fresh current-main governance gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$SOURCE_ROOT"
+          git fetch --no-tags origin main
+          git show refs/remotes/origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > "$RUNNER_TEMP/target-pcr.md"
+          uv run --frozen python -m scripts.acceptance verify-reconciliation --target-pcr "$RUNNER_TEMP/target-pcr.md"
+          echo "CURRENT_MAIN=$(git rev-parse refs/remotes/origin/main)" >> "$GITHUB_ENV"
+          echo "CURRENT_MAIN_TREE=$(git rev-parse refs/remotes/origin/main^{tree})" >> "$GITHUB_ENV"
+
+      - name: Independent targeted mutation reproduction
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$SOURCE_ROOT"
+          uv run --frozen pytest -q \
+            tests/repository/test_infra01_harness_units.py \
+            tests/repository/test_infra01_mutation_suite.py \
+            tests/repository/test_infra02_units.py \
+            tests/repository/test_infra02_mutation_suite.py
+
+      - name: Run complete canonical harness on exact submitted source bytes
+        id: harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$SOURCE_ROOT"
+          env -u GITHUB_WORKFLOW_REF uv run --frozen python -m scripts.acceptance run --output "$RUNNER_TEMP/acceptance"
+
+      - name: Locate and independently validate current-run evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_DIR=$(find "$RUNNER_TEMP/acceptance" -maxdepth 1 -mindepth 1 -type d -name 'run-*' | head -n1)
+          test -n "$RUN_DIR"
+          echo "RUN_DIR=$RUN_DIR" >> "$GITHUB_ENV"
+          cd "$SOURCE_ROOT"
+          uv run --frozen python -m scripts.acceptance verify-evidence "$RUN_DIR"
+
+      - name: Bind harness-produced package content to exact reviewed candidate
+        if: steps.harness.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          GEN="$RUN_DIR/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip"
+          test -f "$GEN"
+          python - "$GITHUB_WORKSPACE/$CANDIDATE_PATH" "$GEN" <<'PY'
+          import hashlib, sys, zipfile
+          from pathlib import Path
+          def members(p):
+              with zipfile.ZipFile(p) as z:
+                  top=next(iter({n.split('/')[0] for n in z.namelist() if n}))
+                  return {i.filename[len(top)+1:]:hashlib.sha256(z.read(i)).hexdigest() for i in z.infolist() if not i.is_dir()}
+          a=members(Path(sys.argv[1])); b=members(Path(sys.argv[2]))
+          assert a==b, f'member map mismatch: submitted={len(a)} generated={len(b)}'
+          print(f'INFRA02_PACKAGE_CONTENT_IDENTITY:PASS:{len(a)}')
+          PY
+
+      - name: Terminal authoritative marker
+        if: steps.harness.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "SOURCE_COMMIT=$SOURCE_COMMIT"
+          echo "SOURCE_TREE=$SOURCE_TREE"
+          echo "CURRENT_MAIN=$CURRENT_MAIN"
+          echo "CURRENT_MAIN_TREE=$CURRENT_MAIN_TREE"
+          echo "INFRA02_AUTHORITATIVE_RESULT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
+
+      - name: Upload independent evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra02-authoritative-evidence-${{ github.run_id }}
+          path: |
+            ${{ env.RUN_DIR }}/EXECUTION-MANIFEST.json
+            ${{ env.RUN_DIR }}/EXECUTION-MANIFEST.sha256
+            ${{ env.RUN_DIR }}/FREEZE-INVENTORY.json
+            ${{ env.RUN_DIR }}/RELEASE/
+            ${{ env.RUN_DIR }}/logs/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload exact reviewed candidate
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra02-authoritative-candidate-${{ github.run_id }}
+          path: ${{ env.CANDIDATE_PATH }}
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 90
