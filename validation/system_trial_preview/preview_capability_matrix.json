@@ -1,0 +1,313 @@
+{
+  "schema": "epd2.system-trial-preview.capability-matrix/1",
+  "status": "PREPARATION_ONLY / CHECKPOINT_NOT_OPEN",
+  "allowed_classifications": [
+    "SUPPORTED_REAL_PATH",
+    "SUPPORTED_WITH_DECLARED_LIMITATION",
+    "UNSUPPORTED_FOR_TRIAL",
+    "BLOCKED_BY_DEPENDENCY"
+  ],
+  "rule": "a mock-only path is never classified as supported",
+  "checkpoint_state": "CHECKPOINT_NOT_OPEN",
+  "checkpoint_preconditions": [
+    "authoritative API-06 acceptance",
+    "API layer CLOSED",
+    "recorded INFRA/OPS preview-readiness minimum"
+  ],
+  "summary_today": {
+    "SUPPORTED_REAL_PATH": 0,
+    "SUPPORTED_WITH_DECLARED_LIMITATION": 1,
+    "UNSUPPORTED_FOR_TRIAL": 1,
+    "BLOCKED_BY_DEPENDENCY": 24
+  },
+  "summary_target_at_checkpoint": {
+    "SUPPORTED_REAL_PATH": 12,
+    "SUPPORTED_WITH_DECLARED_LIMITATION": 14,
+    "UNSUPPORTED_FOR_TRIAL": 0,
+    "BLOCKED_BY_DEPENDENCY": 0
+  },
+  "entries": [
+    {
+      "journey_id": "J-PUB-01",
+      "category": "public_anonymous",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": "Content is trial seed content and is labelled as such."
+    },
+    {
+      "journey_id": "J-PUB-02",
+      "category": "public_anonymous",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-PUB-03",
+      "category": "public_anonymous",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "INFRA-02"
+      ],
+      "declared_limitation": "Only the accepted FRONT-02 page set is in scope."
+    },
+    {
+      "journey_id": "J-AUTH-01",
+      "category": "authentication_session",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-AUTH-02",
+      "category": "authentication_session",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-AUTH-03",
+      "category": "authentication_session",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "CTRL-01",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Quarantine is issued through a CTRL-01 specification-level surface until CTRL-01 is accepted."
+    },
+    {
+      "journey_id": "J-AUTH-04",
+      "category": "authentication_session",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": "High-assurance recovery approval requires a second human and is exercised as a scripted step."
+    },
+    {
+      "journey_id": "J-MEM-01",
+      "category": "applicant_member",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": "Only trial fixtures are used; no real applicant data enters the preview."
+    },
+    {
+      "journey_id": "J-MEM-02",
+      "category": "applicant_member",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Field set limited to the accepted self-service surface."
+    },
+    {
+      "journey_id": "J-MEM-03",
+      "category": "applicant_member",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-PART-01",
+      "category": "participation",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Moderation and AI-assisted paths are out of trial scope."
+    },
+    {
+      "journey_id": "J-PART-02",
+      "category": "participation",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Live assembly conduct is not exercised."
+    },
+    {
+      "journey_id": "J-ORG-01",
+      "category": "organization_regional",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Display must not present a generic regional admin role."
+    },
+    {
+      "journey_id": "J-ORG-02",
+      "category": "organization_regional",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "CTRL-01",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Served by the CTRL-01 read model, which is preseal and not accepted."
+    },
+    {
+      "journey_id": "J-REP-01",
+      "category": "representative_transparency",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Only seeded transparency fixtures are published."
+    },
+    {
+      "journey_id": "J-REP-02",
+      "category": "representative_transparency",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "API-06",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Trial personas only; no real casework enters the preview."
+    },
+    {
+      "journey_id": "J-VOTE-01",
+      "category": "voting_boundary",
+      "status_today": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [],
+      "declared_limitation": "Provable today as a negative property against the CTRL-01 inventory and route set; the full end-to-end proof needs the deployed preview."
+    },
+    {
+      "journey_id": "J-VOTE-02",
+      "category": "voting_boundary",
+      "status_today": "UNSUPPORTED_FOR_TRIAL",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "VOTING-LAW",
+        "API-06",
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": "Excluded until a separate lawful and technical authorization exists. It is not simulated: an unavailable voting path is shown as unavailable, never mocked."
+    },
+    {
+      "journey_id": "J-REF-01",
+      "category": "refusal_states",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "INFRA-02",
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-REF-02",
+      "category": "refusal_states",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "CTRL-01",
+        "INFRA-02"
+      ],
+      "declared_limitation": "Exercised against the CTRL-01 preseal runtime."
+    },
+    {
+      "journey_id": "J-DEG-01",
+      "category": "degraded_dependency",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "OPS-02",
+        "INFRA-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-DEG-02",
+      "category": "degraded_dependency",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "OPS-02",
+        "INFRA-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-RST-01",
+      "category": "recovery_reset",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-RST-02",
+      "category": "recovery_reset",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    },
+    {
+      "journey_id": "J-CTRL-01",
+      "category": "control_plane",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        "CTRL-01",
+        "INFRA-02"
+      ],
+      "declared_limitation": "CTRL-01 is preseal; the surface is specification-level until accepted."
+    },
+    {
+      "journey_id": "J-CTRL-02",
+      "category": "control_plane",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        "OPS-02"
+      ],
+      "declared_limitation": ""
+    }
+  ]
+}

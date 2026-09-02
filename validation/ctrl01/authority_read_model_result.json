@@ -1,0 +1,1351 @@
+{
+  "schema": "epd2.ctrl01.authority-read-model/1",
+  "as_of": "2026-09-02T09:00:00+00:00",
+  "current_organizational_authority": [
+    {
+      "authority_id": "a.auditor",
+      "subject_ref": "p.auditor",
+      "office_code": "INDEPENDENT_AUDITOR",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "READ_METADATA",
+        "REVIEW_OR_AUDIT"
+      ],
+      "action_codes": [
+        "AUDIT.LOOKUP",
+        "AUTH.READ_PROVENANCE",
+        "EMERGENCY.REVIEW",
+        "INTERVENE.READ_ACTIVE",
+        "KEY.READ_TRUST_STATE",
+        "PLATFORM.READ_HEALTH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.auditor.be",
+      "subject_ref": "p.auditor",
+      "office_code": "INDEPENDENT_AUDITOR",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "READ_METADATA",
+        "REVIEW_OR_AUDIT"
+      ],
+      "action_codes": [
+        "AUDIT.LOOKUP",
+        "AUTH.READ_PROVENANCE",
+        "INTERVENE.READ_ACTIVE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.bund.chair",
+      "subject_ref": "p.bund.chair",
+      "office_code": "BUNDESVORSITZ",
+      "scope": "BUND:bundesverband",
+      "capabilities": [
+        "APPROVE",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "INTERVENE.AUTHORITY_SUSPENSION",
+        "INTERVENE.LIFT",
+        "INTERVENE.READ_ACTIVE",
+        "INTERVENE.REGIONAL_ACTION_RESTRICTION",
+        "INTERVENE.TEMPORARY_SUPERVISION",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.bund.deputy",
+      "subject_ref": "p.bund.deputy",
+      "office_code": "BUNDESVORSTAND_STELLV",
+      "scope": "BUND:bundesverband",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.bund.oversight",
+      "subject_ref": "p.bund.oversight",
+      "office_code": "BUNDESVORSTAND_AUFSICHT",
+      "scope": "BUND:bundesverband",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA",
+        "REQUEST",
+        "RESTORE",
+        "SUSPEND_OR_QUARANTINE"
+      ],
+      "action_codes": [
+        "INTERVENE.AUTHORITY_SUSPENSION",
+        "INTERVENE.LIFT",
+        "INTERVENE.READ_ACTIVE",
+        "INTERVENE.REGIONAL_ACTION_RESTRICTION",
+        "INTERVENE.TEMPORARY_SUPERVISION"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [
+        "LAND:land-berlin"
+      ],
+      "oversight_decision_scope": "LAND:land-berlin"
+    },
+    {
+      "authority_id": "a.bund.treasurer",
+      "subject_ref": "p.bund.treasurer",
+      "office_code": "BUNDESSCHATZMEISTER",
+      "scope": "BUND:bundesverband",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.credential.operator",
+      "subject_ref": "p.credential.operator",
+      "office_code": "CREDENTIAL_OPERATOR",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "ACTIVATE",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "REVOKE"
+      ],
+      "action_codes": [
+        "CRED.HIGH_ASSURANCE_RECOVERY",
+        "CRED.HUMAN_ENROLL",
+        "CRED.HUMAN_REVOKE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.emergency.controller",
+      "subject_ref": "p.emergency.controller",
+      "office_code": "EMERGENCY_CONTROLLER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "EXECUTE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "EMERGENCY.ACTIVATE",
+        "EMERGENCY.APPROVE",
+        "EMERGENCY.REQUEST"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.key.custodian",
+      "subject_ref": "p.key.custodian",
+      "office_code": "KEY_CUSTODIAN",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "DESTROY",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "ROTATE_OR_REPLACE",
+        "VIEW_OR_EXPORT_SECRET"
+      ],
+      "action_codes": [
+        "KEY.DESTROY",
+        "KEY.READ_TRUST_STATE",
+        "KEY.REQUEST_GENERATION",
+        "KEY.ROTATE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.key.policy.approver",
+      "subject_ref": "p.key.policy.approver",
+      "office_code": "KEY_POLICY_APPROVER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "KEY.DESTROY",
+        "KEY.REQUEST_GENERATION",
+        "KEY.ROTATE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.key.second.approver",
+      "subject_ref": "p.service.owner",
+      "office_code": "SERVICE_OWNER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "KEY.DESTROY",
+        "KEY.ROTATE",
+        "SERVICE_CRED.ISSUE",
+        "SERVICE_CRED.ROTATE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.land.be.chair",
+      "subject_ref": "p.land.be.chair",
+      "office_code": "LANDESVORSITZ",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "RESTORE",
+        "REVOKE",
+        "SUSPEND_OR_QUARANTINE"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.land.be.deputy",
+      "subject_ref": "p.land.be.deputy",
+      "office_code": "LANDESVORSTAND_STELLV",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.land.be.secretary",
+      "subject_ref": "p.land.be.secretary",
+      "office_code": "LANDESGESCHAEFTSFUEHRUNG",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.land.by.chair",
+      "subject_ref": "p.land.by.chair",
+      "office_code": "LANDESVORSITZ",
+      "scope": "LAND:land-bayern",
+      "capabilities": [
+        "APPROVE",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "SUSPEND_OR_QUARANTINE"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.privileged.operator",
+      "subject_ref": "p.privileged.operator",
+      "office_code": "PRIVILEGED_ACCESS_OPERATOR",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "ACTIVATE",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "REVOKE"
+      ],
+      "action_codes": [
+        "EMERGENCY.ACTIVATE",
+        "EMERGENCY.REQUEST",
+        "EMERGENCY.REVOKE",
+        "JIT.REQUEST"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.recovery.approver",
+      "subject_ref": "p.recovery.approver",
+      "office_code": "RECOVERY_APPROVER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "CRED.HIGH_ASSURANCE_RECOVERY",
+        "CRED.HUMAN_ENROLL",
+        "CRED.HUMAN_REVOKE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.recovery.second",
+      "subject_ref": "p.recovery.second",
+      "office_code": "IDENTITY_GOVERNANCE_APPROVER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "CRED.HIGH_ASSURANCE_RECOVERY"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.reporting.intake",
+      "subject_ref": "p.privileged.operator",
+      "office_code": "PROTECTED_REPORTING_INTAKE",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "REPORTING.CUSTODY_ACCESS"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.security.be",
+      "subject_ref": "p.security.operator",
+      "office_code": "SECURITY_OPERATOR",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "REVOKE",
+        "SUSPEND_OR_QUARANTINE"
+      ],
+      "action_codes": [
+        "INTERVENE.SESSION_QUARANTINE",
+        "SESSION.REVOKE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.security.operator",
+      "subject_ref": "p.security.operator",
+      "office_code": "SECURITY_OPERATOR",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST",
+        "REVOKE",
+        "SUSPEND_OR_QUARANTINE"
+      ],
+      "action_codes": [
+        "INTERVENE.SESSION_QUARANTINE",
+        "KEY.MARK_COMPROMISED",
+        "SERVICE_CRED.REVOKE",
+        "SESSION.REVOKE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.service.approver",
+      "subject_ref": "p.privileged.operator",
+      "office_code": "PLATFORM_APPROVER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "APPROVE",
+        "READ_METADATA"
+      ],
+      "action_codes": [
+        "KEY.REQUEST_GENERATION",
+        "SERVICE_CRED.ISSUE",
+        "SERVICE_CRED.ROTATE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.service.issuer",
+      "subject_ref": "p.credential.operator",
+      "office_code": "SERVICE_CREDENTIAL_ISSUER",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "ACTIVATE",
+        "EXECUTE",
+        "READ_METADATA",
+        "ROTATE_OR_REPLACE"
+      ],
+      "action_codes": [
+        "SERVICE_CRED.ISSUE",
+        "SERVICE_CRED.ROTATE"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.svc.rogue",
+      "subject_ref": "svc.rogue",
+      "office_code": "WORKLOAD",
+      "scope": "LAND:land-berlin",
+      "capabilities": [
+        "APPROVE",
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "AUTH.ASSIGN",
+        "AUTH.READ_PROVENANCE",
+        "AUTH.RESTORE",
+        "AUTH.REVOKE",
+        "AUTH.SUSPEND",
+        "FINANCE.APPROVE_PAYMENT",
+        "MEMBERSHIP.ADMIN_MUTATE",
+        "TRANSPARENCY.PUBLISH"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    },
+    {
+      "authority_id": "a.svc.scheduler",
+      "subject_ref": "svc.scheduler",
+      "office_code": "WORKLOAD",
+      "scope": "PLATFORM:epd2-platform",
+      "capabilities": [
+        "EXECUTE",
+        "READ_METADATA",
+        "REQUEST"
+      ],
+      "action_codes": [
+        "PLATFORM.SERVICE_TASK"
+      ],
+      "state": "ACTIVE",
+      "effective_now": true,
+      "oversight_of": [],
+      "oversight_decision_scope": null
+    }
+  ],
+  "authority_source": [
+    {
+      "authority_id": "a.auditor",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.auditor"
+      ]
+    },
+    {
+      "authority_id": "a.auditor.be",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.auditor.be"
+      ]
+    },
+    {
+      "authority_id": "a.bund.chair",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:BUND:bundesverband",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.bund.chair"
+      ]
+    },
+    {
+      "authority_id": "a.bund.deputy",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:BUND:bundesverband",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.bund.deputy"
+      ]
+    },
+    {
+      "authority_id": "a.bund.oversight",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BUNDESVORSTAND-BESCHLUSS-2026-014",
+      "appointed_by_ref": "ORGAN:BUND:bundesverband",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.bund.oversight"
+      ]
+    },
+    {
+      "authority_id": "a.bund.treasurer",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:BUND:bundesverband",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.bund.treasurer"
+      ]
+    },
+    {
+      "authority_id": "a.credential.operator",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.credential.operator"
+      ]
+    },
+    {
+      "authority_id": "a.emergency.controller",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "PACK12-POLICY-2026-006",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.emergency.controller"
+      ]
+    },
+    {
+      "authority_id": "a.key.custodian",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "KEY-POLICY-2026-004",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.key.custodian"
+      ]
+    },
+    {
+      "authority_id": "a.key.policy.approver",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "KEY-POLICY-2026-004",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.key.policy.approver"
+      ]
+    },
+    {
+      "authority_id": "a.key.second.approver",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.key.second.approver"
+      ]
+    },
+    {
+      "authority_id": "a.land.be.chair",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.land.be.chair"
+      ]
+    },
+    {
+      "authority_id": "a.land.be.deputy",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.land.be.deputy"
+      ]
+    },
+    {
+      "authority_id": "a.land.be.secretary",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.land.be.secretary"
+      ]
+    },
+    {
+      "authority_id": "a.land.by.chair",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "appointed_by_ref": "ORGAN:LAND:land-bayern",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.land.by.chair"
+      ]
+    },
+    {
+      "authority_id": "a.privileged.operator",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "PACK12-POLICY-2026-006",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.privileged.operator"
+      ]
+    },
+    {
+      "authority_id": "a.recovery.approver",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.recovery.approver"
+      ]
+    },
+    {
+      "authority_id": "a.recovery.second",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.recovery.second"
+      ]
+    },
+    {
+      "authority_id": "a.reporting.intake",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.reporting.intake"
+      ]
+    },
+    {
+      "authority_id": "a.security.be",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "INCIDENT-POLICY-2026-002",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.security.be"
+      ]
+    },
+    {
+      "authority_id": "a.security.operator",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "INCIDENT-POLICY-2026-002",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.security.operator"
+      ]
+    },
+    {
+      "authority_id": "a.service.approver",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.service.approver"
+      ]
+    },
+    {
+      "authority_id": "a.service.issuer",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.service.issuer"
+      ]
+    },
+    {
+      "authority_id": "a.svc.rogue",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "appointed_by_ref": "ORGAN:LAND:land-berlin",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.svc.rogue"
+      ]
+    },
+    {
+      "authority_id": "a.svc.scheduler",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "appointed_by_ref": "ORGAN:PLATFORM:epd2-platform",
+      "valid_from": "2026-08-03T09:00:00+00:00",
+      "valid_until": null,
+      "evidence_refs": [
+        "EVID:a.svc.scheduler"
+      ]
+    }
+  ],
+  "authority_history": [
+    {
+      "sequence": 1,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.land.be.chair",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 2,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.land.be.deputy",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 3,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.land.be.secretary",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 4,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.land.by.chair",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 5,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.bund.chair",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 6,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.bund.deputy",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 7,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.bund.treasurer",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BESCHLUSS-2026-001",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 8,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.bund.oversight",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "BUNDESVORSTAND-BESCHLUSS-2026-014",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 9,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.security.operator",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "INCIDENT-POLICY-2026-002",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 10,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.security.be",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "INCIDENT-POLICY-2026-002",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 11,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.credential.operator",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 12,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.recovery.approver",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 13,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.recovery.second",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "IDENTITY-POLICY-2026-003",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 14,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.key.custodian",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "KEY-POLICY-2026-004",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 15,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.key.policy.approver",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "KEY-POLICY-2026-004",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 16,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.key.second.approver",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 17,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.service.issuer",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 18,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.service.approver",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 19,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.privileged.operator",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "PACK12-POLICY-2026-006",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 20,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.emergency.controller",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "PACK12-POLICY-2026-006",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 21,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.reporting.intake",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 22,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.auditor",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 23,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.auditor.be",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "OVERSIGHT-POLICY-2026-007",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 24,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.svc.scheduler",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "recorded_by": "bootstrap",
+      "note": ""
+    },
+    {
+      "sequence": 25,
+      "recorded_at": "2026-08-03T09:00:00+00:00",
+      "authority_id": "a.svc.rogue",
+      "state": "ACTIVE",
+      "rule_version": "SATZUNG-2026.03",
+      "source_decision_ref": "SERVICE-POLICY-2026-005",
+      "recorded_by": "bootstrap",
+      "note": ""
+    }
+  ],
+  "session_quarantine_state": [
+    {
+      "session_id": "s.p.auditor",
+      "principal_id": "p.auditor",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.bund.chair",
+      "principal_id": "p.bund.chair",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.bund.deputy",
+      "principal_id": "p.bund.deputy",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.bund.oversight",
+      "principal_id": "p.bund.oversight",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.bund.treasurer",
+      "principal_id": "p.bund.treasurer",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.credential.operator",
+      "principal_id": "p.credential.operator",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.emergency.controller",
+      "principal_id": "p.emergency.controller",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.key.custodian",
+      "principal_id": "p.key.custodian",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.key.policy.approver",
+      "principal_id": "p.key.policy.approver",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.land.be.chair",
+      "principal_id": "p.land.be.chair",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.land.be.deputy",
+      "principal_id": "p.land.be.deputy",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.land.be.secretary",
+      "principal_id": "p.land.be.secretary",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.land.by.chair",
+      "principal_id": "p.land.by.chair",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.ordinary.member",
+      "principal_id": "p.ordinary.member",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.privileged.operator",
+      "principal_id": "p.privileged.operator",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.recovery.approver",
+      "principal_id": "p.recovery.approver",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.recovery.second",
+      "principal_id": "p.recovery.second",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.security.operator",
+      "principal_id": "p.security.operator",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.p.service.owner",
+      "principal_id": "p.service.owner",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.svc.rogue",
+      "principal_id": "svc.rogue",
+      "state": "ACTIVE"
+    },
+    {
+      "session_id": "s.svc.scheduler",
+      "principal_id": "svc.scheduler",
+      "state": "ACTIVE"
+    }
+  ],
+  "current_restrictions": [],
+  "temporary_supervision": [],
+  "service_credential_state": [
+    {
+      "credential_id": "svc.cred.scheduler",
+      "holder_service": "svc.scheduler",
+      "class": "SERVICE_WORKLOAD",
+      "state": "ACTIVE",
+      "scope": "PLATFORM:epd2-platform"
+    }
+  ],
+  "human_credential_state": [
+    {
+      "credential_id": "cred.p.auditor",
+      "subject_ref": "p.auditor",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.bund.chair",
+      "subject_ref": "p.bund.chair",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.bund.deputy",
+      "subject_ref": "p.bund.deputy",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.bund.oversight",
+      "subject_ref": "p.bund.oversight",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.bund.treasurer",
+      "subject_ref": "p.bund.treasurer",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.credential.operator",
+      "subject_ref": "p.credential.operator",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.emergency.controller",
+      "subject_ref": "p.emergency.controller",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.key.custodian",
+      "subject_ref": "p.key.custodian",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.key.policy.approver",
+      "subject_ref": "p.key.policy.approver",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.land.be.chair",
+      "subject_ref": "p.land.be.chair",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.land.be.deputy",
+      "subject_ref": "p.land.be.deputy",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.land.be.secretary",
+      "subject_ref": "p.land.be.secretary",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.land.by.chair",
+      "subject_ref": "p.land.by.chair",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.ordinary.member",
+      "subject_ref": "p.ordinary.member",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.privileged.operator",
+      "subject_ref": "p.privileged.operator",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.recovery.approver",
+      "subject_ref": "p.recovery.approver",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.recovery.second",
+      "subject_ref": "p.recovery.second",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.security.operator",
+      "subject_ref": "p.security.operator",
+      "state": "ACTIVE",
+      "replaced_by": null
+    },
+    {
+      "credential_id": "cred.p.service.owner",
+      "subject_ref": "p.service.owner",
+      "state": "ACTIVE",
+      "replaced_by": null
+    }
+  ],
+  "trust_key_references": [
+    {
+      "key_reference_id": "key.platform.signing.1",
+      "key_class": "PLATFORM_SIGNING",
+      "credential_class": "PLATFORM_KEY",
+      "algorithm": "ES384",
+      "trust_state": "CURRENT",
+      "custody_policy_ref": "KEY-POLICY-2026-004",
+      "exportable": false,
+      "threshold": "2-of-4"
+    },
+    {
+      "key_reference_id": "key.voting.trustee.1",
+      "key_class": "VOTING_TRUSTEE",
+      "credential_class": "VOTING_DOMAIN",
+      "algorithm": "Ed25519",
+      "trust_state": "EXTERNAL_GOVERNED_REFERENCE",
+      "custody_policy_ref": "VOTING-TRUSTEE-POLICY",
+      "exportable": false,
+      "threshold": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "accepted_predecessor_blobs": {
+    "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json": "7f8b16ca16a11f4916f1988ef53243b977e1862d",
+    "docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json": "0f41555a4aa5f0bf80fa7a1a95be905c02d692c5",
+    "docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json": "fab2833e6769bc9e71876e47b168848e6c386e96",
+    "docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json": "e35f0ff0438419db445580f8739575ccba3f6551",
+    "docs/frontend/FRONT-02-C2.1-ACCEPTANCE-RECORD.json": "8f22eab702d7d674be115916defb2e12e63d7680",
+    "docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json": "ced7d78a779343b5507a5cd612ad8620e8c821cd",
+    "docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json": "5eb35c0699434f1f93c63bfc23a87097c609ca06",
+    "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json": "5618144cf503b55bea96550c80d80cac78580963",
+    "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json": "95df6e5c5288b16aee62621157fc28a790b68bfc",
+    "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json": "0b23469ac20c34fa7891653cb41d0eaa44437ac6",
+    "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json": "3d4baa96b957693244507aaa76f2d685226f88b6"
+  },
+  "bounded_acceptance_semantics": "CTRL-01 may be accepted independently; CTRL layer remains open/not closed",
+  "canonical_base_main": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+  "canonical_base_tree": "eb8a3254c2b8a30feff71318d4377eff2435605c",
+  "canonical_blobs": {
+    "docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md": "15dd290a1bcb6f44b4242e7c33b71119e404553a",
+    "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+    "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md": "aad828e377889e96f0bce16245f4e9ed1d97ed4a",
+    "docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md": "4b69cf500f2171399f7fb0b4213cb1bddcc8cf07"
+  },
+  "p1_base_main": "cb02b231e701d0b4f12db89c86bc56a9fe11f71a",
+  "p1_sha256": "490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71",
+  "schema": "epd2.ctrl01.canonical-reconciliation/1",
+  "source_overlap_with_p1_to_current_governance_delta": [],
+  "system_trial_preview": "CHECKPOINT_NOT_OPEN",
+  "unreconciled_dependencies": {
+    "API-06": "NEXT / NOT ACCEPTED"
+  }
+}

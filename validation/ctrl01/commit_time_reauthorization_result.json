@@ -1,0 +1,22 @@
+{
+  "schema": "epd2.ctrl01.commit-time-reauthorization/1",
+  "gate": {
+    "gate_id": "G15",
+    "name": "commit-time reauthorization",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "mutations_requiring_reauth": 43,
+      "toctou_cases_covered": [
+        "authority revoked after request",
+        "intervention activated during workflow",
+        "emergency grant expired before commit",
+        "quorum changed",
+        "target object scope changed",
+        "session quarantined",
+        "credential revoked",
+        "region restriction began"
+      ]
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "schema": "epd2.system-trial-preview.environment-readiness/1",
+  "status": "PREPARATION_ONLY / CHECKPOINT_NOT_OPEN",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "matrix": {
+    "services": [
+      {
+        "item": "identity/authentication runtime",
+        "source": "accepted API-02 C13",
+        "state": "NOT_DEPLOYED"
+      },
+      {
+        "item": "service-to-service trust runtime",
+        "source": "accepted API-03 C5",
+        "state": "NOT_DEPLOYED"
+      },
+      {
+        "item": "events and messaging runtime",
+        "source": "accepted API-04 C1",
+        "state": "NOT_DEPLOYED"
+      },
+      {
+        "item": "remaining API surface",
+        "source": "API-06",
+        "state": "NEXT_NOT_ACCEPTED"
+      },
+      {
+        "item": "web shell",
+        "source": "accepted FRONT-02 C2.1 / FRONT-03 C1",
+        "state": "NOT_DEPLOYED"
+      }
+    ],
+    "databases": [
+      {
+        "item": "PostgreSQL 16.15",
+        "source": "accepted acceptance evidence baseline",
+        "state": "NOT_PROVISIONED"
+      },
+      {
+        "item": "identity-side / voting-side / neutral audit streams",
+        "source": "audit-core migrations",
+        "state": "NOT_PROVISIONED"
+      }
+    ],
+    "trust_material": [
+      {
+        "item": "preview-only TLS and mTLS material",
+        "source": "INFRA preview minimum",
+        "state": "NOT_ISSUED",
+        "note": "Preview trust material must be distinct from any production trust chain."
+      },
+      {
+        "item": "voting-domain trust material",
+        "source": "voting domain",
+        "state": "OUT_OF_SCOPE",
+        "note": "Never provisioned by the preview harness."
+      }
+    ],
+    "network_boundaries": [
+      {
+        "item": "voting-domain network isolation",
+        "source": "FIR-VOTE-NET-001",
+        "state": "REQUIRED_NOT_VERIFIED"
+      },
+      {
+        "item": "administrative surface origin separation",
+        "source": "FIR-CTRL-001",
+        "state": "REQUIRED_NOT_VERIFIED"
+      }
+    ],
+    "health_readiness": [
+      {
+        "item": "per-service readiness endpoint",
+        "source": "OPS preview minimum",
+        "state": "REQUIRED_NOT_VERIFIED"
+      },
+      {
+        "item": "aggregate environment health view",
+        "source": "FIR-OPS-001",
+        "state": "REQUIRED_NOT_VERIFIED"
+      }
+    ],
+    "observability": [
+      {
+        "item": "privacy-safe log pipeline",
+        "source": "FIR-OPS-001",
+        "state": "REQUIRED_NOT_VERIFIED",
+        "note": "No voting-linkable identifier may reach observability."
+      }
+    ],
+    "backup_reset": [
+      {
+        "item": "deterministic fixture loader",
+        "source": "this harness",
+        "state": "DESIGNED_NOT_IMPLEMENTED"
+      },
+      {
+        "item": "one-command environment reset",
+        "source": "OPS preview minimum",
+        "state": "REQUIRED_NOT_VERIFIED"
+      }
+    ],
+    "operator_runbooks": [
+      {
+        "item": "start / stop / reset runbook",
+        "source": "accepted OPS-01 C2 conventions",
+        "state": "REQUIRED_NOT_WRITTEN"
+      },
+      {
+        "item": "incident and stop-condition runbook",
+        "source": "accepted OPS-01 C2 conventions",
+        "state": "REQUIRED_NOT_WRITTEN"
+      }
+    ],
+    "seed_data": [
+      {
+        "item": "deterministic trial fixture set",
+        "source": "this harness",
+        "state": "DESIGNED_NOT_IMPLEMENTED"
+      }
+    ],
+    "test_accounts": [
+      {
+        "item": "trial personas with synthetic credentials",
+        "source": "this harness",
+        "state": "DESIGNED_NOT_IMPLEMENTED",
+        "note": "No real personal secrets, ever."
+      }
+    ],
+    "voting_isolation_controls": [
+      {
+        "item": "voting client excluded from all administrative surfaces",
+        "source": "CTRL-01 inventory",
+        "state": "SPECIFIED_AND_TESTED_AT_PRESEAL"
+      },
+      {
+        "item": "no voting-linkable identifier in trial logs",
+        "source": "CTRL-01 privacy screen",
+        "state": "SPECIFIED_AND_TESTED_AT_PRESEAL"
+      }
+    ]
+  }
+}

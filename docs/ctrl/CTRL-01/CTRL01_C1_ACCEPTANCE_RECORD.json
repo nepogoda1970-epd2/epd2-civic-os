@@ -1,0 +1,74 @@
+{
+  "authoritative_review": {
+    "authoritative_evidence_artifact": {
+      "artifact_zip_sha256": "4f4454f9cbdf17059882136ee7588e470e61458636795885adb8c74c03ae82ef",
+      "id": 9842027832,
+      "name": "ctrl01-c1-authoritative-evidence-33618683269"
+    },
+    "authoritative_job_id": 100210596079,
+    "build_evidence_artifact": {
+      "artifact_zip_sha256": "a722f8a2bb614a69e089d63a14a494b3466588791ba1bc018d252bdd1c3d7b7e",
+      "id": 9842007526,
+      "name": "ctrl01-c1-build-evidence-33618683269"
+    },
+    "build_job_id": 100210392348,
+    "candidate_artifact": {
+      "artifact_zip_sha256": "12898d5a9ad7658aefe02c0ad62be4c91328e2420e41c7c56291647afd05dbb3",
+      "id": 9842006799,
+      "name": "ctrl01-c1-sealed-candidate-33618683269"
+    },
+    "conclusion": "PASS",
+    "run_id": 33618683269,
+    "terminal_marker": "CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099",
+    "workflow": ".github/workflows/ctrl01-c1-canonical.yml",
+    "workflow_commit": "246824a099fd1e7359e79650a7107d7cfa8ddb43"
+  },
+  "authority": "Project Owner",
+  "candidate": {
+    "base_main": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+    "file": "EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip",
+    "p1_sha256": "490d8ca31d4607da204f03addaf900161257b289d51ec6f0b7e52433fd5cbe71",
+    "self_state_before_governance_decision": "CANDIDATE_NOT_ACCEPTED",
+    "sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+    "size_bytes": 190099
+  },
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-02",
+  "dependencies": {
+    "API-06": "NEXT / NOT ACCEPTED; API layer remains open until API-06 closes"
+  },
+  "master_future_register": {
+    "changed": false,
+    "reason": "No FIR status promotion is requested or evidenced by bounded CTRL-01 C1 acceptance."
+  },
+  "nonclaims": [
+    "overall CTRL layer closure",
+    "System Trial Preview opening",
+    "production readiness",
+    "legal activation",
+    "BSI/Common Criteria/EAL4 certification",
+    "final security acceptance"
+  ],
+  "open_blockers_for_ctrl01_acceptance": [],
+  "overall_ctrl_layer": "OPEN / NOT CLOSED",
+  "previous_state": "NOT_STARTED / PRESEAL PARALLEL WORK NOT ACCEPTED",
+  "remaining_program_blockers": [
+    "API-06 authoritative acceptance before API closure and System Trial Preview opening"
+  ],
+  "schema": "epd2.ctrl01.acceptance-record/1",
+  "scope": "BOUNDED_CTRL01_STAGE_ONLY",
+  "stage": "CTRL-01 — Governed Control Plane",
+  "system_trial_preview": "CHECKPOINT_NOT_OPEN / API-06 BLOCKED",
+  "verification": {
+    "canonical_payload_installation": "EXACT SEALED C1 PAYLOAD BYTES INSTALLED",
+    "commit_time_reauthorization_mutations": 43,
+    "governance_gates": "22/22 PASS",
+    "mutations": "37/37 DETECTED",
+    "mypy": "PASS / 17 source files",
+    "pytest_authoritative": "178 passed",
+    "pytest_build": "178 passed",
+    "ruff": "PASS",
+    "same_bytes_and_internal_sha256s": "PASS",
+    "self_acceptance": false
+  }
+}

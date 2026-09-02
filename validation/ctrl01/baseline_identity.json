@@ -1,0 +1,10 @@
+{
+  "schema": "epd2.ctrl01.baseline-identity/1",
+  "repository": "nepogoda1970-epd2/epd2-civic-os",
+  "branch": "HEAD",
+  "commit": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+  "tree": "eb8a3254c2b8a30feff71318d4377eff2435605c",
+  "stage": "CTRL-01",
+  "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "bootstrap": "PASS"
+}

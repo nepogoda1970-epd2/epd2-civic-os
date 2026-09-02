@@ -4,44 +4,34 @@ on:
   push:
     branches:
       - main
+      - pilot02-verify
+  pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  actions: read
-
 jobs:
-  ctrl01-canonical-promotion:
-    if: github.ref == 'refs/heads/main'
+  roadmap-scope:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout current canonical main
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-          persist-credentials: true
 
-      - name: Download exact sealed CTRL-01 C1 candidate
-        uses: actions/download-artifact@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: ctrl01-c1-sealed-candidate-33618683269
-          path: ${{ runner.temp }}/ctrl01-candidate
-          repository: nepogoda1970-epd2/epd2-civic-os
-          run-id: 33618683269
-          github-token: ${{ github.token }}
+          python-version: '3.12'
 
-      - name: Download authoritative CTRL-01 C1 evidence
-        uses: actions/download-artifact@v4
-        with:
-          name: ctrl01-c1-authoritative-evidence-33618683269
-          path: ${{ runner.temp }}/ctrl01-evidence
-          repository: nepogoda1970-epd2/epd2-civic-os
-          run-id: 33618683269
-          github-token: ${{ github.token }}
+      - name: Verify locked roadmap
+        run: python scripts/check_pilot_roadmap.py --self-check
 
-      - name: Verify, install and canonically accept exact CTRL-01 C1
-        env:
-          CTRL01_CANDIDATE_DIR: ${{ runner.temp }}/ctrl01-candidate
-          CTRL01_EVIDENCE_DIR: ${{ runner.temp }}/ctrl01-evidence
-        run: python scripts/ctrl01_canonical_promote_fix.py
+      - name: Verify any PILOT-03 candidate archives in repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          candidates=(EPD2_PILOT03*.zip EPD2_PILOT-03*.zip)
+          for candidate in "${candidates[@]}"; do
+            python scripts/check_pilot_roadmap.py --zip "$candidate"
+          done
+
+      - name: Guard result
+        run: echo 'PILOT roadmap guard PASS'

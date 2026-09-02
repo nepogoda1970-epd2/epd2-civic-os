@@ -1,0 +1,86 @@
+{
+  "schema": "epd2.system-trial-preview.seed-reset/1",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "principles": [
+    "no real personal data and no real personal secrets enter the preview",
+    "fixtures are deterministic and reproducible from a recorded version and digest",
+    "every fixture load is reversible by the documented reset",
+    "production data is excluded by construction, not by policy statement"
+  ],
+  "fixture_version": "CTRL01-STP-FIXTURES-0.1",
+  "fixture_digest": "TO_BE_COMPUTED_AT_FIXTURE_BUILD",
+  "production_data_exclusion": {
+    "rule": "the preview environment has no credential, network path or trust material that reaches production",
+    "verification": "environment readiness matrix rows 'trust_material' and 'network_boundaries' must be verified before the checkpoint opens"
+  },
+  "organizations": [
+    {
+      "scope": "BUND:trial-bund",
+      "note": "one Bundesverband"
+    },
+    {
+      "scope": "LAND:trial-land-a",
+      "note": "used for in-scope journeys"
+    },
+    {
+      "scope": "LAND:trial-land-b",
+      "note": "used to prove cross-Land refusal"
+    },
+    {
+      "scope": "KREIS:trial-kreis-a1",
+      "note": "child of Land A"
+    },
+    {
+      "scope": "ORT:trial-ort-a1a",
+      "note": "child of Kreis A1"
+    }
+  ],
+  "personas": [
+    {
+      "persona": "anonymous visitor",
+      "credentials": "none"
+    },
+    {
+      "persona": "trial member (Land A)",
+      "credentials": "synthetic authenticator"
+    },
+    {
+      "persona": "trial member (Land B)",
+      "credentials": "synthetic authenticator"
+    },
+    {
+      "persona": "prospective member",
+      "credentials": "none until application"
+    },
+    {
+      "persona": "regional office holder (Land A)",
+      "credentials": "synthetic authenticator + seeded authority"
+    },
+    {
+      "persona": "independent auditor",
+      "credentials": "synthetic authenticator + read-only authority"
+    },
+    {
+      "persona": "trial operator",
+      "credentials": "synthetic operator account, platform scope only"
+    }
+  ],
+  "application_states": [
+    "DRAFT",
+    "SUBMITTED",
+    "UNDER_REVIEW",
+    "DECIDED"
+  ],
+  "reset": {
+    "mode": "full deterministic reset to the recorded fixture version",
+    "steps": [
+      "stop trial traffic",
+      "drop and recreate the trial schemas",
+      "load the fixture set for the recorded version",
+      "recompute and compare the fixture digest",
+      "run the smoke journey set",
+      "record reset evidence including before/after digests"
+    ],
+    "reversibility": "every reset returns the environment to the same recorded digest"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "schema": "epd2.system-trial-preview.failure-scenarios/1",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "scenarios": [
+    {
+      "scenario_id": "F-01",
+      "name": "service unavailable",
+      "trigger": "stop one backing service",
+      "expected": "affected journeys fail closed with an honest degraded state; unaffected journeys continue",
+      "owning_layer": "OPS",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-02",
+      "name": "database unavailable",
+      "trigger": "stop the database",
+      "expected": "reads and writes fail closed; no partial write is acknowledged",
+      "owning_layer": "OPS",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-03",
+      "name": "session revoked mid-journey",
+      "trigger": "revoke an active session",
+      "expected": "the next consequential act is refused with a reason code",
+      "owning_layer": "API",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-04",
+      "name": "authority revoked mid-workflow",
+      "trigger": "revoke an OrganizationalAuthority",
+      "expected": "commit-time reauthorization refuses the commit",
+      "owning_layer": "CTRL",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-05",
+      "name": "time or expiry anomaly",
+      "trigger": "advance a grant past its expiry",
+      "expected": "the expired grant authorizes nothing and is not renewable in place",
+      "owning_layer": "CTRL",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-06",
+      "name": "partial dependency outage",
+      "trigger": "degrade one dependency",
+      "expected": "the surface states the limitation rather than silently omitting data",
+      "owning_layer": "OPS",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-07",
+      "name": "operator recovery",
+      "trigger": "follow the recovery runbook after F-01",
+      "expected": "the environment returns to a known-good state within the recorded target",
+      "owning_layer": "OPS",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-08",
+      "name": "rollback and reset",
+      "trigger": "run the documented reset",
+      "expected": "the fixture digest matches the recorded version exactly",
+      "owning_layer": "OPS",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-09",
+      "name": "stale browser state",
+      "trigger": "act from a tab opened before a state change",
+      "expected": "the stale page is refused; it is never an authorization guarantee",
+      "owning_layer": "CTRL",
+      "stop_condition": false
+    },
+    {
+      "scenario_id": "F-10",
+      "name": "voting-linkable identifier observed in a log",
+      "trigger": "observation",
+      "expected": "immediate stop condition; the trial halts and the finding is escalated",
+      "owning_layer": "CTRL",
+      "stop_condition": true
+    },
+    {
+      "scenario_id": "F-11",
+      "name": "real personal data observed in the preview",
+      "trigger": "observation",
+      "expected": "immediate stop condition; the trial halts and the environment is reset",
+      "owning_layer": "OPS",
+      "stop_condition": true
+    },
+    {
+      "scenario_id": "F-12",
+      "name": "cross-scope data leak observed",
+      "trigger": "observation",
+      "expected": "immediate stop condition; the finding is routed to the owning layer as blocking",
+      "owning_layer": "API",
+      "stop_condition": true
+    }
+  ],
+  "stop_conditions": [
+    "F-10",
+    "F-11",
+    "F-12"
+  ]
+}

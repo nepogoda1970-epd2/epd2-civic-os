@@ -1,0 +1,12 @@
+{
+  "api06": "NEXT / NOT ACCEPTED",
+  "api_layer": "OPEN",
+  "authoritative_acceptance_run": 33618683269,
+  "candidate_sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+  "classification": "API-06 is not a blocker to bounded CTRL-01 C1 acceptance; it remains a blocker to API-layer closure and System Trial Preview opening.",
+  "decision": "BOUNDED_ACCEPTANCE_ALLOWED",
+  "overall_ctrl_layer": "OPEN / NOT CLOSED",
+  "schema": "epd2.ctrl01.dependency-disposition/1",
+  "stage": "CTRL-01 C1",
+  "system_trial_preview": "CHECKPOINT_NOT_OPEN"
+}

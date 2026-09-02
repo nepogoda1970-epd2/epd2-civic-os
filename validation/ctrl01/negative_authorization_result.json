@@ -1,0 +1,156 @@
+{
+  "schema": "epd2.ctrl01.negative-authorization/1",
+  "gate": {
+    "gate_id": "G14",
+    "name": "authorization negative suite",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "pytest_exit_code": 0,
+      "summary": "178 passed in 0.62s",
+      "tests_passed": 178
+    }
+  },
+  "governed_checks": [
+    {
+      "check_id": "CHK-ACTOR-CLASS-SEPARATION",
+      "status": "PASS",
+      "detail": "CTRL_ACTOR_CLASS"
+    },
+    {
+      "check_id": "CHK-COMMIT-TIME-REAUTH",
+      "status": "PASS",
+      "detail": "CTRL_COMMIT_TIME_REAUTH_FAILED"
+    },
+    {
+      "check_id": "CHK-CREDENTIAL-STATE-ENFORCED",
+      "status": "PASS",
+      "detail": "CTRL_CREDENTIAL_NOT_ACTIVE"
+    },
+    {
+      "check_id": "CHK-EMERGENCY-EXPIRY",
+      "status": "PASS",
+      "detail": "CTRL_EMERGENCY_EXPIRED"
+    },
+    {
+      "check_id": "CHK-EMERGENCY-NOT-RENEWABLE",
+      "status": "PASS",
+      "detail": "CTRL_EMERGENCY_STATE"
+    },
+    {
+      "check_id": "CHK-EMERGENCY-SCOPE",
+      "status": "PASS",
+      "detail": "CTRL_EMERGENCY_SCOPE"
+    },
+    {
+      "check_id": "CHK-EVIDENCE-EMITTED",
+      "status": "PASS",
+      "detail": "1 executed record(s)"
+    },
+    {
+      "check_id": "CHK-EVIDENCE-IMMUTABLE",
+      "status": "PASS",
+      "detail": "chain intact"
+    },
+    {
+      "check_id": "CHK-FAIL-CLOSED-ON-UNKNOWN",
+      "status": "PASS",
+      "detail": "CTRL_SESSION_UNKNOWN"
+    },
+    {
+      "check_id": "CHK-FREEZE-SAME-BYTES",
+      "status": "PASS",
+      "detail": "frozen bytes match (recomputed)"
+    },
+    {
+      "check_id": "CHK-INTERVENTION-ENFORCED",
+      "status": "PASS",
+      "detail": "CTRL_RESTRICTION_ACTIVE"
+    },
+    {
+      "check_id": "CHK-INTERVENTION-TIME-BOUNDED",
+      "status": "PASS",
+      "detail": "ValueError"
+    },
+    {
+      "check_id": "CHK-INVENTORY-CONGRUENT",
+      "status": "PASS",
+      "detail": "runtime and inventory agree"
+    },
+    {
+      "check_id": "CHK-NO-COARSE-REGIONAL-DISABLE",
+      "status": "PASS",
+      "detail": "CTRL_RESTRICTION_FREE_TEXT"
+    },
+    {
+      "check_id": "CHK-NO-DIRECT-STATE-MUTATION",
+      "status": "PASS",
+      "detail": "every directory write is attributable"
+    },
+    {
+      "check_id": "CHK-NO-IMPLICIT-BUND-TAKEOVER",
+      "status": "PASS",
+      "detail": "oversight is honoured only for the scope its source decision names"
+    },
+    {
+      "check_id": "CHK-NO-MASS-ASSIGNMENT",
+      "status": "PASS",
+      "detail": "parameters changed nothing"
+    },
+    {
+      "check_id": "CHK-NO-UNIVERSAL-ADMIN",
+      "status": "PASS",
+      "detail": "no universal administrator"
+    },
+    {
+      "check_id": "CHK-PLATFORM-GRANTS-NO-POLITICAL-AUTHORITY",
+      "status": "PASS",
+      "detail": "platform scope carries no party competence"
+    },
+    {
+      "check_id": "CHK-PRIVACY-MINIMIZATION",
+      "status": "PASS",
+      "detail": "CTRL_VOTING_LINKABLE_FIELD"
+    },
+    {
+      "check_id": "CHK-QUORUM-ENFORCED",
+      "status": "PASS",
+      "detail": "CTRL_QUORUM_INSUFFICIENT"
+    },
+    {
+      "check_id": "CHK-REVOKED-AUTHORITY-REFUSED",
+      "status": "PASS",
+      "detail": "CTRL_AUTHORITY_REVOKED"
+    },
+    {
+      "check_id": "CHK-SCOPE-ISOLATION",
+      "status": "PASS",
+      "detail": "CTRL_SCOPE_ISOLATION"
+    },
+    {
+      "check_id": "CHK-SECRET-VISIBILITY-SEPARATION",
+      "status": "PASS",
+      "detail": "CTRL_SECRET_VISIBILITY_APPROVER"
+    },
+    {
+      "check_id": "CHK-SELF-APPROVAL-REJECTED",
+      "status": "PASS",
+      "detail": "CTRL_SELF_APPROVAL"
+    },
+    {
+      "check_id": "CHK-SELF-STATE-BOUNDED",
+      "status": "PASS",
+      "detail": "only permitted self-states present"
+    },
+    {
+      "check_id": "CHK-SESSION-STATE-ENFORCED",
+      "status": "PASS",
+      "detail": "CTRL_SESSION_NOT_ACTIVE"
+    },
+    {
+      "check_id": "CHK-VOTING-BOUNDARY",
+      "status": "PASS",
+      "detail": "CTRL_VOTING_BOUNDARY"
+    }
+  ]
+}

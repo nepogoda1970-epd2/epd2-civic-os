@@ -1,0 +1,41 @@
+{
+  "base_main": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+  "candidate_sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+  "candidate_size": 190099,
+  "commit_time_reauthorization": {
+    "gate": {
+      "evidence": {
+        "mutations_requiring_reauth": 43,
+        "toctou_cases_covered": [
+          "authority revoked after request",
+          "intervention activated during workflow",
+          "emergency grant expired before commit",
+          "quorum changed",
+          "target object scope changed",
+          "session quarantined",
+          "credential revoked",
+          "region restriction began"
+        ]
+      },
+      "findings": [],
+      "gate_id": "G15",
+      "name": "commit-time reauthorization",
+      "status": "PASS"
+    },
+    "schema": "epd2.ctrl01.commit-time-reauthorization/1"
+  },
+  "conclusion": "PASS",
+  "ctrl_layer_state": "OPEN / NOT CLOSED",
+  "gates": "22/22 PASS",
+  "job": "authoritative-review",
+  "mutations": "37/37 DETECTED",
+  "run_id": 33618683269,
+  "schema": "epd2.ctrl01.authoritative-acceptance-result/1",
+  "self_acceptance": false,
+  "stage": "CTRL-01",
+  "system_trial_preview": "CHECKPOINT_NOT_OPEN / API-06 BLOCKED",
+  "terminal_marker": "CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099",
+  "unreconciled_dependencies": {
+    "API-06": "NEXT / NOT ACCEPTED; API layer remains open until API-06 closes"
+  }
+}

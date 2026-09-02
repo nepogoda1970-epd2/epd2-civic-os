@@ -1,0 +1,456 @@
+{
+  "schema": "epd2.ctrl01.mutation-suite/1",
+  "mutations_total": 37,
+  "detected": 37,
+  "undetected": [],
+  "checks": [
+    "CHK-ACTOR-CLASS-SEPARATION",
+    "CHK-COMMIT-TIME-REAUTH",
+    "CHK-CREDENTIAL-STATE-ENFORCED",
+    "CHK-EMERGENCY-EXPIRY",
+    "CHK-EMERGENCY-NOT-RENEWABLE",
+    "CHK-EMERGENCY-SCOPE",
+    "CHK-EVIDENCE-EMITTED",
+    "CHK-EVIDENCE-IMMUTABLE",
+    "CHK-FAIL-CLOSED-ON-UNKNOWN",
+    "CHK-FREEZE-SAME-BYTES",
+    "CHK-INTERVENTION-ENFORCED",
+    "CHK-INTERVENTION-TIME-BOUNDED",
+    "CHK-INVENTORY-CONGRUENT",
+    "CHK-NO-COARSE-REGIONAL-DISABLE",
+    "CHK-NO-DIRECT-STATE-MUTATION",
+    "CHK-NO-IMPLICIT-BUND-TAKEOVER",
+    "CHK-NO-MASS-ASSIGNMENT",
+    "CHK-NO-UNIVERSAL-ADMIN",
+    "CHK-PLATFORM-GRANTS-NO-POLITICAL-AUTHORITY",
+    "CHK-PRIVACY-MINIMIZATION",
+    "CHK-QUORUM-ENFORCED",
+    "CHK-REVOKED-AUTHORITY-REFUSED",
+    "CHK-SCOPE-ISOLATION",
+    "CHK-SECRET-VISIBILITY-SEPARATION",
+    "CHK-SELF-APPROVAL-REJECTED",
+    "CHK-SELF-STATE-BOUNDED",
+    "CHK-SESSION-STATE-ENFORCED",
+    "CHK-VOTING-BOUNDARY"
+  ],
+  "outcomes": [
+    {
+      "mutation_id": "MUT-01",
+      "title": "universal administrator inserted",
+      "kind": "DATA",
+      "expected_check": "CHK-NO-UNIVERSAL-ADMIN",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-DIRECT-STATE-MUTATION",
+        "CHK-NO-UNIVERSAL-ADMIN"
+      ]
+    },
+    {
+      "mutation_id": "MUT-02",
+      "title": "region scope check removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-SCOPE-ISOLATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-IMPLICIT-BUND-TAKEOVER",
+        "CHK-SCOPE-ISOLATION"
+      ]
+    },
+    {
+      "mutation_id": "MUT-03",
+      "title": "self-approval enabled",
+      "kind": "POLICY",
+      "expected_check": "CHK-SELF-APPROVAL-REJECTED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-SELF-APPROVAL-REJECTED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-04",
+      "title": "quorum reduced below four-eyes",
+      "kind": "INVENTORY",
+      "expected_check": "CHK-QUORUM-ENFORCED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-QUORUM-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-05",
+      "title": "quorum enforcement removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-QUORUM-ENFORCED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-QUORUM-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-06",
+      "title": "commit-time reauthorization removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-COMMIT-TIME-REAUTH",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-COMMIT-TIME-REAUTH"
+      ]
+    },
+    {
+      "mutation_id": "MUT-07",
+      "title": "revoked authority accepted",
+      "kind": "POLICY",
+      "expected_check": "CHK-REVOKED-AUTHORITY-REFUSED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-COMMIT-TIME-REAUTH",
+        "CHK-REVOKED-AUTHORITY-REFUSED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-08",
+      "title": "intervention enforcement removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-INTERVENTION-ENFORCED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-INTERVENTION-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-09",
+      "title": "intervention becomes a coarse regional disable",
+      "kind": "POLICY",
+      "expected_check": "CHK-NO-COARSE-REGIONAL-DISABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-COARSE-REGIONAL-DISABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-10",
+      "title": "emergency expiry removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-EMERGENCY-EXPIRY",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EMERGENCY-EXPIRY"
+      ]
+    },
+    {
+      "mutation_id": "MUT-11",
+      "title": "break-glass made renewable forever",
+      "kind": "RUNTIME",
+      "expected_check": "CHK-EMERGENCY-NOT-RENEWABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EMERGENCY-NOT-RENEWABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-12",
+      "title": "emergency scope confinement removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-EMERGENCY-SCOPE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EMERGENCY-SCOPE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-13",
+      "title": "service identity accepted as human administrator",
+      "kind": "POLICY",
+      "expected_check": "CHK-ACTOR-CLASS-SEPARATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-ACTOR-CLASS-SEPARATION"
+      ]
+    },
+    {
+      "mutation_id": "MUT-14",
+      "title": "human action reclassified as a workload action",
+      "kind": "INVENTORY",
+      "expected_check": "CHK-ACTOR-CLASS-SEPARATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-ACTOR-CLASS-SEPARATION"
+      ]
+    },
+    {
+      "mutation_id": "MUT-15",
+      "title": "audit event removed",
+      "kind": "DATA",
+      "expected_check": "CHK-EVIDENCE-IMMUTABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EVIDENCE-IMMUTABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-16",
+      "title": "history overwritten",
+      "kind": "DATA",
+      "expected_check": "CHK-EVIDENCE-IMMUTABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EVIDENCE-IMMUTABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-16B",
+      "title": "newest audit event truncated to hide a committed act",
+      "kind": "DATA",
+      "expected_check": "CHK-EVIDENCE-IMMUTABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EVIDENCE-IMMUTABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-16C",
+      "title": "history overwritten and re-chained forward",
+      "kind": "DATA",
+      "expected_check": "CHK-EVIDENCE-IMMUTABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EVIDENCE-IMMUTABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-17",
+      "title": "stale evidence accepted (immutability enforcement removed)",
+      "kind": "POLICY",
+      "expected_check": "CHK-EVIDENCE-IMMUTABLE",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-EVIDENCE-IMMUTABLE"
+      ]
+    },
+    {
+      "mutation_id": "MUT-18",
+      "title": "hidden privileged field mass-assigned through request parameters",
+      "kind": "RUNTIME",
+      "expected_check": "CHK-NO-MASS-ASSIGNMENT",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-DIRECT-STATE-MUTATION",
+        "CHK-NO-MASS-ASSIGNMENT"
+      ]
+    },
+    {
+      "mutation_id": "MUT-19",
+      "title": "implicit Bund takeover: oversight grant re-pointed away from its decision",
+      "kind": "DATA",
+      "expected_check": "CHK-NO-IMPLICIT-BUND-TAKEOVER",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-IMPLICIT-BUND-TAKEOVER"
+      ]
+    },
+    {
+      "mutation_id": "MUT-20",
+      "title": "key secret made readable to an ordinary approver",
+      "kind": "POLICY",
+      "expected_check": "CHK-SECRET-VISIBILITY-SEPARATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-SECRET-VISIBILITY-SEPARATION"
+      ]
+    },
+    {
+      "mutation_id": "MUT-21",
+      "title": "voting member/person identifier added to control telemetry",
+      "kind": "POLICY",
+      "expected_check": "CHK-PRIVACY-MINIMIZATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-PRIVACY-MINIMIZATION"
+      ]
+    },
+    {
+      "mutation_id": "MUT-22",
+      "title": "voting hard boundary removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-VOTING-BOUNDARY",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-VOTING-BOUNDARY"
+      ]
+    },
+    {
+      "mutation_id": "MUT-23",
+      "title": "a control action moved inside the voting trust domain",
+      "kind": "INVENTORY",
+      "expected_check": "CONSTRUCTION_REFUSED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CONSTRUCTION_REFUSED:InventoryError"
+      ]
+    },
+    {
+      "mutation_id": "MUT-24",
+      "title": "direct database mutation accepted as a control action",
+      "kind": "DATA",
+      "expected_check": "CHK-NO-DIRECT-STATE-MUTATION",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-COMMIT-TIME-REAUTH",
+        "CHK-CREDENTIAL-STATE-ENFORCED",
+        "CHK-EVIDENCE-EMITTED",
+        "CHK-EVIDENCE-IMMUTABLE",
+        "CHK-NO-DIRECT-STATE-MUTATION",
+        "CHK-QUORUM-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-25",
+      "title": "unsafe failure converted to success (fail-open on unknown state)",
+      "kind": "POLICY",
+      "expected_check": "CHK-FAIL-CLOSED-ON-UNKNOWN",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-FAIL-CLOSED-ON-UNKNOWN"
+      ]
+    },
+    {
+      "mutation_id": "MUT-26",
+      "title": "session state check removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-SESSION-STATE-ENFORCED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-FAIL-CLOSED-ON-UNKNOWN",
+        "CHK-SESSION-STATE-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-27",
+      "title": "generated runtime route absent from the inventory",
+      "kind": "INVENTORY",
+      "expected_check": "CHK-INVENTORY-CONGRUENT",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-INVENTORY-CONGRUENT"
+      ]
+    },
+    {
+      "mutation_id": "MUT-28",
+      "title": "undocumented mutation endpoint added",
+      "kind": "RUNTIME",
+      "expected_check": "CHK-INVENTORY-CONGRUENT",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-INVENTORY-CONGRUENT"
+      ]
+    },
+    {
+      "mutation_id": "MUT-29",
+      "title": "candidate changed after verification (package/freeze mismatch)",
+      "kind": "PACKAGING",
+      "expected_check": "CHK-FREEZE-SAME-BYTES",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-FREEZE-SAME-BYTES"
+      ]
+    },
+    {
+      "mutation_id": "MUT-30",
+      "title": "excluded preseal state changed to accepted",
+      "kind": "PACKAGING",
+      "expected_check": "CHK-SELF-STATE-BOUNDED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-SELF-STATE-BOUNDED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-31",
+      "title": "platform operator granted party-organ competence",
+      "kind": "DATA",
+      "expected_check": "CHK-PLATFORM-GRANTS-NO-POLITICAL-AUTHORITY",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-DIRECT-STATE-MUTATION",
+        "CHK-PLATFORM-GRANTS-NO-POLITICAL-AUTHORITY"
+      ]
+    },
+    {
+      "mutation_id": "MUT-32",
+      "title": "credential state check removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-CREDENTIAL-STATE-ENFORCED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-CREDENTIAL-STATE-ENFORCED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-33",
+      "title": "oversight binding to one target scope removed",
+      "kind": "POLICY",
+      "expected_check": "CHK-NO-IMPLICIT-BUND-TAKEOVER",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-NO-IMPLICIT-BUND-TAKEOVER"
+      ]
+    },
+    {
+      "mutation_id": "MUT-35",
+      "title": "indefinite intervention injected from persistence",
+      "kind": "DATA",
+      "expected_check": "CHK-INTERVENTION-TIME-BOUNDED",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-INTERVENTION-TIME-BOUNDED"
+      ]
+    },
+    {
+      "mutation_id": "MUT-34",
+      "title": "inventory binding removed (unmapped action executes)",
+      "kind": "POLICY",
+      "expected_check": "CHK-INVENTORY-CONGRUENT",
+      "detected": true,
+      "caught_by_expected_check": true,
+      "failing_checks": [
+        "CHK-INVENTORY-CONGRUENT"
+      ]
+    }
+  ]
+}

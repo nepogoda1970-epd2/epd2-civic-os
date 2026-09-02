@@ -1,0 +1,1921 @@
+{
+  "schema": "epd2.ctrl01.action-inventory/1",
+  "stage": "CTRL-01",
+  "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "generated_from": "services/control-plane-service/src/epd2_control_plane_service/inventory.py",
+  "hard_constraints": [
+    "no universal administrator action exists",
+    "no action grants hierarchy-derived cross-scope authority",
+    "no action operates voting-domain key material or ballot content",
+    "every mutation requires commit-time reauthorization and immutable evidence"
+  ],
+  "counts": {
+    "actions_total": 48,
+    "mutations": 43,
+    "read_only": 5,
+    "consoles": 6,
+    "desks": 27
+  },
+  "no_ui_decisions": [
+    {
+      "role": "VOTING_TRUSTEE",
+      "decision": "NO_UI",
+      "rationale": "The Voting Client and the voting trust domain remain outside every administrative control-plane surface (FIR-CTRL-001 acceptance criterion 7). Trustee key authority is exercised only through voting-domain components under voting-specific governance.",
+      "governing_fir": "FIR-CTRL-001"
+    },
+    {
+      "role": "VOTING_KEY_CUSTODIAN",
+      "decision": "NO_UI",
+      "rationale": "Voting-domain key material appears in the control plane only as an external governed reference (FIR-SEC-004 class 9). No control-plane right operates it.",
+      "governing_fir": "FIR-SEC-004"
+    },
+    {
+      "role": "UNIVERSAL_SYSTEM_ADMINISTRATOR",
+      "decision": "NO_UI",
+      "rationale": "Deliberately does not exist. There is no console, desk, role or route that aggregates the full right set (FIR-CTRL-001 acceptance criterion 9).",
+      "governing_fir": "FIR-CTRL-001"
+    }
+  ],
+  "actions": [
+    {
+      "action_id": "AI.REVIEW_DRAFT",
+      "domain": "ai_oversight",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "AiDraftProposal",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_AI_OVERSIGHT",
+      "route": "/ctrl/v1/ai_oversight/ai/review_draft",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "CASE_CONTENT"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-AI-003"
+      ],
+      "notes": "A human review decision is mandatory; the model never holds the execute right."
+    },
+    {
+      "action_id": "ASSEMBLY.PUBLISH_MINUTES",
+      "domain": "assemblies",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "AssemblyMinutes",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ASSEMBLIES",
+      "route": "/ctrl/v1/assemblies/assembly/publish_minutes",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "AUDIT.LOOKUP",
+      "domain": "audit",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "REVIEW_OR_AUDIT",
+        "revoke_or_rollback_right": null,
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "ControlEvidenceEvent",
+      "mutation": false,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": false,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OVERSIGHT",
+      "desk_id": "DESK_AUDIT_OVERSIGHT",
+      "route": "/ctrl/v1/audit/audit/lookup",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001",
+        "FIR-OPS-001"
+      ],
+      "notes": "Read-only by construction: the audit desk holds no mutation right on any object class."
+    },
+    {
+      "action_id": "AUTH.ASSIGN",
+      "domain": "authority",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OrganizationalAuthority",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ORG_AUTHORITY",
+      "route": "/ctrl/v1/authority/auth/assign",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-005",
+        "FIR-SEC-004"
+      ],
+      "notes": "Assignment must cite the source election/appointment decision and rule version."
+    },
+    {
+      "action_id": "AUTH.READ_PROVENANCE",
+      "domain": "authority",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "READ_METADATA",
+        "revoke_or_rollback_right": null,
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OrganizationalAuthority",
+      "mutation": false,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": false,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ORG_AUTHORITY",
+      "route": "/ctrl/v1/authority/auth/read_provenance",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-005"
+      ],
+      "notes": "Read model. Summarises current state without erasing historical source records."
+    },
+    {
+      "action_id": "AUTH.RESTORE",
+      "domain": "authority",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "RESTORE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OrganizationalAuthority",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ORG_AUTHORITY",
+      "route": "/ctrl/v1/authority/auth/restore",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": "A technical administrator cannot restore a politically suspended office."
+    },
+    {
+      "action_id": "AUTH.REVOKE",
+      "domain": "authority",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVOKE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OrganizationalAuthority",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ORG_AUTHORITY",
+      "route": "/ctrl/v1/authority/auth/revoke",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "AUTH.SUSPEND",
+      "domain": "authority",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "SUSPEND_OR_QUARANTINE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OrganizationalAuthority",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ORG_AUTHORITY",
+      "route": "/ctrl/v1/authority/auth/suspend",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": "FIR-GOV-004 level 2. Suspension fails authorization at the moment of every affected act."
+    },
+    {
+      "action_id": "CASE.OMBUDS_DECIDE",
+      "domain": "casework",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OmbudsCase",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OVERSIGHT",
+      "desk_id": "DESK_COMPLAINTS_OMBUDS",
+      "route": "/ctrl/v1/casework/case/ombuds_decide",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "CASE_CONTENT"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "CITIZEN_OFFICE.ROUTE_CASE",
+      "domain": "citizen_office",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "CitizenCase",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_CITIZEN_OFFICE",
+      "route": "/ctrl/v1/citizen_office/citizen_office/route_case",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "CASE_CONTENT",
+        "PERSONAL_DATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-AI-003",
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "CORRESPONDENCE.SEND_OFFICIAL",
+      "domain": "correspondence",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OfficialCorrespondence",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_CORRESPONDENCE",
+      "route": "/ctrl/v1/correspondence/correspondence/send_official",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "CASE_CONTENT",
+        "PERSONAL_DATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-AI-003",
+        "FIR-GOV-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "CRED.HIGH_ASSURANCE_RECOVERY",
+      "domain": "credential",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RecoveryDecision",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_IDENTITY",
+      "desk_id": "DESK_RECOVERY",
+      "route": "/ctrl/v1/credential/cred/high_assurance_recovery",
+      "assurance_level": "AAL3",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "RECOVERY_EVIDENCE"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-TRUST-002"
+      ],
+      "notes": "Recovery restores the ability to authenticate. It never restores a suspended OrganizationalAuthority."
+    },
+    {
+      "action_id": "CRED.HUMAN_ENROLL",
+      "domain": "credential",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "HumanAuthenticator",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_IDENTITY",
+      "desk_id": "DESK_CREDENTIAL_OPERATIONS",
+      "route": "/ctrl/v1/credential/cred/human_enroll",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "AUTHENTICATION_METADATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": "The authenticator generates the private key; the platform registers only public material."
+    },
+    {
+      "action_id": "CRED.HUMAN_REVOKE",
+      "domain": "credential",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVOKE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "HumanAuthenticator",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_IDENTITY",
+      "desk_id": "DESK_CREDENTIAL_OPERATIONS",
+      "route": "/ctrl/v1/credential/cred/human_revoke",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "AUTHENTICATION_METADATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": "Never resurrects a revoked credential under the same identity; replacement links forward."
+    },
+    {
+      "action_id": "ELECTION.ADMIN_ACTION",
+      "domain": "election_admin",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "ElectionAdministrationTask",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_ELECTION_ADMIN",
+      "route": "/ctrl/v1/election_admin/election/admin_action",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "ELECTION_ADMINISTRATION_ONLY_NO_BALLOT_ACCESS",
+      "governing_fir_refs": [
+        "FIR-GOV-005",
+        "FIR-VOTE-NET-001"
+      ],
+      "notes": "Nomination, filing and election administration are separately authorised; no ballot access."
+    },
+    {
+      "action_id": "EMERGENCY.ACTIVATE",
+      "domain": "emergency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "BreakGlassGrant",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_EMERGENCY",
+      "route": "/ctrl/v1/emergency/emergency/activate",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": "Activation sets an absolute expiry. There is no renewal path."
+    },
+    {
+      "action_id": "EMERGENCY.APPROVE",
+      "domain": "emergency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "APPROVE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "BreakGlassGrant",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_EMERGENCY",
+      "route": "/ctrl/v1/emergency/emergency/approve",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": "Approver must be distinct from the requester; the controller is a separate principal."
+    },
+    {
+      "action_id": "EMERGENCY.REQUEST",
+      "domain": "emergency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REQUEST",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "BreakGlassGrant",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_EMERGENCY",
+      "route": "/ctrl/v1/emergency/emergency/request",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "EMERGENCY.REVIEW",
+      "domain": "emergency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "REVIEW_OR_AUDIT",
+        "revoke_or_rollback_right": "RESTORE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "BreakGlassGrant",
+      "mutation": true,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OVERSIGHT",
+      "desk_id": "DESK_AUDIT_OVERSIGHT",
+      "route": "/ctrl/v1/emergency/emergency/review",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-CTRL-001"
+      ],
+      "notes": "Mandatory post-use review. The reviewer may not be an actor of the reviewed grant."
+    },
+    {
+      "action_id": "EMERGENCY.REVOKE",
+      "domain": "emergency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVOKE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "BreakGlassGrant",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_EMERGENCY",
+      "route": "/ctrl/v1/emergency/emergency/revoke",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "FINANCE.APPROVE_PAYMENT",
+      "domain": "finance",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "PaymentRequest",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_FINANCE",
+      "route": "/ctrl/v1/finance/finance/approve_payment",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "FINANCIAL_DATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-005"
+      ],
+      "notes": "prepare / approve / execute / book / review are separable per scope."
+    },
+    {
+      "action_id": "INTERVENE.AUTHORITY_SUSPENSION",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "SUSPEND_OR_QUARANTINE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RegionalAdministrationRestriction",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_REGIONAL_INTERVENTION",
+      "route": "/ctrl/v1/intervention/intervene/authority_suspension",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": "Level 2. Requires the competent organ chain and a confirmation route."
+    },
+    {
+      "action_id": "INTERVENE.LIFT",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "RESTORE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RegionalAdministrationRestriction",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_REGIONAL_INTERVENTION",
+      "route": "/ctrl/v1/intervention/intervene/lift",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "INTERVENE.READ_ACTIVE",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "READ_METADATA",
+        "revoke_or_rollback_right": null,
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RegionalAdministrationRestriction",
+      "mutation": false,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": false,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_REGIONAL_INTERVENTION",
+      "route": "/ctrl/v1/intervention/intervene/read_active",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "INTERVENE.REGIONAL_ACTION_RESTRICTION",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "SUSPEND_OR_QUARANTINE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RegionalAdministrationRestriction",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_REGIONAL_INTERVENTION",
+      "route": "/ctrl/v1/intervention/intervene/regional_action_restriction",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004"
+      ],
+      "notes": "Level 3. Freezes named action codes only; a scope-wide disable is prohibited."
+    },
+    {
+      "action_id": "INTERVENE.SESSION_QUARANTINE",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "SUSPEND_OR_QUARANTINE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "Session",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 3600,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_SECURITY_OPERATIONS",
+      "route": "/ctrl/v1/intervention/intervene/session_quarantine",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-SEC-004",
+        "FIR-TRUST-002"
+      ],
+      "notes": "Level 1 containment may be pre-authorised by incident policy; it is not a removal from office."
+    },
+    {
+      "action_id": "INTERVENE.TEMPORARY_SUPERVISION",
+      "domain": "intervention",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "TemporarySupervision",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_REGIONAL_INTERVENTION",
+      "route": "/ctrl/v1/intervention/intervene/temporary_supervision",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": "Level 4. Bounded at 90 days; extension requires a new decision."
+    },
+    {
+      "action_id": "JIT.REQUEST",
+      "domain": "privileged",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "PrivilegedGrant",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": 3600,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_PRIVILEGED_ACCESS",
+      "route": "/ctrl/v1/privileged/jit/request",
+      "assurance_level": "AAL2",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "KEY.DESTROY",
+      "domain": "key_trust",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "DESTROY",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "TrustKeyReference",
+      "mutation": true,
+      "quorum_required": 3,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_KEY_CUSTODY",
+      "route": "/ctrl/v1/key_trust/key/destroy",
+      "assurance_level": "AAL3",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-TRUST-002",
+        "FIR-TRUST-003"
+      ],
+      "notes": "Retention and decryption-dependency check precedes destruction; no export before destroy."
+    },
+    {
+      "action_id": "KEY.MARK_COMPROMISED",
+      "domain": "key_trust",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "SUSPEND_OR_QUARANTINE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "TrustKeyReference",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_SECURITY_OPERATIONS",
+      "route": "/ctrl/v1/key_trust/key/mark_compromised",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-TRUST-002",
+        "FIR-TRUST-003"
+      ],
+      "notes": "Stops new use. Grants no right to inspect unrelated secrets."
+    },
+    {
+      "action_id": "KEY.READ_TRUST_STATE",
+      "domain": "key_trust",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "READ_METADATA",
+        "revoke_or_rollback_right": null,
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "TrustKeyReference",
+      "mutation": false,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": false,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_KEY_CUSTODY",
+      "route": "/ctrl/v1/key_trust/key/read_trust_state",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-TRUST-003"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "KEY.REQUEST_GENERATION",
+      "domain": "key_trust",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "TrustKeyReference",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_KEY_CUSTODY",
+      "route": "/ctrl/v1/key_trust/key/request_generation",
+      "assurance_level": "AAL3",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "KEY_METADATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-TRUST-002",
+        "FIR-TRUST-003",
+        "FIR-SEC-004"
+      ],
+      "notes": "Approver and auditor need no plaintext material; high-impact classes require quorum."
+    },
+    {
+      "action_id": "KEY.ROTATE",
+      "domain": "key_trust",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ROTATE_OR_REPLACE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "TrustKeyReference",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_KEY_CUSTODY",
+      "route": "/ctrl/v1/key_trust/key/rotate",
+      "assurance_level": "AAL3",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-TRUST-003"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "MEMBERSHIP.ADMIN_MUTATE",
+      "domain": "membership",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "MembershipRecord",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_MEMBERSHIP_ADMIN",
+      "route": "/ctrl/v1/membership/membership/admin_mutate",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "PERSONAL_DATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-004",
+        "FIR-GOV-005"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "MODERATION.DECIDE",
+      "domain": "moderation",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "ModerationCase",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_MODERATION",
+      "route": "/ctrl/v1/moderation/moderation/decide",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "CASE_CONTENT"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "OFFICE.ASSIGN_MANDATE",
+      "domain": "offices",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "OfficeAssignment",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_GOVERNANCE",
+      "desk_id": "DESK_OFFICES_MANDATES",
+      "route": "/ctrl/v1/offices/office/assign_mandate",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-GOV-005"
+      ],
+      "notes": "Party office and public mandate remain distinct; neither derives the other."
+    },
+    {
+      "action_id": "PLATFORM.READ_HEALTH",
+      "domain": "platform",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "READ_METADATA",
+        "revoke_or_rollback_right": null,
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "OperationalHealth",
+      "mutation": false,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": false,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_PLATFORM_OPERATIONS",
+      "route": "/ctrl/v1/platform/platform/read_health",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-OPS-001"
+      ],
+      "notes": "Privacy-safe operational state only. Deploy/restart authority grants no domain authority."
+    },
+    {
+      "action_id": "PLATFORM.SERVICE_TASK",
+      "domain": "platform",
+      "actor_class": "SERVICE",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": null,
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "OperationalTask",
+      "mutation": true,
+      "quorum_required": 0,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_PLATFORM_OPERATIONS",
+      "route": "/ctrl/v1/platform/platform/service_task",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-OPS-001",
+        "FIR-CTRL-001"
+      ],
+      "notes": "Workload-only action. A human principal is refused on actor-class grounds."
+    },
+    {
+      "action_id": "PRIVACY.REVIEW_EXPORT",
+      "domain": "privacy",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVIEW_OR_AUDIT",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "GovernedExport",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OVERSIGHT",
+      "desk_id": "DESK_DPO_PRIVACY",
+      "route": "/ctrl/v1/privacy/privacy/review_export",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "PERSONAL_DATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-OPS-001",
+        "FIR-SEC-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "PROCUREMENT.APPROVE_VENDOR",
+      "domain": "procurement",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "VendorEngagement",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_PROCUREMENT",
+      "route": "/ctrl/v1/procurement/procurement/approve_vendor",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-OSS-007",
+        "FIR-CTRL-001"
+      ],
+      "notes": "Commercial operations boundary: a vendor engagement creates no party competence."
+    },
+    {
+      "action_id": "RECORDS.APPLY_RETENTION",
+      "domain": "records",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RecordSeries",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_RECORDS_RETENTION",
+      "route": "/ctrl/v1/records/records/apply_retention",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": "Retention application never removes audit evidence of the act itself."
+    },
+    {
+      "action_id": "REPORTING.CUSTODY_ACCESS",
+      "domain": "protected_reporting",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "VIEW_OR_EXPORT_SECRET",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": "VIEW_OR_EXPORT_SECRET"
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "ReporterIdentityCustody",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OVERSIGHT",
+      "desk_id": "DESK_PROTECTED_REPORTING",
+      "route": "/ctrl/v1/protected_reporting/reporting/custody_access",
+      "assurance_level": "AAL3",
+      "step_up_required": true,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "REPORTER_IDENTITY"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": "Separately protected custody; not reachable from ordinary investigation authority."
+    },
+    {
+      "action_id": "REPRESENTATIVE.OPEN_DESK_UPDATE",
+      "domain": "representative",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "RepresentativeDeskEntry",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_REPRESENTATIVE_OPEN_DESK",
+      "route": "/ctrl/v1/representative/representative/open_desk_update",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "SERVICE_CRED.ISSUE",
+      "domain": "service_identity",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ACTIVATE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": "VIEW_OR_EXPORT_SECRET"
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "ServiceCredential",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_SERVICE_IDENTITY",
+      "route": "/ctrl/v1/service_identity/service_cred/issue",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [
+        "SERVICE_CREDENTIAL_METADATA"
+      ],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-TRUST-003"
+      ],
+      "notes": "Delivery is machine-bound. Approval never requires plaintext secret visibility."
+    },
+    {
+      "action_id": "SERVICE_CRED.REVOKE",
+      "domain": "service_identity",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVOKE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "ServiceCredential",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": true,
+      "expiry_seconds": 1800,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_SECURITY_OPERATIONS",
+      "route": "/ctrl/v1/service_identity/service_cred/revoke",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": "Immediate containment may be pre-authorised; replacement activation follows full SoD."
+    },
+    {
+      "action_id": "SERVICE_CRED.ROTATE",
+      "domain": "service_identity",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "ROTATE_OR_REPLACE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": "VIEW_OR_EXPORT_SECRET"
+      },
+      "organization_scope_level": "PLATFORM",
+      "object_scope": "ServiceCredential",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_OPERATIONS",
+      "desk_id": "DESK_SERVICE_IDENTITY",
+      "route": "/ctrl/v1/service_identity/service_cred/rotate",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004",
+        "FIR-TRUST-003"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "SESSION.REVOKE",
+      "domain": "session",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "REVOKE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "Session",
+      "mutation": true,
+      "quorum_required": 1,
+      "four_eyes_required": false,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_SECURITY",
+      "desk_id": "DESK_SECURITY_OPERATIONS",
+      "route": "/ctrl/v1/session/session/revoke",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-SEC-004"
+      ],
+      "notes": ""
+    },
+    {
+      "action_id": "TRANSPARENCY.PUBLISH",
+      "domain": "transparency",
+      "actor_class": "HUMAN",
+      "required_authority": {
+        "request_right": "REQUEST",
+        "approve_right": "APPROVE",
+        "execute_right": "EXECUTE",
+        "revoke_or_rollback_right": "REVOKE",
+        "audit_review_right": "REVIEW_OR_AUDIT",
+        "secret_visibility_right": null
+      },
+      "organization_scope_level": "LAND",
+      "object_scope": "PublicationItem",
+      "mutation": true,
+      "quorum_required": 2,
+      "four_eyes_required": true,
+      "emergency_eligible": false,
+      "expiry_seconds": null,
+      "commit_time_reauthorization_required": true,
+      "immutable_evidence_required": true,
+      "console_id": "CONSOLE_WORKDESK",
+      "desk_id": "DESK_TRANSPARENCY_PUBLICATION",
+      "route": "/ctrl/v1/transparency/transparency/publish",
+      "assurance_level": "AAL2",
+      "step_up_required": false,
+      "incompatible_rights": [
+        "APPROVE|EXECUTE",
+        "EXECUTE|REVIEW_OR_AUDIT",
+        "REQUEST|APPROVE"
+      ],
+      "sensitive_data_classes": [],
+      "voting_domain_boundary": "OUTSIDE_VOTING_DOMAIN",
+      "governing_fir_refs": [
+        "FIR-CTRL-001"
+      ],
+      "notes": "Publication authority is confined to the actor's own official scope."
+    }
+  ]
+}

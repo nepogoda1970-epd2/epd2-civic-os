@@ -1,0 +1,26 @@
+{
+  "schema": "epd2.system-trial-preview.preseal-result/1",
+  "status": "PREPARATION_ONLY / CHECKPOINT_NOT_OPEN",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "overall": "PASS",
+  "findings": [],
+  "artifacts": [
+    "environment_readiness_matrix.json",
+    "external_fresh_eyes_script.md",
+    "failure_recovery_scenarios.json",
+    "finding_routing_model.json",
+    "journey_catalog.json",
+    "preview_capability_matrix.json",
+    "seed_and_reset_design.json"
+  ],
+  "self_state": [
+    "PRESEAL_READY",
+    "NOT_ACCEPTED"
+  ],
+  "not_claimed": [
+    "SYSTEM TRIAL PASS",
+    "checkpoint opened",
+    "preview readiness achieved",
+    "INFRA or OPS closure"
+  ]
+}

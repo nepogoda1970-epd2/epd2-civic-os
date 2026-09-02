@@ -1,0 +1,152 @@
+{
+  "schema": "epd2.ctrl01.freeze-manifest/1",
+  "rule": "tested bytes == verified bytes == frozen bytes == packaged bytes",
+  "recorded_at": "2026-09-02T10:17:56.443964+00:00",
+  "manifest_digest": "a8fd64858dea0cb67f78b200801f826c87d4b4d86b410ef783e5875bec24edfd",
+  "files": {
+    "docs/ctrl/CTRL-01/CTRL-01-DEVELOPER-REPORT.md": {
+      "sha256": "e8777675361279cbcea0233dec9c5d48be7e8f9f812b108f38d1e9c217cee759",
+      "size_bytes": 12806
+    },
+    "docs/ctrl/CTRL-01/CTRL-01-SPECIFICATION.md": {
+      "sha256": "a3ef7fafa7def8714378c0c1fac4472ae80516e72607eb5b09062a5698c1d5c7",
+      "size_bytes": 13376
+    },
+    "docs/ctrl/CTRL-01/EPD2_Control_Plane_Registry.csv": {
+      "sha256": "88754496ff82f11d12f8e77ad8c6d70591c2765ffbb9ca91f244bf9fdac71e58",
+      "size_bytes": 19113
+    },
+    "scripts/ctrl01_registry_export.py": {
+      "sha256": "febb26c6e23d3ad93d6b1d39f4f7eb07729896d07b6ae58a7252847064d4478f",
+      "size_bytes": 5839
+    },
+    "scripts/ctrl01_validator.py": {
+      "sha256": "e8552df4e02a223b0080ffc41913eb76bb35f41abb47a3bd495cb0427a2f06ca",
+      "size_bytes": 52155
+    },
+    "scripts/system_trial_preview_prepare.py": {
+      "sha256": "a7cfd529db8d8832414ebe7620b26c02e47098710bf4c03f22d19f7ff6547de9",
+      "size_bytes": 45363
+    },
+    "services/control-plane-service/pyproject.toml": {
+      "sha256": "22ec45de376b35fa5b393d9e22b2ec9ba5c4a46c80ceb272eb33bf34b573c724",
+      "size_bytes": 517
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/__init__.py": {
+      "sha256": "99d97e1d109865f5b028681f9227a27b1d7e285a384e55053ec3cd70d0f47aef",
+      "size_bytes": 573
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/api.py": {
+      "sha256": "d355434e31eb5b16d7a6ce805fe23e10ca83ece5c4e511d06732e5a4e3279d4d",
+      "size_bytes": 6557
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/application.py": {
+      "sha256": "69d818295ee2682ba42d8322e8d9ff017236a8936d885ec6e9e5f4db51cef64d",
+      "size_bytes": 32212
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/audit.py": {
+      "sha256": "2f7a3d2ccc77f5488e9329c37bf09e7c535c5f159595f7df66d52e07232a95b1",
+      "size_bytes": 10754
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/authority.py": {
+      "sha256": "2f5284c7ee170a4309451c1d152e1a96e84e1ca62dc5e1e074239f4594aa4736",
+      "size_bytes": 18214
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/breakglass.py": {
+      "sha256": "d103d26c4f8f2be65c282e7c2da26b976f8db4c86bae58af809e09e39a297fa6",
+      "size_bytes": 9159
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/domain.py": {
+      "sha256": "46a207d342fea329f1db4c63d01ff527d60b1b963c5737be0fb87b2634fad5de",
+      "size_bytes": 22401
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/exceptions.py": {
+      "sha256": "fb559e1f12c6d169eba96474ffa58ccae4837d4acf293a7a15988c49013df4f0",
+      "size_bytes": 1848
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/freeze.py": {
+      "sha256": "d5d2733eb0adf83f77a34ccf96a929760dd7683afe2fe56ebb0fb325ecb5557b",
+      "size_bytes": 2009
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/intervention.py": {
+      "sha256": "05a0ad2430dde8ea0dddad51f4c114e66a98e1e6d20e4c806463b078044a01b4",
+      "size_bytes": 9795
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/inventory.py": {
+      "sha256": "fd4b687a3449289c5e12e3ea576fbe19405c70e88a647154cc1e35e101abebbf",
+      "size_bytes": 30868
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/mutations.py": {
+      "sha256": "e33843d8b1b4d5809ce5e33ffe887a091d179416da8e9e7dd6b421eec5adca65",
+      "size_bytes": 18386
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/policy.py": {
+      "sha256": "8b1636a2f78bbd35ca14f01417960a72b79212f536830b38cfa41ea0e3a4bb39",
+      "size_bytes": 3639
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/py.typed": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/reference_world.py": {
+      "sha256": "72b23a8ea41a08b94feb1ccd1ef740780867c025c702117107e109644d41939a",
+      "size_bytes": 18999
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/routes.py": {
+      "sha256": "80d13c0a9731932f49bfaaff51d3cb904cf15828a38806e67ece24c282b713ea",
+      "size_bytes": 5168
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/sod.py": {
+      "sha256": "376fe29dc549cae4513257346f3b62f710616971f09b9cd0a9bbba6f4e5735ac",
+      "size_bytes": 7448
+    },
+    "services/control-plane-service/src/epd2_control_plane_service/verification.py": {
+      "sha256": "04776b71688e8c23c1663e527521ea2ed43e42342ae6777d3be3c4b14f992c91",
+      "size_bytes": 38656
+    },
+    "services/control-plane-service/tests/_control_plane_builders.py": {
+      "sha256": "c1e23e84e0e6b9977bf2aab332c88944058f29508745a845c882608bb120358a",
+      "size_bytes": 403
+    },
+    "services/control-plane-service/tests/conftest.py": {
+      "sha256": "cb2bf1653e6aabd40efb1936ba157a0c7e383d8a36bcf8e0a457949825de2533",
+      "size_bytes": 681
+    },
+    "services/control-plane-service/tests/test_audit_evidence.py": {
+      "sha256": "1e009597439d87198aa6c0c7859897dfff8d19a1ea20c9c7c378598b507d03c8",
+      "size_bytes": 6295
+    },
+    "services/control-plane-service/tests/test_breakglass.py": {
+      "sha256": "d9324a00a210a26caf24665dfe46b2ca179155fd714e160b73eb4f4c02fecce8",
+      "size_bytes": 6974
+    },
+    "services/control-plane-service/tests/test_commit_time_reauthorization.py": {
+      "sha256": "46d4ccffd2af262cd4f00b496c54f3e60926028bb0692d6360c0d374ce9ae392",
+      "size_bytes": 8739
+    },
+    "services/control-plane-service/tests/test_intervention.py": {
+      "sha256": "61e71c7a13a9ad8934033e0c924b1309831ee3152f049fe27b1f25493eaec3e0",
+      "size_bytes": 8684
+    },
+    "services/control-plane-service/tests/test_inventory_and_contracts.py": {
+      "sha256": "f2070db076a31f56f0a0b4e9c3f7cd98ac9df6126619215a4072b6509a48c64c",
+      "size_bytes": 8593
+    },
+    "services/control-plane-service/tests/test_lifecycle.py": {
+      "sha256": "b34697d1b0d1696ba4b2414ba15b0b4911b96d6332dc36d1f05655d2c987ea37",
+      "size_bytes": 6889
+    },
+    "services/control-plane-service/tests/test_mutation_suite.py": {
+      "sha256": "bd41441420fb20a82b35e12bce8c187fd0c3d876883c7347f9915819f9acabf6",
+      "size_bytes": 3193
+    },
+    "services/control-plane-service/tests/test_negative_authorization.py": {
+      "sha256": "de62202ea96e50b9f0e3a97a31b1d77e0707159e6abb91e29b78167e2fb5004c",
+      "size_bytes": 19287
+    },
+    "services/control-plane-service/tests/test_sod.py": {
+      "sha256": "b377f807368377cf90f650d45b6a998437a2ceecdc4225dbb8c6294affe09e02",
+      "size_bytes": 4417
+    }
+  }
+}

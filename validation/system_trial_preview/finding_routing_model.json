@@ -1,0 +1,47 @@
+{
+  "schema": "epd2.system-trial-preview.finding-routing/1",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "severities": [
+    {
+      "severity": "BLOCKING",
+      "definition": "a trust, privacy, authorization or voting-boundary defect, or any stop condition",
+      "retest": "mandatory before the checkpoint proceeds"
+    },
+    {
+      "severity": "MAJOR",
+      "definition": "a governed journey cannot complete on a real path",
+      "retest": "mandatory in the owning layer's next candidate"
+    },
+    {
+      "severity": "MINOR",
+      "definition": "usability, wording or presentation defect with no trust impact",
+      "retest": "at the owning layer's discretion"
+    }
+  ],
+  "owning_layers": [
+    "DATA",
+    "API",
+    "INFRA",
+    "OPS",
+    "CTRL",
+    "FRONT",
+    "PILOT",
+    "SEC"
+  ],
+  "required_fields": [
+    "finding_id",
+    "journey_id or scenario_id",
+    "owning_layer",
+    "severity",
+    "reproduction steps",
+    "evidence reference (privacy-safe)",
+    "whether an accepted baseline correction is required",
+    "retest requirement"
+  ],
+  "hard_rules": [
+    "a trial finding never silently modifies an accepted baseline",
+    "a correction to an accepted baseline goes through that layer's normal governed candidate and acceptance lineage",
+    "no finding is closed by the person who introduced the defect alone",
+    "evidence attached to a finding is privacy-safe and carries no voting-linkable identifier"
+  ]
+}

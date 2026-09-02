@@ -1,0 +1,34 @@
+{
+  "schema": "epd2.ctrl01.regional-intervention/1",
+  "gate": {
+    "gate_id": "G06",
+    "name": "regional scope isolation and bounded intervention",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "intervention_levels": [
+        "AUTHORITY_SUSPENSION",
+        "REGIONAL_ACTION_RESTRICTION",
+        "SESSION_QUARANTINE",
+        "TEMPORARY_SUPERVISION"
+      ],
+      "preserved_member_capabilities": [
+        "PUBLIC_READ_APPROVED_MATERIAL",
+        "ORDINARY_MEMBER_ACCESS_IN_EXISTING_SCOPE",
+        "DISCUSSION_AND_INITIATIVE_PARTICIPATION",
+        "EXISTING_MEETINGS_DOCUMENTS_DECISIONS_AS_HISTORY",
+        "AUDIT_AND_EVIDENCE_VISIBILITY_UNDER_EXISTING_RULES",
+        "CASE_AND_CORRESPONDENCE_HISTORY",
+        "PATH_TO_RESTORE_LAWFUL_REGIONAL_SELF_ADMINISTRATION"
+      ],
+      "prohibited_voting_effects": [
+        "READ_BALLOT_CONTENT",
+        "REVEAL_IDENTITY_VOTE_LINKAGE",
+        "MINT_VOTING_CREDENTIALS",
+        "OPERATE_TRUSTEE_KEYS",
+        "ALTER_TALLY_EVIDENCE"
+      ],
+      "max_supervision_days": 90
+    }
+  }
+}

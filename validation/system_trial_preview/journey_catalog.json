@@ -1,0 +1,947 @@
+{
+  "schema": "epd2.system-trial-preview.journey-catalog/1",
+  "status": "PREPARATION_ONLY / CHECKPOINT_NOT_OPEN",
+  "generated_at": "2026-09-02T10:17:55.277380+00:00",
+  "counts": {
+    "journeys": 26,
+    "categories": 11
+  },
+  "journeys": [
+    {
+      "journey_id": "J-PUB-01",
+      "category": "public_anonymous",
+      "persona": "anonymous visitor",
+      "preconditions": [
+        "preview environment deployed",
+        "public content seeded"
+      ],
+      "dependencies": [
+        "FRONT-02 C2.1",
+        "INFRA preview minimum"
+      ],
+      "browser_steps": [
+        "open the preview base URL",
+        "navigate the public information architecture",
+        "open one public page"
+      ],
+      "api_runtime_paths": [
+        "GET public page routes served by the accepted FRONT-02 shell"
+      ],
+      "expected_result": "public pages render, are navigable and state that this is a trial environment",
+      "expected_audit_evidence": "web/access log only; no personal data",
+      "owning_layer_for_defects": "FRONT",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "Content is trial seed content and is labelled as such.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-PUB-02",
+      "category": "public_anonymous",
+      "persona": "anonymous visitor",
+      "preconditions": [
+        "preview environment deployed"
+      ],
+      "dependencies": [
+        "FRONT-02 C2.1"
+      ],
+      "browser_steps": [
+        "open a page that does not exist",
+        "open a page requiring authentication"
+      ],
+      "api_runtime_paths": [
+        "404 and 401/403 responses from the accepted route set"
+      ],
+      "expected_result": "a non-misleading refusal page; no partial private content is rendered",
+      "expected_audit_evidence": "refusal is logged with a reason code and no subject identifier",
+      "owning_layer_for_defects": "FRONT",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-PUB-03",
+      "category": "public_anonymous",
+      "persona": "anonymous visitor",
+      "preconditions": [
+        "preview environment deployed"
+      ],
+      "dependencies": [
+        "FRONT-00 accessibility baseline"
+      ],
+      "browser_steps": [
+        "navigate by keyboard only",
+        "run the accessibility check on two public pages"
+      ],
+      "api_runtime_paths": [
+        "static route rendering"
+      ],
+      "expected_result": "keyboard navigation and the accepted accessibility baseline hold",
+      "expected_audit_evidence": "no evidence beyond the trial observation record",
+      "owning_layer_for_defects": "FRONT",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Only the accepted FRONT-02 page set is in scope.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-AUTH-01",
+      "category": "authentication_session",
+      "persona": "trial member with a seeded account",
+      "preconditions": [
+        "test account fixture provisioned",
+        "authenticator enrolled"
+      ],
+      "dependencies": [
+        "API-02 C13",
+        "INFRA preview minimum"
+      ],
+      "browser_steps": [
+        "open the sign-in page",
+        "authenticate with the seeded factor",
+        "land on the member home surface"
+      ],
+      "api_runtime_paths": [
+        "accepted API-02 authentication and session issuance runtime"
+      ],
+      "expected_result": "an authenticated session is established at the expected assurance level",
+      "expected_audit_evidence": "authentication context event; no credential material",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-AUTH-02",
+      "category": "authentication_session",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists"
+      ],
+      "dependencies": [
+        "API-02 C13"
+      ],
+      "browser_steps": [
+        "sign out",
+        "attempt to reuse the previous session by navigating back"
+      ],
+      "api_runtime_paths": [
+        "session revocation and re-validation on the accepted runtime"
+      ],
+      "expected_result": "the revoked session is refused; the back-navigation does not restore access",
+      "expected_audit_evidence": "session state change recorded",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-AUTH-03",
+      "category": "authentication_session",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists",
+        "operator quarantines the session"
+      ],
+      "dependencies": [
+        "API-02 C13",
+        "CTRL-01 session quarantine surface"
+      ],
+      "browser_steps": [
+        "keep a browser tab open",
+        "operator quarantines the session",
+        "act in the open tab"
+      ],
+      "api_runtime_paths": [
+        "session state re-evaluation at use time"
+      ],
+      "expected_result": "the open tab is refused at the next consequential act",
+      "expected_audit_evidence": "reason-coded refusal evidence",
+      "owning_layer_for_defects": "CTRL",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "CTRL-01",
+          "reason": "CTRL-01 is preseal and not accepted; control surfaces are specification-level."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Quarantine is issued through a CTRL-01 specification-level surface until CTRL-01 is accepted.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-AUTH-04",
+      "category": "authentication_session",
+      "persona": "trial member without an enrolled factor",
+      "preconditions": [
+        "account fixture without an authenticator"
+      ],
+      "dependencies": [
+        "API-02 C13"
+      ],
+      "browser_steps": [
+        "attempt sign-in",
+        "start the governed recovery intake"
+      ],
+      "api_runtime_paths": [
+        "recovery workflow entry on the accepted runtime"
+      ],
+      "expected_result": "recovery is offered as a governed workflow, never as an administrator override",
+      "expected_audit_evidence": "recovery request evidence, separately protected",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "High-assurance recovery approval requires a second human and is exercised as a scripted step.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-MEM-01",
+      "category": "applicant_member",
+      "persona": "prospective member",
+      "preconditions": [
+        "preview environment deployed",
+        "application intake seeded"
+      ],
+      "dependencies": [
+        "PILOT-02 lineage",
+        "API-02 C13"
+      ],
+      "browser_steps": [
+        "open the membership application",
+        "complete and submit it",
+        "view the submitted state"
+      ],
+      "api_runtime_paths": [
+        "membership application intake on the accepted runtime"
+      ],
+      "expected_result": "the application is recorded in a pending state with a visible status",
+      "expected_audit_evidence": "application state event without excess personal data",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "Only trial fixtures are used; no real applicant data enters the preview.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-MEM-02",
+      "category": "applicant_member",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists"
+      ],
+      "dependencies": [
+        "PILOT-02 lineage"
+      ],
+      "browser_steps": [
+        "open the member profile",
+        "change a permitted profile field",
+        "verify the change is shown"
+      ],
+      "api_runtime_paths": [
+        "member self-service mutation on the accepted runtime"
+      ],
+      "expected_result": "the change is applied within the member's own scope only",
+      "expected_audit_evidence": "self-service change evidence",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Field set limited to the accepted self-service surface.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-MEM-03",
+      "category": "applicant_member",
+      "persona": "trial member of Land A",
+      "preconditions": [
+        "two seeded L\u00e4nder",
+        "authenticated session in Land A"
+      ],
+      "dependencies": [
+        "API-02 C13",
+        "organization scope model"
+      ],
+      "browser_steps": [
+        "attempt to open a Land B administrative surface by direct URL"
+      ],
+      "api_runtime_paths": [
+        "scope authorization on the accepted runtime"
+      ],
+      "expected_result": "refusal; no Land B content is rendered or leaked in the response",
+      "expected_audit_evidence": "reason-coded scope refusal evidence",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-PART-01",
+      "category": "participation",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists",
+        "an open initiative is seeded"
+      ],
+      "dependencies": [
+        "PILOT-03 lineage"
+      ],
+      "browser_steps": [
+        "open the initiative list",
+        "open one initiative",
+        "submit a contribution"
+      ],
+      "api_runtime_paths": [
+        "initiative and deliberation runtime"
+      ],
+      "expected_result": "the contribution is recorded and visible in the correct scope",
+      "expected_audit_evidence": "contribution status event",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Moderation and AI-assisted paths are out of trial scope.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-PART-02",
+      "category": "participation",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists",
+        "a seeded assembly with an agenda"
+      ],
+      "dependencies": [
+        "PILOT-03 lineage"
+      ],
+      "browser_steps": [
+        "open the assembly",
+        "read the agenda and a motion",
+        "read published minutes"
+      ],
+      "api_runtime_paths": [
+        "assembly and motion read surfaces"
+      ],
+      "expected_result": "assembly material is readable within scope",
+      "expected_audit_evidence": "read access evidence per existing rules",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Live assembly conduct is not exercised.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-ORG-01",
+      "category": "organization_regional",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists",
+        "organization graph seeded"
+      ],
+      "dependencies": [
+        "organization service",
+        "FRONT-02 regional operating model"
+      ],
+      "browser_steps": [
+        "open the organization overview",
+        "navigate Bund -> Land -> Kreis -> Ort"
+      ],
+      "api_runtime_paths": [
+        "organization graph read model"
+      ],
+      "expected_result": "the hierarchy is displayed without implying inherited administrative authority",
+      "expected_audit_evidence": "read access evidence",
+      "owning_layer_for_defects": "FRONT",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Display must not present a generic regional admin role.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-ORG-02",
+      "category": "organization_regional",
+      "persona": "regional office holder",
+      "preconditions": [
+        "authenticated session exists",
+        "an OrganizationalAuthority is seeded"
+      ],
+      "dependencies": [
+        "CTRL-01 authority read model",
+        "API-02 C13"
+      ],
+      "browser_steps": [
+        "open the authority provenance view",
+        "inspect rule version and source decision"
+      ],
+      "api_runtime_paths": [
+        "authority provenance read model"
+      ],
+      "expected_result": "office, scope, rule version and source decision are all shown",
+      "expected_audit_evidence": "provenance read evidence",
+      "owning_layer_for_defects": "CTRL",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "CTRL-01",
+          "reason": "CTRL-01 is preseal and not accepted; control surfaces are specification-level."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Served by the CTRL-01 read model, which is preseal and not accepted.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-REP-01",
+      "category": "representative_transparency",
+      "persona": "anonymous visitor",
+      "preconditions": [
+        "preview environment deployed",
+        "representative desk fixtures seeded"
+      ],
+      "dependencies": [
+        "PILOT-05 C3"
+      ],
+      "browser_steps": [
+        "open the representative desk",
+        "open one published transparency item"
+      ],
+      "api_runtime_paths": [
+        "transparency publication read surfaces"
+      ],
+      "expected_result": "published items are readable and clearly marked as trial content",
+      "expected_audit_evidence": "publication read evidence",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Only seeded transparency fixtures are published.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-REP-02",
+      "category": "representative_transparency",
+      "persona": "citizen",
+      "preconditions": [
+        "preview environment deployed"
+      ],
+      "dependencies": [
+        "PILOT-05 C3"
+      ],
+      "browser_steps": [
+        "submit a citizen-office enquiry",
+        "observe the routing acknowledgement"
+      ],
+      "api_runtime_paths": [
+        "citizen office intake and routing"
+      ],
+      "expected_result": "the enquiry is acknowledged and routed to the correct scope",
+      "expected_audit_evidence": "case routing evidence without case content in generic logs",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Trial personas only; no real casework enters the preview.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-VOTE-01",
+      "category": "voting_boundary",
+      "persona": "trial member",
+      "preconditions": [
+        "authenticated session exists"
+      ],
+      "dependencies": [
+        "PILOT-04 C9",
+        "voting isolation profile"
+      ],
+      "browser_steps": [
+        "open the member surface",
+        "observe that no voting-client control surface is reachable"
+      ],
+      "api_runtime_paths": [
+        "route set exclusion; no voting-domain route is served from an administrative surface"
+      ],
+      "expected_result": "the Voting Client is unreachable from every administrative and member control surface",
+      "expected_audit_evidence": "no voting-linkable identifier appears in any control or trial log",
+      "owning_layer_for_defects": "CTRL",
+      "status_today": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [],
+      "declared_limitation": "Provable today as a negative property against the CTRL-01 inventory and route set; the full end-to-end proof needs the deployed preview.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-VOTE-02",
+      "category": "voting_boundary",
+      "persona": "trial member",
+      "preconditions": [
+        "a lawful non-binding trial vote is separately authorized"
+      ],
+      "dependencies": [
+        "PILOT-04 C9",
+        "FRONT-04 C2 voting client",
+        "separate legal authorization"
+      ],
+      "browser_steps": [
+        "open the non-binding trial ballot",
+        "cast a trial ballot",
+        "verify the receipt"
+      ],
+      "api_runtime_paths": [
+        "voting client and non-binding tally path"
+      ],
+      "expected_result": "a non-binding trial vote completes with unlinkability preserved",
+      "expected_audit_evidence": "voting-domain evidence only, under voting-domain rules",
+      "owning_layer_for_defects": "PILOT",
+      "status_today": "UNSUPPORTED_FOR_TRIAL",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "VOTING-LAW",
+          "reason": "Non-binding voting exposure requires a separate lawful and technical authorization."
+        },
+        {
+          "dependency": "API-06",
+          "reason": "API-06 has no authoritative acceptance; the API layer is not closed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "Excluded until a separate lawful and technical authorization exists. It is not simulated: an unavailable voting path is shown as unavailable, never mocked.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-REF-01",
+      "category": "refusal_states",
+      "persona": "trial member without the required authority",
+      "preconditions": [
+        "authenticated session exists"
+      ],
+      "dependencies": [
+        "API-02 C13",
+        "CTRL-01 negative suite"
+      ],
+      "browser_steps": [
+        "navigate directly to an administrative route",
+        "observe the refusal"
+      ],
+      "api_runtime_paths": [
+        "server-side authorization refusal"
+      ],
+      "expected_result": "a clear, non-leaking refusal; frontend visibility never substitutes for authorization",
+      "expected_audit_evidence": "reason-coded refusal evidence",
+      "owning_layer_for_defects": "API",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        },
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-REF-02",
+      "category": "refusal_states",
+      "persona": "trial member whose authority expired",
+      "preconditions": [
+        "authenticated session exists",
+        "authority validity window ended"
+      ],
+      "dependencies": [
+        "CTRL-01 commit-time reauthorization"
+      ],
+      "browser_steps": [
+        "begin a workflow while authorized",
+        "complete it after expiry"
+      ],
+      "api_runtime_paths": [
+        "commit-time reauthorization refusal"
+      ],
+      "expected_result": "the commit is refused even though the workflow started while authorized",
+      "expected_audit_evidence": "commit-time refusal evidence",
+      "owning_layer_for_defects": "CTRL",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "CTRL-01",
+          "reason": "CTRL-01 is preseal and not accepted; control surfaces are specification-level."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "Exercised against the CTRL-01 preseal runtime.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-DEG-01",
+      "category": "degraded_dependency",
+      "persona": "trial member",
+      "preconditions": [
+        "preview environment deployed",
+        "one backing service stopped"
+      ],
+      "dependencies": [
+        "OPS preview minimum"
+      ],
+      "browser_steps": [
+        "stop a dependency",
+        "attempt an affected journey",
+        "observe the degraded state"
+      ],
+      "api_runtime_paths": [
+        "health/readiness endpoints and fail-closed behaviour"
+      ],
+      "expected_result": "the surface degrades safely and states the limitation; it does not fail open",
+      "expected_audit_evidence": "operational event without personal data",
+      "owning_layer_for_defects": "OPS",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-DEG-02",
+      "category": "degraded_dependency",
+      "persona": "trial member",
+      "preconditions": [
+        "preview environment deployed",
+        "database unavailable"
+      ],
+      "dependencies": [
+        "OPS preview minimum"
+      ],
+      "browser_steps": [
+        "stop the database",
+        "attempt a read and a write journey"
+      ],
+      "api_runtime_paths": [
+        "fail-closed persistence behaviour"
+      ],
+      "expected_result": "reads and writes fail closed with an honest message; no stale write is accepted",
+      "expected_audit_evidence": "operational event",
+      "owning_layer_for_defects": "OPS",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-RST-01",
+      "category": "recovery_reset",
+      "persona": "trial operator",
+      "preconditions": [
+        "preview environment deployed",
+        "fixture version recorded"
+      ],
+      "dependencies": [
+        "OPS preview minimum",
+        "seed and reset design"
+      ],
+      "browser_steps": [
+        "run the documented reset",
+        "re-verify the fixture digest",
+        "re-run one smoke journey"
+      ],
+      "api_runtime_paths": [
+        "reset tooling and fixture loader"
+      ],
+      "expected_result": "the environment returns to the exact recorded fixture version",
+      "expected_audit_evidence": "reset evidence including the fixture digest before and after",
+      "owning_layer_for_defects": "OPS",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-RST-02",
+      "category": "recovery_reset",
+      "persona": "trial operator",
+      "preconditions": [
+        "preview environment deployed",
+        "a backup exists"
+      ],
+      "dependencies": [
+        "OPS preview minimum"
+      ],
+      "browser_steps": [
+        "restore from backup",
+        "verify integrity",
+        "confirm no production data is present"
+      ],
+      "api_runtime_paths": [
+        "backup and restore tooling"
+      ],
+      "expected_result": "restore completes and the environment is provably free of production data",
+      "expected_audit_evidence": "restore evidence",
+      "owning_layer_for_defects": "OPS",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-CTRL-01",
+      "category": "control_plane",
+      "persona": "independent auditor",
+      "preconditions": [
+        "authenticated session exists",
+        "auditor authority seeded"
+      ],
+      "dependencies": [
+        "CTRL-01 audit read model"
+      ],
+      "browser_steps": [
+        "open the audit lookup",
+        "inspect one executed act and one refusal"
+      ],
+      "api_runtime_paths": [
+        "immutable audit read path"
+      ],
+      "expected_result": "both the act and the refusal are visible with reason codes and authority basis",
+      "expected_audit_evidence": "read access evidence; the auditor holds no mutation right",
+      "owning_layer_for_defects": "CTRL",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_WITH_DECLARED_LIMITATION",
+      "blocking_dependencies": [
+        {
+          "dependency": "CTRL-01",
+          "reason": "CTRL-01 is preseal and not accepted; control surfaces are specification-level."
+        },
+        {
+          "dependency": "INFRA-02",
+          "reason": "INFRA-02 is ACCEPTED / CLOSED; joint preview remains governed."
+        }
+      ],
+      "declared_limitation": "CTRL-01 is preseal; the surface is specification-level until accepted.",
+      "mock_backed": false
+    },
+    {
+      "journey_id": "J-CTRL-02",
+      "category": "control_plane",
+      "persona": "trial operator",
+      "preconditions": [
+        "preview environment deployed"
+      ],
+      "dependencies": [
+        "OPS preview minimum",
+        "FIR-OPS-001"
+      ],
+      "browser_steps": [
+        "open the operational health view",
+        "confirm no personal data is displayed"
+      ],
+      "api_runtime_paths": [
+        "privacy-safe health and readiness endpoints"
+      ],
+      "expected_result": "health state is visible and carries no personal or voting-linkable data",
+      "expected_audit_evidence": "no evidence beyond the operational event",
+      "owning_layer_for_defects": "OPS",
+      "status_today": "BLOCKED_BY_DEPENDENCY",
+      "status_target_at_checkpoint": "SUPPORTED_REAL_PATH",
+      "blocking_dependencies": [
+        {
+          "dependency": "OPS-02",
+          "reason": "OPS-02 C3 is ACCEPTED / CLOSED; joint preview remains separately governed."
+        }
+      ],
+      "declared_limitation": "",
+      "mock_backed": false
+    }
+  ]
+}

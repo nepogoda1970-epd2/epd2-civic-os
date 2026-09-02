@@ -1,0 +1,37 @@
+{
+  "schema": "epd2.ctrl01.breakglass/1",
+  "gate": {
+    "gate_id": "G09",
+    "name": "emergency lifecycle",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "lifecycle": [
+        "REQUEST",
+        "APPROVE",
+        "ACTIVATE",
+        "USE",
+        "EXPIRE_OR_REVOKE",
+        "REVIEW"
+      ],
+      "renewal_path_present": false,
+      "prohibited_under_break_glass": [
+        "AUTH.ASSIGN",
+        "AUTH.RESTORE",
+        "KEY.DESTROY",
+        "OFFICE.ASSIGN_MANDATE",
+        "RECORDS.APPLY_RETENTION",
+        "REPORTING.CUSTODY_ACCESS"
+      ],
+      "emergency_eligible_actions": [
+        "EMERGENCY.ACTIVATE",
+        "EMERGENCY.APPROVE",
+        "EMERGENCY.REQUEST",
+        "EMERGENCY.REVOKE",
+        "INTERVENE.SESSION_QUARANTINE",
+        "KEY.MARK_COMPROMISED",
+        "SERVICE_CRED.REVOKE"
+      ]
+    }
+  }
+}

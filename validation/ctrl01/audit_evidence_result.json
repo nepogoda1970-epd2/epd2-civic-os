@@ -1,0 +1,42 @@
+{
+  "schema": "epd2.ctrl01.audit-evidence/1",
+  "gates": [
+    {
+      "gate_id": "G17",
+      "name": "immutable audit and evidence",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "chain": "sha256(canonical(record) + previous_hash)",
+        "anchor": "append-time (count, head) held outside the record list",
+        "public_surface": [
+          "anchor",
+          "append",
+          "export",
+          "find",
+          "head_hash",
+          "records",
+          "verify"
+        ],
+        "tamper_helpers_in_evidence_module": [],
+        "refusals_recorded": true
+      }
+    },
+    {
+      "gate_id": "G18",
+      "name": "privacy and data minimization",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "screened_before_write": true,
+        "measured_attribute_budget_bytes": 512,
+        "probe_results": {
+          "voting_linkable_field": "CTRL_VOTING_LINKABLE_FIELD",
+          "secret_field_name": "CTRL_SECRET_IN_AUDIT",
+          "raw_key_material": "CTRL_SECRET_IN_AUDIT",
+          "oversized_attribute": "CTRL_PRIVACY_MINIMIZATION"
+        }
+      }
+    }
+  ]
+}

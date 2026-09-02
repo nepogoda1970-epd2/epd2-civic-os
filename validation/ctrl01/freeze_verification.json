@@ -1,0 +1,18 @@
+{
+  "schema": "epd2.ctrl01.freeze-verification/1",
+  "gate": {
+    "gate_id": "G22",
+    "name": "freeze and same-bytes preseal identity",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "files": 36,
+      "current_manifest_digest": "a8fd64858dea0cb67f78b200801f826c87d4b4d86b410ef783e5875bec24edfd",
+      "baseline_manifest_digest": "a8fd64858dea0cb67f78b200801f826c87d4b4d86b410ef783e5875bec24edfd",
+      "baseline_path": "validation/ctrl01/freeze_manifest.json",
+      "state": "VERIFIED_AGAINST_RECORDED_BASELINE",
+      "rule": "tested bytes == verified bytes == frozen bytes == packaged bytes"
+    }
+  },
+  "mismatches": []
+}

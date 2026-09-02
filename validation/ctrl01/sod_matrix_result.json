@@ -1,0 +1,160 @@
+{
+  "schema": "epd2.ctrl01.sod-matrix/1",
+  "rules": [
+    {
+      "rule_id": "SOD-01",
+      "left": "REQUEST",
+      "right": "APPROVE",
+      "reason_code": "CTRL_SELF_APPROVAL",
+      "governing_fir": "FIR-GOV-005",
+      "description": "The principal who requests a consequential act may not approve it."
+    },
+    {
+      "rule_id": "SOD-02",
+      "left": "APPROVE",
+      "right": "EXECUTE",
+      "reason_code": "CTRL_APPROVE_EXECUTE_MERGED",
+      "governing_fir": "FIR-SEC-004",
+      "description": "Approval and execution/custody are separate authorities."
+    },
+    {
+      "rule_id": "SOD-03",
+      "left": "EXECUTE",
+      "right": "AUDIT",
+      "reason_code": "CTRL_EXECUTE_AUDIT_MERGED",
+      "governing_fir": "FIR-CTRL-001",
+      "description": "An actor may not audit or review their own executed act."
+    },
+    {
+      "rule_id": "SOD-04",
+      "left": "SECRET_VISIBILITY",
+      "right": "APPROVE",
+      "reason_code": "CTRL_SECRET_VISIBILITY_APPROVER",
+      "governing_fir": "FIR-SEC-004",
+      "description": "An approver never requires plaintext private material to approve."
+    },
+    {
+      "rule_id": "SOD-05",
+      "left": "CREDENTIAL_ISSUANCE",
+      "right": "AUDIT",
+      "reason_code": "CTRL_ISSUANCE_AUDIT_MERGED",
+      "governing_fir": "FIR-SEC-004",
+      "description": "The issuer of a credential may not be its independent reviewer."
+    },
+    {
+      "rule_id": "SOD-06",
+      "left": "KEY_CUSTODY",
+      "right": "POLICY_APPROVAL",
+      "reason_code": "CTRL_CUSTODY_POLICY_MERGED",
+      "governing_fir": "FIR-TRUST-002",
+      "description": "Key custody does not carry the authority to approve the key policy it executes."
+    },
+    {
+      "rule_id": "SOD-07",
+      "left": "EMERGENCY_GRANT",
+      "right": "EMERGENCY_REVIEW",
+      "reason_code": "CTRL_EMERGENCY_SELF_REVIEW",
+      "governing_fir": "FIR-SEC-004",
+      "description": "An actor of a break-glass grant may not conduct its mandatory post-use review."
+    },
+    {
+      "rule_id": "SOD-08",
+      "left": "DESTRUCTIVE_OPERATION",
+      "right": "DESTRUCTIVE_CONFIRMATION",
+      "reason_code": "CTRL_DESTRUCTIVE_SELF_CONFIRM",
+      "governing_fir": "FIR-TRUST-002",
+      "description": "A destructive operation is confirmed by a principal other than the one performing it."
+    },
+    {
+      "rule_id": "SOD-09",
+      "left": "REGIONAL_ACTION",
+      "right": "BUND_OVERSIGHT",
+      "reason_code": "CTRL_OVERSIGHT_SELF_CONFIRM",
+      "governing_fir": "FIR-GOV-005",
+      "description": "The acting regional principal may not also supply the higher-level confirmation."
+    }
+  ],
+  "gate": {
+    "gate_id": "G07",
+    "name": "separation of duties",
+    "status": "PASS",
+    "findings": [],
+    "evidence": {
+      "rules": [
+        {
+          "rule_id": "SOD-01",
+          "left": "REQUEST",
+          "right": "APPROVE",
+          "reason_code": "CTRL_SELF_APPROVAL",
+          "governing_fir": "FIR-GOV-005",
+          "description": "The principal who requests a consequential act may not approve it."
+        },
+        {
+          "rule_id": "SOD-02",
+          "left": "APPROVE",
+          "right": "EXECUTE",
+          "reason_code": "CTRL_APPROVE_EXECUTE_MERGED",
+          "governing_fir": "FIR-SEC-004",
+          "description": "Approval and execution/custody are separate authorities."
+        },
+        {
+          "rule_id": "SOD-03",
+          "left": "EXECUTE",
+          "right": "AUDIT",
+          "reason_code": "CTRL_EXECUTE_AUDIT_MERGED",
+          "governing_fir": "FIR-CTRL-001",
+          "description": "An actor may not audit or review their own executed act."
+        },
+        {
+          "rule_id": "SOD-04",
+          "left": "SECRET_VISIBILITY",
+          "right": "APPROVE",
+          "reason_code": "CTRL_SECRET_VISIBILITY_APPROVER",
+          "governing_fir": "FIR-SEC-004",
+          "description": "An approver never requires plaintext private material to approve."
+        },
+        {
+          "rule_id": "SOD-05",
+          "left": "CREDENTIAL_ISSUANCE",
+          "right": "AUDIT",
+          "reason_code": "CTRL_ISSUANCE_AUDIT_MERGED",
+          "governing_fir": "FIR-SEC-004",
+          "description": "The issuer of a credential may not be its independent reviewer."
+        },
+        {
+          "rule_id": "SOD-06",
+          "left": "KEY_CUSTODY",
+          "right": "POLICY_APPROVAL",
+          "reason_code": "CTRL_CUSTODY_POLICY_MERGED",
+          "governing_fir": "FIR-TRUST-002",
+          "description": "Key custody does not carry the authority to approve the key policy it executes."
+        },
+        {
+          "rule_id": "SOD-07",
+          "left": "EMERGENCY_GRANT",
+          "right": "EMERGENCY_REVIEW",
+          "reason_code": "CTRL_EMERGENCY_SELF_REVIEW",
+          "governing_fir": "FIR-SEC-004",
+          "description": "An actor of a break-glass grant may not conduct its mandatory post-use review."
+        },
+        {
+          "rule_id": "SOD-08",
+          "left": "DESTRUCTIVE_OPERATION",
+          "right": "DESTRUCTIVE_CONFIRMATION",
+          "reason_code": "CTRL_DESTRUCTIVE_SELF_CONFIRM",
+          "governing_fir": "FIR-TRUST-002",
+          "description": "A destructive operation is confirmed by a principal other than the one performing it."
+        },
+        {
+          "rule_id": "SOD-09",
+          "left": "REGIONAL_ACTION",
+          "right": "BUND_OVERSIGHT",
+          "reason_code": "CTRL_OVERSIGHT_SELF_CONFIRM",
+          "governing_fir": "FIR-GOV-005",
+          "description": "The acting regional principal may not also supply the higher-level confirmation."
+        }
+      ],
+      "rules_total": 9
+    }
+  }
+}

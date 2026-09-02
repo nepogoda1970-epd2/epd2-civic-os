@@ -1,0 +1,652 @@
+{
+  "schema": "epd2.ctrl01.preseal-result/1",
+  "stage": "CTRL-01",
+  "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "started_at": "2026-09-02T10:17:56.523555+00:00",
+  "completed_at": "2026-09-02T10:17:57.736754+00:00",
+  "overall": "PASS",
+  "gates_total": 22,
+  "gates_passed": 22,
+  "gates_failed": 0,
+  "gates_skipped": 0,
+  "governed_check_suite_digest": "5652edf6f77e2d9e9b66a94c9aa546ca43906b7b120e173fac9749818a733c45",
+  "gates": [
+    {
+      "gate_id": "G01",
+      "name": "governance bootstrap freshness",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "head_commit": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+        "head_tree": "eb8a3254c2b8a30feff71318d4377eff2435605c",
+        "baseline_commit_at_assignment": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+        "head_matches_assignment_baseline": true,
+        "canonical_documents": {
+          "docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md": {
+            "expected": "4b69cf500f2171399f7fb0b4213cb1bddcc8cf07",
+            "actual": "4b69cf500f2171399f7fb0b4213cb1bddcc8cf07",
+            "match": true
+          },
+          "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md": {
+            "expected": "aad828e377889e96f0bce16245f4e9ed1d97ed4a",
+            "actual": "aad828e377889e96f0bce16245f4e9ed1d97ed4a",
+            "match": true
+          },
+          "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md": {
+            "expected": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+            "actual": "7f5c6a9a88f8e653b43dc542a595ac37bf7a0692",
+            "match": true
+          },
+          "docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md": {
+            "expected": "15dd290a1bcb6f44b4242e7c33b71119e404553a",
+            "actual": "15dd290a1bcb6f44b4242e7c33b71119e404553a",
+            "match": true
+          }
+        },
+        "reread_required_before_seal": true
+      }
+    },
+    {
+      "gate_id": "G02",
+      "name": "entering baseline identity",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "repository": "nepogoda1970-epd2/epd2-civic-os",
+        "branch": "HEAD",
+        "commit": "217559b7f21c338d6fe8d4e4676082cd3840251c",
+        "tree": "eb8a3254c2b8a30feff71318d4377eff2435605c",
+        "stage": "CTRL-01",
+        "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+        "bootstrap": "PASS"
+      }
+    },
+    {
+      "gate_id": "G03",
+      "name": "accepted predecessor references",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "records": {
+          "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "7f8b16ca16a11f4916f1988ef53243b977e1862d",
+            "size_bytes": 3097,
+            "manifest_expected": "7f8b16ca16a11f4916f1988ef53243b977e1862d",
+            "match": true,
+            "decision": "ACCEPTED_CLOSED",
+            "candidate_sha256": "9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9"
+          },
+          "docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "0f41555a4aa5f0bf80fa7a1a95be905c02d692c5",
+            "size_bytes": 3754,
+            "manifest_expected": "0f41555a4aa5f0bf80fa7a1a95be905c02d692c5",
+            "match": true,
+            "decision": "ACCEPTED_CLOSED",
+            "candidate_sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55"
+          },
+          "docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "fab2833e6769bc9e71876e47b168848e6c386e96",
+            "size_bytes": 3652,
+            "manifest_expected": "fab2833e6769bc9e71876e47b168848e6c386e96",
+            "match": true,
+            "decision": "ACCEPTED_CLOSED",
+            "candidate_sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337"
+          },
+          "docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "e35f0ff0438419db445580f8739575ccba3f6551",
+            "size_bytes": 3814,
+            "manifest_expected": "e35f0ff0438419db445580f8739575ccba3f6551",
+            "match": true,
+            "decision": "ACCEPTED_CLOSED",
+            "candidate_sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70"
+          },
+          "docs/frontend/FRONT-04-C2-ACCEPTANCE-RECORD.json": {
+            "git_blob_sha": "5eb35c0699434f1f93c63bfc23a87097c609ca06",
+            "size_bytes": 4342,
+            "manifest_expected": "5eb35c0699434f1f93c63bfc23a87097c609ca06",
+            "match": true,
+            "decision": "ACCEPTED",
+            "candidate_sha256": "1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8"
+          },
+          "docs/frontend/FRONT-03-C1-ACCEPTANCE-RECORD.json": {
+            "git_blob_sha": "ced7d78a779343b5507a5cd612ad8620e8c821cd",
+            "size_bytes": 4504,
+            "manifest_expected": "ced7d78a779343b5507a5cd612ad8620e8c821cd",
+            "match": true,
+            "decision": "ACCEPTED / CLOSED",
+            "candidate_sha256": "fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26"
+          },
+          "docs/frontend/FRONT-02-C2.1-ACCEPTANCE-RECORD.json": {
+            "git_blob_sha": "8f22eab702d7d674be115916defb2e12e63d7680",
+            "size_bytes": 1668,
+            "manifest_expected": "8f22eab702d7d674be115916defb2e12e63d7680",
+            "match": true,
+            "decision": "ACCEPTED_IMPLEMENTATION_BASELINE",
+            "candidate_sha256": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179"
+          },
+          "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "5618144cf503b55bea96550c80d80cac78580963",
+            "size_bytes": 3379,
+            "manifest_expected": "5618144cf503b55bea96550c80d80cac78580963",
+            "match": true,
+            "decision": "ACCEPTED / CLOSED",
+            "candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131"
+          },
+          "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "95df6e5c5288b16aee62621157fc28a790b68bfc",
+            "size_bytes": 4007,
+            "manifest_expected": "95df6e5c5288b16aee62621157fc28a790b68bfc",
+            "match": true,
+            "decision": "ACCEPTED / CLOSED",
+            "candidate_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+          },
+          "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "0b23469ac20c34fa7891653cb41d0eaa44437ac6",
+            "size_bytes": 11917,
+            "manifest_expected": "0b23469ac20c34fa7891653cb41d0eaa44437ac6",
+            "match": true,
+            "decision": "ACCEPTED / CLOSED",
+            "candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27"
+          },
+          "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json": {
+            "git_blob_sha": "3d4baa96b957693244507aaa76f2d685226f88b6",
+            "size_bytes": 4727,
+            "manifest_expected": "3d4baa96b957693244507aaa76f2d685226f88b6",
+            "match": true,
+            "decision": "ACCEPTED / CLOSED",
+            "candidate_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125"
+          }
+        }
+      }
+    },
+    {
+      "gate_id": "G04",
+      "name": "action inventory completeness",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "actions_total": 48,
+        "mutations": 43,
+        "read_only": 5,
+        "consoles": [
+          "CONSOLE_GOVERNANCE",
+          "CONSOLE_IDENTITY",
+          "CONSOLE_OPERATIONS",
+          "CONSOLE_OVERSIGHT",
+          "CONSOLE_SECURITY",
+          "CONSOLE_WORKDESK"
+        ],
+        "desks_total": 27,
+        "no_ui_decisions": [
+          {
+            "role": "VOTING_TRUSTEE",
+            "decision": "NO_UI",
+            "rationale": "The Voting Client and the voting trust domain remain outside every administrative control-plane surface (FIR-CTRL-001 acceptance criterion 7). Trustee key authority is exercised only through voting-domain components under voting-specific governance.",
+            "governing_fir": "FIR-CTRL-001"
+          },
+          {
+            "role": "VOTING_KEY_CUSTODIAN",
+            "decision": "NO_UI",
+            "rationale": "Voting-domain key material appears in the control plane only as an external governed reference (FIR-SEC-004 class 9). No control-plane right operates it.",
+            "governing_fir": "FIR-SEC-004"
+          },
+          {
+            "role": "UNIVERSAL_SYSTEM_ADMINISTRATOR",
+            "decision": "NO_UI",
+            "rationale": "Deliberately does not exist. There is no console, desk, role or route that aggregates the full right set (FIR-CTRL-001 acceptance criterion 9).",
+            "governing_fir": "FIR-CTRL-001"
+          }
+        ]
+      }
+    },
+    {
+      "gate_id": "G05",
+      "name": "authority provenance and read model",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "projections": [
+          "as_of",
+          "authority_history",
+          "authority_source",
+          "current_organizational_authority",
+          "current_restrictions",
+          "human_credential_state",
+          "schema",
+          "service_credential_state",
+          "session_quarantine_state",
+          "temporary_supervision",
+          "trust_key_references"
+        ],
+        "authorities": 25,
+        "history_records": 27
+      }
+    },
+    {
+      "gate_id": "G06",
+      "name": "regional scope isolation and bounded intervention",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "intervention_levels": [
+          "AUTHORITY_SUSPENSION",
+          "REGIONAL_ACTION_RESTRICTION",
+          "SESSION_QUARANTINE",
+          "TEMPORARY_SUPERVISION"
+        ],
+        "preserved_member_capabilities": [
+          "PUBLIC_READ_APPROVED_MATERIAL",
+          "ORDINARY_MEMBER_ACCESS_IN_EXISTING_SCOPE",
+          "DISCUSSION_AND_INITIATIVE_PARTICIPATION",
+          "EXISTING_MEETINGS_DOCUMENTS_DECISIONS_AS_HISTORY",
+          "AUDIT_AND_EVIDENCE_VISIBILITY_UNDER_EXISTING_RULES",
+          "CASE_AND_CORRESPONDENCE_HISTORY",
+          "PATH_TO_RESTORE_LAWFUL_REGIONAL_SELF_ADMINISTRATION"
+        ],
+        "prohibited_voting_effects": [
+          "READ_BALLOT_CONTENT",
+          "REVEAL_IDENTITY_VOTE_LINKAGE",
+          "MINT_VOTING_CREDENTIALS",
+          "OPERATE_TRUSTEE_KEYS",
+          "ALTER_TALLY_EVIDENCE"
+        ],
+        "max_supervision_days": 90
+      }
+    },
+    {
+      "gate_id": "G07",
+      "name": "separation of duties",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "rules": [
+          {
+            "rule_id": "SOD-01",
+            "left": "REQUEST",
+            "right": "APPROVE",
+            "reason_code": "CTRL_SELF_APPROVAL",
+            "governing_fir": "FIR-GOV-005",
+            "description": "The principal who requests a consequential act may not approve it."
+          },
+          {
+            "rule_id": "SOD-02",
+            "left": "APPROVE",
+            "right": "EXECUTE",
+            "reason_code": "CTRL_APPROVE_EXECUTE_MERGED",
+            "governing_fir": "FIR-SEC-004",
+            "description": "Approval and execution/custody are separate authorities."
+          },
+          {
+            "rule_id": "SOD-03",
+            "left": "EXECUTE",
+            "right": "AUDIT",
+            "reason_code": "CTRL_EXECUTE_AUDIT_MERGED",
+            "governing_fir": "FIR-CTRL-001",
+            "description": "An actor may not audit or review their own executed act."
+          },
+          {
+            "rule_id": "SOD-04",
+            "left": "SECRET_VISIBILITY",
+            "right": "APPROVE",
+            "reason_code": "CTRL_SECRET_VISIBILITY_APPROVER",
+            "governing_fir": "FIR-SEC-004",
+            "description": "An approver never requires plaintext private material to approve."
+          },
+          {
+            "rule_id": "SOD-05",
+            "left": "CREDENTIAL_ISSUANCE",
+            "right": "AUDIT",
+            "reason_code": "CTRL_ISSUANCE_AUDIT_MERGED",
+            "governing_fir": "FIR-SEC-004",
+            "description": "The issuer of a credential may not be its independent reviewer."
+          },
+          {
+            "rule_id": "SOD-06",
+            "left": "KEY_CUSTODY",
+            "right": "POLICY_APPROVAL",
+            "reason_code": "CTRL_CUSTODY_POLICY_MERGED",
+            "governing_fir": "FIR-TRUST-002",
+            "description": "Key custody does not carry the authority to approve the key policy it executes."
+          },
+          {
+            "rule_id": "SOD-07",
+            "left": "EMERGENCY_GRANT",
+            "right": "EMERGENCY_REVIEW",
+            "reason_code": "CTRL_EMERGENCY_SELF_REVIEW",
+            "governing_fir": "FIR-SEC-004",
+            "description": "An actor of a break-glass grant may not conduct its mandatory post-use review."
+          },
+          {
+            "rule_id": "SOD-08",
+            "left": "DESTRUCTIVE_OPERATION",
+            "right": "DESTRUCTIVE_CONFIRMATION",
+            "reason_code": "CTRL_DESTRUCTIVE_SELF_CONFIRM",
+            "governing_fir": "FIR-TRUST-002",
+            "description": "A destructive operation is confirmed by a principal other than the one performing it."
+          },
+          {
+            "rule_id": "SOD-09",
+            "left": "REGIONAL_ACTION",
+            "right": "BUND_OVERSIGHT",
+            "reason_code": "CTRL_OVERSIGHT_SELF_CONFIRM",
+            "governing_fir": "FIR-GOV-005",
+            "description": "The acting regional principal may not also supply the higher-level confirmation."
+          }
+        ],
+        "rules_total": 9
+      }
+    },
+    {
+      "gate_id": "G08",
+      "name": "four-eyes and quorum",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "four_eyes_actions": [
+          "AUTH.ASSIGN",
+          "AUTH.RESTORE",
+          "AUTH.REVOKE",
+          "AUTH.SUSPEND",
+          "CRED.HIGH_ASSURANCE_RECOVERY",
+          "ELECTION.ADMIN_ACTION",
+          "FINANCE.APPROVE_PAYMENT",
+          "INTERVENE.AUTHORITY_SUSPENSION",
+          "INTERVENE.LIFT",
+          "INTERVENE.REGIONAL_ACTION_RESTRICTION",
+          "INTERVENE.TEMPORARY_SUPERVISION",
+          "KEY.DESTROY",
+          "KEY.REQUEST_GENERATION",
+          "KEY.ROTATE",
+          "OFFICE.ASSIGN_MANDATE",
+          "PRIVACY.REVIEW_EXPORT",
+          "PROCUREMENT.APPROVE_VENDOR",
+          "RECORDS.APPLY_RETENTION",
+          "REPORTING.CUSTODY_ACCESS",
+          "SERVICE_CRED.ISSUE",
+          "SERVICE_CRED.ROTATE",
+          "TRANSPARENCY.PUBLISH"
+        ],
+        "four_eyes_total": 22
+      }
+    },
+    {
+      "gate_id": "G09",
+      "name": "emergency lifecycle",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "lifecycle": [
+          "REQUEST",
+          "APPROVE",
+          "ACTIVATE",
+          "USE",
+          "EXPIRE_OR_REVOKE",
+          "REVIEW"
+        ],
+        "renewal_path_present": false,
+        "prohibited_under_break_glass": [
+          "AUTH.ASSIGN",
+          "AUTH.RESTORE",
+          "KEY.DESTROY",
+          "OFFICE.ASSIGN_MANDATE",
+          "RECORDS.APPLY_RETENTION",
+          "REPORTING.CUSTODY_ACCESS"
+        ],
+        "emergency_eligible_actions": [
+          "EMERGENCY.ACTIVATE",
+          "EMERGENCY.APPROVE",
+          "EMERGENCY.REQUEST",
+          "EMERGENCY.REVOKE",
+          "INTERVENE.SESSION_QUARANTINE",
+          "KEY.MARK_COMPROMISED",
+          "SERVICE_CRED.REVOKE"
+        ]
+      }
+    },
+    {
+      "gate_id": "G10",
+      "name": "human credential and recovery lifecycle",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "credential_states": [
+          "PENDING_ENROLLMENT",
+          "ACTIVE",
+          "SUSPENDED",
+          "RECOVERY_REQUIRED",
+          "REVOKED",
+          "REPLACED",
+          "DESTROYED"
+        ],
+        "recovery_restores_authority": false
+      }
+    },
+    {
+      "gate_id": "G11",
+      "name": "service credential control",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "service_credential_actions": [
+          "SERVICE_CRED.ISSUE",
+          "SERVICE_CRED.ROTATE",
+          "SERVICE_CRED.REVOKE"
+        ],
+        "workload_only_actions": [
+          "PLATFORM.SERVICE_TASK"
+        ]
+      }
+    },
+    {
+      "gate_id": "G12",
+      "name": "key and trust reference control",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "key_actions": [
+          "KEY.DESTROY",
+          "KEY.MARK_COMPROMISED",
+          "KEY.READ_TRUST_STATE",
+          "KEY.REQUEST_GENERATION",
+          "KEY.ROTATE"
+        ],
+        "voting_keys_are_external_references_only": true,
+        "platform_key_threshold": "2-of-4"
+      }
+    },
+    {
+      "gate_id": "G13",
+      "name": "control API contract coverage",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "contracts": {
+          "contracts": 48,
+          "mutating": 43,
+          "read_only": 5
+        },
+        "console_capabilities": [
+          "APPROVE_OR_REJECT",
+          "CREDENTIAL_AND_SERVICE_TRUST_STATUS",
+          "CURRENT_INCIDENTS_AND_RESTRICTIONS",
+          "EMERGENCY_ACTIVATION",
+          "EXECUTE",
+          "IMMUTABLE_AUDIT_LOOKUP",
+          "INSPECT_AUTHORITY_PROVENANCE",
+          "LIST_CURRENT_AUTHORITY",
+          "READ_ONLY_OPERATIONAL_HEALTH",
+          "REQUEST_PRIVILEGED_ACTION",
+          "SUSPEND_OR_REVOKE"
+        ],
+        "ui_visibility_is_not_authorization": true,
+        "unauthorized_probes_run": 43,
+        "unauthorized_probes_refused": 43
+      }
+    },
+    {
+      "gate_id": "G14",
+      "name": "authorization negative suite",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "pytest_exit_code": 0,
+        "summary": "178 passed in 0.62s",
+        "tests_passed": 178
+      }
+    },
+    {
+      "gate_id": "G15",
+      "name": "commit-time reauthorization",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "mutations_requiring_reauth": 43,
+        "toctou_cases_covered": [
+          "authority revoked after request",
+          "intervention activated during workflow",
+          "emergency grant expired before commit",
+          "quorum changed",
+          "target object scope changed",
+          "session quarantined",
+          "credential revoked",
+          "region restriction began"
+        ]
+      }
+    },
+    {
+      "gate_id": "G16",
+      "name": "fail-closed dependency handling",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "policy_obligations": true,
+        "unknown_action_behaviour": "REFUSE",
+        "unknown_session_behaviour": "REFUSE"
+      }
+    },
+    {
+      "gate_id": "G17",
+      "name": "immutable audit and evidence",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "chain": "sha256(canonical(record) + previous_hash)",
+        "anchor": "append-time (count, head) held outside the record list",
+        "public_surface": [
+          "anchor",
+          "append",
+          "export",
+          "find",
+          "head_hash",
+          "records",
+          "verify"
+        ],
+        "tamper_helpers_in_evidence_module": [],
+        "refusals_recorded": true
+      }
+    },
+    {
+      "gate_id": "G18",
+      "name": "privacy and data minimization",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "screened_before_write": true,
+        "measured_attribute_budget_bytes": 512,
+        "probe_results": {
+          "voting_linkable_field": "CTRL_VOTING_LINKABLE_FIELD",
+          "secret_field_name": "CTRL_SECRET_IN_AUDIT",
+          "raw_key_material": "CTRL_SECRET_IN_AUDIT",
+          "oversized_attribute": "CTRL_PRIVACY_MINIMIZATION"
+        }
+      }
+    },
+    {
+      "gate_id": "G19",
+      "name": "voting hard boundary preservation",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "voting_client_outside_control_plane": true,
+        "no_ui_roles": [
+          "UNIVERSAL_SYSTEM_ADMINISTRATOR",
+          "VOTING_KEY_CUSTODIAN",
+          "VOTING_TRUSTEE"
+        ],
+        "prohibited_effects": [
+          "READ_BALLOT_CONTENT",
+          "REVEAL_IDENTITY_VOTE_LINKAGE",
+          "MINT_VOTING_CREDENTIALS",
+          "OPERATE_TRUSTEE_KEYS",
+          "ALTER_TALLY_EVIDENCE"
+        ]
+      }
+    },
+    {
+      "gate_id": "G20",
+      "name": "mutation and anti-cheat suite",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "mutations_total": 37,
+        "detected": 37,
+        "checks_total": 28
+      }
+    },
+    {
+      "gate_id": "G21",
+      "name": "source and package hygiene",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "packaged_files": 36,
+        "allowed_self_states": [
+          "CTRL01_IMPLEMENTATION_COMPLETE",
+          "LOCAL_VERIFICATION_PASS",
+          "PRESEAL_READY",
+          "NOT_ACCEPTED"
+        ],
+        "forbidden_self_states": [
+          "CTRL ACCEPTED",
+          "CTRL CLOSED",
+          "PRODUCTION READY",
+          "FINAL SEC PASS",
+          "BSI CERTIFIED",
+          "CC CERTIFIED",
+          "EAL4",
+          "LEGALLY ACTIVATED"
+        ]
+      }
+    },
+    {
+      "gate_id": "G22",
+      "name": "freeze and same-bytes preseal identity",
+      "status": "PASS",
+      "findings": [],
+      "evidence": {
+        "files": 36,
+        "current_manifest_digest": "a8fd64858dea0cb67f78b200801f826c87d4b4d86b410ef783e5875bec24edfd",
+        "baseline_manifest_digest": "a8fd64858dea0cb67f78b200801f826c87d4b4d86b410ef783e5875bec24edfd",
+        "baseline_path": "validation/ctrl01/freeze_manifest.json",
+        "state": "VERIFIED_AGAINST_RECORDED_BASELINE",
+        "rule": "tested bytes == verified bytes == frozen bytes == packaged bytes"
+      }
+    }
+  ],
+  "self_state": {
+    "declared": [
+      "CTRL01_IMPLEMENTATION_COMPLETE",
+      "LOCAL_VERIFICATION_PASS",
+      "PRESEAL_READY",
+      "NOT_ACCEPTED"
+    ],
+    "not_claimed": [
+      "CTRL layer accepted or closed",
+      "production readiness",
+      "final security acceptance",
+      "BSI / Common Criteria certification",
+      "legal activation",
+      "System Trial Preview checkpoint opened"
+    ]
+  }
+}
