@@ -1,0 +1,69 @@
+name: OPS-03 C2 final current-main build
+on:
+  push:
+    branches: [tmp/ops03-c2-build]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    steps:
+      - name: Checkout builder control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Set up exact uv toolchain
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.14"
+          enable-cache: false
+      - name: Reconcile seal and qualify exact C2
+        id: c2
+        shell: bash
+        run: bash scripts/ops03_c2_ci.sh
+      - name: Upload exact sealed C2 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-sealed-candidate-${{ github.run_id }}
+          path: ${{ steps.c2.outputs.candidate }}
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload C2 builder evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-build-evidence-${{ github.run_id }}
+          path: ${{ steps.c2.outputs.evidence }}/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Terminal builder result
+        run: echo 'OPS03_C2_BUILD_RESULT:PASS:${{ steps.c2.outputs.candidate_sha }}:${{ steps.c2.outputs.candidate_size }}:${{ steps.c2.outputs.workflow_sha }}:${{ steps.c2.outputs.main }}:${{ steps.c2.outputs.tree }}'
