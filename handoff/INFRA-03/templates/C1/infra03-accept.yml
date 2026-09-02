@@ -1,0 +1,161 @@
+name: INFRA-03 C1 authoritative acceptance
+
+on:
+  push:
+    branches: [tmp/infra03-c1-authoritative-accept]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  authoritative-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - name: Checkout independent acceptance control
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 1, persist-credentials: false}
+
+      - name: Load external control
+        id: ctl
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=handoff/INFRA-03/acceptance/INFRA03_C1_ACCEPTANCE_CONTROL.json
+          jq -e '.stage=="INFRA-03" and .candidate_role=="C1" and .self_acceptance==false' "$C"
+          echo "run=$(jq -r .builder_run_id "$C")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r .candidate_sha256 "$C")" >> "$GITHUB_OUTPUT"
+          echo "size=$(jq -r .candidate_size_bytes "$C")" >> "$GITHUB_OUTPUT"
+          echo "artifact=$(jq -r .artifact_name "$C")" >> "$GITHUB_OUTPUT"
+          echo "wf_sha=$(jq -r .sealed_workflow_sha256 "$C")" >> "$GITHUB_OUTPUT"
+
+      - name: Download exact sealed C1 and accepted predecessors
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ steps.ctl.outputs.artifact }}
+          path: incoming/infra03
+          run-id: ${{ steps.ctl.outputs.run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: infra02-authoritative-candidate-33574647511
+          path: incoming/infra02
+          run-id: 33574647511
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: api06-c1-candidate-v3
+          path: incoming/api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+
+      - name: Verify exact candidate seal and predecessor identities
+        id: exact
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP=$(find incoming/infra03 -type f -name 'EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          I2=$(find incoming/infra02 -type f -name 'EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip' -print -quit)
+          A6=$(find incoming/api06 -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$ZIP" -a -n "$I2" -a -n "$A6"
+          echo "${{ steps.ctl.outputs.sha }}  $ZIP" | sha256sum -c -
+          test "$(stat -c%s "$ZIP")" = '${{ steps.ctl.outputs.size }}'
+          echo 'd91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c  '"$I2" | sha256sum -c -
+          echo '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c  '"$A6" | sha256sum -c -
+          rm -rf "$RUNNER_TEMP/infra03"; mkdir -p "$RUNNER_TEMP/infra03"
+          python3 - "$ZIP" "$RUNNER_TEMP/infra03" <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); ns=z.namelist(); assert z.testzip() is None; assert len(ns)==len(set(ns)); roots={n.split('/',1)[0] for n in ns if n}; assert roots=={'EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1'}; assert all(not n.startswith('/') and '..' not in pathlib.PurePosixPath(n).parts for n in ns); z.extractall(sys.argv[2])
+          PY
+          ROOT="$RUNNER_TEMP/infra03/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1"
+          (cd "$ROOT" && sha256sum --quiet -c SHA256SUMS.txt)
+          jq -e '.candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false' "$ROOT/docs/infra/INFRA-03/INFRA03_C1_SEAL_RECORD.json"
+          test "$(sha256sum "$ROOT/handoff/INFRA-03/templates/C1/infra03-accept.yml"|cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          test "$(sha256sum .github/workflows/infra03-accept.yml|cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "root=$ROOT" >> "$GITHUB_OUTPUT"; echo "i2=$I2" >> "$GITHUB_OUTPUT"; echo "a6=$A6" >> "$GITHUB_OUTPUT"
+
+      - name: Install exact locked environment and PostgreSQL 16
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: "0.12.5", enable-cache: false}
+      - name: Prepare runtime
+        shell: bash
+        working-directory: ${{ steps.exact.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv lock --check
+          uv sync --frozen --all-groups
+          test -x /usr/lib/postgresql/16/bin/initdb || (sudo apt-get update -qq && sudo apt-get install -y postgresql-16)
+
+      - name: Re-run all INFRA-03 unit and mutation tests
+        working-directory: ${{ steps.exact.outputs.root }}
+        run: .venv/bin/python -m pytest -q tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py
+
+      - name: Re-run complete 40-gate runtime phase on exact candidate
+        working-directory: ${{ steps.exact.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          .venv/bin/python -m scripts.infra03.gates --root "$PWD" --git-root "$GITHUB_WORKSPACE" --artifact '${{ steps.exact.outputs.i2 }}' --api06-artifact '${{ steps.exact.outputs.a6 }}' | tee /tmp/infra03-authoritative-gates.log
+          grep -F "INFRA03 gates: {'PASS': 40, 'FAIL': 0, 'BLOCKED': 0} verdict=PASS" /tmp/infra03-authoritative-gates.log
+          jq -e '.verdict=="PASS" and .counts.PASS==40 and .counts.FAIL==0 and .counts.BLOCKED==0 and .final_seal_blockers==[]' validation/infra03/infra03_preseal_result.json
+          jq -e '.findings==[] and .expected_candidate.sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c"' validation/infra03/api06_reconciliation_result.json
+
+      - name: Prove exact sealed source unchanged outside regenerated evidence
+        working-directory: ${{ steps.exact.outputs.root }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib
+          root=pathlib.Path('.'); bad=[]
+          for line in (root/'SHA256SUMS.txt').read_text().splitlines():
+              h,rel=line.split('  ',1)
+              if rel.startswith('validation/infra03/'): continue
+              p=root/rel
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=h: bad.append(rel)
+          assert not bad,bad
+          print('INFRA03_SEALED_SOURCE_UNCHANGED:PASS')
+          PY
+
+      - name: Re-run canonical harness from exact candidate source bytes
+        id: harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC="$RUNNER_TEMP/harness-source"; rm -rf "$SRC"; cp -a '${{ steps.exact.outputs.root }}' "$SRC"
+          rm -rf "$SRC/validation/infra03"; mkdir -p "$SRC/validation/infra03"
+          # restore sealed stage evidence before creating the synthetic review commit
+          python3 - '${{ steps.exact.outputs.zip }}' "$SRC" <<'PY'
+          import pathlib,sys,zipfile,shutil
+          z=zipfile.ZipFile(sys.argv[1]); root=z.namelist()[0].split('/')[0]+'/validation/infra03/'; out=pathlib.Path(sys.argv[2])/'validation/infra03'
+          for n in z.namelist():
+              if n.startswith(root) and not n.endswith('/'):
+                  p=out/n[len(root):]; p.parent.mkdir(parents=True,exist_ok=True); p.write_bytes(z.read(n))
+          PY
+          rm -f "$SRC/SHA256SUMS.txt" "$SRC/ACCEPTANCE/FREEZE-INVENTORY.json"
+          cd "$SRC"; git init -q; git config user.email 'epd2-review@users.noreply.github.com'; git config user.name 'epd2-review'; git add -A; git commit -qm 'authoritative reconstructed source'; git remote add origin https://github.com/nepogoda1970-epd2/epd2-civic-os.git; git fetch -q --depth=1 origin main
+          uv sync --frozen --all-groups
+          uv run --frozen python -m scripts.acceptance run --root "$SRC" --output "$RUNNER_TEMP/canonical" | tee /tmp/infra03-canonical.log
+          grep -F 'INFRA01_ACCEPTANCE_RESULT:PASS:' /tmp/infra03-canonical.log
+          RUN=$(find "$RUNNER_TEMP/canonical" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -print -quit); test -n "$RUN"
+          HZIP="$RUN/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip"; test -f "$HZIP"
+          python3 - '${{ steps.exact.outputs.zip }}' "$HZIP" <<'PY'
+          import sys,zipfile
+          a,b=map(zipfile.ZipFile,sys.argv[1:]); da={n.split('/',1)[1]:a.read(n) for n in a.namelist() if '/' in n}; db={n.split('/',1)[1]:b.read(n) for n in b.namelist() if '/' in n}; assert da==db,(len(da),len(db),sorted(set(da)^set(db))[:20]); print('INFRA03_PACKAGE_CONTENT_IDENTITY:PASS',len(da))
+          PY
+          echo "run_dir=$RUN" >> "$GITHUB_OUTPUT"
+
+      - name: Upload authoritative evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra03-c1-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            ${{ steps.exact.outputs.root }}/validation/infra03/
+            ${{ steps.harness.outputs.run_dir }}/EXECUTION-MANIFEST.json
+            /tmp/infra03-authoritative-gates.log
+            /tmp/infra03-canonical.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Authoritative result
+        run: echo 'INFRA03_AUTHORITATIVE_RESULT:PASS:${{ steps.ctl.outputs.sha }}:${{ steps.ctl.outputs.size }}'
