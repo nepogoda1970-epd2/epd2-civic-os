@@ -1,0 +1,16 @@
+{
+  "schema": "epd2.api06.c1.acceptance-control/1",
+  "stage": "API-06",
+  "candidate_role": "C1",
+  "self_acceptance": false,
+  "builder_run_id": 33628261946,
+  "builder_provenance_commit": "40efd68d81cde67bf15453d095785d1971ec301b",
+  "artifact_name": "api06-c1-candidate-v3",
+  "candidate_filename": "EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip",
+  "candidate_sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+  "candidate_size_bytes": 44012716,
+  "sealed_workflow_sha256": "0866787ae8715ec3a2808bce157c4352b5cf2f3ad5be82a0d79099b590fff4c5",
+  "accepted_api05_sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70",
+  "canonical_main_at_build": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "required_result": "40/40 PASS; 30/30 mutations; no failed/environment-blocked gate"
+}
