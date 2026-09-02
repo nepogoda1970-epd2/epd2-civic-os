@@ -125,12 +125,18 @@ jobs:
           test -s "$API04_BROKER_TLS_BINDINGS"
           test -s "$API04_BROKER_SECRETS"
           python3 - "$API04_BROKER_TLS_BINDINGS" <<'PY'
-          import json,sys
+          import json,os,sys
           d=json.load(open(sys.argv[1]))
           assert 'membership-service' in d and d['membership-service'].get('fingerprint')
           assert all(v.get('fingerprint') for v in d.values())
           print(f'API06_API04_RUNTIME_BINDINGS:PASS:{len(d)}')
+          for key in ('UV_PROJECT_ENVIRONMENT','API04_REPOSITORY_ROOT','API04_POSTGRES_DSN','API04_BROKER_HOST','API04_BROKER_PORT','API04_BROKER_TLS_PORT','API04_BROKER_SECRETS','API04_BROKER_TLS_BINDINGS','API04_ACCEPTED_API03_SHA256','RABBITMQ_NODENAME','PATH'):
+              if key in os.environ:
+                  print(f'{key}={os.environ[key]}')
           PY
+          for key in UV_PROJECT_ENVIRONMENT API04_REPOSITORY_ROOT API04_POSTGRES_DSN API04_BROKER_HOST API04_BROKER_PORT API04_BROKER_TLS_PORT API04_BROKER_SECRETS API04_BROKER_TLS_BINDINGS API04_ACCEPTED_API03_SHA256 RABBITMQ_NODENAME PATH; do
+            printf '%s=%s\n' "$key" "${!key}" >> "$GITHUB_ENV"
+          done
 
       - name: Re-run complete authoritative API-06 40-gate validator
         shell: bash
