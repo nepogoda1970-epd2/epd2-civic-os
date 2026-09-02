@@ -1,0 +1,22 @@
+name: OPS-02 C1 Sealer Inspect
+on:
+  push:
+    branches: [handoff/ops]
+    paths: ['.github/workflows/ops02-c1-sealer-inspect.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p evidence c1
+          unzip -q handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip -d c1
+          ROOT=c1; n=$(find c1 -mindepth 1 -maxdepth 1 -type d | wc -l); f=$(find c1 -mindepth 1 -maxdepth 1 -type f | wc -l); if [ "$n" -eq 1 ] && [ "$f" -eq 0 ]; then ROOT=$(find c1 -mindepth 1 -maxdepth 1 -type d | head -n1); fi
+          cp "$ROOT/scripts/ops02/seal_candidate.py" evidence/seal_candidate.py
+          cp "$ROOT/packages/python/epd2-ops/src/epd2_ops/freeze.py" evidence/freeze.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops02-c1-sealer-${{ github.run_id }}
+          path: evidence/
