@@ -1,0 +1,37 @@
+{
+  "accepted_infra01_candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+  "accepted_ops01_candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+  "archive_verification": {
+    "clean": true,
+    "digest_mismatches": [],
+    "hygiene_offenders": [],
+    "member_count": 1541,
+    "missing_members": [],
+    "unaccounted_members": []
+  },
+  "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+  "created_at": "2026-09-02T00:24:53.728906+00:00",
+  "entering_main_commit": "4b95cc952897bd78fe912a2737f53e66264d6ff1",
+  "entering_main_tree": "215991a302ffeb1935207e9b84831e91229c646f",
+  "filename": "EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip",
+  "freeze_file_count": 1536,
+  "freeze_tree_digest": "91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537",
+  "harness": "PASS",
+  "member_count": 1541,
+  "same_bytes": {
+    "added": [],
+    "changed": [],
+    "removed": [],
+    "same_bytes": true,
+    "tree_digest_after": "91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537",
+    "tree_digest_before": "91f5b78df4117e5a407c1b31ba7d65a45b452e7e7c95e11e8bb63e6eed949537"
+  },
+  "schema": "epd2.ops02.candidate-identity/1",
+  "seal_commit": "bf33855a6d2cfb4bc519a992ffda5842d5a6349b",
+  "seal_tree": "b0c55aa431e4bcb1bf3cb8a2badf5a2106bb8dbb",
+  "sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+  "size_bytes": 16632939,
+  "stage": "OPS-02",
+  "stage_mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "working_tree_clean": true
+}
