@@ -1,0 +1,177 @@
+name: API-06 C2 sealed candidate build
+on:
+  push:
+    branches: [tmp/api06-c2-build-final]
+    paths: [".github/workflows/api06-c2-build.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: api06-c2-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env: {POSTGRES_USER: api06, POSTGRES_PASSWORD: api06-synthetic-ci-only, POSTGRES_DB: epd2_api06}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U api06 -d epd2_api06"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_API06_DATABASE_URL: postgresql://api06:api06-synthetic-ci-only@127.0.0.1:5432/epd2_api06
+      C1_SHA: 31e98de2e241982d59ffb05218fa2754af4b4606337f7c945c02735b393a771e
+      C1_SIZE: "44011905"
+      API06_API05_SHA: 38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0, persist-credentials: false}
+
+      - name: Download exact API-06 C1 entering candidate
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: api06-c1-candidate
+          path: incoming/api06-c1
+          run-id: 33626407762
+          github-token: ${{ github.token }}
+
+      - name: Verify and extract exact C1
+        id: src
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP=$(find incoming/api06-c1 -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$ZIP"
+          echo "$C1_SHA  $ZIP" | sha256sum -c -
+          test "$(stat -c%s "$ZIP")" = "$C1_SIZE"
+          rm -rf "$RUNNER_TEMP/api06-c2"; mkdir -p "$RUNNER_TEMP/api06-c2"
+          python3 - "$ZIP" "$RUNNER_TEMP/api06-c2" <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); ns=z.namelist(); roots={n.split('/',1)[0] for n in ns if n}; assert roots=={'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1'}; assert z.testzip() is None; assert len(ns)==len(set(ns)); assert all(not n.startswith('/') and '..' not in pathlib.PurePosixPath(n).parts for n in ns); z.extractall(sys.argv[2])
+          PY
+          ROOT="$RUNNER_TEMP/api06-c2/EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1"
+          (cd "$ROOT" && sha256sum --quiet -c SHA256SUMS.txt)
+          jq -e '.state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false' "$ROOT/docs/api/API-06/API06_CANDIDATE_IDENTITY.json"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo 'API06_C2_ENTERING_C1:PASS'
+
+      - name: Reconcile C2 to fresh current canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin main
+          ROOT='${{ steps.src.outputs.root }}'
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          git show origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md > "$ROOT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"
+          git show origin/main:docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json > "$ROOT/docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json"
+          grep -q '^API-05 = ACCEPTED / CLOSED$' "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          grep -q '^API-06 = NEXT$' "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"
+          echo "API06_CURRENT_MAIN_COMMIT=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_MAIN_TREE=$(git rev-parse origin/main^{tree})" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_PCR_SHA256=$(sha256sum "$ROOT/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md"|cut -d' ' -f1)" >> "$GITHUB_ENV"
+          echo "API06_CURRENT_MASTER_SHA256=$(sha256sum "$ROOT/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md"|cut -d' ' -f1)" >> "$GITHUB_ENV"
+          mkdir -p "$ROOT/handoff/API-06/templates/C2"
+          cp handoff/API-06/templates/C2/api06-accept.yml "$ROOT/handoff/API-06/templates/C2/api06-accept.yml"
+
+      - name: Regenerate governed API-06 evidence for current authority
+        working-directory: ${{ steps.src.outputs.root }}
+        run: python3 scripts/api06/build_api06_artifacts.py
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: "0.12.5", enable-cache: false}
+
+      - name: Prepare locked inherited runtime
+        shell: bash
+        working-directory: ${{ steps.src.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv lock --check
+          uv sync --frozen --all-groups
+          uv pip install --python .venv/bin/python pika==1.3.2
+          mkdir -p .api03-crypto
+          unzip -q -o packages/python/epd2-s2s-crypto/wheelhouse/cryptography-49.0.0-cp311-abi3-manylinux_2_34_x86_64.whl -d .api03-crypto
+          echo "API06_API03_CRYPTO_PATH=$PWD/.api03-crypto" >> "$GITHUB_ENV"
+
+      - name: Provision accepted API-04 live regression environment
+        shell: bash
+        working-directory: ${{ steps.src.outputs.root }}
+        run: |
+          set -euo pipefail
+          source scripts/api04_ci_setup.sh "$PWD"
+          test -s "$API04_BROKER_TLS_BINDINGS"
+          test -s "$API04_BROKER_SECRETS"
+          python3 - "$API04_BROKER_TLS_BINDINGS" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert 'membership-service' in d and d['membership-service'].get('fingerprint'); assert all(v.get('fingerprint') for v in d.values()); print(f'API06_API04_RUNTIME_BINDINGS:PASS:{len(d)}')
+          PY
+
+      - name: Re-run complete C2 40-gate validator
+        working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          .venv/bin/python scripts/validation/validate_api06.py --out validation/api06/api06_c2_acceptance_result.json | tee /tmp/api06-c2-validator.log
+          grep -q '^API06_RESULT:PASS:40/40:validation/api06/api06_c2_acceptance_result.json$' /tmp/api06-c2-validator.log
+          jq -e '.result=="PASS" and .passed_gates==40 and .failed_gates==[] and .environment_blocked_runs==[]' validation/api06/api06_c2_acceptance_result.json
+          jq -e '.result=="PASS" and .detected==30 and .missed==0' validation/api06/mutation_result.json
+
+      - name: Clean transient outputs and seal exact C2
+        id: pkg
+        working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .venv .api03-crypto .pytest_cache .mypy_cache .ruff_cache
+          find . -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
+          find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+          python3 - "$RUNNER_TEMP" <<'PY'
+          import hashlib,json,os,pathlib,shutil,sys,zipfile
+          root=pathlib.Path('.').resolve(); out=pathlib.Path(sys.argv[1]); name='EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C2'
+          def h(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          wf=root/'handoff/API-06/templates/C2/api06-accept.yml'; wfsha=h(wf)
+          seal={'schema':'epd2.api06.c2.seal/1','stage':'API-06','candidate_role':'C2','candidate_self_state':'CANDIDATE_NOT_ACCEPTED','self_accepted':False,'entering_c1':{'sha256':os.environ['C1_SHA'],'size_bytes':int(os.environ['C1_SIZE']),'builder_run_id':33626407762},'accepted_predecessor':{'stage':'API-05','sha256':os.environ['API06_API05_SHA'],'size_bytes':43953160,'authoritative_run_id':33574342011,'authoritative_job_id':100074902089},'builder':{'run_id':int(os.environ['GITHUB_RUN_ID']),'provenance_commit':os.environ['GITHUB_SHA']},'sealed_acceptance_workflow':{'path':'handoff/API-06/templates/C2/api06-accept.yml','sha256':wfsha},'correction':'acceptance environment provisioning only; no gate weakening','governed_gates':'40/40 PASS','mutations':'30/30 detected'}
+          (root/'docs/api/API-06/API06_C2_SEAL_RECORD.json').write_text(json.dumps(seal,indent=2)+'\n')
+          ident={'schema':'epd2.api06.c2.candidate-identity/1','filename':name+'.zip','state':'CANDIDATE_NOT_ACCEPTED','self_accepted':False,'builder_run_id':int(os.environ['GITHUB_RUN_ID']),'builder_provenance_commit':os.environ['GITHUB_SHA'],'outer_archive_sha256':None,'outer_archive_hash_location':'detached sidecar','entering_c1_sha256':os.environ['C1_SHA'],'accepted_api05_sha256':os.environ['API06_API05_SHA'],'sealed_acceptance_workflow_sha256':wfsha}
+          (root/'docs/api/API-06/API06_CANDIDATE_IDENTITY.json').write_text(json.dumps(ident,indent=2)+'\n')
+          (root/'SHA256SUMS.txt').unlink(missing_ok=True)
+          files=sorted(p for p in root.rglob('*') if p.is_file())
+          (root/'SHA256SUMS.txt').write_text('\n'.join(f'{h(p)}  {p.relative_to(root)}' for p in files)+'\n')
+          stage=out/name; shutil.copytree(root,stage); zp=out/(name+'.zip')
+          with zipfile.ZipFile(zp,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+              for p in sorted(stage.rglob('*')):
+                  if p.is_file(): z.write(p,f'{name}/{p.relative_to(stage).as_posix()}')
+          with zipfile.ZipFile(zp) as z: assert z.testzip() is None
+          digest=h(zp); (out/(name+'.zip.sha256')).write_text(f'{digest}  {name}.zip\n'); print('API06_C2_PACKAGE:PASS',digest,zp.stat().st_size)
+          PY
+          ZIP="$RUNNER_TEMP/EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C2.zip"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "side=$ZIP.sha256" >> "$GITHUB_OUTPUT"; echo "sha=$(sha256sum "$ZIP"|cut -d' ' -f1)" >> "$GITHUB_OUTPUT"; echo "size=$(stat -c%s "$ZIP")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload sealed C2 candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: api06-c2-candidate
+          path: |
+            ${{ steps.pkg.outputs.zip }}
+            ${{ steps.pkg.outputs.side }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Upload C2 build evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: api06-c2-build-evidence-${{ github.run_id }}
+          path: |
+            ${{ steps.src.outputs.root }}/docs/api/API-06/
+            ${{ steps.src.outputs.root }}/validation/api06/
+            /tmp/api06-c2-validator.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Developer result
+        run: echo 'API06_C2_DEVELOPER_RESULT:PASS; state=CANDIDATE_NOT_ACCEPTED'
