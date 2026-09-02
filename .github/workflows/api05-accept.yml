@@ -1,0 +1,226 @@
+name: api05-accept
+
+on:
+  push:
+    branches:
+      - tmp/api05-c1-authoritative-accept
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: api05-c1-authoritative-accept
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: api05
+          POSTGRES_PASSWORD: api05-synthetic-ci-only
+          POSTGRES_DB: epd2_api05
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U api05 -d epd2_api05"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_API05_DATABASE_URL: postgresql://api05:api05-synthetic-ci-only@127.0.0.1:5432/epd2_api05
+
+    steps:
+      - name: Checkout external acceptance control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Read external control
+        id: control
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=handoff/API-05/acceptance/API05_C1_ACCEPTANCE_CONTROL.json
+          test -f "$C"
+          python3 - "$C" >> "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          for k in ('candidate_run_id','candidate_sha256','candidate_size_bytes','sealed_workflow_sha256'):
+              print(f"{k}={d[k]}")
+          PY
+          cp "$C" /tmp/api05-accept-control.json
+
+      - name: Download exact sealed API-05 C1 candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: api05-c1-candidate
+          path: incoming/candidate
+          run-id: ${{ steps.control.outputs.candidate_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-04 C1
+        uses: actions/download-artifact@v4
+        with:
+          name: api04-c1-candidate
+          path: incoming/api04
+          run-id: 33567509799
+          github-token: ${{ github.token }}
+
+      - name: Verify exact transport identities
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          C1=$(find incoming/candidate -type f -name 'EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip')
+          A4=$(find incoming/api04 -type f -name 'EPD2_API04_EVENTS_AND_MESSAGING_RUNTIME_CANDIDATE_0.1_C1.zip')
+          test -n "$C1" && test -n "$A4"
+          echo "${{ steps.control.outputs.candidate_sha256 }}  $C1" | sha256sum -c -
+          test "$(stat -c%s "$C1")" = "${{ steps.control.outputs.candidate_size_bytes }}"
+          echo '8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337  '"$A4" | sha256sum -c -
+          test "$(stat -c%s "$A4")" = '43880523'
+          echo "c1=$(realpath "$C1")" >> "$GITHUB_OUTPUT"
+          echo "a4=$(realpath "$A4")" >> "$GITHUB_OUTPUT"
+
+      - name: Extract and verify complete candidate seal
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf work && mkdir work
+          python3 - "${{ steps.inputs.outputs.c1 }}" work <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); roots={n.split('/',1)[0] for n in names if n}
+          assert roots=={'EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1'}, roots
+          assert all(not n.startswith('/') and '..' not in n.split('/') for n in names)
+          assert z.testzip() is None
+          z.extractall(sys.argv[2])
+          for i in z.infolist():
+              if (i.external_attr>>16)&0o111: pathlib.Path(sys.argv[2],i.filename).chmod(0o755)
+          PY
+          ROOT="$PWD/work/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1"
+          cd "$ROOT"
+          sha256sum --quiet -c SHA256SUMS.txt
+          listed=$(grep -c . SHA256SUMS.txt)
+          actual=$(find . -type f ! -path ./SHA256SUMS.txt | wc -l)
+          test "$listed" = "$actual"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          seal=json.load(open('docs/api/API-05/API05_C1_SEAL_RECORD.json'))
+          assert seal['candidate_self_state']=='CANDIDATE_NOT_ACCEPTED'
+          assert seal['self_accepted'] is False
+          assert seal['accepted_predecessor']['sha256']=='8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337'
+          wf=pathlib.Path(seal['sealed_acceptance_workflow']['path'])
+          got=hashlib.sha256(wf.read_bytes()).hexdigest()
+          assert got==seal['sealed_acceptance_workflow']['sha256']==os.environ['CONTROL_WF_SHA']
+          print('API05_C1_SEAL:PASS',got)
+          PY
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+        env:
+          CONTROL_WF_SHA: ${{ steps.control.outputs.sealed_workflow_sha256 }}
+
+      - name: Prove installed workflow equals sealed template
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.extract.outputs.root }}'
+          cmp --silent .github/workflows/api05-accept.yml "$ROOT/handoff/API-05/templates/C1/api05-accept.yml"
+          echo "${{ steps.control.outputs.sealed_workflow_sha256 }}  .github/workflows/api05-accept.yml" | sha256sum -c -
+
+      - name: Verify current canonical predecessor governance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          r=json.load(open('docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json'))
+          assert r['decision']=='ACCEPTED_CLOSED'
+          assert r['candidate']['sha256']=='8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337'
+          assert r['authoritative']['run_id']==33569092401
+          p=open('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read()
+          assert 'API-04 = ACCEPTED / CLOSED' in p
+          assert 'API-05 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED' in p
+          PY
+
+      - name: Install exact toolchain
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: Provision locked candidate
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv sync --frozen --all-groups
+
+      - name: Run full API-05 candidate validator
+        id: validate
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          API05_ACCEPTED_API04_ZIP: ${{ steps.inputs.outputs.a4 }}
+        run: |
+          set -euo pipefail
+          .venv/bin/python scripts/validate_api05.py --out validation/api05/authoritative_acceptance_result.json | tee /tmp/api05-authoritative.out
+          grep -q '^API05_CANDIDATE_RESULT:PASS:validation/api05/authoritative_acceptance_result.json$' /tmp/api05-authoritative.out
+          python3 - <<'PY'
+          import json
+          r=json.load(open('validation/api05/authoritative_acceptance_result.json'))
+          assert r['result']=='PASS'
+          assert r['failed_gates']==[] and r['environment_blocked_gates']==[]
+          assert all(g['result']=='PASS' for g in r['gates'])
+          print(f"API05_GATES:{r['gate_count']}/{r['gate_count']} PASS")
+          PY
+
+      - name: Write external authoritative result
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          CANDIDATE_SHA: ${{ steps.control.outputs.candidate_sha256 }}
+          CANDIDATE_SIZE: ${{ steps.control.outputs.candidate_size_bytes }}
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          r=json.load(open('validation/api05/authoritative_acceptance_result.json'))
+          bg=next(x for x in r['gates'] if x['name']=='api05_behavioral_suite')
+          pg=next(x for x in r['gates'] if x['name']=='postgresql_16')
+          out={
+            'schema':'epd2.api05.c1.authoritative-result/1','stage':'API-05','role':'C1',
+            'candidate_sha256':os.environ['CANDIDATE_SHA'],'candidate_size_bytes':int(os.environ['CANDIDATE_SIZE']),
+            'github_run_id':int(os.environ['GITHUB_RUN_ID']),'github_job':os.environ['GITHUB_JOB'],
+            'provenance_commit':os.environ['GITHUB_SHA'],'result':'PASS',
+            'terminal_marker':'API05_RESULT:PASS:validation/api05/authoritative_acceptance_result.json',
+            'gates_total':r['gate_count'],'failed_gates':r['failed_gates'],'blocked_gates':r['environment_blocked_gates'],
+            'accepted_predecessor_api04_sha256':'8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337',
+            'postgresql':pg.get('server_version'),'behavioral_stdout_tail':bg.get('stdout_tail',''),
+            'self_acceptance':False
+          }
+          pathlib.Path('validation/api05/external_authoritative_result.json').write_text(json.dumps(out,indent=2)+'\n')
+          PY
+
+      - name: Publish authoritative evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: api05-c1-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            ${{ steps.extract.outputs.root }}/validation/api05/
+            ${{ steps.extract.outputs.root }}/docs/api/API-05/API05_C1_SEAL_RECORD.json
+            ${{ steps.extract.outputs.root }}/docs/api/API-05/API05_LINEAGE.json
+            /tmp/api05-accept-control.json
+            /tmp/api05-authoritative.out
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Result
+        shell: bash
+        run: |
+          echo 'AUTHORITATIVE GITHUB ACCEPTANCE: PASS'
+          echo 'API05_RESULT:PASS:validation/api05/authoritative_acceptance_result.json'
