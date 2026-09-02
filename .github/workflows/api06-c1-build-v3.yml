@@ -156,6 +156,22 @@ jobs:
           uv run --frozen ruff format --check $T
           find . -type d -name .ruff_cache -prune -exec rm -rf {} +
 
+      - name: Provision accepted API-04 live regression environment
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        run: |
+          set -euo pipefail
+          source scripts/api04_ci_setup.sh "$PWD"
+          test -s "$API04_BROKER_TLS_BINDINGS"
+          test -s "$API04_BROKER_SECRETS"
+          python3 - "$API04_BROKER_TLS_BINDINGS" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert 'membership-service' in d and d['membership-service'].get('fingerprint')
+          assert all(v.get('fingerprint') for v in d.values())
+          print(f'API06_API04_RUNTIME_BINDINGS:PASS:{len(d)}')
+          PY
+
       - name: Run complete 40-gate API-06 validator
         id: validate
         working-directory: ${{ steps.base.outputs.root }}
