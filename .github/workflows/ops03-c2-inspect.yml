@@ -1,0 +1,35 @@
+name: OPS-03 C2 inspect dependency delta
+on:
+  push:
+    branches: [tmp/ops03-c2-build]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect exact OPS-03 C1 dependency delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/ops
+          mkdir -p /tmp/o2 /tmp/o3
+          git show 'origin/handoff/ops:handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip' > /tmp/o2.zip
+          git show 'origin/handoff/ops:handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C1.zip' > /tmp/o3.zip
+          unzip -q /tmp/o2.zip -d /tmp/o2
+          unzip -q /tmp/o3.zip -d /tmp/o3
+          O2=$(find /tmp/o2 -name pyproject.toml -printf '%h\n' | head -1)
+          O3=$(find /tmp/o3 -name pyproject.toml -printf '%h\n' | head -1)
+          echo '===== PYPROJECT DIFF OPS02 -> OPS03 C1 ====='
+          diff -u "$O2/pyproject.toml" "$O3/pyproject.toml" || true
+          echo '===== UV.LOCK OPS03 QUALIFICATION REFERENCES ====='
+          grep -n -C 3 -E 'epd2-qualification|psutil|httpx|prometheus|cryptography' "$O3/uv.lock" || true
+          echo '===== OPS03 PACKAGE PYPROJECT ====='
+          cat "$O3/packages/python/epd2-qualification/pyproject.toml" || true
+          echo '===== OPS03 CHANGED ROOT CONFIG FILES ====='
+          for p in Makefile pyproject.toml uv.lock package.json package-lock.json; do
+            if ! cmp -s "$O2/$p" "$O3/$p"; then echo "$p"; fi
+          done
