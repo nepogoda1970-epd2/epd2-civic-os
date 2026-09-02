@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags origin handoff/ops
+          git fetch --no-tags origin handoff/ops main
           rm -rf /tmp/o2 /tmp/o3 && mkdir -p /tmp/o2 /tmp/o3
           git show 'origin/handoff/ops:handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip' > /tmp/o2.zip
           git show 'origin/handoff/ops:handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C1.zip' > /tmp/o3.zip
@@ -31,10 +31,30 @@ jobs:
           for p in Makefile pyproject.toml uv.lock package.json package-lock.json; do
             if ! cmp -s "$O2/$p" "$O3/$p"; then echo "$p"; fi
           done
-          echo '===== UV.LOCK OPS03 RELEVANT ====='
-          grep -n -C 3 -E 'epd2-qualification|psutil|prometheus' "$O3/uv.lock" || true
-          echo '===== OPS03 PACKAGE PYPROJECT ====='
-          cat "$O3/packages/python/epd2-qualification/pyproject.toml" || true
           echo '===== PYPROJECT CURRENT MAIN VS C1 ====='
           git show origin/main:pyproject.toml >/tmp/main-pyproject.toml
           diff -u /tmp/main-pyproject.toml "$O3/pyproject.toml" || true
+          echo '===== LOCK PACKAGE SET CURRENT MAIN VS C1 ====='
+          git show origin/main:uv.lock >/tmp/main-uv.lock
+          python3 - /tmp/main-uv.lock "$O3/uv.lock" <<'PY'
+          import sys,tomllib
+          def pkgs(p):
+              d=tomllib.load(open(p,'rb'))
+              return {(x['name'],x.get('version',''),str(x.get('source',''))) for x in d.get('package',[])}
+          m=pkgs(sys.argv[1]); c=pkgs(sys.argv[2])
+          print('MAIN_ONLY_COUNT',len(m-c))
+          for x in sorted(m-c): print('MAIN_ONLY',x)
+          print('C1_ONLY_COUNT',len(c-m))
+          for x in sorted(c-m): print('C1_ONLY',x)
+          PY
+          echo '===== LOCK ROOT PACKAGE CURRENT MAIN VS C1 ====='
+          python3 - /tmp/main-uv.lock "$O3/uv.lock" <<'PY'
+          import sys,tomllib,json
+          def root(p):
+              d=tomllib.load(open(p,'rb'))
+              for x in d.get('package',[]):
+                  if x.get('name')=='epd2-civic-os': return x
+              return {}
+          print('MAIN_ROOT',json.dumps(root(sys.argv[1]),sort_keys=True,default=str))
+          print('C1_ROOT',json.dumps(root(sys.argv[2]),sort_keys=True,default=str))
+          PY
