@@ -76,6 +76,7 @@ jobs:
         working-directory: /tmp/front05-c1
         env:
           NEXT_TELEMETRY_DISABLED: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
           set -euo pipefail
           python3 scripts/run_front05_verification.py --root .
@@ -86,6 +87,7 @@ jobs:
           python3 scripts/validate_front05.py . --output validation/front05/authoritative_preseal_result.json | tee /tmp/front05-validator-before-mutations.log
           python3 scripts/run_front05_mutations.py --root . --output validation/front05/mutation_report.json | tee /tmp/front05-mutations.log
           python3 scripts/build_front05_report.py .
+          find . -type d -name '__pycache__' -prune -exec rm -rf {} +
           python3 scripts/validate_front05.py . --output validation/front05/authoritative_preseal_result.json | tee /tmp/front05-validator-final.log
 
       - name: Bind authoritative result
