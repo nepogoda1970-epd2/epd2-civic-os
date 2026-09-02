@@ -20,6 +20,8 @@ jobs:
       CTRL02_ZIP: handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.2_PRESEAL.zip
       EXPECTED_SHA256: f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e
       EXPECTED_SIZE: '16720456'
+      BASE_MAIN: 217559b7f21c338d6fe8d4e4676082cd3840251c
+      BASE_TREE: eb8a3254c2b8a30feff71318d4377eff2435605c
       CTRL01_RUN: '33619101714'
       CTRL01_HEAD: f4c09fca58d1699bf14b46e077f2972b9cb4b92f
       CTRL01_SHA256: c9c666d01e17fe615f78c2e408169ce4b6434d3b8dec23dfda889b2ce91e3c49
@@ -46,7 +48,7 @@ jobs:
           test "$(sha256sum "$CTRL02_ZIP" | awk '{print $1}')" = "$EXPECTED_SHA256"
           test "$(stat -c '%s' "$CTRL02_ZIP")" = "$EXPECTED_SIZE"
           realpath "$CTRL02_ZIP" > /tmp/ctrl02_archive
-          rm -rf /tmp/ctrl02_accept && mkdir -p /tmp/ctrl02_accept
+          rm -rf /tmp/ctrl02_accept /tmp/ctrl02_runtime && mkdir -p /tmp/ctrl02_accept
           python3 - <<'PY'
           import os,pathlib,zipfile
           zpath=pathlib.Path(os.environ['CTRL02_ZIP']); dest=pathlib.Path('/tmp/ctrl02_accept')
@@ -110,11 +112,24 @@ jobs:
           print('CTRL02_EMBEDDED_46_46_RECONCILIATION_PASS')
           PY
 
+      - name: Reconstruct exact candidate on pinned git baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add --detach /tmp/ctrl02_runtime "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl02_runtime rev-parse HEAD)" = "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl02_runtime rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+          cp -a "$(cat /tmp/ctrl02_root)/." /tmp/ctrl02_runtime/
+          test "$(git -C /tmp/ctrl02_runtime rev-parse HEAD)" = "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl02_runtime rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+          echo /tmp/ctrl02_runtime > /tmp/ctrl02_runtime_root
+          echo CTRL02_PINNED_GIT_RUNTIME_PASS
+
       - name: Frozen dependency reconstruction
         shell: bash
         run: |
           set -euo pipefail
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           uv sync --all-groups --frozen
           echo CTRL02_FROZEN_SYNC_PASS
 
@@ -123,7 +138,7 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVE="$(cat /tmp/ctrl02_archive)"
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           uv run python scripts/verify_ctrl02_package.py "$ARCHIVE" | tee /tmp/package-pre.log
           grep -q "CTRL02_PACKAGE_VERIFY:PASS:$EXPECTED_SHA256:$EXPECTED_SIZE" /tmp/package-pre.log
 
@@ -131,7 +146,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           uv run ruff format --check scripts/ctrl02_validator.py
           uv run ruff check \
@@ -151,7 +166,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           uv run python scripts/ctrl02_mutation_suite.py | tee /tmp/ctrl02-mutations.log
           grep -q 'CTRL02_MUTATIONS:PASS:40/40' /tmp/ctrl02-mutations.log
@@ -163,7 +178,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           npm ci --ignore-scripts
           npm test --if-present
           echo CTRL02_NODE_LOCK_PASS
@@ -173,7 +188,7 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVE="$(cat /tmp/ctrl02_archive)"
-          cd "$(cat /tmp/ctrl02_root)"
+          cd "$(cat /tmp/ctrl02_runtime_root)"
           uv run python scripts/verify_ctrl02_package.py "$ARCHIVE" | tee /tmp/package-post.log
           grep -q "CTRL02_PACKAGE_VERIFY:PASS:$EXPECTED_SHA256:$EXPECTED_SIZE" /tmp/package-post.log
 
@@ -205,6 +220,7 @@ jobs:
             },
             'gates':'46/46 PASS','mutations':'40/40 DETECTED',
             'runtime_quality':'PASS','package_pre':'PASS','package_post':'PASS',
+            'git_baseline_commit':os.environ['BASE_MAIN'],'git_baseline_tree':os.environ['BASE_TREE'],
             'self_acceptance':False,'status':'CANON_PASS',
             'terminal_marker':f"CTRL02_AUTHORITATIVE_RESULT:PASS:{os.environ['EXPECTED_SHA256']}:{os.environ['EXPECTED_SIZE']}"
           }
