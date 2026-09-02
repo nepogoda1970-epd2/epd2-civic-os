@@ -1,0 +1,49 @@
+name: OPS-02 C1 Delta Inspection
+on:
+  push:
+    branches: [handoff/ops]
+    paths: ['.github/workflows/ops02-c1-delta-inspection.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  delta:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip
+      ENTERING_MAIN: 2878c3bbfeb11328adf294a2b59d631b851b43dd
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Exact candidate delta versus entering main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence c1
+          sha256sum "$CANDIDATE" | tee evidence/candidate.sha256
+          unzip -q "$CANDIDATE" -d c1
+          ROOT=c1
+          n=$(find c1 -mindepth 1 -maxdepth 1 -type d | wc -l); f=$(find c1 -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$n" -eq 1 ] && [ "$f" -eq 0 ]; then ROOT=$(find c1 -mindepth 1 -maxdepth 1 -type d | head -n1); fi
+          echo "$ROOT" > evidence/root.txt
+          git worktree add --detach entering "$ENTERING_MAIN"
+          ROOT="$ROOT" python - <<'PY' | tee evidence/c1-vs-entering-delta.json
+          import os,json,hashlib
+          from pathlib import Path
+          root=Path(os.environ['ROOT']); base=Path('entering')
+          def inv(p):
+            d={}
+            for f in p.rglob('*'):
+              if not f.is_file(): continue
+              rel=f.relative_to(p).as_posix()
+              if rel=='.git' or rel.startswith('.git/'): continue
+              d[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+            return d
+          a,b=inv(base),inv(root)
+          added=sorted(set(b)-set(a)); deleted=sorted(set(a)-set(b)); modified=sorted(k for k in set(a)&set(b) if a[k]!=b[k])
+          print(json.dumps({'counts':{'added':len(added),'modified':len(modified),'deleted':len(deleted)},'added':added,'modified':modified,'deleted':deleted},indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops02-c1-delta-${{ github.run_id }}
+          path: evidence/
