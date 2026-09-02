@@ -203,7 +203,6 @@ jobs:
           env -u GITHUB_WORKFLOW_REF uv run --frozen python -m scripts.acceptance run --output "$RUNNER_TEMP/acceptance"
 
       - name: Locate and independently validate current-run evidence
-        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -211,10 +210,9 @@ jobs:
           test -n "$RUN_DIR"
           echo "RUN_DIR=$RUN_DIR" >> "$GITHUB_ENV"
           cd "$SOURCE_ROOT"
-          uv run --frozen python -m scripts.acceptance verify-evidence "$RUN_DIR"
+          uv run --frozen python -m scripts.acceptance verify-evidence --run-dir "$RUN_DIR" --expect-commit "$SOURCE_COMMIT"
 
       - name: Bind harness-produced package content to exact reviewed candidate
-        if: steps.harness.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
@@ -233,7 +231,6 @@ jobs:
           PY
 
       - name: Terminal authoritative marker
-        if: steps.harness.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
