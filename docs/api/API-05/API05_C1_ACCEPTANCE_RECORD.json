@@ -1,0 +1,95 @@
+{
+  "schema": "epd2.api05.c1.acceptance-record/1",
+  "stage": "API-05",
+  "stage_title": "External Integration Boundary",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-02",
+  "previous_state": "ACTIVE / IN DEVELOPMENT / NOT ACCEPTED",
+  "new_state": "ACCEPTED / CLOSED",
+  "api_layer_state": "OPEN until API-06 closes",
+  "candidate": {
+    "filename": "EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip",
+    "role": "C1",
+    "sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70",
+    "size_bytes": 43953160,
+    "sealed_files": 4277,
+    "artifact_id": 9825997172,
+    "artifact_outer_digest": "sha256:79a77551128d95225f2b1a17c20107bfa49c8d40afaac364946e62837ca92dfd",
+    "builder_run_id": 33574093099,
+    "builder_job_id": 100074133148,
+    "builder_provenance_commit": "730107fce97af4ad67234ba2dac98a5137a45912",
+    "self_state": "CANDIDATE_NOT_ACCEPTED",
+    "self_accepted": false
+  },
+  "accepted_predecessor": {
+    "stage": "API-04",
+    "role": "C1",
+    "sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337",
+    "size_bytes": 43880523,
+    "authoritative_run_id": 33569092401,
+    "authoritative_job_id": 100058880258,
+    "state": "ACCEPTED / CLOSED"
+  },
+  "sealed_workflow": {
+    "path": ".github/workflows/api05-accept.yml",
+    "git_blob": "a1582bb4f30335911391db191c37d0687396a3c1",
+    "sha256": "6b2fba5dba895594ac246547ace3b62074b9a80f3c76b3fc3e4a88da8173e106"
+  },
+  "authoritative": {
+    "branch": "tmp/api05-c1-authoritative-accept",
+    "run_id": 33574342011,
+    "job_id": 100074902089,
+    "provenance_commit": "23fb2c034959cc74a006df89d377c5669e2e0398",
+    "conclusion": "SUCCESS",
+    "governed_gates_total": 8,
+    "failed_gates": 0,
+    "environment_blocked_gates": 0,
+    "terminal_marker": "API05_RESULT:PASS:validation/api05/authoritative_acceptance_result.json"
+  },
+  "authoritative_evidence_artifact": {
+    "name": "api05-c1-authoritative-acceptance-33574342011",
+    "id": 9826088503,
+    "size_bytes": 6418,
+    "digest": "sha256:251f429765b86687a3064fa6a7b45bac7b8cca8dfbb11c5aca79c0fec868ec78",
+    "created_at": "2026-09-02T00:13:43Z",
+    "expires_at": "2026-12-01T00:12:13Z"
+  },
+  "builder_evidence_artifact": {
+    "name": "api05-c1-build-evidence-33574093099",
+    "id": 9825997651,
+    "digest": "sha256:64665cdb8698993ac65317904c8f6d8b5104edbbd44a0b5d62f8dd5f79148461"
+  },
+  "measured_evidence": {
+    "governed_gates": "8/8 PASS",
+    "behavioral_suite": "66 passed / 0 failed",
+    "postgresql": "16.15 (Debian 16.15-1.pgdg13+2)",
+    "postgresql_version_num": 160015,
+    "postgresql_suite": "1 passed / 0 failed",
+    "exact_api04_predecessor_files_verified_unchanged": 4237,
+    "locked_dependencies": "PASS",
+    "ruff_check": "PASS",
+    "ruff_format": "PASS",
+    "archive_hygiene": "PASS",
+    "complete_sha256_seal": "PASS",
+    "sealed_acceptance_workflow_equality": "PASS",
+    "dns_connection_pinning": "PASS",
+    "query_bound_endpoint_allowlist": "PASS",
+    "recursive_identifier_isolation": "PASS",
+    "semantic_validation_before_replay_reservation": "PASS",
+    "idempotent_callback_publication_recovery": "PASS",
+    "retry_time_reauthorization": "PASS",
+    "dependency_version_preservation": "PASS"
+  },
+  "candidate_self_state_resolution": "CANDIDATE_NOT_ACCEPTED is the intentional no-self-acceptance safeguard in the sealed bytes; the independent authoritative run and this post-run governance decision supersede it for canonical project state.",
+  "open_blockers": [],
+  "next_permitted_primary_stage": "API-06",
+  "next_stage_state": "NEXT",
+  "nonclaims": [
+    "API layer closure before API-06",
+    "production readiness",
+    "legal activation",
+    "final security readiness",
+    "BSI certification",
+    "Common Criteria / EAL4 certification"
+  ]
+}
