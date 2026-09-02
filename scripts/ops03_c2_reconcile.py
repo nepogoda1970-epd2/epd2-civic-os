@@ -3,18 +3,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import pathlib
 import shutil
 import subprocess
-from typing import Iterable
 
 API06_SHA = "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c"
+# These are current canonical/governance-owned paths. Makefile has concurrent
+# post-OPS02 changes and is not an OPS-03 owned runtime surface, so C2 keeps
+# the current canonical version rather than weakening/overwriting it.
 PROTECTED_PREFIXES = (
     ".github/workflows/",
     "docs/api/API-06/",
     "docs/ctrl/CTRL-01/",
     "docs/roadmap/",
+    "Makefile",
 )
 EXCLUDED_FREEZE_PREFIXES = (
     ".venv/",
@@ -31,12 +33,12 @@ def sha(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def files(root: pathlib.Path) -> dict[str, pathlib.Path]:
-    out: dict[str, pathlib.Path] = {}
-    for p in root.rglob("*"):
-        if p.is_file() and not p.is_symlink():
-            out[p.relative_to(root).as_posix()] = p
-    return out
+def file_map(root: pathlib.Path) -> dict[str, pathlib.Path]:
+    return {
+        p.relative_to(root).as_posix(): p
+        for p in root.rglob("*")
+        if p.is_file() and not p.is_symlink()
+    }
 
 
 def normalized_root(root: pathlib.Path) -> pathlib.Path:
@@ -75,31 +77,24 @@ def merge_text(ours: pathlib.Path, base: pathlib.Path, theirs: pathlib.Path, out
     shutil.copymode(theirs, out)
 
 
-def protected(rel: str) -> bool:
-    return rel.startswith(PROTECTED_PREFIXES)
-
-
 def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathlib.Path) -> dict[str, object]:
-    base = files(base_root)
-    c1 = files(c1_root)
-    ours = files(out_root)
-    changed: list[str] = []
+    base, c1, ours = file_map(base_root), file_map(c1_root), file_map(out_root)
     added: list[str] = []
+    changed: list[str] = []
     deleted: list[str] = []
     merged: list[str] = []
     preserved_newer: list[str] = []
+    protected_delta: list[str] = []
 
-    all_paths = sorted(set(base) | set(c1))
-    for rel in all_paths:
-        if protected(rel):
-            continue
-        b = base.get(rel)
-        t = c1.get(rel)
-        o = ours.get(rel)
+    for rel in sorted(set(base) | set(c1)):
+        b, t, o = base.get(rel), c1.get(rel), ours.get(rel)
         bsha = sha(b) if b else None
         tsha = sha(t) if t else None
         osha = sha(o) if o else None
         if bsha == tsha:
+            continue
+        if rel.startswith(PROTECTED_PREFIXES):
+            protected_delta.append(rel)
             continue
 
         target = out_root / rel
@@ -107,11 +102,7 @@ def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathli
             if o is None:
                 copy_file(t, target)
                 added.append(rel)
-            elif osha == tsha:
-                pass
-            else:
-                # A later line independently added the same path. Fail closed unless text merge is possible
-                # against an empty base.
+            elif osha != tsha:
                 if is_text(o) and is_text(t):
                     empty = out_root / ".ops03-empty-base"
                     empty.write_text("")
@@ -133,14 +124,11 @@ def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathli
             continue
 
         assert b is not None and t is not None
-        if o is None:
-            copy_file(t, target)
-            changed.append(rel)
-        elif osha == bsha:
+        if o is None or osha == bsha:
             copy_file(t, target)
             changed.append(rel)
         elif osha == tsha:
-            pass
+            continue
         elif is_text(o) and is_text(b) and is_text(t):
             merge_text(o, b, t, target)
             merged.append(rel)
@@ -153,13 +141,12 @@ def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathli
         "deleted": deleted,
         "merged": merged,
         "preserved_newer": preserved_newer,
+        "protected_current_canonical": protected_delta,
     }
 
 
 def update_json(path: pathlib.Path, updates: dict[str, object]) -> None:
-    data: dict[str, object] = {}
-    if path.exists():
-        data = json.loads(path.read_text())
+    data: dict[str, object] = json.loads(path.read_text()) if path.exists() else {}
     data.update(updates)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
@@ -167,15 +154,15 @@ def update_json(path: pathlib.Path, updates: dict[str, object]) -> None:
 
 def build_freeze(root: pathlib.Path) -> dict[str, object]:
     mapping: dict[str, str] = {}
-    for rel, p in sorted(files(root).items()):
-        if rel in EXCLUDED_FREEZE_NAMES:
-            continue
-        if rel.startswith(EXCLUDED_FREEZE_PREFIXES):
+    for rel, p in sorted(file_map(root).items()):
+        if rel in EXCLUDED_FREEZE_NAMES or rel.startswith(EXCLUDED_FREEZE_PREFIXES):
             continue
         if "/__pycache__/" in f"/{rel}" or rel.endswith(".pyc"):
             continue
         mapping[rel] = sha(p)
-    canon = json.dumps(dict(sorted(mapping.items())), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    canon = json.dumps(
+        dict(sorted(mapping.items())), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode()
     doc = {
         "schema": "epd2.ops03.freeze-manifest/1",
         "stage": "OPS-03",
@@ -190,7 +177,7 @@ def build_freeze(root: pathlib.Path) -> dict[str, object]:
 
 def write_sha256sums(root: pathlib.Path) -> None:
     rows = []
-    for rel, p in sorted(files(root).items()):
+    for rel, p in sorted(file_map(root).items()):
         if rel == "SHA256SUMS.txt":
             continue
         if rel.startswith(".venv/") or "/__pycache__/" in f"/{rel}" or rel.endswith(".pyc"):
@@ -220,7 +207,6 @@ def main() -> int:
 
     delta = apply_delta(ops02_root, c1_root, out_root)
 
-    # Remove builder/runtime contamination and stale mutable acceptance output.
     for name in (".git", ".venv", ".pytest_cache", ".ruff_cache", ".mypy_cache"):
         shutil.rmtree(out_root / name, ignore_errors=True)
     for p in out_root.rglob("__pycache__"):
@@ -230,12 +216,10 @@ def main() -> int:
         p.unlink(missing_ok=True)
     shutil.rmtree(out_root / "validation" / "ops03", ignore_errors=True)
 
-    # Install the sealed independent acceptance workflow template in candidate-local governance space.
     template = pathlib.Path(args.template)
     template_dst = out_root / "handoff" / "OPS-03" / "templates" / "C2" / "ops03-accept.yml"
     copy_file(template, template_dst)
 
-    # Bind candidate to the current canonical entering baseline.
     baseline = out_root / "docs" / "ops" / "OPS-03" / "OPS03_ENTERING_BASELINE_IDENTITY.json"
     update_json(
         baseline,
@@ -273,7 +257,6 @@ def main() -> int:
         },
     )
 
-    # Explicit reconciliation evidence belongs to OPS-03 and is immutable inside C2.
     evidence = out_root / "docs" / "ops" / "OPS-03" / "OPS03_C2_RECONCILIATION.json"
     evidence.parent.mkdir(parents=True, exist_ok=True)
     evidence.write_text(
