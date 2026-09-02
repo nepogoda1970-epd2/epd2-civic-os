@@ -1,0 +1,11 @@
+{
+  "schema": "epd2.api06.c2.acceptance-control/1",
+  "stage": "API-06",
+  "candidate_role": "C2",
+  "self_acceptance": false,
+  "builder_run_id": 33627382531,
+  "candidate_sha256": "7d5c09e0231f84bf8f4b2e7e3a07696e8469e8e054d0051704fafa47d09d6b88",
+  "candidate_size_bytes": 44020965,
+  "artifact_name": "api06-c2-candidate",
+  "sealed_workflow_sha256": "6ff8c9fe2d4b9f9de6086030417e94cfadab02c3bc7fa90c28643fc84e2f25c9"
+}
