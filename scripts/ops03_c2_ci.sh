@@ -75,8 +75,9 @@ cd "$ROOT"
 uv sync --all-groups --frozen
 sudo apt-get update >/dev/null
 sudo apt-get install --yes postgresql-client >/dev/null
+SERVER_NUM=$(psql -h 127.0.0.1 -U postgres -tAc 'show server_version_num')
+test "$SERVER_NUM" = '160015'
 SERVER=$(psql -h 127.0.0.1 -U postgres -tAc 'show server_version')
-test "$SERVER" = '16.15'
 echo "OPS03_C2_POSTGRES:PASS:$SERVER"
 
 uv run --frozen ruff format --check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
