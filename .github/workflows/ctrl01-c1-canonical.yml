@@ -59,6 +59,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           uv run ruff format --check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
           uv run ruff check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
           uv run mypy services/control-plane-service/src/epd2_control_plane_service
@@ -68,6 +69,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           uv run python scripts/ctrl01_registry_export.py
           uv run python scripts/system_trial_preview_prepare.py
           uv run python scripts/ctrl01_validator.py --record-freeze | tee "$RUNNER_TEMP/ctrl01-record-freeze.log"
@@ -174,6 +176,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           uv sync --all-groups --frozen
           uv run ruff format --check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
           uv run ruff check services/control-plane-service scripts/ctrl01_validator.py scripts/ctrl01_registry_export.py scripts/system_trial_preview_prepare.py
@@ -188,6 +191,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
           mkdir -p "$RUNNER_TEMP/authoritative-evidence"
           CAND_SHA="$(sha256sum "$RUNNER_TEMP/candidate/$CANDIDATE_FILE" | awk '{print $1}')" \
           CAND_SIZE="$(stat -c '%s' "$RUNNER_TEMP/candidate/$CANDIDATE_FILE")" \
