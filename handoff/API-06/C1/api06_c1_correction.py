@@ -48,7 +48,7 @@ s=s[:a]+'''    dump(
         {
             "schema_version": "2",
             "state": "RECONCILED_AGAINST_EXACT_ACCEPTED_API05_C1",
-            "accepted_api05_filename": "EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip",
+            "accepted_api05_filename": "EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1.zip",  # noqa: E501
             "accepted_api05_sha256": baseline["predecessors"]["API-05"]["sha256"],
             "accepted_api05_size_bytes": baseline["predecessors"]["API-05"]["size_bytes"],
             "authoritative_workflow": ".github/workflows/api05-accept.yml",
