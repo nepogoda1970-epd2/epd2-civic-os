@@ -8,7 +8,9 @@ REG = Path("docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md")
 
 rec = json.loads(REC.read_text())
 assert rec["decision"] == "ACCEPTED_CLOSED"
-assert rec["candidate"]["sha256"] == "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70"
+assert (
+    rec["candidate"]["sha256"] == "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70"
+)
 assert rec["candidate"]["size_bytes"] == 43953160
 assert rec["authoritative"]["run_id"] == 33574342011
 assert rec["authoritative"]["job_id"] == 100074902089
@@ -16,7 +18,10 @@ assert rec["authoritative"]["conclusion"] == "SUCCESS"
 assert rec["authoritative"]["governed_gates_total"] == 8
 assert rec["authoritative"]["failed_gates"] == 0
 assert rec["authoritative"]["environment_blocked_gates"] == 0
-assert rec["authoritative"]["terminal_marker"] == "API05_RESULT:PASS:validation/api05/authoritative_acceptance_result.json"
+assert (
+    rec["authoritative"]["terminal_marker"]
+    == "API05_RESULT:PASS:validation/api05/authoritative_acceptance_result.json"
+)
 assert rec["open_blockers"] == []
 assert rec["next_permitted_primary_stage"] == "API-06"
 assert rec["next_stage_state"] == "NEXT"
