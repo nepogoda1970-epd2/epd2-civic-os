@@ -1,0 +1,172 @@
+name: OPS-03 C2 current-canonical build
+on:
+  push:
+    branches: [tmp/ops03-c2-build]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env: { POSTGRES_HOST_AUTH_METHOD: trust }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - name: Bind exact current canonical baseline and input artifacts
+        id: inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main handoff/ops
+          MAIN=$(git rev-parse origin/main); TREE=$(git rev-parse origin/main^{tree})
+          test "$MAIN" = '0470d58dc28a93c0c17128dd361fe758133110de'
+          test "$TREE" = 'f5d4a0b37f175f52eaafa49ca15eff743edcdc6b'
+          test "$(git merge-base --is-ancestor 8db1b85056aad3099fa27e12b29ab9f0a00c4a5b "$MAIN"; echo $?)" = 0
+          jq -e '.decision=="ACCEPTED_CLOSED" and .api_layer_state=="CLOSED" and .candidate.sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c"' <(git show "origin/main:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json")
+          rm -rf "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted"
+          mkdir -p "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted"
+          git archive origin/main | tar -x -C "$RUNNER_TEMP/mainroot"
+          O2='handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip'
+          O3='handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C1.zip'
+          git show "origin/handoff/ops:$O2" > "$RUNNER_TEMP/accepted/$(basename "$O2")"
+          git show "origin/handoff/ops:$O3" > "$RUNNER_TEMP/accepted/$(basename "$O3")"
+          echo 'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125  '"$RUNNER_TEMP/accepted/$(basename "$O2")" | sha256sum -c -
+          test "$(stat -c%s "$RUNNER_TEMP/accepted/$(basename "$O2")")" = 16632939
+          echo 'c4f27e2ead50cab2f1513f4af4b8ae500a16a5658b82add7f51cea03abfc2a16  '"$RUNNER_TEMP/accepted/$(basename "$O3")" | sha256sum -c -
+          test "$(stat -c%s "$RUNNER_TEMP/accepted/$(basename "$O3")")" = 16810302
+          unzip -q "$RUNNER_TEMP/accepted/$(basename "$O2")" -d "$RUNNER_TEMP/ops02"
+          unzip -q "$RUNNER_TEMP/accepted/$(basename "$O3")" -d "$RUNNER_TEMP/ops03c1"
+          echo "main=$MAIN" >> "$GITHUB_OUTPUT"; echo "tree=$TREE" >> "$GITHUB_OUTPUT"
+          echo "EPD2_OPS03_ACCEPTED_ARTIFACTS=$RUNNER_TEMP/accepted" >> "$GITHUB_ENV"
+          echo OPS03_C2_INPUTS:PASS
+      - name: Reconcile exact OPS-03 delta
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/ops03-c2-root"
+          python3 scripts/ops03_c2_reconcile.py --main-root "$RUNNER_TEMP/mainroot" --ops02-root "$RUNNER_TEMP/ops02" --ops03-c1-root "$RUNNER_TEMP/ops03c1" --out-root "$ROOT" --main-commit '${{ steps.inputs.outputs.main }}' --main-tree '${{ steps.inputs.outputs.tree }}' --template handoff/OPS-03/templates/C2/ops03-accept.yml | tee "$RUNNER_TEMP/reconcile.log"
+          grep -q '^OPS03_C2_RECONCILE:PASS:' "$RUNNER_TEMP/reconcile.log"
+          jq -e '.candidate_role=="C2" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and (.declared_blockers|length)==0 and .api_layer_state=="CLOSED"' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
+          jq -e '.base_commit=="${{ steps.inputs.outputs.main }}" and .base_tree=="${{ steps.inputs.outputs.tree }}"' "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json"
+          for P in docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json docs/ctrl/CTRL-02/CTRL02_C1_ACCEPTANCE_RECORD.json; do cmp --silent "$RUNNER_TEMP/mainroot/$P" "$ROOT/$P"; done
+          WF=$(sha256sum "$ROOT/handoff/OPS-03/templates/C2/ops03-accept.yml"|cut -d' ' -f1)
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"; echo "wf_sha=$WF" >> "$GITHUB_OUTPUT"
+      - name: Seal candidate before execution
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.build.outputs.root }}'; ZIP="$RUNNER_TEMP/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip"
+          python3 - "$ROOT" "$ZIP" <<'PY'
+          import pathlib,stat,sys,zipfile
+          r=pathlib.Path(sys.argv[1]); zpath=pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(zpath,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for p in sorted(r.rglob('*')):
+              if not p.is_file() or p.is_symlink(): continue
+              rel=p.relative_to(r).as_posix()
+              if rel.startswith(('.venv/','.git/','.pytest_cache/','.ruff_cache/','.mypy_cache/')) or '/__pycache__/' in f'/{rel}' or rel.endswith('.pyc'): continue
+              i=zipfile.ZipInfo(rel,(2026,9,2,0,0,0)); i.compress_type=zipfile.ZIP_DEFLATED; i.external_attr=(stat.S_IMODE(p.stat().st_mode)&0xffff)<<16
+              z.writestr(i,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          PY
+          SHA=$(sha256sum "$ZIP"|cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP"); test "$SIZE" -gt 1000000
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "OPS03_C2_SEALED:$SHA:$SIZE"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.6.14", enable-cache: false }
+      - name: Locked environment
+        working-directory: ${{ steps.build.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update >/dev/null && sudo apt-get install --yes postgresql-client-16 >/dev/null
+          test "$(psql --version | grep -oE '16\.[0-9]+' | head -1)" = 16.15
+          test "$(psql -h127.0.0.1 -U postgres -tAc 'show server_version')" = 16.15
+      - name: Static and unit qualification
+        working-directory: ${{ steps.build.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --frozen ruff format --check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen ruff check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
+          uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+      - name: Accepted OPS predecessor non-regression
+        working-directory: ${{ steps.build.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --frozen python scripts/validation/validate_ops01.py
+          uv run --frozen python scripts/validation/validate_ops02.py
+      - name: Full 50-gate developer qualification
+        working-directory: ${{ steps.build.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          E="$RUNNER_TEMP/ops03-c2-evidence"; rm -rf "$E"; mkdir -p "$E"
+          uv run --frozen python scripts/validation/validate_ops03.py --repo-root "$PWD" --output-dir "$E" | tee "$RUNNER_TEMP/validator.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/validator.log"
+          jq -e '.verdict=="PASS" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.gates_missing==[] and .result.environment_blocked==[] and .result.skipped==[] and .result.not_run==[] and .result.manual_assume_pass==[] and .result.same_governed_source_bytes_after_execution==true' "$E/ops03_acceptance_result.json"
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0 and (.result.defects|length)==0' "$E/mutation_suite_result.json"
+      - name: Prove sealed source unchanged
+        working-directory: ${{ steps.build.outputs.root }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('.'); f=json.loads((r/'OPS03_FREEZE_MANIFEST.json').read_text()); bad=[]
+          for rel,d in f['files'].items():
+            p=r/rel
+            if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=d: bad.append(rel)
+          assert not bad,bad[:20]
+          print('OPS03_C2_SEALED_SOURCE_UNCHANGED:PASS')
+          PY
+      - name: Package builder evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/ops03-c2-build-evidence"; mkdir -p "$D"; cp "$RUNNER_TEMP/reconcile.log" "$RUNNER_TEMP/validator.log" "$D/"; cp -a "$RUNNER_TEMP/ops03-c2-evidence/." "$D/"
+          cat > "$D/builder_result.json" <<EOF
+          {"schema":"epd2.ops03.c2.builder-result/1","stage":"OPS-03","candidate_role":"C2","result":"PASS","self_acceptance":false,"candidate_sha256":"${{ steps.seal.outputs.sha }}","candidate_size_bytes":${{ steps.seal.outputs.size }},"builder_run_id":${GITHUB_RUN_ID},"builder_commit":"${GITHUB_SHA}","entering_main_commit":"${{ steps.inputs.outputs.main }}","entering_main_tree":"${{ steps.inputs.outputs.tree }}","accepted_api06_candidate_sha256":"3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c","governed_gates":"50/50 PASS","mutations":"24/24 DETECTED","sealed_source_unchanged":true,"sealed_workflow_sha256":"${{ steps.build.outputs.wf_sha }}"}
+          EOF
+          jq -e '.result=="PASS" and .self_acceptance==false' "$D/builder_result.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-sealed-candidate-${{ github.run_id }}
+          path: ${{ steps.seal.outputs.zip }}
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-build-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/ops03-c2-build-evidence/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Terminal result
+        run: echo 'OPS03_C2_BUILD_RESULT:PASS:${{ steps.seal.outputs.sha }}:${{ steps.seal.outputs.size }}:${{ steps.build.outputs.wf_sha }}:${{ steps.inputs.outputs.main }}:${{ steps.inputs.outputs.tree }}'
