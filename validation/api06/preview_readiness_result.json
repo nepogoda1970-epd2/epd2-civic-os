@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "trial handoff prepared but not opened",
+      "id": "G39",
+      "name": "preview-readiness contract",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

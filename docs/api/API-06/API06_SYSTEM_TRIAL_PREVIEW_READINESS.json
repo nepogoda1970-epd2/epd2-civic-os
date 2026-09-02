@@ -1,0 +1,67 @@
+{
+  "health_readiness_endpoints": [
+    "/health/live",
+    "/health/ready"
+  ],
+  "intentionally_unsupported": [
+    "binding-production-vote",
+    "production-provider-activation",
+    "production-break-glass",
+    "legal-activation",
+    "BSI-CC-certification"
+  ],
+  "known_preview_limitations": [
+    "API-06 independent acceptance pending",
+    "API layer not closed",
+    "trial not open"
+  ],
+  "required_databases": [
+    "PostgreSQL-16"
+  ],
+  "required_infra": [
+    "accepted INFRA-01 foundation",
+    "deployable PostgreSQL",
+    "TLS termination",
+    "secret injection"
+  ],
+  "required_ops": [
+    "accepted OPS-01 foundation",
+    "health/readiness",
+    "reset/recovery",
+    "incident/change control"
+  ],
+  "required_services": [
+    "gateway",
+    "member-runtime",
+    "voting-boundary",
+    "auth-runtime",
+    "events-messaging-runtime",
+    "external-integration-runtime"
+  ],
+  "required_trust_material": [
+    "API-02 session trust",
+    "API-03 mTLS trust",
+    "synthetic non-live provider profile using accepted API-05 contract"
+  ],
+  "schema": "epd2.api06.preview-readiness/1",
+  "seed_reset_requirements": [
+    "synthetic fixtures only",
+    "deterministic reset",
+    "no production credentials"
+  ],
+  "state": "HANDOFF_PREPARED_TRIAL_NOT_OPEN",
+  "supported_api_journeys": [
+    "anonymous-public-read",
+    "authentication",
+    "session-use",
+    "member-read",
+    "authorized-mutation",
+    "authorization-refusal",
+    "scope-refusal",
+    "revocation",
+    "S2S-call",
+    "dependency-failure",
+    "idempotent-retry",
+    "audit-verification"
+  ]
+}

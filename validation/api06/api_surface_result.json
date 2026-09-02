@@ -1,0 +1,46 @@
+{
+  "gates": [
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "scripts/api01/inventory_runtime_routes.py",
+          "--check",
+          "--json",
+          "validation/api06/runtime_inventory_raw.json"
+        ],
+        "exit_code": 0,
+        "name": "inventory",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "API01_RUNTIME_INVENTORY:PASS:validation/api06/runtime_inventory_raw.json\n"
+      },
+      "id": "G07",
+      "name": "runtime route inventory",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/api-closure-runtime/tests",
+          "--junitxml=validation/api06/junit-api06.xml"
+        ],
+        "exit_code": 0,
+        "name": "api06",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": ".................................................                        [100%]\n- generated xml file: /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/validation/api06/junit-api06.xml -\n49 passed in 0.70s\n"
+      },
+      "id": "G08",
+      "name": "declared/runtime surface equality",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

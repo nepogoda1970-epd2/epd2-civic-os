@@ -81,16 +81,18 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 **CTRL-01 authoritative acceptance and bounded stage closure (2026-09-02):** exact sealed candidate `EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip`, SHA-256 `07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5`, size `190,099` bytes, passed independent exact-byte GitHub Actions review in `.github/workflows/ctrl01-c1-canonical.yml`, authoritative run `33618683269`, build job `100210392348`, authoritative job `100210596079`, workflow commit `246824a099fd1e7359e79650a7107d7cfa8ddb43`, conclusion `success`. The independent replay verified the complete internal SHA-256 seal, locked dependencies, Ruff, mypy, `178/178` runtime tests, all `22/22` governed CTRL gates, `37/37` mutation attacks detected, and `43` commit-time reauthorization mutations. Terminal marker: `CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099`. The canonical promotion installs the exact sealed C1 payload bytes under `docs/ctrl/CTRL-01`, `scripts`, `services/control-plane-service` and `validation`, and records their hashes in `docs/ctrl/CTRL-01/CTRL01_C1_CANONICAL_INSTALLATION_MANIFEST.json`. The sealed candidate correctly retained `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded module by `docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json`. **CTRL-01 C1 is therefore `ACCEPTED / CLOSED` as a bounded Governed Control Plane stage.** The overall CTRL layer remains **OPEN / NOT CLOSED**. `API-06` remains `NEXT / NOT ACCEPTED`; the API layer remains open and System Trial Preview remains **CHECKPOINT_NOT_OPEN**. No production-readiness, legal-activation, BSI/Common Criteria/EAL4 or final-security claim follows.
 
 
+**API-06 authoritative acceptance, terminal API-stage closure and API-layer closure (2026-09-02):** exact sealed candidate `EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip`, SHA-256 `3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c`, size `44,012,716` bytes, passed independent exact-byte GitHub Actions authoritative review, run `33629147572`, job `100243984921`, provenance commit `2f3f951baa9d392ff7b0decc1137bcc0670c8fd2`, conclusion `success`. The independent runner verified exact candidate identity and complete internal SHA-256 seal, byte-for-byte sealed acceptance-workflow equality, current canonical API-05 closure/API-06 entering governance, locked dependencies, accepted API-04 live regression environment, all `40/40` governed API-06 gates, `30/30` mutations detected, PostgreSQL `16.15`, and unchanged sealed source after execution. Terminal marker: `API06_RESULT:PASS:validation/api06/external_authoritative_result.json`. Authoritative evidence artifact `api06-c1-authoritative-acceptance-33629147572`, artifact ID `9846196028`, digest `sha256:b1c4bb5072a8040b2eaa52a5f31bdfe353b6841228c18e9cd456122d6578bc8c`. The governance decision is recorded in `docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json`, and the exact sealed API-06 payload is installed in canonical `main` with hashes in `docs/api/API-06/API06_C1_CANONICAL_INSTALLATION_MANIFEST.json`. **API-06 is therefore `ACCEPTED / CLOSED`, and the API layer is `CLOSED`.** The sealed candidate's `CANDIDATE_NOT_ACCEPTED` self-state remains the intentional no-self-acceptance safeguard and is superseded only by the independent run plus this post-run Project Owner decision. This releases the API dependency for INFRA/OPS preview-readiness qualification, but does **not** automatically open System Trial Preview, close INFRA/OPS, claim production readiness, legal activation, BSI/CC/EAL4 certification or final security acceptance.
+
 ## 2. Program phase state
 
 | Program layer | Current control state | Execution rule |
 | --- | --- | --- |
 | ARCH PACK-01…35 | `CLOSED` | Do not restart architecture PACK sequencing as current work. |
 | DATA | `CLOSED` | Do not describe DATA as still being finished unless a governed correction explicitly reopens it. |
-| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 NEXT` | API-05 is closed at exact accepted C1. API-06 is the next permitted primary stage but is not active until its governed stage work is opened. API remains open through API-06. |
+| API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 ACCEPTED / CLOSED; API LAYER CLOSED` | Exact API-06 C1 is independently accepted and its exact sealed payload is installed in canonical main. The API layer is CLOSED. This releases the API prerequisite for INFRA/OPS preview-readiness qualification; System Trial Preview still requires an explicit checkpoint-opening decision and does not close INFRA or OPS. |
 | INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA-02 ACCEPTED / CLOSED; INFRA LAYER OPEN` | Exact bounded INFRA-01 C3 and INFRA-02 software supply-chain foundation are accepted/closed. The overall INFRA layer remains open; INFRA-03…INFRA-07 and final INFRA closure remain governed separately and still follow API dependencies. |
-| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 Operational Readiness, Incident, Recovery & Change Control Foundation is accepted/closed at C2. Exact bounded OPS-02 Preview Operations, Deployment, Observability & Recovery Readiness is accepted/closed at C3. The overall OPS layer remains open; this transition does not open System Trial Preview and final OPS closure still follows API/INFRA dependencies and the governed system-trial path. |
-| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1 Governed Control Plane is accepted/closed and its exact sealed payload is installed in canonical main. The overall CTRL layer remains open; API-06 remains NEXT / NOT ACCEPTED and System Trial Preview remains CHECKPOINT_NOT_OPEN. Later CTRL work and whole-layer closure remain separately governed. |
+| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN; OPS-03 QUALIFICATION ELIGIBLE` | Exact bounded OPS-01 C2 and OPS-02 C3 are accepted/closed. API-06/API-layer closure has released the final-API-runtime prerequisite for OPS-03 qualification. The overall OPS layer remains open; OPS-03 still requires its own exact candidate, governed PASS and independent acceptance, and System Trial Preview is not opened by this API transition. |
+| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1 Governed Control Plane is accepted/closed and its exact sealed payload is installed in canonical main. The overall CTRL layer remains open. API-06/API are now closed, but System Trial Preview remains separately checkpoint-governed and later CTRL work/whole-layer closure remain separately governed. |
 | FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE; FRONT-03 C1 ACCEPTED / CLOSED; FRONT-04 C2 ACCEPTED / CLOSED; NOT_STARTED_FINAL` | Exact FRONT-02 C2.1, bounded FRONT-03 C1, and bounded FRONT-04 C2 are accepted governed frontend baselines. The overall FRONT layer remains open; final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |
 | SEC | `NOT_STARTED_FINAL` | Threat/adversarial preparation may proceed; final challenge targets the integrated system. |
 | BSI / CC readiness | `PREPARATORY PARALLEL WORK / NOT CERTIFIED` | P0 feasibility, TOE/ST preparation and assurance planning may proceed in parallel. This opens no SEC stage, changes no implementation-stage status and creates no certification claim. Hard P0 identity freeze applies. |
@@ -111,7 +113,9 @@ API-02 = ACCEPTED / CLOSED
 API-03 = ACCEPTED / CLOSED
 API-04 = ACCEPTED / CLOSED
 API-05 = ACCEPTED / CLOSED
-API-06 = NEXT
+API-06 = ACCEPTED / CLOSED
+API = CLOSED
+NEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM
 ```
 
 ### 2.1 Governed execution path with intermediate system trial
@@ -125,7 +129,7 @@ DATA CLOSED
   → API-03 CLOSED
   → API-04 CLOSED
   → API-05 CLOSED
-  → API-06 NEXT
+  → API-06 CLOSED
   → API CLOSED
   → INFRA/OPS PREVIEW-READINESS MINIMUM
   → SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK
@@ -158,7 +162,7 @@ This does not prohibit already-existing or corrective parallel PILOT work or the
 
 ## 3. Parallel work currently permitted
 
-While `API-06 = NEXT`, the following parallel work may proceed without treating API-06 as active or accepted. API-05 is accepted/closed at exact C1 and is the governed predecessor for API-06:
+With `API = CLOSED`, parallel work may continue while the explicit INFRA/OPS preview-readiness minimum is qualified. API-06 is accepted/closed at exact C1; no parallel line may treat API closure as automatic INFRA/OPS/CTRL/FRONT closure or as System Trial Preview opening:
 
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
@@ -498,19 +502,19 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 ## 9. Immediate execution decision
 
-**Primary implementation:** `API-06 = NEXT` (`API-01 = ACCEPTED / CLOSED`; `API-02 = ACCEPTED / CLOSED`; `API-03 = ACCEPTED / CLOSED`; `API-04 = ACCEPTED / CLOSED`; `API-05 = ACCEPTED / CLOSED`). API-06 is the next permitted primary API stage; it is not active or accepted until its governed stage work is opened and independently accepted.
+**Primary implementation:** `API = CLOSED` through exact independently accepted `API-06 C1`. The current governed checkpoint is `INFRA/OPS PREVIEW-READINESS MINIMUM`; OPS-03 qualification may now bind the exact accepted API-06 runtime.
 
-**Governed forward path:** open and complete API-06 from the exact accepted API-05 C1 predecessor, seal and independently verify API-06, and close API only after API-06 authoritative acceptance. Then establish the explicit INFRA/OPS preview-readiness minimum and open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
+**Governed forward path:** qualify the explicit INFRA/OPS preview-readiness minimum against the exact accepted API runtime and then, only by a separate checkpoint-opening decision, open `SYSTEM TRIAL PREVIEW — FIRST END-TO-END PROBNIK`. The preview is an early usable-system checkpoint only and cannot close INFRA or OPS. After preview findings are handled through owning-layer lineage, complete INFRA → OPS → CTRL → FRONT, establish `FINAL INTEGRATION`, and run final SEC against that exact integrated baseline before the final readiness decision.
 
 **Integration scheduling:** existing INTEGRATION-01 lineage is preserved, but no automatic new INTEGRATION-01 candidate is required after each API stage. Full authoritative integration is normally deferred until FRONT is closed; earlier targeted integration work is permitted only when a concrete compatibility blocker or acceptance dependency requires it.
 
-**Parallel OPS action:** bounded `OPS-01 — Operational Readiness, Incident, Recovery & Change Control Foundation` is `ACCEPTED / CLOSED` at exact C2 SHA-256 `39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27`. This accepted foundation may be reused by later preview/final OPS work, but it does not close the overall OPS layer, does not authorize production operation, and does not alter `API-06 = NEXT`.
+**Parallel OPS action:** bounded `OPS-01 — Operational Readiness, Incident, Recovery & Change Control Foundation` is `ACCEPTED / CLOSED` at exact C2 SHA-256 `39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27`. This accepted foundation may be reused by later preview/final OPS work, but it does not close the overall OPS layer or authorize production operation. API is now closed; OPS-03 qualification must independently bind the exact accepted API-06 identity.
 
-**Parallel INFRA action:** bounded `INFRA-02 — CI/CD & Software Supply-Chain Integrity` is `ACCEPTED / CLOSED` at exact SHA-256 `d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c`, authoritative run `33574647511`. Its accepted build-once, SBOM/provenance, vulnerability/history-secret, promotion-by-digest, drift-detection and release-integrity foundation may be reused by later INFRA work. This does not close the overall INFRA layer, open or accept INFRA-03…INFRA-07, select a hosting provider, or change `API-06 = NEXT`.
+**Parallel INFRA action:** bounded `INFRA-02 — CI/CD & Software Supply-Chain Integrity` is `ACCEPTED / CLOSED` at exact SHA-256 `d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c`, authoritative run `33574647511`. Its accepted build-once, SBOM/provenance, vulnerability/history-secret, promotion-by-digest, drift-detection and release-integrity foundation may be reused by later INFRA work. This does not close the overall INFRA layer, open or accept INFRA-03…INFRA-07, or select a hosting provider. API is now closed; INFRA remains separately governed.
 
-**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. API-06 is now the next permitted primary API stage; this FRONT work does not constitute FRONT acceptance or final closure.
+**Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. API is now closed; this FRONT work still does not constitute FRONT acceptance or final closure and remains downstream of the governed preview/integration path.
 
-**Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage changes `API-06 = NEXT`, claims production readiness/legal activation, or forces immediate INTEGRATION-01 advancement.
+**Parallel PILOT action:** PILOT-04 C9 is `ACCEPTED / FROZEN` and PILOT-05 C3 is `ACCEPTED / ESTABLISHED`; neither requires another acceptance rerun. PILOT-06 remains `NOT_STARTED_AS_GOVERNED_STAGE` until it is explicitly opened for governed pilot findings/corrections. Neither accepted PILOT stage claims production readiness/legal activation or forces immediate INTEGRATION-01 advancement; API closure does not alter their own governed acceptance lineage.
 
 ---
 

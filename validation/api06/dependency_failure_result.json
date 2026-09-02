@@ -1,0 +1,33 @@
+{
+  "gates": [
+    {
+      "evidence": "safe common error model tests",
+      "id": "G24",
+      "name": "error-model safety",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/external-integration-runtime/tests",
+          "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+        ],
+        "exit_code": 0,
+        "name": "api05",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+      },
+      "id": "G25",
+      "name": "fail-closed dependency behavior",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

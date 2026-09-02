@@ -1,0 +1,49 @@
+{
+  "main_commit": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "main_tree": "8f5207684b6282a9d89ed4a78444eee02d94cf01",
+  "master_register_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+  "mode": "CANDIDATE_NOT_ACCEPTED",
+  "predecessors": {
+    "API-01": {
+      "sha256": "cea2fb0e23ee174e802ec1899cf62e570e5c8659a0f31c7e6c3c3955bffa3d27",
+      "state": "ACCEPTED_CLOSED"
+    },
+    "API-02": {
+      "sha256": "9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9",
+      "state": "ACCEPTED_CLOSED"
+    },
+    "API-03": {
+      "sha256": "5fb769cd387c7bcf10b9783d05fce44066985c7408a015cb4c670419ce316b55",
+      "state": "ACCEPTED_CLOSED"
+    },
+    "API-04": {
+      "authoritative_job_id": 100058880258,
+      "authoritative_run_id": 33569092401,
+      "sha256": "8356ba6f1b0e254f9aa215b4873a1e38f44a47fdac2ac859ff62bd95db999337",
+      "size_bytes": 43880523,
+      "state": "ACCEPTED_CLOSED"
+    },
+    "API-05": {
+      "authoritative_job_id": 100074902089,
+      "authoritative_run_id": 33574342011,
+      "builder_job_id": 100074133148,
+      "builder_run_id": 33574093099,
+      "evidence_artifact_id": 9826088503,
+      "sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70",
+      "size_bytes": 43953160,
+      "state": "ACCEPTED_CLOSED"
+    },
+    "INFRA-01": {
+      "sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "state": "ACCEPTED_CLOSED"
+    },
+    "OPS-01": {
+      "sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "state": "ACCEPTED_CLOSED"
+    }
+  },
+  "program_control_register_sha256": "880cd61181ee01cc3d5ce7a63dab0d16de28e5a8dd2fa7efd77e62a14e9100b6",
+  "repository": "https://github.com/nepogoda1970-epd2/epd2-civic-os",
+  "schema_version": "1",
+  "stage": "API-06"
+}

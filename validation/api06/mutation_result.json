@@ -1,0 +1,160 @@
+{
+  "detected": 30,
+  "missed": 0,
+  "mutation_count": 30,
+  "mutations": [
+    {
+      "id": "M01_UNDOCUMENTED_ROUTE",
+      "reason": "undocumented route",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M02_ROUTE_WITHOUT_AUTH",
+      "reason": "route auth",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M03_MUTATION_WITHOUT_AUTHORIZATION",
+      "reason": "mutation authorization",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M04_WEAKENED_ROLE",
+      "reason": "weakened role",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M05_WRONG_REGION_ACCEPTED",
+      "reason": "regional scope",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M06_REVOKED_AUTHORITY_ACCEPTED",
+      "reason": "revocation",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M07_COMMIT_REAUTH_REMOVED",
+      "reason": "commit reauthorization",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M08_S2S_WRONG_AUDIENCE",
+      "reason": "S2S audience",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M09_REPLAY_ACCEPTED",
+      "reason": "replay",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M10_ANONYMOUS_INTERNAL_TRUST",
+      "reason": "anonymous internal",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M11_MEMBER_ID_IN_VOTING",
+      "reason": "voting member identifier",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M12_GLOBAL_CORRELATION_IN_VOTING",
+      "reason": "voting correlation",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M13_PII_ADDED_TO_RESPONSE",
+      "reason": "response PII",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M14_SECRET_ADDED_TO_LOG",
+      "reason": "secret log",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M15_STACK_TRACE_EXPOSED",
+      "reason": "stack trace",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M16_HIDDEN_PRIVILEGED_FIELD",
+      "reason": "mass assignment",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M17_DUPLICATE_MUTATION",
+      "reason": "duplicate state",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M18_PARTIAL_SUCCESS_REPORTED_SUCCESS",
+      "reason": "partial success",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M19_PROVIDER_FAIL_REPORTED_SUCCESS",
+      "reason": "provider failure",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M20_DB_FAIL_REPORTED_SUCCESS",
+      "reason": "database failure",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M21_UNBOUNDED_PAGE",
+      "reason": "page bound",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M22_OVERSIZED_BODY_ACCEPTED",
+      "reason": "body bound",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M23_CLOCK_ROLLBACK_REVIVAL",
+      "reason": "clock rollback",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M24_AUDIT_ENTRY_OMITTED",
+      "reason": "audit coverage",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M25_OPENAPI_MISMATCH",
+      "reason": "OpenAPI drift",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M26_MIGRATION_DATA_LOSS",
+      "reason": "migration loss",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M27_FAKE_PREVIEW_SUPPORTED",
+      "reason": "fake preview",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M28_BLOCKER_HIDDEN",
+      "reason": "hidden blockers",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M29_CANDIDATE_CHANGED_AFTER_TEST",
+      "reason": "changed after testing",
+      "result": "DETECTED"
+    },
+    {
+      "id": "M30_PACKAGE_DIFFERS_FROM_FREEZE",
+      "reason": "package differs",
+      "result": "DETECTED"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.mutations/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

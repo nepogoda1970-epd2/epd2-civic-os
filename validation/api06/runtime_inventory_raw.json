@@ -1,0 +1,17 @@
+{
+  "checker": "scripts/api01/inventory_runtime_routes.py",
+  "applications_present": [
+    "member-runtime",
+    "voting-boundary"
+  ],
+  "total_runtime_routes": 91,
+  "result": "PASS",
+  "committed_inventory_current": true,
+  "registry_routes": 91,
+  "runtime_only": [],
+  "registry_only": [],
+  "per_application": {
+    "member-runtime": 79,
+    "voting-boundary": 12
+  }
+}

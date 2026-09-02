@@ -1,0 +1,692 @@
+{
+  "claims": {
+    "accepted": false,
+    "api_closed": false,
+    "implementation_complete": true,
+    "legally_activated": false,
+    "preseal_ready": true,
+    "production_ready": false,
+    "security_certified": false,
+    "system_trial_ready": false
+  },
+  "environment_blocked_runs": [],
+  "failed_gates": [],
+  "gate_count": 40,
+  "gates": [
+    {
+      "evidence": "API06_ENTERING_BASELINE_IDENTITY.json",
+      "id": "G01",
+      "name": "exact entering baseline",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "API06_CURRENT_MAIN_COMMIT": "616c944248e3afe109368aebc76c416ee75e60a3",
+        "API06_CURRENT_MASTER_SHA256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+        "API06_CURRENT_PCR_SHA256": "880cd61181ee01cc3d5ce7a63dab0d16de28e5a8dd2fa7efd77e62a14e9100b6"
+      },
+      "id": "G02",
+      "name": "governance freshness",
+      "result": "PASS"
+    },
+    {
+      "evidence": "accepted exact API-01 through API-05 predecessor identities",
+      "id": "G03",
+      "name": "accepted predecessor identities",
+      "result": "PASS"
+    },
+    {
+      "evidence": "exact accepted API-05 C1 reconciliation; all 40 gates rerun",
+      "id": "G04",
+      "name": "API-05 reconciliation",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "packaging_exclusions_declared": true,
+        "result": "PASS",
+        "transient_build_outputs_excluded_from_freeze": []
+      },
+      "id": "G05",
+      "name": "source/archive hygiene",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "hits": [],
+        "result": "PASS"
+      },
+      "id": "G06",
+      "name": "secret leakage",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "scripts/api01/inventory_runtime_routes.py",
+          "--check",
+          "--json",
+          "validation/api06/runtime_inventory_raw.json"
+        ],
+        "exit_code": 0,
+        "name": "inventory",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "API01_RUNTIME_INVENTORY:PASS:validation/api06/runtime_inventory_raw.json\n"
+      },
+      "id": "G07",
+      "name": "runtime route inventory",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/api-closure-runtime/tests",
+          "--junitxml=validation/api06/junit-api06.xml"
+        ],
+        "exit_code": 0,
+        "name": "api06",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": ".................................................                        [100%]\n- generated xml file: /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/validation/api06/junit-api06.xml -\n49 passed in 0.70s\n"
+      },
+      "id": "G08",
+      "name": "declared/runtime surface equality",
+      "result": "PASS"
+    },
+    {
+      "evidence": "strict input/schema tests",
+      "id": "G09",
+      "name": "request schema validation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "surface and safe-error contract tests",
+      "id": "G10",
+      "name": "response contract validation",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "packages/python/epd2-runtime/tests/test_api02_authentication_runtime.py"
+        ],
+        "exit_code": 0,
+        "name": "api02",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": ".....................                                                    [100%]\n=============================== warnings summary ===============================\npackages/python/epd2-runtime/tests/test_api02_authentication_runtime.py::test_a_completed_passkey_ceremony_establishes_a_session_over_the_transport\n  /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n21 passed, 1 warning in 10.24s\n"
+      },
+      "id": "G11",
+      "name": "authentication coverage",
+      "result": "PASS"
+    },
+    {
+      "evidence": "60-route authorization matrix + guard tests",
+      "id": "G12",
+      "name": "authorization coverage",
+      "result": "PASS"
+    },
+    {
+      "evidence": "negative authority/scope/mass-assignment/header cases",
+      "id": "G13",
+      "name": "authorization negative cases",
+      "result": "PASS"
+    },
+    {
+      "evidence": "generation and revocation reauthorization tests",
+      "id": "G14",
+      "name": "commit-time reauthorization",
+      "result": "PASS"
+    },
+    {
+      "evidence": "revocation/session invalidation tests",
+      "id": "G15",
+      "name": "revocation propagation",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G16",
+      "name": "S2S authentication",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G17",
+      "name": "S2S authorization",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G18",
+      "name": "S2S replay/refusal",
+      "result": "PASS"
+    },
+    {
+      "evidence": "organization and regional isolation tests",
+      "id": "G19",
+      "name": "regional/scope isolation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "91-route exposure matrix",
+      "id": "G20",
+      "name": "privacy exposure",
+      "result": "PASS"
+    },
+    {
+      "evidence": "bounded disclosure and enumeration policy",
+      "id": "G21",
+      "name": "enumeration/small-cohort safety",
+      "result": "PASS"
+    },
+    {
+      "evidence": "voting field isolation test",
+      "id": "G22",
+      "name": "voting identity isolation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "voting correlation/telemetry invariant",
+      "id": "G23",
+      "name": "voting telemetry isolation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "safe common error model tests",
+      "id": "G24",
+      "name": "error-model safety",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/external-integration-runtime/tests",
+          "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+        ],
+        "exit_code": 0,
+        "name": "api05",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+      },
+      "id": "G25",
+      "name": "fail-closed dependency behavior",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/events-messaging-runtime/tests/unit"
+        ],
+        "exit_code": 0,
+        "name": "api04",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+      },
+      "id": "G26",
+      "name": "transaction semantics",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/external-integration-runtime/tests",
+          "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+        ],
+        "exit_code": 0,
+        "name": "api05",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+      },
+      "id": "G27",
+      "name": "partial-failure semantics",
+      "result": "PASS"
+    },
+    {
+      "evidence": "payload-bound idempotency tests",
+      "id": "G28",
+      "name": "idempotency",
+      "result": "PASS"
+    },
+    {
+      "evidence": "20-way concurrent duplicate mutation test",
+      "id": "G29",
+      "name": "concurrency",
+      "result": "PASS"
+    },
+    {
+      "evidence": "100% consequential audit contract",
+      "id": "G30",
+      "name": "audit completeness",
+      "result": "PASS"
+    },
+    {
+      "evidence": "monotonic rollback/expiry tests",
+      "id": "G31",
+      "name": "authoritative-time semantics",
+      "result": "PASS"
+    },
+    {
+      "evidence": "registry abuse classes and bounded behavior",
+      "id": "G32",
+      "name": "abuse/rate controls",
+      "result": "PASS"
+    },
+    {
+      "evidence": "body/depth/type/page limits",
+      "id": "G33",
+      "name": "resource bounds",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/external-integration-runtime/tests/test_postgresql.py"
+        ],
+        "exit_code": 0,
+        "name": "postgres",
+        "result": "PASS",
+        "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+        "server_version_num": 160015,
+        "stderr_tail": "",
+        "stdout_tail": ".                                                                        [100%]\n1 passed in 0.78s\n"
+      },
+      "id": "G34",
+      "name": "PostgreSQL live runtime",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "api04": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/events-messaging-runtime/tests/unit"
+          ],
+          "exit_code": 0,
+          "name": "api04",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+        },
+        "postgres": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/external-integration-runtime/tests/test_postgresql.py"
+          ],
+          "exit_code": 0,
+          "name": "postgres",
+          "result": "PASS",
+          "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+          "server_version_num": 160015,
+          "stderr_tail": "",
+          "stdout_tail": ".                                                                        [100%]\n1 passed in 0.78s\n"
+        }
+      },
+      "id": "G35",
+      "name": "migration integrity",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "api02": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "packages/python/epd2-runtime/tests/test_api02_authentication_runtime.py"
+          ],
+          "exit_code": 0,
+          "name": "api02",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": ".....................                                                    [100%]\n=============================== warnings summary ===============================\npackages/python/epd2-runtime/tests/test_api02_authentication_runtime.py::test_a_completed_passkey_ceremony_establishes_a_session_over_the_transport\n  /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n21 passed, 1 warning in 10.24s\n"
+        },
+        "api03": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/api03/test_s2s_r2.py",
+            "tests/api03/test_s2s_r3.py"
+          ],
+          "exit_code": 0,
+          "name": "api03",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+        },
+        "api04": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/events-messaging-runtime/tests/unit"
+          ],
+          "exit_code": 0,
+          "name": "api04",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+        },
+        "api05": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/external-integration-runtime/tests",
+            "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+          ],
+          "exit_code": 0,
+          "name": "api05",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+        }
+      },
+      "id": "G36",
+      "name": "API regression journeys",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "scripts/api06/run_api06_mutations.py",
+          "--out",
+          "validation/api06/mutation_result.json"
+        ],
+        "exit_code": 0,
+        "name": "mutations",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "API06_MUTATIONS:PASS:30/30\n"
+      },
+      "id": "G37",
+      "name": "mutation/adversarial suite",
+      "result": "PASS"
+    },
+    {
+      "evidence": "FIR disposition + single truthful API-06 acceptance blocker",
+      "id": "G38",
+      "name": "FIR/gap closure",
+      "result": "PASS"
+    },
+    {
+      "evidence": "trial handoff prepared but not opened",
+      "id": "G39",
+      "name": "preview-readiness contract",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "scripts/api06/freeze_rehearsal.py"
+        ],
+        "exit_code": 0,
+        "name": "freeze",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "API06_FREEZE_REHEARSAL:PASS:4336:47f56fdb4dc7999ca2869ae58318a21746e85d3ae6983e30badf6765e7363682\n"
+      },
+      "id": "G40",
+      "name": "freeze/package byte identity",
+      "result": "PASS"
+    }
+  ],
+  "generated_at": "2026-09-02T12:12:36.775767+00:00",
+  "passed_gates": 40,
+  "result": "PASS",
+  "runs": {
+    "api02": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "packages/python/epd2-runtime/tests/test_api02_authentication_runtime.py"
+      ],
+      "exit_code": 0,
+      "name": "api02",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": ".....................                                                    [100%]\n=============================== warnings summary ===============================\npackages/python/epd2-runtime/tests/test_api02_authentication_runtime.py::test_a_completed_passkey_ceremony_establishes_a_session_over_the_transport\n  /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.\n    from starlette.testclient import TestClient as TestClient  # noqa\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n21 passed, 1 warning in 10.24s\n"
+    },
+    "api03": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/api03/test_s2s_r2.py",
+        "tests/api03/test_s2s_r3.py"
+      ],
+      "exit_code": 0,
+      "name": "api03",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+    },
+    "api04": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "services/events-messaging-runtime/tests/unit"
+      ],
+      "exit_code": 0,
+      "name": "api04",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+    },
+    "api05": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "services/external-integration-runtime/tests",
+        "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+      ],
+      "exit_code": 0,
+      "name": "api05",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+    },
+    "api06": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "services/api-closure-runtime/tests",
+        "--junitxml=validation/api06/junit-api06.xml"
+      ],
+      "exit_code": 0,
+      "name": "api06",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": ".................................................                        [100%]\n- generated xml file: /home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/validation/api06/junit-api06.xml -\n49 passed in 0.70s\n"
+    },
+    "artifact_build": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "scripts/api06/build_api06_artifacts.py"
+      ],
+      "exit_code": 0,
+      "name": "artifact_build",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "API06_ARTIFACT_BUILD:PASS:91:60\n"
+    },
+    "freeze": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "scripts/api06/freeze_rehearsal.py"
+      ],
+      "exit_code": 0,
+      "name": "freeze",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "API06_FREEZE_REHEARSAL:PASS:4336:47f56fdb4dc7999ca2869ae58318a21746e85d3ae6983e30badf6765e7363682\n"
+    },
+    "inventory": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "scripts/api01/inventory_runtime_routes.py",
+        "--check",
+        "--json",
+        "validation/api06/runtime_inventory_raw.json"
+      ],
+      "exit_code": 0,
+      "name": "inventory",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "API01_RUNTIME_INVENTORY:PASS:validation/api06/runtime_inventory_raw.json\n"
+    },
+    "lock": {
+      "command": [
+        "uv",
+        "lock",
+        "--check"
+      ],
+      "exit_code": 0,
+      "name": "lock",
+      "result": "PASS",
+      "stderr_tail": "Resolved 140 packages in 4ms\n",
+      "stdout_tail": ""
+    },
+    "mutations": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "scripts/api06/run_api06_mutations.py",
+        "--out",
+        "validation/api06/mutation_result.json"
+      ],
+      "exit_code": 0,
+      "name": "mutations",
+      "result": "PASS",
+      "stderr_tail": "",
+      "stdout_tail": "API06_MUTATIONS:PASS:30/30\n"
+    },
+    "postgres": {
+      "command": [
+        "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "services/external-integration-runtime/tests/test_postgresql.py"
+      ],
+      "exit_code": 0,
+      "name": "postgres",
+      "result": "PASS",
+      "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+      "server_version_num": 160015,
+      "stderr_tail": "",
+      "stdout_tail": ".                                                                        [100%]\n1 passed in 0.78s\n"
+    },
+    "ruff": {
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "ruff",
+        "check",
+        "services/api-closure-runtime",
+        "scripts/api06",
+        "scripts/validation/validate_api06.py"
+      ],
+      "exit_code": 0,
+      "name": "ruff",
+      "result": "PASS",
+      "stderr_tail": "Uninstalled 3 packages in 2ms\nInstalled 3 packages in 4ms\n",
+      "stdout_tail": "All checks passed!\n"
+    }
+  },
+  "schema": "epd2.api06.acceptance/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

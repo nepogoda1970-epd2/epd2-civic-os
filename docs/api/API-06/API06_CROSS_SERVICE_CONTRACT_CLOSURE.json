@@ -1,0 +1,46 @@
+{
+  "anonymous_internal_trust": false,
+  "calls": [
+    {
+      "audit_semantics": "consequential-only",
+      "authentication": "API-02 session",
+      "authorization": "bounded authority",
+      "callee": "member-runtime",
+      "caller": "api-gateway",
+      "contract": "API-01 governed route registry",
+      "credential_class": "human-session",
+      "failure_semantics": "fail-closed",
+      "idempotency": "registry",
+      "retry_policy": "idempotency-aware",
+      "timeout": "bounded"
+    },
+    {
+      "audit_semantics": "reason-coded",
+      "authentication": "API-03 mTLS",
+      "authorization": "service audience+scope",
+      "callee": "domain-consumer",
+      "caller": "events-messaging-runtime",
+      "contract": "API-04 canonical event",
+      "credential_class": "workload",
+      "failure_semantics": "dead-letter/refusal",
+      "idempotency": "durable-deduplication",
+      "retry_policy": "tiered",
+      "timeout": "bounded"
+    },
+    {
+      "audit_semantics": "redacted",
+      "authentication": "profile-bound",
+      "authorization": "purpose+schema+data allowlist",
+      "callee": "provider",
+      "caller": "external-integration-runtime",
+      "contract": "API-05 provider profile",
+      "credential_class": "provider-secret",
+      "failure_semantics": "non-authoritative claim",
+      "idempotency": "provider-scoped",
+      "retry_policy": "bounded-jitter",
+      "timeout": "bounded"
+    }
+  ],
+  "localhost_trust": false,
+  "schema": "epd2.api06.cross-service/1"
+}

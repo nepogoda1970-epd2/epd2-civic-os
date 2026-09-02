@@ -1,0 +1,1146 @@
+{
+  "mutation_count": 60,
+  "rows": [
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/recovery/{recovery_id}/approval",
+      "route_id": "admin:POST:/admin/v1/identity/recovery/{recovery_id}/approval",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/recovery/{recovery_id}/completion",
+      "route_id": "admin:POST:/admin/v1/identity/recovery/{recovery_id}/completion",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/recovery/{recovery_id}/rejection",
+      "route_id": "admin:POST:/admin/v1/identity/recovery/{recovery_id}/rejection",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/recovery/{recovery_id}/review",
+      "route_id": "admin:POST:/admin/v1/identity/recovery/{recovery_id}/review",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/session",
+      "route_id": "admin:DELETE:/admin/v1/identity/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/session/challenge",
+      "route_id": "admin:POST:/admin/v1/identity/session/challenge",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/admin/v1/identity/session/completion",
+      "route_id": "admin:POST:/admin/v1/identity/session/completion",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies",
+      "route_id": "governance:POST:/api/v1/assemblies",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies/{assembly_id}/agenda",
+      "route_id": "governance:POST:/api/v1/assemblies/{assembly_id}/agenda",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies/{assembly_id}/closure",
+      "route_id": "governance:POST:/api/v1/assemblies/{assembly_id}/closure",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies/{assembly_id}/opening",
+      "route_id": "governance:POST:/api/v1/assemblies/{assembly_id}/opening",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies/{assembly_id}/schedule",
+      "route_id": "governance:POST:/api/v1/assemblies/{assembly_id}/schedule",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/communications",
+      "route_id": "governance:POST:/api/v1/communications",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/communications/{communication_id}/publication",
+      "route_id": "governance:POST:/api/v1/communications/{communication_id}/publication",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/communications/{communication_id}/withdrawal",
+      "route_id": "governance:POST:/api/v1/communications/{communication_id}/withdrawal",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/initiatives/{initiative_id}/closure",
+      "route_id": "governance:POST:/api/v1/initiatives/{initiative_id}/closure",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/initiatives/{initiative_id}/deliberation",
+      "route_id": "governance:POST:/api/v1/initiatives/{initiative_id}/deliberation",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/initiatives/{initiative_id}/pilot-election",
+      "route_id": "governance:POST:/api/v1/initiatives/{initiative_id}/pilot-election",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/motions/{motion_id}/admission",
+      "route_id": "governance:POST:/api/v1/motions/{motion_id}/admission",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/motions/{motion_id}/discussion",
+      "route_id": "governance:POST:/api/v1/motions/{motion_id}/discussion",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/motions/{motion_id}/rejection",
+      "route_id": "governance:POST:/api/v1/motions/{motion_id}/rejection",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/citizen-office/api/v1/citizen-office/submissions/{submission_id}/acknowledgement",
+      "route_id": "governance:POST:/citizen-office/api/v1/citizen-office/submissions/{submission_id}/acknowledgement",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/citizen-office/api/v1/citizen-office/submissions/{submission_id}/classification",
+      "route_id": "governance:POST:/citizen-office/api/v1/citizen-office/submissions/{submission_id}/classification",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/internal/v1/elections/{election_id}",
+      "route_id": "internal:POST:/internal/v1/elections/{election_id}",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/internal/v1/elections/{election_id}/closure",
+      "route_id": "internal:POST:/internal/v1/elections/{election_id}/closure",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/internal/v1/elections/{election_id}/handoffs",
+      "route_id": "internal:POST:/internal/v1/elections/{election_id}/handoffs",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/assemblies/{assembly_id}/motions",
+      "route_id": "member:POST:/api/v1/assemblies/{assembly_id}/motions",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/communications/{communication_id}/acknowledgement",
+      "route_id": "member:POST:/api/v1/communications/{communication_id}/acknowledgement",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/deliberation/discussions",
+      "route_id": "member:POST:/api/v1/deliberation/discussions",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/deliberation/discussions/{discussion_id}/contributions",
+      "route_id": "member:POST:/api/v1/deliberation/discussions/{discussion_id}/contributions",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/credentials/passkey",
+      "route_id": "member:POST:/api/v1/identity/credentials/passkey",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/credentials/passkey/challenge",
+      "route_id": "member:POST:/api/v1/identity/credentials/passkey/challenge",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/credentials/{credential_reference}",
+      "route_id": "member:DELETE:/api/v1/identity/credentials/{credential_reference}",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/mfa",
+      "route_id": "member:POST:/api/v1/identity/mfa",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/mfa/{factor_reference}",
+      "route_id": "member:DELETE:/api/v1/identity/mfa/{factor_reference}",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/mfa/{factor_reference}/verification",
+      "route_id": "member:POST:/api/v1/identity/mfa/{factor_reference}/verification",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/recovery-codes",
+      "route_id": "member:POST:/api/v1/identity/recovery-codes",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/recovery/{recovery_id}/dispute",
+      "route_id": "member:POST:/api/v1/identity/recovery/{recovery_id}/dispute",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/recovery/{recovery_id}/evidence",
+      "route_id": "member:POST:/api/v1/identity/recovery/{recovery_id}/evidence",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/session",
+      "route_id": "member:DELETE:/api/v1/identity/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/sessions",
+      "route_id": "member:DELETE:/api/v1/identity/sessions",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/sessions/{session_reference}",
+      "route_id": "member:DELETE:/api/v1/identity/sessions/{session_reference}",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/step-up/challenge",
+      "route_id": "member:POST:/api/v1/identity/step-up/challenge",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/step-up/completion",
+      "route_id": "member:POST:/api/v1/identity/step-up/completion",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/voting-handoff",
+      "route_id": "member:POST:/api/v1/identity/voting-handoff",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/initiatives",
+      "route_id": "member:POST:/api/v1/initiatives",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/initiatives/{initiative_id}/submission",
+      "route_id": "member:POST:/api/v1/initiatives/{initiative_id}/submission",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/motions/{motion_id}/submission",
+      "route_id": "member:POST:/api/v1/motions/{motion_id}/submission",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/motions/{motion_id}/withdrawal",
+      "route_id": "member:POST:/api/v1/motions/{motion_id}/withdrawal",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/pilot-vote/handoff",
+      "route_id": "member:POST:/api/v1/pilot-vote/handoff",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/session",
+      "route_id": "member:DELETE:/api/v1/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/citizen-office/api/v1/citizen-office/submissions",
+      "route_id": "member:POST:/citizen-office/api/v1/citizen-office/submissions",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "DELETE",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/citizen-office/api/v1/session",
+      "route_id": "member:DELETE:/citizen-office/api/v1/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": false,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/authentication/challenge",
+      "route_id": "public:POST:/api/v1/identity/authentication/challenge",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": false,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/authentication/completion",
+      "route_id": "public:POST:/api/v1/identity/authentication/completion",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": false,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/identity/recovery",
+      "route_id": "public:POST:/api/v1/identity/recovery",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": false,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/api/v1/session",
+      "route_id": "public:POST:/api/v1/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": false,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/citizen-office/api/v1/session",
+      "route_id": "public:POST:/citizen-office/api/v1/session",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/vote/ballot",
+      "route_id": "voting:POST:/vote/ballot",
+      "scope": "organization+region"
+    },
+    {
+      "audit": true,
+      "authenticated": true,
+      "commit_time_reauthorization": true,
+      "method": "POST",
+      "negative_tests": [
+        "anonymous",
+        "wrong-scope",
+        "revoked",
+        "stale-generation",
+        "mass-assignment"
+      ],
+      "required_authority": "coarse_boundary_only",
+      "resource_ownership": "service-owned; caller-supplied actor prohibited",
+      "revocation_sensitive": true,
+      "route": "/vote/exit",
+      "route_id": "voting:POST:/vote/exit",
+      "scope": "organization+region"
+    }
+  ],
+  "schema": "epd2.api06.authorization/1"
+}

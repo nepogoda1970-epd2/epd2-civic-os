@@ -1,0 +1,95 @@
+{
+  "schema": "epd2.api06.c1.acceptance-record/1",
+  "stage": "API-06",
+  "stage_title": "API Layer Completion, Contract Closure & Preview-Readiness Gate",
+  "decision": "ACCEPTED_CLOSED",
+  "decision_date": "2026-09-02",
+  "decision_authority": "Project Owner",
+  "previous_state": "NEXT / NOT ACCEPTED",
+  "new_state": "ACCEPTED / CLOSED",
+  "api_layer_state": "CLOSED",
+  "system_trial_preview_state": "NOT AUTOMATICALLY OPENED; PREVIEW-READINESS CHECKPOINT MAY NOW BE QUALIFIED",
+  "candidate": {
+    "filename": "EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip",
+    "role": "C1",
+    "sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+    "size_bytes": 44012716,
+    "sealed_files": 4339,
+    "artifact_id": 9845841293,
+    "artifact_outer_digest": "sha256:83b0dc1fb0f451dc26799156a0c12518a2e3146b1016ef7e719e9b2cda407a20",
+    "builder_run_id": 33628261946,
+    "builder_job_id": 100241096268,
+    "builder_provenance_commit": "40efd68d81cde67bf15453d095785d1971ec301b",
+    "self_state": "CANDIDATE_NOT_ACCEPTED",
+    "self_accepted": false
+  },
+  "accepted_predecessor": {
+    "stage": "API-05",
+    "role": "C1",
+    "sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70",
+    "size_bytes": 43953160,
+    "authoritative_run_id": 33574342011,
+    "authoritative_job_id": 100074902089,
+    "state": "ACCEPTED / CLOSED"
+  },
+  "sealed_workflow": {
+    "candidate_path": "handoff/API-06/templates/C1/api06-accept.yml",
+    "authoritative_path": ".github/workflows/api06-accept.yml",
+    "git_blob": "37205e9fa76a8f4bebce77fb116e5995f6875347",
+    "sha256": "0866787ae8715ec3a2808bce157c4352b5cf2f3ad5be82a0d79099b590fff4c5",
+    "byte_equality": "PASS"
+  },
+  "authoritative": {
+    "branch": "tmp/api06-c1-authoritative-accept",
+    "run_id": 33629147572,
+    "job_id": 100243984921,
+    "provenance_commit": "2f3f951baa9d392ff7b0decc1137bcc0670c8fd2",
+    "conclusion": "SUCCESS",
+    "governed_gates_total": 40,
+    "passed_gates": 40,
+    "failed_gates": 0,
+    "environment_blocked_gates": 0,
+    "terminal_marker": "API06_RESULT:PASS:validation/api06/external_authoritative_result.json",
+    "sealed_source_unchanged": "PASS"
+  },
+  "authoritative_evidence_artifact": {
+    "name": "api06-c1-authoritative-acceptance-33629147572",
+    "id": 9846196028,
+    "digest": "sha256:b1c4bb5072a8040b2eaa52a5f31bdfe353b6841228c18e9cd456122d6578bc8c",
+    "size_bytes": 30852
+  },
+  "builder_evidence_artifact": {
+    "name": "api06-c1-build-evidence-v3-33628261946",
+    "id": 9845842104,
+    "digest": "sha256:683ec93b1a4caa5f15c158ae84fe087c671b4b5500c8a81f18676801a5def7eb"
+  },
+  "measured_evidence": {
+    "governed_gates": "40/40 PASS (builder) + 40/40 PASS (independent authoritative replay)",
+    "mutations": "30/30 DETECTED",
+    "postgresql": "16.15 / server_version_num=160015",
+    "runtime_routes": 91,
+    "api06_service_tests": "49 passed / 0 failed",
+    "accepted_api05_behavioral_regression": "66 passed / 0 failed",
+    "accepted_api04_unit_regression": "PASS",
+    "locked_dependencies": "PASS",
+    "ruff": "PASS",
+    "complete_sha256_seal": "PASS",
+    "freeze_rehearsal": "PASS / source unchanged / archive byte equal",
+    "canonical_payload_installation": "61 exact sealed C1 payload files installed"
+  },
+  "candidate_self_state_resolution": "CANDIDATE_NOT_ACCEPTED remains the intentional no-self-acceptance safeguard inside the sealed candidate; the independent authoritative PASS and this post-run Project Owner governance decision establish canonical acceptance.",
+  "open_blockers": [],
+  "next_permitted_primary_stage": "INFRA/OPS PREVIEW-READINESS MINIMUM",
+  "next_stage_state": "ELIGIBLE FOR GOVERNED QUALIFICATION",
+  "master_future_register_changed": false,
+  "nonclaims": [
+    "automatic System Trial Preview opening",
+    "INFRA layer closure",
+    "OPS layer closure",
+    "production readiness",
+    "legal activation",
+    "final security readiness",
+    "BSI certification",
+    "Common Criteria / EAL4 certification"
+  ]
+}

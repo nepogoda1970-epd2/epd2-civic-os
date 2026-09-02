@@ -1,0 +1,73 @@
+{
+  "contracts": [
+    {
+      "path": "contracts/api/admin.openapi.json",
+      "sha256": "2ae488bb0bbd4734975917852cb7f2c9c3e261d102fe70451c6303bf85e4ddcf"
+    },
+    {
+      "path": "contracts/api/api01-classification-policy.json",
+      "sha256": "758c7732d0205ce92cb90e30df0d734c732fe565e941daf36e52761838c07186"
+    },
+    {
+      "path": "contracts/api/api01-route-registry.json",
+      "sha256": "9a689e54814b27f3acf49212cc117a8db7775f2b6ff2969242c2348bdb1e3ff5"
+    },
+    {
+      "path": "contracts/api/api01-runtime-inventory.json",
+      "sha256": "8257710232111c0d757aa75c02e289a97da3dab7a108b8617f2c1c441acc35b9"
+    },
+    {
+      "path": "contracts/api/api02-authentication-assurance-policy.json",
+      "sha256": "135c053298f084bde5b034096d99956e901ba0db6976d966d36e686f238cfd3e"
+    },
+    {
+      "path": "contracts/api/api05-provider-claim.schema.json",
+      "sha256": "139eb9d382dcc04079a4b23366a6139e8341bf5e187b3cd3754a2da8822f7a7f"
+    },
+    {
+      "path": "contracts/api/api05-provider-profile.schema.json",
+      "sha256": "1bd6b99c5bb3402e6fa35d29ba46e4a70f34c9624a5e619a013ae216089abab8"
+    },
+    {
+      "path": "contracts/api/error.schema.json",
+      "sha256": "a28ca9af4c94c9a331d4ceecb305f0261f09f554e646c787eab87875f2548876"
+    },
+    {
+      "path": "contracts/api/governance.openapi.json",
+      "sha256": "49b18f0a6fc1385983af0458d5bab77d6d721de09f7a2c77821453b5a1a03955"
+    },
+    {
+      "path": "contracts/api/internal.openapi.json",
+      "sha256": "f708d118a7b13c96be93c480ac4b273f95b86a65f9093d2991371f68207f3fcc"
+    },
+    {
+      "path": "contracts/api/member.openapi.json",
+      "sha256": "94e348535f2bdccad9b0c19cbfe4a381dd51c40fe21c4b7323102dc0dc21b720"
+    },
+    {
+      "path": "contracts/api/public.openapi.json",
+      "sha256": "f3f0e2fd40914a308bf96d4904d7edc0b08fb696f44987fca5ce27eeb54fe304"
+    },
+    {
+      "path": "contracts/api/request-context.schema.json",
+      "sha256": "8efe66611e4dc78159ebed1f3107ffc67d2bab0f5058050fc8eba586c2d6bc04"
+    },
+    {
+      "path": "contracts/api/voting-evidence.openapi.json",
+      "sha256": "6d143283545d644d6234940b0103ea05e6922858fa97f6439364614de9dac37a"
+    },
+    {
+      "path": "contracts/api/voting.openapi.json",
+      "sha256": "15e728e0ae74b4020b99c2afe61079a6f561cfd8892affb1ecdb802b65165ba9"
+    },
+    {
+      "path": "contracts/api/api06_api_surface.json",
+      "sha256": "21bbf55e1db32cae2e30fc28ad88f041b89cd6c17ddaf12694abcd5c285ef18c"
+    }
+  ],
+  "incompatible_changes_after_api_closed": "GOVERNED_CORRECTION_REQUIRED",
+  "known_deprecations": [],
+  "route_count": 91,
+  "schema": "epd2.api06.contract-baseline/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

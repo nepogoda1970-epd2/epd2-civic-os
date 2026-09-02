@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "20-way concurrent duplicate mutation test",
+      "id": "G29",
+      "name": "concurrency",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

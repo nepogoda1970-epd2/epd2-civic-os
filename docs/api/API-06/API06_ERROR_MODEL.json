@@ -1,0 +1,27 @@
+{
+  "failure_classes": [
+    "FAIL_CLOSED",
+    "DEGRADED_READ_ONLY",
+    "RETRYABLE_FAILURE",
+    "SAFE_REJECTION"
+  ],
+  "forbidden_details": [
+    "SQL",
+    "stack_trace",
+    "filesystem_path",
+    "secret",
+    "cryptographic_material",
+    "service_topology",
+    "protected_identity"
+  ],
+  "required_fields": [
+    "code",
+    "reason",
+    "http_status",
+    "retryable",
+    "user_safe_message",
+    "correlation_ref",
+    "audit_ref"
+  ],
+  "schema": "epd2.api06.error/1"
+}

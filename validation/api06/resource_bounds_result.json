@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "body/depth/type/page limits",
+      "id": "G33",
+      "name": "resource bounds",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

@@ -1,0 +1,19 @@
+{
+  "gates": [
+    {
+      "evidence": "91-route exposure matrix",
+      "id": "G20",
+      "name": "privacy exposure",
+      "result": "PASS"
+    },
+    {
+      "evidence": "bounded disclosure and enumeration policy",
+      "id": "G21",
+      "name": "enumeration/small-cohort safety",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

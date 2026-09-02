@@ -1,0 +1,44 @@
+{
+  "gates": [
+    {
+      "evidence": {
+        "api04": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/events-messaging-runtime/tests/unit"
+          ],
+          "exit_code": 0,
+          "name": "api04",
+          "result": "PASS",
+          "stderr_tail": "",
+          "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+        },
+        "postgres": {
+          "command": [
+            "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+            "-m",
+            "pytest",
+            "-q",
+            "services/external-integration-runtime/tests/test_postgresql.py"
+          ],
+          "exit_code": 0,
+          "name": "postgres",
+          "result": "PASS",
+          "server_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+          "server_version_num": 160015,
+          "stderr_tail": "",
+          "stdout_tail": ".                                                                        [100%]\n1 passed in 0.78s\n"
+        }
+      },
+      "id": "G35",
+      "name": "migration integrity",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

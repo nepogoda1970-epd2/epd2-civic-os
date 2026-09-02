@@ -1,0 +1,28 @@
+{
+  "api_closure_blocker_count": 1,
+  "preseal_implementation_blocker_count": 0,
+  "rows": [
+    {
+      "API_closure_blocking": true,
+      "description": "API-06 has not undergone independent authoritative acceptance",
+      "evidence": "CANDIDATE_NOT_ACCEPTED self-state",
+      "id": "API06-GAP-001",
+      "owning_stage": "API-06",
+      "severity": "BLOCKER",
+      "status": "OPEN",
+      "workaround": null
+    },
+    {
+      "API_closure_blocking": false,
+      "description": "Production HSM/KMS/provider custody remains future work",
+      "evidence": "Master FIR",
+      "id": "API06-GAP-002",
+      "owning_stage": "INFRA/SEC",
+      "severity": "DEFERRED",
+      "status": "DEFERRED",
+      "workaround": "synthetic preview trust only"
+    }
+  ],
+  "schema": "epd2.api06.gaps/2",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

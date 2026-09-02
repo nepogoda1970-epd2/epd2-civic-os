@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "registry abuse classes and bounded behavior",
+      "id": "G32",
+      "name": "abuse/rate controls",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

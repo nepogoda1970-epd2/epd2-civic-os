@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "monotonic rollback/expiry tests",
+      "id": "G31",
+      "name": "authoritative-time semantics",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

@@ -1,0 +1,67 @@
+{
+  "gates": [
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G16",
+      "name": "S2S authentication",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G17",
+      "name": "S2S authorization",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/api03/test_s2s_r2.py",
+          "tests/api03/test_s2s_r3.py"
+        ],
+        "exit_code": 0,
+        "name": "api03",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "...............................................                          [100%]\n47 passed in 1.39s\n"
+      },
+      "id": "G18",
+      "name": "S2S replay/refusal",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

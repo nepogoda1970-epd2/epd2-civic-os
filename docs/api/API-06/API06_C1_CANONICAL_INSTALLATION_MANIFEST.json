@@ -1,0 +1,266 @@
+{
+  "schema": "epd2.api06.c1.canonical-installation/1",
+  "stage": "API-06",
+  "candidate": {
+    "filename": "EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip",
+    "sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+    "size_bytes": 44012716,
+    "sealed_files": 4339,
+    "artifact_id": 9845841293,
+    "artifact_outer_digest": "sha256:83b0dc1fb0f451dc26799156a0c12518a2e3146b1016ef7e719e9b2cda407a20"
+  },
+  "authoritative": {
+    "run_id": 33629147572,
+    "job_id": 100243984921,
+    "provenance_commit": "2f3f951baa9d392ff7b0decc1137bcc0670c8fd2",
+    "result": "PASS"
+  },
+  "installed_file_count": 61,
+  "verification": "EXACT_BYTES_MATCH_SEALED_C1",
+  "files": [
+    {
+      "path": "contracts/api/api06_api_surface.json",
+      "sha256": "21bbf55e1db32cae2e30fc28ad88f041b89cd6c17ddaf12694abcd5c285ef18c"
+    },
+    {
+      "path": "docs/api/API-06/API06_API05_RECONCILIATION.json",
+      "sha256": "850403338dc8367971a60a52c033359012d4905b4592879081041456c8b78fca"
+    },
+    {
+      "path": "docs/api/API-06/API06_AUTHORIZATION_COVERAGE_MATRIX.json",
+      "sha256": "54f14f3e163548f40e18e9b84d7e8b607663c714b9fffaeb52e9840fe87338cd"
+    },
+    {
+      "path": "docs/api/API-06/API06_C1_SEAL_RECORD.json",
+      "sha256": "2dea2bd280db75c78a13cfb06cb9c57a27242a40482cfe358d0ac5a4a37f9192"
+    },
+    {
+      "path": "docs/api/API-06/API06_CANDIDATE_IDENTITY.json",
+      "sha256": "db916d30c9880e7a6926666aa03f455e8e7530eb4973a416fb8bc138d7286696"
+    },
+    {
+      "path": "docs/api/API-06/API06_CLOSURE_SNAPSHOT.json",
+      "sha256": "0fcb105702631fe7298f73e20942182c5aa5eb594cc2228d5bab9a68c7f500eb"
+    },
+    {
+      "path": "docs/api/API-06/API06_CONTRACT_BASELINE.json",
+      "sha256": "51ab6094cf54e04f6e1f165128f194ce0ab88c5329954dae37926b3e6566394f"
+    },
+    {
+      "path": "docs/api/API-06/API06_CROSS_SERVICE_CONTRACT_CLOSURE.json",
+      "sha256": "8005ef74afc943ad08b9191d3b294634ff91bb6864aba807c799dfbce0054030"
+    },
+    {
+      "path": "docs/api/API-06/API06_DATA_EXPOSURE_MATRIX.json",
+      "sha256": "9f039e14950948004ffda020ff8c258cc9999b877c679cc093984d9593e6d859"
+    },
+    {
+      "path": "docs/api/API-06/API06_DEVELOPER_REPORT.md",
+      "sha256": "1c0d5dfd8dbfa2e08c71de4cdcac690f5571d2905c3ee21d0c241e326118ca84"
+    },
+    {
+      "path": "docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json",
+      "sha256": "e2f7482992c5529cd217ffff50c64012dcbd8a0c49851cc5a554a1edd2455d48"
+    },
+    {
+      "path": "docs/api/API-06/API06_ERROR_MODEL.json",
+      "sha256": "02af091bc05fc91d480e4b42f32306f17124b295196437c954b49c5a6d46aadd"
+    },
+    {
+      "path": "docs/api/API-06/API06_FINAL_API_GAP_REGISTER.json",
+      "sha256": "64767519521992f2c7fbaf5536b73e0ebda4d60f3b5f0bdf227639975d93c6e2"
+    },
+    {
+      "path": "docs/api/API-06/API06_FIR_DISPOSITION.json",
+      "sha256": "af6ac940d4a5a3dbcedc74664bbc44153f148dfc8bb72f4ac9e12a6d88dfeaa3"
+    },
+    {
+      "path": "docs/api/API-06/API06_STAGE_CONTRACT.md",
+      "sha256": "f0de96064fd39556c80c74c93cc55900354988783045519fe2f7ce7cb1c3fc19"
+    },
+    {
+      "path": "docs/api/API-06/API06_STATUS.txt",
+      "sha256": "18293fa734013024020940f3e2fbc8f49ccdeebd41f3bc020009f78ae4a165b7"
+    },
+    {
+      "path": "docs/api/API-06/API06_SYSTEM_TRIAL_PREVIEW_READINESS.json",
+      "sha256": "b5f875736f1d17047ac8f2a6a2151a6cfec485d664327f17447bcca714676c78"
+    },
+    {
+      "path": "handoff/API-06/templates/C1/api06-accept.yml",
+      "sha256": "0866787ae8715ec3a2808bce157c4352b5cf2f3ad5be82a0d79099b590fff4c5"
+    },
+    {
+      "path": "scripts/api06/build_api06_artifacts.py",
+      "sha256": "f294acf45b9bcba5dc7d0b07991a9a9e0471475098b861c6bb85c078a8830288"
+    },
+    {
+      "path": "scripts/api06/freeze_rehearsal.py",
+      "sha256": "6d185f4231e9f2030277d2c94eb1fe96ed0ed4e7ad5f852bbbc9b834147e6362"
+    },
+    {
+      "path": "scripts/api06/run_api06_mutations.py",
+      "sha256": "59ebfd04d96e5aa62a38a8fdbd14ad1661b3313250eb16bebb4ffedc37d97266"
+    },
+    {
+      "path": "scripts/validation/validate_api06.py",
+      "sha256": "fc3d901d8dddcf3b60caad927369a275b5c4e711ef2ba86d183bf8679262c306"
+    },
+    {
+      "path": "services/api-closure-runtime/src/epd2_api_closure_runtime/__init__.py",
+      "sha256": "b2143ee82eeabdf677382d61c80f522f5c7e5125323b5092d7ac6dc2d1140780"
+    },
+    {
+      "path": "services/api-closure-runtime/src/epd2_api_closure_runtime/guards.py",
+      "sha256": "0640540704ba51c8ee343c2e33e69b3b8b4197ec5e1f7e443dd36cb60c016e04"
+    },
+    {
+      "path": "services/api-closure-runtime/src/epd2_api_closure_runtime/inventory.py",
+      "sha256": "85e48ca3bba02c606cfc3def6c85ad9f7127655c1af49d4a7de186726516415a"
+    },
+    {
+      "path": "services/api-closure-runtime/src/epd2_api_closure_runtime/models.py",
+      "sha256": "73c1aff77ec24ca2eb9c4caf18b7781d0d9051826ec97e0b51e614f4a80dc999"
+    },
+    {
+      "path": "services/api-closure-runtime/src/epd2_api_closure_runtime/verification.py",
+      "sha256": "f063dc079b5a8ccff570c54e4dbc673cdd56f29cd42f5c46bc4cce3b69c34a37"
+    },
+    {
+      "path": "services/api-closure-runtime/tests/conftest.py",
+      "sha256": "993f258f404d9aaf41aaeb33273407787aa059676240a803f392c0efdccead06"
+    },
+    {
+      "path": "services/api-closure-runtime/tests/test_artifacts.py",
+      "sha256": "ff861f0b82e9dc3b2f474e01c498f8473b8d81e83bea3533e5fd37945d40f088"
+    },
+    {
+      "path": "services/api-closure-runtime/tests/test_guards.py",
+      "sha256": "c28523015b08992495c5c68d2be1be85dc8b49679ae342ef64975e59f0bf6785"
+    },
+    {
+      "path": "services/api-closure-runtime/tests/test_inventory.py",
+      "sha256": "66fd0d9009a140c1cb963a32d58a7d0aa13a48ce31c9ae47e2c0f82d0cb175c2"
+    },
+    {
+      "path": "services/api-closure-runtime/tests/test_mutations.py",
+      "sha256": "88a55bae49c88a6b4b3285b508a105ae8e00140434f7bf406c632e897820b46b"
+    },
+    {
+      "path": "validation/api06/abuse_control_result.json",
+      "sha256": "deb956a91589ecfdaf6462cbbad6a7208596416ea87769e444d72616c8e2f78c"
+    },
+    {
+      "path": "validation/api06/api05_reconciliation_result.json",
+      "sha256": "27fb1bfad6043d081a5b1e19ba5519d6986f7ebb1486bd8bbf0600cd11e34bd0"
+    },
+    {
+      "path": "validation/api06/api06_acceptance_result.json",
+      "sha256": "4857dd4571a6d67d85d936c7124dbdaf7a9ed9f9a5e050d5df0760fb433d98bb"
+    },
+    {
+      "path": "validation/api06/api_surface_result.json",
+      "sha256": "ddd4ae3cc415346f8f48dbd82ad5d6f2d5035a09b5f13c5af17f081a01e8df40"
+    },
+    {
+      "path": "validation/api06/audit_coverage_result.json",
+      "sha256": "f2e0812dbed1b747b800d7335c5b8c9061b101494941c28220bf191bcb106ae4"
+    },
+    {
+      "path": "validation/api06/authorization_coverage_result.json",
+      "sha256": "b8b681313997d6764b98916485944795e2b99a0fc08d866c188a1726330c99e3"
+    },
+    {
+      "path": "validation/api06/baseline_identity.json",
+      "sha256": "3a37e50efdedf4d8104a35ff661cd50f20f333235e198e1b2adf13be69373bf9"
+    },
+    {
+      "path": "validation/api06/commit_time_reauth_result.json",
+      "sha256": "3e5c3968adf11d19f131d6cfb3ea996b4321cad5a0afec252c5a587cd28290a8"
+    },
+    {
+      "path": "validation/api06/concurrency_result.json",
+      "sha256": "9bd2db8f0ea8b0e4e8aae10ae65962e51f250a3264bec0f7b5fad731a62b43ad"
+    },
+    {
+      "path": "validation/api06/contract_drift_result.json",
+      "sha256": "cd05b8caab967d6f11ae7d1871f8e855a0c144f6ecce89a9d6c4ccae9f064c5e"
+    },
+    {
+      "path": "validation/api06/dependency_failure_result.json",
+      "sha256": "1508eac8219d90a2059e62001f2b34bbb3fa4d532ba6f713eed269f4a9c17b20"
+    },
+    {
+      "path": "validation/api06/final_api_gap_result.json",
+      "sha256": "c6df64a64ffcb02f287b01a740188503ee6442b96ef04f20544a1f4eaefe3c15"
+    },
+    {
+      "path": "validation/api06/fir_disposition.json",
+      "sha256": "c6df64a64ffcb02f287b01a740188503ee6442b96ef04f20544a1f4eaefe3c15"
+    },
+    {
+      "path": "validation/api06/freeze_rehearsal_result.json",
+      "sha256": "89db8cec6236028707dd6eac33725b7d00ceac51b129df971a3f96ad99d42896"
+    },
+    {
+      "path": "validation/api06/idempotency_result.json",
+      "sha256": "9b8bca173dfac4c1ef4513bfcba4d1415a5270ba8fc7255ff2bac9ec841b8643"
+    },
+    {
+      "path": "validation/api06/junit-api06.xml",
+      "sha256": "f2049afe5edb02da0bc62da362223383be33e8f0f84d458366d7b384024ebb5b"
+    },
+    {
+      "path": "validation/api06/migration_result.json",
+      "sha256": "d1b1574b3b9cd7c4057c892b6b67a58c061210c621687e710a2ae6eadd00241d"
+    },
+    {
+      "path": "validation/api06/mutation_result.json",
+      "sha256": "21f79fc591478c82019249c96ec35c8b64c19d6da6ac4da4ece172dacdd2a501"
+    },
+    {
+      "path": "validation/api06/partial_failure_result.json",
+      "sha256": "0af4408d92cf3c3af5b80375b74880f126ed5479146e4a926a0cebd850519815"
+    },
+    {
+      "path": "validation/api06/postgres_runtime_result.json",
+      "sha256": "347f44bd08eeb90596ae60e6501775244f128cdc52d11825f6f1eb47bef3c24f"
+    },
+    {
+      "path": "validation/api06/preview_readiness_result.json",
+      "sha256": "0fa333e7924663933678fa2f9c18f66556f9c4ae7605094f0ad0f951f82aafc8"
+    },
+    {
+      "path": "validation/api06/privacy_exposure_result.json",
+      "sha256": "b549f520f3c167bb57501bfff1f9e5b521e372b793396d1e1df2e8ec74621211"
+    },
+    {
+      "path": "validation/api06/resource_bounds_result.json",
+      "sha256": "37e0fac2b5219b8677e7bbe89b712ce1b7a7a4d540e64fae6db76556e8e82f70"
+    },
+    {
+      "path": "validation/api06/runtime_inventory_raw.json",
+      "sha256": "6a4980da9382bc9fb00297fd99e0f3b72d7df00298fb200dd8c643c18592371b"
+    },
+    {
+      "path": "validation/api06/runtime_route_inventory.json",
+      "sha256": "ee9b8f008611ddd2ff4b198891a6f2cf753039e59087f0b0c58f35c8869bf1c0"
+    },
+    {
+      "path": "validation/api06/s2s_coverage_result.json",
+      "sha256": "9cb61f98cd03dd4c77575e7434d4233c9d3319f148ba45fcf3515bd4fba767db"
+    },
+    {
+      "path": "validation/api06/schema_security_result.json",
+      "sha256": "2b7785b3e80739654a1b4df9f221740811e699434a3e7d1bee525bfdf1e95fbb"
+    },
+    {
+      "path": "validation/api06/time_semantics_result.json",
+      "sha256": "72809053f7be2a2cd986cd9ff1429401d0b0f4fe7751bf86ea2e0e0f5bf0c167"
+    },
+    {
+      "path": "validation/api06/voting_boundary_result.json",
+      "sha256": "c73d0397c15b9bd92b5c3514a673ee2adf6cfdbe4d66bf64e5fc184747941ce4"
+    }
+  ]
+}

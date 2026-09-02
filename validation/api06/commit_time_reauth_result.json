@@ -1,0 +1,19 @@
+{
+  "gates": [
+    {
+      "evidence": "generation and revocation reauthorization tests",
+      "id": "G14",
+      "name": "commit-time reauthorization",
+      "result": "PASS"
+    },
+    {
+      "evidence": "revocation/session invalidation tests",
+      "id": "G15",
+      "name": "revocation propagation",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

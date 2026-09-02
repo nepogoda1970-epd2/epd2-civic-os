@@ -1,0 +1,46 @@
+{
+  "gates": [
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/events-messaging-runtime/tests/unit"
+        ],
+        "exit_code": 0,
+        "name": "api04",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "........................................................................ [ 20%]\n........................................................................ [ 41%]\n........................................................................ [ 62%]\n........................................................................ [ 83%]\n.........................................................                [100%]\n"
+      },
+      "id": "G26",
+      "name": "transaction semantics",
+      "result": "PASS"
+    },
+    {
+      "evidence": {
+        "command": [
+          "/home/runner/work/_temp/api06/EPD2_API05_EXTERNAL_INTEGRATION_BOUNDARY_CANDIDATE_0.1_C1/.venv/bin/python",
+          "-m",
+          "pytest",
+          "-q",
+          "services/external-integration-runtime/tests",
+          "--ignore=services/external-integration-runtime/tests/test_postgresql.py"
+        ],
+        "exit_code": 0,
+        "name": "api05",
+        "result": "PASS",
+        "stderr_tail": "",
+        "stdout_tail": "..................................................................       [100%]\n66 passed in 25.21s\n"
+      },
+      "id": "G27",
+      "name": "partial-failure semantics",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

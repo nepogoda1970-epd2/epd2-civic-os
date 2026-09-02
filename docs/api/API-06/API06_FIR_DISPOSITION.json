@@ -1,0 +1,52 @@
+{
+  "master_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+  "new_fir_ids": [],
+  "rows": [
+    {
+      "disposition": "PARTIALLY_ADVANCED",
+      "id": "FIR-SEC-004",
+      "owner": "API/INFRA/OPS"
+    },
+    {
+      "disposition": "DEPENDENCY_ONLY",
+      "id": "FIR-TRUST-002",
+      "owner": "INFRA/OPS"
+    },
+    {
+      "disposition": "PARTIALLY_ADVANCED",
+      "id": "FIR-TRUST-003",
+      "owner": "API/INFRA"
+    },
+    {
+      "disposition": "IMPLEMENTED_BY_ACCEPTED_PREDECESSOR",
+      "id": "FIR-SEC-003",
+      "owner": "API"
+    },
+    {
+      "disposition": "IMPLEMENTED_BY_ACCEPTED_PREDECESSOR",
+      "id": "FIR-VENDOR-001",
+      "owner": "API"
+    },
+    {
+      "disposition": "PARTIALLY_ADVANCED",
+      "id": "FIR-READY-001",
+      "owner": "API/INFRA/OPS"
+    },
+    {
+      "disposition": "IMPLEMENTED_BY_API06",
+      "id": "FIR-TEST-001",
+      "owner": "API"
+    },
+    {
+      "disposition": "IMPLEMENTED_BY_API06",
+      "id": "FIR-TEST-002",
+      "owner": "API"
+    },
+    {
+      "disposition": "INTENTIONALLY_UNCHANGED",
+      "id": "FIR-OSS-007",
+      "owner": "cross-layer"
+    }
+  ],
+  "schema": "epd2.api06.fir-disposition/1"
+}

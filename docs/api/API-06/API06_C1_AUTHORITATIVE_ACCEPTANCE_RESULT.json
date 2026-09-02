@@ -1,0 +1,17 @@
+{
+  "schema": "epd2.api06.c1.external-authoritative/1",
+  "stage": "API-06",
+  "result": "PASS",
+  "self_acceptance": false,
+  "candidate_sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+  "candidate_size_bytes": 44012716,
+  "builder_run_id": 33628261946,
+  "authoritative_run_id": 33629147572,
+  "authoritative_job": "authoritative-acceptance",
+  "provenance_commit": "2f3f951baa9d392ff7b0decc1137bcc0670c8fd2",
+  "governed_gates_total": 40,
+  "passed_gates": 40,
+  "failed_gates": [],
+  "environment_blocked_gates": [],
+  "terminal_marker": "API06_RESULT:PASS:validation/api06/external_authoritative_result.json"
+}

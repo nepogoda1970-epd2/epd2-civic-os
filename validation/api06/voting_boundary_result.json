@@ -1,0 +1,19 @@
+{
+  "gates": [
+    {
+      "evidence": "voting field isolation test",
+      "id": "G22",
+      "name": "voting identity isolation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "voting correlation/telemetry invariant",
+      "id": "G23",
+      "name": "voting telemetry isolation",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

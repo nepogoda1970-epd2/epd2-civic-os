@@ -1,0 +1,25 @@
+{
+  "gates": [
+    {
+      "evidence": "strict input/schema tests",
+      "id": "G09",
+      "name": "request schema validation",
+      "result": "PASS"
+    },
+    {
+      "evidence": "negative authority/scope/mass-assignment/header cases",
+      "id": "G13",
+      "name": "authorization negative cases",
+      "result": "PASS"
+    },
+    {
+      "evidence": "body/depth/type/page limits",
+      "id": "G33",
+      "name": "resource bounds",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

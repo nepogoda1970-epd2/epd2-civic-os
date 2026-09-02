@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "FIR disposition + single truthful API-06 acceptance blocker",
+      "id": "G38",
+      "name": "FIR/gap closure",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}

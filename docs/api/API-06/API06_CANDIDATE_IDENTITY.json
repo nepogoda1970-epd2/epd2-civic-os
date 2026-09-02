@@ -1,0 +1,12 @@
+{
+  "schema": "epd2.api06.c1.candidate-identity/1",
+  "filename": "EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip",
+  "state": "CANDIDATE_NOT_ACCEPTED",
+  "self_accepted": false,
+  "builder_run_id": 33628261946,
+  "builder_provenance_commit": "40efd68d81cde67bf15453d095785d1971ec301b",
+  "outer_archive_sha256": null,
+  "outer_archive_hash_location": "detached sidecar",
+  "accepted_api05_sha256": "38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70",
+  "sealed_acceptance_workflow_sha256": "0866787ae8715ec3a2808bce157c4352b5cf2f3ad5be82a0d79099b590fff4c5"
+}

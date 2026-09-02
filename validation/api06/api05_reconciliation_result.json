@@ -1,0 +1,13 @@
+{
+  "gates": [
+    {
+      "evidence": "exact accepted API-05 C1 reconciliation; all 40 gates rerun",
+      "id": "G04",
+      "name": "API-05 reconciliation",
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS",
+  "schema": "epd2.api06.evidence/1",
+  "state": "CANDIDATE_NOT_ACCEPTED"
+}
