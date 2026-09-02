@@ -1,0 +1,44 @@
+{
+  "schema": "epd2.ctrl03.control-console/1",
+  "stage": "CTRL-03",
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "authority_source": "server-side exact-scope authority; frontend state is non-authoritative",
+  "secret_policy": "references and custody-session handles only; no private material or raw provider secret",
+  "read_model": {
+    "fields": [
+      "object_id",
+      "credential_class",
+      "purpose",
+      "scope",
+      "state",
+      "version",
+      "profile",
+      "algorithm",
+      "valid_until",
+      "public_reference",
+      "trust_location",
+      "trust_version",
+      "compromised"
+    ],
+    "forbidden_fields": [
+      "private_key",
+      "raw_secret",
+      "token",
+      "password_verifier",
+      "recovery_secret",
+      "subject_ref"
+    ]
+  },
+  "mutation_flow": ["request", "approve", "commit_reauthorize", "execute", "review"],
+  "voting_key_boundary": "external reference/status/action request only",
+  "break_glass_flow": [
+    "DECLARE",
+    "APPROVE",
+    "ACTIVATE",
+    "CONTAIN",
+    "ROTATE_OR_REVOKE",
+    "VERIFY",
+    "REVIEW"
+  ],
+  "actions_source": "epd2_control_plane_service.credential_lifecycle:CTRL03_ACTIONS"
+}

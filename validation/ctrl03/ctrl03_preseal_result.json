@@ -1,0 +1,314 @@
+{
+  "gates": [
+    {
+      "executed": true,
+      "id": "G01",
+      "name": "fresh_bootstrap",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G02",
+      "name": "baseline_identity",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G03",
+      "name": "exact_ctrl01_accepted_identity",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G04",
+      "name": "ctrl02_authoritative_reconciliation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G05",
+      "name": "credential_class_separation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G06",
+      "name": "human_credential_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G07",
+      "name": "passkey_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G08",
+      "name": "recovery_credential_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G09",
+      "name": "session_lifecycle_and_invalidation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G10",
+      "name": "authority_projection_boundary",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G11",
+      "name": "service_credential_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G12",
+      "name": "mtls_certificate_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G13",
+      "name": "jws_signing_key_lifecycle",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G14",
+      "name": "jwks_versioned_trust_sets",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G15",
+      "name": "encryption_key_reference",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G16",
+      "name": "provider_secret_reference",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G17",
+      "name": "voting_key_external_boundary",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G18",
+      "name": "separation_of_duties",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G19",
+      "name": "four_eyes_quorum",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G20",
+      "name": "secret_visibility",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G21",
+      "name": "jit_secret_access",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G22",
+      "name": "break_glass_sequence",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G23",
+      "name": "compromise_containment",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G24",
+      "name": "rotation_old_new_linkage",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G25",
+      "name": "bounded_overlap",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G26",
+      "name": "cryptoperiods",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G27",
+      "name": "algorithm_pinning",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G28",
+      "name": "pq_track_inactive",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G29",
+      "name": "trust_location_validation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G30",
+      "name": "cross_purpose_isolation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G31",
+      "name": "regional_issuance",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G32",
+      "name": "root_hot_path_forbidden",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G33",
+      "name": "quorum_loss_recovery",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G34",
+      "name": "stale_trust_rejection",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G35",
+      "name": "commit_time_reauthorization",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G36",
+      "name": "idempotency",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G37",
+      "name": "ctrl02_restriction_integration",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G38",
+      "name": "time_and_clock_rollback",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G39",
+      "name": "restart_checkpoint",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G40",
+      "name": "provider_fail_closed",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G41",
+      "name": "safe_read_model",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G42",
+      "name": "metadata_minimization",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G43",
+      "name": "control_api_contract",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G44",
+      "name": "action_inventory",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G45",
+      "name": "negative_authorization",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G46",
+      "name": "immutable_evidence",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G47",
+      "name": "fir_bsi_open_core_reconciliation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G48",
+      "name": "mutation_suite",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G49",
+      "name": "archive_hygiene_contract",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G50",
+      "name": "freeze_same_bytes",
+      "status": "PASS"
+    }
+  ],
+  "gates_blocked_for_final_seal": [],
+  "gates_failed": [],
+  "gates_passed": 50,
+  "gates_total": 50,
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "mutation_result": "44/44 DETECTED",
+  "overall": "PASS",
+  "schema": "epd2.ctrl03.preseal-result/1",
+  "self_state": "NOT_ACCEPTED",
+  "stage": "CTRL-03"
+}

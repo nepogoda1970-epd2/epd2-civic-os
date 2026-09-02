@@ -1,0 +1,13 @@
+{
+  "candidate_sha256": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+  "candidate_size": 16720456,
+  "conclusion": "PASS",
+  "gates": "46/46 PASS",
+  "mutations": "40/40 DETECTED",
+  "run_id": 33690561259,
+  "schema": "epd2.ctrl02.authoritative-acceptance-result/1",
+  "self_acceptance": false,
+  "stage": "CTRL-02",
+  "terminal_marker": "CTRL02_AUTHORITATIVE_RESULT:PASS:f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e:16720456",
+  "workflow_head_sha": "a70e2bfef7a668ee5158475712827bbc50f6d5fd"
+}

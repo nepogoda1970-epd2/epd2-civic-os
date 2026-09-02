@@ -1,0 +1,49 @@
+{
+  "cumulative_control_plane_tests": {
+    "command": [
+      "/tmp/ctrl03_runtime/.venv/bin/python",
+      "-m",
+      "pytest",
+      "services/control-plane-service/tests",
+      "-q"
+    ],
+    "output": "........................................................................ [ 24%]\n........................................................................ [ 49%]\n........................................................................ [ 74%]\n........................................................................ [ 99%]\n..                                                                       [100%]\n290 passed in 1.34s\n",
+    "passed": true,
+    "returncode": 0
+  },
+  "mypy": {
+    "command": [
+      "/tmp/ctrl03_runtime/.venv/bin/mypy",
+      "services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py"
+    ],
+    "output": "Success: no issues found in 1 source file\n",
+    "passed": true,
+    "returncode": 0
+  },
+  "ruff": {
+    "command": [
+      "/tmp/ctrl03_runtime/.venv/bin/ruff",
+      "check",
+      "services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py",
+      "services/control-plane-service/tests/_ctrl03_builders.py",
+      "services/control-plane-service/tests/test_ctrl03_break_glass_and_ctrl02.py",
+      "services/control-plane-service/tests/test_ctrl03_lifecycle.py",
+      "services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py",
+      "services/control-plane-service/tests/test_ctrl03_regional_recovery_review.py",
+      "services/control-plane-service/tests/test_ctrl03_rotation_trust.py",
+      "services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py",
+      "scripts/ctrl03_mutation_suite.py",
+      "scripts/ctrl03_validator.py",
+      "scripts/build_ctrl03_preseal.py",
+      "scripts/verify_ctrl03_package.py"
+    ],
+    "output": "All checks passed!\n",
+    "passed": true,
+    "returncode": 0
+  },
+  "schema": "epd2.ctrl03.test-result/1",
+  "secret_scan": {
+    "hits": [],
+    "passed": true
+  }
+}

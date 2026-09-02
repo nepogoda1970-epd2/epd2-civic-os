@@ -1,0 +1,43 @@
+{
+  "authoritative_review": {
+    "authoritative_job_id": 100466175199,
+    "build_job_id": 100465862662,
+    "conclusion": "PASS",
+    "gates": "50/50 PASS",
+    "mutations": "44/44 DETECTED",
+    "package_post": "PASS",
+    "package_pre": "PASS",
+    "run_attempt": 2,
+    "run_id": 33696046649,
+    "self_acceptance": false,
+    "terminal_marker": "CTRL03_AUTHORITATIVE_RESULT:PASS:89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff:16788860",
+    "tests": "290/290 PASS",
+    "workflow": ".github/workflows/ctrl03-c1-canonical.yml",
+    "workflow_head_sha": "d1702e5acf82b20c85bdd44d038df606ab7aa109"
+  },
+  "authority": "Project Owner",
+  "candidate": {
+    "file": "EPD2_CTRL03_CREDENTIAL_TRUST_AND_KEY_LIFECYCLE_CONTROL_CANDIDATE_0.1_C1.zip",
+    "self_state_before_governance_decision": "NOT_ACCEPTED",
+    "sha256": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+    "size_bytes": 16788860
+  },
+  "certification": "NOT_ASSERTED",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-03",
+  "legal_activation": "NOT_ASSERTED",
+  "open_blockers": [],
+  "overall_ctrl_layer": "OPEN / NOT CLOSED",
+  "predecessor": {
+    "candidate_sha256": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+    "candidate_size": 16720456,
+    "decision": "ACCEPTED / CLOSED",
+    "run_id": 33690561259,
+    "stage": "CTRL-02",
+    "workflow_head_sha": "a70e2bfef7a668ee5158475712827bbc50f6d5fd"
+  },
+  "production_readiness": "NOT_ASSERTED",
+  "schema": "epd2.ctrl03.acceptance-record/1",
+  "scope": "BOUNDED_CTRL03_STAGE_ONLY",
+  "stage": "CTRL-03 \u2014 Credential Trust & Key Lifecycle Control"
+}

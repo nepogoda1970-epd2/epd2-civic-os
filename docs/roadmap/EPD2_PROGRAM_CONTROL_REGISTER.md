@@ -2,7 +2,7 @@
 
 **Status:** Living canonical execution-state register  
 **Location:** `docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md`  
-**Updated:** 2026-09-02  
+**Updated:** 2026-09-03
 **Purpose:** single authoritative source for the current execution state of the EPD² development program.
 
 This register answers what is closed, active, next, blocked, permitted in parallel, and which governed candidate/evidence currently controls each active line. It does not replace the Master Future Implementation Register.
@@ -74,7 +74,9 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 
 **CTRL-01 authoritative acceptance and bounded stage closure (2026-09-02):** exact sealed candidate `EPD2_CTRL01_GOVERNED_CONTROL_PLANE_CANDIDATE_0.1_C1.zip`, SHA-256 `07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5`, size `190,099` bytes, passed independent exact-byte GitHub Actions review in `.github/workflows/ctrl01-c1-canonical.yml`, authoritative run `33618683269`, build job `100210392348`, authoritative job `100210596079`, workflow commit `246824a099fd1e7359e79650a7107d7cfa8ddb43`, conclusion `success`. The independent replay verified the complete internal SHA-256 seal, locked dependencies, Ruff, mypy, `178/178` runtime tests, all `22/22` governed CTRL gates, `37/37` mutation attacks detected, and `43` commit-time reauthorization mutations. Terminal marker: `CTRL01_C1_AUTHORITATIVE_RESULT:PASS:07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5:190099`. The canonical promotion installs the exact sealed C1 payload bytes under `docs/ctrl/CTRL-01`, `scripts`, `services/control-plane-service` and `validation`, and records their hashes in `docs/ctrl/CTRL-01/CTRL01_C1_CANONICAL_INSTALLATION_MANIFEST.json`. The sealed candidate correctly retained `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded module by `docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json`. **CTRL-01 C1 is therefore `ACCEPTED / CLOSED` as a bounded Governed Control Plane stage.** The overall CTRL layer remains **OPEN / NOT CLOSED**. `API-06` remains `NEXT / NOT ACCEPTED`; the API layer remains open and System Trial Preview remains **CHECKPOINT_NOT_OPEN**. No production-readiness, legal-activation, BSI/Common Criteria/EAL4 or final-security claim follows.
 
-**CTRL-02 authoritative acceptance and bounded stage closure (2026-09-02):** exact governed candidate `EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.2_PRESEAL.zip`, SHA-256 `ef3860d9b2f65f444c1c602c9efb9a32a2a07b9e8024161ba7fd6d26c8ed8a`, size `16,729,241` bytes, passed the independent governed GitHub acceptance contour in authoritative run `33633224296`, provenance commit `b9fcd46b0fcf9f4b8a63e7c6f3e7c48c20e1b85`, conclusion `success`. The governed result is `GOVERNED ACCEPTANCE PASS / CANON PASS`. Measured evidence includes exact CTRL-01 predecessor verification `22/22 PASS`, mutation verification `40/40 kills`, contract validator `46/46 PASS`, baseline reconstruction PASS, freeze verification PASS and package identity PASS. The post-run governance decision is recorded in `docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json`. **CTRL-02 is therefore `ACCEPTED / CLOSED` as the bounded Regional Intervention & Privileged Operations stage.** No open CTRL-02 blocker remains. The overall CTRL layer remains **OPEN / NOT CLOSED**; CTRL-03 and later CTRL stages are not accepted by this transition. No production-readiness, legal-activation, BSI/Common Criteria/EAL4 or final-security claim follows.
+**CTRL-02 authoritative acceptance and bounded stage closure (reconciled 2026-09-03):** exact governed candidate `EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.2_PRESEAL.zip`, SHA-256 `f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e`, size `16,720,456` bytes, passed independent authoritative GitHub Actions review, run `33690561259`, job `100448103738`, workflow head `a70e2bfef7a668ee5158475712827bbc50f6d5fd`, conclusion `success`; `46/46` governed gates PASS and `40/40` mutations detected. The earlier PCR CTRL-02 identity is superseded by this later exact authoritative identity. **CTRL-02 remains `ACCEPTED / CLOSED` with no open blocker.**
+
+**CTRL-03 authoritative acceptance and bounded stage closure (2026-09-03):** exact sealed candidate `EPD2_CTRL03_CREDENTIAL_TRUST_AND_KEY_LIFECYCLE_CONTROL_CANDIDATE_0.1_C1.zip`, SHA-256 `89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff`, size `16,788,860` bytes, authoritative run `33696046649` attempt `2`, build job `100465862662`, authoritative-review job `100466175199`, workflow head `d1702e5acf82b20c85bdd44d038df606ab7aa109`, conclusion `success`; `290/290` runtime tests PASS, `44/44` mutations detected, `50/50` governed gates PASS, package verification PASS before and after independent execution. Terminal marker: `CTRL03_AUTHORITATIVE_RESULT:PASS:89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff:16788860`. **CTRL-03 is `ACCEPTED / CLOSED`.** The overall CTRL layer remains **OPEN / NOT CLOSED**; no production-readiness, legal-activation, BSI/CC/EAL4 or final-security claim follows.
 
 **API-06 authoritative acceptance, terminal API-stage closure and API-layer closure (2026-09-02):** exact sealed candidate `EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip`, SHA-256 `3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c`, size `44,012,716` bytes, passed independent exact-byte GitHub Actions authoritative review, run `33629147572`, job `100243984921`, provenance commit `2f3f951baa9d392ff7b0decc1137bcc0670c8fd2`, conclusion `success`. The independent runner verified exact candidate identity and complete internal SHA-256 seal, byte-for-byte sealed acceptance-workflow equality, current canonical API-05 closure/API-06 entering governance, locked dependencies, accepted API-04 live regression environment, all `40/40` governed API-06 gates, `30/30` mutations detected, PostgreSQL `16.15`, and unchanged sealed source after execution. Terminal marker: `API06_RESULT:PASS:validation/api06/external_authoritative_result.json`. Authoritative evidence artifact `api06-c1-authoritative-acceptance-33629147572`, artifact ID `9846196028`, digest `sha256:b1c4bb5072a8040b2eaa52a5f31bdfe353b6841228c18e9cd456122d6578bc8c`. The governance decision is recorded in `docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json`, and the exact sealed API-06 payload is installed in canonical `main` with hashes in `docs/api/API-06/API06_C1_CANONICAL_INSTALLATION_MANIFEST.json`. **API-06 is therefore `ACCEPTED / CLOSED`, and the API layer is `CLOSED`.** The sealed candidate's `CANDIDATE_NOT_ACCEPTED` self-state remains the intentional no-self-acceptance safeguard and is superseded only by the independent run plus this post-run Project Owner decision. This releases the API dependency for INFRA/OPS preview-readiness qualification, but does **not** automatically open System Trial Preview, close INFRA/OPS, claim production readiness, legal activation, BSI/CC/EAL4 certification or final security acceptance.
 
@@ -87,7 +89,7 @@ On 2026-08-26 the previously stale PILOT-05 control state was reconciled to its 
 | API | `API-01 ACCEPTED / CLOSED; API-02 ACCEPTED / CLOSED; API-03 ACCEPTED / CLOSED; API-04 ACCEPTED / CLOSED; API-05 ACCEPTED / CLOSED; API-06 ACCEPTED / CLOSED; API LAYER CLOSED` | Exact API-06 C1 is independently accepted and its exact sealed payload is installed in canonical main. The API layer is CLOSED. This releases the API prerequisite for INFRA/OPS preview-readiness qualification; System Trial Preview still requires an explicit checkpoint-opening decision and does not close INFRA or OPS. |
 | INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA-02 ACCEPTED / CLOSED; INFRA LAYER OPEN` | Exact bounded INFRA-01 C3 and INFRA-02 software supply-chain foundation are accepted/closed. The overall INFRA layer remains open; INFRA-03…INFRA-07 and final INFRA closure remain governed separately and still follow API dependencies. |
 | OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN; OPS-03 QUALIFICATION ELIGIBLE` | Exact bounded OPS-01 C2 and OPS-02 C3 are accepted/closed. API-06/API-layer closure has released the final-API-runtime prerequisite for OPS-03 qualification. The overall OPS layer remains open; OPS-03 still requires its own exact candidate, governed PASS and independent acceptance, and System Trial Preview is not opened by this API transition. |
-| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL LAYER OPEN; CTRL-03 NEXT` | Exact bounded CTRL-01 C1 and CTRL-02 Regional Intervention & Privileged Operations are accepted/closed. CTRL-02 canonical acceptance is installed by `docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json` on the strength of authoritative run `33633224296`. The overall CTRL layer remains open; CTRL-03 and later CTRL stages require their own governed acceptance. |
+| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1, CTRL-02 and CTRL-03 are accepted/closed. CTRL-03 exact C1 is independently accepted by run `33696046649` and the cumulative control-plane payload is installed in canonical main. The overall CTRL layer remains open; later CTRL stages require their own governed acceptance. |
 | FRONT | `FRONT-02 C2.1 ACCEPTED_IMPLEMENTATION_BASELINE; FRONT-03 C1 ACCEPTED / CLOSED; FRONT-04 C2 ACCEPTED / CLOSED; NOT_STARTED_FINAL` | Exact FRONT-02 C2.1, bounded FRONT-03 C1, and bounded FRONT-04 C2 are accepted governed frontend baselines. The overall FRONT layer remains open; final integrated journeys and FRONT-layer closure remain dependent on API → INFRA → OPS → CTRL. |
 | SEC | `NOT_STARTED_FINAL` | Threat/adversarial preparation may proceed; final challenge targets the integrated system. |
 | BSI / CC readiness | `PREPARATORY PARALLEL WORK / NOT CERTIFIED` | P0 feasibility, TOE/ST preparation and assurance planning may proceed in parallel. This opens no SEC stage, changes no implementation-stage status and creates no certification claim. Hard P0 identity freeze applies. |
@@ -112,7 +114,7 @@ API-06 = ACCEPTED / CLOSED
 API = CLOSED
 CTRL-01 = ACCEPTED / CLOSED
 CTRL-02 = ACCEPTED / CLOSED
-CTRL-03 = NEXT CTRL STAGE
+CTRL-03 = ACCEPTED / CLOSED
 NEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM
 ```
 
@@ -164,7 +166,7 @@ With `API = CLOSED`, parallel work may continue while the explicit INFRA/OPS pre
 
 - INFRA specifications, environment/container topology, CI/CD and deployment design;
 - OPS incident/recovery/change/election runbooks and SoD models;
-- CTRL-03 and later CTRL action/authority inventories, credential trust/key lifecycle work, read models and control-console specifications, with no acceptance claim until their own governed gates pass;
+- later CTRL action/authority inventories, read models and control-console specifications, with no acceptance claim until their own governed gates pass;
 - FRONT shared design/application shells, public pages, accessibility/responsive baselines and non-misleading read-only surfaces, now governed by `docs/frontend/FRONT-02-SPECIFICATION.md`;
 - SEC threat-model consolidation, adversarial corpora and test-harness preparation;
 - governed correction/acceptance work on already-existing PILOT stages.
@@ -369,6 +371,20 @@ No status may change merely because a conversation says it is convenient.
 - **Scope consequence:** CTRL-02 is closed at the exact candidate above. This transition does not close CTRL-03 or the overall CTRL layer and makes no production-readiness, legal-activation, BSI/CC/EAL4 or final-security claim.
 - **Next permitted CTRL stage:** `CTRL-03 — Credential Trust & Key Lifecycle Control`.
 
+### CTRL-03 C1 authoritative transition — 2026-09-03
+
+- **Previous state:** `CTRL-03 CANDIDATE / NOT_ACCEPTED`.
+- **New state:** `CTRL-03 ACCEPTED / CLOSED`.
+- **Governing candidate:** `EPD2_CTRL03_CREDENTIAL_TRUST_AND_KEY_LIFECYCLE_CONTROL_CANDIDATE_0.1_C1.zip`.
+- **Candidate SHA-256:** `89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff`.
+- **Candidate size:** `16,788,860` bytes.
+- **Accepted predecessor:** CTRL-02 SHA-256 `f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e`, authoritative run `33690561259`.
+- **Authoritative run:** `33696046649`, attempt `2`; build job `100465862662`; authoritative-review job `100466175199`; conclusion `success`.
+- **Independent proof:** `290/290` tests PASS; `44/44` mutations detected; `50/50` governed gates PASS; package verification PASS pre/post.
+- **Terminal marker:** `CTRL03_AUTHORITATIVE_RESULT:PASS:89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff:16788860`.
+- **Open blockers:** none.
+- **Scope:** overall CTRL layer remains open; no production/legal/certification claim follows.
+
 ### FRONT-02 C2.1 authoritative acceptance transition — 2026-08-29
 
 - **Previous state:** `FRONT-02_SPECIFIED / NOT_STARTED_FINAL`.
@@ -524,7 +540,7 @@ Governed cumulative candidates should fail when any canonical bootstrap/control/
 
 **Parallel INFRA action:** bounded `INFRA-02 — CI/CD & Software Supply-Chain Integrity` is `ACCEPTED / CLOSED` at exact SHA-256 `d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c`, authoritative run `33574647511`. Its accepted build-once, SBOM/provenance, vulnerability/history-secret, promotion-by-digest, drift-detection and release-integrity foundation may be reused by later INFRA work. This does not close the overall INFRA layer, open or accept INFRA-03…INFRA-07, or select a hosting provider. API is now closed; INFRA remains separately governed.
 
-**Parallel CTRL action:** `CTRL-01` and `CTRL-02` are both `ACCEPTED / CLOSED` as bounded stages. CTRL-02 is canonically installed at exact SHA-256 `ef3860d9b2f65f444c1c602c9efb9a32a2a07b9e8024161ba7fd6d26c8ed8a` on the strength of authoritative run `33633224296` and `docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json`. `CTRL-03 — Credential Trust & Key Lifecycle Control` is the next permitted CTRL stage. The overall CTRL layer remains open until its remaining governed stages are independently accepted.
+**Parallel CTRL action:** `CTRL-01`, `CTRL-02` and `CTRL-03` are `ACCEPTED / CLOSED` as bounded stages. CTRL-02 is reconciled to SHA-256 `f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e`, run `33690561259`. CTRL-03 is canonically accepted at C1 SHA-256 `89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff`, run `33696046649`, with `50/50` gates, `44/44` mutations and `290/290` tests PASS. The cumulative control-plane payload through CTRL-03 is installed in canonical main. The overall CTRL layer remains open until remaining governed CTRL stages are independently accepted.
 
 **Parallel FRONT action:** FRONT-02 specification is established. The next legitimate FRONT-02 step is completion/acceptance of the mandatory specification artefacts named in `FRONT-02-SPECIFICATION.md`, followed by implementation within that scope. API is now closed; this FRONT work still does not constitute FRONT acceptance or final closure and remains downstream of the governed preview/integration path.
 

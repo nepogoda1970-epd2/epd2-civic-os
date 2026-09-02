@@ -1,0 +1,27 @@
+{
+  "baseline_commit": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "certification_claim": "NONE",
+  "executed": true,
+  "fir_presence": {
+    "FIR-GOV-004": true,
+    "FIR-GOV-005": true,
+    "FIR-INFRA-SOV-001": true,
+    "FIR-OPS-001": true,
+    "FIR-OSS-007": true,
+    "FIR-SEC-004": true,
+    "FIR-TRUST-002": true,
+    "FIR-TRUST-003": true,
+    "FIR-VOTE-BSI-001": true,
+    "FIR-VOTE-NET-001": true
+  },
+  "gate_refs": [
+    "G47"
+  ],
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "open_trust_verification_boundary": "PRESERVED",
+  "runtime": "credential_lifecycle.py",
+  "schema": "epd2.ctrl03.evidence/1",
+  "status": "PASS",
+  "test_evidence": "test_result.json",
+  "voting_change": false
+}

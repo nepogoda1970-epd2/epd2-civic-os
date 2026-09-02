@@ -1,0 +1,13 @@
+{
+  "baseline_commit": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "executed": true,
+  "gate_refs": [
+    "G35",
+    "G36"
+  ],
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "runtime": "credential_lifecycle.py",
+  "schema": "epd2.ctrl03.evidence/1",
+  "status": "PASS",
+  "test_evidence": "test_result.json"
+}

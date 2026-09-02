@@ -1,0 +1,404 @@
+{
+  "schema": "epd2.ctrl03.mutation-result/1",
+  "mutations_total": 44,
+  "detected": 44,
+  "undetected": [],
+  "results": [
+    {
+      "mutation_id": "M01",
+      "name": "pq_track_activated",
+      "old": "PQ_TRACK_ACTIVE: Final = False",
+      "new": "PQ_TRACK_ACTIVE: Final = True",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "..................F.....................................                 [100%]\n=================================== FAILURES ===================================\n___________ test_profiles_pin_governed_algorithms_and_pq_is_inactive ___________\n\n    def test_profiles_pin_governed_algorithms_and_pq_is_inactive() -> None:\n        assert ALGORITHM_RULES[AssuranceProfile.TRUST_ES384].algorithm == \"ES384\"\n        assert ALGORITHM_RULES[AssuranceProfile.SERVICE_JWS_ES256].algorithm == \"ES256\"\n        assert ALGORITHM_RULES[AssuranceProfile.MTLS].algorithm == \"X509\"\n        assert ALGORITHM_RULES[AssuranceProfile.ENCRYPTION_AES256_GCM].algorithm == \"A256GCM\"\n>       assert PQ_TRACK_ACTIVE is False\nE       assert True is False\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:25: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_profiles_pin_governed_algorithms_and_pq_is_inactive - assert True is False\n1 failed, 55 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M02",
+      "name": "rotation_overlap_extended",
+      "old": "MAX_ROTATION_OVERLAP: Final = timedelta(hours=24)",
+      "new": "MAX_ROTATION_OVERLAP: Final = timedelta(days=365)",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................F.................                 [100%]\n=================================== FAILURES ===================================\n__________ test_rotation_rejects_missing_link_and_indefinite_overlap ___________\n\n    def test_rotation_rejects_missing_link_and_indefinite_overlap() -> None:\n        svc = service()\n        svc.register(object_for())\n        svc.register(object_for(object_id=\"credential:new\", state=LifecycleState.REQUESTED))\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:54: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_rotation_rejects_missing_link_and_indefinite_overlap - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M03",
+      "name": "secret_jit_extended",
+      "old": "MAX_SECRET_JIT: Final = timedelta(minutes=15)",
+      "new": "MAX_SECRET_JIT: Final = timedelta(days=1)",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "..............................................F.........                 [100%]\n=================================== FAILURES ===================================\n______ test_secret_jit_rejects_long_or_insufficient_grants[16-approvals0] ______\n\nminutes = 16, approvals = ('a', 'b')\n\n    @pytest.mark.parametrize(\n        (\"minutes\", \"approvals\"), [(16, (\"a\", \"b\")), (10, (\"a\",)), (10, (\"a\", \"a\"))]\n    )\n    def test_secret_jit_rejects_long_or_insufficient_grants(\n        minutes: int, approvals: tuple[str, ...]\n    ) -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:55: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_secret_jit_rejects_long_or_insufficient_grants[16-approvals0] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M04",
+      "name": "universal_admin",
+      "old": "UNIVERSAL_ADMIN_EXISTS: Final = False",
+      "new": "UNIVERSAL_ADMIN_EXISTS: Final = True",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n>       assert UNIVERSAL_ADMIN_EXISTS is False\nE       assert True is False\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:146: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - assert True is False\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M05",
+      "name": "universal_secret_reader",
+      "old": "UNIVERSAL_SECRET_READER_EXISTS: Final = False",
+      "new": "UNIVERSAL_SECRET_READER_EXISTS: Final = True",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n        assert UNIVERSAL_ADMIN_EXISTS is False\n>       assert UNIVERSAL_SECRET_READER_EXISTS is False\nE       assert True is False\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:147: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - assert True is False\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M06",
+      "name": "direct_db_lifecycle",
+      "old": "DIRECT_DB_COUNTS_AS_LIFECYCLE: Final = False",
+      "new": "DIRECT_DB_COUNTS_AS_LIFECYCLE: Final = True",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n        assert UNIVERSAL_ADMIN_EXISTS is False\n        assert UNIVERSAL_SECRET_READER_EXISTS is False\n>       assert DIRECT_DB_COUNTS_AS_LIFECYCLE is False\nE       assert True is False\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:148: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - assert True is False\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M07",
+      "name": "self_accepted",
+      "old": "SELF_STATE: Final = \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"",
+      "new": "SELF_STATE: Final = \"ACCEPTED\"",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n        assert UNIVERSAL_ADMIN_EXISTS is False\n        assert UNIVERSAL_SECRET_READER_EXISTS is False\n        assert DIRECT_DB_COUNTS_AS_LIFECYCLE is False\n>       assert SELF_STATE == \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"\nE       AssertionError: assert 'ACCEPTED' == 'PARALLEL_WOR..._NOT_ACCEPTED'\nE         \nE         - PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\nE         + ACCEPTED\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:149: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - AssertionError: assert 'ACCEPTED' == 'PARALLEL_WOR..._NOT_ACCEPTED'\n  \n  - PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\n  + ACCEPTED\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M08",
+      "name": "fixture_reduction",
+      "old": "MUTATION_FIXTURES_REQUIRED: Final = 44",
+      "new": "MUTATION_FIXTURES_REQUIRED: Final = 43",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n        assert UNIVERSAL_ADMIN_EXISTS is False\n        assert UNIVERSAL_SECRET_READER_EXISTS is False\n        assert DIRECT_DB_COUNTS_AS_LIFECYCLE is False\n        assert SELF_STATE == \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"\n>       assert MUTATION_FIXTURES_REQUIRED == 44\nE       assert 43 == 44\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:150: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - assert 43 == 44\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M09",
+      "name": "post_validation_change_allowed",
+      "old": "FREEZE_REJECTS_POST_VALIDATION_CHANGE: Final = True",
+      "new": "FREEZE_REJECTS_POST_VALIDATION_CHANGE: Final = False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................................F.                 [100%]\n=================================== FAILURES ===================================\n_______________________ test_meta_governance_invariants ________________________\n\n    def test_meta_governance_invariants() -> None:\n        assert UNIVERSAL_ADMIN_EXISTS is False\n        assert UNIVERSAL_SECRET_READER_EXISTS is False\n        assert DIRECT_DB_COUNTS_AS_LIFECYCLE is False\n        assert SELF_STATE == \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"\n        assert MUTATION_FIXTURES_REQUIRED == 44\n>       assert FREEZE_REJECTS_POST_VALIDATION_CHANGE is True\nE       assert False is True\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:151: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - assert False is True\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M10",
+      "name": "ctrl01_identity_drift",
+      "old": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+      "new": "17134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "s False\n        assert DIRECT_DB_COUNTS_AS_LIFECYCLE is False\n        assert SELF_STATE == \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"\n        assert MUTATION_FIXTURES_REQUIRED == 44\n        assert FREEZE_REJECTS_POST_VALIDATION_CHANGE is True\n>       assert CTRL01_ACCEPTED_SHA256.startswith(\"07134db1\")\nE       AssertionError: assert False\nE        +  where False = <built-in method startswith of str object at 0x7f8a94029220>('07134db1')\nE        +    where <built-in method startswith of str object at 0x7f8a94029220> = '17134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5'.startswith\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:152: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - AssertionError: assert False\n +  where False = <built-in method startswith of str object at 0x7f8a94029220>('07134db1')\n +    where <built-in method startswith of str object at 0x7f8a94029220> = '17134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5'.startswith\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M11",
+      "name": "ctrl02_identity_drift",
+      "old": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+      "new": "0addb4dfaeb3097e22d15e3448b5d927d7c3b1d7d4dd3332230d23ccd999df1d",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "e\n        assert SELF_STATE == \"PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED\"\n        assert MUTATION_FIXTURES_REQUIRED == 44\n        assert FREEZE_REJECTS_POST_VALIDATION_CHANGE is True\n        assert CTRL01_ACCEPTED_SHA256.startswith(\"07134db1\")\n>       assert CTRL02_WORKING_SHA256.startswith(\"f58bafe7\")\nE       AssertionError: assert False\nE        +  where False = <built-in method startswith of str object at 0x7f9d4f859290>('f58bafe7')\nE        +    where <built-in method startswith of str object at 0x7f9d4f859290> = '0addb4dfaeb3097e22d15e3448b5d927d7c3b1d7d4dd3332230d23ccd999df1d'.startswith\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:153: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_meta_governance_invariants - AssertionError: assert False\n +  where False = <built-in method startswith of str object at 0x7f9d4f859290>('f58bafe7')\n +    where <built-in method startswith of str object at 0x7f9d4f859290> = '0addb4dfaeb3097e22d15e3448b5d927d7c3b1d7d4dd3332230d23ccd999df1d'.startswith\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M12",
+      "name": "voting_custody_allowed",
+      "old": "if item.credential_class is CredentialClass.VOTING_KEY_REFERENCE and (",
+      "new": "if False and (",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": ".........................F..............................                 [100%]\n=================================== FAILURES ===================================\n__________ test_voting_key_is_reference_only_without_generic_custody ___________\n\n    def test_voting_key_is_reference_only_without_generic_custody() -> None:\n        svc = service()\n        voting = svc.register(object_for(CredentialClass.VOTING_KEY_REFERENCE))\n        assert voting.custody_ref is None\n        assert voting.provider_ref is None\n>       with pytest.raises(AuthorizationRefused) as custody_error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:113: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_voting_key_is_reference_only_without_generic_custody - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M13",
+      "name": "cryptoperiod_disabled",
+      "old": "item.valid_until - item.valid_from > rule.maximum_lifetime",
+      "new": "False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": ".......................F................................                 [100%]\n=================================== FAILURES ===================================\n____________________ test_cryptoperiod_ceiling_is_enforced _____________________\n\n    def test_cryptoperiod_ceiling_is_enforced() -> None:\n        svc = service()\n        item = replace(object_for(), valid_until=NOW + timedelta(days=91))\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:54: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_cryptoperiod_ceiling_is_enforced - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M14",
+      "name": "cross_region_issuance",
+      "old": "if item.scope != issuer_scope:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "[issuer_scope0-False-WRONG_SCOPE] _\n\nissuer_scope = ExactScope(region_id='DE-BY', org_id='org-bavaria')\nroot_hot_path = False, reason = <Refusal.WRONG_SCOPE: 'WRONG_SCOPE'>\n\n    @pytest.mark.parametrize(\n        (\"issuer_scope\", \"root_hot_path\", \"reason\"),\n        [\n            (BAVARIA, False, Refusal.WRONG_SCOPE),\n            (BERLIN, True, \"ROOT_HOT_PATH\"),\n        ],\n    )\n    def test_regional_issuance_rejects_scope_escape_and_root_hot_path(\n        issuer_scope, root_hot_path: bool, reason: str\n    ) -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_regional_recovery_review.py:38: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_regional_recovery_review.py::test_regional_issuance_rejects_scope_escape_and_root_hot_path[issuer_scope0-False-WRONG_SCOPE] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M15",
+      "name": "root_hot_path",
+      "old": "if root_hot_path:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ape_and_root_hot_path[issuer_scope1-True-ROOT_HOT_PATH] _\n\nissuer_scope = ExactScope(region_id='DE-BE', org_id='org-berlin')\nroot_hot_path = True, reason = 'ROOT_HOT_PATH'\n\n    @pytest.mark.parametrize(\n        (\"issuer_scope\", \"root_hot_path\", \"reason\"),\n        [\n            (BAVARIA, False, Refusal.WRONG_SCOPE),\n            (BERLIN, True, \"ROOT_HOT_PATH\"),\n        ],\n    )\n    def test_regional_issuance_rejects_scope_escape_and_root_hot_path(\n        issuer_scope, root_hot_path: bool, reason: str\n    ) -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_regional_recovery_review.py:38: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_regional_recovery_review.py::test_regional_issuance_rejects_scope_escape_and_root_hot_path[issuer_scope1-True-ROOT_HOT_PATH] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M16",
+      "name": "issuer_purpose_escape",
+      "old": "if item.credential_class not in {",
+      "new": "if False and item.credential_class not in {",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "..............................F.........................                 [100%]\n=================================== FAILURES ===================================\n_____________ test_regional_issuer_cannot_issue_human_credentials ______________\n\n    def test_regional_issuer_cannot_issue_human_credentials() -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_regional_recovery_review.py:49: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_regional_recovery_review.py::test_regional_issuer_cannot_issue_human_credentials - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M17",
+      "name": "profile_class_escape",
+      "old": "if item.credential_class not in rule.allowed_classes:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................F.................................                 [100%]\n=================================== FAILURES ===================================\n___________ test_profile_cannot_be_reused_for_wrong_credential_class ___________\n\n    def test_profile_cannot_be_reused_for_wrong_credential_class() -> None:\n        svc = service()\n        item = replace(\n            object_for(CredentialClass.PASSKEY),\n            credential_class=CredentialClass.SERVICE_CREDENTIAL,\n        )\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:46: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_profile_cannot_be_reused_for_wrong_credential_class - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M18",
+      "name": "algorithm_none",
+      "old": "if item.algorithm in {None, \"none\", \"NONE\"} or item.algorithm != rule.algorithm:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": " (\"algorithm\", \"curve\"),\n        [(\"none\", \"P-256\"), (\"ES384\", \"P-256\"), (\"ES256\", \"P-384\")],\n    )\n    def test_algorithm_none_wrong_alg_and_key_mismatch_rejected(algorithm: str, curve: str) -> None:\n        svc = service()\n        item = replace(object_for(), algorithm=algorithm, curve_or_mode=curve)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:35: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_algorithm_none_wrong_alg_and_key_mismatch_rejected[none-P-256] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_algorithm_none_wrong_alg_and_key_mismatch_rejected[ES384-P-256] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n2 failed, 54 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M19",
+      "name": "curve_mismatch",
+      "old": "if item.curve_or_mode != rule.curve_or_mode:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "[100%]\n=================================== FAILURES ===================================\n_____ test_algorithm_none_wrong_alg_and_key_mismatch_rejected[ES256-P-384] _____\n\nalgorithm = 'ES256', curve = 'P-384'\n\n    @pytest.mark.parametrize(\n        (\"algorithm\", \"curve\"),\n        [(\"none\", \"P-256\"), (\"ES384\", \"P-256\"), (\"ES256\", \"P-384\")],\n    )\n    def test_algorithm_none_wrong_alg_and_key_mismatch_rejected(algorithm: str, curve: str) -> None:\n        svc = service()\n        item = replace(object_for(), algorithm=algorithm, curve_or_mode=curve)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:35: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_algorithm_none_wrong_alg_and_key_mismatch_rejected[ES256-P-384] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M20",
+      "name": "operation_boundary",
+      "old": "return operation in by_class[item.credential_class]",
+      "new": "return True",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "r(object_for(CredentialClass.VOTING_KEY_REFERENCE))\n        assert voting.custody_ref is None\n        assert voting.provider_ref is None\n        with pytest.raises(AuthorizationRefused) as custody_error:\n            svc.register(\n                replace(\n                    object_for(CredentialClass.VOTING_KEY_REFERENCE, object_id=\"voting:bad\"),\n                    provider_ref=\"provider:generic\",\n                    custody_ref=\"custody:generic\",\n                )\n            )\n        assert custody_error.value.reason_code == Refusal.VOTING_BOUNDARY\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:122: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_voting_key_is_reference_only_without_generic_custody - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M21",
+      "name": "high_impact_quorum",
+      "old": "return 2, frozenset({ApproverClass.SECURITY, ApproverClass.TRUST_CUSTODIAN})",
+      "new": "return 1, frozenset({ApproverClass.SECURITY})",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ial:old', ...2, 12, 31, tzinfo=datetime.timezone.utc)),), executed_by=None, review_ref=None, new_object_id=None, overlap_until=None).state\n +  and   <LifecycleState.PENDING_ACTIVATION: 'PENDING_ACTIVATION'> = LifecycleState.PENDING_ACTIVATION\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_two_security_approvers_do_not_replace_trust_custodian - epd2_control_plane_service.exceptions.AuthorizationRefused: request not approvable\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_duplicate_approver_with_distinct_idempotency_key_is_rejected - AssertionError: assert 'WRONG_STATE' == <Refusal.SELF...AL_FORBIDDEN'>\n  \n  - SELF_APPROVAL_FORBIDDEN\n  + WRONG_STATE\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_high_impact_signing_rotation_needs_two_classes - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_compromise_is_preserved_across_checkpoint_and_requires_review - epd2_control_plane_service.exceptions.AuthorizationRefused: request not approvable\n5 failed, 51 passed in 0.35s\n"
+    },
+    {
+      "mutation_id": "M22",
+      "name": "idempotency_conflict",
+      "old": "if previous[0] != digest:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "...........F............................................                 [100%]\n=================================== FAILURES ===================================\n__________ test_idempotency_key_cannot_be_reused_for_different_intent __________\n\n    def test_idempotency_key_cannot_be_reused_for_different_intent() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.PASSKEY))\n        request(svc)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:122: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_idempotency_key_cannot_be_reused_for_different_intent - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M23",
+      "name": "missing_request_evidence",
+      "old": "if not reason.strip() or not tuple(evidence_refs):",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "test_request_requires_reason_and_evidence[valid-evidence1] __________\n\nreason = 'valid', evidence = ()\n\n    @pytest.mark.parametrize((\"reason\", \"evidence\"), [(\"\", (\"e\",)), (\"valid\", ())])\n    def test_request_requires_reason_and_evidence(reason: str, evidence: tuple[str, ...]) -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.PASSKEY))\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:141: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_request_requires_reason_and_evidence[-evidence0] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_request_requires_reason_and_evidence[valid-evidence1] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n2 failed, 54 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M24",
+      "name": "unbounded_rotation",
+      "old": "or overlap_until - moment > MAX_ROTATION_OVERLAP",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "......................................F.................                 [100%]\n=================================== FAILURES ===================================\n__________ test_rotation_rejects_missing_link_and_indefinite_overlap ___________\n\n    def test_rotation_rejects_missing_link_and_indefinite_overlap() -> None:\n        svc = service()\n        svc.register(object_for())\n        svc.register(object_for(object_id=\"credential:new\", state=LifecycleState.REQUESTED))\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:54: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_rotation_rejects_missing_link_and_indefinite_overlap - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M25",
+      "name": "self_approval",
+      "old": "if approver_id == request.requester_id or approver_id in {",
+      "new": "if False or approver_id in {",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ef test_self_approval_duplicate_approval_and_requester_execution_rejected() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.PASSKEY))\n        request(svc)\n        with pytest.raises(AuthorizationRefused) as error:\n            svc.approve(\n                \"request-1\",\n                approver_id=\"requester\",\n                approver_class=ApproverClass.SECURITY,\n                now=NOW + timedelta(minutes=1),\n                idempotency_key=\"self\",\n            )\n>       assert error.value.reason_code == Refusal.SELF_APPROVAL\nE       AssertionError: assert <Decision.WRO...'WRONG_SCOPE'> == <Refusal.SELF...AL_FORBIDDEN'>\nE         \nE         - SELF_APPROVAL_FORBIDDEN\nE         + WRONG_SCOPE\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:74: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_self_approval_duplicate_approval_and_requester_execution_rejected - AssertionError: assert <Decision.WRO...'WRONG_SCOPE'> == <Refusal.SELF...AL_FORBIDDEN'>\n  \n  - SELF_APPROVAL_FORBIDDEN\n  + WRONG_SCOPE\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M26",
+      "name": "duplicate_approval",
+      "old": "or approver_id in {\n                approval.actor_id for approval in request.approvals\n            }",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "..............F.........................................                 [100%]\n=================================== FAILURES ===================================\n______ test_duplicate_approver_with_distinct_idempotency_key_is_rejected _______\n\n    def test_duplicate_approver_with_distinct_idempotency_key_is_rejected() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.JWS_SIGNING_KEY))\n        request(svc)\n        approve_security(svc)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:161: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_duplicate_approver_with_distinct_idempotency_key_is_rejected - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M27",
+      "name": "target_drift",
+      "old": "if item.version != request.expected_target_version:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ity\":\n                svc.authorities.update(\"sec1\")\n            elif mutation == \"provider\":\n                svc.provider.versions[\"credential:old\"] = 2\n            elif mutation == \"ctrl02\":\n                svc.ctrl02.revision = 2\n            else:\n                svc._objects[\"credential:old\"] = object_for(\n                    CredentialClass.PASSKEY, state=LifecycleState.ACTIVE\n                )\n                svc._objects[\"credential:old\"] = __import__(\"dataclasses\").replace(\n                    svc._objects[\"credential:old\"], version=2\n                )\n>           with pytest.raises(AuthorizationRefused):\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE           Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:192: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_commit_time_reauth_detects_authority_provider_ctrl02_and_target_drift - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M28",
+      "name": "provider_drift",
+      "old": "if self.provider.version(item.object_id) != request.expected_provider_version:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ecycle.py:192: Failed\n_________________ test_provider_drift_detects_silent_rotation __________________\n\n    def test_provider_drift_detects_silent_rotation() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.PASSKEY))\n        request(svc)\n        approve_security(svc)\n        svc.provider.versions[\"credential:old\"] += 1\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:159: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_commit_time_reauth_detects_authority_provider_ctrl02_and_target_drift - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_provider_drift_detects_silent_rotation - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n2 failed, 54 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M29",
+      "name": "trust_drift",
+      "old": "if item.trust_version != request.expected_trust_version:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "................F.......................................                 [100%]\n=================================== FAILURES ===================================\n_____________ test_commit_time_reauth_detects_trust_version_drift ______________\n\n    def test_commit_time_reauth_detects_trust_version_drift() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.SERVICE_CREDENTIAL))\n        request(svc)\n        approve_security(svc)\n        svc._objects[\"credential:old\"] = replace(svc._objects[\"credential:old\"], trust_version=4)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:202: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_commit_time_reauth_detects_trust_version_drift - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M30",
+      "name": "approver_reauth",
+      "old": "for approval in request.approvals:\n            self.authorities.require(",
+      "new": "for approval in ():\n            self.authorities.require(",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "ity\":\n                svc.authorities.update(\"sec1\")\n            elif mutation == \"provider\":\n                svc.provider.versions[\"credential:old\"] = 2\n            elif mutation == \"ctrl02\":\n                svc.ctrl02.revision = 2\n            else:\n                svc._objects[\"credential:old\"] = object_for(\n                    CredentialClass.PASSKEY, state=LifecycleState.ACTIVE\n                )\n                svc._objects[\"credential:old\"] = __import__(\"dataclasses\").replace(\n                    svc._objects[\"credential:old\"], version=2\n                )\n>           with pytest.raises(AuthorizationRefused):\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE           Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:192: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_commit_time_reauth_detects_authority_provider_ctrl02_and_target_drift - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M31",
+      "name": "approval_is_execution",
+      "old": "if request.state is not LifecycleState.APPROVED:",
+      "new": "if request.state not in {LifecycleState.APPROVED, LifecycleState.PENDING_ACTIVATION}:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "eeds_two_classes() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.JWS_SIGNING_KEY))\n        svc.register(\n            object_for(\n                CredentialClass.JWS_SIGNING_KEY,\n                object_id=\"credential:new\",\n                parent_id=\"credential:old\",\n                state=LifecycleState.REQUESTED,\n            )\n        )\n        request(\n            svc,\n            operation=LifecycleOperation.ROTATE,\n            new_object_id=\"credential:new\",\n            overlap_until=NOW + timedelta(hours=1),\n        )\n        approve_security(svc)\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:147: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_high_impact_signing_rotation_needs_two_classes - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M32",
+      "name": "custodian_separation",
+      "old": "if custodian_id in {request.requester_id, *(a.actor_id for a in request.approvals)}:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "\",\n                approver_id=\"security-1\",\n                approver_class=ApproverClass.SECURITY,\n                now=NOW + timedelta(minutes=2),\n                idempotency_key=\"duplicate\",\n            )\n        with pytest.raises(AuthorizationRefused) as execute_error:\n            svc.execute(\n                \"request-1\",\n                custodian_id=\"requester\",\n                now=NOW + timedelta(minutes=3),\n                idempotency_key=\"self-execute\",\n            )\n>       assert execute_error.value.reason_code == Refusal.EXECUTION_SEPARATION\nE       AssertionError: assert <Decision.WRO...'WRONG_SCOPE'> == <Refusal.EXEC...OT_EXECUTION'>\nE         \nE         - APPROVAL_IS_NOT_EXECUTION\nE         + WRONG_SCOPE\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:91: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_self_approval_duplicate_approval_and_requester_execution_rejected - AssertionError: assert <Decision.WRO...'WRONG_SCOPE'> == <Refusal.EXEC...OT_EXECUTION'>\n  \n  - APPROVAL_IS_NOT_EXECUTION\n  + WRONG_SCOPE\n1 failed, 55 passed in 0.32s\n"
+    },
+    {
+      "mutation_id": "M33",
+      "name": "cross_region_rotation",
+      "old": "or replacement.scope != item.scope",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "otation_is_rejected() -> None:\n        from _ctrl03_builders import BAVARIA\n    \n        svc = service()\n        svc.register(object_for())\n        svc.register(\n            object_for(\n                object_id=\"credential:new\",\n                parent_id=\"credential:old\",\n                scope=BAVARIA,\n                state=LifecycleState.REQUESTED,\n            )\n        )\n        request(\n            svc,\n            operation=LifecycleOperation.ROTATE,\n            new_object_id=\"credential:new\",\n            overlap_until=NOW + timedelta(hours=1),\n        )\n        approve_security(svc)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:124: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_cross_region_rotation_is_rejected - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M34",
+      "name": "rotation_linkage",
+      "old": "if replacement.parent_id != item.object_id:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "====== FAILURES ===================================\n___________ test_rotation_rejects_unlinked_replacement_at_execution ____________\n\n    def test_rotation_rejects_unlinked_replacement_at_execution() -> None:\n        svc = service()\n        svc.register(object_for())\n        svc.register(object_for(object_id=\"credential:new\", state=LifecycleState.REQUESTED))\n        request(\n            svc,\n            operation=LifecycleOperation.ROTATE,\n            new_object_id=\"credential:new\",\n            overlap_until=NOW + timedelta(hours=1),\n        )\n        approve_security(svc)\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:74: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_rotation_rejects_unlinked_replacement_at_execution - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M35",
+      "name": "session_invalidation",
+      "old": "and value.subject_ref == subject_ref",
+      "new": "and False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": ":\n        svc = service()\n        human = svc.register(object_for(CredentialClass.HUMAN_CREDENTIAL))\n        session = svc.register(object_for(CredentialClass.SESSION, object_id=\"session:one\"))\n        assert human.subject_ref == session.subject_ref\n        request(svc)\n        approve_security(svc)\n        execute(svc)\n        states = {item.object_id: item.state for item in svc.objects}\n        assert states[\"credential:old\"] is LifecycleState.REVOKED\n>       assert states[\"session:one\"] is LifecycleState.REVOKED\nE       AssertionError: assert <LifecycleState.ACTIVE: 'ACTIVE'> is <LifecycleState.REVOKED: 'REVOKED'>\nE        +  where <LifecycleState.REVOKED: 'REVOKED'> = LifecycleState.REVOKED\n\nservices/control-plane-service/tests/test_ctrl03_lifecycle.py:104: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_lifecycle.py::test_human_credential_revocation_invalidates_dependent_sessions - AssertionError: assert <LifecycleState.ACTIVE: 'ACTIVE'> is <LifecycleState.REVOKED: 'REVOKED'>\n +  where <LifecycleState.REVOKED: 'REVOKED'> = LifecycleState.REVOKED\n1 failed, 55 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M36",
+      "name": "trust_in_place",
+      "old": "if previous_version != actual_previous:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "le_in_place_replacement __________\n\n    def test_versioned_trust_set_rejects_stale_in_place_replacement() -> None:\n        svc = service()\n        v1 = svc.publish_trust_version(\n            trust_set_id=\"regional-jwks\",\n            entries=(\"key-1\",),\n            now=NOW,\n            previous_version=None,\n        )\n        v2 = svc.publish_trust_version(\n            trust_set_id=\"regional-jwks\",\n            entries=(\"key-1\", \"key-2\"),\n            now=NOW + timedelta(minutes=1),\n            previous_version=1,\n        )\n        assert v2.previous_version == v1.version\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:94: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_versioned_trust_set_rejects_stale_in_place_replacement - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M37",
+      "name": "cross_purpose_assertion",
+      "old": "if item.purpose != expected_purpose:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "==\n___ test_assertion_validation_pins_purpose_scope_location_and_trust_version ____\n\n    def test_assertion_validation_pins_purpose_scope_location_and_trust_version() -> None:\n        svc = service()\n        item = svc.register(object_for())\n        assert svc.validate_assertion(\n            item.object_id,\n            expected_purpose=item.purpose,\n            expected_scope=BERLIN,\n            trusted_locations=frozenset({\"https://trust.epd.invalid/jwks\"}),\n            minimum_trust_version=3,\n            now=NOW + timedelta(minutes=1),\n        )\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:70: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_assertion_validation_pins_purpose_scope_location_and_trust_version - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M38",
+      "name": "cross_region_assertion",
+      "old": "if item.scope != expected_scope:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "thorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:79: Failed\n____________ test_wrong_region_assertion_is_not_hierarchy_inherited ____________\n\n    def test_wrong_region_assertion_is_not_hierarchy_inherited() -> None:\n        svc = service()\n        item = svc.register(object_for())\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_rotation_trust.py:167: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_assertion_validation_pins_purpose_scope_location_and_trust_version - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_rotation_trust.py::test_wrong_region_assertion_is_not_hierarchy_inherited - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n2 failed, 54 passed in 0.30s\n"
+    },
+    {
+      "mutation_id": "M39",
+      "name": "revoked_assertion",
+      "old": "if item.state is not LifecycleState.ACTIVE or item.compromised:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "..........................F.............................                 [100%]\n=================================== FAILURES ===================================\n_______________ test_revoked_and_expired_assertions_fail_closed ________________\n\n    def test_revoked_and_expired_assertions_fail_closed() -> None:\n        svc = service()\n        item = svc.register(replace(object_for(), state=LifecycleState.REVOKED))\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:140: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_revoked_and_expired_assertions_fail_closed - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M40",
+      "name": "trust_location",
+      "old": "if item.trust_location not in trusted_locations:",
+      "new": "if False:",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "usted_locations=frozenset({\"https://trust.epd.invalid/jwks\"}),\n                minimum_trust_version=3,\n                now=NOW + timedelta(minutes=1),\n            )\n        with pytest.raises(AuthorizationRefused):\n            svc.validate_assertion(\n                item.object_id,\n                expected_purpose=item.purpose,\n                expected_scope=BAVARIA,\n                trusted_locations=frozenset({\"https://trust.epd.invalid/jwks\"}),\n                minimum_trust_version=3,\n                now=NOW + timedelta(minutes=1),\n            )\n>       with pytest.raises(AuthorizationRefused):\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py:88: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_profiles_and_boundaries.py::test_assertion_validation_pins_purpose_scope_location_and_trust_version - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M41",
+      "name": "secret_quorum",
+      "old": "or len(approvals) < 2",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "rovals2] ______\n\nminutes = 10, approvals = ('a', 'a')\n\n    @pytest.mark.parametrize(\n        (\"minutes\", \"approvals\"), [(16, (\"a\", \"b\")), (10, (\"a\",)), (10, (\"a\", \"a\"))]\n    )\n    def test_secret_jit_rejects_long_or_insufficient_grants(\n        minutes: int, approvals: tuple[str, ...]\n    ) -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:55: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_secret_jit_rejects_long_or_insufficient_grants[10-approvals1] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_secret_jit_rejects_long_or_insufficient_grants[10-approvals2] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n2 failed, 54 passed in 0.32s\n"
+    },
+    {
+      "mutation_id": "M42",
+      "name": "secret_expiry",
+      "old": "or moment >= grant.expires_at",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "===\n_________ test_secret_jit_cannot_be_used_after_expiry_without_sweeper __________\n\n    def test_secret_jit_cannot_be_used_after_expiry_without_sweeper() -> None:\n        svc = service()\n        svc.grant_secret_access(\n            grant_id=\"secret-jit:direct-expiry\",\n            actor_id=\"operator\",\n            target_ref=\"provider-secret:mail\",\n            capability=\"SECRET.USE_IN_CUSTODY_SESSION\",\n            scope=BERLIN,\n            now=NOW,\n            expires_at=NOW + timedelta(minutes=5),\n            approval_refs=(\"a\", \"b\"),\n        )\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:103: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_secret_jit_cannot_be_used_after_expiry_without_sweeper - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M43",
+      "name": "recovery_threshold",
+      "old": "or threshold < previous_threshold",
+      "new": "or False",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "__ test_recovery_ceremony_rejects_weak_or_duplicate_quorum[participants1-2-3] __\n\nparticipants = ('a', 'b', 'c'), threshold = 2, previous_threshold = 3\n\n    @pytest.mark.parametrize(\n        (\"participants\", \"threshold\", \"previous_threshold\"),\n        [\n            ((\"a\", \"b\", \"c\"), 1, 2),\n            ((\"a\", \"b\", \"c\"), 2, 3),\n            ((\"a\", \"a\", \"b\"), 2, 2),\n        ],\n    )\n    def test_recovery_ceremony_rejects_weak_or_duplicate_quorum(\n        participants: tuple[str, ...], threshold: int, previous_threshold: int\n    ) -> None:\n>       with pytest.raises(AuthorizationRefused) as error:\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n\nservices/control-plane-service/tests/test_ctrl03_regional_recovery_review.py:99: Failed\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_regional_recovery_review.py::test_recovery_ceremony_rejects_weak_or_duplicate_quorum[participants1-2-3] - Failed: DID NOT RAISE <class 'epd2_control_plane_service.exceptions.AuthorizationRefused'>\n1 failed, 55 passed in 0.29s\n"
+    },
+    {
+      "mutation_id": "M44",
+      "name": "audit_history_overwrite",
+      "old": "self._events.append(event)",
+      "new": "self._events[:] = [event]",
+      "detected": true,
+      "pytest_returncode": 1,
+      "output_tail": "...F...                 [100%]\n=================================== FAILURES ===================================\n_________ test_audit_is_hash_linked_append_only_and_contains_no_secret _________\n\n    def test_audit_is_hash_linked_append_only_and_contains_no_secret() -> None:\n        svc = service()\n        svc.register(object_for(CredentialClass.PASSKEY))\n        request(svc)\n        approve_security(svc)\n        execute(svc)\n        events = svc.events\n>       assert events[0].previous_hash == \"GENESIS\"\nE       AssertionError: assert '6249fd978617...9499418fce8fb' == 'GENESIS'\nE         \nE         - GENESIS\nE         + 6249fd97861733b23f8b69dc0c613032897c7d79e5d01a29e749499418fce8fb\n\nservices/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py:128: AssertionError\n=========================== short test summary info ============================\nFAILED services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py::test_audit_is_hash_linked_append_only_and_contains_no_secret - AssertionError: assert '6249fd978617...9499418fce8fb' == 'GENESIS'\n  \n  - GENESIS\n  + 6249fd97861733b23f8b69dc0c613032897c7d79e5d01a29e749499418fce8fb\n1 failed, 55 passed in 0.29s\n"
+    }
+  ]
+}

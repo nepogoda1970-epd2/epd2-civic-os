@@ -1,0 +1,10 @@
+{
+  "contract_commit": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "contract_tree": "8f5207684b6282a9d89ed4a78444eee02d94cf01",
+  "fresh": true,
+  "master_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+  "observed_commit": "616c944248e3afe109368aebc76c416ee75e60a3",
+  "observed_tree": "8f5207684b6282a9d89ed4a78444eee02d94cf01",
+  "pcr_sha256": "880cd61181ee01cc3d5ce7a63dab0d16de28e5a8dd2fa7efd77e62a14e9100b6",
+  "schema": "epd2.ctrl03.baseline-identity/1"
+}
