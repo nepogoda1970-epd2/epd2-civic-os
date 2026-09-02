@@ -1,0 +1,68 @@
+name: API-06 C1 canonical promotion
+
+on:
+  push:
+    branches: [tmp/api06-canonical-promote]
+    paths:
+      - '.github/workflows/api06-c1-promote-canonical.yml'
+      - 'scripts/api06_canonical_promote.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: api06-c1-canonical-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout promotion control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download exact sealed API-06 C1
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-candidate-v3
+          path: ${{ runner.temp }}/api06-candidate
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+
+      - name: Download authoritative API-06 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-authoritative-acceptance-33629147572
+          path: ${{ runner.temp }}/api06-evidence
+          run-id: 33629147572
+          github-token: ${{ github.token }}
+
+      - name: Promote exact accepted bytes to canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp scripts/api06_canonical_promote.py "$RUNNER_TEMP/api06_canonical_promote.py"
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "616c944248e3afe109368aebc76c416ee75e60a3"
+          git checkout -B main origin/main
+          python3 "$RUNNER_TEMP/api06_canonical_promote.py" "$PWD" "$RUNNER_TEMP/api06-candidate" "$RUNNER_TEMP/api06-evidence"
+          git config user.name "epd2-governance-bot"
+          git config user.email "epd2-governance-bot@users.noreply.github.com"
+          git add contracts/api/api06_api_surface.json
+          git add docs/api/API-06
+          git add handoff/API-06/templates/C1
+          git add scripts/api06 scripts/validation/validate_api06.py
+          git add services/api-closure-runtime validation/api06
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          test -z "$(git status --porcelain | grep '^??' || true)"
+          git diff --cached --check
+          git commit -m "governance(api06): accept terminal API-06 C1 and close API layer"
+          COMMIT=$(git rev-parse HEAD)
+          git push origin HEAD:main
+          echo "API06_C1_CANONICAL_PROMOTION:PASS:$COMMIT"
