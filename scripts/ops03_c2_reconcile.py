@@ -6,11 +6,9 @@ import json
 import pathlib
 import shutil
 import subprocess
+import tomllib
 
 API06_SHA = "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c"
-# These are current canonical/governance-owned paths. Makefile has concurrent
-# post-OPS02 changes and is not an OPS-03 owned runtime surface, so C2 keeps
-# the current canonical version rather than weakening/overwriting it.
 PROTECTED_PREFIXES = (
     ".github/workflows/",
     "docs/api/API-06/",
@@ -77,6 +75,51 @@ def merge_text(ours: pathlib.Path, base: pathlib.Path, theirs: pathlib.Path, out
     shutil.copymode(theirs, out)
 
 
+def semantic_subset(current: object, candidate: object) -> bool:
+    if isinstance(current, dict):
+        return isinstance(candidate, dict) and all(
+            k in candidate and semantic_subset(v, candidate[k]) for k, v in current.items()
+        )
+    if isinstance(current, list):
+        return isinstance(candidate, list) and all(item in candidate for item in current)
+    return current == candidate
+
+
+def assert_pyproject_superset(ours: pathlib.Path, theirs: pathlib.Path) -> None:
+    with ours.open("rb") as fh:
+        current = tomllib.load(fh)
+    with theirs.open("rb") as fh:
+        candidate = tomllib.load(fh)
+    if not semantic_subset(current, candidate):
+        raise RuntimeError("OPS-03 C1 pyproject is not a semantic superset of current canonical pyproject")
+    expected = {"epd2-ops", "epd2-preview", "epd2-qualification"}
+    deps = set(candidate.get("project", {}).get("dependencies", []))
+    if not expected.issubset(deps):
+        raise RuntimeError("OPS workspace dependencies missing from C1 pyproject")
+
+
+def assert_lock_superset(ours: pathlib.Path, theirs: pathlib.Path) -> None:
+    with ours.open("rb") as fh:
+        current = tomllib.load(fh)
+    with theirs.open("rb") as fh:
+        candidate = tomllib.load(fh)
+    cp = current.get("package", [])
+    tp = candidate.get("package", [])
+    by_name = {p.get("name"): p for p in tp}
+    for package in cp:
+        name = package.get("name")
+        if name not in by_name:
+            raise RuntimeError(f"current canonical lock package absent from C1: {name}")
+        if name == "epd2-civic-os":
+            if not semantic_subset(package, by_name[name]):
+                raise RuntimeError("C1 root lock entry is not a semantic superset")
+        elif package != by_name[name]:
+            raise RuntimeError(f"current canonical lock package changed in C1: {name}")
+    expected = {"epd2-ops", "epd2-preview", "epd2-qualification"}
+    if not expected.issubset(by_name):
+        raise RuntimeError("OPS packages missing from C1 uv.lock")
+
+
 def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathlib.Path) -> dict[str, object]:
     base, c1, ours = file_map(base_root), file_map(c1_root), file_map(out_root)
     added: list[str] = []
@@ -98,6 +141,17 @@ def apply_delta(base_root: pathlib.Path, c1_root: pathlib.Path, out_root: pathli
             continue
 
         target = out_root / rel
+        if rel == "pyproject.toml" and o is not None and t is not None:
+            assert_pyproject_superset(o, t)
+            copy_file(t, target)
+            changed.append(rel)
+            continue
+        if rel == "uv.lock" and o is not None and t is not None:
+            assert_lock_superset(o, t)
+            copy_file(t, target)
+            changed.append(rel)
+            continue
+
         if b is None and t is not None:
             if o is None:
                 copy_file(t, target)
