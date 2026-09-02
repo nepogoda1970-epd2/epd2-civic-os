@@ -1,0 +1,84 @@
+name: ctrl02-targeted-inspect
+
+on:
+  push:
+    branches: [handoff/ctrl]
+    paths:
+      - '.github/workflows/ctrl02-targeted-inspect.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/ctrl
+          fetch-depth: 1
+      - name: Capture exact CTRL-02 verifier contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
+          OUT='handoff/CTRL/evidence/CTRL02_TARGETED_INSPECTION_V1.md'
+          rm -rf /tmp/ctrl02_target && mkdir -p /tmp/ctrl02_target
+          python3 - <<'PY'
+          import pathlib, zipfile, re
+          zp=pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
+          out=pathlib.Path('handoff/CTRL/evidence/CTRL02_TARGETED_INSPECTION_V1.md')
+          root=pathlib.Path('/tmp/ctrl02_target')
+          with zipfile.ZipFile(zp) as z: z.extractall(root)
+          tops=[p for p in root.iterdir() if p.is_dir()]
+          if len(tops)!=1: raise SystemExit(f'EXPECTED_ONE_ROOT_GOT_{len(tops)}')
+          r=tops[0]
+          wanted=[]
+          exact=[
+            'pyproject.toml','README.md','LOCAL_VERIFICATION.md','Makefile',
+            'scripts/ctrl02_validator.py','scripts/ctrl02_mutation_suite.py','scripts/verify_ctrl02_package.py','scripts/build_ctrl02_preseal.py',
+            'contracts/control/ctrl02_control_console.json',
+            'validation/ctrl02/ctrl02_preseal_result.json','validation/ctrl02/freeze_manifest.json',
+            'validation/ctrl02/package_identity_result.json','validation/ctrl02/ctrl01_reconciliation_result.json',
+            'validation/ctrl02/fir_reconciliation.json','validation/ctrl02/test_result.json','validation/ctrl02/mutation_result.json'
+          ]
+          for rel in exact:
+              p=r/rel
+              if p.is_file(): wanted.append(p)
+          # Include compact CTRL-02 handover/contract/readme docs and workflow if present.
+          for p in r.rglob('*'):
+              if not p.is_file() or p in wanted: continue
+              rel=p.relative_to(r).as_posix()
+              if p.stat().st_size>50000: continue
+              if re.search(r'(ctrl[-_]?0?2|regional.*intervention|privileged.*operations)', rel, re.I) and p.suffix.lower() in {'.md','.json','.yml','.yaml','.toml','.txt','.py','.sh'}:
+                  wanted.append(p)
+          seen=set(); chunks=['# CTRL-02 Targeted Inspection V1','']
+          total=0
+          for p in wanted:
+              rel=p.relative_to(r).as_posix()
+              if rel in seen: continue
+              seen.add(rel)
+              try: text=p.read_text('utf-8')
+              except Exception: continue
+              block=f'\n## FILE `{rel}`\n\n```text\n{text[:45000]}\n```\n'
+              if total+len(block)>180000: continue
+              chunks.append(block); total+=len(block)
+          chunks += ['', 'CTRL02_TARGETED_INSPECTION_PASS']
+          out.parent.mkdir(parents=True,exist_ok=True)
+          payload='\n'.join(chunks)+'\n'
+          out.write_text(payload,encoding='utf-8')
+          print('REPORT_BYTES',out.stat().st_size)
+          print('FILES_CAPTURED',len(seen))
+          PY
+          test -s "$OUT"
+          grep -q 'scripts/ctrl02_validator.py' "$OUT"
+          grep -q 'scripts/verify_ctrl02_package.py' "$OUT"
+          grep -q 'validation/ctrl02/ctrl02_preseal_result.json' "$OUT"
+          grep -q 'CTRL02_TARGETED_INSPECTION_PASS' "$OUT"
+          git config user.name 'epd2-ctrl02-verifier'
+          git config user.email 'actions@users.noreply.github.com'
+          git add "$OUT"
+          git commit -m 'CTRL-02: persist validator contract evidence'
+          git push origin HEAD:handoff/ctrl
+          echo CTRL02_TARGETED_INSPECTION_COMMIT_PASS
