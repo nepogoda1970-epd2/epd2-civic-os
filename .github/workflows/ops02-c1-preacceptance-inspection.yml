@@ -1,0 +1,171 @@
+name: OPS-02 C1 Pre-Acceptance Inspection
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths:
+      - '.github/workflows/ops02-c1-preacceptance-inspection.yml'
+      - 'handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: epd2
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d epd2"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CANDIDATE: handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C1.zip
+      CANON_MAIN: ef8c96c4b61020a0f2f75aef102cd6ba00c37f8b
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Exact transport identity and ZIP integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence extract
+          sha256sum "$CANDIDATE" | tee evidence/candidate.sha256
+          stat -c 'size_bytes=%s' "$CANDIDATE" | tee evidence/candidate.size
+          unzip -t "$CANDIDATE" | tee evidence/unzip-test.log
+          unzip -q "$CANDIDATE" -d extract
+          python - <<'PY' | tee evidence/zip-inventory.json
+          import json, zipfile, os
+          p=os.environ['CANDIDATE']
+          with zipfile.ZipFile(p) as z:
+              names=z.namelist()
+              print(json.dumps({"member_count":len(names),"duplicates":sorted({n for n in names if names.count(n)>1}),"members":names}, indent=2))
+          PY
+
+      - name: Resolve candidate root and inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=extract
+          n=$(find extract -mindepth 1 -maxdepth 1 -type d | wc -l)
+          f=$(find extract -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$n" -eq 1 ] && [ "$f" -eq 0 ]; then ROOT=$(find extract -mindepth 1 -maxdepth 1 -type d | head -n1); fi
+          echo "$ROOT" | tee evidence/candidate-root.txt
+          find "$ROOT" -type f -printf '%P\n' | sort | tee evidence/file-list.txt
+          echo '=== OPS02 related ==='
+          grep -Ei 'OPS02|ops02|validation/ops02|preview_readiness|bsi_readiness|freeze' evidence/file-list.txt || true
+
+      - name: Candidate governance/identity evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/candidate-root.txt)
+          for p in \
+            OPS02_C1_CANDIDATE_IDENTITY.json \
+            OPS02_PREVIEW_READINESS_PREREQUISITES.json \
+            OPS02_BSI_READINESS_DISPOSITION.json \
+            OPS02_FREEZE_MANIFEST.json \
+            OPS02_DEVELOPER_REPORT.md \
+            OPS02_KNOWN_LIMITATIONS.md \
+            validation/ops02/ops02_acceptance_result.json \
+            docs/ops/OPS-02/OPS02_C1_CANDIDATE_IDENTITY.json \
+            docs/ops/OPS-02/OPS02_PREVIEW_READINESS_PREREQUISITES.json \
+            docs/ops/OPS-02/OPS02_BSI_READINESS_DISPOSITION.json; do
+              if [ -f "$ROOT/$p" ]; then echo "===== $p =====" | tee -a evidence/key-files.txt; cat "$ROOT/$p" | tee -a evidence/key-files.txt; fi
+          done
+          find "$ROOT" -type f \( -iname '*OPS02*' -o -path '*/validation/ops02/*' \) -maxdepth 8 -print | sort | tee evidence/ops02-files.txt
+
+      - name: Compare canonical authority files to pinned main
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/candidate-root.txt)
+          git fetch origin "$CANON_MAIN"
+          : > evidence/canonical-diff.txt
+          for p in \
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md \
+            docs/roadmap/EPD2_BSI_VOTING_BOOTSTRAP_RULE.md \
+            docs/security/bsi/EPD2_BSI_CC_PP_0121_CERTIFICATION_READINESS_GAP_MATRIX_0.1.md \
+            docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json \
+            docs/ops/OPS-01/OPS01_C2_AUTHORITATIVE_ACCEPTANCE_RESULT.json \
+            docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json; do
+              if [ ! -f "$ROOT/$p" ]; then echo "MISSING $p" | tee -a evidence/canonical-diff.txt; continue; fi
+              git show "$CANON_MAIN:$p" > /tmp/canon
+              if cmp -s /tmp/canon "$ROOT/$p"; then echo "MATCH $p" | tee -a evidence/canonical-diff.txt; else echo "DIFF $p" | tee -a evidence/canonical-diff.txt; diff -u /tmp/canon "$ROOT/$p" >> evidence/canonical-diff.txt || true; fi
+          done
+          cat evidence/canonical-diff.txt
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Dependency sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/candidate-root.txt)
+          cd "$ROOT"
+          python --version | tee ../evidence/python-version.txt
+          uv --version | tee ../evidence/uv-version.txt
+          psql --version | tee ../evidence/psql-version.txt
+          psql "$DATABASE_URL" -Atc 'show server_version;' | tee ../evidence/postgres-server-version.txt
+          if [ -f uv.lock ]; then uv sync --all-groups --frozen | tee ../evidence/uv-sync.log; else echo 'NO_UV_LOCK' | tee ../evidence/uv-sync.log; fi
+
+      - name: Run OPS-02 validator if present
+        shell: bash
+        run: |
+          set +e
+          ROOT=$(cat evidence/candidate-root.txt)
+          cd "$ROOT"
+          V=''
+          for p in scripts/validation/validate_ops02.py scripts/validate_ops02.py validation/ops02/validate_ops02.py; do [ -f "$p" ] && V="$p" && break; done
+          if [ -z "$V" ]; then echo 'OPS02_VALIDATOR_NOT_FOUND' | tee ../evidence/validator.log; echo 127 > ../evidence/validator.exit; exit 0; fi
+          echo "VALIDATOR=$V" | tee ../evidence/validator.log
+          uv run python "$V" 2>&1 | tee -a ../evidence/validator.log
+          rc=${PIPESTATUS[0]}
+          echo "$rc" | tee ../evidence/validator.exit
+          find validation -type f -maxdepth 4 -print 2>/dev/null | sort | tee ../evidence/validation-files.txt
+          for p in validation/ops02/*.json; do [ -f "$p" ] && { echo "===== $p ====="; cat "$p"; } | tee -a ../evidence/validator-results.txt; done
+          exit 0
+
+      - name: Discover test/quality commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/candidate-root.txt)
+          {
+            [ -f "$ROOT/pyproject.toml" ] && { echo '===== pyproject.toml relevant ====='; grep -nEi 'ops02|pytest|ruff|mypy|scripts|testpaths' "$ROOT/pyproject.toml" || true; }
+            [ -f "$ROOT/Makefile" ] && { echo '===== Makefile relevant ====='; grep -nEi 'ops02|test|ruff|mypy|check' "$ROOT/Makefile" || true; }
+            find "$ROOT" -type f -path '*ops02*' -o -iname '*ops02*' | sed "s#^$ROOT/##" | sort
+          } | tee evidence/command-discovery.txt
+
+      - name: Candidate self-acceptance scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat evidence/candidate-root.txt)
+          grep -RInE --exclude='*.lock' --exclude='*.svg' --exclude='*.png' --exclude='*.jpg' --exclude='*.zip' '(OPS-02.{0,60}(ACCEPTED|CLOSED|FINAL PASS|CANONICAL PASS|GOVERNANCE APPROVED)|candidate_self_state.{0,30}(ACCEPTED|CLOSED))' "$ROOT" > evidence/self-acceptance-scan.txt || true
+          cat evidence/self-acceptance-scan.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ops02-c1-preacceptance-inspection-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
