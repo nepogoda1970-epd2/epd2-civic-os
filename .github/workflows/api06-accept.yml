@@ -1,0 +1,194 @@
+name: API-06 C2 authoritative acceptance
+
+on:
+  push:
+    branches: [tmp/api06-c2-authoritative-accept]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  authoritative-acceptance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: api06
+          POSTGRES_PASSWORD: api06-synthetic-ci-only
+          POSTGRES_DB: epd2_api06
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U api06 -d epd2_api06"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_API06_DATABASE_URL: postgresql://api06:api06-synthetic-ci-only@127.0.0.1:5432/epd2_api06
+      API06_API05_SHA: 38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70
+
+    steps:
+      - name: Checkout independent acceptance control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Load external candidate control
+        id: ctl
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=handoff/API-06/acceptance/API06_C2_ACCEPTANCE_CONTROL.json
+          test -f "$C"
+          jq -e '.stage=="API-06" and .candidate_role=="C2" and .self_acceptance==false' "$C"
+          echo "run=$(jq -r .builder_run_id "$C")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r .candidate_sha256 "$C")" >> "$GITHUB_OUTPUT"
+          echo "size=$(jq -r .candidate_size_bytes "$C")" >> "$GITHUB_OUTPUT"
+          echo "artifact=$(jq -r .artifact_name "$C")" >> "$GITHUB_OUTPUT"
+          echo "wf_sha=$(jq -r .sealed_workflow_sha256 "$C")" >> "$GITHUB_OUTPUT"
+
+      - name: Download exact sealed API-06 C2
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.ctl.outputs.artifact }}
+          path: incoming/api06
+          run-id: ${{ steps.ctl.outputs.run }}
+          github-token: ${{ github.token }}
+
+      - name: Verify exact candidate identity, seal and workflow
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP=$(find incoming/api06 -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C2.zip' -print -quit)
+          test -n "$ZIP"
+          echo "${{ steps.ctl.outputs.sha }}  $ZIP" | sha256sum -c -
+          test "$(stat -c%s "$ZIP")" = '${{ steps.ctl.outputs.size }}'
+          rm -rf "$RUNNER_TEMP/api06" && mkdir -p "$RUNNER_TEMP/api06"
+          python3 - "$ZIP" "$RUNNER_TEMP/api06" <<'PY'
+          import pathlib,sys,zipfile
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist(); roots={n.split('/',1)[0] for n in names if n}; assert roots=={'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C2'},roots; assert z.testzip() is None; assert all(not n.startswith('/') and '..' not in pathlib.PurePosixPath(n).parts for n in names); z.extractall(sys.argv[2])
+          PY
+          ROOT="$RUNNER_TEMP/api06/EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C2"
+          (cd "$ROOT" && sha256sum --quiet -c SHA256SUMS.txt)
+          jq -e '.state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and .accepted_api05_sha256=="38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70"' "$ROOT/docs/api/API-06/API06_CANDIDATE_IDENTITY.json"
+          jq -e '.candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and .accepted_predecessor.sha256=="38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70"' "$ROOT/docs/api/API-06/API06_C2_SEAL_RECORD.json"
+          test "$(sha256sum "$ROOT/handoff/API-06/templates/C2/api06-accept.yml" | cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          test "$(sha256sum .github/workflows/api06-accept.yml | cut -d' ' -f1)" = '${{ steps.ctl.outputs.wf_sha }}'
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo 'API06_SEALED_IDENTITY:PASS'
+
+      - name: Verify current canonical API-05 closure and API-06 NEXT
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --depth=1 origin main
+          ROOT='${{ steps.candidate.outputs.root }}'
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > /tmp/PCR.md
+          git show origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md > /tmp/MASTER.md
+          git show origin/main:docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json > /tmp/API05_ACCEPT.json
+          jq -e '.decision=="ACCEPTED_CLOSED" and .candidate.sha256=="38bab7663b54f9f81538666315ee16195b0aa086e5b5c50c2b87acc3f4f03a70" and .authoritative.run_id==33574342011' /tmp/API05_ACCEPT.json
+          grep -q '^API-05 = ACCEPTED / CLOSED$' /tmp/PCR.md
+          grep -q '^API-06 = NEXT$' /tmp/PCR.md
+          test "$(sha256sum /tmp/PCR.md | cut -d' ' -f1)" = "$(jq -r .program_control_register_sha256 "$ROOT/docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json")"
+          test "$(sha256sum /tmp/MASTER.md | cut -d' ' -f1)" = "$(jq -r .master_register_sha256 "$ROOT/docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json")"
+          test "$(git rev-parse origin/main)" = "$(jq -r .main_commit "$ROOT/docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json")"
+          echo 'API06_CANONICAL_GOVERNANCE:PASS'
+
+      - name: Install exact toolchain and locked workspace
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: false
+
+      - name: Prepare inherited runtime adapters
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv lock --check
+          uv sync --frozen --all-groups
+          uv pip install --python .venv/bin/python pika==1.3.2
+          mkdir -p .api03-crypto
+          unzip -q -o packages/python/epd2-s2s-crypto/wheelhouse/cryptography-49.0.0-cp311-abi3-manylinux_2_34_x86_64.whl -d .api03-crypto
+          echo "API06_API03_CRYPTO_PATH=$PWD/.api03-crypto" >> "$GITHUB_ENV"
+
+      - name: Provision accepted API-04 live regression environment
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          source scripts/api04_ci_setup.sh "$PWD"
+          test -s "$API04_BROKER_TLS_BINDINGS"
+          test -s "$API04_BROKER_SECRETS"
+          python3 - "$API04_BROKER_TLS_BINDINGS" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert 'membership-service' in d and d['membership-service'].get('fingerprint')
+          assert all(v.get('fingerprint') for v in d.values())
+          print(f'API06_API04_RUNTIME_BINDINGS:PASS:{len(d)}')
+          PY
+
+      - name: Re-run complete authoritative API-06 40-gate validator
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          export API06_CURRENT_MAIN_COMMIT=$(jq -r .main_commit docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
+          export API06_CURRENT_MAIN_TREE=$(jq -r .main_tree docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
+          export API06_CURRENT_PCR_SHA256=$(jq -r .program_control_register_sha256 docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
+          export API06_CURRENT_MASTER_SHA256=$(jq -r .master_register_sha256 docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
+          .venv/bin/python scripts/validation/validate_api06.py --out validation/api06/authoritative_validator_result.json | tee /tmp/api06-authoritative-validator.log
+          grep -q '^API06_RESULT:PASS:40/40:validation/api06/authoritative_validator_result.json$' /tmp/api06-authoritative-validator.log
+          jq -e '.result=="PASS" and .passed_gates==40 and .failed_gates==[] and .environment_blocked_runs==[]' validation/api06/authoritative_validator_result.json
+          jq -e '.result=="PASS" and .detected==30 and .missed==0' validation/api06/mutation_result.json
+
+      - name: Prove sealed source unchanged by acceptance execution
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,pathlib
+          root=pathlib.Path('.')
+          variable=('validation/api06/',)
+          bad=[]
+          for line in (root/'SHA256SUMS.txt').read_text().splitlines():
+              h,rel=line.split('  ',1)
+              if rel.startswith(variable): continue
+              p=root/rel
+              if hashlib.sha256(p.read_bytes()).hexdigest()!=h: bad.append(rel)
+          assert not bad,bad
+          print('API06_SEALED_SOURCE_UNCHANGED:PASS')
+          PY
+
+      - name: Write external authoritative result
+        shell: bash
+        working-directory: ${{ steps.candidate.outputs.root }}
+        run: |
+          set -euo pipefail
+          mkdir -p validation/api06
+          python3 - <<'PY'
+          import json,os,pathlib
+          v=json.loads(pathlib.Path('validation/api06/authoritative_validator_result.json').read_text())
+          out={'schema':'epd2.api06.c2.external-authoritative/1','stage':'API-06','result':'PASS','self_acceptance':False,'candidate_sha256':'${{ steps.ctl.outputs.sha }}','candidate_size_bytes':int('${{ steps.ctl.outputs.size }}'),'builder_run_id':int('${{ steps.ctl.outputs.run }}'),'authoritative_run_id':int(os.environ['GITHUB_RUN_ID']),'authoritative_job':'authoritative-acceptance','provenance_commit':os.environ['GITHUB_SHA'],'governed_gates_total':40,'passed_gates':v['passed_gates'],'failed_gates':v['failed_gates'],'environment_blocked_gates':v['environment_blocked_runs'],'terminal_marker':'API06_RESULT:PASS:validation/api06/external_authoritative_result.json'}
+          pathlib.Path('validation/api06/external_authoritative_result.json').write_text(json.dumps(out,indent=2)+'\n')
+          PY
+
+      - name: Upload authoritative acceptance evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: api06-c2-authoritative-acceptance-${{ github.run_id }}
+          path: |
+            ${{ steps.candidate.outputs.root }}/validation/api06/
+            ${{ steps.candidate.outputs.root }}/docs/api/API-06/API06_CANDIDATE_IDENTITY.json
+            ${{ steps.candidate.outputs.root }}/docs/api/API-06/API06_C2_SEAL_RECORD.json
+            /tmp/api06-authoritative-validator.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Authoritative result
+        run: echo 'API06_RESULT:PASS:validation/api06/external_authoritative_result.json'
