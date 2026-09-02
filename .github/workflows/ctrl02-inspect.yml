@@ -5,7 +5,6 @@ on:
     branches: [handoff/ctrl]
     paths:
       - '.github/workflows/ctrl02-inspect.yml'
-      - 'handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
   workflow_dispatch:
 
 permissions:
@@ -19,101 +18,40 @@ jobs:
         with:
           ref: handoff/ctrl
           fetch-depth: 1
-      - name: Inspect pinned CTRL-02 candidate
+      - name: Persist validator source identity contract
         shell: bash
         run: |
           set -euo pipefail
           ZIP='handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip'
-          OUT='handoff/CTRL/evidence/CTRL02_INSPECTION_V1.md'
-          test -f "$ZIP"
-          mkdir -p "$(dirname "$OUT")"
-          rm -rf /tmp/ctrl02_inspect
-          mkdir -p /tmp/ctrl02_inspect
+          OUT='handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md'
+          rm -rf /tmp/c02inspect && mkdir -p /tmp/c02inspect
           python3 - <<'PY'
-          import hashlib, pathlib, zipfile, re
-          zip_path = pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
-          out = pathlib.Path('handoff/CTRL/evidence/CTRL02_INSPECTION_V1.md')
-          extract = pathlib.Path('/tmp/ctrl02_inspect')
-          sha = hashlib.sha256(zip_path.read_bytes()).hexdigest()
-          size = zip_path.stat().st_size
-          lines = [
-              '# CTRL-02 Candidate Inspection Evidence V1',
-              '',
-              f'ARCHIVE={zip_path.as_posix()}',
-              f'ARCHIVE_SHA256={sha}',
-              f'ARCHIVE_SIZE={size}',
-          ]
-          with zipfile.ZipFile(zip_path) as z:
-              bad = z.testzip()
-              if bad:
-                  raise SystemExit('ZIP_CRC_FAIL=' + bad)
-              names = z.namelist()
-              if len(names) != len(set(names)):
-                  raise SystemExit('ZIP_DUPLICATE_PATHS')
-              for n in names:
-                  p = pathlib.PurePosixPath(n)
-                  if p.is_absolute() or '..' in p.parts:
-                      raise SystemExit('ZIP_PATH_TRAVERSAL=' + n)
-              lines += ['', f'ZIP_ENTRIES={len(names)}']
-              nested = [n for n in names if n.lower().endswith(('.zip','.tar','.tgz','.tar.gz','.7z'))]
-              lines += [f'NESTED_ARCHIVES={nested!r}', '', '## Relevant paths']
-              path_re = re.compile(r'(ctrl|control|handover|handoff|accept|canon|verify|valid|test|report|lineage|candidate|entrypoint|program_control|master_future|readme|pyproject|uv\.lock|requirements|makefile|package\.json|package-lock|pnpm-lock|workflow)', re.I)
-              relevant = [n for n in names if path_re.search(n)]
-              lines.extend(f'- {n}' for n in relevant[:2500])
-              z.extractall(extract)
-          lines += ['', '## Key document excerpts']
-          key_re = re.compile(r'(CTRL[-_]?0?2|CTRL02|regional|intervention|privileged|FIR-GOV-004|handover|handoff|lineage|accept|canon|verify|validation|PROJECT_ENTRYPOINT|PROGRAM_CONTROL_REGISTER|MASTER_FUTURE_IMPLEMENTATION_REGISTER|README|pyproject\.toml|package\.json|Makefile)', re.I)
-          allowed = {'.md','.json','.yml','.yaml','.toml','.txt','.py','.sh','.ps1'}
-          emitted = 0
-          for f in sorted(extract.rglob('*')):
-              if not f.is_file() or f.stat().st_size > 200_000:
-                  continue
-              rel = f.relative_to(extract).as_posix()
-              if not key_re.search(rel):
-                  continue
-              if f.suffix.lower() not in allowed and f.name != 'Makefile':
-                  continue
-              try:
-                  text = f.read_text('utf-8')
-              except Exception:
-                  continue
-              # Keep complete small governance/manifest files; otherwise relevant lines with context.
-              if f.stat().st_size <= 40_000:
-                  excerpt = text
-              else:
-                  src = text.splitlines()
-                  hit = [i for i,s in enumerate(src) if key_re.search(s)]
-                  idx = set()
-                  for i in hit[:150]:
-                      idx.update(range(max(0,i-2), min(len(src),i+3)))
-                  excerpt = '\n'.join(f'{i+1}: {src[i]}' for i in sorted(idx))
-              if not excerpt.strip():
-                  continue
-              block = f'\n### FILE `{rel}`\n\n```text\n{excerpt[:60000]}\n```\n'
-              if emitted + len(block) > 900_000:
-                  break
-              lines.append(block)
-              emitted += len(block)
-          lines += ['', 'CTRL02_INSPECTION_PASS']
-          payload = '\n'.join(lines) + '\n'
-          if 'ARCHIVE_SHA256=' not in payload or 'ARCHIVE_SIZE=' not in payload or 'CTRL02_INSPECTION_PASS' not in payload:
-              raise SystemExit('REPORT_INVARIANT_FAIL')
-          out.write_text(payload, encoding='utf-8')
-          print(f'CTRL02_REPORT_BYTES={out.stat().st_size}')
-          print(f'CTRL02_ARCHIVE_SHA256={sha}')
-          print(f'CTRL02_ARCHIVE_SIZE={size}')
+          import pathlib,zipfile
+          zp=pathlib.Path('handoff/CTRL/incoming/EPD2_CTRL02_REGIONAL_INTERVENTION_AND_PRIVILEGED_OPERATIONS_WORKING_0.1_PRESEAL.zip')
+          d=pathlib.Path('/tmp/c02inspect')
+          with zipfile.ZipFile(zp) as z: z.extractall(d)
+          roots=[p for p in d.iterdir() if p.is_dir()]
+          if len(roots)!=1: raise SystemExit('BAD_ROOT_COUNT')
+          root=roots[0]
+          out=pathlib.Path('handoff/CTRL/evidence/CTRL02_VALIDATOR_CONTRACT_SNIPPET.md')
+          parts=['# CTRL-02 validator source identity contract','']
+          specs=[('scripts/ctrl02_validator.py',160,330),('scripts/ctrl02_mutation_suite.py',0,220),('scripts/build_ctrl02_preseal.py',0,260),('validation/ctrl02/source_identity_result.json',0,500),('validation/ctrl02/ctrl02_preseal_result.json',0,500),('validation/ctrl02/freeze_manifest.json',0,500)]
+          for rel,a,b in specs:
+              p=root/rel
+              if not p.is_file():
+                  parts += [f'## `{rel}`','MISSING','']; continue
+              lines=p.read_text('utf-8').splitlines()
+              excerpt='\n'.join(f'{i+1}: {lines[i]}' for i in range(a,min(len(lines),b)))
+              parts += [f'## `{rel}`','```text',excerpt,'```','']
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text('\n'.join(parts)+'\n',encoding='utf-8')
+          print('CTRL02_VALIDATOR_SNIPPET_BYTES='+str(out.stat().st_size))
           PY
           test -s "$OUT"
-          grep -q '^ARCHIVE_SHA256=' "$OUT"
-          grep -q '^ARCHIVE_SIZE=' "$OUT"
-          grep -q 'CTRL02_INSPECTION_PASS' "$OUT"
+          grep -q 'git_head' "$OUT"
           git config user.name 'epd2-ctrl02-verifier'
           git config user.email 'actions@users.noreply.github.com'
           git add "$OUT"
-          if git diff --cached --quiet; then
-            echo 'Inspection evidence unchanged.'
-          else
-            git commit -m 'CTRL-02: persist non-empty inspection evidence'
-            git push origin HEAD:handoff/ctrl
-          fi
-          echo 'CTRL02_INSPECTION_COMMIT_PASS'
+          git commit -m 'CTRL-02: persist validator source identity contract'
+          git push origin HEAD:handoff/ctrl
+          echo CTRL02_VALIDATOR_CONTRACT_PASS
