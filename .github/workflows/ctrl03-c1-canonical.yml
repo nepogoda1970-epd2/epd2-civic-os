@@ -1,0 +1,396 @@
+name: ctrl03-c1-canonical
+
+on:
+  push:
+    branches: [handoff/ctrl]
+    paths:
+      - '.github/workflows/ctrl03-c1-canonical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  SOURCE_ZIP: handoff/CTRL/incoming/EPD2_CTRL03_CREDENTIAL_TRUST_AND_KEY_LIFECYCLE_CONTROL_WORKING_0.1_PRESEAL.zip
+  SOURCE_SHA256: 4f68557f0ccd8a66745586e451f62d47511666e5603a6a052dd2d76e5dc6a163
+  SOURCE_SIZE: '16796961'
+  BASE_MAIN: 616c944248e3afe109368aebc76c416ee75e60a3
+  BASE_TREE: 8f5207684b6282a9d89ed4a78444eee02d94cf01
+  CTRL02_RUN: '33690561259'
+  CTRL02_HEAD: a70e2bfef7a668ee5158475712827bbc50f6d5fd
+  CTRL02_SHA256: f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e
+  CTRL02_SIZE: '16720456'
+  CANDIDATE_FILE: EPD2_CTRL03_CREDENTIAL_TRUST_AND_KEY_LIFECYCLE_CONTROL_CANDIDATE_0.1_C1.zip
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/ctrl
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+
+      - name: Pin exact uploaded PRESEAL and safe extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$SOURCE_ZIP"
+          test "$(sha256sum "$SOURCE_ZIP" | awk '{print $1}')" = "$SOURCE_SHA256"
+          test "$(stat -c '%s' "$SOURCE_ZIP")" = "$SOURCE_SIZE"
+          rm -rf /tmp/ctrl03_source && mkdir -p /tmp/ctrl03_source
+          python3 - <<'PY'
+          import os,pathlib,zipfile
+          source=pathlib.Path(os.environ['SOURCE_ZIP']); dest=pathlib.Path('/tmp/ctrl03_source')
+          with zipfile.ZipFile(source) as package:
+              if bad:=package.testzip(): raise SystemExit('ZIP_CRC_FAIL='+bad)
+              names=package.namelist()
+              if len(names)!=len(set(names)): raise SystemExit('ZIP_DUPLICATE_PATHS')
+              for name in names:
+                  pure=pathlib.PurePosixPath(name)
+                  if pure.is_absolute() or '..' in pure.parts: raise SystemExit('ZIP_PATH_TRAVERSAL='+name)
+              if any(name.lower().endswith(('.zip','.tar','.tgz','.tar.gz','.7z')) for name in names):
+                  raise SystemExit('NESTED_ARCHIVE_PRESENT')
+              package.extractall(dest)
+          roots=[p for p in dest.iterdir() if p.is_dir()]
+          if len(roots)!=1: raise SystemExit(f'EXPECTED_ONE_ROOT_GOT_{len(roots)}')
+          root=roots[0]
+          required=[
+              'pyproject.toml','uv.lock','package.json','package-lock.json',
+              'scripts/ctrl03_validator.py','scripts/ctrl03_mutation_suite.py',
+              'scripts/build_ctrl03_preseal.py','scripts/verify_ctrl03_package.py',
+              'services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py',
+              'contracts/control/ctrl03_control_console.json',
+              'validation/ctrl03/ctrl03_preseal_result.json',
+              'validation/ctrl03/mutation_result.json',
+              'validation/ctrl03/freeze_manifest.json',
+              'docs/ctrl/CTRL-03/CTRL03_STAGE_CONTRACT.md',
+          ]
+          missing=[item for item in required if not (root/item).is_file()]
+          if missing: raise SystemExit('MISSING_REQUIRED_FILES='+repr(missing))
+          pathlib.Path('/tmp/ctrl03_source_root').write_text(str(root))
+          print('CTRL03_SOURCE_IDENTITY_PASS')
+          PY
+
+      - name: Verify live authoritative CTRL-02 predecessor
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,urllib.request,pathlib
+          url=f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['CTRL02_RUN']}"
+          req=urllib.request.Request(url,headers={'Authorization':f"Bearer {os.environ['GH_TOKEN']}",'Accept':'application/vnd.github+json'})
+          with urllib.request.urlopen(req) as response: run=json.load(response)
+          assert run['status']=='completed' and run['conclusion']=='success',run
+          assert run['head_sha']==os.environ['CTRL02_HEAD'],run['head_sha']
+          assert run['head_branch']=='handoff/ctrl',run['head_branch']
+          assert run['path']=='.github/workflows/ctrl02-accept.yml',run['path']
+          evidence=json.loads(pathlib.Path('handoff/CTRL/evidence/CTRL02_CANONICAL_ACCEPTANCE_0.2.json').read_text())
+          assert evidence['status']=='CANON_PASS',evidence
+          assert evidence['acceptance_run_id']==int(os.environ['CTRL02_RUN']),evidence
+          assert evidence['workflow_head_sha']==os.environ['CTRL02_HEAD'],evidence
+          assert evidence['artifact_sha256']==os.environ['CTRL02_SHA256'],evidence
+          assert evidence['artifact_size']==int(os.environ['CTRL02_SIZE']),evidence
+          assert evidence['gates']=='46/46 PASS',evidence
+          assert evidence['mutations']=='40/40 DETECTED',evidence
+          assert evidence['self_acceptance'] is False,evidence
+          print('CTRL03_CTRL02_AUTHORITATIVE_PREDECESSOR_PASS')
+          PY
+
+      - name: Reconstruct pinned CTRL-03 baseline and apply governed reconciliation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/ctrl03_runtime
+          git worktree add --detach /tmp/ctrl03_runtime "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl03_runtime rev-parse HEAD)" = "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl03_runtime rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+          cp -a "$(cat /tmp/ctrl03_source_root)/." /tmp/ctrl03_runtime/
+          python3 handoff/CTRL/tools/reconcile_ctrl03_c1.py /tmp/ctrl03_runtime
+          grep -q "$CTRL02_SHA256" /tmp/ctrl03_runtime/scripts/ctrl03_validator.py
+          grep -q 'CANDIDATE_0.1_C1' /tmp/ctrl03_runtime/scripts/build_ctrl03_preseal.py
+          echo CTRL03_G04_RECONCILIATION_PATCH_PASS
+
+      - name: Frozen dependency reconstruction
+        working-directory: /tmp/ctrl03_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          npm ci --ignore-scripts
+          echo CTRL03_LOCKED_DEPENDENCIES_PASS
+
+      - name: Independent runnable quality and 290-test regression
+        working-directory: /tmp/ctrl03_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
+          uv run ruff format scripts/ctrl03_validator.py scripts/ctrl03_mutation_suite.py scripts/build_ctrl03_preseal.py scripts/verify_ctrl03_package.py services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py services/control-plane-service/tests/test_ctrl03_secret_evidence_inventory.py
+          uv run ruff check services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py services/control-plane-service/tests/_ctrl03_builders.py services/control-plane-service/tests/test_ctrl03_*.py scripts/ctrl03_mutation_suite.py scripts/ctrl03_validator.py scripts/build_ctrl03_preseal.py scripts/verify_ctrl03_package.py
+          uv run mypy services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py
+          uv run pytest services/control-plane-service/tests -q | tee /tmp/ctrl03-tests.log
+          grep -q '290 passed' /tmp/ctrl03-tests.log
+          npm test --if-present
+          echo CTRL03_RUNTIME_QUALITY_PASS
+
+      - name: Mutation suite and fifty-gate validator
+        working-directory: /tmp/ctrl03_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
+          uv run python scripts/ctrl03_mutation_suite.py | tee /tmp/ctrl03-mutations.log
+          grep -q 'CTRL03_MUTATIONS:PASS:44/44' /tmp/ctrl03-mutations.log
+          uv run python scripts/ctrl03_validator.py --record-freeze | tee /tmp/ctrl03-record.log
+          grep -q 'CTRL03_RESULT:PASS:50/50_PASS' /tmp/ctrl03-record.log
+          uv run python scripts/ctrl03_validator.py | tee /tmp/ctrl03-validator.log
+          grep -q 'CTRL03_RESULT:PASS:50/50_PASS' /tmp/ctrl03-validator.log
+          python3 - <<'PY'
+          import json
+          result=json.load(open('validation/ctrl03/ctrl03_preseal_result.json'))
+          assert result['overall']=='PASS',result
+          assert result['gates_total']==50 and result['gates_passed']==50,result
+          assert result['gates_failed']==[] and result['gates_blocked_for_final_seal']==[],result
+          assert all(item['status']=='PASS' and item['executed'] for item in result['gates']),result
+          pred=json.load(open('validation/ctrl03/predecessor_dependency_result.json'))
+          assert pred['ctrl02_reconciliation']=='PASS',pred
+          assert pred['ctrl02']['sha256']=='f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e',pred
+          mut=json.load(open('validation/ctrl03/mutation_result.json'))
+          assert mut['detected']==44 and mut['undetected']==[],mut
+          print('CTRL03_50_50_RECONCILED_PASS')
+          PY
+
+      - name: Build and independently verify exact C1 candidate
+        working-directory: /tmp/ctrl03_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/$CANDIDATE_FILE"
+          rm -f "$OUT" "$OUT.identity.json"
+          uv run python scripts/build_ctrl03_preseal.py --out "$OUT"
+          uv run python scripts/verify_ctrl03_package.py "$OUT" | tee /tmp/ctrl03-package.log
+          SHA="$(sha256sum "$OUT" | awk '{print $1}')"
+          SIZE="$(stat -c '%s' "$OUT")"
+          grep -q "CTRL03_PACKAGE_VERIFY:PASS:$SHA:$SIZE" /tmp/ctrl03-package.log
+          python3 - <<PY
+          import json,pathlib
+          p=pathlib.Path('$RUNNER_TEMP/ctrl03_build_meta.json')
+          obj={
+            'schema':'epd2.ctrl03.c1-build/1',
+            'source_sha256':'$SOURCE_SHA256',
+            'source_size':int('$SOURCE_SIZE'),
+            'candidate_file':'$CANDIDATE_FILE',
+            'candidate_sha256':'$SHA',
+            'candidate_size':int('$SIZE'),
+            'base_main':'$BASE_MAIN',
+            'base_tree':'$BASE_TREE',
+            'ctrl02_run':int('$CTRL02_RUN'),
+            'ctrl02_head':'$CTRL02_HEAD',
+            'ctrl02_sha256':'$CTRL02_SHA256',
+            'gates':'50/50 PASS',
+            'mutations':'44/44 DETECTED',
+            'tests':'290 PASSED',
+            'self_state':'NOT_ACCEPTED',
+          }
+          p.write_text(json.dumps(obj,indent=2,sort_keys=True)+'\n')
+          print(f"CTRL03_C1_BUILD_PASS:{obj['candidate_sha256']}:{obj['candidate_size']}")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ctrl03-c1-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/${{ env.CANDIDATE_FILE }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ctrl03-c1-build-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/ctrl03_build_meta.json
+          if-no-files-found: error
+          retention-days: 30
+
+  authoritative-review:
+    needs: build-candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: handoff/ctrl
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ctrl03-c1-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/candidate
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ctrl03-c1-build-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/evidence
+
+      - name: Pin candidate identity and safe extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          META="$RUNNER_TEMP/evidence/ctrl03_build_meta.json"
+          ARCHIVE="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
+          test -f "$META" && test -f "$ARCHIVE"
+          META="$META" ARCHIVE="$ARCHIVE" python3 - <<'PY'
+          import json,os,pathlib,hashlib,zipfile
+          meta=json.loads(pathlib.Path(os.environ['META']).read_text())
+          archive=pathlib.Path(os.environ['ARCHIVE'])
+          h=hashlib.sha256(archive.read_bytes()).hexdigest()
+          assert h==meta['candidate_sha256'],(h,meta)
+          assert archive.stat().st_size==meta['candidate_size'],meta
+          assert meta['source_sha256']==os.environ['SOURCE_SHA256'],meta
+          assert meta['base_main']==os.environ['BASE_MAIN'],meta
+          assert meta['ctrl02_sha256']==os.environ['CTRL02_SHA256'],meta
+          assert meta['gates']=='50/50 PASS' and meta['mutations']=='44/44 DETECTED',meta
+          assert meta['self_state']=='NOT_ACCEPTED',meta
+          dest=pathlib.Path('/tmp/ctrl03_candidate_extract'); dest.mkdir(parents=True,exist_ok=True)
+          with zipfile.ZipFile(archive) as package:
+              if bad:=package.testzip(): raise SystemExit('ZIP_CRC_FAIL='+bad)
+              names=package.namelist()
+              if len(names)!=len(set(names)): raise SystemExit('ZIP_DUPLICATE_PATHS')
+              for name in names:
+                  p=pathlib.PurePosixPath(name)
+                  if p.is_absolute() or '..' in p.parts: raise SystemExit('ZIP_PATH_TRAVERSAL='+name)
+              package.extractall(dest)
+          roots=[p for p in dest.iterdir() if p.is_dir()]
+          if len(roots)!=1: raise SystemExit('BAD_ROOT_COUNT')
+          pathlib.Path('/tmp/ctrl03_candidate_root').write_text(str(roots[0]))
+          print('CTRL03_C1_CANDIDATE_IDENTITY_PASS')
+          PY
+
+      - name: Reconstruct candidate on pinned git baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/ctrl03_review_runtime
+          git worktree add --detach /tmp/ctrl03_review_runtime "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl03_review_runtime rev-parse HEAD)" = "$BASE_MAIN"
+          test "$(git -C /tmp/ctrl03_review_runtime rev-parse 'HEAD^{tree}')" = "$BASE_TREE"
+          cp -a "$(cat /tmp/ctrl03_candidate_root)/." /tmp/ctrl03_review_runtime/
+          echo CTRL03_C1_PINNED_RUNTIME_PASS
+
+      - name: Locked independent execution
+        working-directory: /tmp/ctrl03_review_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          npm ci --ignore-scripts
+          ARCHIVE="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
+          uv run python scripts/verify_ctrl03_package.py "$ARCHIVE" | tee /tmp/ctrl03-review-package-pre.log
+          export PYTHONPATH="$PWD/services/control-plane-service/src${PYTHONPATH:+:$PYTHONPATH}"
+          uv run ruff check services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py services/control-plane-service/tests/_ctrl03_builders.py services/control-plane-service/tests/test_ctrl03_*.py scripts/ctrl03_mutation_suite.py scripts/ctrl03_validator.py scripts/build_ctrl03_preseal.py scripts/verify_ctrl03_package.py
+          uv run mypy services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py
+          uv run pytest services/control-plane-service/tests -q | tee /tmp/ctrl03-review-tests.log
+          grep -q '290 passed' /tmp/ctrl03-review-tests.log
+          uv run python scripts/ctrl03_mutation_suite.py | tee /tmp/ctrl03-review-mutations.log
+          grep -q 'CTRL03_MUTATIONS:PASS:44/44' /tmp/ctrl03-review-mutations.log
+          uv run python scripts/ctrl03_validator.py | tee /tmp/ctrl03-review-validator.log
+          grep -q 'CTRL03_RESULT:PASS:50/50_PASS' /tmp/ctrl03-review-validator.log
+          npm test --if-present
+          uv run python scripts/verify_ctrl03_package.py "$ARCHIVE" | tee /tmp/ctrl03-review-package-post.log
+          echo CTRL03_C1_INDEPENDENT_RUNTIME_PASS
+
+      - name: Authoritative evidence assertions
+        working-directory: /tmp/ctrl03_review_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          result=json.load(open('validation/ctrl03/ctrl03_preseal_result.json'))
+          assert result['overall']=='PASS',result
+          assert result['gates_total']==50 and result['gates_passed']==50,result
+          assert result['gates_failed']==[] and result['gates_blocked_for_final_seal']==[],result
+          assert result['self_state']=='NOT_ACCEPTED',result
+          assert all(x['status']=='PASS' and x['executed'] for x in result['gates']),result
+          pred=json.load(open('validation/ctrl03/predecessor_dependency_result.json'))
+          assert pred['ctrl02_reconciliation']=='PASS',pred
+          assert pred['ctrl02']['state']=='CANONICAL_ACCEPTED',pred
+          assert pred['ctrl02']['sha256']=='f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e',pred
+          mut=json.load(open('validation/ctrl03/mutation_result.json'))
+          assert mut['detected']==44 and mut['undetected']==[],mut
+          print('CTRL03_C1_AUTHORITATIVE_EVIDENCE_PASS')
+          PY
+
+      - name: Publish canonical acceptance evidence and exact accepted candidate
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_HEAD: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          META="$RUNNER_TEMP/evidence/ctrl03_build_meta.json"
+          ARCHIVE="$RUNNER_TEMP/candidate/$CANDIDATE_FILE"
+          DEST="handoff/CTRL/candidates/$CANDIDATE_FILE"
+          OUT="handoff/CTRL/evidence/CTRL03_CANONICAL_ACCEPTANCE_C1.json"
+          mkdir -p "$(dirname "$DEST")" "$(dirname "$OUT")"
+          test ! -e "$DEST"
+          test ! -e "$OUT"
+          cp "$ARCHIVE" "$DEST"
+          META="$META" OUT="$OUT" python3 - <<'PY'
+          import json,os,pathlib
+          meta=json.loads(pathlib.Path(os.environ['META']).read_text())
+          payload={
+            'schema':'epd2.ctrl03.authoritative-acceptance/1',
+            'module':'CTRL-03',
+            'artifact':meta['candidate_file'],
+            'artifact_sha256':meta['candidate_sha256'],
+            'artifact_size':meta['candidate_size'],
+            'source_preseal_sha256':meta['source_sha256'],
+            'source_preseal_size':meta['source_size'],
+            'acceptance_workflow':'ctrl03-c1-canonical',
+            'acceptance_run_id':int(os.environ['RUN_ID']),
+            'workflow_head_sha':os.environ['RUN_HEAD'],
+            'base_main':meta['base_main'],
+            'base_tree':meta['base_tree'],
+            'predecessor':{
+              'stage':'CTRL-02','run_id':meta['ctrl02_run'],'workflow_head_sha':meta['ctrl02_head'],
+              'candidate_sha256':meta['ctrl02_sha256'],'candidate_size':16720456,'status':'PASS'
+            },
+            'gates':'50/50 PASS',
+            'mutations':'44/44 DETECTED',
+            'tests':'290/290 PASS',
+            'package_pre':'PASS','package_post':'PASS','runtime_quality':'PASS',
+            'self_acceptance':False,
+            'status':'CANON_PASS',
+            'terminal_marker':f"CTRL03_AUTHORITATIVE_RESULT:PASS:{meta['candidate_sha256']}:{meta['candidate_size']}",
+          }
+          pathlib.Path(os.environ['OUT']).write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          print(payload['terminal_marker'])
+          PY
+          test "$(sha256sum "$DEST" | awk '{print $1}')" = "$(python3 -c 'import json;print(json.load(open("handoff/CTRL/evidence/CTRL03_CANONICAL_ACCEPTANCE_C1.json"))["artifact_sha256"])')"
+          git config user.name epd2-ctrl03-authoritative-review
+          git config user.email actions@users.noreply.github.com
+          git add "$DEST" "$OUT"
+          git commit -m 'CTRL-03: publish authoritative canonical C1 acceptance'
+          git push origin HEAD:handoff/ctrl
+          echo CTRL03_CANON_PASS
