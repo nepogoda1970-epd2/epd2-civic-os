@@ -1,0 +1,34 @@
+name: Temporary I08 Rust toolchain transport
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  rust-toolchain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install exact Rust 1.97.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup default 1.97.1
+          rustc --version --verbose
+          cargo --version --verbose
+          sysroot="$(rustc --print sysroot)"
+          echo "$sysroot"
+          tar -C "$(dirname "$sysroot")" -czf /tmp/rust-1.97.1-x86_64-unknown-linux-gnu.tar.gz "$(basename "$sysroot")"
+          sha256sum /tmp/rust-1.97.1-x86_64-unknown-linux-gnu.tar.gz > /tmp/rust-toolchain.sha256
+      - name: Upload exact toolchain
+        uses: actions/upload-artifact@v4
+        with:
+          name: i08-rust-1.97.1-x86_64-unknown-linux-gnu
+          path: |
+            /tmp/rust-1.97.1-x86_64-unknown-linux-gnu.tar.gz
+            /tmp/rust-toolchain.sha256
+          retention-days: 1
+          compression-level: 0
