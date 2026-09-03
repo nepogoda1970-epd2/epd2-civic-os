@@ -1,0 +1,322 @@
+name: CTRL-05 C1 authoritative review
+
+on:
+  push:
+    branches: [accept/ctrl05-c1-canonical]
+    paths:
+      - .github/workflows/ctrl05-c1-authoritative.yml
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-review:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE_NAME: EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip
+      CANDIDATE_SHA256: a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a
+      CANDIDATE_SIZE: '31060148'
+      UPLOAD_COMMIT: 4fd5523f0222161575c275c6fee1595a054a2450
+      BASELINE_COMMIT: 2ceb77be91448462262b84f278a00cfe6dd4228e
+      BASELINE_TREE: ec057046e235bbd438a4aaa1a23e9f40dff804a2
+      CTRL01_SHA256: 07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5
+      CTRL02_SHA256: f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e
+      CTRL03_SHA256: 89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff
+      CTRL04_SHA256: 346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2
+    steps:
+      - name: Checkout current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: canonical
+          fetch-depth: 0
+
+      - name: Checkout exact upload commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPLOAD_COMMIT }}
+          path: uploaded
+          fetch-depth: 1
+
+      - name: Checkout declared CTRL-05 baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASELINE_COMMIT }}
+          path: replay
+          fetch-depth: 1
+
+      - name: Verify exact candidate bytes before execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test -f "$p"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          unzip -t "$p" >/tmp/ctrl05-unzip.txt
+          tail -1 /tmp/ctrl05-unzip.txt
+          python3 - "$p" "$RUNNER_TEMP/exact" <<'PY'
+          import pathlib, stat, sys, zipfile
+          zpath=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(zpath) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              assert names and len(names)==len(set(names)), 'duplicate entries'
+              roots=set()
+              for i in infos:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts, f'unsafe path {i.filename}'
+                  if p.parts: roots.add(p.parts[0])
+                  mode=(i.external_attr >> 16) & 0xFFFF
+                  assert not stat.S_ISLNK(mode), f'symlink entry {i.filename}'
+              assert len(roots)==1, roots
+              z.extractall(out)
+              print('CTRL05_SAFE_EXTRACT:PASS:'+next(iter(roots)))
+          PY
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          test -f "$root/SHA256SUMS.txt"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl05-sha-pre.txt)
+          test "$(wc -l < "$root/SHA256SUMS.txt")" -ge 2000
+          python3 "$root/scripts/verify_ctrl05_package.py" "$p"
+          python3 - "$root" <<'PY'
+          import json, pathlib, sys
+          root=pathlib.Path(sys.argv[1]); v=root/'validation/ctrl05'
+          pre=json.loads((v/'preseal_result.json').read_text())
+          gates=json.loads((v/'gate_results.json').read_text())['gates']
+          mut=json.loads((v/'mutation_result.json').read_text())
+          e2e=json.loads((v/'e2e_journeys_result.json').read_text())
+          browser=json.loads((v/'browser_journeys_result.json').read_text())
+          assert pre['overall']=='PASS' and pre['gates_passed']==56 and not pre['gates_failed'] and not pre['gates_blocked_for_final_seal'], pre
+          assert len(gates)==56 and len({g['id'] for g in gates})==56 and all(g.get('executed') and g.get('status')=='PASS' for g in gates), 'contradictory gate evidence'
+          assert mut['executed']==52 and mut['detected']==52 and not mut['undetected'], mut
+          assert e2e['journeys_passed']==22 and e2e['journeys_total']==22 and e2e['integration_class']=='REAL_INSTALLED_CTRL02_CTRL03_CTRL04_PLANES', e2e
+          assert browser['status']=='PASS' and browser['journeys_passed']==5 and browser['journeys_total']==5, browser
+          assert pre['self_state']=='CANDIDATE_NOT_ACCEPTED' and pre['self_acceptance'] is False
+          print('CTRL05_SEALED_DEVELOPER_EVIDENCE:PASS:NO_CONTRADICTION')
+          PY
+          echo "CTRL05_EXACT_PACKAGE_PREEXEC:PASS"
+
+      - name: Reconcile candidate baseline against current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C replay rev-parse HEAD)" = "$BASELINE_COMMIT"
+          test "$(git -C replay rev-parse 'HEAD^{tree}')" = "$BASELINE_TREE"
+          current="$(git -C canonical rev-parse HEAD)"
+          echo "CTRL05_CURRENT_MAIN:$current"
+          git -C canonical cat-file -e "$BASELINE_COMMIT^{commit}"
+          git -C canonical diff --name-only "$BASELINE_COMMIT"..HEAD | sort > "$RUNNER_TEMP/main_delta.txt"
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          rsync -a --delete --exclude='.git' "$root/" replay/
+          { git -C replay diff --name-only; git -C replay ls-files --others --exclude-standard; } | sort -u > "$RUNNER_TEMP/candidate_delta.txt"
+          comm -12 "$RUNNER_TEMP/main_delta.txt" "$RUNNER_TEMP/candidate_delta.txt" > "$RUNNER_TEMP/intersection.txt" || true
+          grep -vxF 'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md' "$RUNNER_TEMP/intersection.txt" > "$RUNNER_TEMP/conflicts.txt" || true
+          if test -s "$RUNNER_TEMP/conflicts.txt"; then
+            echo 'CURRENT_MAIN_CONFLICTS:'
+            cat "$RUNNER_TEMP/conflicts.txt"
+            exit 1
+          fi
+          grep -F 'CTRL-01 = ACCEPTED / CLOSED' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL-02 = ACCEPTED / CLOSED' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL-03 = ACCEPTED / CLOSED' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL-04 = ACCEPTED / CLOSED' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL LAYER OPEN' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          python3 - <<'PY'
+          import json, pathlib, os
+          records={
+            'CTRL-01':('canonical/docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json',os.environ['CTRL01_SHA256']),
+            'CTRL-02':('canonical/docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json',os.environ['CTRL02_SHA256']),
+            'CTRL-03':('canonical/docs/ctrl/CTRL-03/CTRL03_C1_ACCEPTANCE_RECORD.json',os.environ['CTRL03_SHA256']),
+            'CTRL-04':('canonical/docs/ctrl/CTRL-04/CTRL04_C1_ACCEPTANCE_RECORD.json',os.environ['CTRL04_SHA256']),
+          }
+          for stage,(path,expected) in records.items():
+              rec=json.loads(pathlib.Path(path).read_text())
+              cand=rec.get('candidate',rec)
+              sha=cand.get('sha256') or rec.get('candidate_sha256') or rec.get('accepted_candidate_sha256')
+              if sha is None:
+                  text=pathlib.Path(path).read_text()
+                  assert expected in text, (stage,'accepted sha absent')
+              else:
+                  assert sha==expected,(stage,sha)
+              assert 'ACCEPTED' in pathlib.Path(path).read_text() or 'CLOSED' in pathlib.Path(path).read_text(), stage
+          print('CTRL05_CURRENT_PREDECESSOR_BINDINGS:PASS:CTRL01-04')
+          PY
+          cp canonical/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md replay/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
+          cp canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md replay/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          cp canonical/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md replay/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          echo "CTRL05_FRESHNESS_RECONCILIATION:PASS:$current"
+
+      - name: Set up Python 3.12 and frozen workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          uv --version
+          uv python install 3.12
+          uv sync --all-groups --frozen
+          uv pip install --python .venv/bin/python 'playwright==1.55.0'
+          .venv/bin/python -m playwright install --with-deps chromium
+          .venv/bin/python - <<'PY'
+          import sys, playwright
+          print('CTRL05_PYTHON:'+sys.version.split()[0])
+          print('CTRL05_PLAYWRIGHT_IMPORT:PASS')
+          PY
+
+      - name: Independent mutation replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl05_mutation_suite.py --python "$PWD/.venv/bin/python"
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl05/mutation_result.json'))
+          assert x['executed']==52 and x['detected']==52 and not x['undetected'], x
+          print('CTRL05_MUTATIONS:PASS:52/52')
+          PY
+
+      - name: Independent E2E replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl05_e2e_journeys.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl05/e2e_journeys_result.json'))
+          assert x['journeys_passed']==22 and x['journeys_total']==22, x
+          assert x['integration_class']=='REAL_INSTALLED_CTRL02_CTRL03_CTRL04_PLANES', x
+          print('CTRL05_E2E:PASS:22/22')
+          PY
+
+      - name: Independent browser replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl05_browser_journeys.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl05/browser_journeys_result.json'))
+          assert x['status']=='PASS' and x['journeys_passed']==5 and x['journeys_total']==5, x
+          assert 'chromium' in x.get('browser','').lower(), x
+          assert len(x.get('screenshots',[]))>=5, x
+          print('CTRL05_BROWSER:PASS:5/5')
+          PY
+
+      - name: Independent governed validator replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl05_validator.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl05/preseal_result.json'))
+          gates=json.load(open('validation/ctrl05/gate_results.json'))['gates']
+          assert x['overall']=='PASS', x
+          assert x['gates_total']==56 and x['gates_passed']==56 and x['gates_failed']==[], x
+          assert x['gates_blocked_for_final_seal']==[], x
+          assert x['mutation_result']=='52/52 DETECTED', x
+          assert x['e2e_result']=='22/22 PASS', x
+          assert x['browser_result']=='PASS', x
+          assert x['self_state']=='CANDIDATE_NOT_ACCEPTED' and x['self_acceptance'] is False, x
+          assert len(gates)==56 and len({g['id'] for g in gates})==56 and all(g['executed'] and g['status']=='PASS' for g in gates), gates
+          t=json.load(open('validation/ctrl05/test_result.json'))
+          runs=t['runs']
+          assert runs['tests']['ok'] and '597 passed' in runs['tests']['summary'], runs['tests']
+          assert runs['ruff']['ok'] and runs['ruff_format']['ok'] and runs['mypy']['ok'], runs
+          assert t['secret_scan_hits']==[], t['secret_scan_hits']
+          print('CTRL05_GOVERNED_GATES:PASS:56/56')
+          print('CTRL05_TESTS:PASS:597/597')
+          PY
+
+      - name: Verify original sealed bytes again after execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl05-sha-post.txt)
+          python3 "$root/scripts/verify_ctrl05_package.py" "$p"
+          echo 'CTRL05_EXACT_PACKAGE_POSTEXEC:PASS'
+
+      - name: Build external authoritative result
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p authoritative-evidence/replayed_browser
+          cp replay/validation/ctrl05/preseal_result.json authoritative-evidence/replayed_gate_result.json
+          cp replay/validation/ctrl05/gate_results.json authoritative-evidence/replayed_gate_details.json
+          cp replay/validation/ctrl05/test_result.json authoritative-evidence/replayed_tests.json
+          cp replay/validation/ctrl05/mutation_result.json authoritative-evidence/replayed_mutations.json
+          cp replay/validation/ctrl05/e2e_journeys_result.json authoritative-evidence/replayed_e2e.json
+          cp replay/validation/ctrl05/browser_journeys_result.json authoritative-evidence/replayed_browser.json
+          cp replay/validation/ctrl05/source_freeze.json authoritative-evidence/replayed_source_freeze.json
+          cp replay/validation/ctrl05/dependency_identities.json authoritative-evidence/replayed_dependency_identities.json
+          cp replay/validation/ctrl05/browser/*.png authoritative-evidence/replayed_browser/
+          cp "$RUNNER_TEMP/main_delta.txt" authoritative-evidence/current_main_delta.txt
+          cp "$RUNNER_TEMP/candidate_delta.txt" authoritative-evidence/candidate_delta.txt
+          cp "$RUNNER_TEMP/intersection.txt" authoritative-evidence/delta_intersection.txt
+          cp "$RUNNER_TEMP/conflicts.txt" authoritative-evidence/delta_conflicts.txt
+          cp /tmp/ctrl05-sha-pre.txt authoritative-evidence/sealed_sha256_manifest_pre.txt
+          cp /tmp/ctrl05-sha-post.txt authoritative-evidence/sealed_sha256_manifest_post.txt
+          python3 - <<'PY'
+          import json, pathlib, subprocess, os
+          main_sha=subprocess.check_output(['git','-C','canonical','rev-parse','HEAD'], text=True).strip()
+          result={
+            'schema':'epd2.ctrl05.c1.external-authoritative-result/1',
+            'stage':'CTRL-05',
+            'candidate':{
+              'filename':os.environ['CANDIDATE_NAME'],
+              'sha256':os.environ['CANDIDATE_SHA256'],
+              'size_bytes':int(os.environ['CANDIDATE_SIZE']),
+              'upload_commit':os.environ['UPLOAD_COMMIT'],
+              'self_state':'CANDIDATE_NOT_ACCEPTED',
+            },
+            'declared_baseline':{'commit':os.environ['BASELINE_COMMIT'],'tree':os.environ['BASELINE_TREE']},
+            'current_canonical_main':main_sha,
+            'freshness_reconciliation':'PASS_NO_CTRL05_OWNED_CONFLICT',
+            'accepted_predecessors':{
+              'CTRL-01':os.environ['CTRL01_SHA256'],
+              'CTRL-02':os.environ['CTRL02_SHA256'],
+              'CTRL-03':os.environ['CTRL03_SHA256'],
+              'CTRL-04':os.environ['CTRL04_SHA256'],
+            },
+            'package_pre_execution':'PASS',
+            'package_post_execution':'PASS',
+            'tests':'597/597 PASS',
+            'mutations':'52/52 DETECTED',
+            'e2e':'22/22 PASS',
+            'browser':'5/5 PASS REAL_CHROMIUM',
+            'governed_gates':'56/56 PASS',
+            'failed_gates':[],
+            'blocked_gates':[],
+            'developer_evidence_consistency':'PASS_NO_CONTRADICTORY_CURRENT_PATH_RESULT',
+            'decision_basis':'INDEPENDENT_EXACT_BYTE_REPLAY_PASS',
+            'scope_nonclaims':['CTRL layer closure','production readiness','legal activation','final security readiness','BSI/CC/EAL4 certification'],
+          }
+          pathlib.Path('authoritative-evidence/CTRL05_C1_EXTERNAL_AUTHORITATIVE_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print('CTRL05_EXTERNAL_RESULT_RECORD:PASS')
+          PY
+          (cd authoritative-evidence && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > authoritative-evidence/authoritative_evidence_sha256.txt
+
+      - name: Upload authoritative evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl05-c1-authoritative-evidence-${{ github.run_id }}
+          path: authoritative-evidence
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Terminal result
+        shell: bash
+        run: |
+          echo "CTRL05_AUTHORITATIVE_RESULT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
