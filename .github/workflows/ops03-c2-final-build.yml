@@ -38,6 +38,23 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Download exact accepted API-06 C1 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-candidate-v3
+          path: ${{ runner.temp }}/accepted-api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+      - name: Bind exact accepted API-06 C1 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          P=$(find "$RUNNER_TEMP/accepted-api06" -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$P"
+          echo '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c  '"$P" | sha256sum -c -
+          test "$(stat -c%s "$P")" = '44012716'
+          echo "EPD2_OPS03_ACCEPTED_API06_ZIP=$P" >> "$GITHUB_ENV"
+          echo 'OPS03_C2_ACCEPTED_API06_ARTIFACT:PASS'
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
