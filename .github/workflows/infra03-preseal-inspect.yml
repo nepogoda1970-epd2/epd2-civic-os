@@ -1,0 +1,47 @@
+name: INFRA-03 PRESEAL Inspect
+
+on:
+  push:
+    branches: ["handoff/infra"]
+    paths:
+      - ".github/workflows/infra03-preseal-inspect.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect exact INFRA-03 PRESEAL
+        shell: bash
+        run: |
+          set -euo pipefail
+          CAND='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          echo "INFRA03_PRESEAL_SHA256=$(sha256sum "$CAND" | awk '{print $1}')"
+          echo "INFRA03_PRESEAL_SIZE=$(stat -c %s "$CAND")"
+          python - <<'PY'
+          import zipfile
+          p='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          z=zipfile.ZipFile(p)
+          bad=[]
+          for i in z.infolist():
+              n=i.filename.replace('\\','/')
+              if n.startswith('/') or '/../' in '/'+n or n.startswith('../'):
+                  bad.append(n)
+          print('INFRA03_ZIP_ENTRIES='+str(len(z.infolist())))
+          print('INFRA03_ZIP_UNSAFE='+str(len(bad)))
+          z.extractall('_infra03')
+          PY
+          ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
+          if [ -z "$ROOT" ]; then ROOT=_infra03; fi
+          echo "INFRA03_ROOT=$ROOT"
+          echo '--- INFRA03/DEPLOY/PREVIEW relevant paths ---'
+          find "$ROOT" -type f | sed "s#^$ROOT/##" | grep -Ei 'infra[-_]?03|deploy|preview|runtime|readiness|stage.contract|accept|seal|evidence|validator|manifest' | sort | head -400
+          echo '--- docs/infra tree ---'
+          find "$ROOT/docs/infra" -maxdepth 3 -type f 2>/dev/null | sed "s#^$ROOT/##" | sort | tail -200 || true
+          echo '--- validation dirs ---'
+          find "$ROOT/validation" -maxdepth 3 -type f 2>/dev/null | sed "s#^$ROOT/##" | grep -Ei 'infra|deploy|preview' | sort | head -300 || true
+          echo '--- candidate-local INFRA03 text markers ---'
+          grep -RIl --exclude='*.lock' --exclude='package-lock.json' -E 'INFRA-03|INFRA03|DEPLOYMENT RUNTIME|PREVIEW READINESS' "$ROOT" 2>/dev/null | sed "s#^$ROOT/##" | sort | head -200 || true
