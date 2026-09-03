@@ -1,0 +1,25 @@
+{
+ "generated_at": "2026-09-03T10:11:20+00:00",
+ "manifest_sha256": "eb75e9edf7bd609648b72ced4875b6b552030fbdbb1fa9998eb68271cdbb672f",
+ "schema": "epd2.infra03.network_flow_result/1",
+ "segmentation": {
+  "loopback_only": true,
+  "placement": {
+   "identity-runtime-shell": "application",
+   "ingress-gateway": "public",
+   "membership-runtime-shell": "application",
+   "observability-collector": "observability",
+   "postgres-preview": "data",
+   "voting-runtime-shell": "voting"
+  },
+  "segments": [
+   "admin_ops",
+   "application",
+   "data",
+   "egress",
+   "observability",
+   "public",
+   "voting"
+  ]
+ }
+}

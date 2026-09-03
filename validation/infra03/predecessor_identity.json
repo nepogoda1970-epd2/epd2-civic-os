@@ -1,0 +1,24 @@
+{
+ "acceptance_record_sha256": "ca23c674667afd7b2164d01db0e7d5dd5342367dacb2e6ed5bbbdd20d7d55b04",
+ "acceptance_record_source": "origin/main (live)",
+ "generated_at": "2026-09-03T10:11:15+00:00",
+ "manifest_sha256": "a942b92c149a43f815e853a817e603b227200e7a8d72cddf61d891144b5097e9",
+ "predecessor": {
+  "acceptance_record": "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json",
+  "archive_member_count": 1496,
+  "authoritative_run": 33574647511,
+  "candidate": "EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip",
+  "freeze_tree_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "size_bytes": 15980332,
+  "source_file_count": 1494,
+  "stage": "INFRA-02",
+  "zip_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+ },
+ "record_verification_findings": [],
+ "schema": "epd2.infra03.predecessor_identity/1",
+ "staged_artifact": {
+  "path": "/tmp/infra02.zip",
+  "sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+  "verification_findings": []
+ }
+}

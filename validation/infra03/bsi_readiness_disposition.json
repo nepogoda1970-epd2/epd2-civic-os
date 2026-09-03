@@ -1,0 +1,27 @@
+{
+ "bsi_reconciliation": {
+  "baseline": "docs/ops/OPS-01/OPS01_C2_BSI_READINESS_DISPOSITION.json (nine existing deferred gaps unchanged)",
+  "certification_claim": "NONE \u2014 this is preparatory readiness work, not BSI/CC/EAL4 certification",
+  "hard_freeze": "PRESERVED: no persistent member/person identifier inside the voting domain \u2014 enforced live at the voting boundary (G34) and scanned in telemetry",
+  "new_certification_blockers": [],
+  "touched_rows": [
+   "M-16 (network segmentation: preview-runtime enforcement added)",
+   "M-17 (TLS/mTLS: live negative proofs added)",
+   "M-19 (secret handling: classified injection + value-exact scans)",
+   "M-25 (logging privacy: redaction + voting telemetry scans)"
+  ]
+ },
+ "generated_at": "2026-09-03T10:11:30+00:00",
+ "manifest_sha256": "33138d53d5c77c5e8645fae177176935cfe61850a673afca1ccdd96339e14d85",
+ "provider_neutrality": {
+  "declared_provider": "NONE_SELECTED",
+  "deployment_mechanism": "process-based, provider-neutral, portable; no container/cloud dependency on the release path",
+  "lock_digests": {
+   "package-lock.json": "86e1a6bfa5f77dcf10680bf7a084e4bb49a78527cec455eedaf1ad941489e258",
+   "uv.lock": "b2d0775458d3b6e81d321724530c7a473584fb2b3d9d231d220d8e9dcdfe8066"
+  },
+  "provider_markers_in_topology": [],
+  "sovereignty": "FIR-INFRA-SOV-001 preserved: sovereignty profile carried by the deployment manifest discipline; no provider-only opaque mechanism is required to establish any cryptographic truth (all trust material is standard X.509 generated per instance)"
+ },
+ "schema": "epd2.infra03.bsi_readiness_disposition/1"
+}

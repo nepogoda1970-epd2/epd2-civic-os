@@ -1,0 +1,15 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:30+00:00",
+ "manifest_sha256": "dd380ada7bd7c962a87cd5bbcbefe33085c0a877554d382fcc62df65531ed634",
+ "scenarios": {
+  "rollback_to_verified_release_allowed": true,
+  "schema_unsafe_rollback_refused": [
+   "I03_UNSAFE_ROLLBACK: 0010_replay_prevention.sql: rollback target does not carry migrations already applied to the database; schema safety refuses the rollback"
+  ],
+  "unknown_target_refused": [
+   "I03_UNSAFE_ROLLBACK: 0000000000000000: rollback target was never verified/deployed in this instance"
+  ]
+ },
+ "schema": "epd2.infra03.rollback_result/1"
+}

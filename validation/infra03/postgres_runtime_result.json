@@ -1,0 +1,28 @@
+{
+ "engine_findings": [],
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "manifest_sha256": "a57673dd696f9003ccce1ae4606fda72ac0aaff1588391c8e39a4eefe537eb70",
+ "scenarios": {
+  "client_connection_tls": {
+   "ssl": "t"
+  },
+  "credential_isolation": {
+   "cross_database_denied": true,
+   "detail": "ort 8432 failed: FATAL:  permission denied for database \"epd2_membership\"\nDETAIL:  User does not have CONNECT privilege."
+  },
+  "plaintext_tcp_refused": {
+   "refused": true
+  },
+  "restart_persistence": {
+   "row_survived_restart": true
+  },
+  "server_version": {
+   "server_version_num": "160015",
+   "version": "16.15 (Ubuntu 16.15-1.pgdg24.04+2)"
+  },
+  "transaction_rollback": {
+   "rows_after_rollback": "0"
+  }
+ },
+ "schema": "epd2.infra03.postgres_runtime_result/1"
+}

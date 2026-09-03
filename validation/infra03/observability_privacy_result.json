@@ -1,0 +1,19 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:27+00:00",
+ "manifest_sha256": "1be7759686521c8e2561b55d4891df2e888d143d18264efd891fd3cac0ab027f",
+ "scenarios": {
+  "collector_outage": {
+   "application_still_ready": true,
+   "classification": "EXPLICIT_UNAVAILABLE (collector) / SAFE_RETRY (producers)"
+  },
+  "generated_secret_leak_scan": {
+   "findings": []
+  },
+  "query_secret_redacted_in_logs": {
+   "leaked_in": [],
+   "ok": true
+  }
+ },
+ "schema": "epd2.infra03.observability_privacy_result/1"
+}

@@ -1,0 +1,12 @@
+{
+ "authorities": [
+  "application-ca",
+  "data-ca",
+  "voting-ca"
+ ],
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "layout_findings": [],
+ "manifest_sha256": "80ab8c8ea7f4dee7c741dc29c4b5e14380b2cbfcf73b6c8313117dba0e1d1a61",
+ "schema": "epd2.infra03.trust_material_result/1",
+ "separation": "three trust domains; voting CA disjoint from the application CA; per-workload key pairs (no universal certificate)"
+}

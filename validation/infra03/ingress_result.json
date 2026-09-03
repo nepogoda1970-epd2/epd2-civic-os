@@ -1,0 +1,33 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:20+00:00",
+ "manifest_sha256": "5a90476137e2134c51f703e115aa58492ecf2847212c51c3e03c192c7755b47e",
+ "scenarios": {
+  "admin_refused_via_ingress": {
+   "refused": true,
+   "status": 403
+  },
+  "forwarded_header_hygiene": {
+   "backend_saw": {
+    "x_forwarded_for": "127.0.0.1",
+    "x_forwarded_proto": "https",
+    "x_request_id": "app-c0d491cfdeaf4039"
+   },
+   "spoof_stripped": true,
+   "status": 200
+  },
+  "internal_refused_via_ingress": {
+   "refused": true,
+   "status": 403
+  },
+  "request_limit": {
+   "mode": "connection-refused",
+   "refused": true
+  },
+  "routing": {
+   "ok": true,
+   "status": 200
+  }
+ },
+ "schema": "epd2.infra03.ingress_result/1"
+}

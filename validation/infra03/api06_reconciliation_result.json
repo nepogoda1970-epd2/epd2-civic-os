@@ -1,0 +1,20 @@
+{
+ "accepted": true,
+ "authoritative_run_id": 33629147572,
+ "candidate_sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+ "checks": {
+  "api_layer_state": true,
+  "authoritative_40_of_40": true,
+  "authoritative_run": true,
+  "authoritative_success": true,
+  "candidate_self_accepted_false": true,
+  "candidate_sha256": true,
+  "decision": true,
+  "new_state": true
+ },
+ "generated_at": "2026-09-03T10:11:43+00:00",
+ "manifest_sha256": "523d05ca388e8bd47b239c890bd360c43c2d941b8b14ea24eb35e8f967808766",
+ "record_sha256": "c859f3e626e11e313a44cfcee51e8e948be29603762b109d6d7279926ce1d4cb",
+ "schema": "epd2.infra03.api06_reconciliation_result/1",
+ "source": "origin/main:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json"
+}

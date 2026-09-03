@@ -1,0 +1,30 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "manifest_sha256": "5f2287fd8f97e118fbd08b0e14e73b8ef39b2b39287f69958dbe22f556d8a438",
+ "scenarios": {
+  "expired_cert_rejected": {
+   "reason": "SSLCertVerificationError",
+   "refused": true,
+   "subject": "expired-server-certificate"
+  },
+  "plaintext_refused": {
+   "refused": true
+  },
+  "valid_cert_path": {
+   "ok": true,
+   "status": 200
+  },
+  "wrong_ca_rejected": {
+   "reason": "SSLCertVerificationError",
+   "refused": true,
+   "subject": "ingress-with-voting-ca-trust"
+  },
+  "wrong_hostname_rejected": {
+   "reason": "SSLCertVerificationError",
+   "refused": true,
+   "subject": "ingress-wrong-hostname"
+  }
+ },
+ "schema": "epd2.infra03.tls_result/1"
+}

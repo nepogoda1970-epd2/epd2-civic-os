@@ -1,0 +1,11 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:30+00:00",
+ "manifest_sha256": "5a4f76faff541833ad23ef4e08734da44e0e870348a5ec1413a564523de20450",
+ "scenarios": {
+  "foreign_artifact_refused": true,
+  "release_digest_stable": true,
+  "same_release_redeploy_findings": []
+ },
+ "schema": "epd2.infra03.redeploy_result/1"
+}

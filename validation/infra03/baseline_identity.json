@@ -1,0 +1,68 @@
+{
+ "api_dependency_inventory": {
+  "accepted_stages": [
+   {
+    "accepted": true,
+    "decision": "ACCEPTED / CLOSED",
+    "record": "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md (API-01 authoritative transition; reconciliations under docs/api/API-01/)",
+    "record_sha256": "4b087133830559c03f135ff5bf58285f7229e1d329a9492a08c65096ffd8da17",
+    "stage": "API-01"
+   },
+   {
+    "accepted": true,
+    "decision": "ACCEPTED_CLOSED",
+    "record": "docs/api/API-02/API02_C13_ACCEPTANCE_RECORD.json",
+    "record_sha256": "f6f5ef3c3efb3fef083b8dbd3af79eb6fe3d40de60f33d56f8085ba124dffe80",
+    "stage": "API-02"
+   },
+   {
+    "accepted": true,
+    "decision": "ACCEPTED_CLOSED",
+    "record": "docs/api/API-03/API03_C5_ACCEPTANCE_RECORD.json",
+    "record_sha256": "c2c180b2334d5e2436bc85a93ac9f7abfffe32539149157cbc6ae2783b22e0eb",
+    "stage": "API-03"
+   },
+   {
+    "accepted": true,
+    "decision": "ACCEPTED_CLOSED",
+    "record": "docs/api/API-04/API04_C1_ACCEPTANCE_RECORD.json",
+    "record_sha256": "215cade01abc353b04b2acb50141da818254fd67bc1c1cdfc6dcd23f3d315d53",
+    "stage": "API-04"
+   },
+   {
+    "accepted": true,
+    "decision": "ACCEPTED_CLOSED",
+    "record": "docs/api/API-05/API05_C1_ACCEPTANCE_RECORD.json",
+    "record_sha256": "2dfdbf9f7d50fea7f47e4fd3d264d715b0fe1e5e2ebd54b3a25e941b68d96522",
+    "stage": "API-05"
+   }
+  ],
+  "runtime_consumption": "the preview runtime shells implement infrastructure semantics only; no unaccepted API business runtime is consumed. Accepted API stages are the governed future occupants of the declared topology slots; API-06 is accepted/closed on live governance; no API-06 business runtime is bundled into INFRA-03."
+ },
+ "candidate_branch": {
+  "commit": "0ec6cabb63e0e504ec3f3338a927d4d5c612ee84",
+  "dirty_paths": [],
+  "tree": "51aeb0d76fafb1e6fcca24a2d281cb62e4b1efd5"
+ },
+ "generated_at": "2026-09-03T10:11:15+00:00",
+ "manifest_sha256": "020e32a4effaddb5dcfb26540a5979e666ac6c0fd514d53ae90bcbc5ecefffa7",
+ "note": "G01/G02/G04: live canonical target read at gate-run start; the candidate branch identity; and the accepted API dependency inventory. Canonical main is a governance authority overlay \u2014 the source predecessor is the exact accepted INFRA-02 candidate (see predecessor_identity.json).",
+ "read_at": "2026-09-03T10:11:15+00:00",
+ "schema": "epd2.infra03.baseline_identity/1",
+ "target_authority": {
+  "branch": "main",
+  "commit": "724e4901e355bdff26c92f238d07785863618a5c",
+  "commit_timestamp": "2026-09-03T09:53:48Z",
+  "controlling_files_sha256": {
+   "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json": "983d558f9dac764c28cb96e02193212e4f97150532a20025289a4bfc30d60e70",
+   "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json": "ca23c674667afd7b2164d01db0e7d5dd5342367dacb2e6ed5bbbdd20d7d55b04",
+   "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json": "960cef6178e8c2453cef102c788953408ed0b3b7637acf0e97eead5388fdef7e",
+   "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+   "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md": "4b087133830559c03f135ff5bf58285f7229e1d329a9492a08c65096ffd8da17",
+   "docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md": "f6a93dec5e372c49c3f22d14e9cc7f5acea56c7ea355bd93b7e44ec940d8cbf2"
+  },
+  "missing_controlling_files": [],
+  "repository": "nepogoda1970-epd2/epd2-civic-os",
+  "tree": "494c29d80bdb46206d3c44afc7bb1dd8f9024e13"
+ }
+}

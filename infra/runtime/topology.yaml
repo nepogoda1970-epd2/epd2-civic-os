@@ -1,0 +1,212 @@
+# EPD2 INFRA-03 runtime topology (assignment section 8).
+#
+# The single declarative, versioned, lintable source of runtime truth for the
+# preview environment: services, artifact identity, network segments, flows,
+# trust, probes, persistence, resources and lifecycle. The supervisor deploys
+# exactly this document; anything running that this document does not declare
+# is drift (I03_UNDECLARED_SERVICE).
+#
+# Artifact identity: the deployed application artifact is the exact accepted
+# INFRA-02 candidate (content-addressed; mutable tags are refused). Runtime
+# shells implement infrastructure semantics only (probes, config validation,
+# TLS/mTLS, DB connectivity, shutdown); they carry no business logic. When
+# API-06 is accepted and SYSTEM TRIAL PREVIEW opens, accepted API runtime
+# artifacts replace the shells under the same digest discipline (section 50).
+#
+# No secrets appear in this file (I03_SECRET_IN_MANIFEST is a governed
+# mutation): secret and trust fields name classified injection slots, never
+# values.
+
+schema: epd2.infra03.topology/1
+environment: preview
+
+artifacts:
+  epd2-civic-os-accepted:
+    class: accepted-candidate-archive
+    filename: EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+    sha256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+    source_tree_digest: c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d
+    acceptance_record: docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json
+  postgresql-16:
+    class: system-runtime
+    name: postgresql
+    version_series: "16"
+    identity_proof: server_version reported by the running cluster and binary digest recorded at deploy time
+
+network_segments:
+  public:
+    description: TLS ingress boundary; the only segment a preview user reaches.
+  application:
+    description: application/internal services; mTLS required for every east-west call.
+  data:
+    description: PostgreSQL; reachable only from declared application/voting flows over TLS.
+  admin_ops:
+    description: supervisor control plane; local unix socket only, never a TCP port.
+  voting:
+    description: voting-domain infrastructure; separate CA, separate DB role/database, no shared observability, no person identifiers, no egress.
+  observability:
+    description: privacy-safe log/metric collection for non-voting segments.
+  egress:
+    description: external destinations; default deny — only declared flows leave the runtime.
+
+services:
+  ingress-gateway:
+    role: public TLS ingress and routing boundary
+    artifact: epd2-civic-os-accepted
+    network_segment: public
+    ports:
+      https: 8443
+    ingress:
+      public_endpoint: true
+      tls: server certificate from the application CA; TLS 1.2+ only; no plaintext listener
+      forwarded_headers: inbound X-Forwarded-* is stripped and replaced; only this gateway may assert forwarded identity to inner services
+      request_limits: { max_body_bytes: 1048576, max_header_bytes: 16384 }
+      admin_routes: refused (no /admin exposure through ingress)
+    egress: []
+    dependencies: [identity-runtime-shell, membership-runtime-shell]
+    secrets: []
+    config: [ingress_routes, request_limits]
+    trust:
+      serves: application-ca/server/ingress-gateway
+      client: application-ca/client/ingress-gateway
+      trusts: [application-ca]
+    probes: { liveness: /livez, readiness: /readyz, health: /healthz }
+    persistence: ephemeral
+    resources: { cpu_shares: 2, memory_bytes: 268435456 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 10 }
+    voting_domain: false
+
+  identity-runtime-shell:
+    role: application runtime shell (infrastructure semantics for the identity slot)
+    artifact: epd2-civic-os-accepted
+    network_segment: application
+    ports:
+      mtls: 8451
+    ingress:
+      public_endpoint: false
+      mtls: required — client certificate from the application CA with the caller's workload identity
+    egress: []
+    dependencies: [postgres-preview]
+    database: { name: epd2_identity, role: rt_identity, tls: verify-full }
+    secrets: [db-password/rt_identity]
+    config: [service_identity, db_dsn_template, observability_endpoint]
+    trust:
+      serves: application-ca/server/identity-runtime-shell
+      client: application-ca/client/identity-runtime-shell
+      trusts: [application-ca, data-ca]
+    probes: { liveness: /livez, readiness: /readyz, health: /healthz }
+    persistence: ephemeral
+    resources: { cpu_shares: 2, memory_bytes: 268435456 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 10 }
+    voting_domain: false
+
+  membership-runtime-shell:
+    role: application runtime shell (infrastructure semantics for the membership slot)
+    artifact: epd2-civic-os-accepted
+    network_segment: application
+    ports:
+      mtls: 8452
+    ingress:
+      public_endpoint: false
+      mtls: required
+    egress: []
+    dependencies: [postgres-preview]
+    database: { name: epd2_membership, role: rt_membership, tls: verify-full }
+    secrets: [db-password/rt_membership]
+    config: [service_identity, db_dsn_template, observability_endpoint]
+    trust:
+      serves: application-ca/server/membership-runtime-shell
+      client: application-ca/client/membership-runtime-shell
+      trusts: [application-ca, data-ca]
+    probes: { liveness: /livez, readiness: /readyz, health: /healthz }
+    persistence: ephemeral
+    resources: { cpu_shares: 2, memory_bytes: 268435456 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 10 }
+    voting_domain: false
+
+  voting-runtime-shell:
+    role: voting-domain runtime shell (infrastructure semantics; strict isolation)
+    artifact: epd2-civic-os-accepted
+    network_segment: voting
+    ports:
+      mtls: 8471
+    ingress:
+      public_endpoint: false
+      mtls: required — client certificates from the voting CA only; application-CA identities are refused
+    egress: []
+    dependencies: [postgres-preview]
+    database: { name: epd2_voting, role: rt_voting, tls: verify-full }
+    secrets: [db-password/rt_voting]
+    config: [service_identity, db_dsn_template]
+    trust:
+      serves: voting-ca/server/voting-runtime-shell
+      client: voting-ca/client/voting-runtime-shell
+      trusts: [voting-ca, data-ca]
+    probes: { liveness: /livez, readiness: /readyz, health: /healthz }
+    persistence: ephemeral
+    resources: { cpu_shares: 2, memory_bytes: 268435456 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 10 }
+    voting_domain: true
+    isolation:
+      observability: private file sink only; never the shared collector
+      correlation: voting-scoped request ids only; application correlation ids, member/person/account/session identifiers are refused at the boundary
+      key_material: voting keys are not generic deployment secrets; none are provisioned in preview
+
+  observability-collector:
+    role: privacy-safe log/metric collection for non-voting segments
+    artifact: epd2-civic-os-accepted
+    network_segment: observability
+    ports:
+      mtls: 8461
+    ingress:
+      public_endpoint: false
+      mtls: required
+    egress: []
+    dependencies: []
+    secrets: []
+    config: [service_identity, redaction_policy]
+    trust:
+      serves: application-ca/server/observability-collector
+      client: application-ca/client/observability-collector
+      trusts: [application-ca]
+    probes: { liveness: /livez, readiness: /readyz, health: /healthz }
+    persistence: evidence (collected logs are part of run evidence after privacy scan)
+    resources: { cpu_shares: 1, memory_bytes: 268435456 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 5 }
+    voting_domain: false
+
+  postgres-preview:
+    role: real PostgreSQL 16 cluster for the preview instance
+    artifact: postgresql-16
+    network_segment: data
+    ports:
+      tls: 8432
+    ingress:
+      public_endpoint: false
+      tls: server certificate from the data CA; scram-sha-256 authentication; TLS required for TCP clients
+    egress: []
+    dependencies: []
+    secrets:
+      - db-password/rt_identity
+      - db-password/rt_membership
+      - db-password/rt_voting
+    config: [pg_parameters]
+    trust:
+      serves: data-ca/server/postgres-preview
+      trusts: [data-ca]
+    probes:
+      liveness: pg_isready over the instance socket
+      readiness: SELECT 1 on each governed database over TLS as the owning role
+    persistence: persistent-within-instance (data directory survives service restarts; destroyed only by governed reset/destroy)
+    resources: { cpu_shares: 2, memory_bytes: 536870912 }
+    restart_policy: { mode: on-failure, max_restarts: 3, backoff_seconds: 2 }
+    shutdown: { drain: true, grace_seconds: 20, mode: pg_ctl stop -m fast }
+    voting_domain: false
+
+admin_plane:
+  supervisor_control: unix socket inside the runtime instance directory; owner-only mode; no TCP listener; final privileged-authority semantics remain CTRL/SEC governed (assignment section 48)

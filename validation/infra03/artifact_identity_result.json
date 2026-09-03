@@ -1,0 +1,19 @@
+{
+ "approved": {
+  "freeze_tree_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "source": "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json",
+  "zip_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+ },
+ "chain": "approved == deployed == observed",
+ "deployed_tree_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "manifest_sha256": "536b7b2c8bb3166f20c0f0a26a6936c4de270997359fb7aaa953928319246474",
+ "observed_runtime_digests": {
+  "identity-runtime-shell": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "ingress-gateway": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "membership-runtime-shell": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "observability-collector": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+  "voting-runtime-shell": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d"
+ },
+ "schema": "epd2.infra03.artifact_identity_result/1"
+}

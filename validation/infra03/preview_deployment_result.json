@@ -1,0 +1,53 @@
+{
+ "canonical_runner": "python validation/infra03/run_preview_deployment.py deploy",
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "instance_id": "preview-70fb62fb0efc",
+ "manifest_sha256": "e487054fd6114ba6451e237771a175a7f92c971f5a3aba69933dfb3fabeed766",
+ "outcome_evaluation": [],
+ "release_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+ "schema": "epd2.infra03.preview_deployment_result/1",
+ "started_at": "2026-09-03T10:11:15+00:00",
+ "steps": [
+  {
+   "detail": "",
+   "ok": true,
+   "step": "topology-lint"
+  },
+  {
+   "detail": "deployed tree digest c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+   "ok": true,
+   "step": "artifact-identity"
+  },
+  {
+   "detail": "application-ca, data-ca, voting-ca",
+   "ok": true,
+   "step": "trust-provisioned"
+  },
+  {
+   "detail": "PostgreSQL 16.15 (Ubuntu 16.15-1.pgdg24.04+2) on port 8432",
+   "ok": true,
+   "step": "postgres"
+  },
+  {
+   "detail": "epd2_identity, epd2_membership, epd2_voting",
+   "ok": true,
+   "step": "databases"
+  },
+  {
+   "detail": "epd2_identity: 10 applied",
+   "ok": true,
+   "step": "migrations"
+  },
+  {
+   "detail": "identity-runtime-shell, ingress-gateway, membership-runtime-shell, observability-collector, voting-runtime-shell",
+   "ok": true,
+   "step": "services-started"
+  },
+  {
+   "detail": "every declared service is ready",
+   "ok": true,
+   "step": "readiness"
+  }
+ ]
+}

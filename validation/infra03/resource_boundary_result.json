@@ -1,0 +1,40 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:27+00:00",
+ "manifest_sha256": "57c002badae4a0f3f96ca5592556ed58943531ee3c3e1c6f7bc28b47479ee882",
+ "scenarios": {
+  "constrained_scenario": {
+   "attempted_bytes": 268435456,
+   "contained": true,
+   "exit_code": 1,
+   "limit_bytes": 50331648
+  },
+  "declared_profiles": {
+   "identity-runtime-shell": {
+    "cpu_shares": 2,
+    "memory_bytes": 268435456
+   },
+   "ingress-gateway": {
+    "cpu_shares": 2,
+    "memory_bytes": 268435456
+   },
+   "membership-runtime-shell": {
+    "cpu_shares": 2,
+    "memory_bytes": 268435456
+   },
+   "observability-collector": {
+    "cpu_shares": 1,
+    "memory_bytes": 268435456
+   },
+   "postgres-preview": {
+    "cpu_shares": 2,
+    "memory_bytes": 536870912
+   },
+   "voting-runtime-shell": {
+    "cpu_shares": 2,
+    "memory_bytes": 268435456
+   }
+  }
+ },
+ "schema": "epd2.infra03.resource_boundary_result/1"
+}

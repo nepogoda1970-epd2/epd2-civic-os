@@ -1,0 +1,296 @@
+{
+ "counts": {
+  "BLOCKED": 0,
+  "FAIL": 0,
+  "PASS": 40
+ },
+ "duration_seconds": 28.1,
+ "final_seal_blockers": [],
+ "gates": [
+  {
+   "detail": "target main@724e4901e355 read live",
+   "evidence": "baseline_identity.json",
+   "gate": "G01",
+   "state": "PASS",
+   "title": "canonical bootstrap freshness"
+  },
+  {
+   "detail": "branch HEAD 0ec6cabb63e0 recorded",
+   "evidence": "baseline_identity.json",
+   "gate": "G02",
+   "state": "PASS",
+   "title": "baseline identity"
+  },
+  {
+   "detail": "exact accepted INFRA-02 d91fa6db8112 verified from record and staged bytes",
+   "evidence": "predecessor_identity.json",
+   "gate": "G03",
+   "state": "PASS",
+   "title": "exact INFRA-02 predecessor"
+  },
+  {
+   "detail": "API-01..05 accepted records inventoried; preview shells consume no unaccepted API runtime",
+   "evidence": "baseline_identity.json",
+   "gate": "G04",
+   "state": "PASS",
+   "title": "API dependency inventory"
+  },
+  {
+   "detail": "catalog complete and governed",
+   "evidence": "environment_catalog_result.json",
+   "gate": "G05",
+   "state": "PASS",
+   "title": "environment catalog"
+  },
+  {
+   "detail": "topology complete, flows declared",
+   "evidence": "runtime_topology_result.json",
+   "gate": "G06",
+   "state": "PASS",
+   "title": "topology completeness"
+  },
+  {
+   "detail": "approved == deployed == observed digest proven live",
+   "evidence": "artifact_identity_result.json",
+   "gate": "G07",
+   "state": "PASS",
+   "title": "immutable artifact identity"
+  },
+  {
+   "detail": "INFRA-02 handoff verified",
+   "evidence": "supply_chain_handoff_result.json",
+   "gate": "G08",
+   "state": "PASS",
+   "title": "supply-chain handoff"
+  },
+  {
+   "detail": "versioned, lintable, deterministic, secret-free declaration",
+   "evidence": "runtime_topology_result.json",
+   "gate": "G09",
+   "state": "PASS",
+   "title": "declarative reproducibility"
+  },
+  {
+   "detail": "clean workspace enforced; dirty control refused",
+   "evidence": "clean_room_result.json",
+   "gate": "G10",
+   "state": "PASS",
+   "title": "clean-room deploy"
+  },
+  {
+   "detail": "real PostgreSQL 16.15 (Ubuntu 16.15-1.pgdg24.04+2): TLS, scram, transactions, isolation, restart persistence proven",
+   "evidence": "postgres_runtime_result.json",
+   "gate": "G11",
+   "state": "PASS",
+   "title": "PostgreSQL runtime"
+  },
+  {
+   "detail": "10 migrations ledgered; re-apply is a no-op",
+   "evidence": "migration_result.json",
+   "gate": "G12",
+   "state": "PASS",
+   "title": "migrations"
+  },
+  {
+   "detail": "classified injection; zero leaks",
+   "evidence": "secret_injection_result.json",
+   "gate": "G13",
+   "state": "PASS",
+   "title": "secret injection / no embedded secrets"
+  },
+  {
+   "detail": "trust layout verified fail-closed",
+   "evidence": "trust_material_result.json",
+   "gate": "G14",
+   "state": "PASS",
+   "title": "trust integrity"
+  },
+  {
+   "detail": "valid path serves; wrong CA/hostname/expiry/plaintext refused",
+   "evidence": "tls_result.json",
+   "gate": "G15",
+   "state": "PASS",
+   "title": "TLS"
+  },
+  {
+   "detail": "missing/wrong/expired/foreign certificates refused; workload identity mapped",
+   "evidence": "mtls_result.json",
+   "gate": "G16",
+   "state": "PASS",
+   "title": "mTLS"
+  },
+  {
+   "detail": "declared segments enforced; loopback-bound runtime",
+   "evidence": "network_flow_result.json",
+   "gate": "G17",
+   "state": "PASS",
+   "title": "segmentation"
+  },
+  {
+   "detail": "TLS-only ingress; forwarded headers replaced; admin/internal unroutable; limits enforced",
+   "evidence": "ingress_result.json",
+   "gate": "G18",
+   "state": "PASS",
+   "title": "ingress trust"
+  },
+  {
+   "detail": "no declared external egress; none observed",
+   "evidence": "egress_result.json",
+   "gate": "G19",
+   "state": "PASS",
+   "title": "egress control"
+  },
+  {
+   "detail": "liveness/health/readiness distinct; no sensitive output",
+   "evidence": "health_readiness_result.json",
+   "gate": "G20",
+   "state": "PASS",
+   "title": "health truth"
+  },
+  {
+   "detail": "alive != ready proven under real outage",
+   "evidence": "health_readiness_result.json",
+   "gate": "G21",
+   "state": "PASS",
+   "title": "readiness truth"
+  },
+  {
+   "detail": "invalid config refuses startup (exit 78); dependency-aware readiness",
+   "evidence": "configuration_result.json",
+   "gate": "G22",
+   "state": "PASS",
+   "title": "startup dependency handling"
+  },
+  {
+   "detail": "readiness removed before termination; bounded drain; clean exit",
+   "evidence": "startup_shutdown_result.json",
+   "gate": "G23",
+   "state": "PASS",
+   "title": "graceful shutdown"
+  },
+  {
+   "detail": "deterministic deploy to readiness, release c169a2930ab5",
+   "evidence": "preview_deployment_result.json",
+   "gate": "G24",
+   "state": "PASS",
+   "title": "deterministic preview deploy"
+  },
+  {
+   "detail": "deterministic fixtures; reset proves old state gone; reseed deterministic",
+   "evidence": "seed_reset_integration_result.json",
+   "gate": "G25",
+   "state": "PASS",
+   "title": "preview reset/seed"
+  },
+  {
+   "detail": "instance-scoped resources only; production-like targets refused",
+   "evidence": "environment_isolation_result.json",
+   "gate": "G26",
+   "state": "PASS",
+   "title": "environment isolation"
+  },
+  {
+   "detail": "profiles declared for every service; constrained scenario contained",
+   "evidence": "resource_boundary_result.json",
+   "gate": "G27",
+   "state": "PASS",
+   "title": "resource boundaries"
+  },
+  {
+   "detail": "clean runtime drift-free; injected drift detected",
+   "evidence": "drift_result.json",
+   "gate": "G28",
+   "state": "PASS",
+   "title": "drift"
+  },
+  {
+   "detail": "identical release redeploys idempotently; foreign artifact refused",
+   "evidence": "redeploy_result.json",
+   "gate": "G29",
+   "state": "PASS",
+   "title": "idempotent redeploy"
+  },
+  {
+   "detail": "verified-release rollback allowed; schema-unsafe and unknown targets refused",
+   "evidence": "rollback_result.json",
+   "gate": "G30",
+   "state": "PASS",
+   "title": "rollback safety"
+  },
+  {
+   "detail": "failures classified; nothing hidden as success",
+   "evidence": "failure_recovery_result.json",
+   "gate": "G31",
+   "state": "PASS",
+   "title": "failure semantics"
+  },
+  {
+   "detail": "recovery after dependency restoration, exactly-once consequential retry",
+   "evidence": "failure_recovery_result.json",
+   "gate": "G32",
+   "state": "PASS",
+   "title": "recovery"
+  },
+  {
+   "detail": "redaction proven; value-exact secret scan clean; collector outage non-fatal",
+   "evidence": "observability_privacy_result.json",
+   "gate": "G33",
+   "state": "PASS",
+   "title": "observability privacy"
+  },
+  {
+   "detail": "voting boundary refusals proven live; telemetry clean",
+   "evidence": "voting_network_isolation_result.json",
+   "gate": "G34",
+   "state": "PASS",
+   "title": "voting isolation"
+  },
+  {
+   "detail": "admin plane is a local unix socket; no admin TCP port; no universal admin; final privileged-authority semantics deferred to CTRL/SEC",
+   "evidence": "ingress_result.json",
+   "gate": "G35",
+   "state": "PASS",
+   "title": "operator/admin boundary"
+  },
+  {
+   "detail": "provider-neutral, portable, sovereignty preserved",
+   "evidence": "bsi_readiness_disposition.json",
+   "gate": "G36",
+   "state": "PASS",
+   "title": "provider neutrality / sovereignty"
+  },
+  {
+   "detail": "BSI rows reconciled; hard freeze preserved; no new blockers",
+   "evidence": "bsi_readiness_disposition.json",
+   "gate": "G37",
+   "state": "PASS",
+   "title": "BSI reconciliation"
+  },
+  {
+   "detail": "36 classes, 36 distinct detectors, 73 tests passed",
+   "evidence": "mutation_result.json",
+   "gate": "G38",
+   "state": "PASS",
+   "title": "mutation suite"
+  },
+  {
+   "detail": "live API-06 acceptance reconciled exactly (ACCEPTED / CLOSED; API layer CLOSED; authoritative 40/40 PASS)",
+   "evidence": "api06_reconciliation_result.json",
+   "gate": "G41",
+   "state": "PASS",
+   "title": "API-06 reconciliation"
+  },
+  {
+   "detail": "target re-fetched at gate end: main@724e4901e355",
+   "evidence": "baseline_identity.json",
+   "gate": "G42",
+   "state": "PASS",
+   "title": "current PCR/Master freshness before seal"
+  }
+ ],
+ "generated_at": "2026-09-03T10:11:43+00:00",
+ "manifest_sha256": "7038ae294e6a75bbbc11b846a48c0ff06d2ea3195a14d2ee5143467fde5636a7",
+ "note": "Runtime-phase gate summary. G39/G40 (archive hygiene, same-bytes identity) are executed by the packaging phase against the final archive; the final candidate SHA-256 cannot appear inside the archive itself and is emitted in the detached preseal marker and sidecar. Self-state: PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED.",
+ "schema": "epd2.infra03.infra03_preseal_result/1",
+ "verdict": "PASS_WITH_GOVERNED_BLOCKERS"
+}

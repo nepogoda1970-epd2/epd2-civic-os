@@ -1,0 +1,13 @@
+{
+ "catalog_file": "infra/runtime/environment_catalog.json",
+ "catalog_sha256": "18fbf52208f171b5f8002ed759a7c194ffd80d68cda6ec341b2d5a03d06ef9ad",
+ "environments": [
+  "local_dev",
+  "ci_runtime",
+  "preview"
+ ],
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:15+00:00",
+ "manifest_sha256": "d31c1ee1248e6f6686aa14295a5a204a27a26b23374c15f146f6d05a9a1816a7",
+ "schema": "epd2.infra03.environment_catalog_result/1"
+}

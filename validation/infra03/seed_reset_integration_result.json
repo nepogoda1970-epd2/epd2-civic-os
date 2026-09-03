@@ -1,0 +1,20 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:27+00:00",
+ "manifest_sha256": "b96237c5dab646eb427287bf7321c6d48c434278feeab9468c54e6da71b2fc01",
+ "scenarios": {
+  "deterministic_reseed": {
+   "deterministic": true,
+   "fixture_rows": "3"
+  },
+  "fixtures_seeded": {
+   "fixture_rows": "3"
+  },
+  "reset": {
+   "migrations_reapplied": 10,
+   "old_state_proven_gone": true,
+   "stale_rows_after_reset": "0"
+  }
+ },
+ "schema": "epd2.infra03.seed_reset_integration_result/1"
+}

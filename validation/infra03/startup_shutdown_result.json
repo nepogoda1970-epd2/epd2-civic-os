@@ -1,0 +1,11 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:24+00:00",
+ "manifest_sha256": "cb6926caa9341ace102c702aef1dd9b0ecaf134ba89ed1cdc8a0759c7a967761",
+ "schema": "epd2.infra03.startup_shutdown_result/1",
+ "shutdown": {
+  "bounded": true,
+  "exit_code": 0,
+  "readiness_removed_before_exit": false
+ }
+}

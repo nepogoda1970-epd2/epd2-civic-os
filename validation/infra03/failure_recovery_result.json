@@ -1,0 +1,49 @@
+{
+ "classifications": {
+  "consequential_operations": "SAFE_RETRY with exactly-once effect",
+  "db_outage": "FAIL_CLOSED (readiness) / EXPLICIT_UNAVAILABLE (dependency)",
+  "dns_failure": "EXPLICIT_UNAVAILABLE",
+  "observability_outage": "EXPLICIT_UNAVAILABLE (collector) / SAFE_RETRY (producers)"
+ },
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:22+00:00",
+ "manifest_sha256": "c0174b496e9118c7dc4f02d3174b171481b18716e28281f80e989746c0de5779",
+ "scenarios": {
+  "consequential_during_outage": {
+   "error": "database unavailable",
+   "retry": "safe",
+   "status": 503
+  },
+  "consequential_first": {
+   "duplicate": false,
+   "executed": true,
+   "operation_key": "op-alpha",
+   "status": 200
+  },
+  "consequential_repeat": {
+   "duplicate": true,
+   "executed": false,
+   "operation_key": "op-alpha",
+   "status": 200
+  },
+  "consequential_retry_after_recovery": {
+   "duplicate": false,
+   "executed": true,
+   "operation_key": "op-during-outage",
+   "status": 200
+  },
+  "db_outage": {
+   "classification": "FAIL_CLOSED (readiness) / EXPLICIT_UNAVAILABLE (dependency)",
+   "liveness_still_true": true,
+   "readiness_failed_closed": true
+  },
+  "dns_failure": {
+   "classification": "EXPLICIT_UNAVAILABLE",
+   "refused": true
+  },
+  "recovery": {
+   "ready_again_without_restart": true
+  }
+ },
+ "schema": "epd2.infra03.failure_recovery_result/1"
+}

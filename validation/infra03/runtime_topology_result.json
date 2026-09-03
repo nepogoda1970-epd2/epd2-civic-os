@@ -1,0 +1,25 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:15+00:00",
+ "manifest_sha256": "e2e73c1fe33513b1d4eef14bed254933a496f2dd94335875b0c3146cdaefed5b",
+ "network_segments": [
+  "admin_ops",
+  "application",
+  "data",
+  "egress",
+  "observability",
+  "public",
+  "voting"
+ ],
+ "schema": "epd2.infra03.runtime_topology_result/1",
+ "services": [
+  "identity-runtime-shell",
+  "ingress-gateway",
+  "membership-runtime-shell",
+  "observability-collector",
+  "postgres-preview",
+  "voting-runtime-shell"
+ ],
+ "topology_file": "infra/runtime/topology.yaml",
+ "topology_sha256": "21e1015d0ae12b20a317d6cc5c6b72673b7702c63803720af17d4a50e1b983ee"
+}

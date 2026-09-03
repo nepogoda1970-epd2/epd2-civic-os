@@ -1,0 +1,32 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:20+00:00",
+ "manifest_sha256": "a97b60eae4492777f70bc55ba69abb4aef56614c5e17380b6549e55b06232cba",
+ "scenarios": {
+  "expired_client_rejected": {
+   "reason": "SSLError",
+   "refused": true,
+   "subject": "identity-shell-expired-client"
+  },
+  "missing_client_cert_rejected": {
+   "reason": "SSLError",
+   "refused": true,
+   "subject": "identity-shell-no-client-cert"
+  },
+  "valid_client_accepted": {
+   "ok": true,
+   "status": 200
+  },
+  "workload_identity_enforced": {
+   "reason": "SSLCertVerificationError",
+   "refused": true,
+   "subject": "identity-shell-as-membership"
+  },
+  "wrong_ca_client_rejected": {
+   "reason": "SSLError",
+   "refused": true,
+   "subject": "identity-shell-voting-ca-client"
+  }
+ },
+ "schema": "epd2.infra03.mtls_result/1"
+}

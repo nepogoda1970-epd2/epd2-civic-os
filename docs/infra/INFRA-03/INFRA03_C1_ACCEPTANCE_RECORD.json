@@ -1,0 +1,67 @@
+{
+  "accepted_predecessor": {
+    "sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+    "size_bytes": 15980332,
+    "stage": "INFRA-02"
+  },
+  "api06_reconciliation": {
+    "authoritative_run_id": 33629147572,
+    "candidate_sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+    "result": "PASS"
+  },
+  "artifacts": {
+    "authoritative_candidate": {
+      "digest": "sha256:32e2fb06bf21109e9f272a2b16a90737bffc4ff13236e86246a71df1941768d9",
+      "id": 9888502423
+    },
+    "authoritative_evidence": {
+      "digest": "sha256:5de4f5b72d3097118391d8b3e47d414bd364dd0a1db55d001639270cc66f0470",
+      "id": 9888501784
+    },
+    "exact_candidate": {
+      "digest": "sha256:6df8f84b4b5d573849a6ab580fce306b01726e2cb35d7ee30d4535fadeb540e0",
+      "id": 9888465152
+    }
+  },
+  "authoritative": {
+    "G39": "PASS",
+    "G40": "PASS",
+    "authoritative_review_job_id": 100608998259,
+    "build_job_id": 100608682265,
+    "conclusion": "success",
+    "governed_gates_passed": 42,
+    "governed_gates_total": 42,
+    "head_sha": "b120659417db2bc519a7b2ab39028d982f40c0d4",
+    "mutation_classes_detected": 36,
+    "mutation_classes_total": 36,
+    "postgresql": "16.15",
+    "run_id": 33742902782,
+    "runtime_gates_passed": 40,
+    "runtime_gates_total": 40,
+    "targeted_tests_passed": 73,
+    "terminal_marker": "INFRA03_C1_AUTHORITATIVE_RESULT:PASS:6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1:16179206",
+    "workflow": "INFRA-03 C1 Canonical Acceptance V5",
+    "workflow_file": ".github/workflows/infra03-c1-canonical-v5.yml"
+  },
+  "candidate": {
+    "filename": "EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip",
+    "self_acceptance": false,
+    "sha256": "6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1",
+    "size_bytes": 16179206,
+    "source_preseal_sha256": "30033863c854b34532b42a216bb275c691e57413053724f393b183ad814685fe"
+  },
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-03",
+  "nonclaims": [
+    "production readiness",
+    "legal activation",
+    "final security acceptance",
+    "BSI/Common Criteria/EAL4 certification",
+    "overall INFRA layer closure"
+  ],
+  "open_stage_blockers": [],
+  "overall_infra_layer": "OPEN / NOT CLOSED",
+  "schema": "epd2.infra03.acceptance-record/1",
+  "scope": "BOUNDED_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_STAGE_ONLY",
+  "stage": "INFRA-03"
+}

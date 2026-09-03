@@ -1,0 +1,11 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:27+00:00",
+ "manifest_sha256": "e9907c7ae2f5b21f7eda1e41484ae88b0ab60fd409a5843a856b9fe2cb8c68ee",
+ "scanner_liveness": [],
+ "scenarios": {
+  "clean_scan_findings": [],
+  "undeclared_service_detected": true
+ },
+ "schema": "epd2.infra03.drift_result/1"
+}

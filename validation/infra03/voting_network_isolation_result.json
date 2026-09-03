@@ -1,0 +1,27 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:24+00:00",
+ "hard_gate": "no persistent member/person identifier, account/session identity or global correlation id crosses into voting infrastructure; voting trust domain and observability are separate",
+ "manifest_sha256": "c55e008d60b19c9ccae0fa70b7ff2e8dc6d3f076f030d00c6e7ef41a37f9b9f4",
+ "scenarios": {
+  "application_ca_client_refused": {
+   "reason": "SSLError",
+   "refused": true,
+   "subject": "voting-shell-app-ca-client"
+  },
+  "clean_request_served": {
+   "ok": true,
+   "status": 200
+  },
+  "identity_headers_refused": {
+   "X-Correlation-Id": true,
+   "X-Member-Id": true,
+   "X-Person-Id": true,
+   "X-Session-Id": true
+  },
+  "voting_absent_from_shared_observability": true
+ },
+ "schema": "epd2.infra03.voting_network_isolation_result/1",
+ "shared_observability_scan": [],
+ "voting_telemetry_scan": []
+}

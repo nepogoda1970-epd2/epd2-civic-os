@@ -1,0 +1,313 @@
+{
+  "authoritative_run_id": 33742902782,
+  "candidate_sha256": "6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1",
+  "candidate_size_bytes": 16179206,
+  "file_count": 59,
+  "files": [
+    {
+      "path": "scripts/infra03/__init__.py",
+      "sha256": "38a2050ec739aff33db634bb60e4998dad4079c76de31c6767763b26349ed372",
+      "size_bytes": 1059
+    },
+    {
+      "path": "scripts/infra03/artifacts.py",
+      "sha256": "e72f3708a6796d9e37dead51e73dc43897b82b22e574fac9859007531b2f9e60",
+      "size_bytes": 7104
+    },
+    {
+      "path": "scripts/infra03/codes.py",
+      "sha256": "ca1bceea302d938700b6fe1242e227a549fe77a14abe2a2d14bdb4b82154f184",
+      "size_bytes": 3952
+    },
+    {
+      "path": "scripts/infra03/config.py",
+      "sha256": "f9c1c305f3e1a0af2123267845daf3bd47d7d95b73a3c3d5ac7289936d7d0bff",
+      "size_bytes": 4468
+    },
+    {
+      "path": "scripts/infra03/evaluators.py",
+      "sha256": "08a8f6e6dca387b9c598258506b61e88a1ba71421e549a48674ed427f722c8f6",
+      "size_bytes": 8445
+    },
+    {
+      "path": "scripts/infra03/gates.py",
+      "sha256": "0fbde41293752be11e46f0d9a67209ddeebf15d747babd8e129455952d96c8c8",
+      "size_bytes": 51338
+    },
+    {
+      "path": "scripts/infra03/mutations.py",
+      "sha256": "c37c021056da7907c3b5ca1f36c24ddce105914bc9553fbbb80ff04e9a6e4c55",
+      "size_bytes": 2808
+    },
+    {
+      "path": "scripts/infra03/postgres.py",
+      "sha256": "be296894a8379b79e15b7c627d7357e8afea2ea9591fb51cba414b698d1fe151",
+      "size_bytes": 13076
+    },
+    {
+      "path": "scripts/infra03/preseal.py",
+      "sha256": "fd8b06a0a87771c707401a71fbfab11d1818eded70962d9543f5d1147f617ca4",
+      "size_bytes": 6416
+    },
+    {
+      "path": "scripts/infra03/scenarios.py",
+      "sha256": "c6eb296d86dfdd2fd13d3bd0f0d7c6a2a6f34ee0997d9ed7b3fb98be5179061d",
+      "size_bytes": 44001
+    },
+    {
+      "path": "scripts/infra03/secrets.py",
+      "sha256": "75e5a388a84e7edc336491c8a1ec186f49dde2d541d717eb8dcf39e5000af4ba",
+      "size_bytes": 6367
+    },
+    {
+      "path": "scripts/infra03/service.py",
+      "sha256": "bfca5bea7cdd2942c14a82034506e103026a2ec07ac3ab283a6520bc52358d4f",
+      "size_bytes": 19949
+    },
+    {
+      "path": "scripts/infra03/supervisor.py",
+      "sha256": "19bf1ed95f0beff0fd4bd4bf655174afe826273be92b924108ff63462985c6fc",
+      "size_bytes": 27230
+    },
+    {
+      "path": "scripts/infra03/topology.py",
+      "sha256": "fb318a68158691c08dcfbc9f4ca1c9651f57f9be8266c7b4abea8117f99e9fa7",
+      "size_bytes": 13348
+    },
+    {
+      "path": "scripts/infra03/trust.py",
+      "sha256": "cac253408e5bedc65dc3f3fce084f09390c1d16ec0091b43f2f2c8a488eb4a6a",
+      "size_bytes": 9045
+    },
+    {
+      "path": "validation/infra03/api06_reconciliation_result.json",
+      "sha256": "72142d44f81024dd89391b36fd6a379309739f625b5b75c196a42fe4acea818a",
+      "size_bytes": 749
+    },
+    {
+      "path": "validation/infra03/artifact_identity_result.json",
+      "sha256": "683e2db8b7ed5712a5c29bd58cad1e0c33732c479d253e1e5787d30756fd2033",
+      "size_bytes": 1098
+    },
+    {
+      "path": "validation/infra03/baseline_identity.json",
+      "sha256": "5b3c07076d7a262ae9fb9f08ce273c0dcc7ba0d6eef95d6020e5f6c0b07afe0e",
+      "size_bytes": 3431
+    },
+    {
+      "path": "validation/infra03/bsi_readiness_disposition.json",
+      "sha256": "8e445e89f3ab62bc56baa528b89192212cf5d3f4e81c293baf82d3cbcf2a0b0c",
+      "size_bytes": 1612
+    },
+    {
+      "path": "validation/infra03/clean_room_result.json",
+      "sha256": "08965e8aeb0d203ce02ed0dd56eb7739ae459a5aaad006b6cd6c8a49b4ccfd3b",
+      "size_bytes": 607
+    },
+    {
+      "path": "validation/infra03/configuration_result.json",
+      "sha256": "96fe78066e966bdfd5ac306072d1fde1217ac8362ac26471c778728e56ff200e",
+      "size_bytes": 909
+    },
+    {
+      "path": "validation/infra03/drift_result.json",
+      "sha256": "67c433a463389b686f4e08569e6ca9994535fa0838b898f322784ca8a9a7ae9f",
+      "size_bytes": 308
+    },
+    {
+      "path": "validation/infra03/egress_result.json",
+      "sha256": "63f5c339587a35bd06535d0a602480a535bf509ee8120968cc7bbca03013c325",
+      "size_bytes": 519
+    },
+    {
+      "path": "validation/infra03/environment_catalog_result.json",
+      "sha256": "3a3b2a05de122c7a0f480c03900eae08804ac1fc6abe281e50f7769af7a4c44d",
+      "size_bytes": 422
+    },
+    {
+      "path": "validation/infra03/environment_isolation_result.json",
+      "sha256": "5e5884c5f58661ac53706462ced69c9e66bf7e12fc2082fadb79a87e92615634",
+      "size_bytes": 760
+    },
+    {
+      "path": "validation/infra03/failure_recovery_result.json",
+      "sha256": "7f764cf43a5cba124650d7216c775ebeb50f2b04accfd9a8243a308fdd3c926f",
+      "size_bytes": 1359
+    },
+    {
+      "path": "validation/infra03/health_readiness_result.json",
+      "sha256": "55b15fc27cde8b094e8876a0db9f35d06f06f597514d8868aa67d9dc5ec04d65",
+      "size_bytes": 1286
+    },
+    {
+      "path": "validation/infra03/infra03_preseal_result.json",
+      "sha256": "a0e85a639032ceabd342e8de695092ab8b2d171092b5ca4e6d2acbe39a8b1aed",
+      "size_bytes": 8772
+    },
+    {
+      "path": "validation/infra03/ingress_result.json",
+      "sha256": "87eb06ba8a877e63fcac911e03dfa17d3ac9abfac8a8d9cabab3819e8ffe453e",
+      "size_bytes": 720
+    },
+    {
+      "path": "validation/infra03/migration_result.json",
+      "sha256": "fe773c34cd379e66575d0b43ab3388a792a5468d6fab2fbcbf7e0e303819fb4f",
+      "size_bytes": 1313
+    },
+    {
+      "path": "validation/infra03/mtls_result.json",
+      "sha256": "79951cb3667aa5e94ff459024754834dd8e33f7f10969a436e1751fdf77262b5",
+      "size_bytes": 814
+    },
+    {
+      "path": "validation/infra03/mutation_result.json",
+      "sha256": "0202dd4f927108c79626dde6406e0af0a7e1ae32ab5a42d5c042ced859f3f166",
+      "size_bytes": 2731
+    },
+    {
+      "path": "validation/infra03/network_flow_inventory.json",
+      "sha256": "e4016dc78fbe89f8e2d37496087f7854bbb780d8a17cfc7e94741c67ed43b21c",
+      "size_bytes": 4977
+    },
+    {
+      "path": "validation/infra03/network_flow_result.json",
+      "sha256": "286e601c3055eabf3309584fae2d22a2c4d711f5f48015c851a2493ef01523df",
+      "size_bytes": 615
+    },
+    {
+      "path": "validation/infra03/observability_privacy_result.json",
+      "sha256": "07f7875dcf3b18f00199b6f8912a07d9b2b06e853b0b081120ca8b996bc6ace0",
+      "size_bytes": 510
+    },
+    {
+      "path": "validation/infra03/package_identity_result.json",
+      "sha256": "a9cfd8338b4d1b450357b78eeeb458d63f323a932cb659dc74b0f3f499ca6c47",
+      "size_bytes": 845
+    },
+    {
+      "path": "validation/infra03/postgres_runtime_result.json",
+      "sha256": "62e102a01b28be2810bdd624fdaff072957bd200b57f41944c658c3e8f0f788b",
+      "size_bytes": 780
+    },
+    {
+      "path": "validation/infra03/predecessor_identity.json",
+      "sha256": "5033cbe9c8932dee06a97f30269d370402abb62b79221a82adf6a91b4da56010",
+      "size_bytes": 1039
+    },
+    {
+      "path": "validation/infra03/preview_deployment_result.json",
+      "sha256": "321fb22784358244fe74645b05b5f37ffb68caebbecc4d9a39f2c0f03e690c68",
+      "size_bytes": 1432
+    },
+    {
+      "path": "validation/infra03/redeploy_result.json",
+      "sha256": "d354278e63a8ae377cdc2f6ceae15ccf7a8f6082fb89d8042346d8b753f4d740",
+      "size_bytes": 327
+    },
+    {
+      "path": "validation/infra03/resource_boundary_result.json",
+      "sha256": "e71971e4de9f23b6f4e98d2088cedf77b283f63cad07e4e642b4cb491cd92081",
+      "size_bytes": 906
+    },
+    {
+      "path": "validation/infra03/rollback_result.json",
+      "sha256": "2f36d5ee321ac18d2e76e448618839bf1134b800a7b1a780322ec56c74bf9b34",
+      "size_bytes": 613
+    },
+    {
+      "path": "validation/infra03/run_preview_deployment.py",
+      "sha256": "093ae5b5779cee8f06a7113ff05c2175e3825b3ca5216a5372b4437e9d5a5e60",
+      "size_bytes": 6139
+    },
+    {
+      "path": "validation/infra03/runtime_topology_result.json",
+      "sha256": "9d7cf07203419e80c74b80561b9697f74ff08acbbf0c6bb915b4689bc6c32296",
+      "size_bytes": 641
+    },
+    {
+      "path": "validation/infra03/secret_injection_result.json",
+      "sha256": "031268f726380b70778dc18c9686ff0ab14bc3d5eacd4937c53fea18342be7b5",
+      "size_bytes": 889
+    },
+    {
+      "path": "validation/infra03/seed_reset_integration_result.json",
+      "sha256": "18d1041c63a334d2c9d03852a8effd6134e7a67a7035ad3e77cedc0c9ccc5250",
+      "size_bytes": 481
+    },
+    {
+      "path": "validation/infra03/startup_shutdown_result.json",
+      "sha256": "6fdc288bdeb94f1482f9304f903905ac45e0e4a3b5f64b668457fd18e3dab626",
+      "size_bytes": 304
+    },
+    {
+      "path": "validation/infra03/supply_chain_handoff_result.json",
+      "sha256": "d9d3d4032cb71dd502bec8332803ba7c18e20321cdcb6122d580d187ecd8c89d",
+      "size_bytes": 933
+    },
+    {
+      "path": "validation/infra03/tls_result.json",
+      "sha256": "99530019cc5718a980fc23a1d18ad914b06d7560e8d0d9f6c1be08ec7c387f4b",
+      "size_bytes": 732
+    },
+    {
+      "path": "validation/infra03/trust_material_result.json",
+      "sha256": "b84f9ddf7d7a225fa9a077fc139442b133fd17a59641243cf192668053000102",
+      "size_bytes": 414
+    },
+    {
+      "path": "validation/infra03/voting_network_isolation_result.json",
+      "sha256": "c8896a358372f6f13dcffaa47efe8fa261106a1f68c7ce5d7f81dcdb40daacb6",
+      "size_bytes": 876
+    },
+    {
+      "path": "docs/infra/INFRA-03/INFRA03_C1_ACCEPTANCE_RECORD.json",
+      "sha256": "f577ff589adb4379674c966900746ebdd311fe2eacef6d19b76b09cbb8480b56",
+      "size_bytes": 2449
+    },
+    {
+      "path": "docs/infra/INFRA-03/INFRA03_C1_RECONCILIATION.md",
+      "sha256": "06469e204be559d9c1684171349ffec061d6f27fde0c56d36ea53ec0187e2c25",
+      "size_bytes": 845
+    },
+    {
+      "path": "docs/infra/INFRA-03/INFRA03_DEVELOPER_REPORT.md",
+      "sha256": "8ce7b615b81396f6b6d582f348527fbc846f74a5931e460ed78282ca8378ea8a",
+      "size_bytes": 10532
+    },
+    {
+      "path": "infra/runtime/environment_catalog.json",
+      "sha256": "18fbf52208f171b5f8002ed759a7c194ffd80d68cda6ec341b2d5a03d06ef9ad",
+      "size_bytes": 4545
+    },
+    {
+      "path": "infra/runtime/fixtures/identity_preview_fixture.sql",
+      "sha256": "99551caf3fd83eaefc4f0df76eeb1819a74d1721423507ddde1c1aceeaad38f5",
+      "size_bytes": 965
+    },
+    {
+      "path": "infra/runtime/topology.yaml",
+      "sha256": "21e1015d0ae12b20a317d6cc5c6b72673b7702c63803720af17d4a50e1b983ee",
+      "size_bytes": 9222
+    },
+    {
+      "path": "tests/repository/test_infra03_units.py",
+      "sha256": "ced5cbab47f087919be94b3cb2540e8fa531999fe49fa68b00993fa01d854548",
+      "size_bytes": 14462
+    },
+    {
+      "path": "tests/repository/test_infra03_mutation_suite.py",
+      "sha256": "16c7948b02df75f42cabed98a319f41425db2b2a02bc68bc8947486fbc0e0296",
+      "size_bytes": 24211
+    }
+  ],
+  "installed_scope": [
+    "scripts/infra03",
+    "validation/infra03",
+    "docs/infra/INFRA-03",
+    "infra/runtime",
+    "tests/repository/test_infra03_units.py",
+    "tests/repository/test_infra03_mutation_suite.py"
+  ],
+  "schema": "epd2.infra03.canonical-installation-manifest/1",
+  "stage": "INFRA-03"
+}

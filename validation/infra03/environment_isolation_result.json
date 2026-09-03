@@ -1,0 +1,18 @@
+{
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:30+00:00",
+ "manifest_sha256": "a1ed3d75d2e2bb161ca56bb408af96f4ffd68dca1b1265cc1f56b9f48ac06d36",
+ "preview_dsn_findings": [],
+ "scenarios": {
+  "exact_target_destroy_allowed": true,
+  "foreign_instance_destroy_refused": [
+   "I03_AMBIGUOUS_DESTRUCTIVE_TARGET: preview-not-this-instance: destroy target does not match the running instance identity"
+  ],
+  "production_destroy_refused": [
+   "I03_AMBIGUOUS_DESTRUCTIVE_TARGET: production: production-like destroy target refused",
+   "I03_AMBIGUOUS_DESTRUCTIVE_TARGET: preview-70fb62fb0efc: destroy target does not match the running instance identity"
+  ],
+  "production_markers_in_config": []
+ },
+ "schema": "epd2.infra03.environment_isolation_result/1"
+}

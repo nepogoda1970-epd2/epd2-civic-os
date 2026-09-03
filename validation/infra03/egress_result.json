@@ -1,0 +1,17 @@
+{
+ "declared_external_egress": [],
+ "enforcement_note": "policy default-deny with socket-level verification; kernel-level egress filtering is deferred to real infrastructure (known limitation)",
+ "generated_at": "2026-09-03T10:11:20+00:00",
+ "listening_runtime_ports": [
+  8432,
+  8443,
+  8451,
+  8452,
+  8461,
+  8471
+ ],
+ "manifest_sha256": "687d74bddc3ae5114aec6165590e67bfab4907367d165d81af7e5bb5f1182356",
+ "non_loopback_ports": [],
+ "runtime_ports_loopback_only": true,
+ "schema": "epd2.infra03.egress_result/1"
+}

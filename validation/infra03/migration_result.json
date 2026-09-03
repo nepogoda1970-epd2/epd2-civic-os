@@ -1,0 +1,21 @@
+{
+ "database": "epd2_identity",
+ "findings": [],
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "ledger": [
+  "0001_account_registry.sql|2c4257e8bcd316cd4329e1426b367391c1de5018c8e46851e3641e369b6e9580",
+  "0002_account_contacts.sql|b9a03965c73fd490b069f0a004fa4a6de090ec823d0612fad4ec02f51f3f17f6",
+  "0003_credential_registry.sql|80c798fd9641a9944cc0351bc3ae553da610441efc8e86da909e72652561c006",
+  "0004_sessions.sql|eb0a5b6e01a2fc68b6cbbdc5a1bfdce2da600c269d730abe5f57d1d122a10c88",
+  "0005_step_up.sql|de1134206834579143a421765ba3c18ea1f61d39434e4ee40a6af360ce7697fd",
+  "0006_recovery.sql|c6e74f50e173b55d9060e1de80385e69c6db690501aeebd1d2ae56511a614195",
+  "0007_proofing.sql|4c7215060fee4feb9fd32f24cfdd7ea7ac42f1da55091122fa52a0f0c194f70c",
+  "0008_bootstrap_and_handoff.sql|a6806016e686b50da1413dbf0ccd0cc671f0ea58e34e075ddce192527f077012",
+  "0009_identity_mappings.sql|6937806b6909b3cd96dfc7a731678a5c77be653d589f6c0a015350b8d33a5630",
+  "0010_replay_prevention.sql|f7478f02cd6f001aa3ac6fae237859af570caca282ab8385bc6a3d1f3fba3f57"
+ ],
+ "manifest_sha256": "0ba44cd38c015e5697b043ad4aa9ef57406db866f6fc92709eb574f612f5d5cc",
+ "reapply_idempotent": true,
+ "schema": "epd2.infra03.migration_result/1",
+ "source": "canonical migrations from the deployed artifact (services/identity-service/migrations)"
+}

@@ -1,0 +1,12 @@
+{
+ "contract": "scripts/infra03/config.py::SERVICE_CONFIG_CONTRACT (non_secret_static / environment_specific / runtime_derived / secret / trust_material)",
+ "dependency_aware_startup": "readiness is polled from live dependency checks (DB/trust/digest); no sleep-based readiness exists and the topology linter refuses it",
+ "generated_at": "2026-09-03T10:11:22+00:00",
+ "invalid_startup_control": {
+  "exit_code": 78,
+  "refused": true,
+  "stderr_excerpt": "on_secret_static configuration missing; the service must fail startup, not guess a default\nI03_CONFIG_INVALID_STARTUP: voting_domain: required non_secret_static configuration missing; the service must fail startup, not guess a default\nSTARTUP_REFUSED: invalid configuration fails closed (INFRA03 \u00a726)"
+ },
+ "manifest_sha256": "4c24a73b71311f797811878167e643e8c1e776beec3d470233a6c51a1bdd9dfe",
+ "schema": "epd2.infra03.configuration_result/1"
+}

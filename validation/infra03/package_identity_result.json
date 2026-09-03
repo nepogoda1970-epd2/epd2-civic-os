@@ -1,0 +1,8 @@
+{
+ "candidate_name": "EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL",
+ "generated_at": "2026-09-03T10:11:43+00:00",
+ "manifest_sha256": "566b7825f1b6f94b919fc4e22a27aad6aa6eb35d0d08604a6bad339cf17bfdf3",
+ "note": "In-archive packaging identity declaration (G39/G40 are executed by the packaging phase). The working archive is produced by the canonical acceptance harness (registry 2.0.0, 51 checks) which itself proves tested bytes == frozen bytes == packaged bytes and runs archive hygiene, frozen-artifact and secret gates; the final archive SHA-256 and size cannot appear inside the archive and are emitted in the detached preseal marker INFRA03_PRESEAL_RESULT:PASS:<sha256>:<size> and its sidecar.",
+ "packaged_by": "uv run python -m scripts.acceptance run",
+ "schema": "epd2.infra03.package_identity_result/1"
+}

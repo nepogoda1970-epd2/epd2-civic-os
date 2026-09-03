@@ -1,0 +1,62 @@
+{
+  "schema": "epd2.infra03.environment-catalog/1",
+  "note": "Machine-readable governed environment catalog (INFRA-03 assignment section 7). Every runtime environment the EPD2 stack may be deployed into is declared here; deploying into an undeclared environment fails closed. No production environment exists or is declared: declaring one is a separately governed act (INFRA-07 / Production Infrastructure Baseline).",
+  "environments": {
+    "local_dev": {
+      "purpose": "Developer-local iterative runtime for implementing and debugging infrastructure behavior.",
+      "allowed_artifact_source": "working-tree (developer checkout); accepted artifacts optional",
+      "network_scope": "loopback only (127.0.0.1); no external exposure",
+      "db_class": "ephemeral local PostgreSQL cluster, synthetic data only",
+      "secret_source": "per-run generated ephemeral secrets; never persisted to the repository",
+      "trust_source": "per-run generated ephemeral CAs and certificates",
+      "persistence": "ephemeral; removable at will",
+      "exposure": "none (loopback)",
+      "reset_policy": "destroy at will; no approval required",
+      "evidence_requirements": "none mandatory; evidence produced is non-authoritative",
+      "operator_ownership": "individual developer",
+      "prohibited_use": [
+        "production or member/person data",
+        "acceptance evidence generation",
+        "long-lived secrets or trust material",
+        "public exposure"
+      ]
+    },
+    "ci_runtime": {
+      "purpose": "Deterministic runtime for canonical gates and mutation suites inside CI.",
+      "allowed_artifact_source": "exact accepted or freshly frozen candidate bytes, digest-verified",
+      "network_scope": "loopback only inside the runner; no inbound exposure; egress limited to declared package/advisory endpoints of the canonical harness",
+      "db_class": "ephemeral PostgreSQL cluster created per run from initdb, synthetic fixtures only",
+      "secret_source": "per-run generated ephemeral secrets",
+      "trust_source": "per-run generated ephemeral CAs and certificates",
+      "persistence": "none across runs; evidence uploaded as CI artifacts",
+      "exposure": "none",
+      "reset_policy": "always destroyed at run end",
+      "evidence_requirements": "complete gate evidence under validation/infra03/ plus execution logs",
+      "operator_ownership": "canonical CI (INFRA-02 governed workflows)",
+      "prohibited_use": [
+        "production or member/person data",
+        "persistent secrets",
+        "manual mutation of runtime state"
+      ]
+    },
+    "preview": {
+      "purpose": "Deterministic, isolated, observable, recoverable preview deployment of the EPD2 stack for SYSTEM TRIAL PREVIEW preparation.",
+      "allowed_artifact_source": "exact accepted candidate artifacts only, digest-verified against acceptance records (supply-chain handoff, INFRA-02)",
+      "network_scope": "segmented loopback runtime (public/application/data/admin_ops/voting/observability zones); no real public exposure until a governed preview host exists",
+      "db_class": "dedicated real PostgreSQL cluster per preview instance; TLS required; per-service roles; synthetic deterministic fixtures only",
+      "secret_source": "per-deployment generated secrets injected at start; classified in the secret inventory; never in repository, images, manifests or logs",
+      "trust_source": "per-deployment CAs: application mTLS CA, data-zone CA and a separate voting-zone CA; delivered as files with restrictive modes",
+      "persistence": "declared volumes only: pg data directory persists across service restarts within one preview instance; evidence persists; secrets/trust are instance-scoped",
+      "exposure": "single TLS ingress endpoint; admin plane is a local unix socket, never a public port",
+      "reset_policy": "destroy/reset only with explicit target identity matching this catalog entry and the running instance marker; production-like targets refused",
+      "evidence_requirements": "full lifecycle evidence: deployment, readiness, probes, drift, redeploy, rollback, failure/recovery, reset proof",
+      "operator_ownership": "EPD2 INFRA maintainer (project owner) until CTRL governs operator roles",
+      "prohibited_use": [
+        "production or member/person data",
+        "real voting or legally binding operations",
+        "reuse of production DBs, domains, secret namespaces, queues, storage or signing keys",
+        "public advertising of the endpoint as a live system"
+      ]
+    }
+  }
+}

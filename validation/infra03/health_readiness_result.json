@@ -1,0 +1,56 @@
+{
+ "alive_not_ready_proven": {
+  "classification": "FAIL_CLOSED (readiness) / EXPLICIT_UNAVAILABLE (dependency)",
+  "liveness_still_true": true,
+  "readiness_failed_closed": true
+ },
+ "crashloop_findings": [],
+ "generated_at": "2026-09-03T10:11:22+00:00",
+ "health_privacy": {
+  "identity-runtime-shell": {
+   "sensitive_markers_found": []
+  },
+  "ingress-gateway": {
+   "sensitive_markers_found": []
+  },
+  "membership-runtime-shell": {
+   "sensitive_markers_found": []
+  },
+  "observability-collector": {
+   "sensitive_markers_found": []
+  },
+  "voting-runtime-shell": {
+   "sensitive_markers_found": []
+  }
+ },
+ "manifest_sha256": "61c98c78b038399e17c48cbd3f62536cf07668a44ff00424a30c43d985f0dc06",
+ "readiness_truth_findings": [],
+ "restart_accounting": {
+  "identity-runtime-shell": {
+   "failed": false,
+   "reasons": [],
+   "restart_count": 0
+  },
+  "ingress-gateway": {
+   "failed": false,
+   "reasons": [],
+   "restart_count": 0
+  },
+  "membership-runtime-shell": {
+   "failed": false,
+   "reasons": [],
+   "restart_count": 0
+  },
+  "observability-collector": {
+   "failed": false,
+   "reasons": [],
+   "restart_count": 0
+  },
+  "voting-runtime-shell": {
+   "failed": false,
+   "reasons": [],
+   "restart_count": 0
+  }
+ },
+ "schema": "epd2.infra03.health_readiness_result/1"
+}

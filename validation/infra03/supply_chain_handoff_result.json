@@ -1,0 +1,14 @@
+{
+ "generated_at": "2026-09-03T10:11:19+00:00",
+ "handoff": "deployment consumes the exact accepted INFRA-02 candidate bytes; digest verified against the acceptance record before extraction; extracted tree reproduces the accepted freeze tree digest; no rebuild, no mutable reference, no bypass path exists in the supervisor (verify_approved_artifact is unconditional)",
+ "infra02_controls_reused": [
+  "content-addressed artifact digests",
+  "acceptance-record identity",
+  "SBOM/provenance identity of the accepted candidate",
+  "promotion-by-digest discipline (deploy == promote of exact bytes)"
+ ],
+ "manifest_sha256": "fc5f3056d35afcb8cefcca93882e99c0abffb1fd0d4bb13ad54a9947ef8bf4f6",
+ "schema": "epd2.infra03.supply_chain_handoff_result/1",
+ "verified_tree_digest": "c169a2930ab50612076ab3f90468ff03f5ec19e2005c520765a4905e15c51f7d",
+ "verified_zip_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+}

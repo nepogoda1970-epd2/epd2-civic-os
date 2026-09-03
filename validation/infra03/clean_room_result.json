@@ -1,0 +1,11 @@
+{
+ "dirty_directory_refused": [
+  "I03_CLEAN_ROOM_VIOLATION: /tmp/epd2-infra03-gates/dirty-control: instance directory is not empty; clean-room deployment refuses developer leftovers"
+ ],
+ "fresh_instance_dir": "/tmp/epd2-infra03-gates/instance-229dec97",
+ "fresh_precondition_findings": [],
+ "generated_at": "2026-09-03T10:11:15+00:00",
+ "manifest_sha256": "837c81cde7bcd63f8a5ea82249ce5c9d5d35e6cb975f5b481bf74ce9973667e1",
+ "note": "every gate deployment starts from an empty instance directory; a non-empty directory is refused (negative control above)",
+ "schema": "epd2.infra03.clean_room_result/1"
+}
