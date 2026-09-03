@@ -1,0 +1,32 @@
+name: tmp-pilot04-python-wheels
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-wheelhouse:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Download exact PILOT-04 Python dependencies
+        run: |
+          python -m pip download --dest wheelhouse \
+            'psycopg==3.3.4' \
+            'psycopg-binary==3.3.4' \
+            'psycopg-pool==3.3.1' \
+            'cryptography==46.0.7' \
+            'cffi==2.1.0' \
+            'pycparser==3.0'
+          sha256sum wheelhouse/* | sort > wheelhouse/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot04-python-runtime-wheelhouse
+          path: wheelhouse/
+          retention-days: 1
