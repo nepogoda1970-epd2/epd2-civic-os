@@ -123,6 +123,25 @@ jobs:
           test "$(stat -c%s "$RUNNER_TEMP/accepted/$(basename "$P")")" = '16632939'
           echo "EPD2_OPS03_ACCEPTED_ARTIFACTS=$RUNNER_TEMP/accepted" >> "$GITHUB_ENV"
 
+      - name: Download exact accepted API-06 C1 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-candidate-v3
+          path: ${{ runner.temp }}/accepted-api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+
+      - name: Bind exact accepted API-06 C1 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          P=$(find "$RUNNER_TEMP/accepted-api06" -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$P"
+          echo '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c  '"$P" | sha256sum -c -
+          test "$(stat -c%s "$P")" = '44012716'
+          echo "EPD2_OPS03_ACCEPTED_API06_ZIP=$P" >> "$GITHUB_ENV"
+          echo 'OPS03_C2_ACCEPTED_API06_ARTIFACT:PASS'
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -140,12 +159,15 @@ jobs:
         run: |
           set -euo pipefail
           uv sync --all-groups --frozen
-          sudo apt-get update
-          sudo apt-get install --yes postgresql-client-16
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes postgresql-client >/dev/null
           python --version
           uv --version
           psql --version
-          PGPASSWORD= psql -h 127.0.0.1 -U postgres -tAc 'show server_version'
+          SERVER_NUM=$(psql -h 127.0.0.1 -U postgres -tAc 'show server_version_num')
+          test "$SERVER_NUM" = '160015'
+          SERVER=$(psql -h 127.0.0.1 -U postgres -tAc 'show server_version')
+          echo "OPS03_C2_POSTGRES:PASS:$SERVER"
 
       - name: Independent lint, type and unit suites
         shell: bash
@@ -222,6 +244,7 @@ jobs:
             ${{ steps.candidate.outputs.root }}/OPS03_CANDIDATE_SELF_STATE.json
             ${{ steps.candidate.outputs.root }}/OPS03_FREEZE_MANIFEST.json
             ${{ steps.candidate.outputs.root }}/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json
+            ${{ steps.candidate.outputs.root }}/docs/ops/OPS-03/OPS03_C2_API06_BINDING.md
           if-no-files-found: error
           retention-days: 90
 
