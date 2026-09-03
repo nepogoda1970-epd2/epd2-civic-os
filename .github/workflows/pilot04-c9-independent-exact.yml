@@ -1,0 +1,318 @@
+name: PILOT-04 C9 independent exact-byte acceptance
+
+on:
+  push:
+    branches:
+      - tmp/pilot04-c9-independent-20260822
+    paths:
+      - 'PILOT04_C8_00.part'
+      - 'PILOT04_C8_01.part'
+      - 'PILOT04_C9_00.part'
+      - 'PILOT04_C9_01.part'
+      - '.github/workflows/pilot04-c9-independent-exact.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: pilot04-c9-independent-exact
+  cancel-in-progress: false
+
+jobs:
+  accept:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      EPD2_LOCAL_CI_HOME: ${{ runner.temp }}/epd2-local-ci
+      PYTHONUNBUFFERED: '1'
+
+    steps:
+      - name: Checkout independent transport branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up uv 0.10.0
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.10.0'
+          enable-cache: true
+
+      - name: Install PostgreSQL 16 client and record environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+          python --version
+          uv --version
+          node --version
+          psql --version
+          PGPASSWORD=postgres psql "$EPD2_TEST_DATABASE_URL" -Atc 'SHOW server_version' | tee "$RUNNER_TEMP/postgres-server-version.txt"
+          grep -Fx '16.15' "$RUNNER_TEMP/postgres-server-version.txt"
+
+      - name: Verify uploaded C8/C9 parts and materialize exact archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '5a7ac1f69dffcd5e785461fe02260664e5b9259af9857e6b9c463896a4d65bf8  PILOT04_C8_00.part' | sha256sum -c -
+          echo 'c5e5b2090fa3dd1b753264455665b5bb49ad743cd8272b697b27175ac0210845  PILOT04_C8_01.part' | sha256sum -c -
+          echo 'df56b22c7d522e10652f060d925662ce6e1b3fc47252cf2644c4175706fa1b73  PILOT04_C9_00.part' | sha256sum -c -
+          echo '27f3a7ae239ad9c3638ace3df6e3340dc263f4ea528ff10e17cbe715564b0d30  PILOT04_C9_01.part' | sha256sum -c -
+
+          W="$RUNNER_TEMP/pilot04-exact"
+          mkdir -p "$W" inputs anchors
+          C8='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C8.zip'
+          C9='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip'
+          cat PILOT04_C8_00.part PILOT04_C8_01.part > "$W/$C8"
+          cat PILOT04_C9_00.part PILOT04_C9_01.part > "$W/$C9"
+          echo 'd3f7ab7c7fbf87591bf476f21a56b19148fdb400cd6454c12df2377f40938446  '"$W/$C8" | sha256sum -c -
+          echo '7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664  '"$W/$C9" | sha256sum -c -
+          unzip -t "$W/$C8" >/dev/null
+          unzip -t "$W/$C9" >/dev/null
+          cp "$W/$C8" inputs/
+          cp "$W/$C9" inputs/
+          echo "PILOT04_EXACT_DIR=$W" >> "$GITHUB_ENV"
+
+      - name: Verify C7 transport assets and reconstruct C3-C7 plus PILOT-03
+        shell: bash
+        run: |
+          set -euo pipefail
+          W="$PILOT04_EXACT_DIR"
+          D="$RUNNER_TEMP/pilot04-deltas"
+          mkdir -p "$D"
+          P0='artifacts/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C4.zip.part00'
+          P1='artifacts/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C4.zip.part01'
+          DB='artifacts/PILOT04_C7_GITHUB_DELTA_BUNDLE.zip'
+          test -f "$P0" && test -f "$P1" && test -f "$DB"
+          echo '8f750c7821462bbeef50686089353f62d5935f0669bede5e3e166e75f49aa201  '"$P0" | sha256sum -c -
+          echo '074d33a0eb13ddba1ec54f5dd91d3c4586768c1cb24504ae8d836f5ade78749e  '"$P1" | sha256sum -c -
+          echo '36cf6781d79394034c4047cff0e9a72abb6cbc14d3df19e4e99a7b2fc81b3c0a  '"$DB" | sha256sum -c -
+
+          C3='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C3.zip'
+          C4='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C4.zip'
+          C5='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C5.zip'
+          C6='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C6.zip'
+          C7='EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C7.zip'
+          P3='EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip'
+
+          cat "$P0" "$P1" > "$W/$C4"
+          echo '994f97c022e499b9847e8c36b48e04aa30b0da0b6e3b4741df13b8f1fcd083d1  '"$W/$C4" | sha256sum -c -
+          unzip -q "$DB" -d "$D"
+          python scripts/tmp_apply_zip_sparse_patch.py "$W/$C4" "$D/c4_to_pilot04c3.zsp" "$W/$C3"
+          python scripts/tmp_apply_zip_sparse_patch.py "$W/$C4" "$D/c4_to_pilot03c3.zsp" "$W/$P3"
+          python scripts/tmp_apply_zip_sparse_patch.py "$W/$C4" "$D/c4_to_c5.zsp" "$W/$C5"
+          python scripts/tmp_apply_zip_sparse_patch.py "$W/$C5" "$D/c5_to_c6.zsp" "$W/$C6"
+          python scripts/tmp_apply_zip_sparse_patch.py "$W/$C6" "$D/c6_to_c7.zsp" "$W/$C7"
+
+          cat > "$RUNNER_TEMP/pilot04-expected.sha256" <<EOF
+          7d9dc40c6b935d2ca899e9c53cc5a1cddef202bc69aa23994871dab1dfa5c1ff  $W/$C3
+          994f97c022e499b9847e8c36b48e04aa30b0da0b6e3b4741df13b8f1fcd083d1  $W/$C4
+          6d63b8a05e369960e4ef2f691cf4cfb44cf2eae37ffa7cab9fa95064e214b495  $W/$C5
+          4899c29a004112d38a33fce51e4e637ceb0951b49a47de71bac5b850e8f31b84  $W/$C6
+          812652950e996bd7c781512e4bbc03488c58eb74ca0c652c2b830056d76c1f1d  $W/$C7
+          52b5bbfe312d90d65f500f0b6085d33ffe3235ce4bd90562110a26a8fae208d1  $W/$P3
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/pilot04-expected.sha256"
+          sha256sum -c "$RUNNER_TEMP/pilot04-expected.sha256"
+          cp "$W/$C3" "$W/$C4" "$W/$C5" "$W/$C6" "$W/$C7" inputs/
+          cp "$W/$P3" anchors/
+
+      - name: Download frozen PB01 I10 C6 exact candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: pb01-i10-c6-exact-candidate
+          path: ${{ runner.temp }}/pb01-artifact
+          github-token: ${{ github.token }}
+          repository: nepogoda1970-epd2/epd2-civic-os
+          run-id: '32388797195'
+
+      - name: Verify and normalize PB01 exact anchor
+        shell: bash
+        run: |
+          set -euo pipefail
+          PB='EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip'
+          export PB_OUT="$GITHUB_WORKSPACE/anchors/$PB"
+          python - <<'PY'
+          import hashlib, os, shutil
+          from pathlib import Path
+          expected = '442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25'
+          root = Path(os.environ['RUNNER_TEMP']) / 'pb01-artifact'
+          matches=[]
+          for p in root.rglob('*'):
+              if p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest() == expected:
+                  matches.append(p)
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one PB01 exact candidate, found {matches}')
+          shutil.copyfile(matches[0], Path(os.environ['PB_OUT']))
+          print(matches[0])
+          PY
+          echo '442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25  '"$PB_OUT" | sha256sum -c -
+          unzip -t "$PB_OUT" >/dev/null
+
+      - name: Materialize exact C9 workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workspace
+          unzip -q inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip -d workspace
+          ROOT="$GITHUB_WORKSPACE/workspace/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9"
+          test -d "$ROOT"
+          echo "C9_WORKSPACE=$ROOT" >> "$GITHUB_ENV"
+
+      - name: Prepare frozen C9 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C9_WORKSPACE"
+          uv sync --frozen --all-extras
+          npm ci --no-audit --no-fund
+
+      - name: Run authoritative C9 validator on exact bytes
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C9_WORKSPACE"
+          uv run python scripts/validate_pilot04_c9.py \
+            --candidate   "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip" \
+            --predecessor "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C8.zip" \
+            --base        "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C3.zip" \
+            --historical  "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C4.zip" \
+            --historical  "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C5.zip" \
+            --historical  "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C6.zip" \
+            --historical  "$GITHUB_WORKSPACE/inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C7.zip" \
+            --anchor      "$GITHUB_WORKSPACE/anchors/EPD2_PILOT03_ASSEMBLIES_MOTIONS_AND_COMMUNICATIONS_CANDIDATE_0.1_C3.zip" \
+            --anchor      "$GITHUB_WORKSPACE/anchors/EPD2_VCRYPTO-PB01-I10_FINAL_CRYPTOGRAPHIC_PROFILE_FREEZE_AND_RELEASE_READINESS_DECISION_CANDIDATE_0.1_C6.zip" \
+            --run-id      "github-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}" \
+            --json        "$GITHUB_WORKSPACE/PILOT04_C9_ACCEPTANCE_EVIDENCE.json" \
+            2>&1 | tee "$GITHUB_WORKSPACE/PILOT04_C9_AUTHORITATIVE.log"
+          EVIDENCE="$GITHUB_WORKSPACE/PILOT04_C9_ACCEPTANCE_EVIDENCE.json"
+          NONCE="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['freshness']['nonce'])" "$EVIDENCE")"
+          DIGEST="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['result_digest'])" "$EVIDENCE")"
+          echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Assert governed quality gates are complete PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, sys
+          d=json.load(open('PILOT04_C9_ACCEPTANCE_EVIDENCE.json'))
+          q=d.get('quality_gates') or {}
+          summary=q.get('summary') or {}
+          declared=summary.get('declared') or []
+          results={x.get('gate'):x for x in q.get('results',[])}
+          problems=[]
+          if not declared: problems.append('no governed quality gates declared')
+          for name in declared:
+              r=results.get(name)
+              if not r: problems.append(f'missing quality gate {name}'); continue
+              print(name, r.get('status'), r.get('exit_code'))
+              if r.get('exit_code') != 0 or r.get('status') != 'PASS':
+                  problems.append(f'quality gate {name} not PASS')
+          if summary.get('all_passed') is not True: problems.append('quality-gate summary not all_passed')
+          for p in problems: print('::error::'+p)
+          sys.exit(1 if problems else 0)
+          PY
+
+      - name: Re-verify fresh GitHub authoritative evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$C9_WORKSPACE"
+          uv run python scripts/validate_pilot04_c9.py \
+            --verify "$GITHUB_WORKSPACE/PILOT04_C9_ACCEPTANCE_EVIDENCE.json" \
+            --expect-nonce  "${{ steps.validate.outputs.nonce }}" \
+            --expect-digest "${{ steps.validate.outputs.digest }}" \
+            --require-github-authoritative \
+            --max-age 21600
+
+      - name: Assert evidence identity and GitHub run binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, sys
+          d=json.load(open('PILOT04_C9_ACCEPTANCE_EVIDENCE.json'))
+          acceptance=d.get('acceptance') or {}
+          execution=acceptance.get('execution') or {}
+          candidate=(d.get('identity') or {}).get('candidate') or {}
+          problems=[]
+          if candidate.get('measured_sha256') != '7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664':
+              problems.append('candidate SHA in evidence mismatch')
+          if acceptance.get('state') != 'GITHUB_AUTHORITATIVE_PASS':
+              problems.append(f"acceptance state is {acceptance.get('state')!r}")
+          if execution.get('github_run_id') != os.environ['GITHUB_RUN_ID']:
+              problems.append('evidence records a different run id')
+          if execution.get('github_repository') != os.environ['GITHUB_REPOSITORY']:
+              problems.append('evidence records a different repository')
+          if acceptance.get('frozen_acceptance_record') != 'NOT_ISSUED':
+              problems.append('validator improperly issued frozen record')
+          for p in problems: print('::error::'+p)
+          sys.exit(1 if problems else 0)
+          PY
+
+      - name: Upload authoritative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot04-c9-independent-authoritative-evidence
+          path: |
+            PILOT04_C9_ACCEPTANCE_EVIDENCE.json
+            PILOT04_C9_AUTHORITATIVE.log
+            ${{ runner.temp }}/postgres-server-version.txt
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload exact accepted C9 candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot04-c9-independent-accepted-candidate
+          path: inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Report acceptance state
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo '## PILOT-04 C9 — GITHUB_AUTHORITATIVE_PASS'
+            echo ''
+            echo '| | |'
+            echo '| --- | --- |'
+            echo '| candidate SHA-256 | `7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664` |'
+            echo '| result digest | `${{ steps.validate.outputs.digest }}` |'
+            echo '| evidence nonce | `${{ steps.validate.outputs.nonce }}` |'
+            echo '| run | `${{ github.repository }}` run `${{ github.run_id }}` attempt `${{ github.run_attempt }}` |'
+            echo '| commit | `${{ github.sha }}` |'
+            echo ''
+            echo '**Frozen acceptance record: NOT ISSUED.**'
+          } >> "$GITHUB_STEP_SUMMARY"
