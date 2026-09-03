@@ -9,7 +9,7 @@ git merge-base --is-ancestor 8db1b85056aad3099fa27e12b29ab9f0a00c4a5b "$MAIN"
 
 # Canonical API-06 prerequisite must remain accepted/closed at the exact accepted identity.
 git show "origin/main:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json" > "$RUNNER_TEMP/api06-acceptance.json"
-jq -e '.decision=="ACCEPTED_CLOSED" and .api_layer_state=="CLOSED" and .candidate.sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and (.open_blockers|length)==0' "$RUNNER_TEMP/api06-acceptance.json"
+jq -e '.decision=="ACCEPTED_CLOSED" and .api_layer_state=="CLOSED" and .candidate.filename=="EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip" and .candidate.sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .candidate.size_bytes==44012716 and .candidate.self_accepted==false and .authoritative.run_id==33629147572 and .authoritative.job_id==100243984921 and .authoritative.conclusion=="SUCCESS" and .authoritative.passed_gates==40 and .authoritative.failed_gates==0 and (.open_blockers|length)==0' "$RUNNER_TEMP/api06-acceptance.json"
 
 rm -rf "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted" "$RUNNER_TEMP/ops03-c2-root" "$RUNNER_TEMP/ops03-c2-evidence" "$RUNNER_TEMP/ops03-c2-build-evidence"
 mkdir -p "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted" "$RUNNER_TEMP/ops03-c2-evidence" "$RUNNER_TEMP/ops03-c2-build-evidence"
@@ -39,10 +39,18 @@ python3 scripts/ops03_c2_reconcile.py \
   --template handoff/OPS-03/templates/C2/ops03-accept.yml | tee "$RUNNER_TEMP/ops03-c2-reconcile.log"
 grep -q '^OPS03_C2_RECONCILE:PASS:' "$RUNNER_TEMP/ops03-c2-reconcile.log"
 
-# C1 was intentionally blocked at G05 while API-06 was NEXT. C2 must re-bootstrap
-# that gate against the exact independently accepted API-06 candidate, then reseal.
+# C1 was intentionally blocked at G05 while API-06 was NEXT. C2 rebinds G05 to
+# the exact accepted/closed API-06 runtime, then freezes those corrected bytes.
 python3 scripts/ops03_c2_patch_api06.py "$ROOT" | tee "$RUNNER_TEMP/ops03-c2-api06-patch.log"
 grep -q '^OPS03_C2_API06_PATCH:PASS:' "$RUNNER_TEMP/ops03-c2-api06-patch.log"
+python3 scripts/ops03_c2_harden_g05.py "$ROOT" "$MAIN" "$TREE" | tee "$RUNNER_TEMP/ops03-c2-g05-harden.log"
+grep -q '^OPS03_C2_G05_HARDEN:PASS:' "$RUNNER_TEMP/ops03-c2-g05-harden.log"
+uvx --from ruff==0.15.22 ruff format \
+  "$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py" \
+  "$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding_c2.py" \
+  "$ROOT/packages/python/epd2-qualification/src/epd2_qualification/preview_minimum.py" \
+  "$ROOT/scripts/validation/validate_ops03.py" \
+  "$ROOT/tests/ops03/test_ops03_c2_api06_binding.py"
 python3 - "$ROOT" <<'PY'
 import pathlib, sys
 from scripts.ops03_c2_reconcile import build_freeze, write_sha256sums
@@ -52,8 +60,9 @@ write_sha256sums(root)
 print(f"OPS03_C2_RESEAL:PASS:{freeze['file_count']}:{freeze['tree_digest']}")
 PY
 
-jq -e --arg m "$MAIN" --arg t "$TREE" '.candidate_role=="C2" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and (.declared_blockers|length)==0 and .api_layer_state=="CLOSED" and .entering_main_commit==$m and .entering_main_tree==$t' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
-jq -e --arg m "$MAIN" --arg t "$TREE" '.base_commit==$m and .base_tree==$t and .accepted_api06_candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .api_layer_state=="CLOSED"' "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json"
+jq -e --arg m "$MAIN" --arg t "$TREE" '.candidate_role=="C2" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and (.declared_blockers|length)==0 and .api06_state=="ACCEPTED_CLOSED" and .api_layer_state=="CLOSED" and .system_trial_preview_state=="NOT_OPEN" and .entering_main_commit==$m and .entering_main_tree==$t' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
+jq -e --arg m "$MAIN" --arg t "$TREE" '.base_commit==$m and .base_tree==$t and .accepted_api06_candidate_filename=="EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip" and .accepted_api06_candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .accepted_api06_candidate_size_bytes==44012716 and .accepted_api06_authoritative_run==33629147572 and .accepted_api06_authoritative_job==100243984921 and .api06_state_at_entry=="ACCEPTED_CLOSED" and .api_layer_state_at_entry=="CLOSED"' "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json"
+jq -e '.stage=="OPS-03" and .dependency=="API-06" and .state=="ACCEPTED_CLOSED" and .candidate_filename=="EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip" and .candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .candidate_size==44012716 and .authoritative_run_id==33629147572 and .authoritative_job_id==100243984921 and .api_layer_state=="CLOSED" and .binding_result=="PASS" and .system_trial_preview_state=="NOT_OPEN"' "$ROOT/validation/ops03/OPS03_API06_ACCEPTED_RUNTIME_BINDING.json"
 
 # OPS-03 may not rewrite current governance/API/CTRL canonical state.
 diff -qr "$RUNNER_TEMP/mainroot/docs/roadmap" "$ROOT/docs/roadmap"
@@ -129,7 +138,7 @@ test "$(git rev-parse origin/main)" = "$MAIN"
 test "$(git rev-parse origin/main^{tree})" = "$TREE"
 
 EVID="$RUNNER_TEMP/ops03-c2-build-evidence"
-cp "$RUNNER_TEMP/ops03-c2-reconcile.log" "$RUNNER_TEMP/ops03-c2-api06-patch.log" "$RUNNER_TEMP/ops03-c2-validator.log" "$EVID/"
+cp "$RUNNER_TEMP/ops03-c2-reconcile.log" "$RUNNER_TEMP/ops03-c2-api06-patch.log" "$RUNNER_TEMP/ops03-c2-g05-harden.log" "$RUNNER_TEMP/ops03-c2-validator.log" "$EVID/"
 cp -a "$RUNNER_TEMP/ops03-c2-evidence/." "$EVID/"
 python3 - "$EVID/builder_result.json" "$CAND_SHA" "$CAND_SIZE" "$WF_SHA" "$MAIN" "$TREE" <<'PY'
 import json,os,sys
@@ -138,12 +147,15 @@ d={
  'schema':'epd2.ops03.c2.builder-result/1','stage':'OPS-03','candidate_role':'C2','result':'PASS','self_acceptance':False,
  'candidate_sha256':sha,'candidate_size_bytes':int(size),'builder_run_id':int(os.environ['GITHUB_RUN_ID']),'builder_commit':os.environ['GITHUB_SHA'],
  'entering_main_commit':main,'entering_main_tree':tree,'accepted_ops02_candidate_sha256':'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125',
+ 'accepted_api06_candidate_filename':'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip',
  'accepted_api06_candidate_sha256':'3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c',
- 'governed_gates':'50/50 PASS','mutations':'24/24 DETECTED','sealed_source_unchanged':True,'sealed_workflow_sha256':wf
+ 'accepted_api06_candidate_size_bytes':44012716,'accepted_api06_authoritative_run_id':33629147572,'accepted_api06_authoritative_job_id':100243984921,
+ 'governed_gates':'50/50 PASS','mutations':'24/24 DETECTED','sealed_source_unchanged':True,'sealed_workflow_sha256':wf,
+ 'candidate_self_state':'CANDIDATE_NOT_ACCEPTED','system_trial_preview_state':'NOT_OPEN'
 }
 open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
 PY
-jq -e '.result=="PASS" and .self_acceptance==false and .governed_gates=="50/50 PASS" and .mutations=="24/24 DETECTED" and .sealed_source_unchanged==true' "$EVID/builder_result.json"
+jq -e '.result=="PASS" and .self_acceptance==false and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .governed_gates=="50/50 PASS" and .mutations=="24/24 DETECTED" and .sealed_source_unchanged==true and .system_trial_preview_state=="NOT_OPEN"' "$EVID/builder_result.json"
 
 {
  echo "candidate=$ZIP"
