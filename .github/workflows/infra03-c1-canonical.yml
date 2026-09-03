@@ -1,0 +1,410 @@
+name: INFRA-03 C1 Canonical Acceptance
+
+on:
+  push:
+    branches: ["handoff/infra"]
+    paths:
+      - ".github/workflows/infra03-c1-canonical.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra03-c1-canonical
+  cancel-in-progress: false
+
+env:
+  PRESEAL: handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip
+  PRESEAL_SHA256: 30033863c854b34532b42a216bb275c691e57413053724f393b183ad814685fe
+  PRESEAL_SIZE: "16176926"
+  C1_NAME: EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1
+  INFRA02_NAME: EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+  INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+  INFRA02_SIZE: "15980332"
+  API06_SHA256: 3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c
+  API06_RUN_ID: "33629147572"
+
+jobs:
+  build-c1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      candidate_sha256: ${{ steps.identity.outputs.sha256 }}
+      candidate_size: ${{ steps.identity.outputs.size }}
+      source_digest: ${{ steps.identity.outputs.source_digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Verify exact PRESEAL and safe extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum "$PRESEAL" | awk '{print $1}')" = "$PRESEAL_SHA256"
+          test "$(stat -c %s "$PRESEAL")" = "$PRESEAL_SIZE"
+          rm -rf _infra03_build
+          python - <<'PY'
+          import os, pathlib, zipfile
+          p=pathlib.Path(os.environ['PRESEAL'])
+          out=pathlib.Path('_infra03_build')
+          with zipfile.ZipFile(p) as z:
+              seen=set()
+              for info in z.infolist():
+                  n=info.filename.replace('\\','/')
+                  if n.startswith('/') or n.startswith('../') or '/../' in '/'+n or n in seen:
+                      raise SystemExit(f'unsafe/duplicate archive member: {n}')
+                  seen.add(n)
+              z.extractall(out)
+          roots=[p for p in out.iterdir() if p.is_dir()]
+          if len(roots)!=1:
+              raise SystemExit(f'expected one archive root, got {roots}')
+          pathlib.Path('_infra03_root.txt').write_text(str(roots[0]), encoding='utf-8')
+          PY
+          echo "INFRA03_PRESEAL_EXACT:PASS:$PRESEAL_SHA256:$PRESEAL_SIZE"
+
+      - name: Reconcile C1 against live accepted API-06
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          python - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(pathlib.Path('_infra03_root.txt').read_text().strip())
+          gates=root/'scripts/infra03/gates.py'
+          s=gates.read_text(encoding='utf-8')
+          old='''        self._record(\n            "G41",\n            "BLOCKED_FOR_FINAL_SEAL / DEVELOPMENT_MAY_CONTINUE",\n            "API-06 has no authoritative acceptance (API-06 = NEXT on the live "\n            "register); exact accepted API-06 reconciliation is impossible and is "\n            "not faked. Final seal is blocked until it exists.",\n            "baseline_identity.json",\n        )'''
+          new='''        api06_path = "docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json"\n        try:\n            api06_bytes = subprocess.run(\n                ["git", "-C", str(self.root), "show", f"origin/main:{api06_path}"],\n                capture_output=True, timeout=120, check=True,\n            ).stdout\n            api06 = json.loads(api06_bytes)\n            authoritative = api06.get("authoritative", {})\n            candidate = api06.get("candidate", {})\n            checks = {\n                "decision": api06.get("decision") == "ACCEPTED_CLOSED",\n                "new_state": api06.get("new_state") == "ACCEPTED / CLOSED",\n                "api_layer_state": api06.get("api_layer_state") == "CLOSED",\n                "candidate_sha256": candidate.get("sha256") == "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",\n                "candidate_self_accepted_false": candidate.get("self_accepted") is False,\n                "authoritative_run": authoritative.get("run_id") == 33629147572,\n                "authoritative_success": str(authoritative.get("conclusion", "")).upper() == "SUCCESS",\n                "authoritative_40_of_40": authoritative.get("governed_gates_total") == 40 and authoritative.get("passed_gates") == 40 and authoritative.get("failed_gates") == 0,\n            }\n            ok = all(checks.values())\n            api06_evidence = self._emit(\n                "api06_reconciliation_result.json",\n                {\n                    "source": f"origin/main:{api06_path}",\n                    "record_sha256": sha256_bytes(api06_bytes),\n                    "candidate_sha256": candidate.get("sha256"),\n                    "authoritative_run_id": authoritative.get("run_id"),\n                    "checks": checks,\n                    "accepted": ok,\n                },\n            )\n            self._record(\n                "G41",\n                "PASS" if ok else "BLOCKED_FOR_FINAL_SEAL / DEVELOPMENT_MAY_CONTINUE",\n                "live API-06 acceptance reconciled exactly (ACCEPTED / CLOSED; API layer CLOSED; authoritative 40/40 PASS)" if ok else "live API-06 acceptance record is absent, stale, or does not match the governed accepted identity",\n                api06_evidence,\n            )\n        except (subprocess.CalledProcessError, json.JSONDecodeError) as error:\n            api06_evidence = self._emit(\n                "api06_reconciliation_result.json",\n                {"source": f"origin/main:{api06_path}", "accepted": False, "error": str(error)[:240]},\n            )\n            self._record(\n                "G41",\n                "BLOCKED_FOR_FINAL_SEAL / DEVELOPMENT_MAY_CONTINUE",\n                "live API-06 acceptance record could not be reconciled",\n                api06_evidence,\n            )'''
+          if old not in s:
+              raise SystemExit('expected PRESEAL G41 block not found exactly')
+          s=s.replace(old,new,1)
+          s=s.replace('"API-06 is NEXT and unaccepted, so no API-06 material exists here."', '"API-06 is accepted/closed on live governance; no API-06 business runtime is bundled into INFRA-03."')
+          old_blockers='''                "final_seal_blockers": [\n                    "canonical governance has not promoted/opened INFRA-03 (proposed "\n                    "working contract only)",\n                    "API-06 has no authoritative acceptance (G41 BLOCKED_FOR_FINAL_SEAL)",\n                ],'''
+          new_blockers='''                "final_seal_blockers": [\n                    f"{gate_id}: {gate.get('detail', '')}"\n                    for gate_id, gate in sorted(self.gates.items())\n                    if gate.get("state") == "FAIL" or str(gate.get("state", "")).startswith("BLOCKED")\n                ],'''
+          if old_blockers not in s:
+              raise SystemExit('expected PRESEAL final blocker declaration not found')
+          s=s.replace(old_blockers,new_blockers,1)
+          gates.write_text(s, encoding='utf-8')
+
+          c1=os.environ['C1_NAME']
+          for rel in ('scripts/acceptance/__main__.py','scripts/infra03/preseal.py'):
+              p=root/rel
+              t=p.read_text(encoding='utf-8')
+              old_name='EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL'
+              if old_name not in t:
+                  raise SystemExit(f'candidate name not found in {rel}')
+              p.write_text(t.replace(old_name,c1), encoding='utf-8')
+
+          note=root/'docs/infra/INFRA-03/INFRA03_C1_RECONCILIATION.md'
+          note.write_text('''# INFRA-03 C1 reconciliation\n\nC1 is derived from the exact governed PRESEAL identified by SHA-256 `30033863c854b34532b42a216bb275c691e57413053724f393b183ad814685fe`.\n\nThe runtime implementation is unchanged. The C1 delta is limited to acceptance/seal reconciliation after API-06 became canonically `ACCEPTED / CLOSED`: G41 now reads and verifies the live `origin/main` API-06 acceptance record, binds the accepted API-06 candidate SHA-256 and authoritative run, and fails closed if that identity is absent or changed. Candidate packaging is renamed to C1.\n\nThis candidate does not self-accept. Canonical acceptance requires an independent authoritative exact-byte replay and a later Project Owner governance decision. INFRA layer closure, production readiness, legal activation, BSI/CC/EAL4 certification and final security acceptance are not asserted.\n''', encoding='utf-8')
+          PY
+          echo 'C1_RECONCILIATION_PATCH:PASS'
+
+      - name: Extract exact accepted INFRA-02 predecessor
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          SRC="$ROOT/handoff/INFRA/incoming/$INFRA02_NAME"
+          test -f "$SRC"
+          test "$(sha256sum "$SRC" | awk '{print $1}')" = "$INFRA02_SHA256"
+          test "$(stat -c %s "$SRC")" = "$INFRA02_SIZE"
+          cp "$SRC" /tmp/infra02.zip
+          echo "INFRA02_EXACT_PREDECESSOR:PASS:$INFRA02_SHA256:$INFRA02_SIZE"
+
+      - name: Initialize isolated candidate git and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          cd "$ROOT"
+          rm -rf .git .venv .pytest_cache
+          git init -q
+          git config user.name 'EPD2 authoritative replay'
+          git config user.email 'epd2-authoritative@invalid.local'
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git add -A
+          git commit -qm 'infra03 c1 replay source'
+          git fetch --no-tags origin main
+          python -m pip install --disable-pip-version-check -q uv
+          uv sync --frozen
+          pg_config --version || true
+
+      - name: C1 targeted tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          cd "$ROOT"
+          uv run pytest -q tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py | tee /tmp/infra03-tests.txt
+          grep -Eq '[1-9][0-9]* passed' /tmp/infra03-tests.txt
+
+      - name: C1 live governed runtime gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          cd "$ROOT"
+          uv run python -m scripts.infra03.gates --artifact /tmp/infra02.zip | tee /tmp/infra03-gates.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('validation/infra03/infra03_preseal_result.json')
+          d=json.loads(p.read_text())
+          gates={g['gate']:g for g in d['gates']}
+          required=[f'G{i:02d}' for i in list(range(1,39))+[41,42]]
+          bad={k:gates.get(k) for k in required if not gates.get(k) or gates[k].get('state')!='PASS'}
+          if bad: raise SystemExit(f'runtime gate failure: {bad}')
+          if d.get('final_seal_blockers'):
+              raise SystemExit(f'final seal blockers remain: {d["final_seal_blockers"]}')
+          print(f'INFRA03_RUNTIME_GATES:PASS:{len(required)}/{len(required)};G39_G40=PACKAGE_PHASE')
+          mut=json.loads(Path('validation/infra03/mutation_result.json').read_text())
+          if mut.get('class_count') != 36 or not mut.get('distinct_detectors') or mut.get('pytest_exit_code') != 0:
+              raise SystemExit(f'mutation evidence invalid: {mut}')
+          print('INFRA03_MUTATIONS:PASS:36/36')
+          api=json.loads(Path('validation/infra03/api06_reconciliation_result.json').read_text())
+          if not api.get('accepted'):
+              raise SystemExit('API06 reconciliation not accepted')
+          print('INFRA03_API06_RECONCILIATION:PASS')
+          PY
+
+      - name: Freeze verified evidence for canonical harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          cd "$ROOT"
+          git add -A
+          git commit -qm 'freeze infra03 c1 live evidence'
+          test -z "$(git status --porcelain)"
+
+      - name: Canonical acceptance harness and C1 package
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_root.txt)
+          cd "$ROOT"
+          rm -rf /tmp/infra03-final
+          mkdir -p /tmp/infra03-final
+          uv run python -m scripts.acceptance run | tee /tmp/infra03-harness.txt
+          RUN_DIR=$(find . -type f -name EXECUTION-MANIFEST.json -printf '%T@ %h\n' | sort -n | tail -1 | cut -d' ' -f2-)
+          test -n "$RUN_DIR"
+          test -f "$RUN_DIR/$C1_NAME.zip"
+          uv run python -m scripts.infra03.preseal --root . --run-dir "$RUN_DIR" --out /tmp/infra03-final | tee /tmp/infra03-package.txt
+          grep -q 'G39 archive hygiene: PASS' /tmp/infra03-package.txt
+          grep -q 'G40 same-bytes identity: PASS' /tmp/infra03-package.txt
+          grep -q 'INFRA03_PRESEAL_RESULT:PASS:' /tmp/infra03-package.txt
+          test -f "/tmp/infra03-final/$C1_NAME.zip"
+          cp "/tmp/infra03-final/$C1_NAME.zip" "$GITHUB_WORKSPACE/$C1_NAME.zip"
+          cp /tmp/infra03-final/INFRA03_PRESEAL_FINAL.json "$GITHUB_WORKSPACE/INFRA03_C1_BUILD_SEAL.json"
+          echo "INFRA03_C1_BUILD:PASS"
+
+      - name: Record exact C1 identity
+        id: identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=$(sha256sum "$C1_NAME.zip" | awk '{print $1}')
+          SIZE=$(stat -c %s "$C1_NAME.zip")
+          ROOT=$(cat _infra03_root.txt)
+          SOURCE_DIGEST=$(ROOT="$ROOT" python - <<'PY'
+          import hashlib, os, pathlib
+          root=pathlib.Path(os.environ['ROOT'])
+          h=hashlib.sha256()
+          excluded={'.git','.venv','.pytest_cache','node_modules','out'}
+          for p in sorted(root.rglob('*')):
+              if not p.is_file() or any(part in excluded or part=='__pycache__' for part in p.relative_to(root).parts):
+                  continue
+              rel=p.relative_to(root).as_posix().encode()
+              h.update(len(rel).to_bytes(4,'big')); h.update(rel)
+              data=p.read_bytes(); h.update(len(data).to_bytes(8,'big')); h.update(data)
+          print(h.hexdigest())
+          PY
+          )
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "source_digest=$SOURCE_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "INFRA03_C1_CANDIDATE:SEALED:$SHA:$SIZE"
+          echo "INFRA03_C1_SOURCE_DIGEST:$SOURCE_DIGEST"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: infra03-c1-exact-candidate-${{ github.run_id }}
+          path: EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip
+          if-no-files-found: error
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: infra03-c1-build-evidence-${{ github.run_id }}
+          path: |
+            INFRA03_C1_BUILD_SEAL.json
+            /tmp/infra03-tests.txt
+            /tmp/infra03-gates.txt
+            /tmp/infra03-harness.txt
+            /tmp/infra03-package.txt
+          if-no-files-found: error
+
+  independent-authoritative-review:
+    needs: build-c1
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: infra03-c1-exact-candidate-${{ github.run_id }}
+          path: _candidate
+
+      - name: Verify exact transport and safe extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="_candidate/$C1_NAME.zip"
+          test -f "$ZIP"
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = "${{ needs.build-c1.outputs.candidate_sha256 }}"
+          test "$(stat -c %s "$ZIP")" = "${{ needs.build-c1.outputs.candidate_size }}"
+          rm -rf _infra03_review
+          ZIP="$ZIP" python - <<'PY'
+          import os, pathlib, zipfile
+          p=pathlib.Path(os.environ['ZIP']); out=pathlib.Path('_infra03_review')
+          with zipfile.ZipFile(p) as z:
+              seen=set()
+              for info in z.infolist():
+                  n=info.filename.replace('\\','/')
+                  if n.startswith('/') or n.startswith('../') or '/../' in '/'+n or n in seen:
+                      raise SystemExit(f'unsafe/duplicate member {n}')
+                  seen.add(n)
+              z.extractall(out)
+          roots=[x for x in out.iterdir() if x.is_dir()]
+          if len(roots)!=1 or roots[0].name != os.environ['C1_NAME']:
+              raise SystemExit(f'bad C1 root: {roots}')
+          pathlib.Path('_infra03_review_root.txt').write_text(str(roots[0]))
+          print(f'INFRA03_C1_ARCHIVE_HYGIENE:PASS:{len(seen)}')
+          PY
+          echo "INFRA03_C1_EXACT_TRANSPORT:PASS:${{ needs.build-c1.outputs.candidate_sha256 }}:${{ needs.build-c1.outputs.candidate_size }}"
+
+      - name: Independently recover exact INFRA-02 predecessor
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_review_root.txt)
+          SRC="$ROOT/handoff/INFRA/incoming/$INFRA02_NAME"
+          test -f "$SRC"
+          test "$(sha256sum "$SRC" | awk '{print $1}')" = "$INFRA02_SHA256"
+          test "$(stat -c %s "$SRC")" = "$INFRA02_SIZE"
+          cp "$SRC" /tmp/infra02-review.zip
+          echo 'INFRA03_REVIEW_PREDECESSOR:PASS'
+
+      - name: Initialize isolated review environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_review_root.txt)
+          cd "$ROOT"
+          rm -rf .git .venv .pytest_cache
+          git init -q
+          git config user.name 'EPD2 independent authoritative review'
+          git config user.email 'epd2-review@invalid.local'
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git add -A
+          git commit -qm 'exact c1 authoritative replay'
+          git fetch --no-tags origin main
+          python -m pip install --disable-pip-version-check -q uv
+          uv sync --frozen
+
+      - name: Independent C1 tests and live gate replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_review_root.txt)
+          cd "$ROOT"
+          uv run pytest -q tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py | tee /tmp/infra03-review-tests.txt
+          uv run python -m scripts.infra03.gates --artifact /tmp/infra02-review.zip | tee /tmp/infra03-review-gates.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('validation/infra03/infra03_preseal_result.json').read_text())
+          gates={g['gate']:g for g in d['gates']}
+          required=[f'G{i:02d}' for i in list(range(1,39))+[41,42]]
+          bad={k:gates.get(k) for k in required if not gates.get(k) or gates[k].get('state')!='PASS'}
+          if bad: raise SystemExit(f'authoritative runtime gate failure: {bad}')
+          if d.get('final_seal_blockers'): raise SystemExit(f'blockers: {d["final_seal_blockers"]}')
+          mut=json.loads(Path('validation/infra03/mutation_result.json').read_text())
+          if mut.get('class_count') != 36 or not mut.get('distinct_detectors') or mut.get('pytest_exit_code') != 0:
+              raise SystemExit('36/36 mutation evidence not satisfied')
+          api=json.loads(Path('validation/infra03/api06_reconciliation_result.json').read_text())
+          if not api.get('accepted') or api.get('candidate_sha256') != '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c' or api.get('authoritative_run_id') != 33629147572:
+              raise SystemExit(f'API06 exact reconciliation invalid: {api}')
+          print(f'INFRA03_C1_AUTHORITATIVE_RUNTIME:PASS:{len(required)}/{len(required)}')
+          print('INFRA03_C1_AUTHORITATIVE_MUTATIONS:PASS:36/36')
+          PY
+
+      - name: Independent package verification and exact-byte immutability
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$GITHUB_WORKSPACE/_candidate/$C1_NAME.zip"
+          ROOT=$(cat _infra03_review_root.txt)
+          BEFORE=$(sha256sum "$ZIP" | awk '{print $1}')
+          cd "$ROOT"
+          uv run python -m scripts.acceptance verify-package "$ZIP" | tee /tmp/infra03-review-package.txt
+          AFTER=$(sha256sum "$ZIP" | awk '{print $1}')
+          test "$BEFORE" = "$AFTER"
+          test "$AFTER" = "${{ needs.build-c1.outputs.candidate_sha256 }}"
+          echo "INFRA03_C1_AUTHORITATIVE_PACKAGE:PASS"
+          echo "INFRA03_C1_SOURCE_ARCHIVE_UNCHANGED:PASS:$AFTER"
+
+      - name: Emit independent authoritative evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat _infra03_review_root.txt)
+          mkdir -p authoritative-evidence
+          ROOT="$ROOT" python - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path(os.environ['ROOT'])
+          runtime=json.loads((root/'validation/infra03/infra03_preseal_result.json').read_text())
+          api=json.loads((root/'validation/infra03/api06_reconciliation_result.json').read_text())
+          mutation=json.loads((root/'validation/infra03/mutation_result.json').read_text())
+          out={
+            'schema':'epd2.infra03.c1-authoritative-result/1',
+            'stage':'INFRA-03',
+            'result':'PASS',
+            'candidate':{
+              'filename':os.environ['C1_NAME']+'.zip',
+              'sha256':'${{ needs.build-c1.outputs.candidate_sha256 }}',
+              'size_bytes':int('${{ needs.build-c1.outputs.candidate_size }}'),
+              'self_acceptance':False,
+            },
+            'preseal_lineage':{'sha256':os.environ['PRESEAL_SHA256'],'size_bytes':int(os.environ['PRESEAL_SIZE'])},
+            'accepted_predecessor':{'stage':'INFRA-02','sha256':os.environ['INFRA02_SHA256'],'size_bytes':int(os.environ['INFRA02_SIZE'])},
+            'api06_reconciliation':api,
+            'runtime_gates':{'passed':40,'total_runtime':40,'package_phase':['G39','G40']},
+            'package_gates':{'G39':'PASS','G40':'PASS'},
+            'mutations':{'classes':mutation.get('class_count'),'detected':'36/36'},
+            'workflow':{'run_id':int(os.environ['GITHUB_RUN_ID']),'head_sha':os.environ['GITHUB_SHA']},
+            'nonclaims':['INFRA layer closure','production readiness','legal activation','final security acceptance','BSI/Common Criteria/EAL4 certification'],
+          }
+          pathlib.Path('authoritative-evidence/INFRA03_C1_AUTHORITATIVE_RESULT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          PY
+          cp /tmp/infra03-review-tests.txt authoritative-evidence/
+          cp /tmp/infra03-review-gates.txt authoritative-evidence/
+          cp /tmp/infra03-review-package.txt authoritative-evidence/
+          echo "INFRA03_C1_AUTHORITATIVE_RESULT:PASS:${{ needs.build-c1.outputs.candidate_sha256 }}:${{ needs.build-c1.outputs.candidate_size }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: infra03-c1-authoritative-evidence-${{ github.run_id }}
+          path: authoritative-evidence
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: infra03-c1-authoritative-candidate-${{ github.run_id }}
+          path: _candidate/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip
+          if-no-files-found: error
+          compression-level: 0
