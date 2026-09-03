@@ -11,6 +11,7 @@ if 'SubjectKeyIdentifier.from_public_key(key.public_key())' not in s: s=s.replac
 p.write_text(s)
 p=root/'scripts/infra03/gates.py'; s=p.read_text()
 s=s.replace('G41 (API-06 reconciliation) is truthfully ``BLOCKED_FOR_FINAL_SEAL /\nDEVELOPMENT_MAY_CONTINUE`` while API-06 has no authoritative acceptance —\nnever a fake PASS.', 'G41 (API-06 reconciliation) verifies the live canonical API-06 acceptance record,\nPCR closure and exact accepted API-06 candidate bytes; any mismatch fails closed.')
+s=s.replace('fails closed. Anti-cheat', 'fails closed.\nAnti-cheat')
 s=s.replace('def __init__(self, root: Path, artifact_zip: Path, instance_base: Path | None = None) -> None:', 'def __init__(self, root: Path, artifact_zip: Path, instance_base: Path | None = None, api06_artifact: Path | None = None) -> None:')
 s=s.replace('        self.instance_base = instance_base or Path("/tmp/epd2-infra03-gates")\n', '        self.instance_base = instance_base or Path("/tmp/epd2-infra03-gates")\n        self.api06_artifact = api06_artifact\n')
 old='''        self._record(\n            "G41",\n            "BLOCKED_FOR_FINAL_SEAL / DEVELOPMENT_MAY_CONTINUE",\n            "API-06 has no authoritative acceptance (API-06 = NEXT on the live "\n            "register); exact accepted API-06 reconciliation is impossible and is "\n            "not faked. Final seal is blocked until it exists.",\n            "baseline_identity.json",\n        )'''
