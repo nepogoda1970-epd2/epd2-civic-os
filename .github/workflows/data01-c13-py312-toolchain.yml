@@ -1,0 +1,80 @@
+name: DATA01 C13 Python312 Toolchain
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/data01-c13-py312-toolchain.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  C1_ARTIFACT_ID: '9421451498'
+  C1_SHA256: 'dbb988d6b96bc8c3351b83de779d6ba8a771eaa6eb660ffcf024c052ea868376'
+
+jobs:
+  build-python312-toolchain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+          enable-cache: false
+      - name: Build Python 3.12.12 exact-lock toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/c1-outer /tmp/c1-root "$GITHUB_WORKSPACE/python-install"
+          gh api repos/${GITHUB_REPOSITORY}/actions/artifacts/${C1_ARTIFACT_ID}/zip > /tmp/c1-outer.zip
+          unzip -q /tmp/c1-outer.zip -d /tmp/c1-outer
+          C1="$(find /tmp/c1-outer -type f -name '*.zip' -size +20M -print -quit)"
+          test -n "$C1"
+          test "$(sha256sum "$C1" | awk '{print $1}')" = "$C1_SHA256"
+          unzip -q "$C1" -d /tmp/c1-root
+          ROOT="$(find /tmp/c1-root -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$ROOT"
+          cd "$ROOT"
+          sha256sum uv.lock pyproject.toml package-lock.json > "$GITHUB_WORKSPACE/dependency-input-sha256.txt"
+          export UV_PYTHON_INSTALL_DIR="$GITHUB_WORKSPACE/python-install"
+          uv python install 3.12.12
+          PY="$(uv python find 3.12.12 --managed-python)"
+          "$PY" --version | tee "$GITHUB_WORKSPACE/python-version.txt"
+          uv --version | tee "$GITHUB_WORKSPACE/uv-version.txt"
+          UV_PYTHON="$PY" uv sync --frozen --all-groups
+          UV_CACHE="$(uv cache dir)"
+          cd "$GITHUB_WORKSPACE"
+          tar -czf python312-runtime.tgz python-install
+          tar -C "$(dirname "$UV_CACHE")" -czf uv-cache-py312.tgz "$(basename "$UV_CACHE")"
+          sha256sum python312-runtime.tgz uv-cache-py312.tgz > toolchain-sha256.txt
+          du -sh python312-runtime.tgz uv-cache-py312.tgz | tee toolchain-size.txt
+      - name: Upload Python runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c13-python312-runtime
+          compression-level: 0
+          retention-days: 2
+          path: |
+            python312-runtime.tgz
+            python-version.txt
+            uv-version.txt
+            dependency-input-sha256.txt
+            toolchain-sha256.txt
+            toolchain-size.txt
+      - name: Upload Python312 uv cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: data01-c13-uv-cache-py312
+          compression-level: 0
+          retention-days: 2
+          path: |
+            uv-cache-py312.tgz
+            dependency-input-sha256.txt
+            toolchain-sha256.txt
+            toolchain-size.txt
