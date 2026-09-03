@@ -1,0 +1,1 @@
+DATA-06 exact PostgreSQL 16.15 runtime
