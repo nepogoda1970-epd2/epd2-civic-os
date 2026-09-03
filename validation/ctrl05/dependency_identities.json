@@ -1,0 +1,35 @@
+{
+  "bound": {
+    "INFRA-01": {
+      "expected_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "record_present": true,
+      "sha_in_record": true
+    },
+    "INFRA-02": {
+      "expected_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+      "record_present": true,
+      "sha_in_record": true
+    },
+    "INFRA-03": {
+      "expected_sha256": "6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1",
+      "record_present": true,
+      "sha_in_record": true
+    },
+    "OPS-01": {
+      "expected_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "record_present": true,
+      "sha_in_record": true
+    },
+    "OPS-02": {
+      "expected_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+      "record_present": true,
+      "sha_in_record": true
+    }
+  },
+  "recorded_unaccepted": {
+    "OPS-03": {
+      "acceptance_record_found": []
+    }
+  },
+  "schema": "epd2.ctrl05.dependency-identities/1"
+}

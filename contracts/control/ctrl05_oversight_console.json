@@ -1,0 +1,365 @@
+{
+  "actions": [
+    {
+      "action_id": "AUDIT.EVIDENCE.SEARCH",
+      "mutation": false,
+      "right": "AUDIT.READ"
+    },
+    {
+      "action_id": "AUDIT.EVIDENCE.OPEN",
+      "mutation": false,
+      "right": "AUDIT.READ"
+    },
+    {
+      "action_id": "AUDIT.EVIDENCE.VERIFY",
+      "mutation": false,
+      "right": "AUDIT.READ"
+    },
+    {
+      "action_id": "AUDIT.CORRELATION.GRAPH",
+      "mutation": false,
+      "right": "AUDIT.CORRELATE"
+    },
+    {
+      "action_id": "AUDIT.CHAIN.OPEN",
+      "mutation": false,
+      "right": "AUDIT.CORRELATE"
+    },
+    {
+      "action_id": "AUDIT.CASE.OPEN",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.CASE.CLARIFY",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.CASE.DISPOSE",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.FINDING.RAISE",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.FINDING.DISPUTE",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.REMEDIATION.LINK",
+      "mutation": true,
+      "right": "AUDIT.REVIEW"
+    },
+    {
+      "action_id": "AUDIT.CASE.ATTEST",
+      "mutation": true,
+      "right": "AUDIT.ATTEST"
+    },
+    {
+      "action_id": "AUDIT.CASE.CLOSE",
+      "mutation": true,
+      "right": "AUDIT.ATTEST"
+    },
+    {
+      "action_id": "AUDIT.EVIDENCE.EXPORT",
+      "mutation": true,
+      "right": "AUDIT.EXPORT"
+    }
+  ],
+  "actions_source": "epd2_control_plane_service.oversight_console:CTRL05_ACTIONS",
+  "bounds": {
+    "export_records": 200,
+    "graph_depth": 3,
+    "graph_nodes": 200,
+    "mandate_lifetime_days": 365,
+    "query_limit": 500,
+    "reauthorization_ticket_minutes": 10,
+    "session_lifetime_hours": 8
+  },
+  "certification_claim": "NONE",
+  "competence_source": "an explicit OversightMandate naming the exact organization, the exact governed oversight unit, the evidence planes it covers, its rights, its governing rule version and the source decision that created it; each right is backed by its own live CTRL-02 authority grant, and the mandate expires",
+  "console_id": "CONSOLE_AUDIT_OVERSIGHT",
+  "desk_id": "DESK_OVERSIGHT",
+  "evidence_plane_sources": {
+    "CTRL-02": "epd2_control_plane_service.oversight_sources:Ctrl02EvidenceSource",
+    "CTRL-03": "epd2_control_plane_service.oversight_sources:Ctrl03EvidenceSource",
+    "CTRL-04": "epd2_control_plane_service.oversight_sources:Ctrl04EvidenceSource"
+  },
+  "evidence_planes": [
+    "CTRL-02",
+    "CTRL-03",
+    "CTRL-04"
+  ],
+  "evidence_schema": "docs/ctrl/CTRL-05/CTRL05_EVIDENCE_SCHEMA.json",
+  "evidence_unit_assignment": "a governed map 'PLANE:stream' -> exact oversight scope key 'region:org:unit'. An unmapped stream is invisible: unit scope fails closed.",
+  "export_purposes": {
+    "EXTERNAL_AUDITOR": [
+      "action_code",
+      "integrity",
+      "occurred_at",
+      "reference",
+      "result",
+      "scope"
+    ],
+    "GOVERNANCE_REPORT": [
+      "action_code",
+      "correlation_ref",
+      "integrity",
+      "object_ref",
+      "occurred_at",
+      "reason_code",
+      "reference",
+      "result",
+      "scope"
+    ],
+    "INTERNAL_REVIEW": [
+      "action_code",
+      "actor_ref",
+      "approval_refs",
+      "authority_ref",
+      "correlation_ref",
+      "integrity",
+      "object_ref",
+      "occurred_at",
+      "reason_code",
+      "reference",
+      "result",
+      "scope"
+    ],
+    "STATISTICAL": [
+      "action_code",
+      "occurred_at",
+      "result",
+      "scope"
+    ]
+  },
+  "finding_severities": [
+    "CRITICAL",
+    "HIGH",
+    "INFORMATIONAL",
+    "LOW",
+    "MEDIUM"
+  ],
+  "finding_states": [
+    "DISPUTED",
+    "RAISED",
+    "SUPERSEDED",
+    "UPHELD",
+    "WITHDRAWN"
+  ],
+  "forbidden_client_fields": [
+    "actor_ref",
+    "allow_fields",
+    "attested_by",
+    "authority_grant_id",
+    "authority_ref",
+    "authority_version",
+    "case_state",
+    "case_version",
+    "content_digest",
+    "dropped_fields",
+    "event_hash",
+    "grant_id",
+    "integrity",
+    "integrity_state",
+    "mandate_id",
+    "mandate_ref",
+    "outcome",
+    "payload_digest",
+    "planes_granted",
+    "policy",
+    "principal_id",
+    "recomputed_hash",
+    "recorded_hash",
+    "redacted_fields",
+    "redaction_decision",
+    "rights",
+    "self_state",
+    "state",
+    "trustworthy",
+    "verified",
+    "verified_by",
+    "version"
+  ],
+  "forbidden_operational_rights": [
+    "AUTHORITY.UNIVERSAL_ADMIN",
+    "KEY.CUSTODY",
+    "LIFECYCLE.EXECUTE",
+    "OPS.APPROVE",
+    "OPS.EXECUTE",
+    "OPS.REQUEST",
+    "SECRET.EXPORT",
+    "SECRET.RAW_READ",
+    "VOTING.ADMIN"
+  ],
+  "forbidden_surfaces": [
+    "/audit/v1/shell",
+    "/audit/v1/exec",
+    "/audit/v1/sql",
+    "/audit/v1/ssh",
+    "/audit/v1/kubectl",
+    "/audit/v1/secrets",
+    "/audit/v1/keys",
+    "/audit/v1/operations",
+    "/audit/v1/actions/execute",
+    "/audit/v1/evidence/mutate"
+  ],
+  "frontend_may_assert_authority": false,
+  "frontend_may_assert_integrity": false,
+  "immutability": "source evidence is read-only to CTRL-05 and is annotated through append-only superseding records; the oversight journal is hash-chained and keyed-sealed, and a restored checkpoint is verified record by record against it, including the content digest of every case, disposition, finding and attestation.",
+  "integrity_states": [
+    "VERIFIED",
+    "HASH_MISMATCH",
+    "CHAIN_BROKEN",
+    "SEQUENCE_BROKEN",
+    "METADATA_MISSING",
+    "SOURCE_UNAVAILABLE",
+    "UNKNOWN_SCHEMA"
+  ],
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "non_claim": "no CTRL-05 acceptance, no CTRL layer closure, no production readiness, no legal activation, no final security acceptance, no BSI or Common Criteria certification",
+  "person_identifier_policy": "no persistent voting-domain member or person identifier is accepted, stored, correlated, exported or journaled; a correlation graph may not be anchored on one and contains no person node; there is no cross-domain person index.",
+  "policy_obligations": [
+    "commit_time_reauthorization",
+    "enforce_append_only_history",
+    "enforce_authority_version",
+    "enforce_case_version",
+    "enforce_competence_source",
+    "enforce_csrf",
+    "enforce_disposition_before_attestation",
+    "enforce_evidence_divergence_check",
+    "enforce_evidence_on_refusal",
+    "enforce_export_purpose",
+    "enforce_export_redaction_record",
+    "enforce_finding_evidence_reference",
+    "enforce_graph_bounds",
+    "enforce_idempotency",
+    "enforce_integrity_verification",
+    "enforce_journal_immutability",
+    "enforce_organization_scope",
+    "enforce_person_identifier_screen",
+    "enforce_plane_mandate",
+    "enforce_query_bounds",
+    "enforce_rights",
+    "enforce_secret_redaction",
+    "enforce_session_state",
+    "enforce_unit_scope",
+    "enforce_voting_boundary",
+    "fail_closed_on_source_unavailable",
+    "reject_operational_rights",
+    "require_trustworthy_evidence_for_findings"
+  ],
+  "policy_version": "ctrl05-policy/1",
+  "predecessors": {
+    "CTRL-01": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+    "CTRL-02": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+    "CTRL-03": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+    "CTRL-04": "346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2"
+  },
+  "refusal_codes": [
+    "AUD_ATTESTATION_WITHOUT_AUTHORITY",
+    "AUD_AUTHORITY_UNRESOLVABLE",
+    "AUD_BROWSER_STATE_NOT_AUTHORITATIVE",
+    "AUD_CLOCK_ROLLBACK",
+    "AUD_COMPETENCE_SOURCE_MISSING",
+    "AUD_CSRF_TOKEN_INVALID",
+    "AUD_DISPOSITION_REQUIRED",
+    "AUD_EVIDENCE_DIVERGED_SINCE_REVIEW",
+    "AUD_EVIDENCE_INTEGRITY_NOT_VERIFIED",
+    "AUD_EXECUTION_SURFACE_ABSENT",
+    "AUD_EXPORT_FIELD_OUT_OF_PURPOSE",
+    "AUD_EXPORT_LIMIT_EXCEEDED",
+    "AUD_EXPORT_PURPOSE_UNKNOWN",
+    "AUD_EXPORT_UNAUTHORIZED",
+    "AUD_FINDING_WITHOUT_EVIDENCE",
+    "AUD_GRAPH_LIMIT_EXCEEDED",
+    "AUD_HISTORY_IS_APPEND_ONLY",
+    "AUD_IDEMPOTENCY_CONFLICT",
+    "AUD_INTEGRITY_METADATA_MISSING",
+    "AUD_MANDATE_EXPIRED",
+    "AUD_MANDATE_SUPERSEDED",
+    "AUD_NOT_FOUND",
+    "AUD_NO_OVERSIGHT_MANDATE",
+    "AUD_NO_SESSION",
+    "AUD_OPERATIONAL_RIGHT_NOT_USABLE_HERE",
+    "AUD_PARAMETER_INVALID",
+    "AUD_PERSON_IDENTIFIER_FORBIDDEN",
+    "AUD_PLANE_NOT_IN_MANDATE",
+    "AUD_QUERY_LIMIT_EXCEEDED",
+    "AUD_REMEDIATION_IS_REFERENCE_ONLY",
+    "AUD_REPLAYED_REQUEST",
+    "AUD_RIGHT_ABSENT",
+    "AUD_SECRET_VISIBILITY_FORBIDDEN",
+    "AUD_SESSION_EXPIRED",
+    "AUD_SESSION_PRINCIPAL_MISMATCH",
+    "AUD_SESSION_REVOKED",
+    "AUD_SOURCE_EVIDENCE_IMMUTABLE",
+    "AUD_SOURCE_UNAVAILABLE",
+    "AUD_STALE_AUTHORITY",
+    "AUD_STALE_REVIEW_VERSION",
+    "AUD_UNBOUNDED_QUERY_FORBIDDEN",
+    "AUD_UNIVERSAL_AUDITOR_FORBIDDEN",
+    "AUD_UNKNOWN_CASE",
+    "AUD_UNKNOWN_EVIDENCE",
+    "AUD_UNKNOWN_EVIDENCE_SCHEMA",
+    "AUD_VOTING_BOUNDARY",
+    "AUD_WRONG_ORGANIZATION_SCOPE",
+    "AUD_WRONG_REVIEW_STATE",
+    "AUD_WRONG_UNIT_SCOPE"
+  ],
+  "review_lifecycle": [
+    "EVIDENCE_SEARCH",
+    "EVIDENCE_OPEN",
+    "INDEPENDENT_INTEGRITY_VERIFICATION",
+    "CORRELATION",
+    "CASE_OPEN",
+    "ANNOTATION",
+    "PREPARE",
+    "COMMIT_TIME_REAUTHORIZATION",
+    "DISPOSITION",
+    "FINDING_OR_DISPUTE",
+    "REMEDIATION_REFERENCE",
+    "ATTESTATION",
+    "CLOSURE",
+    "PURPOSE_BOUND_EXPORT"
+  ],
+  "review_states": [
+    "ATTESTED",
+    "CLOSED",
+    "FINDING_RAISED",
+    "IN_REVIEW",
+    "NEEDS_CLARIFICATION",
+    "NO_FINDING",
+    "OPENED",
+    "REMEDIATION_LINKED"
+  ],
+  "reviewer_may_execute_operations": false,
+  "rights": [
+    "AUDIT.ATTEST",
+    "AUDIT.CORRELATE",
+    "AUDIT.EXPORT",
+    "AUDIT.READ",
+    "AUDIT.REVIEW"
+  ],
+  "schema": "epd2.ctrl05.oversight-console/1",
+  "secret_policy": "governed references only. Metadata is redacted key- and value-wise, every governed free-text field is scrubbed at ingestion, structures are scrubbed per value (never as serialised bytes), an export whose unredacted bytes carry a secret shape is refused outright, session CSRF tokens are delivered as a response header and are never persisted, and the journal refuses secret material.",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "source_evidence_is_mutable": false,
+  "stage": "CTRL-05",
+  "trustworthy_integrity_states": [
+    "VERIFIED"
+  ],
+  "universal_auditor_exists": false,
+  "universal_capability_names": [
+    "ADMIN",
+    "AUDITOR",
+    "ROOT",
+    "SUPER_ADMIN"
+  ],
+  "voting_boundary": "voting-domain evidence, declared as such by the plane that owns the fact, is never visible, openable or reviewable. The only permitted voting surface is a governed verification-interface reference with no internal access and no control path."
+}

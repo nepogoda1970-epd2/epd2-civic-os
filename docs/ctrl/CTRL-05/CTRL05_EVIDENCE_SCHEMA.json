@@ -1,0 +1,133 @@
+{
+  "schema": "epd2.ctrl05.oversight-evidence.v1",
+  "stage": "CTRL-05",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "journal": {
+    "store": "epd2_control_plane_service.audit:EvidenceJournal",
+    "algorithm": "sha256(canonical_json(hashable) + previous_event_hash)",
+    "anchor": "record count and head hash, held outside the record list",
+    "seal": "HMAC-SHA256 over (count, head) with a key that never enters the checkpoint",
+    "append_only": true,
+    "required": [
+      "sequence",
+      "occurred_at",
+      "actor_ref",
+      "actor_class",
+      "authority_basis",
+      "action_id",
+      "scope_key",
+      "object_ref",
+      "result",
+      "reason_code",
+      "correlation_ref",
+      "previous_event_hash",
+      "event_hash"
+    ]
+  },
+  "acts": {
+    "AUDIT.EVIDENCE.SEARCH": ["planes", "matched", "truncated", "unavailable_planes", "mandate"],
+    "AUDIT.EVIDENCE.OPEN": ["integrity", "event_hash"],
+    "AUDIT.CHAIN.OPEN": ["steps"],
+    "AUDIT.CORRELATION.GRAPH": ["nodes", "edges", "truncated"],
+    "AUDIT.VOTING.VERIFICATION": ["interfaces"],
+    "AUDIT.CASE.OPEN": ["evidence_count", "mandate", "title", "content_digest"],
+    "AUDIT.CASE.CLARIFY": ["clarification_id", "evidence_reference"],
+    "AUDIT.CASE.DISPOSE": [
+      "disposition_id",
+      "supersedes",
+      "case_version",
+      "prior_dispositions_preserved",
+      "content_digest"
+    ],
+    "AUDIT.FINDING.RAISE": [
+      "finding_id",
+      "severity",
+      "evidence_reference",
+      "evidence_event_hash",
+      "evidence_content_digest",
+      "evidence_integrity",
+      "content_digest"
+    ],
+    "AUDIT.FINDING.DISPUTE": [
+      "original_finding",
+      "dispute_finding",
+      "finding_id",
+      "content_digest",
+      "original_preserved"
+    ],
+    "AUDIT.REMEDIATION.LINK": ["link_id", "plane", "remediation_ref", "executed_by_ctrl05"],
+    "AUDIT.CASE.ATTEST": [
+      "attestation_id",
+      "outcome",
+      "content_digest",
+      "attested_case_version",
+      "disposition_ref",
+      "findings",
+      "mandate"
+    ],
+    "AUDIT.CASE.CLOSE": ["case_version"],
+    "AUDIT.EVIDENCE.EXPORT": [
+      "purpose",
+      "records",
+      "payload_digest",
+      "redaction_decision",
+      "dropped_fields",
+      "redacted_values"
+    ]
+  },
+  "refusals_are_evidence": true,
+  "refusal_record": {
+    "result": "REFUSED",
+    "reason_code": "one of the stable AUD_* codes in the stage contract",
+    "attributes": ["detail (truncated, scrubbed)"]
+  },
+  "replay_record": {
+    "result": "REPLAYED",
+    "reason_code": "AUD_REPLAYED_REQUEST",
+    "note": "an idempotent retry is itself a governed act and is journaled"
+  },
+  "content_digest": {
+    "algorithm": "sha256 over the record's substance, unit-separator joined",
+    "purpose": "a restored checkpoint must agree with the journal on content, not only on counts",
+    "covered": {
+      "case": ["title", "scope_key", "opened_by"],
+      "disposition": ["state", "rationale", "decided_by", "supersedes"],
+      "finding": ["severity", "summary", "raised_by", "evidence_reference"],
+      "attestation": ["outcome", "statement", "attested_by", "case_version"]
+    }
+  },
+  "forbidden_fields_examples": [
+    "password",
+    "private_key",
+    "secret_value",
+    "access_token",
+    "refresh_token",
+    "recovery_secret",
+    "seed_phrase",
+    "raw_hsm_material",
+    "session_cookie",
+    "csrf_token",
+    "member_id",
+    "person_id",
+    "national_id",
+    "date_of_birth",
+    "global_person_key",
+    "universal_subject_id"
+  ],
+  "integrity_verification": {
+    "independent": true,
+    "verified_by": "CTRL-05 independent re-derivation",
+    "states": [
+      "VERIFIED",
+      "HASH_MISMATCH",
+      "CHAIN_BROKEN",
+      "SEQUENCE_BROKEN",
+      "METADATA_MISSING",
+      "SOURCE_UNAVAILABLE",
+      "UNKNOWN_SCHEMA"
+    ],
+    "trustworthy_states": ["VERIFIED"],
+    "note": "an untrustworthy record is reported, never silently accepted and never hidden"
+  },
+  "non_claim": "This schema describes developer PRESEAL evidence. It asserts no CTRL-05 acceptance, no CTRL layer closure, no production readiness and no certification."
+}

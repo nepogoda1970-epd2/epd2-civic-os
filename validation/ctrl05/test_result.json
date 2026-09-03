@@ -1,0 +1,30 @@
+{
+  "runs": {
+    "mypy": {
+      "command": "mypy services/control-plane-service/src/epd2_control_plane_service/oversight_console.py services/control-plane-service/src/epd2_control_plane_service/oversight_sources.py services/control-plane-service/src/epd2_control_plane_service/oversight_api.py",
+      "ok": true,
+      "returncode": 0,
+      "summary": "Success: no issues found in 3 source files"
+    },
+    "ruff": {
+      "command": "ruff check services/control-plane-service/src/epd2_control_plane_service/oversight_console.py services/control-plane-service/src/epd2_control_plane_service/oversight_sources.py services/control-plane-service/src/epd2_control_plane_service/oversight_api.py services/control-plane-service/tests/_ctrl05_builders.py services/control-plane-service/tests/test_ctrl05_api.py services/control-plane-service/tests/test_ctrl05_authorization.py services/control-plane-service/tests/test_ctrl05_evidence.py services/control-plane-service/tests/test_ctrl05_export.py services/control-plane-service/tests/test_ctrl05_hardening.py services/control-plane-service/tests/test_ctrl05_persistence.py services/control-plane-service/tests/test_ctrl05_review.py scripts/build_ctrl05_candidate.py scripts/ctrl05_browser_journeys.py scripts/ctrl05_common.py scripts/ctrl05_e2e_journeys.py scripts/ctrl05_mutation_suite.py scripts/ctrl05_validator.py scripts/verify_ctrl05_package.py",
+      "ok": true,
+      "returncode": 0,
+      "summary": "All checks passed!"
+    },
+    "ruff_format": {
+      "command": "ruff format --check services/control-plane-service/src/epd2_control_plane_service/oversight_console.py services/control-plane-service/src/epd2_control_plane_service/oversight_sources.py services/control-plane-service/src/epd2_control_plane_service/oversight_api.py services/control-plane-service/tests/_ctrl05_builders.py services/control-plane-service/tests/test_ctrl05_api.py services/control-plane-service/tests/test_ctrl05_authorization.py services/control-plane-service/tests/test_ctrl05_evidence.py services/control-plane-service/tests/test_ctrl05_export.py services/control-plane-service/tests/test_ctrl05_hardening.py services/control-plane-service/tests/test_ctrl05_persistence.py services/control-plane-service/tests/test_ctrl05_review.py scripts/build_ctrl05_candidate.py scripts/ctrl05_browser_journeys.py scripts/ctrl05_common.py scripts/ctrl05_e2e_journeys.py scripts/ctrl05_mutation_suite.py scripts/ctrl05_validator.py scripts/verify_ctrl05_package.py",
+      "ok": true,
+      "returncode": 0,
+      "summary": "18 files already formatted"
+    },
+    "tests": {
+      "command": "python -m pytest services/control-plane-service/tests -q -p no:cacheprovider",
+      "ok": true,
+      "returncode": 0,
+      "summary": "597 passed in 4.13s"
+    }
+  },
+  "schema": "epd2.ctrl05.test-result/1",
+  "secret_scan_hits": []
+}

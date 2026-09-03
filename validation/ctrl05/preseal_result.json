@@ -1,0 +1,19 @@
+{
+  "browser_result": "PASS",
+  "certification_claim": "NONE",
+  "e2e_result": "22/22 PASS",
+  "gates_blocked_for_final_seal": [],
+  "gates_failed": [],
+  "gates_passed": 56,
+  "gates_total": 56,
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "mutation_result": "52/52 DETECTED",
+  "non_claim": "no CTRL-05 acceptance, no CTRL layer closure, no production readiness, no legal activation, no final security acceptance, no BSI or Common Criteria certification",
+  "overall": "PASS",
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "schema": "epd2.ctrl05.preseal-result/1",
+  "self_acceptance": false,
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-05",
+  "tests": "597 passed in 4.13s"
+}

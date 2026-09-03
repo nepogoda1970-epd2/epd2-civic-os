@@ -1,0 +1,429 @@
+{
+  "baseline_summary": "597 passed in 4.04s",
+  "detected": 52,
+  "executed": 52,
+  "required": 52,
+  "results": [
+    {
+      "family": "accept a revoked or expired session",
+      "file": "oversight_console.py",
+      "mutation_id": "M01",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 61 passed in 0.65s"
+    },
+    {
+      "family": "accept a mutation without its CSRF token",
+      "file": "oversight_console.py",
+      "mutation_id": "M02",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 14 passed in 0.50s"
+    },
+    {
+      "family": "ignore organization scope",
+      "file": "oversight_console.py",
+      "mutation_id": "M03",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 45 passed in 0.61s"
+    },
+    {
+      "family": "ignore oversight unit scope",
+      "file": "oversight_console.py",
+      "mutation_id": "M04",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 19 passed in 0.55s"
+    },
+    {
+      "family": "ignore the mandated evidence planes",
+      "file": "oversight_console.py",
+      "mutation_id": "M05",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 50 passed in 0.63s"
+    },
+    {
+      "family": "accept a mandate with no governing rule",
+      "file": "oversight_console.py",
+      "mutation_id": "M06",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 107 passed in 0.83s"
+    },
+    {
+      "family": "ignore the authority grant a mandate is bound to",
+      "file": "oversight_console.py",
+      "mutation_id": "M07",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 56 passed in 0.66s"
+    },
+    {
+      "family": "remove commit-time reauthorization",
+      "file": "oversight_console.py",
+      "mutation_id": "M08",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 194 passed in 1.96s"
+    },
+    {
+      "family": "ignore the rights a mandate carries",
+      "file": "oversight_console.py",
+      "mutation_id": "M09",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 52 passed in 0.65s"
+    },
+    {
+      "family": "let an operational right grant oversight",
+      "file": "oversight_console.py",
+      "mutation_id": "M10",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 42 passed in 0.62s"
+    },
+    {
+      "family": "skip independent integrity verification",
+      "file": "oversight_console.py",
+      "mutation_id": "M11",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 12 passed in 0.51s"
+    },
+    {
+      "family": "let a finding rest on untrustworthy evidence",
+      "file": "oversight_console.py",
+      "mutation_id": "M12",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 75 passed in 0.76s"
+    },
+    {
+      "family": "ignore evidence that changed since it was read",
+      "file": "oversight_console.py",
+      "mutation_id": "M13",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 198 passed in 2.40s"
+    },
+    {
+      "family": "report an unavailable plane as no evidence",
+      "file": "oversight_console.py",
+      "mutation_id": "M14",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 80 passed in 0.80s"
+    },
+    {
+      "family": "allow an unbounded evidence query",
+      "file": "oversight_console.py",
+      "mutation_id": "M15",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 108 passed in 0.88s"
+    },
+    {
+      "family": "allow an unbounded correlation graph",
+      "file": "oversight_console.py",
+      "mutation_id": "M16",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 89 passed in 0.96s"
+    },
+    {
+      "family": "let review history be rewritten",
+      "file": "oversight_console.py",
+      "mutation_id": "M17",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 20 passed in 0.63s"
+    },
+    {
+      "family": "ignore the case version at commit time",
+      "file": "oversight_console.py",
+      "mutation_id": "M18",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 199 passed in 2.69s"
+    },
+    {
+      "family": "disable idempotency",
+      "file": "oversight_console.py",
+      "mutation_id": "M19",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 126 passed in 0.92s"
+    },
+    {
+      "family": "attest without a prior disposition",
+      "file": "oversight_console.py",
+      "mutation_id": "M20",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 188 passed in 2.25s"
+    },
+    {
+      "family": "raise a finding without an exact evidence reference",
+      "file": "oversight_console.py",
+      "mutation_id": "M21",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 202 passed in 2.30s"
+    },
+    {
+      "family": "export without a governed purpose",
+      "file": "oversight_console.py",
+      "mutation_id": "M22",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 20 passed in 0.56s"
+    },
+    {
+      "family": "export without recording the redaction",
+      "file": "oversight_console.py",
+      "mutation_id": "M23",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 20 passed in 0.58s"
+    },
+    {
+      "family": "stop redacting secret material",
+      "file": "oversight_console.py",
+      "mutation_id": "M24",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 111 passed in 0.90s"
+    },
+    {
+      "family": "stop screening person identifiers",
+      "file": "oversight_console.py",
+      "mutation_id": "M25",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 110 passed in 0.86s"
+    },
+    {
+      "family": "admit voting-domain evidence",
+      "file": "oversight_console.py",
+      "mutation_id": "M26",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 100 passed in 0.84s"
+    },
+    {
+      "family": "stop journaling refusals",
+      "file": "oversight_console.py",
+      "mutation_id": "M27",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 153 passed in 1.46s"
+    },
+    {
+      "family": "accept a rewritten oversight journal",
+      "file": "oversight_console.py",
+      "mutation_id": "M28",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 139 passed in 1.06s"
+    },
+    {
+      "family": "accept a wildcard capability as oversight competence",
+      "file": "oversight_console.py",
+      "mutation_id": "M29",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 42 passed in 0.60s"
+    },
+    {
+      "family": "match a bare unit label instead of the exact oversight scope",
+      "file": "oversight_console.py",
+      "mutation_id": "M30",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 48 passed in 0.63s"
+    },
+    {
+      "family": "ignore the query's own plane filter",
+      "file": "oversight_console.py",
+      "mutation_id": "M31",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 116 passed in 0.86s"
+    },
+    {
+      "family": "treat an unmapped evidence stream as visible",
+      "file": "oversight_console.py",
+      "mutation_id": "M32",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 83 passed in 0.72s"
+    },
+    {
+      "family": "silently drop an unavailable plane instead of reporting it",
+      "file": "oversight_sources.py",
+      "mutation_id": "M33",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 79 passed in 0.75s"
+    },
+    {
+      "family": "trust the recorded hash instead of re-deriving it",
+      "file": "oversight_sources.py",
+      "mutation_id": "M34",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 73 passed in 0.73s"
+    },
+    {
+      "family": "treat a broken chain as trustworthy",
+      "file": "oversight_sources.py",
+      "mutation_id": "M35",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 75 passed in 0.72s"
+    },
+    {
+      "family": "accept a coarse correlation anchor",
+      "file": "oversight_console.py",
+      "mutation_id": "M36",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 88 passed in 0.72s"
+    },
+    {
+      "family": "accept a coarse correlation graph anchor",
+      "file": "oversight_console.py",
+      "mutation_id": "M37",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 114 passed in 0.81s"
+    },
+    {
+      "family": "let a person identifier be used as a graph anchor",
+      "file": "oversight_console.py",
+      "mutation_id": "M38",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 115 passed in 0.85s"
+    },
+    {
+      "family": "leave the reauthorization ticket reusable",
+      "file": "oversight_console.py",
+      "mutation_id": "M39",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 177 passed in 2.17s"
+    },
+    {
+      "family": "drop the ticket actor and act binding",
+      "file": "oversight_console.py",
+      "mutation_id": "M40",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 193 passed in 2.18s"
+    },
+    {
+      "family": "ignore the ticket expiry",
+      "file": "oversight_console.py",
+      "mutation_id": "M41",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 194 passed in 2.43s"
+    },
+    {
+      "family": "prepare without capturing the evidence digests",
+      "file": "oversight_console.py",
+      "mutation_id": "M42",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 190 passed in 1.98s"
+    },
+    {
+      "family": "close a case that was never attested",
+      "file": "oversight_console.py",
+      "mutation_id": "M43",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 207 passed in 2.20s"
+    },
+    {
+      "family": "replace a disposition instead of appending it",
+      "file": "oversight_console.py",
+      "mutation_id": "M44",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 182 passed in 2.11s"
+    },
+    {
+      "family": "widen the export allow-list to every field",
+      "file": "oversight_console.py",
+      "mutation_id": "M45",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 20 passed in 0.56s"
+    },
+    {
+      "family": "export without keeping the redaction decision",
+      "file": "oversight_console.py",
+      "mutation_id": "M46",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 124 passed in 0.87s"
+    },
+    {
+      "family": "export without binding the payload digest",
+      "file": "oversight_console.py",
+      "mutation_id": "M47",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 125 passed in 0.94s"
+    },
+    {
+      "family": "load a checkpoint whose tables disagree with the journal",
+      "file": "oversight_console.py",
+      "mutation_id": "M48",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 139 passed in 1.07s"
+    },
+    {
+      "family": "load a re-chained checkpoint without verifying the keyed seal",
+      "file": "oversight_console.py",
+      "mutation_id": "M49",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 168 passed in 1.61s"
+    },
+    {
+      "family": "refuse without appending the refusal to the journal",
+      "file": "oversight_console.py",
+      "mutation_id": "M50",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 153 passed in 1.31s"
+    },
+    {
+      "family": "let the client supply authoritative fields",
+      "file": "oversight_api.py",
+      "mutation_id": "M51",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 10 passed in 0.46s"
+    },
+    {
+      "family": "stop refusing the absent execution surfaces",
+      "file": "oversight_api.py",
+      "mutation_id": "M52",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed in 0.44s"
+    }
+  ],
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "schema": "epd2.ctrl05.mutation-result/1",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-05",
+  "undetected": []
+}

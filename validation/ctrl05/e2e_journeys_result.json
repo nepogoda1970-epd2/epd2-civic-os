@@ -1,0 +1,404 @@
+{
+  "evidence_planes": {
+    "CTRL-02": "RegionalOperationsService: a real intervention requested, approved twice and activated; its own hash-chained AuditEvent sequence is what CTRL-05 reads",
+    "CTRL-03": "CredentialLifecycleService: a real JWS signing key revoked under security and trust-custodian approval; its own LifecycleAuditEvent chain is read",
+    "CTRL-04": "OperationsConsoleService: real service-restart actions through request/approve/commit/resolve, plus a real refusal on a voting-domain target; its EvidenceJournal is read and re-derived",
+    "store": "JsonFileStore \u2014 persisted checkpoint reloaded and re-verified in J22"
+  },
+  "executed_at": "2026-09-03T16:24:04.559490+00:00",
+  "integration_class": "REAL_INSTALLED_CTRL02_CTRL03_CTRL04_PLANES",
+  "journeys": [
+    {
+      "journey": "J01",
+      "observations": {
+        "absent": [
+          "/audit/v1/shell",
+          "/audit/v1/exec",
+          "/audit/v1/sql",
+          "/audit/v1/ssh",
+          "/audit/v1/kubectl",
+          "/audit/v1/secrets",
+          "/audit/v1/keys",
+          "/audit/v1/operations",
+          "/audit/v1/actions/execute",
+          "/audit/v1/evidence/mutate"
+        ],
+        "actions": 14,
+        "self_state": "CANDIDATE_NOT_ACCEPTED"
+      },
+      "status": "PASS",
+      "title": "console served and catalogue declares the absent surfaces"
+    },
+    {
+      "journey": "J02",
+      "observations": {
+        "anonymous_statuses": [
+          401,
+          401
+        ],
+        "unknown_session": [
+          401,
+          {
+            "detail": "no oversight session",
+            "error": "AUD_NO_SESSION"
+          }
+        ]
+      },
+      "status": "PASS",
+      "title": "every oversight route requires a usable session"
+    },
+    {
+      "journey": "J03",
+      "observations": {
+        "csrf_delivered_as_header": true,
+        "csrf_in_body": false,
+        "mandates": [
+          "MND-auditor"
+        ],
+        "note": "frontend visibility is not authorization and not an integrity verdict; every act and every integrity claim is derived server-side",
+        "rights": [
+          "AUDIT.CORRELATE",
+          "AUDIT.EXPORT",
+          "AUDIT.READ",
+          "AUDIT.REVIEW"
+        ]
+      },
+      "status": "PASS",
+      "title": "the mandate and its exact rights are what the principal holds"
+    },
+    {
+      "journey": "J04",
+      "observations": {
+        "integrity": {
+          "VERIFIED": 16
+        },
+        "matched": 16,
+        "planes": [
+          "CTRL-02",
+          "CTRL-03",
+          "CTRL-04"
+        ]
+      },
+      "status": "PASS",
+      "title": "real CTRL-02/03/04 evidence read and independently verified"
+    },
+    {
+      "journey": "J05",
+      "observations": {
+        "reference": "CTRL-04:ctrl04-operations-console:ctrl04-event-00000001",
+        "verdict": "VERIFIED",
+        "verified_by": "CTRL-05 independent re-derivation"
+      },
+      "status": "PASS",
+      "title": "a record is opened and its integrity re-derived by CTRL-05 itself"
+    },
+    {
+      "journey": "J06",
+      "observations": {
+        "correlation": "OPA-000001",
+        "steps": 5
+      },
+      "status": "PASS",
+      "title": "request-approval-execution-result chain rebuilt from the CTRL-04 journal"
+    },
+    {
+      "journey": "J07",
+      "observations": {
+        "coarse": 403,
+        "nodes": 5,
+        "over_depth": 403
+      },
+      "status": "PASS",
+      "title": "correlation is bounded, anchored and carries no person node"
+    },
+    {
+      "journey": "J08",
+      "observations": {
+        "cross_org": [
+          403,
+          "AUD_WRONG_ORGANIZATION_SCOPE"
+        ],
+        "own_scope_matched": 0
+      },
+      "status": "PASS",
+      "title": "another organization is refused and inherits nothing"
+    },
+    {
+      "journey": "J09",
+      "observations": {
+        "ops_into_privacy": "AUD_WRONG_UNIT_SCOPE",
+        "privacy_into_ops": "AUD_WRONG_UNIT_SCOPE"
+      },
+      "status": "PASS",
+      "title": "a different oversight unit in the same organization reaches nothing"
+    },
+    {
+      "journey": "J10",
+      "observations": {
+        "universal": "AUD_UNIVERSAL_AUDITOR_FORBIDDEN",
+        "unmandated": "AUD_NO_OVERSIGHT_MANDATE"
+      },
+      "status": "PASS",
+      "title": "no universal auditor and no visibility without a mandate"
+    },
+    {
+      "journey": "J11",
+      "observations": {
+        "case_id": "CASE-000016",
+        "mandate_ref": "MND-auditor@FIR-GOV-005/oversight-rule-v1#decision:oversight-board-2026-07",
+        "without_csrf": "AUD_CSRF_TOKEN_INVALID"
+      },
+      "status": "PASS",
+      "title": "a review case names its exact evidence and requires the session CSRF token"
+    },
+    {
+      "journey": "J12",
+      "observations": {
+        "ctrl04_head_unchanged": true,
+        "source_mutated": false
+      },
+      "status": "PASS",
+      "title": "an annotation is a new record; the source planes are byte-identical"
+    },
+    {
+      "journey": "J13",
+      "observations": {
+        "replay": "AUD_REPLAYED_REQUEST",
+        "ticket": "TKT-000018"
+      },
+      "status": "PASS",
+      "title": "a disposition is committed under a single-use reauthorization ticket"
+    },
+    {
+      "journey": "J14",
+      "observations": {
+        "evidence": "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000001",
+        "finding": "FND-000021"
+      },
+      "status": "PASS",
+      "title": "a finding names one exact verified evidence record"
+    },
+    {
+      "journey": "J15",
+      "observations": {
+        "findings": [
+          "FND-000021",
+          "FND-000022"
+        ],
+        "original_retained": true
+      },
+      "status": "PASS",
+      "title": "a disputed finding is retained beside its dispute"
+    },
+    {
+      "journey": "J16",
+      "observations": {
+        "ctrl04_journal_unchanged": true,
+        "executed_by_ctrl05": false
+      },
+      "status": "PASS",
+      "title": "a remediation link references CTRL-04 without acting on it"
+    },
+    {
+      "journey": "J17",
+      "observations": {
+        "attested_by": "attestor",
+        "attested_version": 6,
+        "reviewer_attempt": "AUD_RIGHT_ABSENT"
+      },
+      "status": "PASS",
+      "title": "review and attestation are separate rights held by separate principals"
+    },
+    {
+      "journey": "J18",
+      "observations": {
+        "purposes": {
+          "EXTERNAL_AUDITOR": {
+            "decision": "RDC-000034",
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "correlation_ref",
+              "domain",
+              "object_ref",
+              "reason_code",
+              "redacted_fields"
+            ],
+            "fields": [
+              "action_code",
+              "integrity",
+              "occurred_at",
+              "reference",
+              "result",
+              "scope"
+            ],
+            "status": 201
+          },
+          "GOVERNANCE_REPORT": {
+            "decision": "RDC-000031",
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "domain",
+              "redacted_fields"
+            ],
+            "fields": [
+              "action_code",
+              "correlation_ref",
+              "integrity",
+              "object_ref",
+              "occurred_at",
+              "reason_code",
+              "reference",
+              "result",
+              "scope"
+            ],
+            "status": 201
+          },
+          "INTERNAL_REVIEW": {
+            "decision": "RDC-000028",
+            "dropped": [
+              "attributes",
+              "domain",
+              "redacted_fields"
+            ],
+            "fields": [
+              "action_code",
+              "actor_ref",
+              "approval_refs",
+              "authority_ref",
+              "correlation_ref",
+              "integrity",
+              "object_ref",
+              "occurred_at",
+              "reason_code",
+              "reference",
+              "result",
+              "scope"
+            ],
+            "status": 201
+          },
+          "STATISTICAL": {
+            "decision": "RDC-000037",
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "correlation_ref",
+              "domain",
+              "integrity",
+              "object_ref",
+              "reason_code",
+              "redacted_fields",
+              "reference"
+            ],
+            "fields": [
+              "action_code",
+              "occurred_at",
+              "result",
+              "scope"
+            ],
+            "status": 201
+          }
+        },
+        "unknown_purpose": "AUD_EXPORT_PURPOSE_UNKNOWN",
+        "without_a_ticket": "AUD_NOT_FOUND"
+      },
+      "status": "PASS",
+      "title": "every export is purpose-bound and its redaction is recorded as evidence"
+    },
+    {
+      "journey": "J19",
+      "observations": {
+        "person_fields": [],
+        "secret_markers": []
+      },
+      "status": "PASS",
+      "title": "no secret material and no person identifier reaches any oversight route"
+    },
+    {
+      "journey": "J20",
+      "observations": {
+        "ctrl04_states_unchanged": true,
+        "surfaces": {
+          "/audit/v1/actions/execute": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/evidence/mutate": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/exec": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/keys": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/kubectl": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/operations": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/secrets": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/shell": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/sql": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/ssh": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ]
+        }
+      },
+      "status": "PASS",
+      "title": "no shell, SQL, SSH, secret or CTRL-04 execution surface exists"
+    },
+    {
+      "journey": "J21",
+      "observations": {
+        "blocked_open": "AUD_VOTING_BOUNDARY",
+        "voting_records_visible": 0,
+        "voting_reference": "voting-verifier-berlin"
+      },
+      "status": "PASS",
+      "title": "real voting-domain evidence exists and is refused; only a reference is offered"
+    },
+    {
+      "journey": "J22",
+      "observations": {
+        "case_identical": true,
+        "forged_seal_refused": true,
+        "journal_head": "4cd409295d2567a5df61b5dbcf3f473065901fc4435bf50c2c0462d198e128d9",
+        "records": 31
+      },
+      "status": "PASS",
+      "title": "persisted oversight evidence survives a restart and a forged seal is refused"
+    }
+  ],
+  "journeys_passed": 22,
+  "journeys_total": 22,
+  "non_claim": "This evidence shows the governed oversight semantics over the real installed CTRL-02/03/04 planes. It is not a CTRL-05 acceptance, not a CTRL-layer closure, not a production-readiness statement and not a security certification.",
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "schema": "epd2.ctrl05.e2e-journeys/1",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-05",
+  "transport": "real HTTP (ThreadingHTTPServer) over loopback"
+}

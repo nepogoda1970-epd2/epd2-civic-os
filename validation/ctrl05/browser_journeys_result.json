@@ -1,0 +1,146 @@
+{
+  "browser": "chromium (playwright)",
+  "executed_at": "2026-09-03T16:24:21.957897+00:00",
+  "journeys": [
+    {
+      "journey": "B01",
+      "observations": {
+        "boundary": "Oversight is read-and-review only. Operational execution surface: ABSENT \u00b7 secret surface: ABSENT \u00b7 this console cannot request, approve, execute or cancel any CTRL-04 operation, cannot alter source e",
+        "header": "auditor MANDATED NOT_AN_OPERATOR",
+        "planes_rendered": [
+          "CTRL-02",
+          "CTRL-03",
+          "CTRL-04"
+        ],
+        "summary": "matched 11 \u00b7 integrity {\"VERIFIED\":11} \u00b7 unavailable planes: none",
+        "verified_badges": 11
+      },
+      "status": "PASS",
+      "title": "a mandated reviewer sees the three real planes with server integrity verdicts"
+    },
+    {
+      "journey": "B02",
+      "observations": {
+        "case_disabled": true,
+        "header": "unmandated NO_MANDATE NOT_AN_OPERATOR",
+        "search_disabled": true,
+        "why": "no oversight mandate: nothing is visible and nothing may be reviewed"
+      },
+      "status": "PASS",
+      "title": "without a mandate nothing is visible and the reason is shown"
+    },
+    {
+      "journey": "B03",
+      "observations": {
+        "case_row": "CASE-000004\nbrowser-driven review\tDE-BE:org-berlin:unit-operations-audit\tFINDING_RAISED v2\tFINDING_RAISED auditor\t\u2014\t0\t\u2014\t\u2014\t2 events \u00b7 append-only",
+        "commit_disabled_after_use": true,
+        "commit_disabled_before_prepare": true,
+        "commit_enabled_after_prepare": true,
+        "ticket": "ticket TKT-000005 \u00b7 expires 2026-09-03T12:10:33+00:00"
+      },
+      "status": "PASS",
+      "title": "a governed act is prepared then committed, and the ticket is single-use"
+    },
+    {
+      "journey": "B04",
+      "observations": {
+        "exports": [
+          {
+            "authority_ref": "ag-exp@v1",
+            "case_id": "CASE-000004",
+            "export_id": "EXP-000008",
+            "mandate_ref": "MND-auditor@FIR-GOV-005/oversight-rule-v1#decision:oversight-board-2026-07",
+            "payload_digest": "b628d3cf9e5982299bf2990de150fa64d2818ec5d4f5f2b040dc46fedc1e9a63",
+            "purpose": "STATISTICAL",
+            "record_count": 1,
+            "redaction_decision_id": "RDC-000009",
+            "requested_at": "2026-09-03T12:00:41+00:00",
+            "requested_by": "auditor",
+            "scope": "DE-BE:org-berlin:unit-operations-audit"
+          }
+        ],
+        "forged": [
+          400,
+          {
+            "detail": "client may not supply authoritative fields: ['trustworthy']",
+            "error": "AUD_BROWSER_STATE_NOT_AUTHORITATIVE"
+          }
+        ],
+        "log_excerpt": "2026-09-03T16:24:21.176Z GET /audit/v1/cases?region_id=DE-BE&org_id=org-berlin&unit_id=unit-operations-audit -> 200 {\"scope\":\"DE-BE:org-berlin:unit-operations-audit\",\"cases\":[{\"case_id\":\"CASE-000004\",\"title\":\"browser-driven review\",\"scope\":"
+      },
+      "status": "PASS",
+      "title": "an export shows its purpose-bound redaction; a forged client field is refused"
+    },
+    {
+      "journey": "B05",
+      "observations": {
+        "attempts": [
+          [
+            "/audit/v1/shell",
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          [
+            "/audit/v1/sql",
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          [
+            "/audit/v1/secrets",
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          [
+            "/audit/v1/operations",
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          [
+            "/audit/v1/actions/execute",
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ]
+        ],
+        "button_labels": [
+          "Search evidence",
+          "Open record",
+          "Verify integrity",
+          "Action chain",
+          "Correlation graph",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Use",
+          "Open case",
+          "Add clarification",
+          "Prepare",
+          "Commit act"
+        ],
+        "ctrl04_unchanged": true,
+        "operational_buttons": 0
+      },
+      "status": "PASS",
+      "title": "the page offers no operational control and CTRL-04 is untouched"
+    }
+  ],
+  "journeys_passed": 5,
+  "journeys_total": 5,
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "schema": "epd2.ctrl05.browser-journeys/1",
+  "screenshots": [
+    "B01_evidence.png",
+    "B02_no_mandate.png",
+    "B03_two_phase.png",
+    "B04_export_and_forgery.png",
+    "B05_no_operations.png"
+  ],
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "status": "PASS"
+}

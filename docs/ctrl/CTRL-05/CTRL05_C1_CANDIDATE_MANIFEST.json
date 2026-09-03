@@ -1,0 +1,67 @@
+{
+  "adversarial_review": {
+    "defects_fixed": 11,
+    "defects_found": 11,
+    "performed": true,
+    "reproducing_tests": "services/control-plane-service/tests/test_ctrl05_hardening.py"
+  },
+  "branch": "main",
+  "browser_journeys": {
+    "browser": "chromium (playwright)",
+    "passed": 5,
+    "required": 5
+  },
+  "candidate_sha256": "EXTERNAL: see EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.identity.json (an archive cannot contain its own digest)",
+  "candidate_size": 0,
+  "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+  "candidate_zip": "EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip",
+  "certification_claim": "NONE",
+  "e2e_journeys": {
+    "integration_class": "REAL_INSTALLED_CTRL02_CTRL03_CTRL04_PLANES",
+    "passed": 22,
+    "required": 22
+  },
+  "gates": {
+    "passed": 56,
+    "required": 56
+  },
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "mutations": {
+    "detected": 52,
+    "required": 52
+  },
+  "non_claim": "no CTRL-05 acceptance, no CTRL layer closure, no production readiness, no legal activation, no final security acceptance, no BSI or Common Criteria certification",
+  "predecessor_binding": "CTRL-01/02/03/04 are bound by exact accepted identity AND read as real installed runtimes: the oversight console reads the hash-chained evidence those planes actually produce, and their installed files are left byte-identical (gate G07). INFRA and OPS are bound by exact accepted identity only; no INFRA/OPS runtime is imported.",
+  "predecessors": {
+    "CTRL-01": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+    "CTRL-02": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+    "CTRL-03": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+    "CTRL-04": "346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2",
+    "INFRA": [
+      "INFRA-01 C3 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "INFRA-02 d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+      "INFRA-03 C1 6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1"
+    ],
+    "OPS": [
+      "OPS-01 C2 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "OPS-02 C3 ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125"
+    ],
+    "not_accepted_not_claimed": [
+      "OPS-03 (QUALIFICATION_ELIGIBLE, not accepted)"
+    ]
+  },
+  "repository": "nepogoda1970-epd2/epd2-civic-os",
+  "repository_commit": "2ceb77be91448462262b84f278a00cfe6dd4228e",
+  "repository_tree": "ec057046e235bbd438a4aaa1a23e9f40dff804a2",
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "self_acceptance": false,
+  "stage": "CTRL-05",
+  "tests": {
+    "ctrl05_specific": 213,
+    "failed": 0,
+    "inherited_ctrl01_02_03_04": 384,
+    "passed": 597,
+    "skipped": 0
+  },
+  "title": "Audit & Oversight Console"
+}

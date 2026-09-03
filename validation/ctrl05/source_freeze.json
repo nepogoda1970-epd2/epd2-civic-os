@@ -1,0 +1,31 @@
+{
+  "files": {
+    "contracts/control/ctrl05_oversight_console.json": "82806075adaec870b369519c0069153fee71e8ec42bdc1fce626d6409b0b51c1",
+    "docs/ctrl/CTRL-05/CTRL05_C1_CANDIDATE_MANIFEST.json": "de3f82532805b6d170a0945ed51bcabcb66283299c11d7da3a0ef45c942287a3",
+    "docs/ctrl/CTRL-05/CTRL05_DEVELOPER_REPORT.md": "ad5185c9340dfec387a0cbc0bc939a19df93eb227ee18130353684d694249bbd",
+    "docs/ctrl/CTRL-05/CTRL05_EVIDENCE_SCHEMA.json": "b6cf73ea144068cf88f70353db92c5523e32147b5150a55bf8a3654abe4632b1",
+    "docs/ctrl/CTRL-05/CTRL05_SPECIFICATION.md": "b3895c8e6a332228326fe32c04a49d1421ac48b5c2ba293bda2ce9430ab182ec",
+    "docs/ctrl/CTRL-05/CTRL05_STAGE_CONTRACT.md": "08b90c24b06aaee36d5ca4c46ee10fceeb309b842a770fc7af42bd8ee3f5587b",
+    "scripts/build_ctrl05_candidate.py": "e51ef53c439186558f937bc5168e47e73c777d0cb0d19cd8660a36890f6dc9ed",
+    "scripts/ctrl05_browser_journeys.py": "227da6aac79d63a68fbaf6462a713069bd408f5914970f28d3f95b3cb05e325b",
+    "scripts/ctrl05_common.py": "8dffe3f5129a1a1b96b882d6c1fd6e311be1b5ffce1ee2675322d04848b1110a",
+    "scripts/ctrl05_e2e_journeys.py": "5ef29e9c246d6ace6685fabe9004d45f202d65c59cfc6ed3f9fa7aa68206cbad",
+    "scripts/ctrl05_mutation_suite.py": "aa4c5bdc47e2aa13167fa9955c88403624f3b4c141e96e5640de6bc15ca4b966",
+    "scripts/ctrl05_validator.py": "05e6932db4a65c8b6a2269da32b6cd1526ee0e45b268cf30137767dd3c6297a2",
+    "scripts/verify_ctrl05_package.py": "a23bfb7368321ef97913752ba4fcee8e1c0e8a07a8d55a33385fc4c261ebd2c5",
+    "services/control-plane-service/src/epd2_control_plane_service/oversight_api.py": "3d60d3a225c7d12e161676eaa59c741b756069e03e6443ba1404dc3e99070031",
+    "services/control-plane-service/src/epd2_control_plane_service/oversight_console.html": "cb8ac822a46581601f1110640b36321975044994c4bdcdb7657164a82c91f591",
+    "services/control-plane-service/src/epd2_control_plane_service/oversight_console.py": "efaf81a4fa131874529a78771859abc8e5c42e4a65620b062b444be9bef2d91e",
+    "services/control-plane-service/src/epd2_control_plane_service/oversight_sources.py": "7d408ab0568608f9e6dbcb2510174eac2a3f9bb885dfdd480ca711cfcc361fc1",
+    "services/control-plane-service/tests/_ctrl05_builders.py": "e9c7eebc16a045e541d06e06730e48f8d5d946d90770bdc06dfffce8b5e3970a",
+    "services/control-plane-service/tests/test_ctrl05_api.py": "0b30da2e3635bb7870a559bcb5f91cf786ce20f03a0cdf052ddcc4eaa28ad243",
+    "services/control-plane-service/tests/test_ctrl05_authorization.py": "63aac6817ef0cfe622e46c738b7c4ef4368ba361f81ba16579468a3492e1ef52",
+    "services/control-plane-service/tests/test_ctrl05_evidence.py": "ed11b627b7e56d091f49a2a46ac7d81685158629c976eaa38a3c710a7d963e86",
+    "services/control-plane-service/tests/test_ctrl05_export.py": "b51f2c54c83eeb6f24cfd5367e2ad1c4c378c44280862922776a7989f5f4592a",
+    "services/control-plane-service/tests/test_ctrl05_hardening.py": "1922ecb9ee2c2d9a5f6c45d4635b8da474f2616edf0698d8f490142b88de2889",
+    "services/control-plane-service/tests/test_ctrl05_persistence.py": "477be50e3151ee9723997392c81bdee90e7d41a7eb50fd34c6b7f419521baa2f",
+    "services/control-plane-service/tests/test_ctrl05_review.py": "8cc557463e4d730adcc92da3e8d4c6afb47f91028ec0dba4c0467fac1c2bca3a"
+  },
+  "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db",
+  "schema": "epd2.ctrl05.source-freeze/1"
+}

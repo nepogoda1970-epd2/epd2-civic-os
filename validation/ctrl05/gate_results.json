@@ -1,0 +1,1069 @@
+{
+  "gates": [
+    {
+      "executed": true,
+      "id": "G01",
+      "name": "exact_repository_baseline_recorded",
+      "observations": {
+        "contract_commit": "2ceb77be91448462262b84f278a00cfe6dd4228e",
+        "contract_tree": "ec057046e235bbd438a4aaa1a23e9f40dff804a2",
+        "entrypoint_sha256": "f6a93dec5e372c49c3f22d14e9cc7f5acea56c7ea355bd93b7e44ec940d8cbf2",
+        "master_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+        "observed_commit": "2ceb77be91448462262b84f278a00cfe6dd4228e",
+        "observed_tree": "ec057046e235bbd438a4aaa1a23e9f40dff804a2",
+        "pcr_sha256": "8536626b18036e795e307507ce24024b2bd58c8ab3a44ddd0f369c8a7d0196b8"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G02",
+      "name": "mandatory_bootstrap_docs_read_and_digested",
+      "observations": {
+        "documents_read": 11,
+        "missing": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G03",
+      "name": "exact_ctrl01_accepted_identity_bound",
+      "observations": {
+        "expected_sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+        "record": "docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json",
+        "record_decision": "ACCEPTED / CLOSED",
+        "runtime_bound_sha256": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+        "sha_in_record": true,
+        "size_in_record": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G04",
+      "name": "exact_ctrl02_accepted_identity_bound",
+      "observations": {
+        "expected_sha256": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+        "record": "docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json",
+        "record_decision": "ACCEPTED / CLOSED",
+        "runtime_bound_sha256": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+        "sha_in_record": true,
+        "size_in_record": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G05",
+      "name": "exact_ctrl03_accepted_identity_bound",
+      "observations": {
+        "expected_sha256": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+        "record": "docs/ctrl/CTRL-03/CTRL03_C1_ACCEPTANCE_RECORD.json",
+        "record_decision": "ACCEPTED / CLOSED",
+        "runtime_bound_sha256": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+        "sha_in_record": true,
+        "size_in_record": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G06",
+      "name": "exact_ctrl04_accepted_identity_bound",
+      "observations": {
+        "expected_sha256": "346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2",
+        "record": "docs/ctrl/CTRL-04/CTRL04_C1_ACCEPTANCE_RECORD.json",
+        "record_decision": "ACCEPTED / CLOSED",
+        "runtime_bound_sha256": "346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2",
+        "sha_in_record": true,
+        "size_in_record": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G07",
+      "name": "installed_predecessor_runtime_unmodified",
+      "observations": {
+        "digests": {
+          "services/control-plane-service/src/epd2_control_plane_service/audit.py": "2f7a3d2ccc77f5488e9329c37bf09e7c535c5f159595f7df66d52e07232a95b1",
+          "services/control-plane-service/src/epd2_control_plane_service/authority.py": "2f5284c7ee170a4309451c1d152e1a96e84e1ca62dc5e1e074239f4594aa4736",
+          "services/control-plane-service/src/epd2_control_plane_service/credential_lifecycle.py": "6631238f8aa080d30d4f33d82cd0c17f9ab27061213e6e20cf9093b3359176d2",
+          "services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py": "3c5ed7302df4d28c514ad6d460cfa748691b41b254436ec5771cb94817094ad6",
+          "services/control-plane-service/src/epd2_control_plane_service/operations_api.py": "3e352d0d7eabaaf46572a522a6ae0920c2ce08816bd577ee79af34404b3ef689",
+          "services/control-plane-service/src/epd2_control_plane_service/operations_console.html": "33a0db5d43e53fa44caf13b02044c8359ad06020bc33945bf4f8bc2670573711",
+          "services/control-plane-service/src/epd2_control_plane_service/operations_console.py": "dab47d1b7f5807c4b5b136ae877ded2530761fc9f8bde3c9474c4d1bd1fb6ce9",
+          "services/control-plane-service/src/epd2_control_plane_service/regional_operations.py": "aad08bcc67912d3ae1a23d7438ac8d036c897d512f32ba6b6850e99c41185286"
+        },
+        "files": 8,
+        "modified": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G08",
+      "name": "relevant_infra_and_ops_identities_bound_or_recorded_unaccepted",
+      "observations": {
+        "bound": {
+          "INFRA-01": {
+            "expected_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+            "record_present": true,
+            "sha_in_record": true
+          },
+          "INFRA-02": {
+            "expected_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+            "record_present": true,
+            "sha_in_record": true
+          },
+          "INFRA-03": {
+            "expected_sha256": "6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1",
+            "record_present": true,
+            "sha_in_record": true
+          },
+          "OPS-01": {
+            "expected_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+            "record_present": true,
+            "sha_in_record": true
+          },
+          "OPS-02": {
+            "expected_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+            "record_present": true,
+            "sha_in_record": true
+          }
+        },
+        "recorded_unaccepted": {
+          "OPS-03": {
+            "acceptance_record_found": []
+          }
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G09",
+      "name": "no_universal_auditor_capability",
+      "observations": {
+        "refusal": "AUD_UNIVERSAL_AUDITOR_FORBIDDEN",
+        "universal_auditor_exists": false,
+        "universal_names": [
+          "ADMIN",
+          "AUDITOR",
+          "ROOT",
+          "SUPER_ADMIN"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G10",
+      "name": "exact_organization_scope_without_inheritance",
+      "observations": {
+        "contains": false,
+        "cross_org_refusal": "AUD_WRONG_ORGANIZATION_SCOPE",
+        "own_scope_matched": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G11",
+      "name": "exact_oversight_unit_scope_without_inheritance",
+      "observations": {
+        "cross_unit_refusal": "AUD_WRONG_UNIT_SCOPE",
+        "ctrl04_visible_when_unmapped": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G12",
+      "name": "oversight_mandate_required_for_any_visibility",
+      "observations": {
+        "refusal": "AUD_NO_OVERSIGHT_MANDATE"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G13",
+      "name": "mandate_bound_to_live_authority_grant_and_version",
+      "observations": {
+        "missing_grant": "AUD_STALE_AUTHORITY",
+        "reissued_grant": "AUD_STALE_AUTHORITY"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G14",
+      "name": "mandate_carries_rule_version_and_source_decision",
+      "observations": {
+        "competence_ref": "MND-auditor@FIR-GOV-005/oversight-rule-v1#decision:oversight-board-2026-07",
+        "empty_rule_rejected": true,
+        "unbacked_right_rejected": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G15",
+      "name": "audit_rights_are_disjoint",
+      "observations": {
+        "attest": "AUD_RIGHT_ABSENT",
+        "export": "AUD_RIGHT_ABSENT",
+        "review": "AUD_RIGHT_ABSENT",
+        "rights": [
+          "AUDIT.ATTEST",
+          "AUDIT.CORRELATE",
+          "AUDIT.EXPORT",
+          "AUDIT.READ",
+          "AUDIT.REVIEW"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G16",
+      "name": "operational_rights_grant_no_oversight",
+      "observations": {
+        "dual_hat_export": "AUD_RIGHT_ABSENT",
+        "forbidden_operational_rights": [
+          "AUTHORITY.UNIVERSAL_ADMIN",
+          "KEY.CUSTODY",
+          "LIFECYCLE.EXECUTE",
+          "OPS.APPROVE",
+          "OPS.EXECUTE",
+          "OPS.REQUEST",
+          "SECRET.EXPORT",
+          "SECRET.RAW_READ",
+          "VOTING.ADMIN"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G17",
+      "name": "oversight_grants_no_operational_execution",
+      "observations": {
+        "ctrl04_unchanged": true,
+        "journal_head_after": "2640c074b8fe6a5a81a6fd997c32b35eafc39c7ac3ce3fffd50419332549d67f",
+        "journal_head_before": "2640c074b8fe6a5a81a6fd997c32b35eafc39c7ac3ce3fffd50419332549d67f",
+        "operational_methods_present": [],
+        "remediation_executed_by_ctrl05": false
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G18",
+      "name": "no_shell_sql_ssh_exec_or_cluster_surface",
+      "observations": {
+        "banned_primitives": [],
+        "declared_absent": {
+          "exec": true,
+          "keys": true,
+          "kubectl": true,
+          "secrets": true,
+          "shell": true,
+          "sql": true,
+          "ssh": true
+        },
+        "surfaces": {
+          "/audit/v1/actions/execute": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/evidence/mutate": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/exec": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/keys": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/kubectl": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/operations": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/secrets": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/shell": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/sql": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ],
+          "/audit/v1/ssh": [
+            403,
+            "AUD_EXECUTION_SURFACE_ABSENT"
+          ]
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G19",
+      "name": "no_raw_secret_visibility_in_any_surface",
+      "observations": {
+        "marker_hits": [],
+        "secret_methods": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G20",
+      "name": "no_secret_material_in_evidence_or_export",
+      "observations": {
+        "export_hits": {
+          "EXTERNAL_AUDITOR": [],
+          "GOVERNANCE_REPORT": [],
+          "INTERNAL_REVIEW": [],
+          "STATISTICAL": []
+        },
+        "journal_hits": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G21",
+      "name": "source_evidence_immutable_to_ctrl05",
+      "observations": {
+        "planes_unchanged": true,
+        "public_sources_attribute": false,
+        "reachable_plane_methods": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G22",
+      "name": "annotation_is_an_append_only_superseding_record",
+      "observations": {
+        "states": [
+          "NEEDS_CLARIFICATION",
+          "NO_FINDING"
+        ],
+        "supersedes": "DSP-000005"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G23",
+      "name": "integrity_independently_re_derived",
+      "observations": {
+        "CTRL-02": {
+          "recomputed": "5314f98b80a54aef",
+          "recorded": "5314f98b80a54aef",
+          "state": "VERIFIED",
+          "verified_by": "CTRL-05 independent re-derivation"
+        },
+        "CTRL-03": {
+          "recomputed": "bfecb673ca052ec3",
+          "recorded": "bfecb673ca052ec3",
+          "state": "VERIFIED",
+          "verified_by": "CTRL-05 independent re-derivation"
+        },
+        "CTRL-04": {
+          "recomputed": "8af4ae2c010a89bb",
+          "recorded": "8af4ae2c010a89bb",
+          "state": "VERIFIED",
+          "verified_by": "CTRL-05 independent re-derivation"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G24",
+      "name": "broken_hash_chain_reported_not_hidden",
+      "observations": {
+        "rewritten": {
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000001": "VERIFIED",
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000002": "HASH_MISMATCH",
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000003": "SEQUENCE_BROKEN",
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000004": "SEQUENCE_BROKEN"
+        },
+        "truncated": {
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000001": "VERIFIED",
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000003": "SEQUENCE_BROKEN",
+          "CTRL-02:ctrl02-regional-operations:ctrl02-event-00000004": "SEQUENCE_BROKEN"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G25",
+      "name": "untrustworthy_evidence_cannot_carry_a_finding",
+      "observations": {
+        "refusal": "AUD_EVIDENCE_INTEGRITY_NOT_VERIFIED"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G26",
+      "name": "fail_closed_on_unavailable_source_or_authority",
+      "observations": {
+        "chain_refusal": "AUD_SOURCE_UNAVAILABLE",
+        "search_unavailable": {
+          "CTRL-02": "regional operations evidence is unavailable"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G27",
+      "name": "unmapped_evidence_stream_is_invisible",
+      "observations": {
+        "cross_org_same_unit_matched": 0,
+        "matched_when_unmapped": 0,
+        "unit_names_identical": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G28",
+      "name": "no_unbounded_global_evidence_query",
+      "observations": {
+        "coarse_refusals": [
+          "AUD_UNBOUNDED_QUERY_FORBIDDEN",
+          "AUD_UNBOUNDED_QUERY_FORBIDDEN",
+          "AUD_UNBOUNDED_QUERY_FORBIDDEN",
+          "AUD_UNBOUNDED_QUERY_FORBIDDEN"
+        ],
+        "limit_bounded": true,
+        "truncated": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G29",
+      "name": "bounded_correlation_graph_without_person_nodes",
+      "observations": {
+        "edges": [
+          "chain-successor",
+          "same-correlation"
+        ],
+        "nodes": 5,
+        "over_depth_refusal": "AUD_GRAPH_LIMIT_EXCEEDED",
+        "person_keys": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G30",
+      "name": "action_chain_reconstructed_from_real_ctrl04_evidence",
+      "observations": {
+        "action_codes": [
+          "OPS.SERVICE.RESTART",
+          "OPS.SERVICE.RESTART",
+          "OPS.SERVICE.RESTART",
+          "OPS.SERVICE.RESTART",
+          "OPS.SERVICE.RESTART"
+        ],
+        "all_verified": true,
+        "steps": 5
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G31",
+      "name": "no_persistent_voting_person_identifier",
+      "observations": {
+        "identity_reference_screened": true,
+        "leaked_fields": [],
+        "person_identifier_field_count": 34
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G32",
+      "name": "no_voting_isolation_bypass_reference_only",
+      "observations": {
+        "reach_methods": [],
+        "status": {
+          "member_identifiers_exposed": 0,
+          "voting_control_path": "NONE",
+          "voting_internal_access": "NONE"
+        },
+        "voting_domain_records_visible": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G33",
+      "name": "no_new_cross_domain_universal_person_index",
+      "observations": {
+        "index_structures": [],
+        "node_kinds": [
+          "evidence"
+        ],
+        "screened_identifiers": {
+          "global_person_key": true,
+          "member_id": true,
+          "person_id": true,
+          "universal_subject_id": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G34",
+      "name": "typed_oversight_mandate",
+      "observations": {
+        "OversightMandate": {
+          "fields": [
+            "mandate_id",
+            "subject_ref",
+            "scope",
+            "planes",
+            "rights",
+            "rule_version",
+            "source_decision_ref",
+            "authority_bindings",
+            "valid_from",
+            "valid_until",
+            "superseded_by",
+            "revoked_at"
+          ],
+          "frozen": true
+        },
+        "OversightScope": {
+          "fields": [
+            "region_id",
+            "org_id",
+            "unit_id"
+          ],
+          "frozen": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G35",
+      "name": "typed_evidence_reference_and_envelope",
+      "observations": {
+        "EvidenceEnvelope": {
+          "fields": [
+            "reference",
+            "domain",
+            "scope_key",
+            "occurred_at",
+            "actor_ref",
+            "authority_ref",
+            "action_code",
+            "object_ref",
+            "result",
+            "reason_code",
+            "correlation_ref",
+            "approval_refs",
+            "attributes",
+            "redacted_fields",
+            "integrity"
+          ],
+          "frozen": true
+        },
+        "EvidenceReference": {
+          "fields": [
+            "plane",
+            "stream_id",
+            "event_id",
+            "sequence",
+            "event_hash",
+            "content_digest"
+          ],
+          "frozen": true
+        },
+        "IntegrityVerification": {
+          "fields": [
+            "state",
+            "algorithm",
+            "recorded_hash",
+            "recomputed_hash",
+            "previous_hash",
+            "expected_previous_hash",
+            "sequence",
+            "detail"
+          ],
+          "frozen": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G36",
+      "name": "typed_review_case_and_disposition",
+      "observations": {
+        "ReviewCase": {
+          "fields": [
+            "case_id",
+            "title",
+            "scope",
+            "opened_by",
+            "opened_at",
+            "mandate_ref",
+            "authority_ref",
+            "state",
+            "version",
+            "evidence_refs",
+            "disposition_ids",
+            "finding_ids",
+            "attestation_ids",
+            "remediation_ids",
+            "clarification_ids",
+            "closed_at"
+          ],
+          "frozen": true
+        },
+        "ReviewDisposition": {
+          "fields": [
+            "disposition_id",
+            "case_id",
+            "state",
+            "rationale",
+            "decided_by",
+            "decided_at",
+            "mandate_ref",
+            "authority_ref",
+            "supersedes"
+          ],
+          "frozen": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G37",
+      "name": "typed_finding_and_dispute",
+      "observations": {
+        "ReviewFinding": {
+          "fields": [
+            "finding_id",
+            "case_id",
+            "severity",
+            "summary",
+            "evidence_reference",
+            "evidence_content_digest",
+            "raised_by",
+            "raised_at",
+            "mandate_ref",
+            "authority_ref",
+            "state",
+            "superseded_by",
+            "dispute_ref"
+          ],
+          "frozen": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G38",
+      "name": "typed_attestation_bound_to_case_version",
+      "observations": {
+        "ReviewAttestation": {
+          "fields": [
+            "attestation_id",
+            "case_id",
+            "statement",
+            "outcome",
+            "attested_by",
+            "attested_at",
+            "mandate_ref",
+            "authority_ref",
+            "authority_version",
+            "case_version",
+            "disposition_ref",
+            "finding_refs",
+            "evidence_refs",
+            "reauthorized_at"
+          ],
+          "frozen": true
+        },
+        "bound_case_version": [
+          2,
+          2
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G39",
+      "name": "typed_export_request_and_redaction_decision",
+      "observations": {
+        "EvidenceExportRequest": {
+          "fields": [
+            "export_id",
+            "purpose",
+            "scope",
+            "case_id",
+            "evidence_refs",
+            "requested_by",
+            "requested_at",
+            "mandate_ref",
+            "authority_ref",
+            "redaction_decision_id",
+            "payload_digest",
+            "record_count"
+          ],
+          "frozen": true
+        },
+        "RedactionDecision": {
+          "fields": [
+            "decision_id",
+            "export_id",
+            "purpose",
+            "policy_version",
+            "allowed_fields",
+            "dropped_fields",
+            "redacted_values",
+            "record_count",
+            "decided_at",
+            "decided_by"
+          ],
+          "frozen": true
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G40",
+      "name": "review_history_is_append_only",
+      "observations": {
+        "finding_ids": [
+          "FND-000007",
+          "FND-000008"
+        ],
+        "removers": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G41",
+      "name": "case_version_optimistic_concurrency_enforced",
+      "observations": {
+        "close_refusal": "AUD_STALE_REVIEW_VERSION",
+        "dispose_refusal": "AUD_STALE_REVIEW_VERSION"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G42",
+      "name": "disposition_required_before_attestation",
+      "observations": {
+        "refusal": "AUD_DISPOSITION_REQUIRED"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G43",
+      "name": "attestation_required_before_closure",
+      "observations": {
+        "refusal": "AUD_ATTESTATION_WITHOUT_AUTHORITY"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G44",
+      "name": "commit_time_reauthorization_on_every_governed_act",
+      "observations": {
+        "no_ticket_refusal": "AUD_NOT_FOUND",
+        "reauthorize_call_sites": 4,
+        "ticket": {
+          "authority_grant_id": "ag-rev",
+          "authority_version": 1,
+          "case_version": 1,
+          "evidence_digests": 2,
+          "expires_at": "2026-09-03T12:10:03+00:00",
+          "mandate_id": "MND-auditor"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G45",
+      "name": "stale_authority_rejected_at_commit_time",
+      "observations": {
+        "grant_withdrawn": "AUD_AUTHORITY_UNRESOLVABLE",
+        "mandate_superseded": "AUD_MANDATE_SUPERSEDED",
+        "session_revoked": "AUD_SESSION_REVOKED",
+        "ticket_expired": "AUD_STALE_AUTHORITY"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G46",
+      "name": "evidence_divergence_rejected_at_commit_time",
+      "observations": {
+        "refusal": "AUD_EVIDENCE_DIVERGED_SINCE_REVIEW"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G47",
+      "name": "ticket_replay_rejected",
+      "observations": {
+        "other_actor": "AUD_PARAMETER_INVALID",
+        "replay": "AUD_REPLAYED_REQUEST"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G48",
+      "name": "idempotency_enforced_on_every_mutation",
+      "observations": {
+        "case_ids_equal": true,
+        "cases": 1,
+        "export_ids_equal": true,
+        "finding_ids_equal": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G49",
+      "name": "purpose_bound_export_with_evidenced_redaction",
+      "observations": {
+        "out_of_case": "AUD_EXPORT_FIELD_OUT_OF_PURPOSE",
+        "purposes": {
+          "EXTERNAL_AUDITOR": {
+            "decision_recorded": true,
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "correlation_ref",
+              "domain",
+              "object_ref",
+              "reason_code",
+              "redacted_fields"
+            ],
+            "fields_outside_purpose": [],
+            "payload_digest": "a8332a7c75282d26"
+          },
+          "GOVERNANCE_REPORT": {
+            "decision_recorded": true,
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "domain",
+              "redacted_fields"
+            ],
+            "fields_outside_purpose": [],
+            "payload_digest": "eb9456678a31565a"
+          },
+          "INTERNAL_REVIEW": {
+            "decision_recorded": true,
+            "dropped": [
+              "attributes",
+              "domain",
+              "redacted_fields"
+            ],
+            "fields_outside_purpose": [],
+            "payload_digest": "338087ab0aeeee06"
+          },
+          "STATISTICAL": {
+            "decision_recorded": true,
+            "dropped": [
+              "actor_ref",
+              "approval_refs",
+              "attributes",
+              "authority_ref",
+              "correlation_ref",
+              "domain",
+              "integrity",
+              "object_ref",
+              "reason_code",
+              "redacted_fields",
+              "reference"
+            ],
+            "fields_outside_purpose": [],
+            "payload_digest": "bd7d08240b073cea"
+          }
+        },
+        "unknown_purpose": "AUD_EXPORT_PURPOSE_UNKNOWN"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G50",
+      "name": "every_refusal_is_evidence_bearing",
+      "observations": {
+        "observed": {
+          "attest_without_right": {
+            "journal_growth": 3,
+            "refusal": "AUD_RIGHT_ABSENT"
+          },
+          "no_mandate_search": {
+            "journal_growth": 1,
+            "refusal": "AUD_NO_OVERSIGHT_MANDATE"
+          },
+          "review_without_right": {
+            "journal_growth": 2,
+            "refusal": "AUD_RIGHT_ABSENT"
+          },
+          "universal_search": {
+            "journal_growth": 1,
+            "refusal": "AUD_UNIVERSAL_AUDITOR_FORBIDDEN"
+          }
+        },
+        "refused_records": 4
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G51",
+      "name": "oversight_evidence_survives_restart_and_reverifies",
+      "observations": {
+        "case_identical": true,
+        "journal_head": "d7cf9bc0c618a36b099118bd442615acbadb27bd377823b2f75489d87f4d16da",
+        "journal_records": 6,
+        "store_file_used": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G52",
+      "name": "rewritten_or_resealed_checkpoint_refused",
+      "observations": {
+        "dropped_record": "AuthorizationRefused",
+        "forged_attestation": "AuthorizationRefused",
+        "forged_case_table": "AuthorizationRefused",
+        "naive_edit": "AuthorizationRefused",
+        "other_key": "AuthorizationRefused",
+        "rechained": "AuthorizationRefused",
+        "untouched_loads": true
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G53",
+      "name": "frontend_asserts_neither_authority_nor_integrity",
+      "observations": {
+        "all_ingestions_escaped": true,
+        "all_refused": true,
+        "forbidden_client_fields": 32,
+        "hostile_title_served_as_data": true,
+        "json_ingestions": [
+          2,
+          2
+        ],
+        "ui_claims": []
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G54",
+      "name": "mutation_and_e2e_evidence_bound_to_runtime_digest",
+      "observations": {
+        "browser_journeys_result.json": {
+          "digest_matches": true,
+          "present": true
+        },
+        "e2e_journeys_result.json": {
+          "digest_matches": true,
+          "present": true
+        },
+        "mutation_result.json": {
+          "digest_matches": true,
+          "present": true
+        },
+        "runtime_source_digest": "4e07679a2a36c7857552700e99c34d5c8add1ca395dcd3f19b5e9ba98794f3db"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G55",
+      "name": "browser_journeys_executed_in_a_real_browser",
+      "observations": {
+        "browser": "chromium (playwright)",
+        "journeys": [
+          5,
+          5
+        ],
+        "screenshots": [
+          "B01_evidence.png",
+          "B02_no_mandate.png",
+          "B03_two_phase.png",
+          "B04_export_and_forgery.png",
+          "B05_no_operations.png"
+        ],
+        "status": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G56",
+      "name": "package_pre_post_verification_and_review_readiness",
+      "observations": {
+        "checks": {
+          "freeze_stable": true,
+          "mypy": true,
+          "ruff": true,
+          "ruff_format": true,
+          "tests": true
+        },
+        "drift": [],
+        "files_frozen": 25,
+        "tests_summary": "597 passed in 4.13s"
+      },
+      "status": "PASS"
+    }
+  ],
+  "schema": "epd2.ctrl05.gate-results/1"
+}
