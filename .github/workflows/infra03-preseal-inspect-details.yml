@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect G41 implementation and API06 schema
+      - name: Inspect final packaging contract
         shell: bash
         run: |
           set -euo pipefail
@@ -26,12 +26,7 @@ jobs:
           zipfile.ZipFile(p).extractall('_infra03')
           PY
           ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
-          echo '===== G41 AREA ====='
-          sed -n '430,515p' "$ROOT/scripts/infra03/gates.py"
-          echo '===== G41 CALL AREA ====='
-          sed -n '250,370p' "$ROOT/scripts/infra03/gates.py"
-          echo '===== CURRENT API06 RECORD ====='
-          git fetch --no-tags origin main
-          git show origin/main:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json
-          echo '===== INFRA02 ACCEPTANCE RECORD ====='
-          git show origin/main:docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json | head -220
+          echo '===== PRESEAL FULL ====='
+          sed -n '1,280p' "$ROOT/scripts/infra03/preseal.py"
+          echo '===== G39 G40 REFERENCES ====='
+          grep -RIn -E 'G39|G40|archive hygiene|same-bytes|package_identity' "$ROOT/scripts/infra03" "$ROOT/tests/repository/test_infra03_units.py" | head -240 || true
