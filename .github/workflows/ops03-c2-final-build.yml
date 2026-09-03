@@ -73,7 +73,7 @@ jobs:
           path = Path("scripts/ops03_c2_ci.sh")
           text = path.read_text(encoding="utf-8")
           needle = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\npython3 - \"$ROOT\" <<'PY'\n"
-          replacement = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\nuvx --from ruff==0.15.22 ruff format \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\"\npython3 - \"$ROOT\" <<'PY'\n"
+          replacement = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\npython3 \"$REPO_ROOT/scripts/ops03_c2_normalize_generated.py\" \"$ROOT\"\nuvx --from ruff==0.15.22 ruff format \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\" \"$ROOT/scripts/validation/validate_ops03.py\"\npython3 - \"$ROOT\" <<'PY'\n"
           if needle not in text:
               raise SystemExit("OPS03 C2 formatter insertion point not found")
           path.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
