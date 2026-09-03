@@ -1,0 +1,93 @@
+name: INFRA-03 C1 finalize
+on:
+  push:
+    branches: [tmp/infra03-c1-finalize]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0, persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: api06-c1-candidate-v3
+          path: incoming/api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+      - name: Prepare exact source and inputs
+        id: src
+        shell: bash
+        run: |
+          set -euo pipefail
+          PRE='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          I2='handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip'
+          A6=$(find incoming/api06 -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          echo '30033863c854b34532b42a216bb275c691e57413053724f393b183ad814685fe  '"$PRE" | sha256sum -c -
+          echo 'd91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c  '"$I2" | sha256sum -c -
+          echo '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c  '"$A6" | sha256sum -c -
+          rm -rf "$RUNNER_TEMP/src"; mkdir -p "$RUNNER_TEMP/src"; unzip -q "$PRE" -d "$RUNNER_TEMP/src"
+          ROOT="$RUNNER_TEMP/src/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL"
+          python3 handoff/INFRA-03/C1/infra03_c1_patch.py "$ROOT"
+          rm -f "$ROOT/SHA256SUMS.txt" "$ROOT/ACCEPTANCE/FREEZE-INVENTORY.json"
+          git fetch -q origin main
+          for p in docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json; do
+            mkdir -p "$ROOT/$(dirname "$p")"; git show "origin/main:$p" > "$ROOT/$p"
+          done
+          cd "$ROOT"; rm -rf .git; git init -q; git config user.email epd2-builder@users.noreply.github.com; git config user.name epd2-builder; git add -A; git commit -qm 'INFRA-03 C1 corrected source'; git remote add origin https://github.com/nepogoda1970-epd2/epd2-civic-os.git; git fetch -q --depth=1 origin main
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"; echo "i2=$GITHUB_WORKSPACE/$I2" >> "$GITHUB_OUTPUT"; echo "a6=$GITHUB_WORKSPACE/$A6" >> "$GITHUB_OUTPUT"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: '0.12.5', enable-cache: false}
+      - name: Install locked environment
+        working-directory: ${{ steps.src.outputs.root }}
+        run: |
+          uv lock --check
+          uv sync --frozen --all-groups
+      - name: Targeted INFRA-03 tests
+        working-directory: ${{ steps.src.outputs.root }}
+        run: .venv/bin/python -m pytest -q tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py
+      - name: INFRA-03 40-gate runtime
+        working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          .venv/bin/python -m scripts.infra03.gates --root "$PWD" --artifact '${{ steps.src.outputs.i2 }}' --api06-artifact '${{ steps.src.outputs.a6 }}' | tee /tmp/infra03-gates.log
+          grep -F "INFRA03 gates: {'PASS': 40, 'FAIL': 0, 'BLOCKED': 0} verdict=PASS" /tmp/infra03-gates.log
+          jq -e '.verdict=="PASS" and .counts.PASS==40 and .counts.FAIL==0 and .counts.BLOCKED==0 and .final_seal_blockers==[]' validation/infra03/infra03_preseal_result.json
+          git add validation/infra03; git commit -qm 'INFRA-03 C1 runtime evidence'
+      - name: Full canonical harness
+        id: canon
+        working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --frozen python -m scripts.acceptance run --root "$PWD" --output "$RUNNER_TEMP/canonical" | tee /tmp/infra03-canonical.log
+          grep -F 'INFRA01_ACCEPTANCE_RESULT:PASS:' /tmp/infra03-canonical.log
+          RUN=$(find "$RUNNER_TEMP/canonical" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -print -quit); test -n "$RUN"
+          ZIP="$RUN/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip"; test -f "$ZIP"
+          sha256sum "$ZIP"; stat -c '%s' "$ZIP"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "run=$RUN" >> "$GITHUB_OUTPUT"
+      - name: Upload C1 candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra03-c1-candidate-${{ github.run_id }}
+          path: ${{ steps.canon.outputs.zip }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+      - name: Upload evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra03-c1-evidence-${{ github.run_id }}
+          path: |
+            ${{ steps.src.outputs.root }}/validation/infra03/
+            /tmp/infra03-gates.log
+            /tmp/infra03-canonical.log
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Builder result
+        run: echo INFRA03_C1_BUILDER_RESULT:PASS
