@@ -1,0 +1,173 @@
+name: FRONT-05 C1 Canonical Acceptance
+
+on:
+  push:
+    branches: [handoff/front]
+    paths:
+      - 'handoff/FRONT/incoming/EPD2_FRONT05_WS04_REPRESENTATIVE_WORKSPACE_CANDIDATE_0.1_C1.zip'
+      - '.github/workflows/front05-c1-canonical.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-accept:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CANDIDATE: handoff/FRONT/incoming/EPD2_FRONT05_WS04_REPRESENTATIVE_WORKSPACE_CANDIDATE_0.1_C1.zip
+      EXPECTED_SHA256: ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a
+      EXPECTED_SIZE: '27161590'
+      EXPECTED_SOURCE_TREE: f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1
+      EXPECTED_TEST_SOURCE: 39a0d73e4cb3629532d5fb5e9309ac6636b974b5f10d5e0ede8c29238fa3a920
+      EXPECTED_CONFIG: 4851300fa932dd696a0a997eace985d2c6fb6900a7233316504418aa6be4deda
+      EXPECTED_VALIDATOR: c5577c5e9cb0346ea86ae0b48a5b7cd6aa778c4dd8e1ed1a74e22c76f04761e5
+      EXPECTED_CONTRACT: dd76d17772275ac4389a659181f6286dcd7d97a65cf6a1e539e4463e935d26bd
+      EXPECTED_LOCK: 2a1d4cbd8bb86b117bcb547523fbf920b2bbb218d887aef4847ef2762687f6a7
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Exact-byte identity and archive hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$CANDIDATE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$EXPECTED_SHA256"
+          test "$(stat -c '%s' "$CANDIDATE")" = "$EXPECTED_SIZE"
+          rm -rf /tmp/front05-c1
+          mkdir -p /tmp/front05-c1
+          python3 - <<'PY'
+          import os, stat
+          from pathlib import PurePosixPath
+          from zipfile import ZipFile
+          z=os.environ['CANDIDATE']
+          with ZipFile(z) as f:
+              names=f.namelist()
+              assert names and len(names)==len(set(names))
+              for i in f.infolist():
+                  p=PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts
+                  assert not stat.S_ISLNK((i.external_attr >> 16) & 0xffff)
+                  low=('/'+i.filename.lower())
+                  assert '/node_modules/' not in low
+                  assert '/.next/' not in low
+                  assert '__pycache__' not in low
+                  assert not low.endswith(('.pyc','.pyo'))
+              f.extractall('/tmp/front05-c1')
+          print('FRONT05_ARCHIVE_HYGIENE=PASS')
+          PY
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Provision locked browser toolchain
+        shell: bash
+        working-directory: /tmp/front05-c1
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          rm -rf node_modules
+
+      - name: Independent full re-execution
+        shell: bash
+        working-directory: /tmp/front05-c1
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          python3 scripts/run_front05_verification.py --root .
+          rm -rf node_modules frontend/representative-workspace/node_modules frontend/representative-workspace/.next frontend/representative-workspace/test-results frontend/representative-workspace/playwright-report
+          find . -type d -name '__pycache__' -prune -exec rm -rf {} +
+          find . -type f -name '*.py[co]' -delete
+          python3 scripts/build_front05_report.py .
+          python3 scripts/validate_front05.py . --output validation/front05/authoritative_preseal_result.json | tee /tmp/front05-validator-before-mutations.log
+          python3 scripts/run_front05_mutations.py --root . --output validation/front05/mutation_report.json | tee /tmp/front05-mutations.log
+          python3 scripts/build_front05_report.py .
+          find . -type d -name '__pycache__' -prune -exec rm -rf {} +
+          python3 scripts/validate_front05.py . --output validation/front05/authoritative_preseal_result.json | tee /tmp/front05-validator-final.log
+
+      - name: Bind authoritative result
+        shell: bash
+        working-directory: /tmp/front05-c1
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          r=json.loads(Path('validation/front05/authoritative_preseal_result.json').read_text())
+          m=json.loads(Path('validation/front05/mutation_report.json').read_text())
+          b=r['binding']
+          assert r['status']=='PASS' and r['gates_passed']==46 and r['gates_total']==46, r
+          assert m['status']=='PASS' and m['detected']==44 and m['count']==44, m
+          expected={
+            'source_tree_digest':os.environ['EXPECTED_SOURCE_TREE'],
+            'test_source_digest':os.environ['EXPECTED_TEST_SOURCE'],
+            'configuration_digest':os.environ['EXPECTED_CONFIG'],
+            'validator_source_digest':os.environ['EXPECTED_VALIDATOR'],
+            'package_lock_sha256':os.environ['EXPECTED_LOCK'],
+          }
+          for k,v in expected.items():
+              assert b[k]==v,(k,b[k],v)
+          assert r['stage_contract']['contract_digest']==os.environ['EXPECTED_CONTRACT']
+          out={
+            'schema':'epd2.front05.c1-authoritative-result/1',
+            'stage':'FRONT-05 — WS-04 Representative Workspace',
+            'decision_basis':'independent exact-byte GitHub Actions re-execution',
+            'candidate':{'filename':Path(os.environ['CANDIDATE']).name,
+                         'sha256':os.environ['EXPECTED_SHA256'],
+                         'size_bytes':int(os.environ['EXPECTED_SIZE'])},
+            'workflow':{'run_id':int(os.environ['GITHUB_RUN_ID']),
+                        'run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+                        'head_sha':os.environ['GITHUB_SHA']},
+            'validator':{'passed':46,'total':46,'status':'PASS'},
+            'mutations':{'detected':44,'total':44,'status':'PASS'},
+            'archive_hygiene':'PASS',
+            'binding':b,
+            'contract_digest':os.environ['EXPECTED_CONTRACT'],
+            'result':'PASS',
+            'terminal_marker':f"FRONT05_C1_AUTHORITATIVE_RESULT:PASS:{os.environ['EXPECTED_SHA256']}:{os.environ['EXPECTED_SIZE']}",
+            'self_acceptance':False
+          }
+          Path('validation/front05/FRONT05_C1_AUTHORITATIVE_RESULT.json').write_text(json.dumps(out,indent=2,ensure_ascii=False)+'\n')
+          print(out['terminal_marker'])
+          PY
+
+      - name: Reject stale evidence and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a /tmp/front05-c1 /tmp/front05-stale
+          printf '\nexport const injectedStaleMutation = true;\n' >> /tmp/front05-stale/frontend/representative-workspace/policies/authority.ts
+          set +e
+          (cd /tmp/front05-stale && python3 scripts/validate_front05.py . >/tmp/front05-stale.log 2>&1)
+          rc=$?
+          set -e
+          test "$rc" -ne 0
+          echo 'FRONT05_STALE_SOURCE_REJECTION=PASS'
+
+      - name: Upload authoritative evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: front05-c1-canonical-evidence-${{ github.run_id }}
+          path: |
+            /tmp/front05-c1/validation/front05/
+            /tmp/front05-c1/FRONT05_C1_DEVELOPER_REPORT.md
+            /tmp/front05-validator-final.log
+            /tmp/front05-mutations.log
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload exact reviewed candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: front05-c1-exact-reviewed-candidate-${{ github.run_id }}
+          path: ${{ env.CANDIDATE }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Terminal authoritative marker
+        run: echo "FRONT05_C1_AUTHORITATIVE_RESULT:PASS:$EXPECTED_SHA256:$EXPECTED_SIZE"
