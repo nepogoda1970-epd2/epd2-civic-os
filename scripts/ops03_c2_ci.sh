@@ -39,6 +39,19 @@ python3 scripts/ops03_c2_reconcile.py \
   --template handoff/OPS-03/templates/C2/ops03-accept.yml | tee "$RUNNER_TEMP/ops03-c2-reconcile.log"
 grep -q '^OPS03_C2_RECONCILE:PASS:' "$RUNNER_TEMP/ops03-c2-reconcile.log"
 
+# C1 was intentionally blocked at G05 while API-06 was NEXT. C2 must re-bootstrap
+# that gate against the exact independently accepted API-06 candidate, then reseal.
+python3 scripts/ops03_c2_patch_api06.py "$ROOT" | tee "$RUNNER_TEMP/ops03-c2-api06-patch.log"
+grep -q '^OPS03_C2_API06_PATCH:PASS:' "$RUNNER_TEMP/ops03-c2-api06-patch.log"
+python3 - "$ROOT" <<'PY'
+import pathlib, sys
+from scripts.ops03_c2_reconcile import build_freeze, write_sha256sums
+root = pathlib.Path(sys.argv[1])
+freeze = build_freeze(root)
+write_sha256sums(root)
+print(f"OPS03_C2_RESEAL:PASS:{freeze['file_count']}:{freeze['tree_digest']}")
+PY
+
 jq -e --arg m "$MAIN" --arg t "$TREE" '.candidate_role=="C2" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .self_accepted==false and (.declared_blockers|length)==0 and .api_layer_state=="CLOSED" and .entering_main_commit==$m and .entering_main_tree==$t' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
 jq -e --arg m "$MAIN" --arg t "$TREE" '.base_commit==$m and .base_tree==$t and .accepted_api06_candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .api_layer_state=="CLOSED"' "$ROOT/docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json"
 
@@ -116,7 +129,7 @@ test "$(git rev-parse origin/main)" = "$MAIN"
 test "$(git rev-parse origin/main^{tree})" = "$TREE"
 
 EVID="$RUNNER_TEMP/ops03-c2-build-evidence"
-cp "$RUNNER_TEMP/ops03-c2-reconcile.log" "$RUNNER_TEMP/ops03-c2-validator.log" "$EVID/"
+cp "$RUNNER_TEMP/ops03-c2-reconcile.log" "$RUNNER_TEMP/ops03-c2-api06-patch.log" "$RUNNER_TEMP/ops03-c2-validator.log" "$EVID/"
 cp -a "$RUNNER_TEMP/ops03-c2-evidence/." "$EVID/"
 python3 - "$EVID/builder_result.json" "$CAND_SHA" "$CAND_SIZE" "$WF_SHA" "$MAIN" "$TREE" <<'PY'
 import json,os,sys
