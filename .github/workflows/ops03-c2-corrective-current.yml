@@ -84,27 +84,17 @@ jobs:
           version: "0.6.14"
           enable-cache: false
 
-      - name: Inject surgical C2 correction before freeze
+      - name: Verify surgical C2 hardening control is pre-freeze
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
-          path = Path("scripts/ops03_c2_ci.sh")
-          text = path.read_text(encoding="utf-8")
-          needle = 'python3 "$REPO_ROOT/scripts/ops03_c2_normalize_generated.py" "$ROOT"\n'
-          replacement = needle + """python3 \"$REPO_ROOT/scripts/ops03_c2_harden_g05.py\" \"$ROOT\" \"$MAIN\" \"$TREE\"
-          uvx --from ruff==0.15.22 ruff format \\
-            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\" \\
-            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding_c2.py\" \\
-            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/preview_minimum.py\" \\
-            \"$ROOT/scripts/validation/validate_ops03.py\" \\
-            \"$ROOT/tests/ops03/test_ops03_c2_api06_binding.py\"
-          """
-          if text.count(needle) != 1:
-              raise SystemExit(f"OPS03 C2 normalizer insertion point count={text.count(needle)}")
-          path.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
+          text = Path("scripts/ops03_c2_ci.sh").read_text(encoding="utf-8")
+          harden = 'python3 scripts/ops03_c2_harden_g05.py "$ROOT" "$MAIN" "$TREE"'
+          freeze = 'from scripts.ops03_c2_reconcile import build_freeze, write_sha256sums'
+          if harden not in text or freeze not in text or text.index(harden) > text.index(freeze):
+              raise SystemExit("C2 G05 hardening is not bound before freeze")
           print("OPS03_C2_SURGICAL_CORRECTION_CONTROL:PASS")
           PY
 
