@@ -31,31 +31,56 @@ jobs:
           actual_size="$(stat -c '%s' "$candidate")"
           test "$actual_sha" = "$expected_sha"
           test "$actual_size" = "$expected_size"
+          rm -rf extracted evidence
           mkdir -p extracted evidence
           unzip -q "$candidate" -d extracted
           root="$(find extracted -mindepth 1 -maxdepth 1 -type d | head -n 1)"
           test -n "$root"
-          files=(
-            'CTRL05_ACCEPTANCE_RESULT.json'
-            'docs/handover/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_REPORT.md'
-            'contracts/control/ctrl05_oversight_console.json'
-            'tests/controller/test_ctrl05_audit_oversight.py'
-            'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md'
-            'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'
-            'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'
-            'pyproject.toml'
-            'uv.lock'
-            'package.json'
-            'package-lock.json'
-          )
-          for rel in "${files[@]}"; do
-            if [[ -f "$root/$rel" ]]; then
-              mkdir -p "evidence/$(dirname "$rel")"
-              cp "$root/$rel" "evidence/$rel"
-            fi
+
+          copy_one() {
+            local rel="$1"
+            test -f "$root/$rel"
+            mkdir -p "evidence/$(dirname "$rel")"
+            cp "$root/$rel" "evidence/$rel"
+          }
+
+          copy_tree() {
+            local rel="$1"
+            test -d "$root/$rel"
+            mkdir -p "evidence/$(dirname "$rel")"
+            cp -R "$root/$rel" "evidence/$rel"
+          }
+
+          copy_tree 'docs/ctrl/CTRL-05'
+          copy_one 'contracts/control/ctrl05_oversight_console.json'
+          copy_one 'scripts/build_ctrl05_candidate.py'
+          copy_one 'scripts/ctrl05_browser_journeys.py'
+          copy_one 'scripts/ctrl05_common.py'
+          copy_one 'scripts/ctrl05_e2e_journeys.py'
+          copy_one 'scripts/ctrl05_mutation_suite.py'
+          copy_one 'scripts/ctrl05_validator.py'
+          copy_one 'scripts/verify_ctrl05_package.py'
+          copy_one 'services/control-plane-service/src/epd2_control_plane_service/oversight_api.py'
+          copy_one 'services/control-plane-service/src/epd2_control_plane_service/oversight_console.py'
+          copy_one 'services/control-plane-service/src/epd2_control_plane_service/oversight_sources.py'
+          copy_one 'services/control-plane-service/src/epd2_control_plane_service/oversight_console.html'
+          copy_one 'services/control-plane-service/tests/_ctrl05_builders.py'
+          for p in "$root"/services/control-plane-service/tests/test_ctrl05_*.py; do
+            test -f "$p"
+            rel="${p#"$root/"}"
+            copy_one "$rel"
           done
-          find "$root/.github/workflows" -maxdepth 1 -type f -print | LC_ALL=C sort > evidence/workflow-list.txt || true
-          find "$root" -maxdepth 3 -type f \( -iname '*ctrl05*' -o -iname '*ctrl-05*' \) -print | sed "s#^$root/##" | LC_ALL=C sort > evidence/ctrl05-files.txt
+          copy_one 'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md'
+          copy_one 'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'
+          copy_one 'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'
+          copy_one 'SHA256SUMS.txt'
+          copy_one 'pyproject.toml'
+          copy_one 'uv.lock'
+          copy_one 'package.json'
+          copy_one 'package-lock.json'
+
+          find "$root/.github/workflows" -maxdepth 1 -type f -print | sed "s#^$root/##" | LC_ALL=C sort > evidence/workflow-list.txt || true
+          find "$root" -type f \( -iname '*ctrl05*' -o -iname '*ctrl-05*' \) -print | sed "s#^$root/##" | LC_ALL=C sort > evidence/ctrl05-files.txt
           {
             echo "candidate_sha256=$actual_sha"
             echo "candidate_size=$actual_size"
