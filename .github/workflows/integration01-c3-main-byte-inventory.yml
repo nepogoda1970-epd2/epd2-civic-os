@@ -1,0 +1,53 @@
+name: INTEGRATION-01 C3 byte inventory
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    if: startsWith(github.head_ref, 'tmp/integration01-c3-authoritative-')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: mainrepo
+      - name: Compare C3 changed bytes with main
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > c3-main-byte-inventory.txt
+          matches=0
+          misses=0
+          while IFS='  ' read -r expected path; do
+            [ -n "$expected" ] || continue
+            file="mainrepo/$path"
+            if [ -f "$file" ]; then
+              got=$(sha256sum "$file" | awk '{print $1}')
+              if [ "$got" = "$expected" ]; then
+                echo "MATCH $path" | tee -a c3-main-byte-inventory.txt
+                matches=$((matches+1))
+              else
+                echo "MISS  $path expected=$expected got=$got" | tee -a c3-main-byte-inventory.txt
+                misses=$((misses+1))
+              fi
+            else
+              echo "MISS  $path expected=$expected got=ABSENT" | tee -a c3-main-byte-inventory.txt
+              misses=$((misses+1))
+            fi
+          done < verification/integration01-c3/c3_changed_sha256.txt
+          echo "C3_MAIN_MATCHES=$matches C3_MAIN_MISSES=$misses" | tee -a c3-main-byte-inventory.txt
+          test $((matches+misses)) -eq 45
+      - name: Upload inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration01-c3-main-byte-inventory
+          path: c3-main-byte-inventory.txt
+          retention-days: 7
