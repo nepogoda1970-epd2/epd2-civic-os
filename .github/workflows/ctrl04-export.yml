@@ -1,0 +1,34 @@
+name: CTRL-04 exact candidate export
+
+on:
+  push:
+    branches: [handoff/ctrl]
+    paths:
+      - .github/workflows/ctrl04-export.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact incoming archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          p='handoff/CTRL/incoming/EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip'
+          test -f "$p"
+          sha256sum "$p"
+          stat -c 'CTRL04_SIZE:%s' "$p"
+          unzip -t "$p" >/tmp/ctrl04_unzip_test.txt
+          tail -1 /tmp/ctrl04_unzip_test.txt
+          echo 'CTRL04_EXPORT_INPUT:PASS'
+      - name: Upload exact candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl04-exact-candidate-${{ github.run_id }}
+          path: handoff/CTRL/incoming/EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip
+          if-no-files-found: error
+          compression-level: 0
