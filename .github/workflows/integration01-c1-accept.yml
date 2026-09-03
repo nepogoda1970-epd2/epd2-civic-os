@@ -1,0 +1,197 @@
+name: INTEGRATION-01 C1 authoritative acceptance
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  accept:
+    if: startsWith(github.head_ref, 'tmp/integration01-c1-authoritative-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      INT_EXPECTED_SHA: a7b136993c2ded2e0427286d93b9ab386b79f2ac8e3c0252eba47c5451e749cc
+      INT_TRANSPORT_SHA: 56fda67239150a6c97aff639b696c07b72f1b6c5e34c0b3e5a5729ae41c1eadc
+      OLD_CONS_SHA: f8cc21c1701593c57ae9c069a7d61b57dd53ae7c60cf2b697062b67dcfd2981d
+      OLD_TRANSPORT_SHA: 523fd846c77b98716afd223ca965c1ad9450e3973cf23c5322ca4b82192ef01a
+      C9_SHA: 7fc4f3a5a982d11535006fcea8201ffb694546a01f5326eaed09fcf4ffc78664
+      DATA04_SHA: e5502772cbb4abe961ca46059fa02a9610dd243e86c31ece7b7e5148aeb5c3d3
+      PB01_SHA: 442b83d9639a7398b3da767beb95976d379190229610d9b5ccb550d53d277d25
+      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA02_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA03_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA03_BOOTSTRAP_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA03_UPGRADE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_upgrade
+      DATA04_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA04_BOOTSTRAP_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_bootstrap
+      DATA04_UPGRADE_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/epd2_int_upgrade
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+          enable-cache: true
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-16
+      - name: Download exact accepted PILOT-04 C9 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pilot04-c9-exact-accepted-candidate
+          path: sources/c9
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '32601698352'
+      - name: Download frozen PB01 exact artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pb01-i10-c6-exact-candidate
+          path: sources/pb01
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '32388797195'
+      - name: Decode exact INTEGRATION transport
+        run: |
+          cat verification/integration01/transport.b64.part* | base64 -d > "$RUNNER_TEMP/integration01_transport.tar.xz"
+          echo "$INT_TRANSPORT_SHA  $RUNNER_TEMP/integration01_transport.tar.xz" | sha256sum -c -
+      - name: Reconstruct exact predecessor consolidation
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/tmp/consolidation-c1-authoritative-20260823/verification/consolidation-c1/transport.part00" -o "$RUNNER_TEMP/old_transport.tar.xz"
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/tmp/consolidation-c1-authoritative-20260823/verification/consolidation-c1/reconstruct.py" -o "$RUNNER_TEMP/old_reconstruct.py"
+          echo "$OLD_TRANSPORT_SHA  $RUNNER_TEMP/old_transport.tar.xz" | sha256sum -c -
+          C9=$(find sources/c9 -type f -name '*.zip' -print -quit)
+          PB=$(find sources/pb01 -type f -name '*.zip' -print -quit)
+          echo "$C9_SHA  $C9" | sha256sum -c -
+          echo "$PB01_SHA  $PB" | sha256sum -c -
+          python "$RUNNER_TEMP/old_reconstruct.py" --c9 "$C9" --pb01 "$PB" --bundle "$RUNNER_TEMP/old_transport.tar.xz" --work "$RUNNER_TEMP/oldcons-work" --out "$RUNNER_TEMP/OLD_CONSOLIDATION.zip"
+          echo "$OLD_CONS_SHA  $RUNNER_TEMP/OLD_CONSOLIDATION.zip" | sha256sum -c -
+          echo "PB_ZIP=$PB" >> "$GITHUB_ENV"
+      - name: Reconstruct exact INTEGRATION-01 C1 candidate
+        run: |
+          python verification/integration01/reconstruct.py --old-candidate "$RUNNER_TEMP/OLD_CONSOLIDATION.zip" --bundle "$RUNNER_TEMP/integration01_transport.tar.xz" --work "$RUNNER_TEMP/int-work" --out "$RUNNER_TEMP/INTEGRATION01_C1.zip"
+          echo "$INT_EXPECTED_SHA  $RUNNER_TEMP/INTEGRATION01_C1.zip" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/int-extract"
+          unzip -q "$RUNNER_TEMP/INTEGRATION01_C1.zip" -d "$RUNNER_TEMP/int-extract"
+          ROOT=$(find "$RUNNER_TEMP/int-extract" -mindepth 1 -maxdepth 1 -type d -print -quit)
+          echo "INT_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "INT_ZIP=$RUNNER_TEMP/INTEGRATION01_C1.zip" >> "$GITHUB_ENV"
+          echo "REPO=$ROOT/repo" >> "$GITHUB_ENV"
+          echo "DATA01_PB01_ZIP=$PB_ZIP" >> "$GITHUB_ENV"
+          echo "DATA04_PB01_ZIP=$PB_ZIP" >> "$GITHUB_ENV"
+      - name: Static package integrity
+        run: python "$INT_ROOT/governance/validate_integration.py"
+      - name: Canonical environment
+        run: |
+          python --version | grep -Fx 'Python 3.12.12'
+          node --version | grep -Fx 'v22.16.0'
+          npm --version | tail -1 | grep -Fx '10.9.2'
+          uv --version | grep -F 'uv 0.12.5'
+          psql -h 127.0.0.1 -U postgres -d postgres -Atqc 'SHOW server_version_num' | grep -Fx '160015'
+          createdb -h 127.0.0.1 -U postgres epd2_int_bootstrap
+          createdb -h 127.0.0.1 -U postgres epd2_int_upgrade
+      - name: Frozen dependency install
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv sync --frozen --all-groups --all-extras
+          npm ci --no-audit --no-fund
+      - name: Ruff lint
+        working-directory: ${{ env.REPO }}
+        run: uv run ruff check .
+      - name: Ruff format
+        working-directory: ${{ env.REPO }}
+        run: uv run ruff format --check .
+      - name: Typecheck
+        working-directory: ${{ env.REPO }}
+        run: make typecheck
+      - name: DATA-04 live source and PostgreSQL convergence
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run python - <<'PY'
+          from scripts import data04_validate as d
+          print(d.tool_versions())
+          print(d.check_source())
+          print(d.live_bootstrap_upgrade())
+          PY
+          uv run pytest -q tests/data04/test_data04_contract.py tests/data04/test_data04_postgresql.py
+      - name: DATA-03 regression
+        working-directory: ${{ env.REPO }}
+        run: uv run pytest -q tests/data03 tests/data02 tests/data01
+      - name: PILOT-04 mandatory security properties A-F
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run pytest -q tests/pilot04c3/test_witness_custody.py tests/pilot04c2/test_decryption_authority.py
+          uv run pytest -q tests/pilot04c2/test_guardian_credential_isolation.py
+          uv run pytest -q tests/pilot04c2/test_verification_authority_independence.py
+          uv run pytest -q tests/pilot04c2/test_network_correlation.py tests/pilot04c2/test_submission_mix.py
+          uv run pytest -q tests/pilot04c3/test_operation_binding.py tests/pilot04c3/test_parity.py
+      - name: Full repository regression
+        working-directory: ${{ env.REPO }}
+        run: uv run pytest -q
+      - name: Install Playwright Chromium
+        working-directory: ${{ env.REPO }}
+        run: npx playwright install --with-deps chromium
+      - name: Browser regression
+        working-directory: ${{ env.REPO }}
+        run: bash scripts/data01_browser_acceptance.sh
+      - name: Frozen PB01 integrity execution
+        working-directory: ${{ env.REPO }}
+        run: |
+          uv run python - <<'PY'
+          import json
+          from scripts import data01_validate as d
+          result=d.run_pb01_integrity()
+          assert result['status']=='PASS' and result['executed'] is True
+          print(json.dumps(result,sort_keys=True))
+          PY
+      - name: Cross-boundary integration assertions
+        working-directory: ${{ env.REPO }}
+        run: uv run pytest -q tests/data04 tests/data03 tests/data02 tests/data01 tests/pilot04c9 tests/pilot04c8
+      - name: Write authoritative evidence
+        if: success()
+        run: |
+          python verification/integration01/write_evidence.py "$INT_ZIP" INTEGRATION01_C1_ACCEPTANCE_EVIDENCE.json
+          python verification/integration01/verify_evidence.py INTEGRATION01_C1_ACCEPTANCE_EVIDENCE.json
+          echo INTEGRATION01_C1_GITHUB_AUTHORITATIVE_PASS
+      - name: Upload authoritative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration01-c1-authoritative-evidence
+          path: INTEGRATION01_C1_ACCEPTANCE_EVIDENCE.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Upload exact accepted candidate
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration01-c1-exact-accepted-candidate
+          path: ${{ env.INT_ZIP }}
+          if-no-files-found: error
+          retention-days: 90
