@@ -1,0 +1,271 @@
+name: CTRL-04 C1 authoritative review
+
+on:
+  push:
+    branches: [tmp/ctrl04-c1-authoritative-review]
+    paths:
+      - .github/workflows/ctrl04-c1-authoritative.yml
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-review:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE_NAME: EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip
+      CANDIDATE_SHA256: 346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2
+      CANDIDATE_SIZE: '18419399'
+      UPLOAD_COMMIT: 704b6ae34b6006cd607a734ce3564b3ff1d14065
+      BASELINE_COMMIT: 8a4d336589f2322984dbf03b1af3b5a575643005
+      BASELINE_TREE: ee38a1a51f70f4c9652dd75eab4d0d1034d7135c
+      CTRL03_SHA256: 89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff
+    steps:
+      - name: Checkout current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: canonical
+          fetch-depth: 0
+
+      - name: Checkout exact upload commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPLOAD_COMMIT }}
+          path: uploaded
+          fetch-depth: 1
+
+      - name: Checkout declared CTRL-04 baseline
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASELINE_COMMIT }}
+          path: replay
+          fetch-depth: 1
+
+      - name: Verify exact candidate bytes before execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test -f "$p"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          unzip -t "$p" >/tmp/ctrl04-unzip.txt
+          tail -1 /tmp/ctrl04-unzip.txt
+          python3 - "$p" "$RUNNER_TEMP/exact" <<'PY'
+          import pathlib, stat, sys, zipfile
+          zpath=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(zpath) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              assert names and len(names)==len(set(names)), 'duplicate entries'
+              roots=set()
+              for i in infos:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts, f'unsafe path {i.filename}'
+                  if p.parts: roots.add(p.parts[0])
+                  mode=(i.external_attr >> 16) & 0xFFFF
+                  assert not stat.S_ISLNK(mode), f'symlink entry {i.filename}'
+              assert len(roots)==1, roots
+              z.extractall(out)
+              print('CTRL04_SAFE_EXTRACT:PASS:'+next(iter(roots)))
+          PY
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          test -f "$root/SHA256SUMS.txt"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl04-sha-pre.txt)
+          test "$(wc -l < "$root/SHA256SUMS.txt")" -ge 1600
+          python3 "$root/scripts/verify_ctrl04_package.py" "$p"
+          echo "CTRL04_EXACT_PACKAGE_PREEXEC:PASS"
+
+      - name: Reconcile candidate baseline against current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C replay rev-parse HEAD)" = "$BASELINE_COMMIT"
+          test "$(git -C replay rev-parse 'HEAD^{tree}')" = "$BASELINE_TREE"
+          current="$(git -C canonical rev-parse HEAD)"
+          echo "CTRL04_CURRENT_MAIN:$current"
+          git -C canonical cat-file -e "$BASELINE_COMMIT^{commit}"
+          git -C canonical diff --name-only "$BASELINE_COMMIT"..HEAD | sort > "$RUNNER_TEMP/main_delta.txt"
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          rsync -a --delete --exclude='.git' "$root/" replay/
+          git -C replay status --porcelain=v1 | sed -E 's/^...//' | sort -u > "$RUNNER_TEMP/candidate_delta.txt"
+          comm -12 "$RUNNER_TEMP/main_delta.txt" "$RUNNER_TEMP/candidate_delta.txt" > "$RUNNER_TEMP/intersection.txt" || true
+          grep -vxF 'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md' "$RUNNER_TEMP/intersection.txt" > "$RUNNER_TEMP/conflicts.txt" || true
+          if test -s "$RUNNER_TEMP/conflicts.txt"; then
+            echo 'CURRENT_MAIN_CONFLICTS:'
+            cat "$RUNNER_TEMP/conflicts.txt"
+            exit 1
+          fi
+          grep -F 'CTRL-03 = ACCEPTED / CLOSED' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL LAYER OPEN' canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          python3 - <<'PY'
+          import json, pathlib
+          rec=json.loads(pathlib.Path('canonical/docs/ctrl/CTRL-03/CTRL03_C1_ACCEPTANCE_RECORD.json').read_text())
+          c=rec.get('candidate', rec)
+          sha=c.get('sha256') or rec.get('candidate_sha256')
+          assert sha == '89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff', sha
+          assert 'ACCEPTED' in str(rec.get('decision','')) or 'CLOSED' in str(rec.get('new_state',''))
+          print('CTRL04_CURRENT_CTRL03_BINDING:PASS')
+          PY
+          cp canonical/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md replay/docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md
+          cp canonical/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md replay/docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          cp canonical/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md replay/docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          echo "CTRL04_FRESHNESS_RECONCILIATION:PASS:$current"
+
+      - name: Set up Python 3.12 and frozen workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          uv --version
+          uv python install 3.12
+          uv sync --all-groups --frozen
+          uv pip install --python .venv/bin/python 'playwright==1.55.0'
+          .venv/bin/python -m playwright install --with-deps chromium
+          .venv/bin/python - <<'PY'
+          import sys, playwright
+          print('CTRL04_PYTHON:'+sys.version.split()[0])
+          print('CTRL04_PLAYWRIGHT_IMPORT:PASS')
+          PY
+
+      - name: Independent mutation replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl04_mutation_suite.py --python .venv/bin/python
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl04/mutation_result.json'))
+          assert x['executed']==48 and x['detected']==48 and not x['undetected'], x
+          print('CTRL04_MUTATIONS:PASS:48/48')
+          PY
+
+      - name: Independent E2E replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl04_e2e_journeys.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl04/e2e_journeys_result.json'))
+          assert x['journeys_passed']==20 and x['journeys_total']==20, x
+          assert x['integration_class']=='REFERENCE_AND_LOCAL_REAL_ADAPTERS', x
+          print('CTRL04_E2E:PASS:20/20')
+          PY
+
+      - name: Independent browser replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl04_browser_journeys.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl04/browser_journeys_result.json'))
+          assert x['status']=='PASS' and x['journeys_passed']==4 and x['journeys_total']==4, x
+          print('CTRL04_BROWSER:PASS:4/4')
+          PY
+
+      - name: Independent governed validator replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd replay
+          export PYTHONDONTWRITEBYTECODE=1
+          .venv/bin/python scripts/ctrl04_validator.py
+          python3 - <<'PY'
+          import json
+          x=json.load(open('validation/ctrl04/ctrl04_preseal_result.json'))
+          assert x['overall']=='PASS', x
+          assert x['gates_total']==52 and x['gates_passed']==52 and x['gates_failed']==[], x
+          assert x['gates_blocked_for_final_seal']==[], x
+          assert x['mutation_result']=='48/48 DETECTED', x
+          assert x['e2e_result']=='20/20 PASS', x
+          assert x['browser_result']=='PASS', x
+          assert x['self_state']=='CANDIDATE_NOT_ACCEPTED' and x['self_acceptance'] is False, x
+          t=json.load(open('validation/ctrl04/test_result.json'))
+          assert t['tests']['passed'] and '384 passed' in t['tests']['summary'], t['tests']
+          assert t['ruff']['passed'] and t['ruff_format']['passed'] and t['mypy']['passed'], t
+          assert t['secret_scan']['passed'], t['secret_scan']
+          print('CTRL04_GOVERNED_GATES:PASS:52/52')
+          print('CTRL04_TESTS:PASS:384/384')
+          PY
+
+      - name: Verify original sealed bytes again after execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl04-sha-post.txt)
+          python3 "$root/scripts/verify_ctrl04_package.py" "$p"
+          echo 'CTRL04_EXACT_PACKAGE_POSTEXEC:PASS'
+
+      - name: Build external authoritative result
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p authoritative-evidence
+          cp replay/validation/ctrl04/ctrl04_preseal_result.json authoritative-evidence/replayed_gate_result.json
+          cp replay/validation/ctrl04/gate_results.json authoritative-evidence/replayed_gate_details.json
+          cp replay/validation/ctrl04/test_result.json authoritative-evidence/replayed_tests.json
+          cp replay/validation/ctrl04/mutation_result.json authoritative-evidence/replayed_mutations.json
+          cp replay/validation/ctrl04/e2e_journeys_result.json authoritative-evidence/replayed_e2e.json
+          cp replay/validation/ctrl04/browser_journeys_result.json authoritative-evidence/replayed_browser.json
+          cp "$RUNNER_TEMP/main_delta.txt" authoritative-evidence/current_main_delta.txt
+          cp "$RUNNER_TEMP/candidate_delta.txt" authoritative-evidence/candidate_delta.txt
+          cp "$RUNNER_TEMP/intersection.txt" authoritative-evidence/delta_intersection.txt
+          python3 - <<'PY'
+          import json, pathlib, subprocess, os
+          main_sha=subprocess.check_output(['git','-C','canonical','rev-parse','HEAD'], text=True).strip()
+          result={
+            'schema':'epd2.ctrl04.c1.external-authoritative-result/1',
+            'stage':'CTRL-04',
+            'candidate':{
+              'filename':os.environ['CANDIDATE_NAME'],
+              'sha256':os.environ['CANDIDATE_SHA256'],
+              'size_bytes':int(os.environ['CANDIDATE_SIZE']),
+              'upload_commit':os.environ['UPLOAD_COMMIT'],
+              'self_state':'CANDIDATE_NOT_ACCEPTED',
+            },
+            'declared_baseline':{'commit':os.environ['BASELINE_COMMIT'],'tree':os.environ['BASELINE_TREE']},
+            'current_canonical_main':main_sha,
+            'freshness_reconciliation':'PASS_NO_CTRL04_OWNED_CONFLICT',
+            'accepted_predecessor':{'stage':'CTRL-03','sha256':os.environ['CTRL03_SHA256']},
+            'package_pre_execution':'PASS',
+            'package_post_execution':'PASS',
+            'tests':'384/384 PASS',
+            'mutations':'48/48 DETECTED',
+            'e2e':'20/20 PASS',
+            'browser':'4/4 PASS',
+            'governed_gates':'52/52 PASS',
+            'failed_gates':[],
+            'blocked_gates':[],
+            'decision_basis':'INDEPENDENT_EXACT_BYTE_REPLAY_PASS',
+            'scope_nonclaims':['CTRL layer closure','production readiness','legal activation','final security readiness','BSI/CC/EAL4 certification'],
+          }
+          pathlib.Path('authoritative-evidence/CTRL04_C1_EXTERNAL_AUTHORITATIVE_RESULT.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print('CTRL04_EXTERNAL_RESULT_RECORD:PASS')
+          PY
+
+      - name: Upload authoritative evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl04-c1-authoritative-evidence-${{ github.run_id }}
+          path: authoritative-evidence
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Terminal result
+        shell: bash
+        run: |
+          echo "CTRL04_AUTHORITATIVE_RESULT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
