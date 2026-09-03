@@ -104,6 +104,15 @@ jobs:
           test -s "$API04_BROKER_TLS_BINDINGS"
           test -s "$API04_BROKER_SECRETS"
 
+      - name: Reset API-06 database for pristine run
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PGPASSWORD=api06-synthetic-ci-only
+          psql -h 127.0.0.1 -p 5432 -U api06 -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE IF EXISTS epd2_api06 WITH (FORCE);'
+          psql -h 127.0.0.1 -p 5432 -U api06 -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE epd2_api06 OWNER api06;'
+          echo 'FINDST_API06_DB_RESET:PRISTINE:PASS'
+
       - name: Run pristine accepted API-06 40-gate baseline
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
@@ -127,22 +136,16 @@ jobs:
           tar -xzf "$RUNNER_TEMP/findst-overlay.tgz" -C .
           echo 'FINDST_DECLARED_DELTA:PASS:8'
 
-      - name: Run targeted FIND-ST01-04 integration tests
-        shell: bash
-        working-directory: ${{ steps.base.outputs.root }}
-        run: |
-          set -euo pipefail
-          .venv/bin/python -m pytest packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py -q --junitxml=validation/find_st01_04/github-targeted.xml
-
-      - name: Verify packaged 32-of-32 mutation evidence
+      - name: Reset API-06 database for corrected run
         shell: bash
         run: |
           set -euo pipefail
-          jq -e '.schema=="epd2.find-st01-04.mutations/1" and .work_item=="FIND-ST01-04" and .candidate_state=="CANDIDATE_NOT_ACCEPTED" and .self_acceptance==false and .result=="PASS" and .mutation_count==32 and .detected==32 and .missed==0 and ([.mutations[].id] | length)==32 and ([.mutations[] | select(.result!="DETECTED" or .restored!=true)] | length)==0' .epd2-findst-review/original-mutation-result.json
-          echo 'FINDST_PACKAGED_MUTATION_EVIDENCE:PASS:32/32'
-          echo 'NOTE: sealed System Trial harness commit referenced by the candidate is no longer reachable in GitHub; this step verifies the packaged mutation record, it does not claim a fresh G33 replay.'
+          export PGPASSWORD=api06-synthetic-ci-only
+          psql -h 127.0.0.1 -p 5432 -U api06 -d postgres -v ON_ERROR_STOP=1 -c 'DROP DATABASE IF EXISTS epd2_api06 WITH (FORCE);'
+          psql -h 127.0.0.1 -p 5432 -U api06 -d postgres -v ON_ERROR_STOP=1 -c 'CREATE DATABASE epd2_api06 OWNER api06;'
+          echo 'FINDST_API06_DB_RESET:CORRECTED:PASS'
 
-      - name: Re-run complete API-06 40-gate validator on corrected tree
+      - name: Run complete API-06 40-gate validator on corrected tree
         shell: bash
         working-directory: ${{ steps.base.outputs.root }}
         run: |
@@ -163,6 +166,21 @@ jobs:
           set -euo pipefail
           jq -e --slurp '.[0].result=="PASS" and .[1].result=="PASS" and .[0].passed_gates==40 and .[1].passed_gates==40 and .[0].failed_gates==[] and .[1].failed_gates==[]' validation/find_st01_04/github-api06-pristine.json validation/find_st01_04/github-api06-corrected.json
           echo 'FINDST_G31_COMPARISON:PASS:NO_REGRESSION'
+
+      - name: Run targeted FIND-ST01-04 integration tests
+        shell: bash
+        working-directory: ${{ steps.base.outputs.root }}
+        run: |
+          set -euo pipefail
+          .venv/bin/python -m pytest packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py -q --junitxml=validation/find_st01_04/github-targeted.xml
+
+      - name: Verify packaged 32-of-32 mutation evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.schema=="epd2.find-st01-04.mutations/1" and .work_item=="FIND-ST01-04" and .candidate_state=="CANDIDATE_NOT_ACCEPTED" and .self_acceptance==false and .result=="PASS" and .mutation_count==32 and .detected==32 and .missed==0 and ([.mutations[].id] | length)==32 and ([.mutations[] | select(.result!="DETECTED" or .restored!=true)] | length)==0' .epd2-findst-review/original-mutation-result.json
+          echo 'FINDST_PACKAGED_MUTATION_EVIDENCE:PASS:32/32'
+          echo 'NOTE: sealed System Trial harness commit referenced by the candidate is no longer reachable in GitHub; this verifies packaged mutation evidence and does not claim a fresh G33 replay.'
 
       - name: Upload detached GitHub review evidence
         uses: actions/upload-artifact@v4
