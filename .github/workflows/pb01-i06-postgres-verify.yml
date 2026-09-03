@@ -1,0 +1,179 @@
+name: PB01 I06 PostgreSQL Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [pilot02-verify]
+    paths:
+      - 'EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip'
+      - '.github/workflows/pb01-i06-postgres-verify.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify-i06:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CANDIDATE_ZIP: EPD2_VCRYPTO-PB01-I06_GUARDIAN_CEREMONY_AND_THRESHOLD_DECRYPTION_CANDIDATE_0.2_C1.zip
+      EXPECTED_SHA256: 25114f10c95664e5145e4efc7c381aba4a2d9c3edc83760ee5e9bc72e55c532e
+
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Set up Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Install PostgreSQL 16 and tools
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y postgresql-16 postgresql-client-16 unzip
+          echo "PG_BINDIR=$(pg_config --bindir)" >> "$GITHUB_ENV"
+          node --version
+          go version
+          "$(pg_config --bindir)/postgres" --version
+          "$(pg_config --bindir)/psql" --version
+
+      - name: Verify exact candidate and unpack
+        id: integrity
+        shell: bash
+        run: |
+          set +e
+          : > "$GITHUB_WORKSPACE/integrity.log"
+          {
+            set -euo pipefail
+            echo "candidate=$CANDIDATE_ZIP"
+            test -f "$CANDIDATE_ZIP"
+            actual=$(sha256sum "$CANDIDATE_ZIP" | awk '{print $1}')
+            echo "actual_sha256=$actual"
+            echo "expected_sha256=$EXPECTED_SHA256"
+            test "$actual" = "$EXPECTED_SHA256"
+            rm -rf i06-unpacked
+            mkdir i06-unpacked
+            unzip -q "$CANDIDATE_ZIP" -d i06-unpacked
+            roots=$(find i06-unpacked -mindepth 1 -maxdepth 1 -type d | wc -l)
+            echo "root_dirs=$roots"
+            test "$roots" -eq 1
+            root=$(find i06-unpacked -mindepth 1 -maxdepth 1 -type d | head -1)
+            echo "$root" > i06-root.txt
+            cd "$root"
+            sha256sum -c SHA256SUMS.txt
+          } >> "$GITHUB_WORKSPACE/integrity.log" 2>&1
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_WORKSPACE/integrity.log"
+          exit 0
+
+      - name: Install candidate dependencies offline
+        id: deps
+        if: steps.integrity.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          root=$(cat i06-root.txt)
+          cd "$root"
+          npm ci --offline > "$GITHUB_WORKSPACE/deps.log" 2>&1
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_WORKSPACE/deps.log"
+          exit 0
+
+      - name: Run cryptographic and verifier gate
+        id: crypto
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          root=$(cat i06-root.txt)
+          cd "$root"
+          chmod +x evidence/build/belenios-tool-3.3.0-linux-x86_64 2>/dev/null || true
+          npm run validate:i06 > "$GITHUB_WORKSPACE/crypto.log" 2>&1
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_WORKSPACE/crypto.log"
+          exit 0
+
+      - name: Run real PostgreSQL 16 I06 acceptance harness
+        id: pg
+        if: steps.integrity.outputs.rc == '0' && steps.deps.outputs.rc == '0'
+        shell: bash
+        run: |
+          set +e
+          root=$(cat i06-root.txt)
+          cd "$root"
+          NODE_OPTIONS="--test-reporter=tap" EPD2_I06_PG_BIN="$PG_BINDIR" bash scripts/run_i06_postgres_validation.sh > "$GITHUB_WORKSPACE/postgres.log" 2>&1
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_WORKSPACE/postgres.log"
+          exit 0
+
+      - name: Record verification result
+        if: always()
+        env:
+          INTEGRITY_RC: ${{ steps.integrity.outputs.rc }}
+          DEPS_RC: ${{ steps.deps.outputs.rc }}
+          CRYPTO_RC: ${{ steps.crypto.outputs.rc }}
+          PG_RC: ${{ steps.pg.outputs.rc }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          verdict="NOT VERIFIED"
+          if [ "${INTEGRITY_RC:-99}" = 0 ] && [ "${DEPS_RC:-99}" = 0 ] && [ "${CRYPTO_RC:-99}" = 0 ] && [ "${PG_RC:-99}" = 0 ]; then
+            verdict="PASS — PB01-I06 external PostgreSQL gate passed"
+          fi
+          {
+            echo "# PB01-I06 External PostgreSQL Verification Result"
+            echo
+            echo "**Verdict:** $verdict"
+            echo
+            echo "- Workflow run: $GITHUB_RUN_ID"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Candidate: \`$CANDIDATE_ZIP\`"
+            echo "- Expected SHA-256: \`$EXPECTED_SHA256\`"
+            echo "- Node: \`$(node --version)\`"
+            echo "- PostgreSQL: \`$(\"$PG_BINDIR/postgres\" --version)\`"
+            echo "- Integrity rc: ${INTEGRITY_RC:-99}"
+            echo "- Dependency install rc: ${DEPS_RC:-99}"
+            echo "- Crypto/verifier rc: ${CRYPTO_RC:-99}"
+            echo "- PostgreSQL 16 rc: ${PG_RC:-99}"
+            echo
+            echo "## Integrity log (tail)"
+            echo '```text'
+            tail -n 120 "$GITHUB_WORKSPACE/integrity.log" 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## Dependency log (tail)"
+            echo '```text'
+            tail -n 120 "$GITHUB_WORKSPACE/deps.log" 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## Crypto / verifier log (tail)"
+            echo '```text'
+            tail -n 240 "$GITHUB_WORKSPACE/crypto.log" 2>/dev/null || true
+            echo '```'
+            echo
+            echo "## PostgreSQL 16 log"
+            echo '```text'
+            cat "$GITHUB_WORKSPACE/postgres.log" 2>/dev/null || true
+            echo '```'
+          } > PB01_I06_VERIFY_RESULT.md
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add PB01_I06_VERIFY_RESULT.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'record PB01-I06 PostgreSQL verification result'
+            git push origin HEAD:pilot02-verify
+          fi
+
+          test "$verdict" = "PASS — PB01-I06 external PostgreSQL gate passed"
