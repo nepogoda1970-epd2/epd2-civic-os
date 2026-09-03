@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Locate promotion-sensitive constants
+      - name: Inspect G41 implementation and API06 schema
         shell: bash
         run: |
           set -euo pipefail
@@ -26,10 +26,12 @@ jobs:
           zipfile.ZipFile(p).extractall('_infra03')
           PY
           ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
-          echo "ROOT=$ROOT"
-          echo '===== PRESEAL NAME / MODE OCCURRENCES ====='
-          grep -RIn --exclude='*.json' --exclude='*.md' --exclude='*.lock' --exclude='package-lock.json' -E 'EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0\.1_PRESEAL|PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED|API-06 has no authoritative acceptance|API-06 = NEXT' "$ROOT" | head -300 || true
-          echo '===== GATES TAIL ====='
-          sed -n '1040,1195p' "$ROOT/scripts/infra03/gates.py"
-          echo '===== ACCEPTANCE NAMING ====='
-          grep -RIn --include='*.py' -E 'candidate_name|CANDIDATE_NAME|EPD2_INFRA03|INFRA03' "$ROOT/scripts/acceptance" | head -300 || true
+          echo '===== G41 AREA ====='
+          sed -n '430,515p' "$ROOT/scripts/infra03/gates.py"
+          echo '===== G41 CALL AREA ====='
+          sed -n '250,370p' "$ROOT/scripts/infra03/gates.py"
+          echo '===== CURRENT API06 RECORD ====='
+          git fetch --no-tags origin main
+          git show origin/main:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json
+          echo '===== INFRA02 ACCEPTANCE RECORD ====='
+          git show origin/main:docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json | head -220
