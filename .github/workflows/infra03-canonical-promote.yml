@@ -1,0 +1,178 @@
+name: INFRA-03 Canonical Promotion
+
+on:
+  push:
+    branches: [handoff/infra]
+    paths:
+      - .github/workflows/infra03-canonical-promote.yml
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout handoff trigger
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download exact accepted candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: infra03-c1-authoritative-candidate-33742902782
+          path: _artifact
+          repository: ${{ github.repository }}
+          run-id: 33742902782
+          github-token: ${{ github.token }}
+
+      - name: Verify authoritative accepted bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='_artifact/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip'
+          test "$(sha256sum "$ZIP" | awk '{print $1}')" = '6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1'
+          test "$(stat -c %s "$ZIP")" = '16179206'
+          unzip -t "$ZIP" >/dev/null
+          echo 'INFRA03_PROMOTION_INPUT:PASS'
+
+      - name: Checkout current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: mainrepo
+          fetch-depth: 1
+
+      - name: Install bounded INFRA-03 payload and governance
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$GITHUB_WORKSPACE/_artifact/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip"
+          rm -rf extracted
+          mkdir extracted
+          unzip -q "$ZIP" -d extracted
+          ROOT="$GITHUB_WORKSPACE/extracted/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1"
+          test -d "$ROOT/scripts/infra03"
+          test -d "$ROOT/validation/infra03"
+          test -d "$ROOT/docs/infra/INFRA-03"
+          test -d "$ROOT/infra/runtime"
+
+          cd mainrepo
+          rm -rf scripts/infra03 validation/infra03 docs/infra/INFRA-03 infra/runtime
+          mkdir -p scripts validation docs/infra infra
+          cp -a "$ROOT/scripts/infra03" scripts/
+          cp -a "$ROOT/validation/infra03" validation/
+          cp -a "$ROOT/docs/infra/INFRA-03" docs/infra/
+          cp -a "$ROOT/infra/runtime" infra/
+          cp -a "$ROOT/tests/repository/test_infra03_units.py" tests/repository/
+          cp -a "$ROOT/tests/repository/test_infra03_mutation_suite.py" tests/repository/
+
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root=pathlib.Path('.')
+          acceptance={
+            'schema':'epd2.infra03.acceptance-record/1',
+            'stage':'INFRA-03',
+            'decision':'ACCEPTED / CLOSED',
+            'decision_date':'2026-09-03',
+            'scope':'BOUNDED_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_STAGE_ONLY',
+            'candidate':{
+              'filename':'EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip',
+              'sha256':'6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1',
+              'size_bytes':16179206,
+              'self_acceptance':False,
+              'source_preseal_sha256':'30033863c854b34532b42a216bb275c691e57413053724f393b183ad814685fe'
+            },
+            'accepted_predecessor':{
+              'stage':'INFRA-02',
+              'sha256':'d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c',
+              'size_bytes':15980332
+            },
+            'api06_reconciliation':{
+              'candidate_sha256':'3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c',
+              'authoritative_run_id':33629147572,
+              'result':'PASS'
+            },
+            'authoritative':{
+              'workflow':'INFRA-03 C1 Canonical Acceptance V5',
+              'workflow_file':'.github/workflows/infra03-c1-canonical-v5.yml',
+              'run_id':33742902782,
+              'build_job_id':100608682265,
+              'authoritative_review_job_id':100608998259,
+              'head_sha':'b120659417db2bc519a7b2ab39028d982f40c0d4',
+              'conclusion':'success',
+              'runtime_gates_passed':40,
+              'runtime_gates_total':40,
+              'G39':'PASS',
+              'G40':'PASS',
+              'governed_gates_passed':42,
+              'governed_gates_total':42,
+              'mutation_classes_detected':36,
+              'mutation_classes_total':36,
+              'targeted_tests_passed':73,
+              'postgresql':'16.15',
+              'terminal_marker':'INFRA03_C1_AUTHORITATIVE_RESULT:PASS:6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1:16179206'
+            },
+            'artifacts':{
+              'authoritative_evidence':{'id':9888501784,'digest':'sha256:5de4f5b72d3097118391d8b3e47d414bd364dd0a1db55d001639270cc66f0470'},
+              'exact_candidate':{'id':9888465152,'digest':'sha256:6df8f84b4b5d573849a6ab580fce306b01726e2cb35d7ee30d4535fadeb540e0'},
+              'authoritative_candidate':{'id':9888502423,'digest':'sha256:32e2fb06bf21109e9f272a2b16a90737bffc4ff13236e86246a71df1941768d9'}
+            },
+            'open_stage_blockers':[],
+            'overall_infra_layer':'OPEN / NOT CLOSED',
+            'nonclaims':['production readiness','legal activation','final security acceptance','BSI/Common Criteria/EAL4 certification','overall INFRA layer closure']
+          }
+          ap=root/'docs/infra/INFRA-03/INFRA03_C1_ACCEPTANCE_RECORD.json'
+          ap.write_text(json.dumps(acceptance,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+
+          owned=[]
+          for base in ['scripts/infra03','validation/infra03','docs/infra/INFRA-03','infra/runtime']:
+            for p in sorted((root/base).rglob('*')):
+              if p.is_file():
+                b=p.read_bytes(); owned.append({'path':p.as_posix(),'sha256':hashlib.sha256(b).hexdigest(),'size_bytes':len(b)})
+          for rel in ['tests/repository/test_infra03_units.py','tests/repository/test_infra03_mutation_suite.py']:
+            p=root/rel; b=p.read_bytes(); owned.append({'path':rel,'sha256':hashlib.sha256(b).hexdigest(),'size_bytes':len(b)})
+          manifest={
+            'schema':'epd2.infra03.canonical-installation-manifest/1',
+            'stage':'INFRA-03',
+            'candidate_sha256':'6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1',
+            'candidate_size_bytes':16179206,
+            'authoritative_run_id':33742902782,
+            'installed_scope':['scripts/infra03','validation/infra03','docs/infra/INFRA-03','infra/runtime','tests/repository/test_infra03_units.py','tests/repository/test_infra03_mutation_suite.py'],
+            'files':owned,
+            'file_count':len(owned)
+          }
+          mp=root/'docs/infra/INFRA-03/INFRA03_C1_CANONICAL_INSTALLATION_MANIFEST.json'
+          mp.write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+
+          pcr=root/'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'
+          s=pcr.read_text(encoding='utf-8')
+          paragraph="""**INFRA-03 authoritative acceptance and bounded stage closure (2026-09-03):** exact sealed candidate `EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip`, SHA-256 `6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1`, size `16,179,206` bytes, passed independent exact-byte GitHub Actions workflow `INFRA-03 C1 Canonical Acceptance V5`, authoritative run `33742902782`, build job `100608682265`, independent authoritative-review job `100608998259`, reviewed head `b120659417db2bc519a7b2ab39028d982f40c0d4`, conclusion `success`. The build and independent replay each passed all `40/40` runtime gates, including exact accepted INFRA-02 predecessor identity and live API-06 acceptance reconciliation, detected all `36/36` mutation classes with `73/73` targeted tests, and exercised real PostgreSQL `16.15`. Deterministic sealed-archive gate G39 passed with `1,563` members; independent exact-same-byte replay G40 passed on unchanged candidate SHA. Authoritative evidence artifact ID `9888501784` has digest `sha256:5de4f5b72d3097118391d8b3e47d414bd364dd0a1db55d001639270cc66f0470`; exact-candidate artifact ID `9888465152` has wrapper digest `sha256:6df8f84b4b5d573849a6ab580fce306b01726e2cb35d7ee30d4535fadeb540e0`. The candidate does not self-accept; the separate independent review and this post-run governance decision preserve the no-self-acceptance rule. Canonical INFRA-03-owned runtime/evidence payload is installed in `main` and recorded by `docs/infra/INFRA-03/INFRA03_C1_CANONICAL_INSTALLATION_MANIFEST.json`; governance decision is `docs/infra/INFRA-03/INFRA03_C1_ACCEPTANCE_RECORD.json`. **INFRA-03 C1 is therefore `ACCEPTED / CLOSED` as the bounded Deployment Runtime & Preview Readiness stage.** The overall INFRA layer remains **OPEN / NOT CLOSED**; INFRA-04…INFRA-07 remain separately governed. No production-readiness, legal-activation, final-security or BSI/CC/EAL4 claim follows.\n\n"""
+          marker='**INFRA-01 authoritative acceptance and bounded stage closure (2026-09-01):**'
+          if 'INFRA-03 authoritative acceptance and bounded stage closure' not in s:
+            if marker not in s: raise SystemExit('PCR INFRA-01 marker missing')
+            s=s.replace(marker,paragraph+marker,1)
+          primary='API = CLOSED\nCTRL-01 = ACCEPTED / CLOSED'
+          replacement='API = CLOSED\nINFRA-01 = ACCEPTED / CLOSED\nINFRA-02 = ACCEPTED / CLOSED\nINFRA-03 = ACCEPTED / CLOSED\nINFRA = OPEN / NOT CLOSED\nCTRL-01 = ACCEPTED / CLOSED'
+          if primary in s:
+            s=s.replace(primary,replacement,1)
+          elif 'INFRA-03 = ACCEPTED / CLOSED' not in s:
+            raise SystemExit('PCR primary-state insertion point missing')
+          s=s.replace('The overall INFRA layer remains open; INFRA-03…INFRA-07 are not promoted.','The overall INFRA layer remains open; INFRA-03 is accepted/closed and INFRA-04…INFRA-07 are not promoted.',1)
+          pcr.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit canonical INFRA-03 state
+        shell: bash
+        working-directory: mainrepo
+        run: |
+          set -euo pipefail
+          git config user.name 'epd2-governance-bot'
+          git config user.email 'epd2-governance-bot@users.noreply.github.com'
+          git add scripts/infra03 validation/infra03 docs/infra/INFRA-03 infra/runtime tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git diff --cached --check
+          git commit -m 'governance(infra03): accept close and install canonical C1'
+          git push origin HEAD:main
+          echo "INFRA03_CANONICAL_PROMOTION:PASS:$(git rev-parse HEAD)"
