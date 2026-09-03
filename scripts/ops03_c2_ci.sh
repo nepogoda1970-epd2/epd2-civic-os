@@ -39,6 +39,16 @@ python3 scripts/ops03_c2_reconcile.py \
   --template handoff/OPS-03/templates/C2/ops03-accept.yml | tee "$RUNNER_TEMP/ops03-c2-reconcile.log"
 grep -q '^OPS03_C2_RECONCILE:PASS:' "$RUNNER_TEMP/ops03-c2-reconcile.log"
 
+# C1 carries an obsolete pre-acceptance API-06 subtree as part of its historical
+# delta. C2 must inherit the current canonical API-06 authority from fresh main,
+# not replay that stale dependency metadata. Restore the whole governed subtree
+# before the exact binding is generated and before bytes are frozen.
+rm -rf "$ROOT/docs/api/API-06"
+mkdir -p "$ROOT/docs/api/API-06"
+cp -a "$RUNNER_TEMP/mainroot/docs/api/API-06/." "$ROOT/docs/api/API-06/"
+diff -qr "$RUNNER_TEMP/mainroot/docs/api/API-06" "$ROOT/docs/api/API-06"
+echo 'OPS03_C2_CANONICAL_API06_RESTORE:PASS'
+
 # C1 was intentionally blocked at G05 while API-06 was NEXT. C2 rebinds G05 to
 # the exact accepted/closed API-06 runtime, then freezes those corrected bytes.
 python3 scripts/ops03_c2_patch_api06.py "$ROOT" | tee "$RUNNER_TEMP/ops03-c2-api06-patch.log"
