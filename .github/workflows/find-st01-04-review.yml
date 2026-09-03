@@ -111,13 +111,14 @@ jobs:
         working-directory: ${{ steps.base.outputs.root }}
         run: |
           set -euo pipefail
+          mkdir -p validation/find_st01_04
           export API06_CURRENT_MAIN_COMMIT=$(jq -r .main_commit docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
           export API06_CURRENT_MAIN_TREE=$(jq -r .main_tree docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
           export API06_CURRENT_PCR_SHA256=$(jq -r .program_control_register_sha256 docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
           export API06_CURRENT_MASTER_SHA256=$(jq -r .master_register_sha256 docs/api/API-06/API06_ENTERING_BASELINE_IDENTITY.json)
-          .venv/bin/python scripts/validation/validate_api06.py --out "$RUNNER_TEMP/api06-pristine.json" | tee "$RUNNER_TEMP/api06-pristine.log"
+          .venv/bin/python scripts/validation/validate_api06.py --out validation/find_st01_04/github-api06-pristine.json | tee "$RUNNER_TEMP/api06-pristine.log"
           grep -q '^API06_RESULT:PASS:40/40:' "$RUNNER_TEMP/api06-pristine.log"
-          jq -e '.result=="PASS" and .passed_gates==40 and .failed_gates==[] and .environment_blocked_runs==[]' "$RUNNER_TEMP/api06-pristine.json"
+          jq -e '.result=="PASS" and .passed_gates==40 and .failed_gates==[] and .environment_blocked_runs==[]' validation/find_st01_04/github-api06-pristine.json
           echo 'FINDST_PRISTINE_API06:PASS:40/40'
 
       - name: Apply exact 8-file correction overlay
@@ -167,7 +168,7 @@ jobs:
         working-directory: ${{ steps.base.outputs.root }}
         run: |
           set -euo pipefail
-          .venv/bin/python scripts/find_st01_04/validate_correction.py --baseline-regression "$RUNNER_TEMP/api06-pristine.json" --out validation/find_st01_04/github-correction-gates.json
+          .venv/bin/python scripts/find_st01_04/validate_correction.py --baseline-regression validation/find_st01_04/github-api06-pristine.json --out validation/find_st01_04/github-correction-gates.json
           jq '.summary,.gates[]|select(.id=="G31" or .id=="G32" or .id=="G33")' validation/find_st01_04/github-correction-gates.json
           jq -e '[.gates[] | select(.id=="G31")][0].status=="PASS"' validation/find_st01_04/github-correction-gates.json
           jq -e '[.gates[] | select(.status=="FAIL")] | length==0' validation/find_st01_04/github-correction-gates.json
@@ -179,7 +180,6 @@ jobs:
           path: |
             ${{ steps.base.outputs.root }}/validation/find_st01_04/
             ${{ steps.base.outputs.root }}/docs/api/FIND-ST01-04/
-            ${{ runner.temp }}/api06-pristine.json
             ${{ runner.temp }}/api06-pristine.log
             ${{ runner.temp }}/api06-corrected.log
             ${{ runner.temp }}/overlay-files.txt
