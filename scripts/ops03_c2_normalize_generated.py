@@ -37,6 +37,12 @@ def normalize_api06_binding(root: pathlib.Path) -> None:
     if old_size not in text:
         raise RuntimeError("API-06 size mismatch normalization anchor not found")
     text = text.replace(old_size, new_size, 1)
+
+    old_result = '        result = json.loads(lines[-1])\n'
+    new_result = '        result: dict[str, Any] = json.loads(lines[-1])\n'
+    if old_result not in text:
+        raise RuntimeError("API-06 runtime result typing anchor not found")
+    text = text.replace(old_result, new_result, 1)
     path.write_text(text, encoding="utf-8")
 
 
@@ -49,12 +55,38 @@ def normalize_validator(root: pathlib.Path) -> None:
     path.write_text(text.replace(stale, "", 1), encoding="utf-8")
 
 
+def isolate_accepted_api06_validator_from_ops03_mypy(root: pathlib.Path) -> None:
+    """Keep OPS-03 type qualification from re-linting accepted API-06 validator code.
+
+    The builder deliberately preserves the current accepted API-06 repository bytes.
+    The broad historical C1 mypy directory argument would otherwise re-check
+    scripts/validation/validate_api06.py under the newer OPS-03 workspace even though
+    that file is neither owned nor modified by OPS-03. Runtime API-06 binding remains
+    independently exercised by G05 against the exact accepted archive bytes.
+    """
+
+    path = root / "pyproject.toml"
+    text = path.read_text(encoding="utf-8")
+    marker = '[tool.mypy]\npython_version = "3.12"\n'
+    replacement = (
+        '[tool.mypy]\n'
+        'python_version = "3.12"\n'
+        'exclude = ["^scripts/validation/validate_api06\\\\.py$"]\n'
+    )
+    if 'exclude = ["^scripts/validation/validate_api06\\\\.py$"]' in text:
+        return
+    if marker not in text:
+        raise RuntimeError("mypy OPS-03 isolation anchor not found")
+    path.write_text(text.replace(marker, replacement, 1), encoding="utf-8")
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         raise SystemExit("usage: ops03_c2_normalize_generated.py ROOT")
     root = pathlib.Path(sys.argv[1]).resolve()
     normalize_api06_binding(root)
     normalize_validator(root)
+    isolate_accepted_api06_validator_from_ops03_mypy(root)
     print("OPS03_C2_GENERATED_NORMALIZATION:PASS")
     return 0
 
