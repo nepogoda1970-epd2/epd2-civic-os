@@ -1,0 +1,266 @@
+name: CTRL-04 C1 canonical governance close
+
+on:
+  push:
+    branches: [tmp/ctrl04-c1-governance-close]
+    paths:
+      - .github/workflows/ctrl04-c1-governance-close.yml
+
+permissions:
+  contents: write
+
+jobs:
+  close:
+    runs-on: ubuntu-24.04
+    env:
+      EXPECTED_MAIN: bdb98b62e43eaaf601ffa9e35762d778b021324f
+      UPLOAD_COMMIT: 704b6ae34b6006cd607a734ce3564b3ff1d14065
+      CANDIDATE_NAME: EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip
+      CANDIDATE_SHA256: 346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2
+      CANDIDATE_SIZE: '18419399'
+      AUTHORITATIVE_RUN: '33740633562'
+      AUTHORITATIVE_JOB: '100601442266'
+      AUTHORITATIVE_HEAD: a7b14911774fcfdafb75537539f6a9bd5e5e29ce
+      EVIDENCE_ARTIFACT_ID: '9887650513'
+      EVIDENCE_ARTIFACT_DIGEST: sha256:05f9897f150e93b6d2e1aaf311b5bc98a2a0f16d6b3f2bd79ab2f2eb8e7f8256
+    steps:
+      - name: Checkout exact current canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: canonical
+          fetch-depth: 1
+
+      - name: Checkout exact uploaded candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPLOAD_COMMIT }}
+          path: uploaded
+          fetch-depth: 1
+
+      - name: Fail closed on canonical drift and verify exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C canonical rev-parse HEAD)" = "$EXPECTED_MAIN"
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test -f "$p"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          unzip -t "$p" >/tmp/ctrl04-install-zip.txt
+          tail -1 /tmp/ctrl04-install-zip.txt
+          python3 - "$p" "$RUNNER_TEMP/exact" <<'PY'
+          import pathlib, stat, sys, zipfile
+          zpath=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(zpath) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              assert names and len(names)==len(set(names))
+              roots=set()
+              for i in infos:
+                  p=pathlib.PurePosixPath(i.filename)
+                  assert not p.is_absolute() and '..' not in p.parts, i.filename
+                  if p.parts: roots.add(p.parts[0])
+                  mode=(i.external_attr >> 16) & 0xFFFF
+                  assert not stat.S_ISLNK(mode), i.filename
+              assert len(roots)==1, roots
+              z.extractall(out)
+              print(next(iter(roots)))
+          PY
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl04-install-seal.txt)
+          python3 "$root/scripts/verify_ctrl04_package.py" "$p"
+          echo 'CTRL04_CANONICAL_INSTALL_INPUT:PASS'
+
+      - name: Install only allowlisted CTRL-04-owned payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(find "$RUNNER_TEMP/exact" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          cd "$root"
+          files=(
+            contracts/control/ctrl04_operations_console.json
+            docs/ctrl/CTRL-04/CTRL04_C1_CANDIDATE_MANIFEST.json
+            docs/ctrl/CTRL-04/CTRL04_DEVELOPER_REPORT.md
+            docs/ctrl/CTRL-04/CTRL04_EVIDENCE_SCHEMA.json
+            docs/ctrl/CTRL-04/CTRL04_SPECIFICATION.md
+            docs/ctrl/CTRL-04/CTRL04_STAGE_CONTRACT.md
+            scripts/build_ctrl04_candidate.py
+            scripts/ctrl04_browser_journeys.py
+            scripts/ctrl04_common.py
+            scripts/ctrl04_e2e_journeys.py
+            scripts/ctrl04_mutation_suite.py
+            scripts/ctrl04_validator.py
+            scripts/verify_ctrl04_package.py
+            services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py
+            services/control-plane-service/src/epd2_control_plane_service/operations_api.py
+            services/control-plane-service/src/epd2_control_plane_service/operations_console.html
+            services/control-plane-service/src/epd2_control_plane_service/operations_console.py
+            services/control-plane-service/tests/_ctrl04_builders.py
+            services/control-plane-service/tests/test_ctrl04_api.py
+            services/control-plane-service/tests/test_ctrl04_authorization.py
+            services/control-plane-service/tests/test_ctrl04_evidence_persistence.py
+            services/control-plane-service/tests/test_ctrl04_hardening.py
+            services/control-plane-service/tests/test_ctrl04_lifecycle.py
+            services/control-plane-service/tests/test_ctrl04_real_adapters.py
+          )
+          while IFS= read -r f; do files+=("$f"); done < <(find validation/ctrl04 -type f | sort)
+          printf '%s\n' "${files[@]}" | sort -u > "$RUNNER_TEMP/install_paths.txt"
+          test "$(wc -l < "$RUNNER_TEMP/install_paths.txt")" -ge 35
+          while IFS= read -r f; do
+            test -f "$f"
+            test ! -e "$GITHUB_WORKSPACE/canonical/$f"
+          done < "$RUNNER_TEMP/install_paths.txt"
+          while IFS= read -r f; do
+            mkdir -p "$GITHUB_WORKSPACE/canonical/$(dirname "$f")"
+            cp -a "$f" "$GITHUB_WORKSPACE/canonical/$f"
+          done < "$RUNNER_TEMP/install_paths.txt"
+          echo 'CTRL04_ALLOWLIST_INSTALL:PASS'
+
+      - name: Create post-run acceptance record and installation manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          rec={
+            'schema':'epd2.ctrl04.c1.acceptance-record/1',
+            'stage':'CTRL-04 — Operations Console',
+            'authority':'Project Owner',
+            'decision':'ACCEPTED / CLOSED',
+            'decision_date':'2026-09-03',
+            'scope':'BOUNDED_CTRL04_STAGE_ONLY',
+            'overall_ctrl_layer':'OPEN / NOT CLOSED',
+            'candidate':{
+              'file':os.environ['CANDIDATE_NAME'],
+              'sha256':os.environ['CANDIDATE_SHA256'],
+              'size_bytes':int(os.environ['CANDIDATE_SIZE']),
+              'upload_commit':os.environ['UPLOAD_COMMIT'],
+              'upload_git_blob':'baba83e1182bf1b0bf7b6c19c780b1379ef499f1',
+              'self_state_before_governance_decision':'CANDIDATE_NOT_ACCEPTED',
+              'self_accepted':False,
+            },
+            'entering_governance':{
+              'declared_baseline_commit':'8a4d336589f2322984dbf03b1af3b5a575643005',
+              'declared_baseline_tree':'ee38a1a51f70f4c9652dd75eab4d0d1034d7135c',
+              'reviewed_current_main':'bdb98b62e43eaaf601ffa9e35762d778b021324f',
+              'freshness_reconciliation':'PASS_NO_CTRL04_OWNED_CONFLICT',
+            },
+            'accepted_predecessors':{
+              'CTRL-01':'07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5',
+              'CTRL-02':'f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e',
+              'CTRL-03':'89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff',
+              'INFRA-01':'5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131',
+              'INFRA-02':'d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c',
+              'OPS-01':'39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27',
+              'OPS-02':'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125',
+            },
+            'authoritative_review':{
+              'workflow':'.github/workflows/ctrl04-c1-authoritative.yml',
+              'branch':'tmp/ctrl04-c1-authoritative-review',
+              'run_id':int(os.environ['AUTHORITATIVE_RUN']),
+              'job_id':int(os.environ['AUTHORITATIVE_JOB']),
+              'workflow_head_sha':os.environ['AUTHORITATIVE_HEAD'],
+              'conclusion':'PASS',
+              'package_pre':'PASS',
+              'package_post':'PASS',
+              'freshness':'PASS',
+              'tests':'384/384 PASS',
+              'mutations':'48/48 DETECTED',
+              'e2e':'20/20 PASS',
+              'browser':'4/4 PASS',
+              'gates':'52/52 PASS',
+              'failed_gates':[],
+              'blocked_gates':[],
+              'terminal_marker':'CTRL04_AUTHORITATIVE_RESULT:PASS:346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2:18419399',
+            },
+            'authoritative_evidence_artifact':{
+              'name':'ctrl04-c1-authoritative-evidence-33740633562',
+              'id':int(os.environ['EVIDENCE_ARTIFACT_ID']),
+              'size_bytes':17755,
+              'digest':os.environ['EVIDENCE_ARTIFACT_DIGEST'],
+              'created_at':'2026-09-03T09:48:36Z',
+              'expires_at':'2026-12-02T09:45:46Z',
+            },
+            'open_blockers':[],
+            'production_readiness':'NOT_ASSERTED',
+            'legal_activation':'NOT_ASSERTED',
+            'final_security_readiness':'NOT_ASSERTED',
+            'certification':'NOT_ASSERTED',
+            'scope_nonclaims':[
+              'CTRL layer closure',
+              'direct shell/SSH or arbitrary SQL administration',
+              'provider/orchestrator/backup/secret-store ownership',
+              'voting-domain operational reach',
+              'production readiness',
+              'legal activation',
+              'final security readiness',
+              'BSI/Common Criteria/EAL4 certification',
+            ],
+          }
+          recp=pathlib.Path('docs/ctrl/CTRL-04/CTRL04_C1_ACCEPTANCE_RECORD.json')
+          recp.write_text(json.dumps(rec,indent=2,sort_keys=True)+'\n')
+          paths=[]
+          for p in [pathlib.Path(x.strip()) for x in pathlib.Path(os.environ['RUNNER_TEMP']+'/install_paths.txt').read_text().splitlines() if x.strip()]:
+              paths.append(p)
+          paths.append(recp)
+          hashes={p.as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
+          manifest={
+            'schema':'epd2.ctrl04.c1.canonical-installation-manifest/1',
+            'candidate_sha256':os.environ['CANDIDATE_SHA256'],
+            'candidate_size':int(os.environ['CANDIDATE_SIZE']),
+            'acceptance_run_id':int(os.environ['AUTHORITATIVE_RUN']),
+            'canonical_base_commit':os.environ['EXPECTED_MAIN'],
+            'files':hashes,
+          }
+          pathlib.Path('docs/ctrl/CTRL-04/CTRL04_C1_CANONICAL_INSTALLATION_MANIFEST.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+          print('CTRL04_ACCEPTANCE_RECORD_AND_INSTALL_MANIFEST:PASS')
+          PY
+
+      - name: Patch canonical Program Control without changing primary program stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          s=p.read_text()
+          old_block='''CTRL-01 = ACCEPTED / CLOSED\nCTRL-02 = ACCEPTED / CLOSED\nCTRL-03 = ACCEPTED / CLOSED\nNEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM'''
+          new_block='''CTRL-01 = ACCEPTED / CLOSED\nCTRL-02 = ACCEPTED / CLOSED\nCTRL-03 = ACCEPTED / CLOSED\nCTRL-04 = ACCEPTED / CLOSED\nNEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM'''
+          assert s.count(old_block)==1, s.count(old_block)
+          s=s.replace(old_block,new_block,1)
+          old_row='| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1, CTRL-02 and CTRL-03 are accepted/closed. CTRL-03 exact C1 is independently accepted by run `33696046649` and the cumulative control-plane payload is installed in canonical main. The overall CTRL layer remains open; later CTRL stages require their own governed acceptance. |'
+          new_row='| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL-04 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1, CTRL-02, CTRL-03 and CTRL-04 are accepted/closed. CTRL-04 exact C1 is independently accepted by run `33740633562`; its bounded Operations Console payload is installed in canonical main while preserving the accepted CTRL-01…03 lineage. The overall CTRL layer remains open; later CTRL stages require their own governed acceptance. |'
+          assert s.count(old_row)==1, s.count(old_row)
+          s=s.replace(old_row,new_row,1)
+          anchor='**API-06 authoritative acceptance, terminal API-stage closure and API-layer closure (2026-09-02):**'
+          assert s.count(anchor)==1, s.count(anchor)
+          assert 'CTRL-04 authoritative acceptance and bounded stage closure (2026-09-03)' not in s
+          para='''**CTRL-04 authoritative acceptance and bounded stage closure (2026-09-03):** exact sealed candidate `EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip`, SHA-256 `346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2`, size `18,419,399` bytes, passed independent exact-byte GitHub Actions review in `.github/workflows/ctrl04-c1-authoritative.yml`, authoritative run `33740633562`, job `100601442266`, workflow head `a7b14911774fcfdafb75537539f6a9bd5e5e29ce`, conclusion `success`. The runner independently verified exact ZIP identity, safe extraction, the complete internal `SHA256SUMS.txt` seal before and after execution, and freshness against canonical `main@bdb98b62e43eaaf601ffa9e35762d778b021324f`; the candidate's declared CTRL-03 baseline `8a4d336589f2322984dbf03b1af3b5a575643005` had no conflicting CTRL-04-owned change in the newer FRONT-05 governance delta. Independent replay passed `384/384` tests, detected `48/48` governed source mutations, passed `20/20` E2E journeys and `4/4` real Chromium journeys, and reproduced all `52/52` governed CTRL-04 gates with no failed or blocked gate. Terminal marker: `CTRL04_AUTHORITATIVE_RESULT:PASS:346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2:18419399`. Authoritative evidence artifact `ctrl04-c1-authoritative-evidence-33740633562`, artifact ID `9887650513`, digest `sha256:05f9897f150e93b6d2e1aaf311b5bc98a2a0f16d6b3f2bd79ab2f2eb8e7f8256`. The sealed candidate correctly retained `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded module by `docs/ctrl/CTRL-04/CTRL04_C1_ACCEPTANCE_RECORD.json`. **CTRL-04 C1 is therefore `ACCEPTED / CLOSED` as the bounded Operations Console stage.** The overall CTRL layer remains **OPEN / NOT CLOSED**. This acceptance creates no direct shell/SSH or arbitrary SQL administration surface, no provider/orchestrator/backup/secret-store ownership, no voting-domain operational reach, and no production-readiness, legal-activation, final-security, BSI/Common Criteria/EAL4 certification claim.\n\n'''
+          s=s.replace(anchor,para+anchor,1)
+          p.write_text(s)
+          print('CTRL04_PROGRAM_CONTROL_PATCH:PASS')
+          PY
+
+      - name: Validate canonical delta and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          python3 -m json.tool docs/ctrl/CTRL-04/CTRL04_C1_ACCEPTANCE_RECORD.json >/dev/null
+          python3 -m json.tool docs/ctrl/CTRL-04/CTRL04_C1_CANONICAL_INSTALLATION_MANIFEST.json >/dev/null
+          grep -F 'CTRL-04 = ACCEPTED / CLOSED' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL-04 C1 is therefore `ACCEPTED / CLOSED`' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          grep -F 'CTRL LAYER OPEN' docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md >/dev/null
+          git status --short
+          git config user.name 'epd2-governance-bot'
+          git config user.email 'epd2-governance-bot@users.noreply.github.com'
+          git add contracts/control/ctrl04_operations_console.json docs/ctrl/CTRL-04 scripts/build_ctrl04_candidate.py scripts/ctrl04_browser_journeys.py scripts/ctrl04_common.py scripts/ctrl04_e2e_journeys.py scripts/ctrl04_mutation_suite.py scripts/ctrl04_validator.py scripts/verify_ctrl04_package.py services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py services/control-plane-service/src/epd2_control_plane_service/operations_api.py services/control-plane-service/src/epd2_control_plane_service/operations_console.html services/control-plane-service/src/epd2_control_plane_service/operations_console.py services/control-plane-service/tests/_ctrl04_builders.py services/control-plane-service/tests/test_ctrl04_api.py services/control-plane-service/tests/test_ctrl04_authorization.py services/control-plane-service/tests/test_ctrl04_evidence_persistence.py services/control-plane-service/tests/test_ctrl04_hardening.py services/control-plane-service/tests/test_ctrl04_lifecycle.py services/control-plane-service/tests/test_ctrl04_real_adapters.py validation/ctrl04 docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'governance(ctrl04): accept close and install canonical C1'
+          git push origin HEAD:main
+          echo 'CTRL04_CANONICAL_GOVERNANCE_COMMIT:PASS'
+
+      - name: Terminal governance result
+        run: echo 'CTRL04_CANONICAL_RESULT:PASS:ACCEPTED_CLOSED:CTRL_LAYER_OPEN'
