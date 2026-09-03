@@ -39,7 +39,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .epd2-findst-review/overlay.part*.b64 | base64 -d > "$RUNNER_TEMP/findst-overlay.tgz"
+          : > "$RUNNER_TEMP/findst-overlay.tgz"
+          for f in .epd2-findst-review/overlay.part*.b64; do
+            base64 -d "$f" >> "$RUNNER_TEMP/findst-overlay.tgz"
+          done
           echo '419aeefa246f29d2d78880accff394bb7fdf6c7262fbb3d467b4fa7ae12d4bfb  '"$RUNNER_TEMP/findst-overlay.tgz" | sha256sum -c -
           tar -tzf "$RUNNER_TEMP/findst-overlay.tgz" | sort > "$RUNNER_TEMP/overlay-files.txt"
           test "$(grep -vc '/$' "$RUNNER_TEMP/overlay-files.txt")" -eq 8
