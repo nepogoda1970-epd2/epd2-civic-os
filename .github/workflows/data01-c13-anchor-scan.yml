@@ -1,0 +1,61 @@
+name: DATA01 C13 Rejected C12 Anchor Scan
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/data01-c13-anchor-scan.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TARGET_C12: db0dc35d755a392232c69ffc5d337a33bc78a7f279382cb2cb43b1e42177fb71
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan DATA01 candidate artifacts for exact rejected C12 bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p anchors work
+          : > scan.tsv
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.expired == false) | select(.name|test("^data01-(format3-full-exact-candidate|ruff9-corrected-exact-candidate|e501-corrected-exact-candidate|exact-candidate-and-evidence)$")) | [.id,.name,.workflow_run.id] | @tsv' \
+            > candidates.tsv
+          cat candidates.tsv
+          while IFS=$'\t' read -r id name runid; do
+            rm -rf work/*
+            echo "Scanning artifact $id $name run=$runid"
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}/zip" > work/wrapper.zip
+            mkdir work/unpack
+            unzip -q work/wrapper.zip -d work/unpack
+            while IFS= read -r -d '' f; do
+              sha=$(sha256sum "$f" | awk '{print $1}')
+              printf '%s\t%s\t%s\t%s\t%s\n' "$id" "$name" "$runid" "$sha" "${f#work/unpack/}" >> scan.tsv
+              if [[ "$sha" == "$TARGET_C12" ]]; then
+                cp "$f" anchors/rejected-c12.zip
+                printf 'artifact_id=%s\nartifact_name=%s\nworkflow_run_id=%s\nsource_file=%s\nsha256=%s\n' "$id" "$name" "$runid" "${f#work/unpack/}" "$sha" > anchors/rejected-c12-source.txt
+              fi
+            done < <(find work/unpack -type f -print0)
+          done < candidates.tsv
+          grep "$TARGET_C12" scan.tsv || true
+          test -f anchors/rejected-c12.zip
+          test "$(sha256sum anchors/rejected-c12.zip | awk '{print $1}')" = "$TARGET_C12"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: data01-c13-rejected-c12-anchor
+          compression-level: 0
+          retention-days: 2
+          path: |
+            anchors/rejected-c12.zip
+            anchors/rejected-c12-source.txt
+            candidates.tsv
+            scan.tsv
