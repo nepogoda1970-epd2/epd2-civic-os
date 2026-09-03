@@ -33,6 +33,7 @@ jobs:
       EPD2_OPS03_PGDATABASE: epd2_ops03
       EXPECTED_MAIN_COMMIT: 1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1
       EXPECTED_MAIN_TREE: e4b4b7359476bed30c5349b5835d74d72ce6dcc1
+      OPS03_C2_CORRECTION_ROUND: canonical-api06-restore
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0, persist-credentials: false }
@@ -81,9 +82,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           text = Path('scripts/ops03_c2_ci.sh').read_text(encoding='utf-8')
+          restore = "echo 'OPS03_C2_CANONICAL_API06_RESTORE:PASS'"
           harden = 'python3 scripts/ops03_c2_harden_g05.py "$ROOT" "$MAIN" "$TREE"'
           freeze = 'from scripts.ops03_c2_reconcile import build_freeze, write_sha256sums'
-          assert harden in text and freeze in text and text.index(harden) < text.index(freeze)
+          assert restore in text and harden in text and freeze in text
+          assert text.index(restore) < text.index(harden) < text.index(freeze)
           print('OPS03_C2_SURGICAL_CORRECTION_CONTROL:PASS')
           PY
 
