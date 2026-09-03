@@ -1,0 +1,51 @@
+name: INFRA-03 PRESEAL Inspect Details
+
+on:
+  push:
+    branches: ["handoff/infra"]
+    paths:
+      - ".github/workflows/infra03-preseal-inspect-details.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-details:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read candidate contract and evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          CAND='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          rm -rf _infra03
+          python - <<'PY'
+          import zipfile
+          p='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          zipfile.ZipFile(p).extractall('_infra03')
+          PY
+          ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
+          echo "ROOT=$ROOT"
+          for f in \
+            docs/infra/INFRA-03/INFRA03_DEVELOPER_REPORT.md \
+            validation/infra03/infra03_preseal_result.json \
+            validation/infra03/baseline_identity.json \
+            validation/infra03/predecessor_identity.json \
+            validation/infra03/package_identity_result.json \
+            validation/infra03/mutation_result.json \
+            validation/infra03/bsi_readiness_disposition.json \
+            validation/infra03/preview_deployment_result.json \
+            validation/infra03/postgres_runtime_result.json \
+            validation/infra03/mtls_result.json \
+            validation/infra03/voting_network_isolation_result.json \
+            validation/infra03/supply_chain_handoff_result.json \
+            scripts/infra03/preseal.py \
+            .github/workflows/infra02-acceptance.yml; do
+              if [ -f "$ROOT/$f" ]; then
+                echo "===== FILE:$f ====="
+                sed -n '1,260p' "$ROOT/$f"
+              fi
+          done
+          echo '===== PRESEAL CLI HELP ====='
+          (cd "$ROOT" && python -m scripts.infra03.preseal --help) || true
