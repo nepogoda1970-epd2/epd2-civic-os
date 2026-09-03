@@ -1,0 +1,181 @@
+name: OPS-03 C2 corrective current-canonical build
+on:
+  push:
+    branches: [tmp/ops03-c2-corrective-c2]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+      EXPECTED_MAIN_COMMIT: 1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1
+      EXPECTED_MAIN_TREE: e4b4b7359476bed30c5349b5835d74d72ce6dcc1
+    steps:
+      - name: Checkout corrective builder control
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fresh bootstrap exact current canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN_COMMIT"
+          test "$(git rev-parse origin/main^{tree})" = "$EXPECTED_MAIN_TREE"
+          git show "origin/main:docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md" >/dev/null
+          git show "origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md" >/dev/null
+          git show "origin/main:docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md" >/dev/null
+          echo "OPS03_C2_FRESH_BOOTSTRAP:PASS:$EXPECTED_MAIN_COMMIT:$EXPECTED_MAIN_TREE"
+
+      - name: Download exact accepted API-06 C1 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-candidate-v3
+          path: ${{ runner.temp }}/accepted-api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+
+      - name: Bind exact accepted API-06 C1 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          P=$(find "$RUNNER_TEMP/accepted-api06" -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          test -n "$P"
+          test "$(basename "$P")" = 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip'
+          echo '3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c  '"$P" | sha256sum -c -
+          test "$(stat -c%s "$P")" = '44012716'
+          echo "EPD2_OPS03_ACCEPTED_API06_ZIP=$P" >> "$GITHUB_ENV"
+          echo 'OPS03_C2_ACCEPTED_API06_ARTIFACT:PASS:33629147572:100243984921'
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up exact uv toolchain
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.6.14"
+          enable-cache: false
+
+      - name: Inject surgical C2 correction before freeze
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/ops03_c2_ci.sh")
+          text = path.read_text(encoding="utf-8")
+          needle = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\npython3 - \"$ROOT\" <<'PY'\n"
+          replacement = """grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"
+          python3 \"$REPO_ROOT/scripts/ops03_c2_normalize_generated.py\" \"$ROOT\"
+          python3 \"$REPO_ROOT/scripts/ops03_c2_harden_g05.py\" \"$ROOT\" \"$MAIN\" \"$TREE\"
+          uvx --from ruff==0.15.22 ruff format \\
+            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\" \\
+            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding_c2.py\" \\
+            \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/preview_minimum.py\" \\
+            \"$ROOT/scripts/validation/validate_ops03.py\" \\
+            \"$ROOT/tests/ops03/test_ops03_c2_api06_binding.py\"
+          python3 - \"$ROOT\" <<'PY'
+          """
+          if needle not in text:
+              raise SystemExit("OPS03 C2 correction insertion point not found")
+          path.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
+          print("OPS03_C2_SURGICAL_CORRECTION_CONTROL:PASS")
+          PY
+
+      - name: Re-bootstrap reconcile freeze qualify and reseal C2
+        id: c2
+        shell: bash
+        run: bash scripts/ops03_c2_ci.sh
+
+      - name: Verify terminal evidence and write external developer report
+        id: report
+        shell: bash
+        env:
+          CANDIDATE: ${{ steps.c2.outputs.candidate }}
+          CANDIDATE_SHA: ${{ steps.c2.outputs.candidate_sha }}
+          CANDIDATE_SIZE: ${{ steps.c2.outputs.candidate_size }}
+          EVIDENCE: ${{ steps.c2.outputs.evidence }}
+          MAIN_COMMIT: ${{ steps.c2.outputs.main }}
+          MAIN_TREE: ${{ steps.c2.outputs.tree }}
+        run: |
+          set -euo pipefail
+          test "$MAIN_COMMIT" = "$EXPECTED_MAIN_COMMIT"
+          test "$MAIN_TREE" = "$EXPECTED_MAIN_TREE"
+          jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and (.result.gates_failed|length)==0 and (.result.environment_blocked|length)==0' "$EVIDENCE/ops03_acceptance_result.json"
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0' "$EVIDENCE/mutation_suite_result.json"
+          REPORT="$RUNNER_TEMP/OPS03_C2_DEVELOPER_REPORT.md"
+          cat > "$REPORT" <<EOF
+          # OPS-03 C2 developer report
+
+          - C1 verdict: **FAIL FOR CURRENT AUTHORITATIVE ACCEPTANCE / CORRECTION REQUIRED** because its entering governance state was stale (`API-06 = NEXT`).
+          - Exact old C1 baseline: `main@217559b7f21c338d6fe8d4e4676082cd3840251c`, tree `eb8a3254c2b8a30feff71318d4377eff2435605c`.
+          - Exact C2 entering canonical baseline: `main@$MAIN_COMMIT`, tree `$MAIN_TREE`.
+          - Exact accepted API-06: `EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip`; SHA-256 `3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c`; size `44012716`; authoritative run `33629147572`; authoritative job `100243984921`; decision `ACCEPTED_CLOSED`; API layer `CLOSED`.
+          - G05 correction: the former `API-06 NEXT` blocker is inverted. PASS now requires the exact canonical acceptance record, exact filename/SHA/size/run/job, API layer `CLOSED`, frozen binding evidence, exact sealed API-06 artifact bytes, and bounded runtime load/soak against those bytes.
+          - Governed qualification: **50/50 PASS**, **0 FAIL**, **0 BLOCKED**.
+          - Mutation suite: **24/24 DETECTED**; the original mutation count is preserved.
+          - Anti-cheat: stale API-06 state, wrong filename/SHA/size/run/job, forged acceptance record, old entering baseline, missing binding, self-acceptance, post-seal mutation and stale evidence reuse are fail-closed through the exact-binding tests plus the existing freeze/evidence mutation suite.
+          - Predecessor regression: **PASS** for OPS-01 and OPS-02; the C2 builder fails before terminal PASS if either predecessor validator fails.
+          - Same-bytes/freeze: **PASS** (`tested bytes == frozen bytes == packaged bytes` by builder freeze plus post-execution sealed-source verification).
+          - Candidate package: `EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip`.
+          - Package SHA-256: `$CANDIDATE_SHA`.
+          - Package size: `$CANDIDATE_SIZE` bytes.
+          - Candidate self-state: **CANDIDATE_NOT_ACCEPTED**; `self_accepted=false`.
+          - Preview boundary: `OPS-03 may qualify preview-readiness minimum`; **SYSTEM TRIAL PREVIEW remains NOT OPEN until separate governed checkpoint-opening decision**.
+          - Terminal marker: `OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json`.
+          EOF
+          sed -i 's/^          //' "$REPORT"
+          echo "report=$REPORT" >> "$GITHUB_OUTPUT"
+          echo "OPS03_C2_DEVELOPER_REPORT:PASS:$CANDIDATE_SHA:$CANDIDATE_SIZE"
+
+      - name: Upload exact corrective C2 deliverable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-corrective-deliverable-${{ github.run_id }}
+          path: |
+            ${{ steps.c2.outputs.candidate }}
+            ${{ steps.report.outputs.report }}
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload C2 builder evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-corrective-evidence-${{ github.run_id }}
+          path: ${{ steps.c2.outputs.evidence }}/
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Terminal corrective builder result
+        run: |
+          echo 'OPS03_C2_BUILD_RESULT:PASS:${{ steps.c2.outputs.candidate_sha }}:${{ steps.c2.outputs.candidate_size }}:${{ steps.c2.outputs.workflow_sha }}:${{ steps.c2.outputs.main }}:${{ steps.c2.outputs.tree }}'
+          echo 'OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json'
