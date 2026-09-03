@@ -37,15 +37,53 @@ jobs:
           for p in docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json; do
             mkdir -p "$ROOT/$(dirname "$p")"; git show "origin/main:$p" > "$ROOT/$p"
           done
-          cd "$ROOT"; rm -rf .git; git init -q; git config user.email epd2-builder@users.noreply.github.com; git config user.name epd2-builder; git add -A; git commit -qm 'INFRA-03 C1 corrected source'; git remote add origin https://github.com/nepogoda1970-epd2/epd2-civic-os.git; git fetch -q --depth=1 origin main
+          cd "$ROOT"; rm -rf .git; git init -q; git config user.email epd2-builder@users.noreply.github.com; git config user.name epd2-builder; git remote add origin https://github.com/nepogoda1970-epd2/epd2-civic-os.git; git fetch -q --depth=1 origin main
+          git update-ref refs/heads/main refs/remotes/origin/main
           echo "root=$ROOT" >> "$GITHUB_OUTPUT"; echo "i2=$GITHUB_WORKSPACE/$I2" >> "$GITHUB_OUTPUT"; echo "a6=$GITHUB_WORKSPACE/$A6" >> "$GITHUB_OUTPUT"
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
         with: {version: '0.12.5', enable-cache: false}
-      - name: Install locked environment
+      - name: Install locked environments and format exact C1
         working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
         run: |
+          set -euo pipefail
           uv lock --check
           uv sync --frozen --all-groups
+          npm ci
+          uv run ruff format scripts/infra03/trust.py scripts/infra03/gates.py
+          uv run ruff check --fix scripts/infra03/trust.py scripts/infra03/gates.py
+          npx prettier --write docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json docs/infra/INFRA-03/*.md docs/infra/INFRA-03/*.json validation/infra03/*.json || true
+      - name: Seal fresh governance reconciliation and source commit
+        working-directory: ${{ steps.src.outputs.root }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,subprocess
+          from datetime import datetime,UTC
+          from pathlib import Path
+          from scripts.acceptance.governance import build_reconciliation_record
+          root=Path('.')
+          def g(*a): return subprocess.check_output(['git',*a],text=True).strip()
+          pcr='docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'; master='docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'
+          target={
+            'repository':'nepogoda1970-epd2/epd2-civic-os','branch':'main',
+            'commit':g('rev-parse','origin/main'),'tree':g('rev-parse','origin/main^{tree}'),
+            'pcr_git_blob':g('rev-parse',f'origin/main:{pcr}'),
+            'pcr_sha256':hashlib.sha256(subprocess.check_output(['git','show',f'origin/main:{pcr}'])).hexdigest(),
+            'master_git_blob':g('rev-parse',f'origin/main:{master}'),
+            'master_sha256':hashlib.sha256(subprocess.check_output(['git','show',f'origin/main:{master}'])).hexdigest(),
+          }
+          facts=[
+            {'id':'api-layer-closed','region':'primary_position','must_include':['API-06 = ACCEPTED / CLOSED','API = CLOSED'],'must_exclude':['API-06 = NEXT','API-06 = ACTIVE / IN DEVELOPMENT / NOT ACCEPTED']},
+            {'id':'infra-predecessors','region':'layer_table','must_include':['INFRA-01 ACCEPTED / CLOSED','INFRA-02 ACCEPTED / CLOSED','INFRA LAYER OPEN'],'must_exclude':[]},
+          ]
+          rec=build_reconciliation_record(target,hashlib.sha256((root/pcr).read_bytes()).hexdigest(),facts,datetime.now(UTC).isoformat(timespec='seconds'),g('show','-s','--format=%cI','origin/main'),'INFRA-03 C1 reconciliation after API-06 closure; candidate remains NOT_ACCEPTED pending independent authoritative review.')
+          out=root/'docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json'; out.write_text(json.dumps(rec,indent=2,sort_keys=True)+'\n')
+          PY
+          npx prettier --write docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
+          git add -A
+          git commit -qm 'INFRA-03 C1 corrected source'
       - name: Targeted INFRA-03 tests
         working-directory: ${{ steps.src.outputs.root }}
         run: .venv/bin/python -m pytest -q tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py
@@ -63,13 +101,20 @@ jobs:
         working-directory: ${{ steps.src.outputs.root }}
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           uv run --frozen python -m scripts.acceptance run --root "$PWD" --output "$RUNNER_TEMP/canonical" | tee /tmp/infra03-canonical.log
+          RC=${PIPESTATUS[0]}
+          RUN=$(find "$RUNNER_TEMP/canonical" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -print -quit)
+          echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          if [ -n "$RUN" ]; then
+            echo '--- non-pass details ---'
+            grep -R -n -E 'FAIL|BLOCKED|MISMATCH|NOT_EXECUTED|INCONSISTENCY|SECRET|STALE|INVALID' "$RUN"/logs "$RUN"/release 2>/dev/null | tail -300 || true
+          fi
+          if [ "$RC" -ne 0 ]; then exit "$RC"; fi
           grep -F 'INFRA01_ACCEPTANCE_RESULT:PASS:' /tmp/infra03-canonical.log
-          RUN=$(find "$RUNNER_TEMP/canonical" -mindepth 1 -maxdepth 1 -type d -name 'run-*' -print -quit); test -n "$RUN"
           ZIP="$RUN/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip"; test -f "$ZIP"
           sha256sum "$ZIP"; stat -c '%s' "$ZIP"
-          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"; echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
       - name: Upload C1 candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -85,6 +130,7 @@ jobs:
           name: infra03-c1-evidence-${{ github.run_id }}
           path: |
             ${{ steps.src.outputs.root }}/validation/infra03/
+            ${{ steps.canon.outputs.run }}/
             /tmp/infra03-gates.log
             /tmp/infra03-canonical.log
           if-no-files-found: warn
