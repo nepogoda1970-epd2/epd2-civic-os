@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Read candidate contract and evidence
+      - name: Read candidate executable acceptance surface
         shell: bash
         run: |
           set -euo pipefail
@@ -27,25 +27,9 @@ jobs:
           PY
           ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
           echo "ROOT=$ROOT"
-          for f in \
-            docs/infra/INFRA-03/INFRA03_DEVELOPER_REPORT.md \
-            validation/infra03/infra03_preseal_result.json \
-            validation/infra03/baseline_identity.json \
-            validation/infra03/predecessor_identity.json \
-            validation/infra03/package_identity_result.json \
-            validation/infra03/mutation_result.json \
-            validation/infra03/bsi_readiness_disposition.json \
-            validation/infra03/preview_deployment_result.json \
-            validation/infra03/postgres_runtime_result.json \
-            validation/infra03/mtls_result.json \
-            validation/infra03/voting_network_isolation_result.json \
-            validation/infra03/supply_chain_handoff_result.json \
-            scripts/infra03/preseal.py \
-            .github/workflows/infra02-acceptance.yml; do
-              if [ -f "$ROOT/$f" ]; then
-                echo "===== FILE:$f ====="
-                sed -n '1,260p' "$ROOT/$f"
-              fi
+          for f in scripts/infra03/gates.py scripts/infra03/config.py tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py validation/infra03/run_preview_deployment.py; do
+            echo "===== FILE:$f ====="
+            sed -n '1,520p' "$ROOT/$f"
           done
-          echo '===== PRESEAL CLI HELP ====='
-          (cd "$ROOT" && python -m scripts.infra03.preseal --help) || true
+          echo '===== SCRIPT ENTRYPOINTS ====='
+          grep -RIn -E 'if __name__|argparse|def main|run_gate|gate_suite|INFRA03_' "$ROOT/scripts/infra03" "$ROOT/validation/infra03/run_preview_deployment.py" | head -400 || true
