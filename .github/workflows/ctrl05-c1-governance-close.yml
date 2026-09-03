@@ -1,0 +1,320 @@
+name: CTRL-05 C1 canonical governance close
+
+on:
+  push:
+    branches: [accept/ctrl05-c1-canonical]
+    paths:
+      - .github/workflows/ctrl05-c1-governance-close.yml
+
+permissions:
+  contents: write
+
+jobs:
+  canonical-close:
+    runs-on: ubuntu-24.04
+    env:
+      CANDIDATE_NAME: EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip
+      CANDIDATE_SHA256: a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a
+      CANDIDATE_SIZE: '31060148'
+      UPLOAD_COMMIT: 4fd5523f0222161575c275c6fee1595a054a2450
+      UPLOAD_BLOB: 2e7ff274600b99de97987bbe79cfe75fc112384a
+      CANONICAL_BASE_COMMIT: 2ceb77be91448462262b84f278a00cfe6dd4228e
+      CANONICAL_BASE_TREE: ec057046e235bbd438a4aaa1a23e9f40dff804a2
+      ACCEPTANCE_WORKFLOW_HEAD: 0ebf71055227197b83ef1da868e40d36ae0eaa58
+      ACCEPTANCE_RUN_ID: '33809558709'
+      ACCEPTANCE_JOB_ID: '100827942256'
+      EVIDENCE_ARTIFACT_ID: '9914333352'
+      EVIDENCE_ARTIFACT_NAME: ctrl05-c1-authoritative-evidence-33809558709
+      EVIDENCE_ARTIFACT_DIGEST: sha256:d228e928b35e0ada7bf3b36701d67dee9c2aad70dd46086d2fb0866367b7b504
+      EVIDENCE_ARTIFACT_SIZE: '2018055'
+      CTRL01_SHA256: 07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5
+      CTRL02_SHA256: f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e
+      CTRL03_SHA256: 89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff
+      CTRL04_SHA256: 346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2
+      INFRA03_SHA256: 6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1
+    steps:
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: canonical
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Checkout immutable candidate transport
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.UPLOAD_COMMIT }}
+          path: uploaded
+          fetch-depth: 1
+
+      - name: Guard canonical base and exact accepted candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C canonical rev-parse HEAD)" = "$CANONICAL_BASE_COMMIT"
+          test "$(git -C canonical rev-parse 'HEAD^{tree}')" = "$CANONICAL_BASE_TREE"
+          p="$GITHUB_WORKSPACE/uploaded/handoff/CTRL/incoming/$CANDIDATE_NAME"
+          test -f "$p"
+          test "$(sha256sum "$p" | awk '{print $1}')" = "$CANDIDATE_SHA256"
+          test "$(stat -c %s "$p")" = "$CANDIDATE_SIZE"
+          rm -rf "$RUNNER_TEMP/accepted"
+          mkdir -p "$RUNNER_TEMP/accepted"
+          python3 - "$p" "$RUNNER_TEMP/accepted" <<'PY'
+          import pathlib, stat, sys, zipfile
+          zpath=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(zpath) as z:
+              infos=z.infolist(); names=[i.filename for i in infos]
+              assert names and len(names)==len(set(names)), 'duplicate zip entries'
+              roots=set()
+              for i in infos:
+                  pp=pathlib.PurePosixPath(i.filename)
+                  assert not pp.is_absolute() and '..' not in pp.parts, i.filename
+                  if pp.parts: roots.add(pp.parts[0])
+                  mode=(i.external_attr >> 16) & 0xFFFF
+                  assert not stat.S_ISLNK(mode), i.filename
+              assert len(roots)==1, roots
+              z.extractall(out)
+          PY
+          root="$(find "$RUNNER_TEMP/accepted" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          test -n "$root"
+          (cd "$root" && sha256sum -c SHA256SUMS.txt >/tmp/ctrl05-close-sha.txt)
+          python3 "$root/scripts/verify_ctrl05_package.py" "$p"
+          echo "CTRL05_GOVERNANCE_INPUT:PASS:$CANDIDATE_SHA256:$CANDIDATE_SIZE"
+
+      - name: Install exact cumulative C1 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$(find "$RUNNER_TEMP/accepted" -mindepth 1 -maxdepth 1 -type d | head -1)"
+          rsync -a --delete --exclude='.git' "$root/" canonical/
+          { git -C canonical diff --name-only; git -C canonical ls-files --others --exclude-standard; } | LC_ALL=C sort -u > "$RUNNER_TEMP/candidate_delta.txt"
+          test -s "$RUNNER_TEMP/candidate_delta.txt"
+          python3 - "$root" canonical "$RUNNER_TEMP/candidate_delta.txt" <<'PY'
+          import hashlib, pathlib, sys
+          root=pathlib.Path(sys.argv[1]); canon=pathlib.Path(sys.argv[2]); delta=pathlib.Path(sys.argv[3]).read_text().splitlines()
+          checked=0
+          for rel in delta:
+              a=root/rel; b=canon/rel
+              assert a.exists()==b.exists(), ('existence mismatch',rel)
+              if a.is_file():
+                  ha=hashlib.sha256(a.read_bytes()).hexdigest(); hb=hashlib.sha256(b.read_bytes()).hexdigest()
+                  assert ha==hb,(rel,ha,hb); checked+=1
+          assert checked>0
+          print(f'CTRL05_INSTALLED_CANDIDATE_BYTES:PASS:{checked}')
+          PY
+
+      - name: Record post-run Project Owner acceptance and reconcile PCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          python3 - <<'PY'
+          import json, os, pathlib
+          p=pathlib.Path('docs/ctrl/CTRL-05/CTRL05_C1_ACCEPTANCE_RECORD.json')
+          p.parent.mkdir(parents=True, exist_ok=True)
+          record={
+            'schema':'epd2.ctrl05.c1.acceptance-record/1',
+            'stage':'CTRL-05 — Audit & Oversight Console',
+            'scope':'BOUNDED_CTRL05_STAGE_ONLY',
+            'decision':'ACCEPTED / CLOSED',
+            'decision_date':'2026-09-03',
+            'authority':'Project Owner',
+            'candidate':{
+              'file':os.environ['CANDIDATE_NAME'],
+              'sha256':os.environ['CANDIDATE_SHA256'],
+              'size_bytes':int(os.environ['CANDIDATE_SIZE']),
+              'upload_commit':os.environ['UPLOAD_COMMIT'],
+              'upload_git_blob':os.environ['UPLOAD_BLOB'],
+              'self_state_before_governance_decision':'CANDIDATE_NOT_ACCEPTED',
+              'self_accepted':False,
+            },
+            'entering_governance':{
+              'declared_baseline_commit':os.environ['CANONICAL_BASE_COMMIT'],
+              'declared_baseline_tree':os.environ['CANONICAL_BASE_TREE'],
+              'reviewed_current_main':os.environ['CANONICAL_BASE_COMMIT'],
+              'freshness_reconciliation':'PASS_NO_CTRL05_OWNED_CONFLICT',
+            },
+            'accepted_predecessors':{
+              'CTRL-01':os.environ['CTRL01_SHA256'],
+              'CTRL-02':os.environ['CTRL02_SHA256'],
+              'CTRL-03':os.environ['CTRL03_SHA256'],
+              'CTRL-04':os.environ['CTRL04_SHA256'],
+            },
+            'authoritative_review':{
+              'branch':'accept/ctrl05-c1-canonical',
+              'workflow':'.github/workflows/ctrl05-c1-authoritative.yml',
+              'workflow_head_sha':os.environ['ACCEPTANCE_WORKFLOW_HEAD'],
+              'run_id':int(os.environ['ACCEPTANCE_RUN_ID']),
+              'job_id':int(os.environ['ACCEPTANCE_JOB_ID']),
+              'conclusion':'PASS',
+              'freshness':'PASS',
+              'package_pre':'PASS',
+              'package_post':'PASS',
+              'tests':'597/597 PASS',
+              'mutations':'52/52 DETECTED',
+              'e2e':'22/22 PASS',
+              'browser':'5/5 PASS REAL_CHROMIUM',
+              'gates':'56/56 PASS',
+              'failed_gates':[],
+              'blocked_gates':[],
+              'developer_evidence_consistency':'PASS_NO_CONTRADICTORY_CURRENT_PATH_RESULT',
+              'terminal_marker':f"CTRL05_AUTHORITATIVE_RESULT:PASS:{os.environ['CANDIDATE_SHA256']}:{os.environ['CANDIDATE_SIZE']}",
+            },
+            'authoritative_evidence_artifact':{
+              'name':os.environ['EVIDENCE_ARTIFACT_NAME'],
+              'id':int(os.environ['EVIDENCE_ARTIFACT_ID']),
+              'size_bytes':int(os.environ['EVIDENCE_ARTIFACT_SIZE']),
+              'digest':os.environ['EVIDENCE_ARTIFACT_DIGEST'],
+              'created_at':'2026-09-03T21:47:23Z',
+              'expires_at':'2026-12-02T21:44:32Z',
+            },
+            'open_blockers':[],
+            'overall_ctrl_layer':'OPEN / NOT CLOSED',
+            'production_readiness':'NOT_ASSERTED',
+            'legal_activation':'NOT_ASSERTED',
+            'final_security_readiness':'NOT_ASSERTED',
+            'certification':'NOT_ASSERTED',
+            'scope_nonclaims':[
+              'CTRL layer closure',
+              'production readiness',
+              'legal activation',
+              'final security readiness',
+              'BSI/Common Criteria/EAL4 certification',
+              'direct shell/SSH or arbitrary SQL administration',
+              'provider/orchestrator/backup/secret-store ownership',
+              'voting-domain operational reach',
+            ],
+          }
+          p.write_text(json.dumps(record,indent=2,sort_keys=True,ensure_ascii=False)+'\n',encoding='utf-8')
+          PY
+
+          python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          text=p.read_text(encoding='utf-8')
+          assert 'CTRL-05 authoritative acceptance and bounded stage closure (2026-09-03)' not in text
+
+          ctrl04='**CTRL-04 authoritative acceptance and bounded stage closure (2026-09-03):**'
+          start=text.index(ctrl04)
+          end=text.index('\n\n', start)
+          ctrl05=(
+            '**CTRL-05 authoritative acceptance and bounded stage closure (2026-09-03):** exact sealed candidate '
+            '`EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip`, SHA-256 '
+            '`a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a`, size `31,060,148` bytes, '
+            'passed independent exact-byte GitHub Actions review in `.github/workflows/ctrl05-c1-authoritative.yml`, '
+            'authoritative run `33809558709`, job `100827942256`, workflow head '
+            '`0ebf71055227197b83ef1da868e40d36ae0eaa58`, conclusion `success`. The independent runner verified '
+            'the exact ZIP identity and safe single-root extraction, the complete internal `SHA256SUMS.txt` seal before '
+            'and after execution, and freshness against canonical `main@2ceb77be91448462262b84f278a00cfe6dd4228e`; '
+            'all accepted CTRL-01…CTRL-04 predecessor identities were rebound exactly with no CTRL-05-owned freshness conflict. '
+            'Independent replay passed `597/597` tests, detected `52/52` governed source mutations, passed `22/22` real-HTTP '
+            'E2E journeys against the installed CTRL-02/03/04 planes, passed `5/5` real Chromium journeys, and reproduced '
+            'all `56/56` governed CTRL-05 gates with no failed or blocked gate; Ruff, Ruff-format, mypy and secret scan also passed. '
+            'Terminal marker: `CTRL05_AUTHORITATIVE_RESULT:PASS:a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a:31060148`. '
+            'Authoritative evidence artifact `ctrl05-c1-authoritative-evidence-33809558709`, artifact ID `9914333352`, digest '
+            '`sha256:d228e928b35e0ada7bf3b36701d67dee9c2aad70dd46086d2fb0866367b7b504`. The sealed candidate correctly retained '
+            '`CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded module by '
+            '`docs/ctrl/CTRL-05/CTRL05_C1_ACCEPTANCE_RECORD.json`. **CTRL-05 C1 is therefore `ACCEPTED / CLOSED` as the bounded '
+            'Audit & Oversight Console stage.** The exact cumulative C1 payload is installed in canonical main. The overall CTRL '
+            'layer remains **OPEN / NOT CLOSED**; later CTRL stages still require independent acceptance. This acceptance creates '
+            'no production-readiness, legal-activation, final-security, BSI/Common Criteria/EAL4 certification or voting-domain '
+            'operational-reach claim.'
+          )
+          text=text[:end]+"\n\n"+ctrl05+text[end:]
+
+          old_ctrl_row='| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL-04 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 C1, CTRL-02, CTRL-03 and CTRL-04 are accepted/closed. CTRL-04 exact C1 is independently accepted by run `33740633562`; its bounded Operations Console payload is installed in canonical main while preserving the accepted CTRL-01…03 lineage. The overall CTRL layer remains open; later CTRL stages require their own governed acceptance. |'
+          new_ctrl_row='| CTRL | `CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL-04 ACCEPTED / CLOSED; CTRL-05 ACCEPTED / CLOSED; CTRL LAYER OPEN` | Exact bounded CTRL-01 through CTRL-05 stages are accepted/closed. CTRL-05 exact C1 is independently accepted by run `33809558709`; its Audit & Oversight Console payload is installed in canonical main while preserving the accepted CTRL-01…04 lineage. The overall CTRL layer remains open; later CTRL stages require their own governed acceptance. |'
+          assert text.count(old_ctrl_row)==1
+          text=text.replace(old_ctrl_row,new_ctrl_row)
+
+          old_infra_row='| INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA-02 ACCEPTED / CLOSED; INFRA LAYER OPEN` | Exact bounded INFRA-01 C3 and INFRA-02 software supply-chain foundation are accepted/closed. The overall INFRA layer remains open; INFRA-03…INFRA-07 and final INFRA closure remain governed separately and still follow API dependencies. |'
+          new_infra_row='| INFRA | `INFRA-01 ACCEPTED / CLOSED; INFRA-02 ACCEPTED / CLOSED; INFRA-03 ACCEPTED / CLOSED; INFRA LAYER OPEN` | Exact bounded INFRA-01 C3, INFRA-02 and INFRA-03 C1 are accepted/closed. INFRA-03 exact C1 is independently accepted by run `33742902782`, SHA-256 `6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1`. The overall INFRA layer remains open; INFRA-04…INFRA-07 and final INFRA closure remain governed separately. |'
+          assert text.count(old_infra_row)==1
+          text=text.replace(old_infra_row,new_infra_row)
+
+          primary='CTRL-04 = ACCEPTED / CLOSED\nNEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM'
+          assert text.count(primary)==1
+          text=text.replace(primary,'CTRL-04 = ACCEPTED / CLOSED\nCTRL-05 = ACCEPTED / CLOSED\nNEXT CHECKPOINT = INFRA/OPS PREVIEW-READINESS MINIMUM')
+
+          old_parallel_ctrl='**Parallel CTRL action:** `CTRL-01`, `CTRL-02` and `CTRL-03` are `ACCEPTED / CLOSED` as bounded stages. CTRL-02 is reconciled to SHA-256 `f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e`, run `33690561259`. CTRL-03 is canonically accepted at C1 SHA-256 `89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff`, run `33696046649`, with `50/50` gates, `44/44` mutations and `290/290` tests PASS. The cumulative control-plane payload through CTRL-03 is installed in canonical main. The overall CTRL layer remains open until remaining governed CTRL stages are independently accepted.'
+          new_parallel_ctrl='**Parallel CTRL action:** `CTRL-01` through `CTRL-05` are `ACCEPTED / CLOSED` as bounded stages. CTRL-04 is canonically accepted at C1 SHA-256 `346acc12316ac4a8f2be45c889aa9002172710da61c67ec88e54a976bb5733a2`, run `33740633562`. CTRL-05 is canonically accepted at exact C1 SHA-256 `a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a`, run `33809558709`, with `56/56` gates, `52/52` mutations, `597/597` tests, `22/22` E2E and `5/5` real Chromium journeys PASS. The cumulative control-plane payload through CTRL-05 is installed in canonical main. The overall CTRL layer remains open until remaining governed CTRL stages are independently accepted.'
+          assert text.count(old_parallel_ctrl)==1
+          text=text.replace(old_parallel_ctrl,new_parallel_ctrl)
+
+          old_parallel_infra='**Parallel INFRA action:** bounded `INFRA-02 — CI/CD & Software Supply-Chain Integrity` is `ACCEPTED / CLOSED` at exact SHA-256 `d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c`, authoritative run `33574647511`. Its accepted build-once, SBOM/provenance, vulnerability/history-secret, promotion-by-digest, drift-detection and release-integrity foundation may be reused by later INFRA work. This does not close the overall INFRA layer, open or accept INFRA-03…INFRA-07, or select a hosting provider. API is now closed; INFRA remains separately governed.'
+          new_parallel_infra='**Parallel INFRA action:** bounded `INFRA-01`, `INFRA-02` and `INFRA-03` are `ACCEPTED / CLOSED`. INFRA-02 remains accepted at SHA-256 `d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c`, run `33574647511`; INFRA-03 C1 is accepted at SHA-256 `6b49e02dbf38f9672c02c2540af051e3684cb4278b4330e91909e454f379d3c1`, run `33742902782`. Their accepted supply-chain and deployment/runtime foundations may be reused by later INFRA work. This does not close the overall INFRA layer, open or accept INFRA-04…INFRA-07, or select a hosting provider. API is closed; INFRA remains separately governed.'
+          assert text.count(old_parallel_infra)==1
+          text=text.replace(old_parallel_infra,new_parallel_infra)
+
+          p.write_text(text,encoding='utf-8')
+          print('CTRL05_PCR_RECONCILIATION:PASS')
+          print('INFRA03_PCR_STALE_ROW_RECONCILIATION:PASS')
+          PY
+
+      - name: Build canonical installation manifest and verify governance state
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          python3 - "$RUNNER_TEMP/candidate_delta.txt" <<'PY'
+          import hashlib, json, os, pathlib, sys
+          delta=pathlib.Path(sys.argv[1]).read_text().splitlines()
+          governed=sorted(set(delta+[
+            'docs/ctrl/CTRL-05/CTRL05_C1_ACCEPTANCE_RECORD.json',
+            'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md',
+          ]))
+          hashes={}; deleted=[]
+          for rel in governed:
+              p=pathlib.Path(rel)
+              if p.is_file(): hashes[rel]=hashlib.sha256(p.read_bytes()).hexdigest()
+              else: deleted.append(rel)
+          manifest={
+            'schema':'epd2.ctrl05.c1.canonical-installation-manifest/1',
+            'candidate_sha256':os.environ['CANDIDATE_SHA256'],
+            'candidate_size':int(os.environ['CANDIDATE_SIZE']),
+            'canonical_base_commit':os.environ['CANONICAL_BASE_COMMIT'],
+            'canonical_base_tree':os.environ['CANONICAL_BASE_TREE'],
+            'acceptance_run_id':int(os.environ['ACCEPTANCE_RUN_ID']),
+            'acceptance_job_id':int(os.environ['ACCEPTANCE_JOB_ID']),
+            'files':hashes,
+            'deleted_paths':deleted,
+          }
+          path=pathlib.Path('docs/ctrl/CTRL-05/CTRL05_C1_CANONICAL_INSTALLATION_MANIFEST.json')
+          path.write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+          print(f'CTRL05_INSTALL_MANIFEST:PASS:{len(hashes)}:{len(deleted)}')
+          PY
+
+          python3 - <<'PY'
+          import json, pathlib
+          rec=json.loads(pathlib.Path('docs/ctrl/CTRL-05/CTRL05_C1_ACCEPTANCE_RECORD.json').read_text())
+          assert rec['decision']=='ACCEPTED / CLOSED'
+          assert rec['candidate']['sha256']=='a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a'
+          assert rec['authoritative_review']['run_id']==33809558709
+          assert rec['authoritative_review']['job_id']==100827942256
+          assert rec['authoritative_review']['gates']=='56/56 PASS'
+          assert rec['open_blockers']==[]
+          assert rec['overall_ctrl_layer']=='OPEN / NOT CLOSED'
+          pcr=pathlib.Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md').read_text()
+          assert 'CTRL-05 = ACCEPTED / CLOSED' in pcr
+          assert '`CTRL-01 ACCEPTED / CLOSED; CTRL-02 ACCEPTED / CLOSED; CTRL-03 ACCEPTED / CLOSED; CTRL-04 ACCEPTED / CLOSED; CTRL-05 ACCEPTED / CLOSED; CTRL LAYER OPEN`' in pcr
+          assert '`INFRA-01 ACCEPTED / CLOSED; INFRA-02 ACCEPTED / CLOSED; INFRA-03 ACCEPTED / CLOSED; INFRA LAYER OPEN`' in pcr
+          assert 'CTRL05_AUTHORITATIVE_RESULT:PASS:a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a:31060148' in pcr
+          print('CTRL05_POST_GOVERNANCE_ASSERTIONS:PASS')
+          PY
+          git diff --check
+          git status --short
+
+      - name: Commit and push canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd canonical
+          git config user.name 'nepogoda1970-epd2'
+          git config user.email 'nepogoda1970@gmail.com'
+          git add -A
+          test -n "$(git status --porcelain)"
+          git commit -m 'governance(ctrl05): accept and install canonical C1'
+          new_sha="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          echo "CTRL05_CANONICAL_INSTALL:PASS:$new_sha"
