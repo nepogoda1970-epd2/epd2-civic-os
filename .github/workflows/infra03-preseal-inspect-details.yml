@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Read candidate executable acceptance surface
+      - name: Locate promotion-sensitive constants
         shell: bash
         run: |
           set -euo pipefail
@@ -27,9 +27,9 @@ jobs:
           PY
           ROOT=$(find _infra03 -mindepth 1 -maxdepth 1 -type d | head -1)
           echo "ROOT=$ROOT"
-          for f in scripts/infra03/gates.py scripts/infra03/config.py tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py validation/infra03/run_preview_deployment.py; do
-            echo "===== FILE:$f ====="
-            sed -n '1,520p' "$ROOT/$f"
-          done
-          echo '===== SCRIPT ENTRYPOINTS ====='
-          grep -RIn -E 'if __name__|argparse|def main|run_gate|gate_suite|INFRA03_' "$ROOT/scripts/infra03" "$ROOT/validation/infra03/run_preview_deployment.py" | head -400 || true
+          echo '===== PRESEAL NAME / MODE OCCURRENCES ====='
+          grep -RIn --exclude='*.json' --exclude='*.md' --exclude='*.lock' --exclude='package-lock.json' -E 'EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0\.1_PRESEAL|PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED|API-06 has no authoritative acceptance|API-06 = NEXT' "$ROOT" | head -300 || true
+          echo '===== GATES TAIL ====='
+          sed -n '1040,1195p' "$ROOT/scripts/infra03/gates.py"
+          echo '===== ACCEPTANCE NAMING ====='
+          grep -RIn --include='*.py' -E 'candidate_name|CANDIDATE_NAME|EPD2_INFRA03|INFRA03' "$ROOT/scripts/acceptance" | head -300 || true
