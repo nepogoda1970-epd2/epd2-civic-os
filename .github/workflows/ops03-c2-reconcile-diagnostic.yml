@@ -1,0 +1,42 @@
+name: OPS-03 C2 reconcile diagnostic
+on:
+  push:
+    branches: [tmp/ops03-c2-build]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - name: Reproduce exact reconcile
+        shell: bash
+        run: |
+          set -u
+          git fetch --no-tags origin main handoff/ops
+          MAIN='bdb98b62e43eaaf601ffa9e35762d778b021324f'
+          TREE='f2558fe2b03a22f5d1d7b583f6e0016404d82f50'
+          rm -rf "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted" "$RUNNER_TEMP/out"
+          mkdir -p "$RUNNER_TEMP/mainroot" "$RUNNER_TEMP/ops02" "$RUNNER_TEMP/ops03c1" "$RUNNER_TEMP/accepted"
+          git archive "$MAIN" | tar -x -C "$RUNNER_TEMP/mainroot"
+          O2='handoff/OPS/incoming/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip'
+          O3='handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C1.zip'
+          git show "origin/handoff/ops:$O2" > "$RUNNER_TEMP/accepted/o2.zip"
+          git show "origin/handoff/ops:$O3" > "$RUNNER_TEMP/accepted/o3.zip"
+          unzip -q "$RUNNER_TEMP/accepted/o2.zip" -d "$RUNNER_TEMP/ops02"
+          unzip -q "$RUNNER_TEMP/accepted/o3.zip" -d "$RUNNER_TEMP/ops03c1"
+          set +e
+          python3 scripts/ops03_c2_reconcile.py --main-root "$RUNNER_TEMP/mainroot" --ops02-root "$RUNNER_TEMP/ops02" --ops03-c1-root "$RUNNER_TEMP/ops03c1" --out-root "$RUNNER_TEMP/out" --main-commit "$MAIN" --main-tree "$TREE" --template handoff/OPS-03/templates/C2/ops03-accept.yml > "$RUNNER_TEMP/reconcile-diagnostic.txt" 2>&1
+          rc=$?
+          set -e
+          echo "exit_code=$rc" >> "$RUNNER_TEMP/reconcile-diagnostic.txt"
+          cat "$RUNNER_TEMP/reconcile-diagnostic.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ops03-c2-reconcile-diagnostic-${{ github.run_id }}
+          path: ${{ runner.temp }}/reconcile-diagnostic.txt
+          if-no-files-found: error
+          retention-days: 7
