@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>EPD² CTRL-04 Operations Console</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f4f5f7;color:#1b1f24}
+header{background:#1b1f24;color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center}
+main{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+section{background:#fff;border:1px solid #d8dbe0;border-radius:6px;padding:12px}
+h2{font-size:15px;margin:0 0 8px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px 6px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid transparent}
+.HEALTHY{background:#e6f4ea;color:#137333}.DEGRADED{background:#fef7e0;color:#b06000}.UNAVAILABLE,.UNKNOWN{background:#fce8e6;color:#c5221f}
+.REQUESTED,.AWAITING_APPROVAL{background:#e8f0fe;color:#1a56db}.APPROVED{background:#e6f4ea;color:#137333}.EXECUTING{background:#fef7e0;color:#b06000}
+.SUCCEEDED{background:#137333;color:#fff}.FAILED,.PARTIAL_FAILURE,.REFUSED{background:#c5221f;color:#fff}.CANCELLED,.EXPIRED,.UNSUPPORTED{background:#5f6368;color:#fff}
+.PRODUCTION_LIKE{background:#c5221f;color:#fff}.NON_PRODUCTION{background:#5f6368;color:#fff}
+.ro{background:#fce8e6;color:#c5221f;border-color:#c5221f}
+button{font:inherit;padding:4px 9px;border-radius:4px;border:1px solid #888;background:#fff;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.danger{border-color:#c5221f;color:#c5221f}
+.mono{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all}
+#log{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12px;max-height:220px;overflow:auto;background:#fafafa;border:1px solid #eee;padding:6px}
+dialog{border:1px solid #c5221f;border-radius:6px;max-width:520px}
+label{display:block;margin:6px 0 2px;font-size:12px}input,select{font:inherit;width:100%;box-sizing:border-box;padding:4px}
+.why{color:#5f6368;font-size:11px}
+</style></head><body>
+<header><div><strong>EPD² CTRL-04 — Operations Console</strong> <span class="mono" id="stage"></span></div>
+<div id="who"></div></header>
+<main>
+<section><h2>Targets &amp; deployment identity</h2><table id="targets"><thead><tr><th>Target</th><th>Env</th><th>Health</th><th>Artifact / release</th><th>Controls</th></tr></thead><tbody></tbody></table></section>
+<section><h2>Request operation</h2>
+<label>Action <select id="f-action"></select></label>
+<label>Target <select id="f-target"></select></label>
+<label>Reason <input id="f-reason" placeholder="ticket / incident reference"></label>
+<label>Additional parameter (key=value, optional) <input id="f-extra" placeholder="drain_seconds=5"></label>
+<label>Idempotency key <input id="f-idem"></label>
+<p class="why" id="f-why"></p>
+<button id="f-submit">Request</button>
+<h2 style="margin-top:14px">Evidence lookup</h2>
+<label>Action ID <input id="e-id" placeholder="OPA-000001"></label><button id="e-go">Lookup</button>
+<pre id="e-out" class="mono"></pre>
+</section>
+<section style="grid-column:1/3"><h2>Actions</h2><table id="actions"><thead><tr><th>Action</th><th>Type</th><th>Target</th><th>State</th><th>Approval</th><th>Execution</th><th>Result</th><th>Provenance</th><th>Controls</th></tr></thead><tbody></tbody></table></section>
+<section style="grid-column:1/3"><h2>Console log (server responses, verbatim)</h2><div id="log"></div></section>
+</main>
+<dialog id="confirm"><form method="dialog"><h2>Explicit confirmation required</h2><p id="c-text"></p>
+<label>Type the confirmation phrase exactly <input id="c-phrase" autocomplete="off"></label>
+<menu style="display:flex;gap:8px;justify-content:flex-end;padding:0"><button value="cancel">Cancel</button><button value="ok" class="danger" id="c-ok">Confirm and request</button></menu></form></dialog>
+<script>
+const SESSION = new URLSearchParams(location.search).get('session') || '';
+const H = {'Content-Type':'application/json','X-EPD2-Session':SESSION};
+let ME=null, CAT=[], TARGETS=[];
+const log=(m)=>{const l=document.getElementById('log');l.textContent=(new Date().toISOString()+' '+m+'\\n')+l.textContent;};
+const esc=(v)=>typeof v==='string'?v.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])):Array.isArray(v)?v.map(esc):(v&&typeof v==='object')?Object.fromEntries(Object.entries(v).map(([k,x])=>[esc(k),esc(x)])):v;
+// Every server value is HTML-escaped at ingestion; the page only ever renders escaped data.
+async function api(method,path,body){const r=await fetch(path,{method,headers:H,body:body?JSON.stringify(body):undefined});const j=esc(await r.json());log(method+' '+path+' -> '+r.status+' '+JSON.stringify(j).slice(0,300));return {status:r.status,json:j};}
+function badge(v,extra){return '<span class="badge '+v+' '+(extra||'')+'">'+v+'</span>';}
+function can(cap){return !!(ME&&ME.usable&&!ME.read_only&&ME.grants.some(g=>g.capability===cap));}
+function why(cap){if(!ME)return 'no session';if(!ME.usable)return 'session '+ME.session_state;if(ME.read_only)return 'read-only session: visibility without execute rights';if(!ME.grants.some(g=>g.capability===cap))return 'no '+cap+' authority in any scope';return '';}
+async function load(){
+  const me=await api('GET','/ops/v1/me');ME=me.json;
+  document.getElementById('f-submit').disabled=!!why('OPS.REQUEST');
+  document.getElementById('who').innerHTML=me.status===200?('<span>'+ME.principal_id+'</span> '+(ME.read_only?badge('READ_ONLY','ro'):badge('EXECUTABLE'))):badge('NO_SESSION','ro');
+  const cat=await api('GET','/ops/v1/catalogue');CAT=cat.json.actions.filter(a=>a.mutation);document.getElementById('stage').textContent=cat.json.stage+' · '+cat.json.self_state;
+  const sel=document.getElementById('f-action');sel.innerHTML=CAT.map(a=>'<option value="'+a.action_id+'">'+a.action_id+' ['+a.impact+']</option>').join('');
+  const t=await api('GET','/ops/v1/targets');TARGETS=t.status===200?t.json.targets:[];
+  document.getElementById('f-target').innerHTML=TARGETS.map(x=>'<option value="'+x.target_id+'">'+x.target_id+' ('+x.environment+')</option>').join('');
+  const tb=document.querySelector('#targets tbody');tb.innerHTML='';
+  for(const x of TARGETS){const h=await api('GET','/ops/v1/health?target_id='+encodeURIComponent(x.target_id));const hs=h.status===200?h.json.health.state:'UNAVAILABLE';
+    const d=x.deployment_identity;const un=Object.entries(x.unavailable_actions).filter(([k,v])=>v!=='NOT_APPLICABLE_TO_TARGET_CLASS').map(([k,v])=>k+': '+v).join('<br>');
+    tb.innerHTML+='<tr data-target="'+x.target_id+'"><td><strong>'+x.target_id+'</strong><br><span class="why">'+x.target_class+' · '+x.scope+' · v'+x.version+'</span></td><td>'+badge(x.environment)+'</td><td>'+badge(hs)+(h.status===200&&h.json.health.redacted_fields.length?'<br><span class="why">redacted: '+h.json.health.redacted_fields.join(',')+'</span>':'')+'</td><td class="mono">'+(d?d.artifact_digest.slice(0,16)+'… '+d.release_ref+' / '+d.change_ref+(d.verified?' ✔':' ✘ unverified'):'—')+'</td><td class="why">'+(un||'all applicable actions supported by backend')+'</td></tr>';}
+  updateWhy();await loadActions();
+}
+function updateWhy(){const a=CAT.find(c=>c.action_id===document.getElementById('f-action').value);const t=TARGETS.find(x=>x.target_id===document.getElementById('f-target').value);let w=why('OPS.REQUEST');
+  if(!w&&a&&t&&t.unavailable_actions[a.action_id])w='unavailable on this target: '+t.unavailable_actions[a.action_id];
+  if(!w&&a){w=(t&&t.production_like?'production-like target: approval '+a.approval_production.join('+'):'non-production: approval '+(a.approval_non_production.join('+')||'none'))+(a.destructive_confirmation?' · destructive: explicit confirmation required':'')+(a.requester_may_execute?'':' · requester may not execute');}
+  document.getElementById('f-why').textContent=w;document.getElementById('f-submit').disabled=!!why('OPS.REQUEST');}
+document.getElementById('f-action').onchange=updateWhy;document.getElementById('f-target').onchange=updateWhy;
+async function loadActions(){const r=await api('GET','/ops/v1/actions');const tb=document.querySelector('#actions tbody');tb.innerHTML='';if(r.status!==200)return;
+  for(const a of r.json.actions){const ex=a.execution?a.execution.state+' by '+a.execution.executor_ref:'—';const res=a.result?a.result.state+(a.result.failure_classification!=='NONE'?' ('+a.result.failure_classification+')':''):'PENDING';
+    const ctl=[];if(a.state==='AWAITING_APPROVAL'&&can('OPS.APPROVE'))ctl.push('<button data-act="approve" data-id="'+a.action_id+'">Approve</button>');
+    if(a.state==='APPROVED'&&can('OPS.EXECUTE'))ctl.push('<button data-act="commit" data-id="'+a.action_id+'" class="'+(a.impact==='HIGH'||a.impact==='DESTRUCTIVE'?'danger':'')+'">Commit &amp; dispatch</button>');
+    if(a.state==='EXECUTING')ctl.push('<button data-act="resolve" data-id="'+a.action_id+'">Observe result</button>');
+    if((a.state==='REQUESTED'||a.state==='AWAITING_APPROVAL'||a.state==='APPROVED')&&ME&&ME.principal_id===a.actor_ref)ctl.push('<button data-act="cancel" data-id="'+a.action_id+'">Cancel</button>');
+    if(['SUCCEEDED','FAILED','PARTIAL_FAILURE','CANCELLED','EXPIRED','UNSUPPORTED'].includes(a.state)&&a.review_state!=='REVIEWED'&&can('OPS.REVIEW'))ctl.push('<button data-act="review" data-id="'+a.action_id+'">Review</button>');
+    const w=ctl.length?'':'<span class="why">'+(why('OPS.EXECUTE')||'no control applicable in state '+a.state)+'</span>';
+    tb.innerHTML+='<tr data-action="'+a.action_id+'"><td class="mono">'+a.action_id+'</td><td>'+a.action_type+' '+badge(a.impact)+'</td><td>'+a.target_id+' '+badge(a.environment)+'<br><span class="mono">'+a.deployment_identity_ref+'</span></td><td>'+badge(a.state)+'</td><td>'+a.approval_state+'<br><span class="why">'+a.approvals.map(x=>x.approver_class+':'+x.approver_ref+':'+x.state).join(' ')+(a.required_approver_classes.length?' need '+a.required_approver_classes.join('+'):'')+'</span></td><td>'+ex+'</td><td>'+res+'</td><td class="why">by '+a.actor_ref+' · '+a.authority_ref+'<br>evidence: '+a.evidence_refs.map(e=>e.evidence_id).join(',')+'</td><td>'+ctl.join(' ')+w+'</td></tr>';}
+}
+document.getElementById('f-submit').onclick=async()=>{const a=CAT.find(c=>c.action_id===document.getElementById('f-action').value);const target=document.getElementById('f-target').value;const params={reason:document.getElementById('f-reason').value};
+  const extra=document.getElementById('f-extra').value;if(extra.includes('=')){const [k,...v]=extra.split('=');params[k.trim()]=v.join('=').trim();}
+  if(a.impact==='HIGH'||a.impact==='DESTRUCTIVE'){const dlg=document.getElementById('confirm');const phrase='CONFIRM-DESTRUCTIVE:'+target;document.getElementById('c-text').textContent=a.action_id+' on '+target+' is '+a.impact+'. It requires '+(a.approval_production.join(' + ')||'no')+' approval and a distinct executor. Phrase: '+phrase;document.getElementById('c-phrase').value='';dlg.returnValue='';dlg.showModal();
+    await new Promise(res=>dlg.addEventListener('close',res,{once:true}));if(dlg.returnValue!=='ok')return log('request aborted at confirmation');
+    if(document.getElementById('c-phrase').value!==phrase)return log('confirmation phrase mismatch; not sent');if(a.destructive_confirmation)params.confirmation=phrase;}
+  await api('POST','/ops/v1/actions',{action_type:a.action_id,target_id:target,parameters:params,idempotency_key:document.getElementById('f-idem').value||('ui-'+Date.now()),purpose:params.reason});await loadActions();};
+document.querySelector('#actions tbody').onclick=async(ev)=>{const b=ev.target.closest('button');if(!b)return;const act=b.dataset.act,id=b.dataset.id;let body={};
+  if(act==='approve'){const cls=prompt('Approver class (INCIDENT_COMMANDER / SECURITY / TRUST_CUSTODIAN)','INCIDENT_COMMANDER');if(!cls)return;body={approver_class:cls};}
+  if(act==='commit'&&b.classList.contains('danger')&&!confirm('Dispatch this high-impact/destructive operation now? Commit-time reauthorization will be applied.'))return;
+  await api('POST','/ops/v1/actions/'+id+'/'+act,body);await loadActions();};
+document.getElementById('e-go').onclick=async()=>{const r=await api('GET','/ops/v1/evidence/'+document.getElementById('e-id').value);document.getElementById('e-out').textContent=JSON.stringify(r.json,null,1);};
+load();
+</script></body></html>

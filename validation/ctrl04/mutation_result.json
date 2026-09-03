@@ -1,0 +1,396 @@
+{
+  "baseline_summary": "384 passed in 2.58s",
+  "detected": 48,
+  "executed": 48,
+  "required": 48,
+  "results": [
+    {
+      "family": "remove commit-time reauthorization",
+      "file": "operations_console.py",
+      "mutation_id": "M01",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 15 passed in 1.04s"
+    },
+    {
+      "family": "allow stale approval",
+      "file": "operations_console.py",
+      "mutation_id": "M02",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 21 passed in 1.05s"
+    },
+    {
+      "family": "allow revoked session",
+      "file": "operations_console.py",
+      "mutation_id": "M03",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 11 passed in 1.02s"
+    },
+    {
+      "family": "ignore changed target identity",
+      "file": "operations_console.py",
+      "mutation_id": "M04",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 22 passed in 1.03s"
+    },
+    {
+      "family": "ignore changed deployment identity",
+      "file": "operations_console.py",
+      "mutation_id": "M05",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 23 passed in 1.08s"
+    },
+    {
+      "family": "ignore changed parameters digest",
+      "file": "operations_console.py",
+      "mutation_id": "M06",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 25 passed in 1.05s"
+    },
+    {
+      "family": "collapse requester and approver permissions",
+      "file": "operations_console.py",
+      "mutation_id": "M07",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.54s"
+    },
+    {
+      "family": "allow approver to execute despite SoD rule",
+      "file": "operations_console.py",
+      "mutation_id": "M08",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 15 passed in 1.09s"
+    },
+    {
+      "family": "expose raw secret field",
+      "file": "operations_adapters.py",
+      "mutation_id": "M09",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 4 passed in 0.49s"
+    },
+    {
+      "family": "leak token into log/evidence",
+      "file": "operations_console.py",
+      "mutation_id": "M10",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.55s"
+    },
+    {
+      "family": "bypass CTRL-02 policy",
+      "file": "operations_console.py",
+      "mutation_id": "M11",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 28 passed in 1.11s"
+    },
+    {
+      "family": "bypass CTRL-03 scoped authority",
+      "file": "operations_console.py",
+      "mutation_id": "M12",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.16s"
+    },
+    {
+      "family": "allow voting-origin operation from general console",
+      "file": "operations_console.py",
+      "mutation_id": "M13",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 4 passed in 0.47s"
+    },
+    {
+      "family": "treat dispatch ACK as success",
+      "file": "operations_console.py",
+      "mutation_id": "M14",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.47s"
+    },
+    {
+      "family": "silently swallow provider failure",
+      "file": "operations_console.py",
+      "mutation_id": "M15",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 48 passed in 1.25s"
+    },
+    {
+      "family": "permit unsupported operation as simulated success",
+      "file": "operations_console.py",
+      "mutation_id": "M16",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.08s"
+    },
+    {
+      "family": "disable idempotency",
+      "file": "operations_console.py",
+      "mutation_id": "M17",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.50s"
+    },
+    {
+      "family": "permit duplicate execution",
+      "file": "operations_console.py",
+      "mutation_id": "M18",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 71 passed in 1.32s"
+    },
+    {
+      "family": "break concurrency guard",
+      "file": "operations_console.py",
+      "mutation_id": "M19",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.07s"
+    },
+    {
+      "family": "permit replayed request",
+      "file": "operations_console.py",
+      "mutation_id": "M20",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 74 passed in 1.28s"
+    },
+    {
+      "family": "mutate historical evidence",
+      "file": "operations_console.py",
+      "mutation_id": "M21",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.10s"
+    },
+    {
+      "family": "omit actor provenance",
+      "file": "operations_console.py",
+      "mutation_id": "M22",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.51s"
+    },
+    {
+      "family": "omit target provenance",
+      "file": "operations_console.py",
+      "mutation_id": "M23",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 36 passed in 1.18s"
+    },
+    {
+      "family": "omit deployment identity",
+      "file": "operations_console.py",
+      "mutation_id": "M24",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 36 passed in 1.31s"
+    },
+    {
+      "family": "omit approval evidence",
+      "file": "operations_console.py",
+      "mutation_id": "M25",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 37 passed in 1.17s"
+    },
+    {
+      "family": "allow expired request",
+      "file": "operations_console.py",
+      "mutation_id": "M26",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.13s"
+    },
+    {
+      "family": "allow expired maintenance window",
+      "file": "operations_console.py",
+      "mutation_id": "M27",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 80 passed in 1.35s"
+    },
+    {
+      "family": "ignore environment mismatch",
+      "file": "operations_console.py",
+      "mutation_id": "M28",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 24 passed in 1.15s"
+    },
+    {
+      "family": "ignore region/scope mismatch at commit",
+      "file": "operations_console.py",
+      "mutation_id": "M29",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 24 passed in 1.12s"
+    },
+    {
+      "family": "authorize by role name without exact scope",
+      "file": "operations_console.py",
+      "mutation_id": "M30",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 9 passed in 1.03s"
+    },
+    {
+      "family": "allow hierarchy-inherited admin",
+      "file": "operations_console.py",
+      "mutation_id": "M31",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 9 passed in 0.51s"
+    },
+    {
+      "family": "add universal super-admin",
+      "file": "operations_console.py",
+      "mutation_id": "M32",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 13 passed in 1.02s"
+    },
+    {
+      "family": "allow direct shell/SSH command execution surface",
+      "file": "operations_api.py",
+      "mutation_id": "M33",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 1 passed in 0.47s"
+    },
+    {
+      "family": "allow arbitrary SQL/admin command",
+      "file": "operations_api.py",
+      "mutation_id": "M34",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 1 passed in 0.48s"
+    },
+    {
+      "family": "bypass backend adapter contract",
+      "file": "operations_console.py",
+      "mutation_id": "M35",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 3 passed in 0.50s"
+    },
+    {
+      "family": "bypass audit write on failure",
+      "file": "operations_console.py",
+      "mutation_id": "M36",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 38 passed in 1.05s"
+    },
+    {
+      "family": "bypass audit write on cancellation",
+      "file": "operations_console.py",
+      "mutation_id": "M37",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 38 passed in 1.09s"
+    },
+    {
+      "family": "collapse failure into generic success",
+      "file": "operations_console.py",
+      "mutation_id": "M38",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 38 passed in 1.08s"
+    },
+    {
+      "family": "hide partial failure",
+      "file": "operations_console.py",
+      "mutation_id": "M39",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 66 passed in 1.24s"
+    },
+    {
+      "family": "allow rollback to unverified artifact",
+      "file": "operations_console.py",
+      "mutation_id": "M40",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 78 passed in 1.24s"
+    },
+    {
+      "family": "allow restart of wrong deployment target",
+      "file": "operations_console.py",
+      "mutation_id": "M41",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 35 passed in 1.05s"
+    },
+    {
+      "family": "allow restore against mismatched backup identity",
+      "file": "operations_console.py",
+      "mutation_id": "M42",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 81 passed in 1.26s"
+    },
+    {
+      "family": "allow destructive operation without strong confirmation",
+      "file": "operations_console.py",
+      "mutation_id": "M43",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 33 passed in 1.06s"
+    },
+    {
+      "family": "allow UI execution while read-only",
+      "file": "operations_console.py",
+      "mutation_id": "M44",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 5 passed in 0.47s"
+    },
+    {
+      "family": "let browser supply authoritative approval state",
+      "file": "operations_api.py",
+      "mutation_id": "M45",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 2 passed in 0.45s"
+    },
+    {
+      "family": "let browser supply authoritative execution result",
+      "file": "operations_api.py",
+      "mutation_id": "M46",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 2 passed in 0.45s"
+    },
+    {
+      "family": "accept unsigned/untrusted authority projection",
+      "file": "operations_console.py",
+      "mutation_id": "M47",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 8 passed in 1.00s"
+    },
+    {
+      "family": "self-acceptance marker mutation",
+      "file": "operations_console.py",
+      "mutation_id": "M48",
+      "returncode": 1,
+      "status": "DETECTED",
+      "summary": "1 failed, 4 passed in 0.46s"
+    }
+  ],
+  "schema": "epd2.ctrl04.mutation-result/1",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-04",
+  "undetected": []
+}

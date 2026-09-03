@@ -1,0 +1,330 @@
+{
+  "browser_result": "PASS",
+  "e2e_result": "20/20 PASS",
+  "gates": [
+    {
+      "executed": true,
+      "id": "G01",
+      "name": "exact_repository_baseline_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G02",
+      "name": "mandatory_bootstrap_docs_read_and_digested",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G03",
+      "name": "exact_ctrl01_accepted_identity_bound",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G04",
+      "name": "exact_ctrl02_accepted_identity_bound",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G05",
+      "name": "exact_ctrl03_accepted_identity_bound",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G06",
+      "name": "relevant_infra_accepted_identities_bound",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G07",
+      "name": "relevant_ops_accepted_identities_bound",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G08",
+      "name": "no_universal_admin_capability",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G09",
+      "name": "no_raw_secret_key_exposure",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G10",
+      "name": "no_direct_provider_coupling_in_control_api",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G11",
+      "name": "no_voting_isolation_bypass",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G12",
+      "name": "no_governance_political_authority_inheritance",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G13",
+      "name": "no_historical_evidence_mutation",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G14",
+      "name": "read_vs_execute_permissions_separated",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G15",
+      "name": "typed_target_identity",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G16",
+      "name": "typed_action_request",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G17",
+      "name": "typed_approval_state",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G18",
+      "name": "typed_execution_state",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G19",
+      "name": "typed_final_result",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G20",
+      "name": "explicit_deployment_identity",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G21",
+      "name": "explicit_environment_scope",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G22",
+      "name": "explicit_regional_scope_context",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G23",
+      "name": "unsupported_backend_capability_fails_explicitly",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G24",
+      "name": "dispatch_acknowledgement_is_not_success",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G25",
+      "name": "partial_failure_represented_explicitly",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G26",
+      "name": "cancellation_expiry_represented_explicitly",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G27",
+      "name": "request_time_authorization",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G28",
+      "name": "approval_authorization_where_required",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G29",
+      "name": "execution_authorization_separate_from_approval",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G30",
+      "name": "commit_time_reauthorization",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G31",
+      "name": "stale_authority_rejected",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G32",
+      "name": "stale_approval_rejected",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G33",
+      "name": "changed_target_rejected",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G34",
+      "name": "changed_parameters_digest_rejected",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G35",
+      "name": "revoked_expired_session_rejected",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G36",
+      "name": "high_impact_dual_control_path_tested",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G37",
+      "name": "idempotency_key_enforced",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G38",
+      "name": "replay_rejected_or_safely_deduplicated",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G39",
+      "name": "duplicate_execution_prevented",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G40",
+      "name": "conflicting_concurrent_execution_handled",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G41",
+      "name": "rollback_semantics_deterministic",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G42",
+      "name": "maintenance_state_transition_guarded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G43",
+      "name": "every_privileged_mutation_has_immutable_action_id",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G44",
+      "name": "actor_authority_provenance_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G45",
+      "name": "target_deployment_identity_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G46",
+      "name": "request_parameters_digest_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G47",
+      "name": "approval_provenance_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G48",
+      "name": "execution_result_evidence_recorded",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G49",
+      "name": "secret_values_absent_from_evidence",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G50",
+      "name": "audit_evidence_survives_restart",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G51",
+      "name": "frontend_api_negative_paths_verified",
+      "status": "PASS"
+    },
+    {
+      "executed": true,
+      "id": "G52",
+      "name": "package_pre_post_verification_and_review_readiness",
+      "status": "PASS"
+    }
+  ],
+  "gates_blocked_for_final_seal": [],
+  "gates_failed": [],
+  "gates_passed": 52,
+  "gates_total": 52,
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "mutation_result": "48/48 DETECTED",
+  "overall": "PASS",
+  "schema": "epd2.ctrl04.preseal-result/1",
+  "self_acceptance": false,
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-04",
+  "tests": "384 passed in 2.55s"
+}

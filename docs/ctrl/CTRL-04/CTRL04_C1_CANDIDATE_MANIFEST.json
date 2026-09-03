@@ -1,0 +1,53 @@
+{
+  "stage": "CTRL-04",
+  "title": "Operations Console",
+  "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+  "mode": "PARALLEL_WORKING_PRESEAL_NOT_ACCEPTED",
+  "repository": "nepogoda1970-epd2/epd2-civic-os",
+  "branch": "main",
+  "repository_commit": "8a4d336589f2322984dbf03b1af3b5a575643005",
+  "repository_tree": "ee38a1a51f70f4c9652dd75eab4d0d1034d7135c",
+  "predecessors": {
+    "CTRL-01": "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+    "CTRL-02": "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+    "CTRL-03": "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+    "INFRA": [
+      "INFRA-01 C3 5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "INFRA-02 d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+    ],
+    "OPS": [
+      "OPS-01 C2 39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "OPS-02 C3 ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125"
+    ],
+    "not_accepted_not_claimed": ["INFRA-03 (WORKING_PRESEAL_NOT_ACCEPTED)", "OPS-03 (QUALIFICATION_ELIGIBLE, not accepted)"]
+  },
+  "predecessor_binding": "by exact accepted identity and adapter contract; no INFRA/OPS runtime code is installed on main or imported",
+  "gates": {
+    "required": 52,
+    "passed": 52
+  },
+  "mutations": {
+    "required": 48,
+    "detected": 48
+  },
+  "e2e_journeys": {
+    "required": 20,
+    "passed": 20,
+    "integration_class": "REFERENCE_AND_LOCAL_REAL_ADAPTERS"
+  },
+  "browser_journeys": {
+    "required": 4,
+    "passed": 4
+  },
+  "tests": {
+    "passed": 384,
+    "failed": 0,
+    "skipped": 0,
+    "ctrl04_specific": 94,
+    "inherited_ctrl01_02_03": 290
+  },
+  "self_acceptance": false,
+  "candidate_zip": "EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.zip",
+  "candidate_sha256": "EXTERNAL: see EPD2_CTRL04_OPERATIONS_CONSOLE_CANDIDATE_0.1_C1.identity.json (an archive cannot contain its own digest)",
+  "candidate_size": 0
+}

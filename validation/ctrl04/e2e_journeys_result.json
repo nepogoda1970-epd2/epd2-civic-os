@@ -1,0 +1,227 @@
+{
+  "adapters": {
+    "local-backup": "LocalFilesystemBackupAdapter: real content-addressed archive backup",
+    "local-process": "LocalProcessAdapter: real OS process restart, live health",
+    "reference-adapter": "ReferenceOperationsAdapter: deterministic injection for degraded/rollback paths",
+    "store": "JsonFileStore \u2014 persisted checkpoint reloaded for J19"
+  },
+  "integration_class": "REFERENCE_AND_LOCAL_REAL_ADAPTERS",
+  "journeys": [
+    {
+      "journey": "J01",
+      "observations": {
+        "health": "HEALTHY",
+        "pid": "4586",
+        "release": "rel-1.4.0",
+        "status": 200
+      },
+      "status": "PASS",
+      "title": "read environment/deployment status"
+    },
+    {
+      "journey": "J02",
+      "observations": {
+        "int-payment": "DEGRADED",
+        "svc-legacy": "UNAVAILABLE"
+      },
+      "status": "PASS",
+      "title": "read degraded/unavailable service state"
+    },
+    {
+      "journey": "J03",
+      "observations": {
+        "action_id": "OPA-000001",
+        "execution_state": "COMPLETED",
+        "pid_after": 4595,
+        "pid_before": 4586,
+        "state": "SUCCEEDED"
+      },
+      "status": "PASS",
+      "title": "request safe restart and observe terminal result"
+    },
+    {
+      "journey": "J04",
+      "observations": {
+        "error": "OPS_WRONG_SCOPE",
+        "status": 403
+      },
+      "status": "PASS",
+      "title": "forbidden restart by insufficient authority"
+    },
+    {
+      "journey": "J05",
+      "observations": {
+        "commit_status": 403,
+        "error": "OPS_STALE_AUTHORITY"
+      },
+      "status": "PASS",
+      "title": "stale authority between request and execution refused"
+    },
+    {
+      "journey": "J06",
+      "observations": {
+        "final": "SUCCEEDED",
+        "required": [
+          "INCIDENT_COMMANDER",
+          "SECURITY"
+        ],
+        "single_approval_commit": "OPS_QUORUM_NOT_MET"
+      },
+      "status": "PASS",
+      "title": "high-impact operation requires approval/dual control"
+    },
+    {
+      "journey": "J07",
+      "observations": {
+        "commit_status": 403,
+        "error": "OPS_STALE_APPROVAL"
+      },
+      "status": "PASS",
+      "title": "approval expires before execution refused"
+    },
+    {
+      "journey": "J08",
+      "observations": {
+        "conflict": "OPS_IDEMPOTENCY_CONFLICT",
+        "dispatches": 1,
+        "duplicate_commit": "OPS_DUPLICATE_EXECUTION",
+        "same_action": true
+      },
+      "status": "PASS",
+      "title": "duplicate request/idempotency replay: no duplicate execution"
+    },
+    {
+      "journey": "J09",
+      "observations": {
+        "classification": "PROVIDER_FAILURE",
+        "evidence_result": "FAILED",
+        "health_after": "UNAVAILABLE",
+        "state": "FAILED"
+      },
+      "status": "PASS",
+      "title": "provider/backend failure: explicit FAILED result + evidence"
+    },
+    {
+      "journey": "J10",
+      "observations": {
+        "classification": "UNSUPPORTED_CAPABILITY",
+        "state": "UNSUPPORTED"
+      },
+      "status": "PASS",
+      "title": "unsupported operation: explicit unsupported state"
+    },
+    {
+      "journey": "J11",
+      "observations": {
+        "archive_exists": true,
+        "backup_state": "COMPLETED",
+        "readiness": "READY",
+        "state": "SUCCEEDED"
+      },
+      "status": "PASS",
+      "title": "backup operation request/status path"
+    },
+    {
+      "journey": "J13",
+      "observations": {
+        "error": "OPS_BACKUP_IDENTITY_MISMATCH",
+        "status": 403
+      },
+      "status": "PASS",
+      "title": "mismatched backup/target identity refused"
+    },
+    {
+      "journey": "J12",
+      "observations": {
+        "data_restored": true,
+        "final": "SUCCEEDED",
+        "no_confirmation": "OPS_DESTRUCTIVE_CONFIRMATION_MISSING",
+        "no_window": "OPS_MAINTENANCE_WINDOW_REQUIRED",
+        "requester_execute": "OPS_WRONG_SCOPE",
+        "required": [
+          "INCIDENT_COMMANDER",
+          "SECURITY",
+          "TRUST_CUSTODIAN"
+        ]
+      },
+      "status": "PASS",
+      "title": "restore/recovery request guarded by stronger controls"
+    },
+    {
+      "journey": "J14",
+      "observations": {
+        "after": "EXPIRED",
+        "before": "ACTIVE"
+      },
+      "status": "PASS",
+      "title": "maintenance window request/activation/expiry"
+    },
+    {
+      "journey": "J15",
+      "observations": {
+        "unverified": "OPS_ROLLBACK_ARTIFACT_UNVERIFIED",
+        "verified_path": "J06"
+      },
+      "status": "PASS",
+      "title": "rollback only to verified allowed artifact identity"
+    },
+    {
+      "journey": "J16",
+      "observations": {
+        "mutation": "OPS_READ_ONLY_SESSION",
+        "read_status": 200
+      },
+      "status": "PASS",
+      "title": "read-only operator cannot mutate"
+    },
+    {
+      "journey": "J17",
+      "observations": {
+        "api_token": "[REDACTED]",
+        "redacted_fields": [
+          "api_token"
+        ]
+      },
+      "status": "PASS",
+      "title": "secret-bearing provider metadata rendered redacted"
+    },
+    {
+      "journey": "J18",
+      "observations": {
+        "evidence_digest": "4616650dfe53a3c757208af958ddde96a939fb98319f157d0474f24a9ca17dc9",
+        "missing": [],
+        "status": 200
+      },
+      "status": "PASS",
+      "title": "audit/evidence lookup by immutable action ID"
+    },
+    {
+      "journey": "J19",
+      "observations": {
+        "actions_after_restart": 10,
+        "journal_head": "eecb1e06a7caedda",
+        "records": 57
+      },
+      "status": "PASS",
+      "title": "runtime restart does not erase action/evidence history"
+    },
+    {
+      "journey": "J20",
+      "observations": {
+        "listed": false,
+        "mutate": "OPS_VOTING_BOUNDARY",
+        "read": "OPS_VOTING_BOUNDARY"
+      },
+      "status": "PASS",
+      "title": "voting-domain operational boundary cannot be crossed"
+    }
+  ],
+  "journeys_passed": 20,
+  "journeys_total": 20,
+  "non_claim": "The accepted OPS-01/OPS-02/INFRA-01/INFRA-02 provider runtimes are not installed on canonical main; this evidence proves the governed control semantics over the adapter contract with real local mechanisms and is not a provider-integration claim.",
+  "runtime_source_digest": "865a665b564b79a993bd931067e2526764634c79d01c01e7f9468028cb56a010",
+  "schema": "epd2.ctrl04.e2e-journeys/1",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "stage": "CTRL-04",
+  "transport": "real HTTP (ThreadingHTTPServer) over loopback"
+}

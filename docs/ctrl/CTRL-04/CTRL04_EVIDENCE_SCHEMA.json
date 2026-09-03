@@ -1,0 +1,44 @@
+{
+  "schema": "epd2.ctrl04.evidence.v1",
+  "required": [
+    "action_id",
+    "request_id",
+    "action_type",
+    "actor_ref",
+    "authority_ref",
+    "target_ref",
+    "environment",
+    "parameters_digest",
+    "requested_at",
+    "authorization_decision",
+    "execution_state",
+    "result_state",
+    "deployment_identity_ref",
+    "evidence_digest"
+  ],
+  "optional": [
+    "approval_ref",
+    "region_scope",
+    "maintenance_window_ref",
+    "incident_ref",
+    "backend_operation_ref",
+    "failure_classification"
+  ],
+  "forbidden_fields_examples": [
+    "password",
+    "private_key",
+    "secret_value",
+    "access_token",
+    "refresh_token",
+    "recovery_secret",
+    "seed_phrase",
+    "raw_hsm_material"
+  ],
+  "terminal_states": [
+    "SUCCEEDED",
+    "FAILED",
+    "CANCELLED",
+    "EXPIRED",
+    "UNSUPPORTED"
+  ]
+}

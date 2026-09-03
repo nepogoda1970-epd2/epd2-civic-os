@@ -1,0 +1,9 @@
+{
+  "contract_commit": "8a4d336589f2322984dbf03b1af3b5a575643005",
+  "contract_tree": "ee38a1a51f70f4c9652dd75eab4d0d1034d7135c",
+  "master_sha256": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+  "observed_commit": "8a4d336589f2322984dbf03b1af3b5a575643005",
+  "observed_tree": "ee38a1a51f70f4c9652dd75eab4d0d1034d7135c",
+  "pcr_sha256": "3542d4f4d31fdb3578009f0c162715c32b3439b837bbcc2f125b485539851bca",
+  "schema": "epd2.ctrl04.baseline-identity/1"
+}

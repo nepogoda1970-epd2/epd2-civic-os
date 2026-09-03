@@ -1,0 +1,31 @@
+{
+  "documents": {
+    "docs/ctrl/CTRL-01/CTRL-01-SPECIFICATION.md": "a3ef7fafa7def8714378c0c1fac4472ae80516e72607eb5b09062a5698c1d5c7",
+    "docs/ctrl/CTRL-01/CTRL01_C1_ACCEPTANCE_RECORD.json": "f6f6671d13917a04865d384450015ff1305d05e3923ec510b54c2e7bbcc0c3b6",
+    "docs/ctrl/CTRL-02/CTRL02_ACCEPTANCE_RECORD.json": "a555f09841d9031224d132ee54ae74ecf50ba9a2d36f60b2a24ce923ca50de3c",
+    "docs/ctrl/CTRL-03/CTRL03_C1_ACCEPTANCE_RECORD.json": "818436c9cbbad162522c86e4e316ec45ec456c4af22447704260f17bc5c752fc",
+    "docs/ctrl/CTRL-03/CTRL03_STAGE_CONTRACT.md": "dfbebf38692057ed3d07025962aa356ccbba9b5153f632884d4b2f0d1ebf4795",
+    "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json": "983d558f9dac764c28cb96e02193212e4f97150532a20025289a4bfc30d60e70",
+    "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json": "ca23c674667afd7b2164d01db0e7d5dd5342367dacb2e6ed5bbbdd20d7d55b04",
+    "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json": "960cef6178e8c2453cef102c788953408ed0b3b7637acf0e97eead5388fdef7e",
+    "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json": "2625147639140d2c03e07d5c499dd9960bb46d88f428524163306cccff372ce0",
+    "docs/ops/OPS-02/OPS02_C3_PREVIEW_READINESS_DISPOSITION.json": "06023bedf122c6d89695604edb9db09f7626bb3bcf8ddfa29afff50c00880d3b",
+    "docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md": "3cb40d8c46baa4126702a60cb3138b3776548eda4549fc4ec0dd6163c83c1a3d",
+    "docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md": "3542d4f4d31fdb3578009f0c162715c32b3439b837bbcc2f125b485539851bca",
+    "docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md": "f6a93dec5e372c49c3f22d14e9cc7f5acea56c7ea355bd93b7e44ec940d8cbf2"
+  },
+  "master_firs_present": {
+    "FIR-CTRL-001": true,
+    "FIR-GOV-004": true,
+    "FIR-GOV-005": true,
+    "FIR-OPS-001": true,
+    "FIR-OSS-007": true,
+    "FIR-SEC-004": true,
+    "FIR-TRUST-002": true,
+    "FIR-VOTE-NET-001": true
+  },
+  "pcr_states_ctrl03_closed": true,
+  "pcr_states_ctrl_layer_open": true,
+  "pcr_states_ops03_not_accepted": true,
+  "schema": "epd2.ctrl04.bootstrap/1"
+}

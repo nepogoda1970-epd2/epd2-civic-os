@@ -1,0 +1,67 @@
+{
+  "browser": "chromium (playwright)",
+  "executed_at": "2026-09-03T09:07:07.202909+00:00",
+  "journeys": [
+    {
+      "journey": "B01",
+      "observations": {
+        "header": "readonly-operator READ_ONLY",
+        "health_badges": 6,
+        "production_badges": 6,
+        "submit_disabled": true,
+        "voting_listed": false,
+        "why": "read-only session: visibility without execute rights"
+      },
+      "status": "PASS",
+      "title": "read-only visibility without executable controls"
+    },
+    {
+      "journey": "B02",
+      "observations": {
+        "dialog": "OPS.DEPLOYMENT.ROLLBACK on svc-ref is HIGH. It requires INCIDENT_COMMANDER + SECURITY approval and a distinct executor. Phrase: CONFIRM-DESTRUCTIVE:svc-ref",
+        "medium_row": "OPA-000001\tOPS.SERVICE.RESTART MEDIUM\tsvc-ref PRODUCTION_LIKE\ndep-web-1\tAWAITING_APPROVAL\tPENDING\nneed INCIDENT_COMMANDE",
+        "rollback_row": "OPA-000003\tOPS.DEPLOYMENT.ROLLBACK HIGH\tsvc-ref PRODUCTION_LIKE\ndep-web-1\tAWAITING_APPROVAL\tPENDING\nneed INCIDENT_COMMANDER+SECURITY\t\u2014\tPENDING\tby requester \u00b7 g-",
+        "wrong_phrase_not_sent": true
+      },
+      "status": "PASS",
+      "title": "request with explicit confirmation for high-impact actions"
+    },
+    {
+      "journey": "B03",
+      "observations": {
+        "approver_sees_commit": 0,
+        "executing_row": "OPA-000001\tOPS.SERVICE.RESTART MEDIUM\tsvc-ref PRODUCTION_LIKE\ndep-web-1\tEXECUTING\tGRANTED\nINCIDENT_COMMANDER:incident-commander:GRANTED need INCIDENT_COMMANDER\t",
+        "final_row": "OPA-000001\tOPS.SERVICE.RESTART MEDIUM\tsvc-ref PRODUCTION_LIKE\ndep-web-1\tSUCCEEDED\tGRANTED\nINCIDENT_COMMANDER:incident-commander:GRANTED need INCIDENT_COMMANDER\tCOMPLETED by executor\tSUCCEEDED\tby reque"
+      },
+      "status": "PASS",
+      "title": "approval and commit rights separated; result derived server-side"
+    },
+    {
+      "journey": "B04",
+      "observations": {
+        "action_id": "OPA-000001",
+        "forged": [
+          400,
+          {
+            "detail": "client may not supply authoritative fields: ['approval_state']",
+            "error": "OPS_BROWSER_STATE_NOT_AUTHORITATIVE"
+          }
+        ]
+      },
+      "status": "PASS",
+      "title": "evidence lookup and refusal of client-supplied authoritative state"
+    }
+  ],
+  "journeys_passed": 4,
+  "journeys_total": 4,
+  "runtime_source_digest": "865a665b564b79a993bd931067e2526764634c79d01c01e7f9468028cb56a010",
+  "schema": "epd2.ctrl04.browser-journeys/1",
+  "screenshots": [
+    "B01_read_only.png",
+    "B02_request_and_confirmation.png",
+    "B03_lifecycle.png",
+    "B04_evidence.png"
+  ],
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "status": "PASS"
+}

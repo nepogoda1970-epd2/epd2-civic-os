@@ -1,0 +1,8 @@
+{
+  "archive_sha256": null,
+  "archive_size": null,
+  "freeze_verified": true,
+  "schema": "epd2.ctrl04.package-identity/1",
+  "self_state": "CANDIDATE_NOT_ACCEPTED",
+  "status": "SOURCE_FREEZE_BOUND / EXTERNAL_ARCHIVE_IDENTITY_REQUIRED"
+}

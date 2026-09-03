@@ -1,0 +1,77 @@
+{
+  "ctrl": {
+    "CTRL-01": [
+      "07134db175587a9aa441fe87a811c7cfca6cc8dfbd30006279dd0edb598783b5",
+      190099
+    ],
+    "CTRL-02": [
+      "f58bafe758f19c0b40d3a525d85d0315052c01bc9ed14eae9973079a4dfb993e",
+      16720456
+    ],
+    "CTRL-03": [
+      "89fca0f6c975a7c0e1eb70c2e3ad5229830e781c91d86637a81f99e39ac7b0ff",
+      16788860
+    ]
+  },
+  "infra": {
+    "INFRA-01": {
+      "bound": true,
+      "decision": "ACCEPTED / CLOSED",
+      "expected_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "expected_size": 15854311,
+      "record": "docs/infra/INFRA-01/INFRA01_C3_ACCEPTANCE_RECORD.json",
+      "record_sha256": "983d558f9dac764c28cb96e02193212e4f97150532a20025289a4bfc30d60e70",
+      "recorded_candidate_sha256": "5cd90da141056badc38ee3fb34f2d648002ace5b87c6a0cce1d331431364b131",
+      "recorded_size": 15854311
+    },
+    "INFRA-02": {
+      "bound": true,
+      "decision": "ACCEPTED / CLOSED",
+      "expected_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+      "expected_size": 15980332,
+      "record": "docs/infra/INFRA-02/INFRA02_ACCEPTANCE_RECORD.json",
+      "record_sha256": "ca23c674667afd7b2164d01db0e7d5dd5342367dacb2e6ed5bbbdd20d7d55b04",
+      "recorded_candidate_sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+      "recorded_size": 15980332
+    },
+    "INFRA-03": {
+      "bound": false,
+      "claimed_as_canonical_dependency": false,
+      "state": "WORKING_PRESEAL_NOT_ACCEPTED"
+    }
+  },
+  "not_accepted_dependencies": [
+    "INFRA-03",
+    "OPS-03"
+  ],
+  "ops": {
+    "OPS-01": {
+      "bound": true,
+      "decision": "ACCEPTED / CLOSED",
+      "expected_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "expected_size": 16457357,
+      "record": "docs/ops/OPS-01/OPS01_C2_ACCEPTANCE_RECORD.json",
+      "record_sha256": "960cef6178e8c2453cef102c788953408ed0b3b7637acf0e97eead5388fdef7e",
+      "recorded_candidate_sha256": "39a6b02af03269a8ebf61216503fa03df2abf4e5194aa3c45c6f4bb176f2ad27",
+      "recorded_size": 16457357
+    },
+    "OPS-02": {
+      "bound": true,
+      "decision": "ACCEPTED / CLOSED",
+      "expected_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+      "expected_size": 16632939,
+      "record": "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json",
+      "record_sha256": "2625147639140d2c03e07d5c499dd9960bb46d88f428524163306cccff372ce0",
+      "recorded_candidate_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+      "recorded_size": 16632939
+    },
+    "OPS-03": {
+      "bound": false,
+      "claimed_as_canonical_dependency": false,
+      "state": "QUALIFICATION_ELIGIBLE_NOT_ACCEPTED"
+    }
+  },
+  "runtime_binding": "by accepted identity and adapter contract only; no OPS/INFRA runtime code imported",
+  "runtime_payload_installed_on_main": false,
+  "schema": "epd2.ctrl04.predecessors/1"
+}

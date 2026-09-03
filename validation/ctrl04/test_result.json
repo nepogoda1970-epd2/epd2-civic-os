@@ -1,0 +1,103 @@
+{
+  "mypy": {
+    "command": [
+      "/root/work/repo/.venv/bin/mypy",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_console.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_api.py"
+    ],
+    "output_tail": [
+      "Success: no issues found in 3 source files"
+    ],
+    "passed": true,
+    "returncode": 0,
+    "summary": "Success: no issues found in 3 source files"
+  },
+  "ruff": {
+    "command": [
+      "/root/work/repo/.venv/bin/ruff",
+      "check",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_console.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_api.py",
+      "services/control-plane-service/tests/_ctrl04_builders.py",
+      "services/control-plane-service/tests/test_ctrl04_api.py",
+      "services/control-plane-service/tests/test_ctrl04_authorization.py",
+      "services/control-plane-service/tests/test_ctrl04_evidence_persistence.py",
+      "services/control-plane-service/tests/test_ctrl04_hardening.py",
+      "services/control-plane-service/tests/test_ctrl04_lifecycle.py",
+      "services/control-plane-service/tests/test_ctrl04_real_adapters.py",
+      "scripts/build_ctrl04_candidate.py",
+      "scripts/ctrl04_browser_journeys.py",
+      "scripts/ctrl04_common.py",
+      "scripts/ctrl04_e2e_journeys.py",
+      "scripts/ctrl04_mutation_suite.py",
+      "scripts/ctrl04_validator.py",
+      "scripts/verify_ctrl04_package.py"
+    ],
+    "output_tail": [
+      "All checks passed!"
+    ],
+    "passed": true,
+    "returncode": 0,
+    "summary": "All checks passed!"
+  },
+  "ruff_format": {
+    "command": [
+      "/root/work/repo/.venv/bin/ruff",
+      "format",
+      "--check",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_console.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_adapters.py",
+      "services/control-plane-service/src/epd2_control_plane_service/operations_api.py",
+      "services/control-plane-service/tests/_ctrl04_builders.py",
+      "services/control-plane-service/tests/test_ctrl04_api.py",
+      "services/control-plane-service/tests/test_ctrl04_authorization.py",
+      "services/control-plane-service/tests/test_ctrl04_evidence_persistence.py",
+      "services/control-plane-service/tests/test_ctrl04_hardening.py",
+      "services/control-plane-service/tests/test_ctrl04_lifecycle.py",
+      "services/control-plane-service/tests/test_ctrl04_real_adapters.py",
+      "scripts/build_ctrl04_candidate.py",
+      "scripts/ctrl04_browser_journeys.py",
+      "scripts/ctrl04_common.py",
+      "scripts/ctrl04_e2e_journeys.py",
+      "scripts/ctrl04_mutation_suite.py",
+      "scripts/ctrl04_validator.py",
+      "scripts/verify_ctrl04_package.py"
+    ],
+    "output_tail": [
+      "17 files already formatted"
+    ],
+    "passed": true,
+    "returncode": 0,
+    "summary": "17 files already formatted"
+  },
+  "schema": "epd2.ctrl04.test-result/1",
+  "secret_scan": {
+    "hits": [],
+    "passed": true
+  },
+  "tests": {
+    "command": [
+      "/root/work/repo/.venv/bin/python",
+      "-m",
+      "pytest",
+      "services/control-plane-service/tests",
+      "-q",
+      "-p",
+      "no:cacheprovider"
+    ],
+    "output_tail": [
+      "........................................................................ [ 18%]",
+      "........................................................................ [ 37%]",
+      "........................................................................ [ 56%]",
+      "........................................................................ [ 75%]",
+      "........................................................................ [ 93%]",
+      "........................                                                 [100%]",
+      "384 passed in 2.55s"
+    ],
+    "passed": true,
+    "returncode": 0,
+    "summary": "384 passed in 2.55s"
+  }
+}
