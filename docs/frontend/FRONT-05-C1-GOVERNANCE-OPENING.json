@@ -1,0 +1,28 @@
+{
+  "schema": "epd2.front05.c1-governance-opening/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "decision": "OPEN_BOUNDED_C1_INDEPENDENT_ACCEPTANCE_ATTEMPT",
+  "decision_date": "2026-09-02",
+  "authority": "PROJECT_OWNER_DIRECTIVE",
+  "directive": "Conduct canonical verification to PASS",
+  "entering_canonical_main": "8db1b85056aad3099fa27e12b29ab9f0a00c4a5b",
+  "entering_canonical_tree": "db01eb66ff1e3ebb03c511ac4eb183175b08f371",
+  "stage_contract": {
+    "path": "docs/frontend/FRONT-05-STAGE-CONTRACT.json",
+    "version": "1.0.0",
+    "ratification_before_run": "PROPOSED_FOR_GOVERNED_RATIFICATION"
+  },
+  "permitted": [
+    "seal a C1 candidate with internal state CANDIDATE_NOT_ACCEPTED",
+    "run independent exact-byte acceptance",
+    "record bounded acceptance only after authoritative PASS"
+  ],
+  "not_permitted": [
+    "candidate self-acceptance",
+    "FRONT layer closure",
+    "production-readiness claim",
+    "legal activation claim",
+    "BSI, Common Criteria or EAL4 certification claim"
+  ],
+  "status": "OPEN_FOR_INDEPENDENT_REVIEW_NOT_ACCEPTED"
+}

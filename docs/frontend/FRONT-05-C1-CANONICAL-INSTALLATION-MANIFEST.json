@@ -1,0 +1,2052 @@
+{
+  "schema": "epd2.front05.canonical-installation-manifest/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "candidate_sha256": "ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a",
+  "candidate_size_bytes": 27161590,
+  "authoritative_run_id": 33700475382,
+  "promotion_run_id": 33701575058,
+  "pre_promotion_main": "8a4d336589f2322984dbf03b1af3b5a575643005",
+  "cumulative_payload": [
+    "frontend/web-shell",
+    "frontend/voting-client",
+    "frontend/representative-workspace"
+  ],
+  "file_count": 407,
+  "files": [
+    {
+      "path": "docs/frontend/FRONT-05-C1-ACCEPTANCE-RECORD.json",
+      "sha256": "1b52530ad4fc4016526f43cf9391a7065c1a270ef6933a5de6a97d58a0caac8f",
+      "size_bytes": 3006
+    },
+    {
+      "path": "docs/frontend/FRONT-05-C1-AUTHORITATIVE-EVIDENCE.json",
+      "sha256": "2133f01b05d93eef7b4551061aa27d3c306a8c148ea29e16bd185d725d6ac3e1",
+      "size_bytes": 1613
+    },
+    {
+      "path": "docs/frontend/FRONT-05-C1-GOVERNANCE-OPENING.json",
+      "sha256": "c4a7214adc0cfeebdf3029732ba5c43331f0271dad8b888842f24672af75d08b",
+      "size_bytes": 1092
+    },
+    {
+      "path": "docs/frontend/FRONT-05-CAPABILITY-STATUS-MATRIX.csv",
+      "sha256": "1e69265e3813b87187d572624bb9d2796bb4b34f62a6eafc51ce99222557982a",
+      "size_bytes": 9792
+    },
+    {
+      "path": "docs/frontend/FRONT-05-PACK-DEPENDENCY-RECONCILIATION.md",
+      "sha256": "c2efa452a3644c8ce7c8a5ba431de310693c96ed5f2b8969b0094b683e33bee3",
+      "size_bytes": 7978
+    },
+    {
+      "path": "docs/frontend/FRONT-05-STAGE-CONTRACT.json",
+      "sha256": "bf3d87f58b4ba98bf80827e5729d10d0dfd02f7c362c413b1a1b16be03d3d8af",
+      "size_bytes": 23963
+    },
+    {
+      "path": "docs/frontend/FRONT-05-STAGE-CONTRACT.md",
+      "sha256": "dfac41d4a729e4db2517d8754d12a540d98ef48f1c3e424e1e4a527b4538aa1e",
+      "size_bytes": 14193
+    },
+    {
+      "path": "frontend/representative-workspace/.prettierignore",
+      "sha256": "547e0973a0657f3ac36d46fe0ab151172485ff00f78e103027fcc44c16e38695",
+      "size_bytes": 79
+    },
+    {
+      "path": "frontend/representative-workspace/app/layout.tsx",
+      "sha256": "457db42e8fb6e47e3ebbc9975e8a4f4d03bc9c2cef4486ab33f1cb3f1d42211b",
+      "size_bytes": 1273
+    },
+    {
+      "path": "frontend/representative-workspace/app/not-found.tsx",
+      "sha256": "f70a1b66e3672f77b75646f00fdbc61210538e7b875cbfa09003f5b772a3b229",
+      "size_bytes": 757
+    },
+    {
+      "path": "frontend/representative-workspace/app/page.tsx",
+      "sha256": "5ef8d4b15f8562b611441f449113f6545aac363217b0107fb1b20d85c43c938c",
+      "size_bytes": 1960
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/conflicts/page.tsx",
+      "sha256": "e7b3fde454cbd29f4210413ebf5a8912375efaf82461c928c5d1e96ffb788fa2",
+      "size_bytes": 948
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/declarations/page.tsx",
+      "sha256": "cb3f23d665323d6acf108572cf57189690821bb82f7eef68a3825e8e47489b38",
+      "size_bytes": 960
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/desk/[caseId]/page.tsx",
+      "sha256": "3df1695cc5ed4f0a24263927fc6f51e69b336e90b45155760e04c4c9f9e6f4f0",
+      "size_bytes": 1231
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/desk/page.tsx",
+      "sha256": "3f9cd2b6248635fcb5fa617bceb219cb8f5f4d43d2a5f596f1799a83698a3e40",
+      "size_bytes": 931
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/deviations/page.tsx",
+      "sha256": "0cedecff6517b5a9fbd294ecf1d16a14c1cc2c21ef74f67738cecf8f433c96ed",
+      "size_bytes": 952
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/layout.tsx",
+      "sha256": "cb466daaf1ec558bea7fb19581af08c4c738a12b156d3a24630b95c54d5b5e3e",
+      "size_bytes": 735
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/page.tsx",
+      "sha256": "593c643957fd64dd99c6d3647df95870c812df6db865dd44c96585ff5706f839",
+      "size_bytes": 942
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/positions/page.tsx",
+      "sha256": "bb1ce0a53853dce2da4594395b818b7adc9e4cdd563beae5f8c2f833c7fee197",
+      "size_bytes": 948
+    },
+    {
+      "path": "frontend/representative-workspace/app/representative/publication/page.tsx",
+      "sha256": "1c744bdec35f738c99fbc8099c984b414709333da7ee3b6f5c731577d2c5b3f4",
+      "size_bytes": 959
+    },
+    {
+      "path": "frontend/representative-workspace/app/workspace.css",
+      "sha256": "8a4f39383e41128874e0c992a7693ae8142bdb86d996435d63cab56744d15703",
+      "size_bytes": 11845
+    },
+    {
+      "path": "frontend/representative-workspace/components/CaseDetailSurface.tsx",
+      "sha256": "7c1b2b7eb5bea4a378136d296441970f8460befc01dc3eeaa7b532f95d61e9f0",
+      "size_bytes": 7572
+    },
+    {
+      "path": "frontend/representative-workspace/components/ConflictSurface.tsx",
+      "sha256": "fc1ffb09dd4a71b93053b554e41d8572fac4df4b6a70147f5cd9ca8d063ec9dc",
+      "size_bytes": 4328
+    },
+    {
+      "path": "frontend/representative-workspace/components/DeclarationSurface.tsx",
+      "sha256": "87cce941e97c72b3134679ede6c22cff0246580ccf7b92ad93b4378dfdf8bb3e",
+      "size_bytes": 7789
+    },
+    {
+      "path": "frontend/representative-workspace/components/DeskSurface.tsx",
+      "sha256": "01192b17cc35023790912e8c875bb358d2bec9eef301bce65d1f28f58d4ca878",
+      "size_bytes": 5125
+    },
+    {
+      "path": "frontend/representative-workspace/components/DeviationSurface.tsx",
+      "sha256": "bce383e05c9002bd9923793c47a9bb3810daaff5b6cf490d896e6c2b98faa58d",
+      "size_bytes": 7746
+    },
+    {
+      "path": "frontend/representative-workspace/components/HomeSurface.tsx",
+      "sha256": "9c7ae0d7da57ceecbb891c11897517389919cb12f2ef86625da55cc8008d4325",
+      "size_bytes": 4142
+    },
+    {
+      "path": "frontend/representative-workspace/components/PositionSurface.tsx",
+      "sha256": "295ddec2169a80aa382fee1ccb390ccf5f4cde9f5b000e7c36c8a79a8ebfee00",
+      "size_bytes": 5573
+    },
+    {
+      "path": "frontend/representative-workspace/components/PublicationSurface.tsx",
+      "sha256": "77e6ef5c94fd7c2912658f9b704e7a7d60dcee49f9f540f9fabde1e244ead491",
+      "size_bytes": 7511
+    },
+    {
+      "path": "frontend/representative-workspace/components/ScopeBanner.tsx",
+      "sha256": "f7bc3dfc7c16e7d1487c784bbd3fca8d28fe2e312dfc12c439e7035f7aa0cb8a",
+      "size_bytes": 1361
+    },
+    {
+      "path": "frontend/representative-workspace/components/WorkspaceProvider.tsx",
+      "sha256": "77f17c6cf02275bdeb1a680af4451fa957a86c2a12ccfd02895cf24b498960e1",
+      "size_bytes": 6668
+    },
+    {
+      "path": "frontend/representative-workspace/components/primitives.tsx",
+      "sha256": "4c0d4ae266a27e07db08c00238915c2f591fc4f17ce9bf451a475dda3b1e0ce5",
+      "size_bytes": 5484
+    },
+    {
+      "path": "frontend/representative-workspace/components/shell.tsx",
+      "sha256": "135001226769d20b11138a0a00efcbff76622849df467ce87960af4df17a47cf",
+      "size_bytes": 3450
+    },
+    {
+      "path": "frontend/representative-workspace/content/de.ts",
+      "sha256": "19b1d22512ea86dee1cefe24089b98e70b3dacc8d295678ecfe6be40f91736d3",
+      "size_bytes": 10394
+    },
+    {
+      "path": "frontend/representative-workspace/content/en.ts",
+      "sha256": "8230caa5a8cabab223b6a1971e862b8f8ad89d45d3dccbf84e2dcf8feff17e6b",
+      "size_bytes": 1336
+    },
+    {
+      "path": "frontend/representative-workspace/domain/capabilities.ts",
+      "sha256": "589c66490a387c551681953973439f7263246e0e5a678e8bdbda1374e3c05534",
+      "size_bytes": 26195
+    },
+    {
+      "path": "frontend/representative-workspace/domain/caseWorkflow.ts",
+      "sha256": "a069a372900151eec5ebe3ad1f0abb033a675686f182cd9642c44f4e2c2b7b7b",
+      "size_bytes": 5715
+    },
+    {
+      "path": "frontend/representative-workspace/domain/conflict.ts",
+      "sha256": "5ba338b5dee2cc11d355fc88d36eb767b9e98e2726576ce3f5a649bc76964d56",
+      "size_bytes": 4738
+    },
+    {
+      "path": "frontend/representative-workspace/domain/declaration.ts",
+      "sha256": "b4dfc6516e4b5e5c3ea4647405f541395088269a6b3789911d0d61f1ecc68a54",
+      "size_bytes": 3406
+    },
+    {
+      "path": "frontend/representative-workspace/domain/deviation.ts",
+      "sha256": "45cbfc86fb653aa18f819d887063e9eb588c043bfedb7617dc571cfb84d216fe",
+      "size_bytes": 4128
+    },
+    {
+      "path": "frontend/representative-workspace/domain/publication.ts",
+      "sha256": "2915b28a7ca6ffc595fb5ded7fad98955526d66070d694910ed2a03a1e6645ec",
+      "size_bytes": 7944
+    },
+    {
+      "path": "frontend/representative-workspace/domain/scope.ts",
+      "sha256": "efc94ce529d562eead0a70095c60bb262fbc7febc0c0e6fbc20e3385b652d1aa",
+      "size_bytes": 3851
+    },
+    {
+      "path": "frontend/representative-workspace/domain/session.ts",
+      "sha256": "36dbf6372a66f11fcdc91c652d5c201db1d11c7acdd54551a8d972a19dc33225",
+      "size_bytes": 6967
+    },
+    {
+      "path": "frontend/representative-workspace/domain/types.ts",
+      "sha256": "7dd3da44905385de8c26e03c5c410db32f16b76902a80b6891f9c349c2fcb4f5",
+      "size_bytes": 6294
+    },
+    {
+      "path": "frontend/representative-workspace/eslint.config.mjs",
+      "sha256": "8bc2adc7ed39793d6c2e8f39b9336ab412ee66beae300ebb15c2c08a3a7fe6fe",
+      "size_bytes": 412
+    },
+    {
+      "path": "frontend/representative-workspace/middleware.ts",
+      "sha256": "af201da1094139980ed420b7901c8cd3304af5fc77eddd18a2e9b6e428a699fb",
+      "size_bytes": 2626
+    },
+    {
+      "path": "frontend/representative-workspace/next-env.d.ts",
+      "sha256": "85ae5aee75f011967cf2d25cbc342f62d69314e9d925f7f4aa3456fc2cffcca6",
+      "size_bytes": 262
+    },
+    {
+      "path": "frontend/representative-workspace/next.config.ts",
+      "sha256": "9c8d0a5951b603c7cf2ea863ca7d5deb9b43a0b9b19768b28013242ce44a6ca8",
+      "size_bytes": 2977
+    },
+    {
+      "path": "frontend/representative-workspace/package.json",
+      "sha256": "367adc9789a7fedec274423918ba956727e4ec6007d6a5cce996a7e161634bce",
+      "size_bytes": 1585
+    },
+    {
+      "path": "frontend/representative-workspace/playwright.config.ts",
+      "sha256": "3346891a3b0b6aff11eeff58e715680f73296bd91b25db35ad30291a9d941bc1",
+      "size_bytes": 3297
+    },
+    {
+      "path": "frontend/representative-workspace/policies/authority.ts",
+      "sha256": "df99d151570207a8cbdb66d7548da3e8c39075c5f314b03a1bc59f0341aa548d",
+      "size_bytes": 5327
+    },
+    {
+      "path": "frontend/representative-workspace/policies/boundaries.ts",
+      "sha256": "c0dc00c9bd4008c7b5e81b20680a0efd9fa8452a28d5efb23291705ce406803d",
+      "size_bytes": 4423
+    },
+    {
+      "path": "frontend/representative-workspace/policies/confidentiality.ts",
+      "sha256": "3a87af6798d5d8cfcd0c33d82e5ce2e9740c12eeac707ff59638f005e2e9f0a1",
+      "size_bytes": 5461
+    },
+    {
+      "path": "frontend/representative-workspace/policies/dateTime.ts",
+      "sha256": "130a419d05deac94c17f53760524e774fec5f61f3fab7e7247a807a096cd6f05",
+      "size_bytes": 1384
+    },
+    {
+      "path": "frontend/representative-workspace/policies/language.ts",
+      "sha256": "18f06904154153b98625230c8c1d0aad3a7b0c07f3a2e9ff3c9efa7bc55a7526",
+      "size_bytes": 2502
+    },
+    {
+      "path": "frontend/representative-workspace/policies/visualBaseline.ts",
+      "sha256": "b057d75bc877ffc1f3d9e9297b9d886f37225d73325921733e6800f1de301451",
+      "size_bytes": 2337
+    },
+    {
+      "path": "frontend/representative-workspace/policies/workspace.ts",
+      "sha256": "032d766fed94cca7f200aca0553ae26b94c446654ab9e1ecc495791aadcc7575",
+      "size_bytes": 4734
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/compose.ts",
+      "sha256": "818929120ed9249f192c689671d459687d97040c858e3b510aa124b7783579af",
+      "size_bytes": 1509
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/fixtureAbsent.ts",
+      "sha256": "8630adb264356f3aaaedb7f8d167279e59c5dcea61e20f968500d2870c703db7",
+      "size_bytes": 982
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/governedTestRuntime.ts",
+      "sha256": "cf4d5107542cc38b9fa30f6217d2db9aa96df0464d64ca65f2c781b00b2bacb1",
+      "size_bytes": 7568
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/ports.ts",
+      "sha256": "f4700e78ab1850851a5e03a1f0ee94183a9d925b803c60dae666921d65d35d53",
+      "size_bytes": 6690
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/productionRuntime.ts",
+      "sha256": "2bd09d10f9f98f34bdc70958d8ece86b824ca68c2afc3d0aff02b45fc2bb99f6",
+      "size_bytes": 8202
+    },
+    {
+      "path": "frontend/representative-workspace/runtime/unavailable.ts",
+      "sha256": "5637b551ea7a0785d2ed56aa7d548fb93238aef3ecd90cd3dcb745d8c581f027",
+      "size_bytes": 8106
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.browser.spec.ts",
+      "sha256": "42c3dc9ddaf773d266f6fab2e5af95e2ebde55ea3a1151cab880b950fdde644c",
+      "size_bytes": 18845
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.production.browser.spec.ts",
+      "sha256": "4128528654eb127aef7d7d801aa875abbbd06f0688c20772ba7844a4a874490c",
+      "size_bytes": 4762
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts",
+      "sha256": "1a0f947ca877ca65eaad58d7ffc9cbbba37b195ba79999a00dce727262443384",
+      "size_bytes": 2664
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-detail-desktop-linux.png",
+      "sha256": "c790b50eef84f8f3b7febbe513fdfa4858cba4bba935d8aad51a505e028c0d53",
+      "size_bytes": 192060
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-detail-mobile-linux.png",
+      "sha256": "3d1dcb30948d8f4383417c3f2dca0436909485723d00b03ceade1fe674e96868",
+      "size_bytes": 212039
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-detail-wide-linux.png",
+      "sha256": "cf511b96fe169768758968f0e0a5c410c2d82748394bb8be95b1412c017c96a0",
+      "size_bytes": 198916
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-refused-desktop-linux.png",
+      "sha256": "2ecef367d15d776135c17edd66edda7787332f6571e3f66b735c55c32f3bc34d",
+      "size_bytes": 179033
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-refused-mobile-linux.png",
+      "sha256": "00c5d7e95c74d2e5cb090bd6e090dfc55988dfc0a5d740b8a1b77f9015e9f3da",
+      "size_bytes": 199234
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-case-refused-wide-linux.png",
+      "sha256": "83333c91f43c1cae60caebde3596b691f7936c493d9107ec1e57e149ecc7b0c1",
+      "size_bytes": 185267
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-conflicts-desktop-linux.png",
+      "sha256": "20503c4b4263d28a33037f276d8ce630db8a68672182f5de8ce426fca0b9a25a",
+      "size_bytes": 179565
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-conflicts-mobile-linux.png",
+      "sha256": "9abaf5f8a65d23afd8cfccbf74be90e50921faf20c78f5f77f00f98d11888c0b",
+      "size_bytes": 194368
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-conflicts-wide-linux.png",
+      "sha256": "95c584ef4ac98c1f5577dfc95b9da9d610d780cddeffa042b859d47095545ff4",
+      "size_bytes": 185562
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declaration-blocked-desktop-linux.png",
+      "sha256": "5dd0728ce384959b505b231362e4f8c24f20edfb49ae9ff4c246bde0150fcd1f",
+      "size_bytes": 183733
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declaration-blocked-mobile-linux.png",
+      "sha256": "b145efd5644e503dfb1caf63d5f9378841aeab7b23a436b1b96cbd0d05703301",
+      "size_bytes": 191959
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declaration-blocked-wide-linux.png",
+      "sha256": "7d2e509c7a4662a20f5a2b949fb2ba1fa5c12c2f393f39e26824a502e7f02e5b",
+      "size_bytes": 191124
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declarations-desktop-linux.png",
+      "sha256": "e4dad42f8a5e41057df8b365228b7629ee29b08bcf1a019bbce605357bd74530",
+      "size_bytes": 133239
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declarations-mobile-linux.png",
+      "sha256": "a024f93f037c8749c3908ba9148e6ab459aced253fc5cc201d7102e95e1affa9",
+      "size_bytes": 147026
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-declarations-wide-linux.png",
+      "sha256": "b8d8d2c17729c1bc8831991331abf2893c573e074194a261cf722cabc1ca1b93",
+      "size_bytes": 137734
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-desk-desktop-linux.png",
+      "sha256": "8a973ad14accfd13d5c6b9e9d6b575907fdfe4e315bcfcb3e29eb25283db3666",
+      "size_bytes": 158075
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-desk-mobile-linux.png",
+      "sha256": "ec8e8e258b3154d49892e926a1f95665e7fd46b008564eae37e5250253442a3a",
+      "size_bytes": 169979
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-desk-wide-linux.png",
+      "sha256": "bd728ad6ec3a1e9c42a829bc96dc41bfb4770564c5b999f72ffc7f6c49275488",
+      "size_bytes": 163405
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-deviations-desktop-linux.png",
+      "sha256": "e0933662180c726071931c7f803274e24be7212b7ee54307e19990d7a20ebdf9",
+      "size_bytes": 178183
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-deviations-mobile-linux.png",
+      "sha256": "bc80be3a8acb7330e1a93f9afc26de744559256a03839bd9d581f32682c13f22",
+      "size_bytes": 187016
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-deviations-wide-linux.png",
+      "sha256": "ad0a12782234627152f3de02d685c15e3bef78c9fd4b1b43af8bd2fe197cb619",
+      "size_bytes": 184482
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-home-desktop-linux.png",
+      "sha256": "04df2acc9bff5f8fa3b48fd1595cdc919a1752033871d3b4c33f8249882450e9",
+      "size_bytes": 251912
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-home-mobile-linux.png",
+      "sha256": "ddda7730350025b771c197883b6b34c6b96db32d0e628b3a159651fa00c59bd3",
+      "size_bytes": 267608
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-home-wide-linux.png",
+      "sha256": "156164c35f0d3a9498a58cd7c70bc824796e7a87467cb53db9e123487df22fc8",
+      "size_bytes": 259943
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-not-found-desktop-linux.png",
+      "sha256": "878073dc433851e7f8676baf7081936db107475343c267aacba2833e213205df",
+      "size_bytes": 24408
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-not-found-mobile-linux.png",
+      "sha256": "196733e8e076293e2fb0a7db7bad0b58fbd6533e43175106e08de33f1e6982f7",
+      "size_bytes": 22401
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-not-found-wide-linux.png",
+      "sha256": "1533e190187a25ffe0215ec89b9b6e59bc58b3dcffed14e2918c4797b36238cf",
+      "size_bytes": 27187
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-positions-desktop-linux.png",
+      "sha256": "b2ccfc87a921b16a5195533cbdb112086a6db45e2d3e373b3e2b8622847c7d60",
+      "size_bytes": 136402
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-positions-mobile-linux.png",
+      "sha256": "72428c1de028e91340c6b88c6638c4b868837d8dac88f6091c2ad9540ff5f379",
+      "size_bytes": 153845
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-positions-wide-linux.png",
+      "sha256": "b0093ba27b9908fa8aa2fd2fd34854932d3abe67eee20683cf95d9d8c9949812",
+      "size_bytes": 140806
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-publication-desktop-linux.png",
+      "sha256": "e8b259b4a9d2dc1fb84f77894a5a90819948daa52f2ba1f90e9b6e9b7ae5315f",
+      "size_bytes": 298416
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-publication-mobile-linux.png",
+      "sha256": "d82512b9cf955585772ba12fa299887ea64ae5bcba4e92b39ab6039f5a8e89cc",
+      "size_bytes": 286657
+    },
+    {
+      "path": "frontend/representative-workspace/tests/browser/front05.visual.spec.ts-snapshots/front05-publication-wide-linux.png",
+      "sha256": "d27b675c305488061dac50880a35ac8d75947fea57676c5114278815761efe07",
+      "size_bytes": 308416
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.boundaries.test.ts",
+      "sha256": "d4de13aa2797009b86e4bfd166f248833ef131b44487c865ad25057dc8edaf7d",
+      "size_bytes": 8019
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.design.test.ts",
+      "sha256": "d0e5f9e7a69bec29276b55bfa7eeb486bd5cd372e8ebee85a0868c268fd14289",
+      "size_bytes": 5023
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.isolation.test.ts",
+      "sha256": "2f759551cd203ff6540a2ec2865afcfd843fbb0e899deec254cc86b6ea8ddac6",
+      "size_bytes": 9883
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.language.test.ts",
+      "sha256": "fea75b26e966a62189c7a7a32b15585695c7e3a99de3e5b8215a6a609ae62af0",
+      "size_bytes": 4804
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.render.test.tsx",
+      "sha256": "d1cc0501f02679e91515ce1c3db51530f6e5fcb39eb366a5bb07a4cffad48693",
+      "size_bytes": 7380
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.runtime.test.ts",
+      "sha256": "2ab72a82fb516a9c983208e980be8fc697de680db9b1ad03e35113189e8eecf4",
+      "size_bytes": 18019
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.scope.test.ts",
+      "sha256": "b27ab100482ec8fc33b5df404c2f4760634808c0916dfd57c1b2118483ea2338",
+      "size_bytes": 6322
+    },
+    {
+      "path": "frontend/representative-workspace/tests/front05.workflow.test.ts",
+      "sha256": "a8bd3c1a1f4c826339a68f1a0f3ffdf47861fef1511f638395171449664077b5",
+      "size_bytes": 10228
+    },
+    {
+      "path": "frontend/representative-workspace/tests/resolve-chromium.mjs",
+      "sha256": "c054a2f869a79ab9e88f50c9bcdbd7ff81d6e0f9aa25718a63c7e3f5cdb15c69",
+      "size_bytes": 2114
+    },
+    {
+      "path": "frontend/representative-workspace/tests/setup.ts",
+      "sha256": "99d596defdbc1e50c3fd46ffbc79ab471c9091b86056e8233c1118812dfb234e",
+      "size_bytes": 151
+    },
+    {
+      "path": "frontend/representative-workspace/tests/start-next.mjs",
+      "sha256": "cd7b7a0097a6eb4a36eda61dfa8dfd6888a06af0036d7c5974160320ecd3ccaa",
+      "size_bytes": 359
+    },
+    {
+      "path": "frontend/representative-workspace/tsconfig.json",
+      "sha256": "0cd175c36641bf7a10d284a82a80f616d6c88f04fda7452c7f21ae68d60f1ef0",
+      "size_bytes": 583
+    },
+    {
+      "path": "frontend/representative-workspace/vitest.config.ts",
+      "sha256": "d8c0778a5d9c1787441b6d06a24f15eebf9d531aa207f37828d53c61d0531e14",
+      "size_bytes": 269
+    },
+    {
+      "path": "frontend/voting-client/.prettierignore",
+      "sha256": "547e0973a0657f3ac36d46fe0ab151172485ff00f78e103027fcc44c16e38695",
+      "size_bytes": 79
+    },
+    {
+      "path": "frontend/voting-client/app/layout.tsx",
+      "sha256": "6505404cb985298aa43ca04b88cb730b1a28c8f0ee9c7f906c7cb3e0e9a67dcc",
+      "size_bytes": 1303
+    },
+    {
+      "path": "frontend/voting-client/app/not-found.tsx",
+      "sha256": "1a8cbf46980e87b00a4a1b37abf9b2bb4f852d6b3cfd75eef7e1241cc00d92cd",
+      "size_bytes": 976
+    },
+    {
+      "path": "frontend/voting-client/app/page.tsx",
+      "sha256": "605a85f824ef275cbd7005c5f26c342a1a6a2c688111b0a61a32070ce94c2e5e",
+      "size_bytes": 1257
+    },
+    {
+      "path": "frontend/voting-client/app/vote/ballot/page.tsx",
+      "sha256": "17bc8a63adf2376aebb07d281374b7349421ca7fe944f34168d5449b4fa281b2",
+      "size_bytes": 245
+    },
+    {
+      "path": "frontend/voting-client/app/vote/credential/page.tsx",
+      "sha256": "7aa450d5a2e16d14a10d8cd249341cbb23dd237cb29dd986de68c5b3321341d8",
+      "size_bytes": 261
+    },
+    {
+      "path": "frontend/voting-client/app/vote/layout.tsx",
+      "sha256": "3a98157baece8d317f33a5cc90bad4218ee84a9222851d61eb1ee5c869f3d535",
+      "size_bytes": 667
+    },
+    {
+      "path": "frontend/voting-client/app/vote/receipt/page.tsx",
+      "sha256": "6e4b1346eefd43e3d7d0d711f7da944a76d4ac1e9b4ba7aca832e6ae0d8b3183",
+      "size_bytes": 249
+    },
+    {
+      "path": "frontend/voting-client/app/vote/review/page.tsx",
+      "sha256": "ec493ef569000f4bbadfa3547357034028c53d98dc4b1d2bd7e9717f731b5ae7",
+      "size_bytes": 245
+    },
+    {
+      "path": "frontend/voting-client/app/voting.css",
+      "sha256": "8c076bd2076569dcc1b6eb7cbcf50fdc88608712373267d69a3b69264d6b1372",
+      "size_bytes": 8542
+    },
+    {
+      "path": "frontend/voting-client/components/BallotSurface.tsx",
+      "sha256": "0abb44b88b168c79ec116d0f91306377383dd904469b001c7ee408daf02531bb",
+      "size_bytes": 6706
+    },
+    {
+      "path": "frontend/voting-client/components/CredentialSurface.tsx",
+      "sha256": "dfc75dc93e8a47e0b5b7823faa70484f75eb2582128145384e22b90a747e3652",
+      "size_bytes": 3770
+    },
+    {
+      "path": "frontend/voting-client/components/JourneyProvider.tsx",
+      "sha256": "2e0077f88e0348572722fa0527ac6705d322b511e05eeb72a9fe29943a8cb46b",
+      "size_bytes": 8682
+    },
+    {
+      "path": "frontend/voting-client/components/ReceiptSurface.tsx",
+      "sha256": "a4d852b5c0d6f41e7ac03ad61931617c02bbf4fba2e16ef11ead1ff556f37c64",
+      "size_bytes": 5816
+    },
+    {
+      "path": "frontend/voting-client/components/ReviewSurface.tsx",
+      "sha256": "55af45877fb8d985251b47d42c37842f9d449314c6bc85a7aa77979b055e72ee",
+      "size_bytes": 7697
+    },
+    {
+      "path": "frontend/voting-client/components/assistance.tsx",
+      "sha256": "f89572a8528fd5d1228a88fa2eacc685387495466367cc05165ad7d7c891e8f6",
+      "size_bytes": 1933
+    },
+    {
+      "path": "frontend/voting-client/components/primitives.tsx",
+      "sha256": "e8c3d2cab3da5467ee51d157b928bdc302207103e0132064b991dba2143c5382",
+      "size_bytes": 5146
+    },
+    {
+      "path": "frontend/voting-client/components/shell.tsx",
+      "sha256": "ed821a843743fb1b26b634fdb023c47072d36983e15b24c8294779579e4bdae5",
+      "size_bytes": 1468
+    },
+    {
+      "path": "frontend/voting-client/content/de.ts",
+      "sha256": "3fe4471e3e4aac3b47be0212d828fc449c1592c9e3dc1fb44662951b8a829ab0",
+      "size_bytes": 6513
+    },
+    {
+      "path": "frontend/voting-client/content/en.ts",
+      "sha256": "f663939080b0b2f2b56eb146610f3b6dbb376109e190ce56980bfc1c9c98c5c8",
+      "size_bytes": 1162
+    },
+    {
+      "path": "frontend/voting-client/domain/ballot.ts",
+      "sha256": "a82e68ef42de98338170dafec1c796e803bde351537e3e97a6ed80be642fcdde",
+      "size_bytes": 4691
+    },
+    {
+      "path": "frontend/voting-client/domain/capabilities.ts",
+      "sha256": "e4ed720700a26ca3f47f69aa827c47c3808dce06c821086ea6420877eb6d14c0",
+      "size_bytes": 8329
+    },
+    {
+      "path": "frontend/voting-client/domain/handoff.ts",
+      "sha256": "9fff8cf2fae153128283e1929346ffa7fb580c9c33d3f08eef6aea76fe4e496b",
+      "size_bytes": 8023
+    },
+    {
+      "path": "frontend/voting-client/domain/receipt.ts",
+      "sha256": "c5c038821955b51f5ac9fd8b4dd1cf4acac85899a636a0bd9c9891d24d442699",
+      "size_bytes": 5482
+    },
+    {
+      "path": "frontend/voting-client/domain/stateMachine.ts",
+      "sha256": "472bdfb8063cb187c483e3596147f3e977137b1fefb2a8c5dc91bb56e47faca8",
+      "size_bytes": 4728
+    },
+    {
+      "path": "frontend/voting-client/domain/types.ts",
+      "sha256": "2a80aba887e7eba16dee66db83e8b7456645955e54ba2acc2a1843853d573469",
+      "size_bytes": 5835
+    },
+    {
+      "path": "frontend/voting-client/eslint.config.mjs",
+      "sha256": "0de173aab75b5cc9be9ed254859aaf38d366b11c57d42c094069fe990192a2bd",
+      "size_bytes": 326
+    },
+    {
+      "path": "frontend/voting-client/middleware.ts",
+      "sha256": "7aca2fae78a38d044c6b5eae0c00727da52d37e7019934a4f16613dd1524e5e5",
+      "size_bytes": 2328
+    },
+    {
+      "path": "frontend/voting-client/next-env.d.ts",
+      "sha256": "85ae5aee75f011967cf2d25cbc342f62d69314e9d925f7f4aa3456fc2cffcca6",
+      "size_bytes": 262
+    },
+    {
+      "path": "frontend/voting-client/next.config.ts",
+      "sha256": "be5f96f3bca29e24707a10c86c60c8212f268588f57a7fff77569e7921afa158",
+      "size_bytes": 2916
+    },
+    {
+      "path": "frontend/voting-client/package.json",
+      "sha256": "b5c723e7058b4ebdeaf1ac2a135c32aa7168fe992e75f43df27b9e62d224cbb2",
+      "size_bytes": 1560
+    },
+    {
+      "path": "frontend/voting-client/playwright.config.ts",
+      "sha256": "a88da1a5faa137faa98f8fb789f7855fd0d6854d48098db392f9072ce7b68b72",
+      "size_bytes": 3097
+    },
+    {
+      "path": "frontend/voting-client/policies/identity.ts",
+      "sha256": "5c209e8d7339545d74f8ae016051cee9071e1885dd065041ce759a154077b514",
+      "size_bytes": 2471
+    },
+    {
+      "path": "frontend/voting-client/policies/isolation.ts",
+      "sha256": "7b1744c17da132320ebb6ef24664dbf549932ec0eb4f907082f5ba6a868d2684",
+      "size_bytes": 3004
+    },
+    {
+      "path": "frontend/voting-client/policies/supportRole.ts",
+      "sha256": "a4b851d6f9e1a400f476cae31aa45723b3d36e0a7787476636d2cf94cc3e4b48",
+      "size_bytes": 2276
+    },
+    {
+      "path": "frontend/voting-client/policies/tally.ts",
+      "sha256": "4902ff99e664bae16c32ca47f3dd8993f2349b176b1c88a34b5c6472d2f5faf4",
+      "size_bytes": 1804
+    },
+    {
+      "path": "frontend/voting-client/policies/telemetry.ts",
+      "sha256": "4ec304d662255560f0a6669ea642210b66f42e83b222fe57a795d88bf52a89fe",
+      "size_bytes": 1111
+    },
+    {
+      "path": "frontend/voting-client/policies/visualBaseline.ts",
+      "sha256": "16e185c5d06d80766c2277dbd9eab7d17e76fb50fceffeb961952e9de22cb549",
+      "size_bytes": 1494
+    },
+    {
+      "path": "frontend/voting-client/runtime/compose.ts",
+      "sha256": "7fb8af65a1df019520d3b16b94f2caba8c587e72008ab9c1195c022f7c887511",
+      "size_bytes": 1485
+    },
+    {
+      "path": "frontend/voting-client/runtime/fixtureAbsent.ts",
+      "sha256": "7c80b69cc1cf9a919a4e9419fc615ea3da457b9b8e90fab2fca6c5f7900b8706",
+      "size_bytes": 886
+    },
+    {
+      "path": "frontend/voting-client/runtime/governedTestRuntime.ts",
+      "sha256": "ab2b6c297fbf2700eb9c559ebc059ec0b71c075a4a31e9ee6453c4452b46a073",
+      "size_bytes": 4724
+    },
+    {
+      "path": "frontend/voting-client/runtime/ports.ts",
+      "sha256": "18a5d2f1f9aa880255a2f7717ee1697bb943d23a6bb12e93b0a2ff9374ba982a",
+      "size_bytes": 2367
+    },
+    {
+      "path": "frontend/voting-client/runtime/productionRuntime.ts",
+      "sha256": "743533a1342eb7b41eebaf870e8ebb44a7524584544d39dc2d889a62e8ac7280",
+      "size_bytes": 5474
+    },
+    {
+      "path": "frontend/voting-client/runtime/unavailable.ts",
+      "sha256": "c6e6ef4318c54186ee59d67f37dd1fb64b0082288831249e714d1310a6cf6581",
+      "size_bytes": 4038
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.browser.spec.ts",
+      "sha256": "0a3390917a2dbdce742dbd56d7cbd50ec4d3766efab395ae4764015c763c8894",
+      "size_bytes": 21339
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.production.browser.spec.ts",
+      "sha256": "034b2fb0f47489beebc93c57711eb48fcfab76346cb57ae01a1340100a175c58",
+      "size_bytes": 5033
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts",
+      "sha256": "188509dc908205acac45e2495d8d7994995a90cc8f5dee1eb242220793bdc497",
+      "size_bytes": 3520
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-ballot-desktop-linux.png",
+      "sha256": "86159a325d63b5256a5427b4aeeb71919c5b4a768a68a565c38d613bad2e04fe",
+      "size_bytes": 146870
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-ballot-mobile-linux.png",
+      "sha256": "4dcc169f1f024301534185425f5e28f9cc1a260c1978eab1fbbfa9eee0f3e344",
+      "size_bytes": 172139
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-ballot-wide-linux.png",
+      "sha256": "62d0056b09f25b5fd28c4e123e55cd69bda1a9ae3a821365c03fec48ff044dbd",
+      "size_bytes": 152577
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-cast-failclosed-desktop-linux.png",
+      "sha256": "633de01a8970d2ca315e3921514ba7879f30122100c4b6fd39a7c4fb36a4d169",
+      "size_bytes": 161288
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-cast-failclosed-mobile-linux.png",
+      "sha256": "7a6aaf85a0c8a97bcdd0e7e0b9fb3eb8c24723aa594376ef89837595fa6aac95",
+      "size_bytes": 200247
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-cast-failclosed-wide-linux.png",
+      "sha256": "baa13ef73a38d54203b2170bd82a9c2095c1814c04619d91b855687a302e5dcb",
+      "size_bytes": 167720
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-channel-violation-desktop-linux.png",
+      "sha256": "e395f7f55debea44fddf1ca5098026949d0a2838a520cc0744524946c25e90d0",
+      "size_bytes": 110510
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-channel-violation-mobile-linux.png",
+      "sha256": "fb5f065c03f958594d0215e02cd66678f424c56416f67d9c883e031279d7b782",
+      "size_bytes": 137299
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-channel-violation-wide-linux.png",
+      "sha256": "252de7ab78a367c3e3d21948ef256329255d1a5f5488e90b4f0424cae63f237e",
+      "size_bytes": 114516
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-credential-desktop-linux.png",
+      "sha256": "9f1ecf8ff03f01a19aaeb60c101d2e5d034818d6c00f24d4edf27ea56c9598f4",
+      "size_bytes": 98521
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-credential-mobile-linux.png",
+      "sha256": "2b4b426c062d0da80213bef7cecb32921c39c5e5396124531ce3b64aa2ef1f28",
+      "size_bytes": 120092
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-credential-wide-linux.png",
+      "sha256": "98b444b41db216c165e9e7474bd8261fbb7dcbfcb51870df8e6823e4eb2ead72",
+      "size_bytes": 102190
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-not-found-desktop-linux.png",
+      "sha256": "eef793d57b3b35c1dd512accb3d870271c006932564635c4a2c9abeeb28e6b0f",
+      "size_bytes": 59273
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-not-found-mobile-linux.png",
+      "sha256": "76a711b7069b003f7ae83d1c22e2f56abd211fd901e1fc0dbc9d46e563719db2",
+      "size_bytes": 73097
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-not-found-wide-linux.png",
+      "sha256": "0539a30347e8fb90e57e482c8c487b621ae1ab88b61544da88b877a7fe30017f",
+      "size_bytes": 62944
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-desktop-linux.png",
+      "sha256": "9d40d56882d9f3416c493028c15b1c1d3a638e39c36ea68e06cc960e470cd656",
+      "size_bytes": 94738
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-mobile-linux.png",
+      "sha256": "e20a4cb2fe81305e46fc3623547978388afeaa3d7aed7acef2a2e629a41558fe",
+      "size_bytes": 121017
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-unavailable-desktop-linux.png",
+      "sha256": "c097e4bcbb7584b59e3641e0a08cca04f0c8048cff09d3c99880484df1e4673b",
+      "size_bytes": 126341
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-unavailable-mobile-linux.png",
+      "sha256": "8d44a663f0a27c8a8a4bebc1587faaf0191d585309b682a9e5b10a61eb3ad01a",
+      "size_bytes": 157161
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-unavailable-wide-linux.png",
+      "sha256": "5e49c8a4709e42b294d01aca119274fd372abb5b0db84a93d1ffeb8ccd6deb84",
+      "size_bytes": 131054
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-receipt-wide-linux.png",
+      "sha256": "93ca4dd9278072c242933ecc87d470a3e165cd808f9300b1ba374b058ab8b6f4",
+      "size_bytes": 98467
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-consequential-desktop-linux.png",
+      "sha256": "595ff5551a8bdd35b7d9ab11b96747185baa67e1a044982c1259a26f15f0e6ef",
+      "size_bytes": 131917
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-consequential-mobile-linux.png",
+      "sha256": "0157487c56e683b95f5c85e8daea3b7e57ed11e29608ab65a20811188c193c48",
+      "size_bytes": 163399
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-consequential-wide-linux.png",
+      "sha256": "706db6311e90059bf2b0d78ddcaef3dc750253b3761e76315c5b9f3c83033509",
+      "size_bytes": 136679
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-desktop-linux.png",
+      "sha256": "bbe8524f9fb6fd89a12c4d4df01a350c81a185ad8e5f08b89b42dc4a9ce6d2d1",
+      "size_bytes": 74319
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-mobile-linux.png",
+      "sha256": "06347baefbe3691d9d2d6168ed5245b9e91aa105511618d2e86c476f8dc695cb",
+      "size_bytes": 95402
+    },
+    {
+      "path": "frontend/voting-client/tests/browser/front04.visual.spec.ts-snapshots/front04-review-wide-linux.png",
+      "sha256": "a4e61d9520d1422c2ab11a8d9fed0b3686a366c43dd26f6e1e5c586024aa5f9f",
+      "size_bytes": 77037
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.design.test.ts",
+      "sha256": "4a3b61684e2505f37050e61e676db17ace3dbb1fc665e1096b8ab33f8a760134",
+      "size_bytes": 5134
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.handoff.test.ts",
+      "sha256": "5e86638211600af1edef3d199636b51ac7ba4efa2b9455a7ab156827495cf1ad",
+      "size_bytes": 7292
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.isolation.test.ts",
+      "sha256": "aba7abf15fe11742885f1f7594b5fc169521256955683205236de71bd90c6abc",
+      "size_bytes": 10942
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.journey.test.ts",
+      "sha256": "b342f4c9de3405941214f8fedffa5992634a646a931b3374a8e7a4805292691a",
+      "size_bytes": 8541
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.receipt.test.ts",
+      "sha256": "159120050b0205cbb0a3a65c33fb433e12459bd9dd305894197c45ea9afdd302",
+      "size_bytes": 5810
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.render.test.tsx",
+      "sha256": "defa6a5de6791aa361723c07407c5fd19919d085a42ba4c966b4344061800bb9",
+      "size_bytes": 9635
+    },
+    {
+      "path": "frontend/voting-client/tests/front04.runtime.test.ts",
+      "sha256": "72f9b54c1dcf120d7ab113d1956b87a91c5732f4dfe2d376db755c2a58b6a015",
+      "size_bytes": 7380
+    },
+    {
+      "path": "frontend/voting-client/tests/resolve-chromium.mjs",
+      "sha256": "c054a2f869a79ab9e88f50c9bcdbd7ff81d6e0f9aa25718a63c7e3f5cdb15c69",
+      "size_bytes": 2114
+    },
+    {
+      "path": "frontend/voting-client/tests/setup.ts",
+      "sha256": "99d596defdbc1e50c3fd46ffbc79ab471c9091b86056e8233c1118812dfb234e",
+      "size_bytes": 151
+    },
+    {
+      "path": "frontend/voting-client/tests/start-next.mjs",
+      "sha256": "d1843d3c7e0f91e8b3c55f3e31978351d891181139d5747050961d935276fe74",
+      "size_bytes": 359
+    },
+    {
+      "path": "frontend/voting-client/tsconfig.json",
+      "sha256": "0cd175c36641bf7a10d284a82a80f616d6c88f04fda7452c7f21ae68d60f1ef0",
+      "size_bytes": 583
+    },
+    {
+      "path": "frontend/voting-client/vitest.config.ts",
+      "sha256": "d8c0778a5d9c1787441b6d06a24f15eebf9d531aa207f37828d53c61d0531e14",
+      "size_bytes": 269
+    },
+    {
+      "path": "frontend/web-shell/.prettierignore",
+      "sha256": "c61456503285ff891f67aacabbcb5631c0262f87f32ddc8b04d02a2ce5437a27",
+      "size_bytes": 50
+    },
+    {
+      "path": "frontend/web-shell/README.md",
+      "sha256": "2d99fc4caa429194d9ec406ab880dfa0f9fc310deb7bcbec9f9784f7e13b6902",
+      "size_bytes": 5272
+    },
+    {
+      "path": "frontend/web-shell/app/[...slug]/page.tsx",
+      "sha256": "3fd1ee9ade055fe2bc6e807ea24310791c389b26883ee22d81e21319df8c98c7",
+      "size_bytes": 1634
+    },
+    {
+      "path": "frontend/web-shell/app/foundation/examples/[kind]/page.tsx",
+      "sha256": "47b9c3c91dbbd2f6d3bb2c064a92b1617c06dfff3791275d8d9e0bc9c66e6898",
+      "size_bytes": 972
+    },
+    {
+      "path": "frontend/web-shell/app/foundation/front02/page.tsx",
+      "sha256": "ed6cfb4876e6316b0aed9d6cc6d1413abaf467e7ed6a8121e650adfaf9732704",
+      "size_bytes": 4605
+    },
+    {
+      "path": "frontend/web-shell/app/foundation/page.tsx",
+      "sha256": "0f727eac0dd8d65c802038f24b3c0365317d82a9990eebab29689ac29c2b4b41",
+      "size_bytes": 6406
+    },
+    {
+      "path": "frontend/web-shell/app/globals.css",
+      "sha256": "cfcb26fccf677d3bb9fd2e6b3ce7998acb0dd8983a6adad03e959771389e486a",
+      "size_bytes": 25886
+    },
+    {
+      "path": "frontend/web-shell/app/layout.tsx",
+      "sha256": "bb19fe9b9c00b1c96068f832f473d55a1a11cf178d48989779ad9586b01f1170",
+      "size_bytes": 861
+    },
+    {
+      "path": "frontend/web-shell/app/member/[[...memberPath]]/page.tsx",
+      "sha256": "e71a2f7523f6a5708617209527fa049e0c2c462c1eb15405d6a18eb6088c7eff",
+      "size_bytes": 1059
+    },
+    {
+      "path": "frontend/web-shell/app/mitwirkung/abstimmungen/page.tsx",
+      "sha256": "ef399a45f082e5b10fd3c6b7de1e60f983396e8552f831babf898c02596e912a",
+      "size_bytes": 3249
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/AsOfSelector.tsx",
+      "sha256": "e6ceadbb7eb9748cf1d3226a1599b4426d93b35a2c68d3ba57c080afa1c8b116",
+      "size_bytes": 1959
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/Bilingual.tsx",
+      "sha256": "188308380e1211aa1c0da3b71d6b432f2b9e1d0b62bcbbbfcb9605b1d915a9e1",
+      "size_bytes": 680
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/[id]/page.tsx",
+      "sha256": "e4d635ee5bcee1f36464d5c4275faeeb084c3a7f862674be525c3d89a0cd2a4f",
+      "size_bytes": 8952
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/authorization.ts",
+      "sha256": "4ecb757a69b962435a0c852d09e06187b06550a9581716bdaf6bf981a233f2e4",
+      "size_bytes": 2722
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/data.ts",
+      "sha256": "237c9d3d3d3f603b0815439c90fef315f40e5e3af828e480ec76e5da2c4b84a4",
+      "size_bytes": 13411
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/dev-authorization-console/page.tsx",
+      "sha256": "7cf96ab790b1f097a00d2e9129d8ee1e65a94ee7f0ddf2dcd28edba99e536c12",
+      "size_bytes": 5417
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/labels.ts",
+      "sha256": "7805435266deaf4e3a1ec0efed9fc0c72b1608b3c561e15ba88d3714a4de5cec",
+      "size_bytes": 7518
+    },
+    {
+      "path": "frontend/web-shell/app/organizations/page.tsx",
+      "sha256": "033082ea7f5cd6ae7359e3dbe9d4701440709276526fbbb86c7aff9d17d8cd4e",
+      "size_bytes": 2569
+    },
+    {
+      "path": "frontend/web-shell/app/page.tsx",
+      "sha256": "06b79be0108b73950a06323df757e2396faa73aaf2ad2b47e7f5c28071741d00",
+      "size_bytes": 213
+    },
+    {
+      "path": "frontend/web-shell/app/vote/page.tsx",
+      "sha256": "5a356ce4506c85b38a590adfb3478c087e40c422b6d8f9a036ebd6a3b204d23d",
+      "size_bytes": 1638
+    },
+    {
+      "path": "frontend/web-shell/components/DialogExample.tsx",
+      "sha256": "04feff07179e424ed7237b05a7eab4f46b6d3ba03e75a9a333999be022e85eb0",
+      "size_bytes": 1635
+    },
+    {
+      "path": "frontend/web-shell/components/foundation.tsx",
+      "sha256": "c4de69f289d5b347403900f91d1f3f0b3b65f7c797541d323db6faa088aefffe",
+      "size_bytes": 9633
+    },
+    {
+      "path": "frontend/web-shell/components/migrated-fixtures.tsx",
+      "sha256": "2b769dab3ef5c9b85fc6f37285443f4d63545f28a5891204a97a608ff9c1c73a",
+      "size_bytes": 20927
+    },
+    {
+      "path": "frontend/web-shell/components/public-fixture-detail.tsx",
+      "sha256": "706acf79d0d769b8fd2efa1fabdc2775c08b276d4b7d2250006a73fdbc3a3d47",
+      "size_bytes": 1890
+    },
+    {
+      "path": "frontend/web-shell/components/public-site.tsx",
+      "sha256": "2870d818446dc23d5539fa6c18856723632496821dfa1ba021fa840b8d5b5219",
+      "size_bytes": 14011
+    },
+    {
+      "path": "frontend/web-shell/components/voting-trust.tsx",
+      "sha256": "c5236f49f88a2ab6414e00ade061125be2e1cc493c7c177cdf9017cebcd41f49",
+      "size_bytes": 8011
+    },
+    {
+      "path": "frontend/web-shell/eslint.config.mjs",
+      "sha256": "0de173aab75b5cc9be9ed254859aaf38d366b11c57d42c094069fe990192a2bd",
+      "size_bytes": 326
+    },
+    {
+      "path": "frontend/web-shell/foundation/mobile-application-profile.ts",
+      "sha256": "3fc6fde67de01dc558299a7dee0b330f644c2c250858c7930969977ab3280d58",
+      "size_bytes": 5869
+    },
+    {
+      "path": "frontend/web-shell/foundation/routes.ts",
+      "sha256": "df08fd7cad0eeead7cc8b82c0e33dbea71ecd56d68bfdda5eb3344449d889185",
+      "size_bytes": 1996
+    },
+    {
+      "path": "frontend/web-shell/foundation/storage-policy.ts",
+      "sha256": "00738f40e9513a32374bc0c2b70f10d849dd2d7f2e347c46a327504d562d926a",
+      "size_bytes": 849
+    },
+    {
+      "path": "frontend/web-shell/foundation/telemetry-policy.ts",
+      "sha256": "741b717687fdaf6804be60bac1bfe506485dc7ff32f1f440aad0653f3f8fb386",
+      "size_bytes": 549
+    },
+    {
+      "path": "frontend/web-shell/foundation/types.ts",
+      "sha256": "3b57b32800c13faf8d6d58263dc2aa112ca11e6d9b5b586a081c36c3ca98fa09",
+      "size_bytes": 1545
+    },
+    {
+      "path": "frontend/web-shell/foundation/voting-trust-policy.ts",
+      "sha256": "6b7a529780068b61673a34353001f32a60186ca32544c3a771e205020211c872",
+      "size_bytes": 5851
+    },
+    {
+      "path": "frontend/web-shell/foundation/workspaces.ts",
+      "sha256": "7b9f2ab0d87d51e20bee66978e47f1f2118a32bd9678c6a1a7b396b63ff25e97",
+      "size_bytes": 4842
+    },
+    {
+      "path": "frontend/web-shell/member/MemberWorkspace.tsx",
+      "sha256": "783288da36e525a4e33b80f888e9ce933ee48c5d22ca00b4e10753469dab993c",
+      "size_bytes": 29308
+    },
+    {
+      "path": "frontend/web-shell/member/MemberWorkspaceEntry.tsx",
+      "sha256": "ed4845e263b96f0be748fd11e5fc3415cff81f3323a2d2463856725c10f3aa08",
+      "size_bytes": 621
+    },
+    {
+      "path": "frontend/web-shell/member/adapters.ts",
+      "sha256": "7889709f34595ee9b9eab8b58f34874c04c924c5f0baf0cb694fbc29f63cc130",
+      "size_bytes": 4053
+    },
+    {
+      "path": "frontend/web-shell/member/api02Runtime.ts",
+      "sha256": "1673533f75a69ce1263f1d78c655e1ee04f678fbf0dd9f14dc9ef9ea094c2c63",
+      "size_bytes": 12655
+    },
+    {
+      "path": "frontend/web-shell/member/member.css",
+      "sha256": "e46a25bf30100d18653f2dd75357871cc4d8b06a98ec37d8a675dd48cd464f99",
+      "size_bytes": 2152
+    },
+    {
+      "path": "frontend/web-shell/member/runtime.ts",
+      "sha256": "d5bd49e76df0b91b14648c4db3c6bfbbbd4a25a45fcc944ac16ed1f30333ee91",
+      "size_bytes": 8258
+    },
+    {
+      "path": "frontend/web-shell/member/types.ts",
+      "sha256": "b1798d5a53ff45778e011888eaa92cb2adf5b87fbd88d1f388fed2f4040c5a8b",
+      "size_bytes": 4107
+    },
+    {
+      "path": "frontend/web-shell/member/useScopeTransition.ts",
+      "sha256": "dbb86ab21a8596591a1fa8b501d615495b40edb00af5f7ac412e4510f006d7e6",
+      "size_bytes": 2754
+    },
+    {
+      "path": "frontend/web-shell/next-env.d.ts",
+      "sha256": "85ae5aee75f011967cf2d25cbc342f62d69314e9d925f7f4aa3456fc2cffcca6",
+      "size_bytes": 262
+    },
+    {
+      "path": "frontend/web-shell/next.config.ts",
+      "sha256": "c17f46ae1a38a89feae863d624eaf7d070b9b0b093754bc36ee8995a24b55467",
+      "size_bytes": 700
+    },
+    {
+      "path": "frontend/web-shell/package.json",
+      "sha256": "3cc8d8db8893a27ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197",
+      "size_bytes": 1572
+    },
+    {
+      "path": "frontend/web-shell/playwright.config.ts",
+      "sha256": "9468e6c9ff1f069eaa46bd6f99342dcea98b43557948d17a4247b825c8f38373",
+      "size_bytes": 2769
+    },
+    {
+      "path": "frontend/web-shell/public/content.ts",
+      "sha256": "3cf43dca47637a869e4499cc6d910d47e74226a0cf1695dacdcf69b68e56c09a",
+      "size_bytes": 37766
+    },
+    {
+      "path": "frontend/web-shell/public/front02-fixtures.ts",
+      "sha256": "234ff153826b65293ff80abde6372fe34245ac8f2f905a0e54f7218bed0d6030",
+      "size_bytes": 3168
+    },
+    {
+      "path": "frontend/web-shell/public/status.ts",
+      "sha256": "320d16deafbbebef9fa221c077625529237b8c0f9a90d72b4a699ab0982b9968",
+      "size_bytes": 740
+    },
+    {
+      "path": "frontend/web-shell/public/voting-content.ts",
+      "sha256": "dbb6b6cf423f5ec602061453d17375355bb5ad9f98f9504e3f3af1b30fd027f6",
+      "size_bytes": 11537
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts",
+      "sha256": "e9e886fc6f828d27298474fad3424643cad27b13c935f7b5c7d4cf024ddc6c19",
+      "size_bytes": 2393
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/abstimmungen-desktop-linux.png",
+      "sha256": "2cafacdf57982bf757bbf13a8502dfcbc0b7ce80c93b41f3d45e48b20ca8356c",
+      "size_bytes": 63717
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/abstimmungen-mobile-linux.png",
+      "sha256": "b68d5f5f99e90883b913a681107d1398620592a83379196aac472d2ecc01e3fe",
+      "size_bytes": 90126
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/abstimmungen-wide-linux.png",
+      "sha256": "6f5f2eb68b33200d4a2d8631e6bb293dc09dd9ed051f1f07eaeb548a61ba4be0",
+      "size_bytes": 66148
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/buerger-login-desktop-linux.png",
+      "sha256": "08c192b3ca7d9a1ca203cfd5315db54cfe8c9f0a7158e70dad78de32c93877a6",
+      "size_bytes": 130047
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/buerger-login-mobile-linux.png",
+      "sha256": "4923b775d8fcc0bbbdecbd1779c58d708a71dd08755e39cb19f9eba8a6cb1d56",
+      "size_bytes": 155489
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/buerger-login-wide-linux.png",
+      "sha256": "ad17d5d45a023e83b7925b1e505efc6d9efb2766409b758fd762e48b6d15a146",
+      "size_bytes": 134324
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/dashboard-desktop-linux.png",
+      "sha256": "f0a5b58a880b8a9cc007fb395a1e59e33ad536a73269cdf605f45c1093a36772",
+      "size_bytes": 195086
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/dashboard-mobile-linux.png",
+      "sha256": "cc81b6d41d613957f829c421aba3a3487c64ab18dfa09232d6eb2e58cac37484",
+      "size_bytes": 240842
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/dashboard-wide-linux.png",
+      "sha256": "8d4dc1a7f2d61e0fba692ae6606670d6b66f4977f37491899aaaddb3f7bd9106",
+      "size_bytes": 201459
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/index-desktop-linux.png",
+      "sha256": "16b0dd43500b4056297569dd8b6806c3e02f4a361ab95278ec7c7669afbc5096",
+      "size_bytes": 189048
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/index-mobile-linux.png",
+      "sha256": "f793ada09d6ee264b3f9b5a09cba1e41bea40eae8f006614cbc7c19f8f09056b",
+      "size_bytes": 256638
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/index-wide-linux.png",
+      "sha256": "b44dd643d62d607feafd03040a2b4b7b04d506c39d6fbbd44fcf37da946fed2c",
+      "size_bytes": 196880
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/kommunikation-desktop-linux.png",
+      "sha256": "7e00f5df8e728261db9704c0451d7dcc84167f6ab895478736db481dd67c0571",
+      "size_bytes": 122215
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/kommunikation-mobile-linux.png",
+      "sha256": "e9bf9f3155afff3e4e0bccc164f3aba5aa7a2ca1ee8c020538f0b72dd5a902cd",
+      "size_bytes": 124943
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front00.browser.spec.ts-snapshots/kommunikation-wide-linux.png",
+      "sha256": "b79bd06e7fe44a3d1536465b89753dcd33adf6b7cb3a4370da326a1c6f11c7da",
+      "size_bytes": 126142
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts",
+      "sha256": "212036d5a5125ac3929080b2f1361081088b483d5794439859e807a78b23d651",
+      "size_bytes": 2680
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-about-goals-desktop-linux.png",
+      "sha256": "7a9764bda2c1080fe9c129730a4172d01a1a0b42acd983a62fb49f53f8f89a93",
+      "size_bytes": 201386
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-about-goals-mobile-linux.png",
+      "sha256": "022972d9b451bca6d3c5345180b32e2fce654f78a76c7fd3851292748bb2a096",
+      "size_bytes": 166273
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-about-goals-wide-linux.png",
+      "sha256": "12720dd826f06e39eb655af05c476ed81e2cc44b1652db84ca77bc76fec43e3a",
+      "size_bytes": 212257
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-homepage-desktop-linux.png",
+      "sha256": "683762d0c19242225c28612d640a686cb798edae24a82f001e765736469fbe06",
+      "size_bytes": 351005
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-homepage-mobile-linux.png",
+      "sha256": "e5ce4b548e2c6307247f193d3aecfeb8f09d45d18a9f6df9fee4e1726dd7950a",
+      "size_bytes": 318055
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-homepage-wide-linux.png",
+      "sha256": "4db6a33d8869a80ed9b912c9b0bc8e4f22b7c74f9fb772b8c432c3a788c5aa2e",
+      "size_bytes": 367306
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-initiative-lifecycle-desktop-linux.png",
+      "sha256": "a086bc2e2a4648aa645687cba145b1384cc1943487be69e90e3e9087a1468883",
+      "size_bytes": 317282
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-initiative-lifecycle-mobile-linux.png",
+      "sha256": "57a9220ef835c21c04f1286cffb883fe1229ed3404ccef9e4b602b83217c844b",
+      "size_bytes": 272347
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-initiative-lifecycle-wide-linux.png",
+      "sha256": "0e40d0bc6eb4372b31b78604f279c29e30ccc1a8e2fba246da926b2377975a6c",
+      "size_bytes": 330937
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-open-program-desktop-linux.png",
+      "sha256": "be5f7d1dab9ea627e632892093046810aff81df3d3f3f390831ccf44ebd85d9c",
+      "size_bytes": 246041
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-open-program-mobile-linux.png",
+      "sha256": "b61bfd0eb77ac663f8c2f797d4d15f773dc21e1263126e215d41b3ac0dfb1e79",
+      "size_bytes": 224945
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-open-program-wide-linux.png",
+      "sha256": "37d8cfe11cd94f06fd83392dab67755f535258b3ba469c4d1e43b09891d448bf",
+      "size_bytes": 251711
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-participation-desktop-linux.png",
+      "sha256": "2da8f244ce9ef6829ef7953e8ce804575ed1d4919e694bc1fb2f02393736fa31",
+      "size_bytes": 210676
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-participation-mobile-linux.png",
+      "sha256": "eb134485f1fb468551d7502c016bf3f9981c080da55effcb118055ec81222bf3",
+      "size_bytes": 163633
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-participation-wide-linux.png",
+      "sha256": "e91457d8ee7494e5769c39ea91026f701ec3549757d6a30b566ac1aadd04aea1",
+      "size_bytes": 221449
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-program-detail-desktop-linux.png",
+      "sha256": "7546a628848d531d1de586656e3529a5f8457bfce5df62885fa27d4393a51f70",
+      "size_bytes": 230487
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-program-detail-mobile-linux.png",
+      "sha256": "3dcef5bd0182aa889b47033df7ca9a8c9e565b76db9af3fc7bea3b0d7df20d1f",
+      "size_bytes": 199345
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-program-detail-wide-linux.png",
+      "sha256": "f0e7853c662e8f956d8f0dbcead7595b0ef2490f66108521be7e70b37435d234",
+      "size_bytes": 240444
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-roadmap-status-desktop-linux.png",
+      "sha256": "4fccd97db10675b06e09b904c946be2e252833fc7a40dd14ba597732fe21e699",
+      "size_bytes": 231605
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-roadmap-status-mobile-linux.png",
+      "sha256": "af6bdd1cfa7a4885adf0657679694d26402f8dac5605019d2808018f7e00d93e",
+      "size_bytes": 176378
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-roadmap-status-wide-linux.png",
+      "sha256": "65789105169d9e17cd08b3cb9e28e6bca4ab50997634608f53613bdca411b87d",
+      "size_bytes": 243629
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-technology-security-desktop-linux.png",
+      "sha256": "9c144ceb085cde60c165cb8003f64c144347553124b9ed14b74e3eb8ecb758d2",
+      "size_bytes": 232062
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-technology-security-mobile-linux.png",
+      "sha256": "6406b84a8c563bc6f3875a78921df51891c73372902e2d18f4a3b117f73d11fb",
+      "size_bytes": 177408
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-technology-security-wide-linux.png",
+      "sha256": "61cdf33571c15c2f1da5c78d01a3cc93ce028a151bbdd8a25cd6118b0a3fb8b0",
+      "size_bytes": 241920
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-transparency-model-desktop-linux.png",
+      "sha256": "d6c95722beb988346b9d6a7ba97fd302c4f90bc118ba363b49fdaf097bc060d3",
+      "size_bytes": 271248
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-transparency-model-mobile-linux.png",
+      "sha256": "9b767ab7fc67f56fdca7e9138df11f07df311915d073a0f4692adff3d6a08d3c",
+      "size_bytes": 197945
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-transparency-model-wide-linux.png",
+      "sha256": "f2463295688fe2926abb46e2f5fd296c9e43bc36fae4da2343e256072d6ebdbd",
+      "size_bytes": 282709
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-voting-explanation-desktop-linux.png",
+      "sha256": "8d17fccfcac8a895b0e7432939faaee8d668a26b601413309caf05f41547362c",
+      "size_bytes": 310876
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-voting-explanation-mobile-linux.png",
+      "sha256": "5cc6ad8589cd22f3d5e39460ab346091a36477d1e410bfd2ca21e6d620800fd2",
+      "size_bytes": 278085
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/front01-voting-explanation-wide-linux.png",
+      "sha256": "5f32ee76e6a82c18101afad6aca12c7cb2307b34d33d1debfe3f8dc37bbb4fa2",
+      "size_bytes": 326662
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front02.browser.spec.ts",
+      "sha256": "382cabb0505976733d8ad4c49a35f2b0edaf6ca05bfb4ad7955ec1a1748a461f",
+      "size_bytes": 3569
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03-r3-visual-baseline.sha256",
+      "sha256": "dec7987dc9a0eff11994aac11aacc23fadd007619af1d664cfe1e7001255c578",
+      "size_bytes": 4167
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts",
+      "sha256": "8e5577fa7cb0654d38d4a66c2811b352eccf80aa80b13ce3c82b905179ed6de4",
+      "size_bytes": 8219
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-application-desktop-linux.png",
+      "sha256": "b421a66b59e3b784814ef286d2ed8b85066d8bbac85ca031bc25a457db3b3a11",
+      "size_bytes": 75253
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-application-mobile-linux.png",
+      "sha256": "1dafd12bed8fac3c617b834440eabeaf81edebf305ce669d4791f6ba9d7442a7",
+      "size_bytes": 90865
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-application-wide-linux.png",
+      "sha256": "5d32745df6ea739326dc4e7aa63468b54b07ecf3e689bd785fa2f4cf327555d4",
+      "size_bytes": 78360
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-assurance-authentication-session-assurance-desktop-linux.png",
+      "sha256": "dadb21a3b2783926f3e1861c164ba993c2a018c387cdfad94219b0fe3bb60400",
+      "size_bytes": 58382
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-assurance-authentication-session-assurance-mobile-linux.png",
+      "sha256": "d04469481fcbd862559def7f20b9b14d282c52f7fa7d6b246b607d035e6c115c",
+      "size_bytes": 62028
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-assurance-authentication-session-assurance-wide-linux.png",
+      "sha256": "66802237a69f757dc31dfa0a8ac8468488c152fc4585c48d1327f9686716cdf1",
+      "size_bytes": 62334
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-delegation-desktop-linux.png",
+      "sha256": "1d560f32d833f7b51780cd334ab79f6a6c2cebee725f857a7bb7ea6c77ab10c8",
+      "size_bytes": 54944
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-delegation-mobile-linux.png",
+      "sha256": "3a09075c0d6c45428c25fa928ae857d48385a58ff725ce28c087832034016b8c",
+      "size_bytes": 57749
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-delegation-wide-linux.png",
+      "sha256": "c24de4ba9268b2f56a19370c5096b52bdbc762c9c9f7861756616adc988d7a4c",
+      "size_bytes": 58758
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-deliberation-desktop-linux.png",
+      "sha256": "77ac7c4f7840da3b515725072d071248ad5e867610ae6c239f03578189a5bca1",
+      "size_bytes": 69766
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-deliberation-mobile-linux.png",
+      "sha256": "bb7ce348f88f117030be3d096893e541af011f762a7fceb3b40ea6453c6aa5ee",
+      "size_bytes": 78738
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-deliberation-wide-linux.png",
+      "sha256": "cd1bcc8e3cc3f814a25f5d972e1ad5120212e0f3b7678397f170d4db97301409",
+      "size_bytes": 73045
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-home-desktop-linux.png",
+      "sha256": "20a1924c3d771292ceeed9bab256d54e3b8c7d9d23eb5e28fc4e3d239c480491",
+      "size_bytes": 130062
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-home-mobile-linux.png",
+      "sha256": "f565842f55a9072ef49f4eb33c89024803613cae1dc2d3cb46067672c1719da4",
+      "size_bytes": 168863
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-home-wide-linux.png",
+      "sha256": "c8c5d42072a72494b5229d7b8da2b19f7c1f180215c4404c274fcefe0a80ea9d",
+      "size_bytes": 134988
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-desktop-linux.png",
+      "sha256": "c8c430c7b7eb7ae9d3b4d75e7b8b22ce847a074c51740d2646ed18a41cc43360",
+      "size_bytes": 69668
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-mobile-linux.png",
+      "sha256": "0468ca1770add8103f6629ee3b3056cee10fabbfcc2625e45243fdafa75a8902",
+      "size_bytes": 81150
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-new-desktop-linux.png",
+      "sha256": "e9bca7fa76039cd7fad4987fafd799bc08fbaf5f56643a34653c98d8638447ea",
+      "size_bytes": 66916
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-new-mobile-linux.png",
+      "sha256": "557927fab8838335229e864a0b2ea2a7b4e35203ba672cdbbd97598d20c6417e",
+      "size_bytes": 77698
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-new-wide-linux.png",
+      "sha256": "b5bc7429dd33159df2be1faa3018c5dddf78acfb9cb99928cf4694074956d8ff",
+      "size_bytes": 69766
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-initiatives-wide-linux.png",
+      "sha256": "d180f07ee4e32864a1d9fb3b16824810e594556134576f0ac2dd41f82b98b8b8",
+      "size_bytes": 72540
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-appeal-desktop-linux.png",
+      "sha256": "995108384f759f88db76a1cf17dd4222213b9e501dde4b4b96d7ab64bccb9ccb",
+      "size_bytes": 38387
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-appeal-mobile-linux.png",
+      "sha256": "18c07f1bf692a085dc9a1dcd5767c6d1efc253b8f671c5fd24cab943948b4157",
+      "size_bytes": 38285
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-appeal-wide-linux.png",
+      "sha256": "c11c5a67b94ab15b801943ee95fc6a0cfdbf91c14c8907aa32ed19605758f4f7",
+      "size_bytes": 41775
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-desktop-linux.png",
+      "sha256": "00fe5e8ac3d8103bea17508aa1d0d336f2f7f3e4571ed2f77e26a0bc26cb8b39",
+      "size_bytes": 54228
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-mobile-linux.png",
+      "sha256": "5544799dccb5fa29fa9bcab49ce3572a79a628899da8ab2894c7b4839ee963eb",
+      "size_bytes": 48080
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.browser.spec.ts-snapshots/front03-membership-wide-linux.png",
+      "sha256": "5e7e93b862e614fbf06255a6504376a10ede11bea6df2405baa160d0be282d8c",
+      "size_bytes": 57546
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts",
+      "sha256": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
+      "size_bytes": 5345
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.production.browser.spec.ts",
+      "sha256": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
+      "size_bytes": 1035
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts",
+      "sha256": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+      "size_bytes": 2441
+    },
+    {
+      "path": "frontend/web-shell/tests/browser/pack15.browser.spec.ts",
+      "sha256": "9cd86b29641d0042965c326f018a92466970e24cff1d56dae89a983abaf96257",
+      "size_bytes": 3163
+    },
+    {
+      "path": "frontend/web-shell/tests/foundation.render.test.tsx",
+      "sha256": "e6ca36e591e281ab33a2959920ffb0833e9cbcadc736c7fa05ef739d528ccb79",
+      "size_bytes": 4866
+    },
+    {
+      "path": "frontend/web-shell/tests/front00.test.ts",
+      "sha256": "c2cde80f4c8cdae1b52a696d0bef32cc0ed62b96690ae2f4ac102c8dc506997c",
+      "size_bytes": 8101
+    },
+    {
+      "path": "frontend/web-shell/tests/front01.render.test.tsx",
+      "sha256": "f5d448cac33d6d05a04eb2a356748d6c53642a0a50aafd26e5eb52426244246a",
+      "size_bytes": 1741
+    },
+    {
+      "path": "frontend/web-shell/tests/front01.test.ts",
+      "sha256": "e733f5dc7c60e5649001175a9d90b6dea1d7aad30d35ccd63a55dd5960f51667",
+      "size_bytes": 5260
+    },
+    {
+      "path": "frontend/web-shell/tests/front03.api02-c1.test.ts",
+      "sha256": "cd8e9733b2281d3459c052791d2a875b4d0f2f2b2f8d7d42163897344ae79878",
+      "size_bytes": 8093
+    },
+    {
+      "path": "frontend/web-shell/tests/front03.render.test.tsx",
+      "sha256": "0c9045b95028a19a2b57e1fadaee8883b1593001d5a6591b47b00582adfe6358",
+      "size_bytes": 3954
+    },
+    {
+      "path": "frontend/web-shell/tests/front03.test.ts",
+      "sha256": "49d3e9d7fb80c5e63e6f297bb9f10a23138e89f4a10a5dd7d37a5ba696335e13",
+      "size_bytes": 3028
+    },
+    {
+      "path": "frontend/web-shell/tests/organizations.test.ts",
+      "sha256": "76bcc533c2e27c27f76b8a9bf3b00b8e78b87656735a9004064d1db008d871b8",
+      "size_bytes": 4701
+    },
+    {
+      "path": "frontend/web-shell/tests/pack15.render.test.tsx",
+      "sha256": "90611a28d43c966cc0a10f0904d7303ca8da16fe4d3996a94737e779195d6b0b",
+      "size_bytes": 3761
+    },
+    {
+      "path": "frontend/web-shell/tests/pack15.test.ts",
+      "sha256": "a8cb255e7b28340b7dc5abe9e8298f7059ebac877105963742b55cc72b026867",
+      "size_bytes": 4983
+    },
+    {
+      "path": "frontend/web-shell/tests/resolve-chromium.mjs",
+      "sha256": "c054a2f869a79ab9e88f50c9bcdbd7ff81d6e0f9aa25718a63c7e3f5cdb15c69",
+      "size_bytes": 2114
+    },
+    {
+      "path": "frontend/web-shell/tests/setup.ts",
+      "sha256": "a1b700f8b4a9859fad3accf41bd79fffdafc858255136bb80bd28b692b3c4782",
+      "size_bytes": 341
+    },
+    {
+      "path": "frontend/web-shell/tests/smoke.test.ts",
+      "sha256": "76a963e94f66386456235511429dc6d082cc9266da596a4da3316ffa69ab1d95",
+      "size_bytes": 1225
+    },
+    {
+      "path": "frontend/web-shell/tests/start-next.mjs",
+      "sha256": "74cc2706d7e59eee4ad8bc7f45e5d62325aac379dc454c51e1a9f0e99a17c9db",
+      "size_bytes": 359
+    },
+    {
+      "path": "frontend/web-shell/tsconfig.json",
+      "sha256": "ad18d947035fcfd0180df9dfdc2c048deb6b4bc315283abb2b7e826bbc2f6c5c",
+      "size_bytes": 582
+    },
+    {
+      "path": "frontend/web-shell/vitest.config.ts",
+      "sha256": "d8c0778a5d9c1787441b6d06a24f15eebf9d531aa207f37828d53c61d0531e14",
+      "size_bytes": 269
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "2a1d4cbd8bb86b117bcb547523fbf920b2bbb218d887aef4847ef2762687f6a7",
+      "size_bytes": 288992
+    },
+    {
+      "path": "package.json",
+      "sha256": "b57e5495dc6c7a4dbd3a47a4af2b2ee2b4ed246b5649d222dff9f287fe905f4c",
+      "size_bytes": 481
+    },
+    {
+      "path": "scripts/build_front05_authorization_negatives.py",
+      "sha256": "636c81865f3bdf7193ec3aec169333d6d1fbe4157e47e5d39f389ca723ee58cf",
+      "size_bytes": 6118
+    },
+    {
+      "path": "scripts/build_front05_dependency_findings.py",
+      "sha256": "1e17d8e3b88b9fbe75ec2dbeaabd8fce9cb53d1ca30b19b9cce822bee78b2ea0",
+      "size_bytes": 10071
+    },
+    {
+      "path": "scripts/build_front05_identity.py",
+      "sha256": "ca7f1f187e17bd9e35a536f1bee5d80a56623f3c380ad115ccd1a03af1c10205",
+      "size_bytes": 9340
+    },
+    {
+      "path": "scripts/build_front05_records.py",
+      "sha256": "0d75230c5d1c0c4edcbbcb174afa6d95b495da272d7e2e8407aca1e72f9643f0",
+      "size_bytes": 10663
+    },
+    {
+      "path": "scripts/build_front05_report.py",
+      "sha256": "f855062ecf71bf08d656c16333a2514329033ceb3500afe7982de5f6a7860417",
+      "size_bytes": 18668
+    },
+    {
+      "path": "scripts/check_front05_fixture_absence.py",
+      "sha256": "cb6919532943ea0de9f1cdc3e15ce4df328425c840364f0c309e459edf1b9f5e",
+      "size_bytes": 2784
+    },
+    {
+      "path": "scripts/front05_digest.py",
+      "sha256": "8ebd9731e09bb3b88a3b77fd9feb7240bdf7c5d9b822e340675f93901af92298",
+      "size_bytes": 8905
+    },
+    {
+      "path": "scripts/run_front05_mutations.py",
+      "sha256": "17827882a0d2afc771df7963de3bbfb915fe0aa901d2feec1560f7e6378b7f5f",
+      "size_bytes": 21988
+    },
+    {
+      "path": "scripts/run_front05_verification.py",
+      "sha256": "a3eae903ac20b52f5973136006896130a42736a863b8fc96be96223262f6d3e7",
+      "size_bytes": 16181
+    },
+    {
+      "path": "scripts/seal_front05.py",
+      "sha256": "109bf9b688b86a28a7976ce46b622386314f01fb8f9eb8d9e7a3fd732095b784",
+      "size_bytes": 4406
+    },
+    {
+      "path": "scripts/validate_front05.py",
+      "sha256": "f7be8922866ae9ae72b5ad751ee1244edf6d556e098860b192267e08e114a947",
+      "size_bytes": 69099
+    },
+    {
+      "path": "validation/front05/api_capability_truth.json",
+      "sha256": "ec2094398ea4e9e77c0d2fbc0a95736c70b6e7b4a5abe36142529afb037aec6a",
+      "size_bytes": 18089
+    },
+    {
+      "path": "validation/front05/authoritative_preseal_result.json",
+      "sha256": "6af836e2748cc9f839844b774083dbf690bbdc03ba0b91ca34b7434f755a520e",
+      "size_bytes": 4608
+    },
+    {
+      "path": "validation/front05/authorization_negatives.json",
+      "sha256": "22c3f8d378c487a51c0059d47138c6dffffb979621ba7de20fba825e190ef7b7",
+      "size_bytes": 5957
+    },
+    {
+      "path": "validation/front05/dependency_findings.json",
+      "sha256": "03dc00aaf7a3cf1e7873a8c0e49b9a2f97bbba107f6e41f0cb211389766cdaf4",
+      "size_bytes": 9750
+    },
+    {
+      "path": "validation/front05/dependency_reconciliation.json",
+      "sha256": "7ef8f0b9c347abdab320c71c186e683554a7bb136269c1b425daea31fcd2d447",
+      "size_bytes": 10333
+    },
+    {
+      "path": "validation/front05/evidence/authorization_negative.json",
+      "sha256": "bdfd63ee6a625a50a448747dda76f20439a492530ef6e673977567492030a67a",
+      "size_bytes": 1707
+    },
+    {
+      "path": "validation/front05/evidence/authorization_negatives_record.json",
+      "sha256": "e3308bbe5dd463d8579f0fb0121c6fc8401d99ac097db2171ccee0442077f867",
+      "size_bytes": 1457
+    },
+    {
+      "path": "validation/front05/evidence/browser.json",
+      "sha256": "c706268bd52fde28bc069cf771981b91f8aee186c4369e1d7bde3e1b7cc3c963",
+      "size_bytes": 1505
+    },
+    {
+      "path": "validation/front05/evidence/browser_production.json",
+      "sha256": "cf6b9eba7fefccb886d65e94254969af07a54e0dcdef06ac50901c0aff5226d9",
+      "size_bytes": 1569
+    },
+    {
+      "path": "validation/front05/evidence/build.json",
+      "sha256": "eb939f010ee31ae18a6ad3153f995f98916fb157970ef60cc1a106eae2c9149e",
+      "size_bytes": 1413
+    },
+    {
+      "path": "validation/front05/evidence/build_production_profile.json",
+      "sha256": "47f4a381c4511065f60df7bd9aa820626015eee42f2d0bb7b9b2db05be414f66",
+      "size_bytes": 1443
+    },
+    {
+      "path": "validation/front05/evidence/component.json",
+      "sha256": "515e158263b253a3c57aba91cf27f4cd1e63f344fe3e960805242cfdcb2ee54a",
+      "size_bytes": 1344
+    },
+    {
+      "path": "validation/front05/evidence/dependency_audit.json",
+      "sha256": "6b23c666e627035dcf6da6cdd1ae4f366df6beddca4138da14db5cfbf1ded45f",
+      "size_bytes": 1322
+    },
+    {
+      "path": "validation/front05/evidence/dependency_findings_record.json",
+      "sha256": "d072d7d28be9a0d7233c3ac37b543b1bc48b04090db6f0e7c2d94d0abdda3c56",
+      "size_bytes": 1445
+    },
+    {
+      "path": "validation/front05/evidence/derived_records.json",
+      "sha256": "c7e0700d9a096974892adde1d4098063d2d922efa0df5f44e6bcefb34e2d9656",
+      "size_bytes": 1411
+    },
+    {
+      "path": "validation/front05/evidence/fixture_absence.json",
+      "sha256": "181825a897d221448b9ad7517c9726053de4103c27b6b729d486fa7aa8b46397",
+      "size_bytes": 1419
+    },
+    {
+      "path": "validation/front05/evidence/format.json",
+      "sha256": "0084925d6730c1325ff219f9d310e01d8af4e46bd45215c5422ac6db87f05012",
+      "size_bytes": 1343
+    },
+    {
+      "path": "validation/front05/evidence/identity_records.json",
+      "sha256": "c4dced07d8616cff87b22f3e07f1a5187e4092aa87b5771ed91805df19f4f89e",
+      "size_bytes": 1414
+    },
+    {
+      "path": "validation/front05/evidence/install.json",
+      "sha256": "daa57bf2d7f3419acb23ba45cacdde529fd92ca7893ffeff07ab995ac89f2bc7",
+      "size_bytes": 1315
+    },
+    {
+      "path": "validation/front05/evidence/lint.json",
+      "sha256": "fa09e45b255e62f92f33b29ae706f1a6359ea82fe7f539e38ed5da19d213d8f6",
+      "size_bytes": 1326
+    },
+    {
+      "path": "validation/front05/evidence/typecheck.json",
+      "sha256": "ce1fe118d3d612d1c6b3745324646de6fddbb70002382352d6aff129fcb01c5c",
+      "size_bytes": 1341
+    },
+    {
+      "path": "validation/front05/evidence/unit.json",
+      "sha256": "edbc3adf51350bc2ecfd4c1cd4a2acbcf3e9248f54d8d9e606fcf24ee9e26af8",
+      "size_bytes": 1721
+    },
+    {
+      "path": "validation/front05/evidence/visual.json",
+      "sha256": "371dc906675b0d8491387903c80a88256771925deb76896da30e903cc0060210",
+      "size_bytes": 1493
+    },
+    {
+      "path": "validation/front05/lineage.json",
+      "sha256": "d6863fb5e28bfde28178dee5081247ba27c3ffb41346769bba924e1b7826156d",
+      "size_bytes": 1658
+    },
+    {
+      "path": "validation/front05/mandate_scope_inventory.json",
+      "sha256": "18b8658a88092fb599dd53cac598f61608208765099eba588a73a73f0b695087",
+      "size_bytes": 5956
+    },
+    {
+      "path": "validation/front05/mutation_report.json",
+      "sha256": "79e13c340bb6b470930bd60562f4da0ce9336841499e30a4e70528a2dabc20e1",
+      "size_bytes": 17271
+    },
+    {
+      "path": "validation/front05/preseal_identity.json",
+      "sha256": "c3ff287c0dfd7f8b2097a1e13cca81b0efdd227b7e8470fc3999e9c6fa258958",
+      "size_bytes": 1628
+    },
+    {
+      "path": "validation/front05/raw/authorization-negative.log",
+      "sha256": "10a1bb88364e4155af84c0496c192ca1ce2950afbd2a4d13a210ed26a2746d5e",
+      "size_bytes": 25393
+    },
+    {
+      "path": "validation/front05/raw/authorization-negatives-record.log",
+      "sha256": "ac27f69a5cb64f8ec50809eb6d5dfdf49e7c40c9431158f2dfa1a13cc1bb5662",
+      "size_bytes": 156
+    },
+    {
+      "path": "validation/front05/raw/browser-production.log",
+      "sha256": "a539ec937e65e3ba1c2995de01cf4885c0cea8532515a59c87bba34243ed63cf",
+      "size_bytes": 50203
+    },
+    {
+      "path": "validation/front05/raw/browser.log",
+      "sha256": "d06bba4417a4db0606356e4ef2c81b3308841c9f747363415aa312ee6bb950c2",
+      "size_bytes": 50173
+    },
+    {
+      "path": "validation/front05/raw/build-production.log",
+      "sha256": "eb35a545b7927296daa13f513630a19b4b21e33f1d04dd089e549d62af483bf9",
+      "size_bytes": 1686
+    },
+    {
+      "path": "validation/front05/raw/build.log",
+      "sha256": "8cf8646b0ec855ea129ccceaada8c379970acfdcc2ff47233c786dc5cca10f89",
+      "size_bytes": 1667
+    },
+    {
+      "path": "validation/front05/raw/component-tests.log",
+      "sha256": "0666338a669068f45a5f082cb906f3d125da0312938cede8b77f4686ac46caa6",
+      "size_bytes": 479
+    },
+    {
+      "path": "validation/front05/raw/dependency-audit.log",
+      "sha256": "f3bfa4abe061fbbc728252227409607c5f1507e4241f955db501b8630fd82535",
+      "size_bytes": 8794
+    },
+    {
+      "path": "validation/front05/raw/dependency-findings-record.log",
+      "sha256": "d9c798c1152327fbdd0beb3f404593ce8e002f3d60c9a9123aa9de913ea6eb1a",
+      "size_bytes": 526
+    },
+    {
+      "path": "validation/front05/raw/derived-records.log",
+      "sha256": "52a6594126fd52e28aa8083c1b1ca9c69030dd047c4648e32dc691692be1671b",
+      "size_bytes": 308
+    },
+    {
+      "path": "validation/front05/raw/fixture-absence.log",
+      "sha256": "476da35883134abd0a42a098d3f8638ace51780248983059d6d51dd2c26bb6de",
+      "size_bytes": 581
+    },
+    {
+      "path": "validation/front05/raw/format.log",
+      "sha256": "ca71f987e3c7393c1a6cfd63ef39b94af51dc4ffc223a26a61a795af749cc765",
+      "size_bytes": 326
+    },
+    {
+      "path": "validation/front05/raw/identity-records.log",
+      "sha256": "b35f7eb70149fb784852706f10236fe753a4c4af41b7aaf8eb6fb560f1fa14bd",
+      "size_bytes": 268
+    },
+    {
+      "path": "validation/front05/raw/install.log",
+      "sha256": "d3a6f68f876d9441a730317d3af63f5bcb0fec585fcb1d810608bf6d04f77e1d",
+      "size_bytes": 219
+    },
+    {
+      "path": "validation/front05/raw/lint.log",
+      "sha256": "7c640a42ca0040d573194645f5bb903b3a16e222c692dd51a07838c1263f84bf",
+      "size_bytes": 240
+    },
+    {
+      "path": "validation/front05/raw/typecheck.log",
+      "sha256": "786b161b5c22a9d17dc6b5f3c3988d7732add02e14a4bcc4e052d1b88f3b85b3",
+      "size_bytes": 254
+    },
+    {
+      "path": "validation/front05/raw/unit-tests.log",
+      "sha256": "c18b20c12b1837b3ade293e63b272f4b2f9fdd3c8712bd59281d85a3b87ddd4e",
+      "size_bytes": 8353
+    },
+    {
+      "path": "validation/front05/raw/visual.log",
+      "sha256": "82dddc70aa91b2cd4b6f1a0202b6d3b36ae27ccca8a7e3c084301de9e8a5104f",
+      "size_bytes": 8266
+    },
+    {
+      "path": "validation/front05/route_inventory.json",
+      "sha256": "19fcdbc145a845750368cde75688bf7c968ea2ded64ee38392d63b0e8669c0ee",
+      "size_bytes": 3071
+    },
+    {
+      "path": "validation/front05/source_delta.json",
+      "sha256": "52cfd639fc8117a02451b1938ba6718bc5c692b5756c4927dfd59b1f5754818f",
+      "size_bytes": 10868
+    },
+    {
+      "path": "validation/front05/source_manifest.json",
+      "sha256": "db249ec96a4f501910c08400d075a96f1e72f391c415f2655b580cd3813ca22e",
+      "size_bytes": 19928
+    },
+    {
+      "path": "validation/front05/verification_integrity.json",
+      "sha256": "b20088a2465cb7dce59db6f817a4e0f9ed30e233f180758f3626c410863bb0d1",
+      "size_bytes": 499
+    }
+  ]
+}

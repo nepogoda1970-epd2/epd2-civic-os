@@ -1,0 +1,163 @@
+{
+ "schema": "epd2.front05.mandate-scope-inventory/1",
+ "derived_from": [
+  "docs/frontend/FRONT-05-STAGE-CONTRACT.json",
+  "frontend/representative-workspace/domain/capabilities.ts"
+ ],
+ "unbounded_scope_representable": false,
+ "cross_mandate_action_count": 0,
+ "roles": {
+  "primary": [
+   "representative",
+   "mandate_staff"
+  ],
+  "secondary": [
+   "publication_reviewer",
+   "conflict_officer"
+  ],
+  "forbidden": [
+   "super_admin",
+   "representative_all",
+   "system_admin",
+   "global_admin",
+   "cross_mandate_operator",
+   "bund_all_access",
+   "debug_bypass"
+  ]
+ },
+ "action_count": 12,
+ "actions": [
+  {
+   "action": "case.assign",
+   "capability": "case_assignment",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_staff_assigned",
+   "resource_scope": "single mandate",
+   "impact": "low",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "case.triage",
+   "capability": "case_triage_transition",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_staff_assigned",
+   "resource_scope": "single mandate",
+   "impact": "low",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "case.record_response",
+   "capability": "case_response_record",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_staff_assigned",
+   "resource_scope": "single mandate",
+   "impact": "high",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "case.close",
+   "capability": "case_triage_transition",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "consequential",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "position.save",
+   "capability": "position_draft_write",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "high",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "position.submit",
+   "capability": "position_internal_submission",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "consequential",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "deviation.record",
+   "capability": "deviation_record_write",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "consequential",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "declaration.submit",
+   "capability": "declaration_submission",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "consequential",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  },
+  {
+   "action": "publication.propose",
+   "capability": "publication_proposal_submission",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "consequential",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "SECURITY_SENSITIVE_BOUNDARY"
+  },
+  {
+   "action": "publication.withdraw",
+   "capability": "publication_proposal_submission",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_representative",
+   "resource_scope": "single mandate",
+   "impact": "high",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "SECURITY_SENSITIVE_BOUNDARY"
+  },
+  {
+   "action": "conflict.record_assessment_proposal",
+   "capability": "conflict_restriction_change",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "conflict_officer",
+   "resource_scope": "single mandate",
+   "impact": "high",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "UNSUPPORTED",
+   "dependency_class": "PROHIBITED"
+  },
+  {
+   "action": "registry.read",
+   "capability": "registry_read_reference",
+   "scope_source": "session mandate scope, exactly one",
+   "required_authority": "mandate_member",
+   "resource_scope": "single mandate",
+   "impact": "read",
+   "cross_scope_behaviour": "refused before any port is reached; refusal identical to not-found",
+   "expected_refusal_state": "BLOCKED_BY_DEPENDENCY",
+   "dependency_class": "ABSENT"
+  }
+ ]
+}

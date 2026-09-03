@@ -1,0 +1,102 @@
+{
+ "schema": "epd2.front05.route-inventory/1",
+ "derived_from": [
+  "frontend/representative-workspace/app",
+  "docs/frontend/FRONT-05-STAGE-CONTRACT.json"
+ ],
+ "route_count": 9,
+ "undeclared_routes": [],
+ "unimplemented_routes": [],
+ "routes": [
+  {
+   "route": "/",
+   "page_id": "WS04-R00",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "none",
+   "routing_creates_authority": false,
+   "scope_source": "none",
+   "cross_scope_behaviour": "not applicable"
+  },
+  {
+   "route": "/representative",
+   "page_id": "WS04-R01",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_member",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/conflicts",
+   "page_id": "WS04-R08",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_member",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/declarations",
+   "page_id": "WS04-R06",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/desk",
+   "page_id": "WS04-R02",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_staff_assigned",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/desk/[caseId]",
+   "page_id": "WS04-R03",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_staff_assigned",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/deviations",
+   "page_id": "WS04-R05",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/positions",
+   "page_id": "WS04-R04",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  },
+  {
+   "route": "/representative/publication",
+   "page_id": "WS04-R07",
+   "implemented": true,
+   "declared": true,
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false,
+   "scope_source": "session mandate scope",
+   "cross_scope_behaviour": "non-disclosing refusal (scope_mismatch)"
+  }
+ ]
+}

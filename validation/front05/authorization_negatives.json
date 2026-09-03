@@ -1,0 +1,156 @@
+{
+ "schema": "epd2.front05.authorization-negatives/1",
+ "authority": "NON_AUTHORITATIVE",
+ "stage": "FRONT-05 — WS-04 Representative Workspace",
+ "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+ "generated_at": "2026-09-02T14:18:57.845110+00:00",
+ "derivation": "Each entry names an executed test and reports that test's observed outcome. Nothing here is asserted independently of a run.",
+ "case_count": 18,
+ "satisfied": 18,
+ "cases": [
+  {
+   "id": "AN-01",
+   "scenario": "another representative's case within a foreign mandate",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: every negative case outcome renders identical text",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-02",
+   "scenario": "a case in another mandate, reached by direct URL",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: every negative case outcome renders identical text",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-03",
+   "scenario": "a case that does not exist, reached by URL guessing",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: every negative case outcome renders identical text",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-04",
+   "scenario": "a conflict-restricted case",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: the refusal names no resource and no reason",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-05",
+   "scenario": "a malformed or traversal-shaped case identifier",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: every negative case outcome renders identical text",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-06",
+   "scenario": "a restricted case is not linked and its subject is withheld in the list",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: a restricted case is not linked and its subject is withheld",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-07",
+   "scenario": "no mandate resolved: every protected read refuses",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/authorization-negative.log :: no mandate is resolved, and the interface says so",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-08",
+   "scenario": "a case detail under the production profile discloses nothing",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/authorization-negative.log :: a case detail refuses without disclosing existence",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-09",
+   "scenario": "a consequential action is refused with nothing committed",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/authorization-negative.log :: every consequential action is refused with nothing committed",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-10",
+   "scenario": "an unreadable conflict register keeps access restricted",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/authorization-negative.log :: the conflict register is unreadable, so access stays restricted",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-11",
+   "scenario": "no universal or cross-mandate mode is offered on any route",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: offers no universal or cross-mandate mode",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-12",
+   "scenario": "no unscoped search surface exists on any route",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: offers no unscoped search field",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-13",
+   "scenario": "no case content reaches a browser store, a URL or the title",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: writes nothing to a browser store",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-14",
+   "scenario": "a typed draft never reaches a store even when the save is refused",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/browser.log :: a case body typed into a draft never reaches a store",
+   "evidence_kind": "browser"
+  },
+  {
+   "id": "AN-15",
+   "scenario": "expired, revoked and scope-changed sessions clear scope and role",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/unit-tests.log :: expiry and revocation clear the scope and the role",
+   "evidence_kind": "unit"
+  },
+  {
+   "id": "AN-16",
+   "scenario": "no terminal session state returns to a working state",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/unit-tests.log :: no event returns a terminal negative state to a working state",
+   "evidence_kind": "unit"
+  },
+  {
+   "id": "AN-17",
+   "scenario": "a stale route: a scope change forces loaded content to be cleared",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/unit-tests.log :: a scope change forces previously loaded content to be cleared",
+   "evidence_kind": "unit"
+  },
+  {
+   "id": "AN-18",
+   "scenario": "a wrong-mandate binding is refused non-disclosingly",
+   "expected": "refused safely",
+   "observed": "refused safely",
+   "evidence": "validation/front05/raw/unit-tests.log :: the wrong-mandate refusal is non-disclosing",
+   "evidence_kind": "unit"
+  }
+ ]
+}

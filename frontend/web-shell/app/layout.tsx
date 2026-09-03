@@ -15,6 +15,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de">
+      <head>
+        <script
+          // The URL is the sole locale state.  This runs before hydration so a
+          // directly opened English URL never remains labelled as German.
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.documentElement.lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'de';",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

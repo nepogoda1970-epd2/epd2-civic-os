@@ -1,0 +1,282 @@
+{
+ "schema": "epd2.front05.capability-truth/1",
+ "derived_from": "frontend/representative-workspace/domain/capabilities.ts",
+ "capability_count": 29,
+ "counts": {
+  "SUPPORTED_REAL_PATH": 3,
+  "SUPPORTED_WITH_DECLARED_LIMITATION": 0,
+  "BLOCKED_BY_DEPENDENCY": 25,
+  "UNSUPPORTED": 1
+ },
+ "security_sensitive_count": 2,
+ "security_sensitive_capabilities": [
+  "publication_proposal_submission",
+  "publication_state_observation"
+ ],
+ "no_network_capability_supported": true,
+ "capabilities": [
+  {
+   "id": "mandate_session_establishment",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "API-02 / identity boundary",
+   "missingDependency": "an accepted executable route issuing a mandate-scoped representative session",
+   "dependencyClass": "ABSENT",
+   "reason": "API-02 C13 accepts identity-side issuance operations, but none of them issues or validates a session bound to an elected mandate. No accepted route exists that a WS-04 browser could call to become authenticated as a mandate holder.",
+   "frontendBehaviour": "The workspace starts in the anonymous state, states that mandate sessions cannot be established against any accepted runtime, and offers no credential entry that would imply otherwise."
+  },
+  {
+   "id": "mandate_scope_resolution",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-20 office-mandate-service (unaccepted)",
+   "missingDependency": "an accepted mandate register exposing the mandate, its level, and its active authority window",
+   "dependencyClass": "ABSENT",
+   "reason": "The only mandate register source in the programme is office-mandate-service, which exists solely inside the unaccepted PACK-20 candidate archive. compliance-service.RepresentationMandate is legal power of attorney under PACK-09 and is not an elected mandate.",
+   "frontendBehaviour": "Scope is never resolved from the network. Every protected surface refuses with scope_mismatch or unavailable and names the missing register."
+  },
+  {
+   "id": "authority_revalidation",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-20 office-mandate-service (unaccepted)",
+   "missingDependency": "an accepted server-side authority check evaluated at commit time",
+   "dependencyClass": "ABSENT",
+   "reason": "Commit-time revalidation is a server obligation. With no accepted mandate service there is nothing to revalidate against, and the client is forbidden from deciding authority itself.",
+   "frontendBehaviour": "No action that would require commit-time revalidation is offered as executable. The requirement is displayed, not simulated."
+  },
+  {
+   "id": "step_up_authentication",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "API-02 / identity boundary",
+   "missingDependency": "an accepted executable step-up ceremony returning a raised assurance level",
+   "dependencyClass": "ABSENT",
+   "reason": "Assurance levels are declared in the accepted policy records, but no accepted route performs a step-up ceremony.",
+   "frontendBehaviour": "Surfaces that require step-up render the step_up_required state with the reason, and the trigger is inert by construction rather than disabled by styling."
+  },
+  {
+   "id": "case_intake_list",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route listing mandate-scoped citizen cases",
+   "dependencyClass": "ABSENT",
+   "reason": "The desk service exists only inside the unaccepted PACK-29 candidate archive, and FIR-REP-001 is recorded as captured, not accepted.",
+   "frontendBehaviour": "The desk renders the unavailable state with the named dependency. No placeholder case list is shown, because a fabricated list is indistinguishable from a real one to the user."
+  },
+  {
+   "id": "case_detail_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route returning a single case within mandate scope",
+   "dependencyClass": "ABSENT",
+   "reason": "Same dependency as the intake list. Case content is confidential and is the data class this workspace is most constrained around.",
+   "frontendBehaviour": "Detail routes refuse non-disclosingly: the refusal is identical whether the case does not exist or lies outside scope."
+  },
+  {
+   "id": "case_assignment",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable case assignment operation",
+   "dependencyClass": "ABSENT",
+   "reason": "Assignment mutates server-held state; no accepted route accepts such a mutation.",
+   "frontendBehaviour": "The action is described in the action register with its authority requirement and reported as blocked. It is never offered as executable."
+  },
+  {
+   "id": "case_triage_transition",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable state-transition operation with optimistic-concurrency semantics",
+   "dependencyClass": "ABSENT",
+   "reason": "Case state transitions are server-authoritative and require a version precondition. Neither the operation nor the version token has an accepted definition.",
+   "frontendBehaviour": "Transitions are not attempted. The state machine models the safe outcomes, including the uncertain outcome, and is exercised only under the governed test profile."
+  },
+  {
+   "id": "case_response_record",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route recording an outbound response against a case",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route accepts case correspondence.",
+   "frontendBehaviour": "Composition surfaces are not presented as a send path. Nothing composed is described as delivered."
+  },
+  {
+   "id": "case_scoped_search",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable search operation that is server-side scope-bound",
+   "dependencyClass": "ABSENT",
+   "reason": "Search must be constrained on the server. A client-side filter over a client-held corpus is not a scoped search, and a cross-mandate search is prohibited outright.",
+   "frontendBehaviour": "Search is unavailable. The interface never offers an unscoped search field, so there is no surface on which a cross-mandate query could be typed."
+  },
+  {
+   "id": "position_draft_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route returning stored position drafts",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route stores or returns position drafts.",
+   "frontendBehaviour": "The position surface renders unavailable rather than an empty list, because an empty list asserts that nothing exists."
+  },
+  {
+   "id": "position_draft_write",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route persisting a draft",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route persists a draft.",
+   "frontendBehaviour": "A draft composed in this workspace exists only in volatile memory for the life of the surface. It is labelled as unsaved, and no browser storage receives it."
+  },
+  {
+   "id": "position_internal_submission",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route accepting an internal submission",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route accepts a submission.",
+   "frontendBehaviour": "Submission is reported blocked with the named dependency. The workspace never reports a draft as submitted."
+  },
+  {
+   "id": "deviation_record_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 / transparency-service",
+   "missingDependency": "an accepted executable route returning deviation records with provenance",
+   "dependencyClass": "ABSENT",
+   "reason": "transparency-service publishes finished items; it holds no deviation record model, and the desk service that would hold one is unaccepted.",
+   "frontendBehaviour": "Unavailable state with the named dependency."
+  },
+  {
+   "id": "deviation_record_write",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missingDependency": "an accepted executable route recording a deviation against a governed decision",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route accepts a deviation record.",
+   "frontendBehaviour": "The composition surface exists and enforces the record's shape locally, including the requirement that a deviation references a decision and cannot alter it. Nothing is transmitted."
+  },
+  {
+   "id": "deviation_decision_reference",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-16 / decision runtime",
+   "missingDependency": "an accepted executable route resolving a governed decision identifier to its published record",
+   "dependencyClass": "ABSENT",
+   "reason": "A deviation must reference a real decision. No accepted route resolves decision identifiers.",
+   "frontendBehaviour": "References are accepted as opaque text and explicitly marked unverified. The workspace does not claim a reference is valid."
+  },
+  {
+   "id": "declaration_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-09 compliance-service",
+   "missingDependency": "an accepted executable route returning a representative's own declarations",
+   "dependencyClass": "ABSENT",
+   "reason": "compliance-service models declarations at specification level only; no accepted executable route exists, and its RepresentationMandate is legal power of attorney rather than an elected mandate.",
+   "frontendBehaviour": "Unavailable state with the named dependency."
+  },
+  {
+   "id": "declaration_submission",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-09 compliance-service",
+   "missingDependency": "an accepted executable route accepting a declaration submission",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route accepts a declaration.",
+   "frontendBehaviour": "The form validates locally and reports the submission blocked. It never reports acceptance, and it never asserts a compliance obligation has been met."
+  },
+  {
+   "id": "publication_proposal_submission",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-13 transparency-service",
+   "missingDependency": "a server-authoritative proposal and authorization contract: a proposal state distinct from PUBLISHED, and an authorization decided by the server rather than asserted by the caller",
+   "dependencyClass": "SECURITY_SENSITIVE_BOUNDARY",
+   "reason": "transparency-service has a single publication state, PUBLISHED, and it authorises by a caller-supplied actor_is_authorized boolean. There is no proposal state to submit into, and the authorization gate is not an authorization gate.",
+   "frontendBehaviour": "The workspace offers proposal composition only, states in the interface that a proposal is not an approval, and reports submission blocked. It never sets, sends or relies on an authorization flag of its own.",
+   "securityFinding": "A caller-supplied actor_is_authorized boolean is a self-asserted authorization: the caller declares its own permission and the service accepts the declaration. FRONT-05 must not treat it as evidence that any authorization occurred, and must not build a privileged path on it â doing so would let a proposal reach publication carrying nothing but the proposer's own claim of being allowed to publish. This is a defect in the dependency, not a gap in it: the capability stays blocked until a server-authoritative authorization contract exists, and would remain blocked even if a proposal route were added while the boolean stayed."
+  },
+  {
+   "id": "publication_state_observation",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-13 transparency-service",
+   "missingDependency": "a route returning a publication state whose approval was decided by an authority other than the proposer",
+   "dependencyClass": "SECURITY_SENSITIVE_BOUNDARY",
+   "reason": "No accepted executable transparency route ships, and the model behind it records no deciding authority â publication is authorised by the caller's own actor_is_authorized boolean.",
+   "frontendBehaviour": "Publication state is shown as unknown rather than assumed, and an approved state is presented as public only when a deciding authority and a public rendition reference are both present.",
+   "securityFinding": "An observed publication state carries no independent evidence of who approved it, because the service records no deciding authority. A state read back from such a service cannot distinguish an approval by the publication authority from one the proposer asserted about itself, so this workspace treats an approved state with no recorded decider as not public â see mayPresentAsPublic in domain/publication.ts."
+  },
+  {
+   "id": "conflict_restriction_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-09 compliance-service",
+   "missingDependency": "an accepted executable route returning active conflict restrictions for a mandate",
+   "dependencyClass": "ABSENT",
+   "reason": "No accepted route returns restrictions.",
+   "frontendBehaviour": "Restrictions cannot be read, so the workspace fails closed: it neither asserts that a restriction is absent nor treats an unknown restriction as cleared."
+  },
+  {
+   "id": "conflict_restriction_change",
+   "status": "UNSUPPORTED",
+   "owner": "Conflict officer role, outside WS-04",
+   "missingDependency": "not applicable â the capability is prohibited for this workspace, not merely blocked",
+   "dependencyClass": "PROHIBITED",
+   "reason": "A subject may never clear a restriction over themselves. This is a prohibition, so it would remain unsupported even if an accepted route existed.",
+   "frontendBehaviour": "No surface, no action descriptor, and no port exists. The prohibition is enforced by absence and asserted by a total function returning false."
+  },
+  {
+   "id": "registry_read_reference",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-20 / PACK-09 registers (unaccepted or specification-level)",
+   "missingDependency": "an accepted executable read route over a protected register",
+   "dependencyClass": "ABSENT",
+   "reason": "WS-04 holds no registry custody and may only reference registry data by reading it. No accepted read route exists.",
+   "frontendBehaviour": "Registry-derived facts are shown as unavailable. No registry mutation surface exists at all."
+  },
+  {
+   "id": "eligibility_status_display",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "Eligibility authority, outside WS-04",
+   "missingDependency": "an accepted executable route returning a decided eligibility status",
+   "dependencyClass": "ABSENT",
+   "reason": "WS-04 may display an eligibility decision made elsewhere but may never make one. No accepted route supplies a decision to display.",
+   "frontendBehaviour": "Eligibility is displayed as undetermined-elsewhere, with the explicit statement that this workspace does not decide it."
+  },
+  {
+   "id": "audit_trail_read",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "CTRL / governed control plane (NOT_STARTED)",
+   "missingDependency": "any control-plane implementation whatsoever",
+   "dependencyClass": "ABSENT",
+   "reason": "CTRL is recorded NOT_STARTED and no code is on disk. There is no audit surface to read.",
+   "frontendBehaviour": "The workspace states that its own actions are not currently audited by an accepted control plane, which is a limitation the operator must know."
+  },
+  {
+   "id": "telemetry_emission",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "Platform telemetry (not connected)",
+   "missingDependency": "a connected accepted telemetry platform",
+   "dependencyClass": "ABSENT",
+   "reason": "No telemetry platform is connected. The allowlist and the content prohibitions are implemented and tested regardless, so that the constraint is already binding when a platform arrives.",
+   "frontendBehaviour": "No telemetry leaves the browser. The validator asserts the allowlist is enforced and that case content can never enter an event."
+  },
+  {
+   "id": "local_refusal_rendering",
+   "status": "SUPPORTED_REAL_PATH",
+   "owner": "FRONT-05 / WS-04",
+   "missingDependency": "",
+   "dependencyClass": "ABSENT",
+   "reason": "Rendering a safe refusal is performed entirely by this workspace and depends on nothing external.",
+   "frontendBehaviour": "Every refusal kind renders a safe message, a committed/not-committed/unknown statement, and one safe next action, with non-disclosure preserved where required."
+  },
+  {
+   "id": "local_scope_binding",
+   "status": "SUPPORTED_REAL_PATH",
+   "owner": "FRONT-05 / WS-04",
+   "missingDependency": "",
+   "dependencyClass": "ABSENT",
+   "reason": "Binding every route and action to exactly one mandate scope, and rejecting any request that carries none or more than one, is local structure. It is presentation-side only and never a substitute for the server decision.",
+   "frontendBehaviour": "There is no representation of an unbounded scope in the type system, so a cross-mandate request has no expressible form."
+  },
+  {
+   "id": "governed_fallback",
+   "status": "SUPPORTED_REAL_PATH",
+   "owner": "FRONT-05 / WS-04",
+   "missingDependency": "",
+   "dependencyClass": "ABSENT",
+   "reason": "Directing the user to the governed non-digital path when a digital path is blocked is local and always available.",
+   "frontendBehaviour": "Each blocked surface names the offline route that remains valid, so no citizen matter is dropped because the software is unfinished."
+  }
+ ]
+}

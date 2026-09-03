@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 
 import type { PublicPage } from "../public/content";
 import { reviewed, topNavigation } from "../public/content";
@@ -62,20 +66,37 @@ export function CapabilityStatusBanner({ page }: { page: PublicPage }) {
   );
 }
 
-function PublicHeader() {
+type Locale = "de" | "en";
+
+function PublicHeader({
+  locale,
+  setLocale,
+}: {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+}) {
   return (
     <>
       <a className="skip-link" href="#main">
         Zum Inhalt springen
       </a>
       <div className="candidate-banner" role="status">
-        <strong>FRONT-01 Implementation Candidate</strong>
-        <span>Keine produktive oder rechtlich aktivierte Plattform</span>
+        <strong>FRONT-02 C2 Correction Candidate</strong>
+        <span>
+          {locale === "en"
+            ? "No production-ready or legally activated platform"
+            : "Keine produktive oder rechtlich aktivierte Plattform"}
+        </span>
       </div>
       <header className="public-header">
-        <Link aria-label="EPD² Startseite" className="logo" href="/">
-          EPD²
-        </Link>
+        <div className="public-brand">
+          <Link aria-label="EPD² Startseite" className="logo" href="/">
+            EPD²
+          </Link>
+          <span className="public-logo-subtitle visually-hidden">
+            Erste Partei Direkte Demokratie
+          </span>
+        </div>
         <nav aria-label="Hauptnavigation">
           {topNavigation.map((item) => (
             <Link href={item.href} key={item.href}>
@@ -83,6 +104,27 @@ function PublicHeader() {
             </Link>
           ))}
         </nav>
+        <div
+          aria-label="Sprache / language"
+          className="language-selector"
+          role="group"
+        >
+          <button
+            aria-pressed={locale === "de"}
+            onClick={() => setLocale("de")}
+            type="button"
+          >
+            DE
+          </button>
+          <span aria-hidden="true">|</span>
+          <button
+            aria-pressed={locale === "en"}
+            onClick={() => setLocale("en")}
+            type="button"
+          >
+            EN
+          </button>
+        </div>
       </header>
     </>
   );
@@ -285,14 +327,71 @@ function KindSpecific({ kind }: Pick<PublicPage, "kind">) {
 }
 
 export function PublicPageView({ page }: { page: PublicPage }) {
+  const [locale, setLocale] = useState<Locale>(() =>
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("lang") === "en"
+      ? "en"
+      : "de",
+  );
+  useEffect(() => {
+    const selected =
+      new URLSearchParams(window.location.search).get("lang") === "en"
+        ? "en"
+        : "de";
+    setLocale(selected);
+    document.documentElement.lang = selected;
+  }, []);
+  const english = locale === "en" && page.en;
+  const visiblePage = english ? { ...page, ...page.en } : page;
+  const fallback = locale === "en" && !page.en;
+  const preserveLocale = (event: MouseEvent<HTMLDivElement>) => {
+    if (locale !== "en") return;
+    const anchor = (event.target as HTMLElement).closest(
+      "a[href]",
+    ) as HTMLAnchorElement | null;
+    if (
+      !anchor ||
+      anchor.target ||
+      !anchor.getAttribute("href")?.startsWith("/")
+    )
+      return;
+    const url = new URL(anchor.href, window.location.origin);
+    if (url.searchParams.get("lang") === "en") return;
+    event.preventDefault();
+    url.searchParams.set("lang", "en");
+    window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+  };
   return (
-    <div className="public-shell" data-page-id={page.id} data-workspace="WS-01">
-      <PublicHeader />
+    <div
+      className="public-shell"
+      data-page-id={page.id}
+      data-workspace="WS-01"
+      onClickCapture={preserveLocale}
+    >
+      <PublicHeader
+        locale={locale}
+        setLocale={(next) => {
+          const query = next === "en" ? "?lang=en" : "";
+          window.history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}${query}`,
+          );
+          document.documentElement.lang = next;
+          setLocale(next);
+        }}
+      />
       <main id="main" tabIndex={-1}>
-        <section className="public-hero">
-          <p className="public-eyebrow">{page.eyebrow}</p>
-          <h1>{page.title}</h1>
-          <p className="public-lead">{page.lead}</p>
+        {fallback ? (
+          <section className="locale-fallback" lang="en">
+            <strong>English rendition unavailable.</strong> The current
+            authoritative content is available in German below.
+          </section>
+        ) : null}
+        <section className="public-hero" lang={fallback ? "de" : undefined}>
+          <p className="public-eyebrow">{visiblePage.eyebrow}</p>
+          <h1>{visiblePage.title}</h1>
+          <p className="public-lead">{visiblePage.lead}</p>
           {page.kind === "home" ? (
             <div className="hero-actions">
               <Link className="button button--primary" href="/programm">
@@ -304,9 +403,11 @@ export function PublicPageView({ page }: { page: PublicPage }) {
             </div>
           ) : null}
         </section>
-        <CapabilityStatusBanner page={page} />
-        <div className="public-content">
-          {page.sections.map((section) => (
+        <div lang={fallback ? "de" : undefined}>
+          <CapabilityStatusBanner page={page} />
+        </div>
+        <div className="public-content" lang={fallback ? "de" : undefined}>
+          {visiblePage.sections.map((section) => (
             <section className="public-section" key={section.title}>
               <h2>{section.title}</h2>
               <p>{section.text}</p>

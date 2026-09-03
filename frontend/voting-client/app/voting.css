@@ -1,0 +1,457 @@
+/*
+ * WS-03 stylesheet.
+ *
+ * The Voting Client may not import the Member Workspace runtime, and importing
+ * the shared stylesheet across package boundaries would create exactly that
+ * coupling.  The tokens below are therefore carried here as literal values and
+ * are asserted, byte for byte, against frontend/web-shell/app/globals.css by
+ * tests/front04.design.test.ts.  Changing a token in either place fails that
+ * test — which is the mechanical form of requiring a Design Change Decision.
+ *
+ * Only the primitives this workspace actually uses are reproduced.  Nothing is
+ * modernised, restyled or re-proportioned.
+ */
+
+:root {
+  color-scheme: light;
+  --accent: #5c3d3d;
+  --text: #1f1f1f;
+  --muted: #666;
+  --light-bg: #f4f5f7;
+  --card-border: #e2e0d8;
+  --soft: #f0ede6;
+  --white: #fff;
+  --green: #0b8b4f;
+  --danger: #9d2424;
+  --warning: #775700;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --radius-sm: 8px;
+  --radius-lg: 14px;
+  --shadow-raised: 0 12px 24px -8px rgb(0 0 0 / 7%);
+  --content-wide: 1280px;
+  --content-reading: 760px;
+  --z-sticky: 50;
+  --z-overlay: 100;
+  --focus: #175cd3;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.55;
+  background: var(--light-bg);
+  color: var(--text);
+}
+a {
+  color: inherit;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  min-height: 44px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: var(--z-overlay);
+  left: 1rem;
+  top: -5rem;
+  padding: 0.75rem 1rem;
+  background: var(--text);
+  color: var(--white);
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+.voting-shell {
+  max-width: var(--content-wide);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--white);
+}
+.voting-header {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  padding: 1.25rem 2.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.voting-header p {
+  max-width: var(--content-reading);
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.voting-wordmark {
+  font-size: 1.375rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.voting-main {
+  max-width: var(--content-reading);
+  padding: 3.5rem 2.5rem;
+}
+.voting-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2.25rem 2.5rem;
+  border-top: 1px solid var(--card-border);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.candidate-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #d4b45e;
+  background: #fff8dc;
+  color: #503d06;
+  font-size: 0.82rem;
+  text-align: center;
+}
+.candidate-banner strong {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+.page-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.page-header p {
+  max-width: var(--content-reading);
+  color: var(--muted);
+}
+
+.card,
+.state-panel {
+  padding: 1.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+}
+.card-title,
+.state-panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+}
+
+.notice {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.notice h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.notice--warning,
+.notice--legal {
+  border-left-color: var(--warning);
+}
+.notice--danger {
+  border-left-color: var(--danger);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.375rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.button--primary {
+  background: #2c2c2c;
+  color: var(--white);
+}
+.button--secondary {
+  border-color: #444;
+  background: var(--white);
+}
+.button--quiet {
+  background: transparent;
+  color: var(--accent);
+}
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.status-badge {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--soft);
+  font-size: 0.78rem;
+}
+.status-badge__marker {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+.status-badge--blocked,
+.status-badge--failed {
+  color: var(--danger);
+}
+.status-badge--limited,
+.status-badge--uncertain {
+  color: var(--warning);
+}
+
+fieldset {
+  margin: 1.25rem 0;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+}
+legend {
+  font-weight: 600;
+}
+fieldset input {
+  width: auto;
+  min-height: auto;
+}
+.form-field {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+.form-field label {
+  font-weight: 600;
+}
+.form-field p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #777;
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--text);
+}
+.validation-message {
+  color: var(--danger) !important;
+}
+
+.ballot-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+}
+.ballot-option + .ballot-option {
+  border-top: 1px solid var(--card-border);
+}
+.ballot-option label {
+  font-weight: 500;
+}
+.ballot-option p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.ballot-option__selected {
+  font-weight: 650;
+}
+
+.selection-list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 1rem 0 0;
+  list-style: none;
+}
+.selection-list > li {
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--card-border);
+}
+.selection-list strong {
+  display: block;
+}
+
+.metadata-list {
+  display: grid;
+  gap: 0.75rem;
+}
+.metadata-list div {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.5fr) 1fr;
+  gap: 1rem;
+}
+.metadata-list dt {
+  font-weight: 700;
+}
+.metadata-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.consequential-block {
+  margin-top: 2rem;
+  padding: 1.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+}
+.consequential-block > h2 {
+  margin-top: 0;
+}
+.consequential-choice {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.25rem 0;
+}
+.consequential-choice + .consequential-choice {
+  border-top: 1px solid var(--card-border);
+}
+.consequential-choice p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.confirmation-code {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  overflow-wrap: anywhere;
+}
+
+.error-summary {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+}
+.error-summary h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--danger);
+}
+.error-summary ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.provenance {
+  margin-top: 2rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--card-border);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.informational,
+.hint {
+  font-size: 0.9em;
+  color: var(--muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+main:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .voting-header {
+    padding: 1.125rem 1.375rem;
+  }
+  .voting-main {
+    padding: 2rem 1.375rem;
+  }
+  .voting-footer {
+    flex-direction: column;
+    padding: 2rem 1.375rem;
+  }
+  .metadata-list div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -13,6 +13,8 @@
     "test:components": "vitest run",
     "test:browser": "playwright test",
     "test:a11y": "playwright test --grep @a11y",
+    "validate:front02": "node ../../scripts/validate_front02_catalogue.mjs",
+    "validate:package": "node ../../scripts/validate_front02_package.mjs",
     "test:visual": "playwright test --grep @visual",
     "test:browser:update": "playwright test --grep @visual --update-snapshots",
     "format:check": "prettier --check .",

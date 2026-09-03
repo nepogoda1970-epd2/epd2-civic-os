@@ -1,0 +1,178 @@
+{
+ "schema": "epd2.front05.dependency-reconciliation/1",
+ "principle": "A dependency that is missing and a dependency that is defective are different findings. A missing dependency becomes a real path when it is built. A defective one must be corrected before it may be relied on at all, and a route appearing over the top of it does not correct it.",
+ "rule": "A capability whose dependency is classified SECURITY_SENSITIVE_BOUNDARY may only carry status BLOCKED_BY_DEPENDENCY or UNSUPPORTED. It may never be SUPPORTED_REAL_PATH, and it may never be SUPPORTED_WITH_DECLARED_LIMITATION — a declared limitation states the bounds within which something is safe, and there are no bounds within which a self-asserted authorization is safe.",
+ "absent_dependencies": [
+  {
+   "capability": "mandate_session_establishment",
+   "owner": "API-02 / identity boundary",
+   "missing": "an accepted executable route issuing a mandate-scoped representative session"
+  },
+  {
+   "capability": "mandate_scope_resolution",
+   "owner": "PACK-20 office-mandate-service (unaccepted)",
+   "missing": "an accepted mandate register exposing the mandate, its level, and its active authority window"
+  },
+  {
+   "capability": "authority_revalidation",
+   "owner": "PACK-20 office-mandate-service (unaccepted)",
+   "missing": "an accepted server-side authority check evaluated at commit time"
+  },
+  {
+   "capability": "step_up_authentication",
+   "owner": "API-02 / identity boundary",
+   "missing": "an accepted executable step-up ceremony returning a raised assurance level"
+  },
+  {
+   "capability": "case_intake_list",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route listing mandate-scoped citizen cases"
+  },
+  {
+   "capability": "case_detail_read",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route returning a single case within mandate scope"
+  },
+  {
+   "capability": "case_assignment",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable case assignment operation"
+  },
+  {
+   "capability": "case_triage_transition",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable state-transition operation with optimistic-concurrency semantics"
+  },
+  {
+   "capability": "case_response_record",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route recording an outbound response against a case"
+  },
+  {
+   "capability": "case_scoped_search",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable search operation that is server-side scope-bound"
+  },
+  {
+   "capability": "position_draft_read",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route returning stored position drafts"
+  },
+  {
+   "capability": "position_draft_write",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route persisting a draft"
+  },
+  {
+   "capability": "position_internal_submission",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route accepting an internal submission"
+  },
+  {
+   "capability": "deviation_record_read",
+   "owner": "PACK-29 / transparency-service",
+   "missing": "an accepted executable route returning deviation records with provenance"
+  },
+  {
+   "capability": "deviation_record_write",
+   "owner": "PACK-29 representative-desk-service (unaccepted)",
+   "missing": "an accepted executable route recording a deviation against a governed decision"
+  },
+  {
+   "capability": "deviation_decision_reference",
+   "owner": "PACK-16 / decision runtime",
+   "missing": "an accepted executable route resolving a governed decision identifier to its published record"
+  },
+  {
+   "capability": "declaration_read",
+   "owner": "PACK-09 compliance-service",
+   "missing": "an accepted executable route returning a representative's own declarations"
+  },
+  {
+   "capability": "declaration_submission",
+   "owner": "PACK-09 compliance-service",
+   "missing": "an accepted executable route accepting a declaration submission"
+  },
+  {
+   "capability": "conflict_restriction_read",
+   "owner": "PACK-09 compliance-service",
+   "missing": "an accepted executable route returning active conflict restrictions for a mandate"
+  },
+  {
+   "capability": "registry_read_reference",
+   "owner": "PACK-20 / PACK-09 registers (unaccepted or specification-level)",
+   "missing": "an accepted executable read route over a protected register"
+  },
+  {
+   "capability": "eligibility_status_display",
+   "owner": "Eligibility authority, outside WS-04",
+   "missing": "an accepted executable route returning a decided eligibility status"
+  },
+  {
+   "capability": "audit_trail_read",
+   "owner": "CTRL / governed control plane (NOT_STARTED)",
+   "missing": "any control-plane implementation whatsoever"
+  },
+  {
+   "capability": "telemetry_emission",
+   "owner": "Platform telemetry (not connected)",
+   "missing": "a connected accepted telemetry platform"
+  }
+ ],
+ "prohibited_capabilities": [
+  {
+   "capability": "conflict_restriction_change",
+   "reason": "A subject may never clear a restriction over themselves. This is a prohibition, so it would remain unsupported even if an accepted route existed."
+  }
+ ],
+ "security_sensitive_boundaries": [
+  {
+   "id": "SSD-01",
+   "owner": "PACK-13 transparency-service",
+   "capabilities": [
+    "publication_proposal_submission",
+    "publication_state_observation"
+   ],
+   "observed": "Publication has the single state PUBLISHED, and authorization is a caller-supplied actor_is_authorized boolean.",
+   "finding": "A caller-supplied authorization boolean is a self-asserted authorization: the caller declares its own permission and the service accepts the declaration. The field that looks like an authorization gate is an authorization claim, made by exactly the party the gate exists to constrain. Accepting it as sufficient would let a rendition reach publication carrying nothing but the proposer's own claim of being allowed to publish — which is the separation WS-04 exists to preserve.",
+   "front05_position": "FRONT-05 does not treat this boolean as evidence that authorization occurred, does not set or send such a flag, and builds no privileged path on it. No port signature contains a field it could be carried in.",
+   "insufficient_remedies": [
+    "adding a proposal route while authorization stays caller-supplied",
+    "having WS-04 set actor_is_authorized itself",
+    "treating a successful call as evidence that authorization occurred",
+    "recording the capability as SUPPORTED_WITH_DECLARED_LIMITATION"
+   ],
+   "unblocking_condition": "a server-authoritative proposal and authorization contract: a proposal state distinct from PUBLISHED, and an approval decided and recorded by an authority other than the proposer.",
+   "status_until_then": "BLOCKED_BY_DEPENDENCY, with publication approval itself remaining prohibited for WS-04 under every dependency state.",
+   "escalation": "Reported to the accepting authority as a security-relevant finding against PACK-13, not as a FRONT-05 gap."
+  }
+ ],
+ "security_sensitive_capability_records": [
+  {
+   "id": "publication_proposal_submission",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-13 transparency-service",
+   "missingDependency": "a server-authoritative proposal and authorization contract: a proposal state distinct from PUBLISHED, and an authorization decided by the server rather than asserted by the caller",
+   "dependencyClass": "SECURITY_SENSITIVE_BOUNDARY",
+   "reason": "transparency-service has a single publication state, PUBLISHED, and it authorises by a caller-supplied actor_is_authorized boolean. There is no proposal state to submit into, and the authorization gate is not an authorization gate.",
+   "frontendBehaviour": "The workspace offers proposal composition only, states in the interface that a proposal is not an approval, and reports submission blocked. It never sets, sends or relies on an authorization flag of its own.",
+   "securityFinding": "A caller-supplied actor_is_authorized boolean is a self-asserted authorization: the caller declares its own permission and the service accepts the declaration. FRONT-05 must not treat it as evidence that any authorization occurred, and must not build a privileged path on it â doing so would let a proposal reach publication carrying nothing but the proposer's own claim of being allowed to publish. This is a defect in the dependency, not a gap in it: the capability stays blocked until a server-authoritative authorization contract exists, and would remain blocked even if a proposal route were added while the boolean stayed."
+  },
+  {
+   "id": "publication_state_observation",
+   "status": "BLOCKED_BY_DEPENDENCY",
+   "owner": "PACK-13 transparency-service",
+   "missingDependency": "a route returning a publication state whose approval was decided by an authority other than the proposer",
+   "dependencyClass": "SECURITY_SENSITIVE_BOUNDARY",
+   "reason": "No accepted executable transparency route ships, and the model behind it records no deciding authority â publication is authorised by the caller's own actor_is_authorized boolean.",
+   "frontendBehaviour": "Publication state is shown as unknown rather than assumed, and an approved state is presented as public only when a deciding authority and a public rendition reference are both present.",
+   "securityFinding": "An observed publication state carries no independent evidence of who approved it, because the service records no deciding authority. A state read back from such a service cannot distinguish an approval by the publication authority from one the proposer asserted about itself, so this workspace treats an approved state with no recorded decider as not public â see mayPresentAsPublic in domain/publication.ts."
+  }
+ ],
+ "assertions": {
+  "no_security_sensitive_capability_is_supported": true,
+  "no_security_sensitive_capability_is_a_declared_limitation": true,
+  "every_security_sensitive_capability_states_a_finding": true,
+  "caller_asserted_authorization_treated_as_sufficient": false
+ }
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "epd2.front05.acceptance-record/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-03",
+  "scope": "BOUNDED_FRONT05_WS04_STAGE_ONLY",
+  "candidate": {
+    "filename": "EPD2_FRONT05_WS04_REPRESENTATIVE_WORKSPACE_CANDIDATE_0.1_C1.zip",
+    "sha256": "ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a",
+    "size_bytes": 27161590
+  },
+  "authoritative_review": {
+    "conclusion": "PASS",
+    "workflow": ".github/workflows/front05-c1-canonical-v2.yml",
+    "run_id": 33700475382,
+    "run_attempt": 1,
+    "head_sha": "d45c478c70b2098d4bed2c73ab048ccacf9c081e",
+    "verify_job_id": 100478465454,
+    "independent_review_job_id": 100480260808,
+    "terminal_marker": "FRONT05_C1_AUTHORITATIVE_RESULT:PASS:ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a:27161590"
+  },
+  "authoritative_artifacts": {
+    "evidence": {
+      "id": 9873516980,
+      "digest": "sha256:e382021fb9eae34e3ab153ebac47446eda9f49876d028e63c148de1d02822b52"
+    },
+    "exact_candidate": {
+      "id": 9873517578,
+      "digest": "sha256:870dec54b8564a122dce7219d22710a4b03d5ebb1e5caa27cbf15c708a975ce4"
+    }
+  },
+  "evidence": {
+    "gates": "46/46 PASS",
+    "mutations": "44/44 DETECTED",
+    "authorization_negative": "18/18 PASS",
+    "unit_tests": "111 PASS",
+    "browser": "297 PASS",
+    "browser_production": "297 PASS",
+    "authorization_negative_runtime": "132 PASS",
+    "visual": "33 PASS",
+    "archive_hygiene": "PASS",
+    "stale_source_rejection": "PASS",
+    "source_tree_digest": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1"
+  },
+  "stage_contract": {
+    "version": "1.0.0",
+    "digest": "dd76d17772275ac4389a659181f6286dcd7d97a65cf6a1e539e4463e935d26bd",
+    "governance_decision": "RATIFIED_FOR_C1_ACCEPTANCE"
+  },
+  "accepted_predecessors": {
+    "FRONT-02_C2_1": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179",
+    "FRONT-03_C1": "fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26",
+    "FRONT-04_C2": "1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8"
+  },
+  "self_acceptance": false,
+  "canonical_install": {
+    "cumulative_front_payload_through": "FRONT-05 C1",
+    "promotion_run_id": 33701575058,
+    "pre_promotion_main": "8a4d336589f2322984dbf03b1af3b5a575643005"
+  },
+  "open_stage_blockers": [],
+  "governed_deferred_items": [
+    {
+      "id": "SSD-01",
+      "owner": "PACK-13 / owning backend-security stage",
+      "disposition": "FRONT-05 FAILS CLOSED; NOT A FRONT-05 ACCEPTANCE BLOCKER"
+    },
+    {
+      "id": "FRONT05_ROUTE_PREFIX",
+      "disposition": "DISPLAY/POLICY PREFIX GOVERNANCE ITEM; CANONICAL ROUTE REMAINS /representative"
+    }
+  ],
+  "overall_front_layer": "OPEN / NOT CLOSED",
+  "production_readiness": "NOT_ASSERTED",
+  "legal_activation": "NOT_ASSERTED",
+  "certification": "NOT_ASSERTED",
+  "final_security_acceptance": "NOT_ASSERTED",
+  "final_integration": "NOT_ASSERTED"
+}

@@ -1,0 +1,215 @@
+{
+  "schema": "epd2.front05.authoritative-candidate-result/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+  "authority": "AUTHORITATIVE",
+  "self_acceptance": false,
+  "state": "PASS_FOR_INDEPENDENT_ACCEPTANCE",
+  "acceptance_meaning": "Nothing is accepted by this package. It is a C1 candidate that records an implemented, isolated, mandate-scoped WS-04 frontend and the mechanically demonstrated absence of every prohibited capability for independent governed review.",
+  "stage_contract": {
+    "path": "docs/frontend/FRONT-05-STAGE-CONTRACT.json",
+    "contract_version": "1.0.0",
+    "contract_digest": "dd76d17772275ac4389a659181f6286dcd7d97a65cf6a1e539e4463e935d26bd",
+    "ratification_status": "PROPOSED_FOR_GOVERNED_RATIFICATION",
+    "canonically_opened_stage": true
+  },
+  "binding": {
+    "source_tree_digest": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+    "test_source_digest": "39a0d73e4cb3629532d5fb5e9309ac6636b974b5f10d5e0ede8c29238fa3a920",
+    "configuration_digest": "4851300fa932dd696a0a997eace985d2c6fb6900a7233316504418aa6be4deda",
+    "validator_source_digest": "c5577c5e9cb0346ea86ae0b48a5b7cd6aa778c4dd8e1ed1a74e22c76f04761e5",
+    "package_lock_sha256": "2a1d4cbd8bb86b117bcb547523fbf920b2bbb218d887aef4847ef2762687f6a7",
+    "source_file_count": 121
+  },
+  "gates_total": 46,
+  "gates_passed": 46,
+  "status": "PASS",
+  "note": "PASS_FOR_INDEPENDENT_ACCEPTANCE is the highest assertion a candidate-run validator may make. It is not acceptance. Independent governed review on the sealed bytes and a post-run governance record own that decision.",
+  "gates": {
+    "G01": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G02": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G03": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G04": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G05": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G06": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G07": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G08": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G09": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G10": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G11": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G12": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G13": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G14": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G15": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G16": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G17": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G18": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G19": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G20": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G21": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G22": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G23": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G24": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G25": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G26": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G27": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G28": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G29": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G30": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G31": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G32": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G33": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G34": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G35": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G36": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G37": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G38": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G39": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G40": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G41": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G42": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G43": {
+      "status": "PASS",
+      "errors": [],
+      "checked": "manifest"
+    },
+    "G44": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G45": {
+      "status": "PASS",
+      "errors": []
+    },
+    "G46": {
+      "status": "PASS",
+      "errors": []
+    }
+  }
+}

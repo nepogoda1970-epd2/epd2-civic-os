@@ -1,0 +1,10 @@
+{
+  "schema": "epd2.front05.verification-integrity/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+  "source_tree_digest_before": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+  "source_tree_digest_after": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+  "source_unchanged_by_verification": true,
+  "files_changed_during_verification": [],
+  "generated_at": "2026-09-02T14:19:03.396521+00:00"
+}

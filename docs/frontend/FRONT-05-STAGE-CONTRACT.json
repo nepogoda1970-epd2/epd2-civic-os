@@ -1,0 +1,734 @@
+{
+ "schema": "epd2.front05.stage-contract/1",
+ "contract_version": "1.0.0",
+ "stage": "FRONT-05 — WS-04 Representative Workspace",
+ "scope_class": "BOUNDED WS-04 FRONTEND CANDIDATE",
+ "ratification": {
+  "authored_by": "developer, as a separately reviewable artifact",
+  "ratified_by": "independent governance",
+  "status_in_candidate": "PROPOSED_FOR_GOVERNED_RATIFICATION",
+  "note": "The project owner has opened this bounded C1 acceptance attempt for independent review. The candidate cannot ratify or accept itself; ratification and acceptance remain owned by the post-run governance decision."
+ },
+ "acceptance_meaning": "Nothing is accepted by this package. It is a C1 candidate that records an implemented, isolated, mandate-scoped WS-04 frontend and the mechanically demonstrated absence of every prohibited capability for independent governed review.",
+ "non_claims": [
+  "FRONT-05 accepted",
+  "FRONT layer closed",
+  "representative workspace production ready",
+  "mandate register accepted",
+  "case desk runtime accepted",
+  "publication approval implemented",
+  "legal activation complete",
+  "BSI certified",
+  "CC compliant",
+  "EAL4",
+  "SEC PASS",
+  "final integration pass"
+ ],
+ "forbidden_claim_strings": [
+  "FRONT-05 ACCEPTED",
+  "FRONT-05 = ACCEPTED",
+  "FRONT CLOSED",
+  "FRONT LAYER CLOSED",
+  "PRODUCTION READY",
+  "FINAL INTEGRATION PASS",
+  "SEC PASS",
+  "BSI CERTIFIED",
+  "BSI COMPLIANT",
+  "CC COMPLIANT",
+  "EAL4 CERTIFIED",
+  "LEGALLY ACTIVATED",
+  "LEGALLY ACTIVE"
+ ],
+ "governance_state": {
+  "stage_opening": {
+   "canonically_opened": true,
+   "consequence": "A bounded FRONT-05 C1 candidate may be sealed and independently reviewed; no acceptance or FRONT-layer closure follows before a successful authoritative run and post-run governance record.",
+   "source": "Project-owner directive to conduct canonical FRONT-05 verification to PASS, recorded in docs/frontend/FRONT-05-C1-GOVERNANCE-OPENING.json and the candidate Program Control Register."
+  },
+  "permitted_before_independent_acceptance": [
+   "FRONT-05 = CANDIDATE / NOT ACCEPTED",
+   "FRONT-05 = OPEN FOR BOUNDED C1 INDEPENDENT REVIEW"
+  ],
+  "forbidden_in_candidate": [
+   "FRONT-05 = ACCEPTED",
+   "FRONT-05 = CLOSED",
+   "FINAL PASS"
+  ],
+  "candidate_internal_state": "CANDIDATE_NOT_ACCEPTED",
+  "highest_permitted_self_assertion": "PASS_FOR_INDEPENDENT_ACCEPTANCE"
+ },
+ "workspace": {
+  "workspace_id": "WS-04",
+  "canonical_name": "Mandate Holder Workspace",
+  "origin": "https://represent.epd.example",
+  "route_prefix": "/representative",
+  "separately_deployable": true,
+  "may_import_member_workspace_runtime": false,
+  "may_import_voting_client_runtime": false,
+  "route_prefix_reconciliation": {
+   "observed_in_accepted_frontend_policy": "/Mandate Holder",
+   "used_here": "/representative",
+   "disposition": "OPEN_GOVERNANCE_ITEM: the accepted frontend policy record carries a display name in the route-prefix field. The architecture source gives /representative. This package uses /representative and records the conflict rather than silently choosing."
+  }
+ },
+ "required_routes": [
+  {
+   "page_id": "WS04-R01",
+   "route": "/representative",
+   "german_title": "Übersicht",
+   "authority_required": "mandate_member",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R02",
+   "route": "/representative/desk",
+   "german_title": "Bürgeranliegen",
+   "authority_required": "mandate_staff_assigned",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R03",
+   "route": "/representative/desk/[caseId]",
+   "german_title": "Vorgang",
+   "authority_required": "mandate_staff_assigned",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R04",
+   "route": "/representative/positions",
+   "german_title": "Positionen",
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R05",
+   "route": "/representative/deviations",
+   "german_title": "Abweichungen",
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R06",
+   "route": "/representative/declarations",
+   "german_title": "Erklärungen",
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R07",
+   "route": "/representative/publication",
+   "german_title": "Veröffentlichungsvorschläge",
+   "authority_required": "mandate_representative",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R08",
+   "route": "/representative/conflicts",
+   "german_title": "Zugriffsbeschränkungen",
+   "authority_required": "mandate_member",
+   "routing_creates_authority": false
+  },
+  {
+   "page_id": "WS04-R00",
+   "route": "/",
+   "german_title": "Mandatsbereich",
+   "authority_required": "none",
+   "routing_creates_authority": false
+  }
+ ],
+ "roles": {
+  "primary": [
+   "representative",
+   "mandate_staff"
+  ],
+  "secondary": [
+   "publication_reviewer",
+   "conflict_officer"
+  ],
+  "forbidden": [
+   "super_admin",
+   "representative_all",
+   "system_admin",
+   "global_admin",
+   "cross_mandate_operator",
+   "bund_all_access",
+   "debug_bypass"
+  ]
+ },
+ "data_classes": [
+  "MANDATE_INTERNAL",
+  "CASE_CONFIDENTIAL",
+  "PUBLIC_APPROVED"
+ ],
+ "implementable_now": [
+  "isolated WS-04 shell and route set",
+  "mandate-scope binding with no expressible cross-mandate form",
+  "session and authority state model including expiry, revocation and scope change",
+  "case intake and triage presentation contracts",
+  "position, deviation and declaration composition contracts",
+  "publication proposal composition with an enforced proposal/approval separation",
+  "conflict restriction presentation that fails closed on unknown",
+  "safe refusal rendering for every failure class",
+  "accessibility",
+  "responsive behaviour",
+  "confidentiality and storage boundary",
+  "telemetry allowlist and content prohibition",
+  "correct security boundary behaviour"
+ ],
+ "capability_status_vocabulary": [
+  "SUPPORTED_REAL_PATH",
+  "SUPPORTED_WITH_DECLARED_LIMITATION",
+  "BLOCKED_BY_DEPENDENCY",
+  "UNSUPPORTED"
+ ],
+ "blocked_capability_condition": "A capability may be dependency-blocked if and only if the frontend fails closed for it, names its exact missing dependency, and does not simulate it.",
+ "capabilities_that_may_be_dependency_blocked": [
+  "mandate_session_establishment",
+  "mandate_scope_resolution",
+  "authority_revalidation",
+  "step_up_authentication",
+  "case_intake_list",
+  "case_detail_read",
+  "case_assignment",
+  "case_triage_transition",
+  "case_response_record",
+  "case_scoped_search",
+  "position_draft_read",
+  "position_draft_write",
+  "position_internal_submission",
+  "deviation_record_read",
+  "deviation_record_write",
+  "deviation_decision_reference",
+  "declaration_read",
+  "declaration_submission",
+  "publication_proposal_submission",
+  "publication_state_observation",
+  "conflict_restriction_read",
+  "registry_read_reference",
+  "eligibility_status_display",
+  "audit_trail_read",
+  "telemetry_emission"
+ ],
+ "capabilities_that_must_be_unsupported": [
+  "conflict_restriction_change"
+ ],
+ "capabilities_that_must_be_local_real_paths": [
+  "local_refusal_rendering",
+  "local_scope_binding",
+  "governed_fallback"
+ ],
+ "hard_invariants": [
+  {
+   "id": "INV-01",
+   "statement": "No universal, cross-mandate or administrative mode exists, under any role, permission or debug flag.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-02",
+   "statement": "Every protected read and action binds to exactly one mandate scope, and no unbound form is expressible.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-03",
+   "statement": "WS-04 may propose a publication rendition and may never approve one. No approval state is reachable from any client state under any event.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-04",
+   "statement": "WS-04 holds no registry custody: no registry mutation operation exists.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-05",
+   "statement": "WS-04 takes no eligibility decision; it may only display one made elsewhere.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-06",
+   "statement": "WS-04 has no voting-domain access of any kind, for any role.",
+   "class": "HARD_FREEZE"
+  },
+  {
+   "id": "INV-07",
+   "statement": "Case content is never written to browser storage, a URL, the page title, a telemetry event or an error report.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-08",
+   "statement": "No authoritative decision is taken in the client; a rendered control is never an authorization.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-09",
+   "statement": "A refusal about a protected resource is non-disclosing: absent, out of scope and restricted are indistinguishable.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-10",
+   "statement": "An unreadable conflict register restricts rather than permits; unknown is never treated as cleared.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-11",
+   "statement": "No specification-level or unaccepted API path is treated as an executable runtime route, and no network request is issued from the production adapter.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-12",
+   "statement": "No success language may precede an authoritative server outcome, and a blocked compliance submission must state that the obligation remains open.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-13",
+   "statement": "The inherited FRONT-00/FRONT-01 visual baseline is immutable without a Design Change Decision.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-14",
+   "statement": "Inherited accepted evidence and documents are byte-identical to the accepted bytes they came from.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-15",
+   "statement": "A recorded PASS is bound to the source tree that produced it; stale evidence must cause a deterministic FAIL.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-16",
+   "statement": "Every identity value quoted in the developer report equals the corresponding value in the evidence it claims to describe.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-17",
+   "statement": "A locale change alters no authority, scope, state or legal effect.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-18",
+   "statement": "No service-to-service credential, private key or bearer authority is present in the browser.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-19",
+   "statement": "The governed test fixture is absent from the production build, not merely unreachable in it.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-20",
+   "statement": "This package never asserts its own acceptance.",
+   "class": "HARD"
+  },
+  {
+   "id": "INV-21",
+   "statement": "A capability whose dependency is a security-sensitive boundary is never reported as supported, and no caller-asserted authorization is treated as evidence that authorization occurred.",
+   "class": "HARD"
+  }
+ ],
+ "required_evidence": [
+  {
+   "id": "format",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/format.log"
+  },
+  {
+   "id": "typecheck",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/typecheck.log"
+  },
+  {
+   "id": "lint",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/lint.log"
+  },
+  {
+   "id": "unit",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/unit-tests.log"
+  },
+  {
+   "id": "component",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/component-tests.log"
+  },
+  {
+   "id": "build",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/build.log"
+  },
+  {
+   "id": "build_production_profile",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/build-production.log"
+  },
+  {
+   "id": "browser",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/browser.log"
+  },
+  {
+   "id": "browser_production",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/browser-production.log"
+  },
+  {
+   "id": "authorization_negative",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/authorization-negative.log"
+  },
+  {
+   "id": "visual",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/visual.log"
+  },
+  {
+   "id": "fixture_absence",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/fixture-absence.log"
+  },
+  {
+   "id": "dependency_audit",
+   "authoritative": true,
+   "raw_log": "validation/front05/raw/dependency-audit.log"
+  }
+ ],
+ "evidence_binding_fields": [
+  "schema_version",
+  "stage",
+  "candidate_state",
+  "source_tree_digest",
+  "package_lock_sha256",
+  "test_source_digest",
+  "configuration_digest",
+  "command",
+  "started_at",
+  "finished_at",
+  "exit_code",
+  "result",
+  "raw_report_sha256"
+ ],
+ "authoritative_result_path": "validation/front05/authoritative_preseal_result.json",
+ "required_identity_records": [
+  "validation/front05/preseal_identity.json",
+  "validation/front05/lineage.json",
+  "validation/front05/source_delta.json",
+  "validation/front05/source_manifest.json",
+  "validation/front05/verification_integrity.json",
+  "validation/front05/report_identity_crosscheck.json"
+ ],
+ "required_machine_readable_records": [
+  "validation/front05/route_inventory.json",
+  "validation/front05/mandate_scope_inventory.json",
+  "validation/front05/api_capability_truth.json",
+  "validation/front05/journey_classification.json",
+  "validation/front05/authorization_negatives.json",
+  "validation/front05/mutation_report.json",
+  "validation/front05/gate_results.json"
+ ],
+ "minimum_mutation_count": 40,
+ "minimum_authorization_negative_count": 12,
+ "prohibited_remedies": [
+  "inventing a representative or mandate API",
+  "inventing a publication proposal state on the server's behalf",
+  "treating compliance-service RepresentationMandate as an elected mandate",
+  "mocking a blocked production journey",
+  "fabricating citizen cases outside the marked governed test profile",
+  "reporting a compliance obligation as discharged",
+  "regenerating an inherited visual baseline to clear a regression",
+  "softening a mutation instead of closing the gate it exposed",
+  "treating a caller-supplied actor_is_authorized boolean as evidence of authorization",
+  "recording a security-sensitive dependency as a declared limitation rather than a block"
+ ],
+ "report_identity_crosscheck": {
+  "rule": "Every 64-hex digest and every numeric size quoted in the developer report must equal the value recorded in the evidence record it names.",
+  "rationale": "The FRONT-04 C2 archive was rejected and resealed because the developer report quoted a source_tree_digest from a penultimate run while the sealed tree carried another. The report sat outside the digest-covered boundary, so no gate checked it. This contract closes that hole by making the report's own quoted identities a gated artifact.",
+  "gate": "G45"
+ },
+ "source_binding_boundary": {
+  "covered": [
+   "the representative-workspace implementation, its tests and its configuration",
+   "the tooling that produces and checks evidence",
+   "this stage contract",
+   "package.json and package-lock.json"
+  ],
+  "not_covered": [
+   "evidence outputs under validation/front05 — they cannot be inside the set they bind"
+  ],
+  "developer_report": "not digest-covered, but gated: G45 cross-checks every identity value it quotes against the evidence. This is the FRONT-04 C2 correction.",
+  "inherited_evidence": "pinned separately by explicit SHA-256 in inherited_evidence_digests"
+ },
+ "gates": {
+  "count": 46,
+  "seed_count": 44,
+  "added_beyond_seed": [
+   "G45",
+   "G46"
+  ],
+  "policy": "All runnable mandatory gates PASS; unresolved mandatory dependencies block future seal.",
+  "list": [
+   {
+    "id": "G01",
+    "name": "bootstrap_freshness",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G02",
+    "name": "baseline_identity",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G03",
+    "name": "accepted_front_lineage",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G04",
+    "name": "design_preservation",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G05",
+    "name": "workspace_origin_boundary",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G06",
+    "name": "route_inventory",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G07",
+    "name": "api_capability_truth",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G08",
+    "name": "mandate_scope_inventory",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G09",
+    "name": "auth_session",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G10",
+    "name": "step_up",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G11",
+    "name": "server_authorization_negatives",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G12",
+    "name": "wrong_mandate_isolation",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G13",
+    "name": "representative_home",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G14",
+    "name": "case_queue_detail",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G15",
+    "name": "case_triage_real_path",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G16",
+    "name": "confidential_storage_boundary",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G17",
+    "name": "staff_assignment_boundary",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G18",
+    "name": "position_workflow",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G19",
+    "name": "deviation_workflow",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G20",
+    "name": "version_provenance",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G21",
+    "name": "meeting_declaration",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G22",
+    "name": "conflict_recusal",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G23",
+    "name": "publication_proposal",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G24",
+    "name": "final_publication_separation",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G25",
+    "name": "registry_custody_prohibition",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G26",
+    "name": "eligibility_decision_prohibition",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G27",
+    "name": "commit_reauthorization",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G28",
+    "name": "idempotency",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G29",
+    "name": "concurrency",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G30",
+    "name": "degraded_mode",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G31",
+    "name": "browser_storage",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G32",
+    "name": "service_worker_cache",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G33",
+    "name": "privacy_telemetry",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G34",
+    "name": "scoped_search",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G35",
+    "name": "accessibility",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G36",
+    "name": "responsive",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G37",
+    "name": "i18n",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G38",
+    "name": "real_build",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G39",
+    "name": "browser_e2e",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G40",
+    "name": "voting_boundary",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G41",
+    "name": "dependency_reconciliation",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G42",
+    "name": "mutation_suite",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G43",
+    "name": "archive_hygiene",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G44",
+    "name": "same_bytes_identity",
+    "source": "FRONT05_ACCEPTANCE_GATE_SEED.json"
+   },
+   {
+    "id": "G45",
+    "name": "report_identity_crosscheck",
+    "source": "added by this contract",
+    "note": "Not in the assignment seed. Added because the FRONT-04 C2 archive was rejected for a stale digest quoted in the developer report, which no gate covered."
+   },
+   {
+    "id": "G46",
+    "name": "security_sensitive_dependency_discipline",
+    "source": "added by this contract",
+    "note": "Not in the assignment seed. Added because a caller-supplied actor_is_authorized boolean is a defective authorization boundary rather than a missing feature, and a status vocabulary that offers SUPPORTED_WITH_DECLARED_LIMITATION would otherwise let it be recorded as a limitation."
+   }
+  ]
+ },
+ "security_sensitive_dependencies": {
+  "principle": "A dependency that is missing and a dependency that is defective are different findings. A missing dependency becomes a real path when it is built. A defective one must be corrected before it may be relied on at all, and a route appearing over the top of it does not correct it.",
+  "rule": "A capability whose dependency is classified SECURITY_SENSITIVE_BOUNDARY may only carry status BLOCKED_BY_DEPENDENCY or UNSUPPORTED. It may never be SUPPORTED_REAL_PATH, and it may never be SUPPORTED_WITH_DECLARED_LIMITATION — a declared limitation states the bounds within which something is safe, and there are no bounds within which a self-asserted authorization is safe.",
+  "dependency_classes": [
+   "ABSENT",
+   "SECURITY_SENSITIVE_BOUNDARY",
+   "PROHIBITED"
+  ],
+  "boundaries": [
+   {
+    "id": "SSD-01",
+    "owner": "PACK-13 transparency-service",
+    "capabilities": [
+     "publication_proposal_submission",
+     "publication_state_observation"
+    ],
+    "observed": "Publication has the single state PUBLISHED, and authorization is a caller-supplied actor_is_authorized boolean.",
+    "finding": "A caller-supplied authorization boolean is a self-asserted authorization: the caller declares its own permission and the service accepts the declaration. The field that looks like an authorization gate is an authorization claim, made by exactly the party the gate exists to constrain. Accepting it as sufficient would let a rendition reach publication carrying nothing but the proposer's own claim of being allowed to publish — which is the separation WS-04 exists to preserve.",
+    "front05_position": "FRONT-05 does not treat this boolean as evidence that authorization occurred, does not set or send such a flag, and builds no privileged path on it. No port signature contains a field it could be carried in.",
+    "insufficient_remedies": [
+     "adding a proposal route while authorization stays caller-supplied",
+     "having WS-04 set actor_is_authorized itself",
+     "treating a successful call as evidence that authorization occurred",
+     "recording the capability as SUPPORTED_WITH_DECLARED_LIMITATION"
+    ],
+    "unblocking_condition": "a server-authoritative proposal and authorization contract: a proposal state distinct from PUBLISHED, and an approval decided and recorded by an authority other than the proposer.",
+    "status_until_then": "BLOCKED_BY_DEPENDENCY, with publication approval itself remaining prohibited for WS-04 under every dependency state.",
+    "escalation": "Reported to the accepting authority as a security-relevant finding against PACK-13, not as a FRONT-05 gap."
+   }
+  ],
+  "gate": "G46"
+ }
+}

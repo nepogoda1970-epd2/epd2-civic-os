@@ -28,6 +28,16 @@ export type PublicPage = {
     text: string;
     items?: readonly string[];
   }[];
+  en?: {
+    title: string;
+    eyebrow: string;
+    lead: string;
+    sections: readonly {
+      title: string;
+      text: string;
+      items?: readonly string[];
+    }[];
+  };
 };
 
 const reviewed = "27.07.2026";
@@ -647,8 +657,289 @@ export const publicPages: readonly PublicPage[] = [
   },
 ];
 
+const front02PublicPages: readonly PublicPage[] = [
+  {
+    id: "FRONT02-PAGE-001",
+    path: "/aktuelles",
+    title: "Aktuelles",
+    eyebrow: "Freigegebene öffentliche Mitteilungen",
+    lead: "Veröffentlichungen erscheinen hier erst nach der zuständigen Freigabe.",
+    status: "planned",
+    pack: "PACK-28 / WS-10",
+    prerequisites: "Freigegebene Publikationsprojektion",
+    kind: "standard",
+    sections: [
+      {
+        title: "Illustrative öffentliche Mitteilung",
+        text: "31. August 2026 · Information · Herausgegeben von der Redaktion. Beispielhafte, nicht autoritative Fixture mit Version 1.0 und sichtbarem Korrekturweg.",
+      },
+      {
+        title: "Weitere Mitteilungen",
+        text: "Die Liste ist begrenzt und paginiert. Nicht freigegebene Inhalte werden nicht dargestellt.",
+      },
+    ],
+    en: {
+      title: "News",
+      eyebrow: "Approved public notices",
+      lead: "Publications appear here only after responsible approval.",
+      sections: [
+        {
+          title: "Illustrative public notice",
+          text: "31 August 2026 · Information · Issued by the editorial role. This is a non-authoritative fixture, version 1.0, with a visible correction path.",
+        },
+        {
+          title: "Further notices",
+          text: "The list is bounded and paginated. Unapproved content is not displayed.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-002",
+    path: "/presse",
+    title: "Presse",
+    eyebrow: "Pressezentrum · freigegebene Renditionen",
+    lead: "Pressemitteilungen und Stellungnahmen werden versioniert veröffentlicht.",
+    status: "planned",
+    pack: "PACK-28 / WS-10",
+    prerequisites: "Freigegebene Publikationsprojektion",
+    kind: "standard",
+    sections: [
+      {
+        title: "Illustrative Pressemitteilung",
+        text: "31. August 2026 · Pressestelle · Version 1.0. Medienkontakt und freigegebener Download werden als Muster dargestellt.",
+      },
+      {
+        title: "Korrekturen",
+        text: "Eine spätere Ersetzung bleibt mit der ursprünglichen Rendition verknüpft.",
+      },
+    ],
+    en: {
+      title: "Press",
+      eyebrow: "Press centre · approved renditions",
+      lead: "Press releases and statements are published with versions.",
+      sections: [
+        {
+          title: "Illustrative press release",
+          text: "31 August 2026 · Press office · Version 1.0. Media contact and an approved download are shown as a fixture.",
+        },
+        {
+          title: "Corrections",
+          text: "A later replacement remains linked to the original rendition.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-003",
+    path: "/termine",
+    title: "Termine",
+    eyebrow: "Öffentliche Veranstaltungen",
+    lead: "Nur freigegebene öffentliche Termine gehören in diese Ansicht.",
+    status: "planned",
+    pack: "PACK-21 / PACK-28",
+    prerequisites: "Freigegebene Veranstaltungsprojektion",
+    kind: "standard",
+    sections: [
+      {
+        title: "Illustrativer Termin",
+        text: "12. September 2026 · Berlin · Öffentliche Informationsveranstaltung. Dies ist keine Anmeldung, Versammlung oder Abstimmung.",
+      },
+      {
+        title: "Filter und Seiten",
+        text: "Zeit, Ort und Thema werden später als begrenzte öffentliche Filter angeboten.",
+      },
+    ],
+    en: {
+      title: "Events",
+      eyebrow: "Public events",
+      lead: "Only approved public events belong on this view.",
+      sections: [
+        {
+          title: "Illustrative event",
+          text: "12 September 2026 · Berlin · Public information event. This is not registration, an assembly or a vote.",
+        },
+        {
+          title: "Filters and pages",
+          text: "Time, location and topic will later be available as bounded public filters.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-004",
+    path: "/regionen",
+    title: "Regionen",
+    eyebrow: "Eine EPD²-Plattform · organisationsbezogen",
+    lead: "Regionale Informationen werden im gemeinsamen Auftritt dargestellt, nicht als lokale Mini-Sites.",
+    status: "specified",
+    pack: "PACK-08 / PACK-28",
+    prerequisites: "Freigegebene Organisationsprojektionen",
+    kind: "standard",
+    sections: [
+      {
+        title: "Region finden",
+        text: "Illustrative Suche nach einem freigegebenen öffentlichen Organisationsbereich. Sie erstellt weder Mitgliedschaft noch Berechtigung.",
+      },
+      {
+        title: "Landesverband Berlin",
+        text: "Illustrative öffentliche Projektion mit Übersicht, Aktuelles, Termine, Initiativen, Personen, Wahlen, Dokumente & Transparenz und Kontakt.",
+      },
+    ],
+    en: {
+      title: "Regions",
+      eyebrow: "One EPD² platform · organization-scoped",
+      lead: "Regional information is presented in the common platform, not as local mini-sites.",
+      sections: [
+        {
+          title: "Find a region",
+          text: "Illustrative search for an approved public organization scope. It creates neither membership nor authority.",
+        },
+        {
+          title: "Berlin regional association",
+          text: "Illustrative public projection with overview, news, events, initiatives, people, elections, documents & transparency and contact.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-005",
+    path: "/personen",
+    title: "Personen",
+    eyebrow: "Öffentliche Rollen und Mandate",
+    lead: "Dies ist keine Mitgliederdatenbank und kein universelles Personenprofil.",
+    status: "planned",
+    pack: "PACK-28 / WS-10",
+    prerequisites: "Freigegebene öffentliche Personenrenditionen",
+    kind: "standard",
+    sections: [
+      {
+        title: "Illustrative öffentliche Rolle",
+        text: "Eine später freigegebene Persona zeigt nur die veröffentlichte Rolle, ihre Quelle und Version – keine Mitgliederdaten.",
+      },
+    ],
+    en: {
+      title: "People",
+      eyebrow: "Public roles and mandates",
+      lead: "This is not a membership directory or universal person profile.",
+      sections: [
+        {
+          title: "Illustrative public role",
+          text: "A future approved persona displays only the published role, its source and version – never membership data.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-006",
+    path: "/wahlen",
+    title: "Wahlen",
+    eyebrow: "Öffentliche Information · keine Stimmabgabe",
+    lead: "Diese Seite informiert. Die geheime Stimmabgabe bleibt ausschließlich im isolierten WS-03.",
+    status: "not_activated",
+    pack: "PACK-15 / PACK-16 / PACK-17",
+    prerequisites:
+      "Rechts-, Sicherheits-, Infrastruktur- und Kryptografie-Freigaben",
+    kind: "voting",
+    sections: [
+      {
+        title: "Illustrative Wahlinformation",
+        text: "Eine zukünftige öffentliche Kampagnen- oder Wahlinformation ist keine Wahlurne und prüft keine Stimmberechtigung.",
+      },
+    ],
+    en: {
+      title: "Elections",
+      eyebrow: "Public information · no ballot casting",
+      lead: "This page informs. Secret ballot casting remains exclusively in isolated WS-03.",
+      sections: [
+        {
+          title: "Illustrative election information",
+          text: "A future public campaign or election notice is not a ballot box and does not check voting eligibility.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-007",
+    path: "/hilfe",
+    title: "Hilfe",
+    eyebrow: "Unterstützung in Ebenen",
+    lead: "Hilfe beginnt mit verständlicher Information und führt bei geschützten Vorgängen zum zuständigen Workspace.",
+    status: "informational",
+    pack: "FRONT-02 / PACK-18",
+    prerequisites: "Versionierte Hilfeinhalte und Kontaktwege",
+    kind: "standard",
+    sections: [
+      {
+        title: "Öffentliche Hilfe",
+        text: "Status, Grenzen und sichere nächste Schritte werden erklärt.",
+      },
+      {
+        title: "Menschliche Unterstützung",
+        text: "Ein Chatbot ist nicht der einzige Hilfsweg. Für nicht verfügbare Funktionen wird ein Kontakt- oder geregelter Offline-Weg genannt.",
+      },
+    ],
+    en: {
+      title: "Help",
+      eyebrow: "Layered assistance",
+      lead: "Help begins with clear information and directs protected matters to their owning workspace.",
+      sections: [
+        {
+          title: "Public help",
+          text: "Status, limits and safe next steps are explained.",
+        },
+        {
+          title: "Human support",
+          text: "A chatbot is not the only help channel. Unavailable functions name contact or a governed offline route.",
+        },
+      ],
+    },
+  },
+  {
+    id: "FRONT02-PAGE-008",
+    path: "/suche",
+    title: "Suche",
+    eyebrow: "Nur freigegebene öffentliche Inhalte",
+    lead: "Die öffentliche Suche ist begrenzt: Findbar ist nur, was für denselben öffentlichen Nutzer geöffnet werden darf.",
+    status: "planned",
+    pack: "PACK-12 / PACK-13 / WS-10",
+    prerequisites: "Freigegebener öffentlicher Index",
+    kind: "standard",
+    sections: [
+      {
+        title: "Öffentlicher Fixture-Index",
+        text: "Aktuelles, Presse und Termine sind illustrative, offene Treffer. Ein geschützter Testdatensatz ist absichtlich nicht auffindbar.",
+      },
+      {
+        title: "Keine Ergebnisse",
+        text: "Unbekannte Eingaben werden nicht zu erfundenen öffentlichen Datensätzen.",
+      },
+    ],
+    en: {
+      title: "Search",
+      eyebrow: "Approved public content only",
+      lead: "Public search is bounded: only content openable by the same public user is findable.",
+      sections: [
+        {
+          title: "Public fixture index",
+          text: "News, press and events are illustrative open results. A protected test record is intentionally not findable.",
+        },
+        {
+          title: "No results",
+          text: "Unknown input is not turned into invented public records.",
+        },
+      ],
+    },
+  },
+];
+
+export const allPublicPages: readonly PublicPage[] = [
+  ...publicPages,
+  ...front02PublicPages,
+];
+
 export const publicPageByPath = new Map(
-  publicPages.map((page) => [page.path, page]),
+  allPublicPages.map((page) => [page.path, page]),
 );
 
 export const topNavigation = [

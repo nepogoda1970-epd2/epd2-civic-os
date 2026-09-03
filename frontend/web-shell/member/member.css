@@ -1,0 +1,102 @@
+.member-navigation {
+  display: flex;
+  gap: 0.5rem;
+  overflow: auto;
+  padding: 0.75rem 2.5rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.member-navigation a,
+.member-shell .header-actions a {
+  padding: 0.55rem 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.member-navigation a[aria-current="page"] {
+  border-bottom: 3px solid var(--accent);
+  color: var(--accent);
+}
+.member-shell .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.member-shell .scope-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  background: var(--soft);
+  border-radius: var(--radius-sm);
+}
+.member-shell .record {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr;
+  border-top: 1px solid var(--card-border);
+}
+.member-shell .record dt,
+.member-shell .record dd {
+  margin: 0;
+  padding: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.member-shell .record dt {
+  font-weight: 650;
+}
+.member-shell .timeline {
+  border-left: 3px solid var(--accent);
+  padding-left: 1.5rem;
+}
+.member-shell .timeline li {
+  padding: 0.5rem;
+}
+.member-shell form {
+  display: grid;
+  gap: 1rem;
+  max-width: var(--content-reading);
+}
+.member-shell form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+.member-shell form input,
+.member-shell form textarea,
+.member-shell form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #777;
+  border-radius: var(--radius-sm);
+}
+.member-shell dialog {
+  max-width: min(36rem, calc(100vw - 2rem));
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+}
+.member-shell dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+@media (max-width: 48rem) {
+  .member-shell .site-header,
+  .member-shell .main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .member-navigation {
+    padding-left: 1rem;
+  }
+  .member-shell .workspace-heading span {
+    display: none;
+  }
+  .member-shell .record {
+    grid-template-columns: 1fr;
+  }
+  .member-shell .record dt {
+    padding-bottom: 0;
+  }
+  .member-shell .page-header {
+    display: block;
+  }
+}

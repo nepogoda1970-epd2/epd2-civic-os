@@ -1,0 +1,30 @@
+{
+  "schema_version": "epd2.front05.evidence/1",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+  "step_id": "build_production_profile",
+  "authoritative": true,
+  "source_tree_digest": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+  "package_lock_sha256": "2a1d4cbd8bb86b117bcb547523fbf920b2bbb218d887aef4847ef2762687f6a7",
+  "test_source_digest": "39a0d73e4cb3629532d5fb5e9309ac6636b974b5f10d5e0ede8c29238fa3a920",
+  "configuration_digest": "4851300fa932dd696a0a997eace985d2c6fb6900a7233316504418aa6be4deda",
+  "validator_source_digest": "c5577c5e9cb0346ea86ae0b48a5b7cd6aa778c4dd8e1ed1a74e22c76f04761e5",
+  "contract_digest": "dd76d17772275ac4389a659181f6286dcd7d97a65cf6a1e539e4463e935d26bd",
+  "source_file_count": 121,
+  "command": "npm run build",
+  "working_directory": "frontend/representative-workspace",
+  "environment_overrides": {
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "NEXT_PUBLIC_FRONT05_GOVERNED_TEST": "0"
+  },
+  "started_at": "2026-09-02T14:10:35.183873+00:00",
+  "finished_at": "2026-09-02T14:10:55.327061+00:00",
+  "exit_code": 0,
+  "result": "PASS",
+  "raw_report_path": "validation/front05/raw/build-production.log",
+  "raw_report_sha256": "eb35a545b7927296daa13f513630a19b4b21e33f1d04dd089e549d62af483bf9",
+  "node_version": "v24.19.0",
+  "npm_version": "11.9.0",
+  "python_version": "3.12.13",
+  "playwright_version": "Version 1.62.0"
+}

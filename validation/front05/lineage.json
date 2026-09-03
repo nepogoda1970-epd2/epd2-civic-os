@@ -1,0 +1,38 @@
+{
+ "schema": "epd2.front05.lineage/1",
+ "stage": "FRONT-05 — WS-04 Representative Workspace",
+ "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+ "generated_at": "2026-09-02T14:19:03.317789+00:00",
+ "entering_canonical_main": "8db1b85056aad3099fa27e12b29ab9f0a00c4a5b",
+ "accepted_predecessors": {
+  "FRONT-04 C2": {
+   "filename": "EPD2_FRONT04_WS03_VOTING_CLIENT_CANDIDATE_0.1_C2.zip",
+   "sha256": "1ac87914a30e589b4059e3b7c74e0a0fd940a78cecbe7f06de299421c8da55f8",
+   "size_bytes": 21448756,
+   "source_tree_digest": "eee6bf1e80f9e5b5ce18618611513b871b195a163e98948d55d99f61276f2f2e",
+   "authoritative_run": 33569268417,
+   "authoritative_job": 100059427183,
+   "reviewed_commit": "66a65f2303d2a0d18fb8396887a35d6c14df1d92",
+   "decision": "ACCEPTED"
+  },
+  "FRONT-03 C1": {
+   "sha256": "fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26",
+   "authoritative_run": 33528038712,
+   "authoritative_job": 99923795567,
+   "decision": "ACCEPTED"
+  },
+  "FRONT-02 C2.1": {
+   "sha256": "aaf980a2cd3b3b06d48218adaa68d109c8770e6abfcbef230197b51a87006179",
+   "decision": "ACCEPTED_IMPLEMENTATION_BASELINE"
+  }
+ },
+ "predecessor_programme_state": {
+  "ARCH": "CLOSED",
+  "DATA": "CLOSED",
+  "API": "API-01..06 ACCEPTED / CLOSED; API LAYER CLOSED",
+  "INFRA": "INFRA-01/02 ACCEPTED / CLOSED; LAYER OPEN",
+  "OPS": "OPS-01/02 ACCEPTED / CLOSED; LAYER OPEN",
+  "CTRL": "CTRL-01 ACCEPTED / CLOSED; LAYER OPEN"
+ },
+ "note": "This package inherits the accepted FRONT-04 C2 bytes unchanged and adds the WS-04 workspace beside them. The bounded C1 acceptance attempt is opened by project-owner directive but remains NOT_ACCEPTED until independent review."
+}

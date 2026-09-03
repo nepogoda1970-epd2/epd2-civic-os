@@ -1,0 +1,978 @@
+{
+ "schema": "epd2.front05.mutations/1",
+ "authority": "NON_AUTHORITATIVE",
+ "stage": "FRONT-05 — WS-04 Representative Workspace",
+ "candidate_state": "CANDIDATE_NOT_ACCEPTED",
+ "baseline_source_tree_digest": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+ "baseline_failing_gates": [
+  "G42"
+ ],
+ "detection_rule": "a mutation is DETECTED when it makes a validator gate fail that was not already failing on the unmutated tree",
+ "count": 44,
+ "detected": 44,
+ "families": {
+  "prohibition": 16,
+  "confidentiality": 12,
+  "evidence_chain": 10,
+  "seed_extension": 6
+ },
+ "status": "PASS",
+ "mutations": [
+  {
+   "id": "M-F05-P01",
+   "name": "M-F05-P01 universal-admin-role-added",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/authority.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G08",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G08",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P02",
+   "name": "M-F05-P02 cross-mandate-access-granted",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/authority.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G08",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G08",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P03",
+   "name": "M-F05-P03 scope-binding-accepts-any-mandate",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/scope.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G08",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G08",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P04",
+   "name": "M-F05-P04 multiple-mandates-resolved",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/scope.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G08",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G08",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P05",
+   "name": "M-F05-P05 publication-approval-reachable",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/publication.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G24",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G24",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P06",
+   "name": "M-F05-P06 ws04-may-approve-publication",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/boundaries.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G24",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G24",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P07",
+   "name": "M-F05-P07 approve-action-offered",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/publication.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G24",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G24",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P08",
+   "name": "M-F05-P08 approval-port-method-added",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/runtime/ports.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G24",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G24",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P09",
+   "name": "M-F05-P09 registry-mutation-permitted",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/boundaries.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G25",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G25",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P10",
+   "name": "M-F05-P10 registry-write-shape-added",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/runtime/ports.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G25",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G25",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P11",
+   "name": "M-F05-P11 eligibility-decided-here",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/boundaries.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G26",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G26",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P12",
+   "name": "M-F05-P12 eligibility-decision-shape-added",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/runtime/ports.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G26",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G26",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P13",
+   "name": "M-F05-P13 voting-domain-access-granted",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/boundaries.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G40",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G40",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P14",
+   "name": "M-F05-P14 voting-identifier-introduced",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/types.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G40",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G40",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P15",
+   "name": "M-F05-P15 self-clearing-own-conflict",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/policies/authority.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G22",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G22",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-P16",
+   "name": "M-F05-P16 unknown-restriction-treated-as-cleared",
+   "family": "prohibition",
+   "targets": [
+    "frontend/representative-workspace/domain/conflict.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G22",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G22",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C01",
+   "name": "M-F05-C01 case-body-written-to-localstorage",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/components/PositionSurface.tsx"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G16",
+    "G31",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G16",
+    "G31",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C02",
+   "name": "M-F05-C02 case-content-in-session-storage",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/components/CaseDetailSurface.tsx"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G16",
+    "G31",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G16",
+    "G31",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C03",
+   "name": "M-F05-C03 case-content-logged-to-console",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/components/DeskSurface.tsx"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G16",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G16",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C04",
+   "name": "M-F05-C04 storage-policy-opened-up",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/workspace.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G31",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G31",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C05",
+   "name": "M-F05-C05 telemetry-platform-declared-connected",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/confidentiality.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G33",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G33",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C06",
+   "name": "M-F05-C06 telemetry-no-longer-fails-closed",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/confidentiality.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G33",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G33",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C07",
+   "name": "M-F05-C07 error-report-carries-case-content",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/confidentiality.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G33",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G33",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C08",
+   "name": "M-F05-C08 confidential-payload-stripped-not-refused",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/confidentiality.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G16",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G16",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C09",
+   "name": "M-F05-C09 unscoped-search-surface-rendered",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/components/DeskSurface.tsx"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G34",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G34",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C10",
+   "name": "M-F05-C10 cross-mandate-search-permitted",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/confidentiality.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G34",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G34",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C11",
+   "name": "M-F05-C11 case-detail-discloses-restriction",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/components/CaseDetailSurface.tsx"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G12",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G12",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-C12",
+   "name": "M-F05-C12 client-decides-an-authoritative-subject",
+   "family": "confidentiality",
+   "targets": [
+    "frontend/representative-workspace/policies/boundaries.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G11",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G11",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E01",
+   "name": "M-F05-E01 source-changed-after-evidence-recorded",
+   "family": "evidence_chain",
+   "targets": [],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E02",
+   "name": "M-F05-E02 new-source-file-added-after-evidence",
+   "family": "evidence_chain",
+   "targets": [
+    "frontend/representative-workspace/domain/smuggled.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E03",
+   "name": "M-F05-E03 evidence-digest-forged-to-match",
+   "family": "evidence_chain",
+   "targets": [],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44"
+   ]
+  },
+  {
+   "id": "M-F05-E04",
+   "name": "M-F05-E04 failing-step-relabelled-pass",
+   "family": "evidence_chain",
+   "targets": [],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44"
+   ]
+  },
+  {
+   "id": "M-F05-E05",
+   "name": "M-F05-E05 raw-log-contradicts-the-recorded-result-and-is-rehashed",
+   "family": "evidence_chain",
+   "targets": [
+    "validation/front05/raw/unit-tests.log"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E06",
+   "name": "M-F05-E06 raw-log-trailer-removed",
+   "family": "evidence_chain",
+   "targets": [
+    "validation/front05/raw/build.log"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G38",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G38",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E07",
+   "name": "M-F05-E07 raw-log-trailer-names-another-step",
+   "family": "evidence_chain",
+   "targets": [
+    "validation/front05/raw/lint.log"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E08",
+   "name": "M-F05-E08 lockfile-changed-after-evidence",
+   "family": "evidence_chain",
+   "targets": [
+    "package-lock.json"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-E09",
+   "name": "M-F05-E09 competing-authoritative-result-added",
+   "family": "evidence_chain",
+   "targets": [
+    "validation/front05/friendly_result.json"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44"
+   ]
+  },
+  {
+   "id": "M-F05-E10",
+   "name": "M-F05-E10 verification-integrity-claims-an-unchanged-tree",
+   "family": "evidence_chain",
+   "targets": [
+    "validation/front05/verification_integrity.json"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G44"
+   ],
+   "failing_gates": [
+    "G42",
+    "G44"
+   ]
+  },
+  {
+   "id": "M-F05-S01",
+   "name": "M-F05-S01 security-sensitive-capability-marked-supported",
+   "family": "seed_extension",
+   "targets": [
+    "frontend/representative-workspace/domain/capabilities.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G07",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G07",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-S02",
+   "name": "M-F05-S02 security-sensitive-capability-downgraded-to-a-limitation",
+   "family": "seed_extension",
+   "targets": [
+    "frontend/representative-workspace/domain/capabilities.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G07",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G07",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-S03",
+   "name": "M-F05-S03 security-classification-downgraded-to-absent",
+   "family": "seed_extension",
+   "targets": [
+    "frontend/representative-workspace/domain/capabilities.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G07",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G07",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-S04",
+   "name": "M-F05-S04 caller-asserted-authorization-accepted",
+   "family": "seed_extension",
+   "targets": [
+    "frontend/representative-workspace/domain/publication.ts"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G02",
+    "G44",
+    "G45"
+   ],
+   "failing_gates": [
+    "G02",
+    "G42",
+    "G44",
+    "G45"
+   ]
+  },
+  {
+   "id": "M-F05-S05",
+   "name": "M-F05-S05 security-finding-removed-from-the-reconciliation",
+   "family": "seed_extension",
+   "targets": [
+    "docs/frontend/FRONT-05-PACK-DEPENDENCY-RECONCILIATION.md"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G46"
+   ],
+   "failing_gates": [
+    "G42",
+    "G46"
+   ]
+  },
+  {
+   "id": "M-F05-S06",
+   "name": "M-F05-S06 report-quotes-a-stale-source-tree-digest",
+   "family": "seed_extension",
+   "targets": [
+    "FRONT05_C1_DEVELOPER_REPORT.md"
+   ],
+   "detected": true,
+   "exit_code": 1,
+   "detecting_gates": [
+    "G45"
+   ],
+   "failing_gates": [
+    "G42",
+    "G45"
+   ]
+  }
+ ]
+}
