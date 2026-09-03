@@ -136,7 +136,7 @@ jobs:
           set -euo pipefail
           cd replay
           export PYTHONDONTWRITEBYTECODE=1
-          .venv/bin/python scripts/ctrl04_mutation_suite.py --python .venv/bin/python
+          .venv/bin/python scripts/ctrl04_mutation_suite.py --python "$PWD/.venv/bin/python"
           python3 - <<'PY'
           import json
           x=json.load(open('validation/ctrl04/mutation_result.json'))
