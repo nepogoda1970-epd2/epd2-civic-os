@@ -64,7 +64,7 @@ jobs:
         with:
           version: "0.6.14"
           enable-cache: false
-      - name: Normalize generated API-06 binding before seal
+      - name: Install exact C2 governance overlay before seal
         shell: bash
         run: |
           set -euo pipefail
@@ -72,17 +72,98 @@ jobs:
           from pathlib import Path
           path = Path("scripts/ops03_c2_ci.sh")
           text = path.read_text(encoding="utf-8")
-          needle = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\npython3 - \"$ROOT\" <<'PY'\n"
-          replacement = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\npython3 \"$REPO_ROOT/scripts/ops03_c2_normalize_generated.py\" \"$ROOT\"\nuvx --from ruff==0.15.22 ruff format \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\" \"$ROOT/scripts/validation/validate_ops03.py\"\npython3 - \"$ROOT\" <<'PY'\n"
-          if needle not in text:
-              raise SystemExit("OPS03 C2 formatter insertion point not found")
-          path.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
-          print("OPS03_C2_FORMAT_NORMALIZATION_CONTROL:PASS")
+          anchor = "grep -q '^OPS03_C2_API06_PATCH:PASS:' \"$RUNNER_TEMP/ops03-c2-api06-patch.log\"\n"
+          insertion = (
+              anchor
+              + "python3 \"$REPO_ROOT/scripts/ops03_c2_exact_binding_overlay.py\" \"$ROOT\"\n"
+              + "python3 \"$REPO_ROOT/scripts/ops03_c2_normalize_generated.py\" \"$ROOT\"\n"
+              + "uvx --from ruff==0.15.22 ruff format \"$ROOT/packages/python/epd2-qualification/src/epd2_qualification/api06_binding.py\" \"$ROOT/scripts/validation/validate_ops03.py\"\n"
+          )
+          if text.count(anchor) != 1:
+              raise SystemExit(f"OPS03 C2 API06 post-patch anchor count={text.count(anchor)}")
+          text = text.replace(anchor, insertion, 1)
+          path.write_text(text, encoding="utf-8")
+          print("OPS03_C2_EXACT_BINDING_CONTROL:PASS")
           PY
       - name: Reconcile seal and qualify exact C2
         id: c2
         shell: bash
         run: bash scripts/ops03_c2_ci.sh
+      - name: Prove tested frozen packaged governed bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - '${{ steps.c2.outputs.candidate }}' '${{ steps.c2.outputs.evidence }}/same_bytes_result.json' <<'PY'
+          import hashlib, json, pathlib, sys, zipfile
+          candidate = pathlib.Path(sys.argv[1])
+          out = pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(candidate) as zf:
+              names = set(zf.namelist())
+              freeze = json.loads(zf.read("OPS03_FREEZE_MANIFEST.json"))
+              bad = []
+              for rel, expected in freeze["files"].items():
+                  if rel not in names:
+                      bad.append(f"missing:{rel}")
+                      continue
+                  actual = hashlib.sha256(zf.read(rel)).hexdigest()
+                  if actual != expected:
+                      bad.append(f"digest:{rel}")
+              sums_bad = []
+              for row in zf.read("SHA256SUMS.txt").decode("utf-8").splitlines():
+                  if not row.strip():
+                      continue
+                  digest, rel = row.split(None, 1)
+                  rel = rel.strip()
+                  if rel not in names or hashlib.sha256(zf.read(rel)).hexdigest() != digest:
+                      sums_bad.append(rel)
+          acceptance = json.loads((out.parent / "ops03_acceptance_result.json").read_text())
+          unchanged = acceptance["result"]["same_governed_source_bytes_after_execution"] is True
+          result = {
+              "schema": "epd2.ops03.c2.same-bytes/1",
+              "result": "PASS" if not bad and not sums_bad and unchanged else "FAIL",
+              "tested_source_unchanged": unchanged,
+              "frozen_files_verified_in_package": freeze["file_count"] - len(bad),
+              "frozen_files_total": freeze["file_count"],
+              "sha256sums_failures": sums_bad,
+              "freeze_failures": bad,
+              "statement": "tested governed source bytes == frozen governed bytes == packaged governed bytes",
+          }
+          out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+          if result["result"] != "PASS":
+              raise SystemExit(result)
+          print(f"OPS03_C2_SAME_BYTES:PASS:{freeze['file_count']}")
+          PY
+      - name: Write C2 developer report
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > '${{ steps.c2.outputs.evidence }}/OPS03_C2_DEVELOPER_REPORT.md' <<'EOF'
+          # OPS-03 C2 Developer Report
+
+          C1 was not promoted. It was stale for current authoritative acceptance because its entering baseline was `main@217559b7f21c338d6fe8d4e4676082cd3840251c` and its G05 semantics treated API-06 as `NEXT` / API-layer closure as a stale-baseline blocker.
+
+          C2 is a minimal corrective reconciliation on the current canonical baseline:
+
+          - old entering baseline: `217559b7f21c338d6fe8d4e4676082cd3840251c`
+          - new entering baseline commit: `${{ steps.c2.outputs.main }}`
+          - new entering baseline tree: `${{ steps.c2.outputs.tree }}`
+          - accepted API-06 candidate: `EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip`
+          - accepted API-06 SHA-256: `3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c`
+          - accepted API-06 size: `44012716` bytes
+          - authoritative API-06 run/job: `33629147572` / `100243984921`
+          - API-06 state required by G05: `ACCEPTED_CLOSED`; API layer: `CLOSED`
+          - G05 change: exact acceptance-record identity + filename/SHA/size/run/job + exact accepted archive bytes + bounded runtime load/soak + explicit binding evidence
+          - governed qualification: `50/50 PASS`, `0 FAIL`, `0 BLOCKED`
+          - mutation suite: `24/24 DETECTED`
+          - predecessor regression: OPS-01 + exact accepted OPS-02 regression PASS
+          - candidate package SHA-256: `${{ steps.c2.outputs.candidate_sha }}`
+          - candidate package size: `${{ steps.c2.outputs.candidate_size }}` bytes
+          - self-state: `CANDIDATE_NOT_ACCEPTED`
+          - same-bytes: tested governed source bytes == frozen governed bytes == packaged governed bytes
+          - System Trial Preview: NOT OPEN; OPS-03 may qualify preview-readiness minimum only, and a separate governed checkpoint-opening decision remains required.
+
+          No automatic acceptance, closure, production-readiness, or System Trial Preview opening is claimed by candidate bytes.
+          EOF
       - name: Upload exact sealed C2 candidate
         uses: actions/upload-artifact@v4
         with:
