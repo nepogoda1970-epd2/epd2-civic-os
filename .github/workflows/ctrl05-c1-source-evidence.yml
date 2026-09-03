@@ -1,0 +1,74 @@
+name: EPD2 CTRL05 C1 Source Evidence
+
+on:
+  push:
+    branches:
+      - accept/ctrl05-c1-canonical
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture exact candidate governance and CTRL05 sources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout immutable transport commit
+        uses: actions/checkout@v4
+        with:
+          ref: 4fd5523f0222161575c275c6fee1595a054a2450
+          path: transport
+          fetch-depth: 1
+
+      - name: Verify, extract, and capture selected sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate='transport/handoff/CTRL/incoming/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip'
+          expected_sha='a17be544e81f5014212629cea840d2b3010929e835cba5de68331e63e9583f2a'
+          expected_size='31060148'
+          actual_sha="$(sha256sum "$candidate" | awk '{print $1}')"
+          actual_size="$(stat -c '%s' "$candidate")"
+          test "$actual_sha" = "$expected_sha"
+          test "$actual_size" = "$expected_size"
+          mkdir -p extracted evidence
+          unzip -q "$candidate" -d extracted
+          root="$(find extracted -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          test -n "$root"
+          files=(
+            'CTRL05_ACCEPTANCE_RESULT.json'
+            'docs/handover/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_REPORT.md'
+            'contracts/control/ctrl05_oversight_console.json'
+            'tests/controller/test_ctrl05_audit_oversight.py'
+            'docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md'
+            'docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'
+            'docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md'
+            'pyproject.toml'
+            'uv.lock'
+            'package.json'
+            'package-lock.json'
+          )
+          for rel in "${files[@]}"; do
+            if [[ -f "$root/$rel" ]]; then
+              mkdir -p "evidence/$(dirname "$rel")"
+              cp "$root/$rel" "evidence/$rel"
+            fi
+          done
+          find "$root/.github/workflows" -maxdepth 1 -type f -print | LC_ALL=C sort > evidence/workflow-list.txt || true
+          find "$root" -maxdepth 3 -type f \( -iname '*ctrl05*' -o -iname '*ctrl-05*' \) -print | sed "s#^$root/##" | LC_ALL=C sort > evidence/ctrl05-files.txt
+          {
+            echo "candidate_sha256=$actual_sha"
+            echo "candidate_size=$actual_size"
+            echo "transport_commit=4fd5523f0222161575c275c6fee1595a054a2450"
+            echo "candidate_root=$(basename "$root")"
+            echo "file_count=$(find "$root" -type f | wc -l)"
+          } > evidence/identity.txt
+          (cd evidence && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > evidence/evidence-sha256.txt
+
+      - name: Upload exact source evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl05-c1-source-evidence-${{ github.run_id }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 90
