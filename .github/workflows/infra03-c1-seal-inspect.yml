@@ -1,0 +1,27 @@
+name: INFRA-03 C1 Seal Inspect
+on:
+  push:
+    branches: ["handoff/infra"]
+    paths: [".github/workflows/infra03-c1-seal-inspect.yml"]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - shell: bash
+        run: |
+          set -euo pipefail
+          Z='handoff/INFRA/incoming/EPD2_INFRA03_DEPLOYMENT_RUNTIME_AND_PREVIEW_READINESS_WORKING_0.1_PRESEAL.zip'
+          rm -rf /tmp/i03 && mkdir /tmp/i03
+          unzip -q "$Z" -d /tmp/i03
+          ROOT=$(find /tmp/i03 -mindepth 1 -maxdepth 1 -type d | head -1)
+          echo '--- preseal.py ---'
+          sed -n '1,280p' "$ROOT/scripts/infra03/preseal.py"
+          echo '--- acceptance package.py ---'
+          sed -n '1,320p' "$ROOT/scripts/acceptance/package.py"
+          echo '--- acceptance main package area ---'
+          grep -RIn "FREEZE-INVENTORY\|SHA256SUMS\|verify-package\|candidate archive" "$ROOT/scripts/acceptance" | head -200
+          echo '--- prettier files ---'
+          if command -v npx >/dev/null; then cd "$ROOT"; npm ci --ignore-scripts >/dev/null 2>&1 || true; npx prettier --check . 2>&1 | tail -80 || true; fi
