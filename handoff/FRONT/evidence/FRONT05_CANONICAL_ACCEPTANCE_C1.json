@@ -1,0 +1,40 @@
+{
+  "schema": "epd2.front05.c1-authoritative-result/2",
+  "stage": "FRONT-05 — WS-04 Representative Workspace",
+  "candidate": {
+    "filename": "EPD2_FRONT05_WS04_REPRESENTATIVE_WORKSPACE_CANDIDATE_0.1_C1.zip",
+    "sha256": "ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a",
+    "size_bytes": 27161590
+  },
+  "workflow": {
+    "run_id": 33700475382,
+    "run_attempt": 1,
+    "head_sha": "d45c478c70b2098d4bed2c73ab048ccacf9c081e",
+    "verify_job_id": 100478465454,
+    "review_job_id": 100480260808
+  },
+  "validator": {
+    "passed": 46,
+    "total": 46,
+    "status": "PASS"
+  },
+  "mutations": {
+    "detected": 44,
+    "total": 44,
+    "status": "PASS"
+  },
+  "archive_hygiene": "PASS",
+  "binding": {
+    "source_tree_digest": "f9cdd397b944835174a440ec4f470b26743d94839eb32ccbda9f69d325c99ce1",
+    "test_source_digest": "39a0d73e4cb3629532d5fb5e9309ac6636b974b5f10d5e0ede8c29238fa3a920",
+    "configuration_digest": "4851300fa932dd696a0a997eace985d2c6fb6900a7233316504418aa6be4deda",
+    "validator_source_digest": "c5577c5e9cb0346ea86ae0b48a5b7cd6aa778c4dd8e1ed1a74e22c76f04761e5",
+    "package_lock_sha256": "2a1d4cbd8bb86b117bcb547523fbf920b2bbb218d887aef4847ef2762687f6a7",
+    "source_file_count": 121
+  },
+  "contract_digest": "dd76d17772275ac4389a659181f6286dcd7d97a65cf6a1e539e4463e935d26bd",
+  "result": "PASS",
+  "self_acceptance": false,
+  "decision_basis": "independent exact-byte GitHub Actions re-execution plus separate review job",
+  "terminal_marker": "FRONT05_C1_AUTHORITATIVE_RESULT:PASS:ed8d8f0c7f3da68cfe5d871149c799484548bb172907e5b954f1f10728c88f7a:27161590"
+}
