@@ -1,0 +1,61 @@
+name: OPS-03 C1 inspection
+
+on:
+  push:
+    branches: [handoff/ops]
+    paths:
+      - '.github/workflows/ops03-c1-inspect.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect exact OPS-03 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP='handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C1.zip'
+          echo "OPS03_FILE=$ZIP"
+          echo "OPS03_SHA256=$(sha256sum "$ZIP" | awk '{print $1}')"
+          echo "OPS03_SIZE=$(stat -c %s "$ZIP")"
+          unzip -t "$ZIP" >/dev/null
+          rm -rf /tmp/ops03 && mkdir -p /tmp/ops03
+          ZIP="$ZIP" python - <<'PY'
+          import os, pathlib, zipfile, json
+          p=pathlib.Path(os.environ['ZIP']); out=pathlib.Path('/tmp/ops03')
+          with zipfile.ZipFile(p) as z:
+              infos=z.infolist(); names=[i.filename.replace('\\','/') for i in infos]
+              bad=[n for n in names if n.startswith('/') or n.startswith('../') or '/../' in '/'+n]
+              dup=len(names)-len(set(names))
+              print(f'OPS03_ENTRIES={len(names)}')
+              print(f'OPS03_UNSAFE={len(bad)}')
+              print(f'OPS03_DUPLICATES={dup}')
+              roots=sorted({n.split('/',1)[0] for n in names if n})
+              print('OPS03_ROOTS='+json.dumps(roots))
+              if bad or dup or len(roots)!=1: raise SystemExit('archive hygiene failure')
+              z.extractall(out)
+          root=out/roots[0]
+          print('OPS03_ROOT='+str(root))
+          for pat in [
+              'docs/ops/OPS-03/*','docs/ops/*OPS03*','validation/ops03/*','validation/OPS03/*',
+              'scripts/ops03/*','tests/**/*ops03*','ACCEPTANCE/*'
+          ]:
+              for f in sorted(root.glob(pat)):
+                  if f.is_file(): print('OPS03_RELEVANT='+f.relative_to(root).as_posix())
+          PY
+          ROOT=$(find /tmp/ops03 -mindepth 1 -maxdepth 1 -type d | head -1)
+          echo '=== GOVERNED DOCS / RESULTS ==='
+          find "$ROOT" -type f \( -iname '*OPS03*' -o -path '*/OPS-03/*' -o -path '*/validation/ops03/*' \) -print | sort | while read -r f; do
+            case "$f" in
+              *.md|*.txt|*.json|*.yaml|*.yml|*.py)
+                echo "===== ${f#$ROOT/} ====="
+                sed -n '1,260p' "$f"
+                ;;
+            esac
+          done
+          echo '=== BLOCKER / STATE SEARCH ==='
+          grep -RniE 'BLOCKED|NOT_ACCEPTED|CANDIDATE_NOT_ACCEPTED|FAIL|NOT_RUN|NEXT|API-06|INFRA-03|OPS-02|final.*block|accept' "$ROOT/docs/ops" "$ROOT/validation" "$ROOT/scripts" 2>/dev/null | grep -Ei 'ops03|OPS-03|blocked|not_accept|api-06|infra-03|ops-02|final' | head -n 500 || true
