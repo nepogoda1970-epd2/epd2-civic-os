@@ -1,0 +1,93 @@
+name: EPD2 CTRL05 C1 Canonical Inspection
+
+on:
+  push:
+    branches:
+      - accept/ctrl05-c1-canonical
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    name: Exact-byte candidate inspection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout verification branch
+        uses: actions/checkout@v4
+
+      - name: Checkout immutable transport commit
+        uses: actions/checkout@v4
+        with:
+          ref: 4fd5523f0222161575c275c6fee1595a054a2450
+          path: transport
+          fetch-depth: 1
+
+      - name: Inspect sealed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate='transport/handoff/CTRL/incoming/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip'
+          test -f "$candidate"
+          mkdir -p _inspection/extracted _inspection/relevant
+          sha256sum "$candidate" | tee _inspection/candidate.sha256
+          stat -c '%s' "$candidate" | tee _inspection/candidate.size
+          unzip -t "$candidate" | tee _inspection/unzip-test.txt
+          unzip -q "$candidate" -d _inspection/extracted
+          (cd _inspection/extracted && find . -type f -printf '%P\n' | LC_ALL=C sort) | tee _inspection/inventory.txt
+          (cd _inspection/extracted && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum) > _inspection/extracted-sha256.txt
+          python - <<'PY'
+          from pathlib import Path
+          import json, hashlib
+          root=Path('_inspection/extracted')
+          names=[]
+          needles=('ctrl05','ctrl-05','audit','oversight','handoff','contract','accept','validation','validator','manifest','lineage','evidence','entrypoint','program_control','master_future','readme')
+          for p in sorted(x for x in root.rglob('*') if x.is_file()):
+              rel=p.relative_to(root).as_posix()
+              low=rel.lower()
+              if any(n in low for n in needles):
+                  names.append(rel)
+          Path('_inspection/relevant-files.txt').write_text('\n'.join(names)+'\n', encoding='utf-8')
+          meta={
+              'schema':'epd2.ctrl05.c1.inspection/1',
+              'transport_commit':'4fd5523f0222161575c275c6fee1595a054a2450',
+              'candidate_path':'handoff/CTRL/incoming/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip',
+              'candidate_sha256':hashlib.sha256(Path('transport/handoff/CTRL/incoming/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip').read_bytes()).hexdigest(),
+              'candidate_size':Path('transport/handoff/CTRL/incoming/EPD2_CTRL05_AUDIT_AND_OVERSIGHT_CONSOLE_CANDIDATE_0.1_C1.zip').stat().st_size,
+              'file_count':sum(1 for p in root.rglob('*') if p.is_file()),
+              'relevant_files':names,
+              'acceptance':'NOT_PERFORMED'
+          }
+          Path('_inspection/metadata.json').write_text(json.dumps(meta, indent=2, sort_keys=True)+'\n', encoding='utf-8')
+          print('CTRL05_INSPECTION_METADATA='+json.dumps(meta, sort_keys=True))
+          print('--- RELEVANT FILES ---')
+          print('\n'.join(names))
+          print('--- TEXT EXCERPTS ---')
+          for rel in names:
+              p=root/rel
+              if p.suffix.lower() not in {'.md','.txt','.json','.yml','.yaml','.toml'}:
+                  continue
+              try:
+                  text=p.read_text(encoding='utf-8')
+              except Exception:
+                  continue
+              if len(text)>30000:
+                  text=text[:30000]+'\n...[TRUNCATED BY INSPECTION WORKFLOW]...\n'
+              print(f'===== FILE: {rel} =====')
+              print(text)
+          PY
+
+      - name: Upload inspection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: ctrl05-c1-inspection-${{ github.run_id }}
+          path: |
+            _inspection/metadata.json
+            _inspection/candidate.sha256
+            _inspection/candidate.size
+            _inspection/unzip-test.txt
+            _inspection/inventory.txt
+            _inspection/extracted-sha256.txt
+            _inspection/relevant-files.txt
+          if-no-files-found: error
+          retention-days: 30
