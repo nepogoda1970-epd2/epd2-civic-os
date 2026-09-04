@@ -1,0 +1,12 @@
+582c103cae9ff208cfa8762189ca15063beb9251343b392eeba976b15db82c1d  ./.github/workflows/infra04-c2-authoritative.yml
+6e74470f09dd802c385b4ecbbbb3ab2ba23edbc628cf6754b2d30e64117aacbd  ./.github/workflows/ops03-c3-authoritative-build.yml
+dcf971dcc836d4780b7464f761d152221a731467383ba7616e11c748901e8ca8  ./.github/workflows/ops03-c3-final.yml
+8b38dfcfa9ccbd4641a74bff4e5d6c1eb043b5ec8577c2b6c1d89168daf482b5  ./.github/workflows/ops03-c3-v2.yml
+27be06ed16a0a06d33ebdf1e039f8ab3de5438bc6f9f0d81a46c58d47eb57fbc  ./REBINDBINDING.txt
+4e684b233455f06f697c55033b5d888dd25a727bde1c9c936fc80c41e0d878ae  ./docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
+d4d41f656b816638477318249cb5d93b54514cf1809de3a2a68dc8724525e59b  ./docs/infra/INFRA-04/INFRA-04-KNOWN-LIMITATIONS.md
+acf132f6af657c7d51bb9db92dff4c304317b9e80de2497376711b9465284ff9  ./docs/infra/INFRA-04/INFRA-04-STAGE-CONTRACT.md
+a88260c9bf6d94b6a5682539d3ecf2ea23462332f5cfee3332e7e68b1d03041c  ./docs/infra/INFRA-04/INFRA04_DEVELOPER_REPORT.md
+2744092d5a322b473ae68d0f357270b259dc63421a28b75ae5eabf796ebc7e02  ./scripts/infra02/supply_chain_policy.json
+4096fb0bef28e18cab02a271e87cb50b0fb7403dd612b27eea128fff4a15c5f1  ./scripts/ops03_c2_authoritative_runner.py
+b534e6d7246a204d5e3a5b0022395f802988c0ff8966c95b36d449dd1a79a704  ./scripts/ops03_c3_patch_from_c2.py
