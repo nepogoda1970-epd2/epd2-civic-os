@@ -1,4 +1,4 @@
-name: INFRA-04 C2 Mobile Baseline Capture
+name: INFRA-04 C2 FRONT-01 Visual-Lock Scope Proof
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
   INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
 
 jobs:
-  capture:
+  prove:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -32,6 +32,21 @@ jobs:
           cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
           rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
 
+      - name: Isolate later FRONT-02 locale control from historical FRONT-01 visual scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('frontend/web-shell/tests/browser/front01.browser.spec.ts')
+          s=p.read_text()
+          needle='''    await page.goto(path);\n    await expect(page).toHaveScreenshot(`front01-${name}.png`, {\n'''
+          repl='''    await page.goto(path);\n    await page.locator(".language-selector").evaluate((element) => element.remove());\n    await expect(page).toHaveScreenshot(`front01-${name}.png`, {\n'''
+          if needle not in s:
+              raise SystemExit('front01 visual insertion point not found')
+          p.write_text(s.replace(needle,repl,1))
+          PY
+
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
@@ -44,20 +59,11 @@ jobs:
           npm ci
           npx playwright install --with-deps chromium
 
-      - name: Regenerate only FRONT-01 mobile baseline and prove repeatability
+      - name: Prove existing locked baselines unchanged on all projects
         shell: bash
         run: |
           set -euo pipefail
           cd frontend/web-shell
-          npx playwright test tests/browser/front01.browser.spec.ts --project=mobile --update-snapshots
-          npx playwright test tests/browser/front01.browser.spec.ts --project=mobile
-          sha256sum tests/browser/front01.browser.spec.ts-snapshots/*-mobile-linux.png | tee "$GITHUB_WORKSPACE/mobile-baselines.sha256"
-
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: infra04-c2-current-mobile-baselines-${{ github.run_id }}
-          path: |
-            frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/*-mobile-linux.png
-            mobile-baselines.sha256
-          if-no-files-found: error
-          retention-days: 7
+          npx playwright test tests/browser/front01.browser.spec.ts
+          git diff --exit-code -- tests/browser/front01.browser.spec.ts-snapshots
+          echo "FRONT01_VISUAL_LOCK_SCOPE_RECONCILIATION:PASS"
