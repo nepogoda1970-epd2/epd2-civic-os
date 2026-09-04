@@ -1,0 +1,61 @@
+name: INFRA-04 property baseline proof
+on:
+  push:
+    branches: ["diagnostic/infra04-property-baseline-proof"]
+permissions:
+  contents: read
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: baseline
+            ref: 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+          - kind: candidate
+            ref: 5f619b76f9bc6ef81e076f785d6f5cb307965133
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ matrix.ref }}
+          fetch-depth: 0
+      - name: Materialize exact C2 candidate
+        if: matrix.kind == 'candidate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show 'origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip' > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with:
+          enable-cache: false
+      - name: Install exact frozen Python environment
+        shell: bash
+        run: uv sync --all-groups --frozen
+      - name: Execute exact candidate failure on this source
+        id: test
+        shell: bash
+        run: |
+          set +e
+          uv run pytest -q services/voting-service/tests/reference/test_property.py::test_property_limitation_is_recorded 2>&1 | tee "$RUNNER_TEMP/property-${{ matrix.kind }}.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "PROPERTY_TEST_RC:$rc"
+          exit 0
+      - name: Require the same failure on both sides
+        shell: bash
+        run: |
+          test '${{ steps.test.outputs.rc }}' = '1'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-property-${{ matrix.kind }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/property-${{ matrix.kind }}.txt
+          retention-days: 7
