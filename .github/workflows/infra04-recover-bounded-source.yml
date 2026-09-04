@@ -24,19 +24,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "c986fe35a6aec3b3ea5d986d0b8c9f2b36a310c9"
-          git show HEAD^:.github/workflows/infra04-final-bounded-assembler.yml > /tmp/failed-assembler.yml
+          BROKEN=c986fe35a6aec3b3ea5d986d0b8c9f2b36a310c9
+          git cat-file -e "$BROKEN^{commit}"
+          git show "$BROKEN:.github/workflows/infra04-final-bounded-assembler.yml" > /tmp/failed-assembler.yml
           python3 - <<'PY'
-          import base64, pathlib, re
+          import base64
+          import pathlib
+          import re
 
           src = pathlib.Path("/tmp/failed-assembler.yml").read_text()
-          payloads = {}
-          for key in ("WORKFLOW_B64", "BASELINE_B64"):
-              m = re.search(rf"^\s+{key}:\s+([A-Za-z0-9+/=]+)\s*$", src, re.M)
-              if not m:
-                  raise SystemExit(f"missing {key} in failed assembler")
-              payloads[key] = base64.b64decode(m.group(1)).decode("utf-8")
+          encoded = {}
+          wanted = ("WORKFLOW_B64", "BASELINE_B64")
+          for raw in src.splitlines():
+              stripped = raw.strip()
+              for key in wanted:
+                  prefix = key + ":"
+                  if stripped.startswith(prefix):
+                      encoded[key] = stripped[len(prefix):].strip()
 
+          for key in wanted:
+              if key not in encoded or not encoded[key]:
+                  print("Available B64 lines:")
+                  for raw in src.splitlines():
+                      if "B64" in raw:
+                          print(raw[:240])
+                  raise SystemExit(f"missing {key} in failed assembler")
+              print(f"INFRA04_RECOVERY_ENCODED:{key}:{len(encoded[key])}")
+
+          payloads = {
+              key: base64.b64decode(encoded[key], validate=False).decode("utf-8")
+              for key in wanted
+          }
           workflow = payloads["WORKFLOW_B64"]
           pathlib.Path("/tmp/infra04-c2-authoritative.yml").write_text(workflow)
 
@@ -50,8 +68,8 @@ jobs:
           ))
           for mod in module_candidates:
               candidates.add(mod.replace(".", "/") + ".py")
-
           candidates = {c.lstrip("./") for c in candidates if "baseline" in c.lower()}
+
           if len(candidates) != 1:
               print("Recovered workflow baseline path candidates:", sorted(candidates))
               for i, line in enumerate(workflow.splitlines(), 1):
