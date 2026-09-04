@@ -1,0 +1,52 @@
+name: Main inherited roots diagnostic
+on:
+  push:
+    branches: ["diagnostic/main-inherited-roots-20260904"]
+permissions:
+  contents: read
+jobs:
+  roots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with:
+          enable-cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Install exact dependencies
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Canonical main pytest
+        id: pytest
+        run: |
+          set +e
+          uv run pytest -q 2>&1 | tee main-pytest.txt
+          rc=${PIPESTATUS[0]}; echo "rc=$rc" >> "$GITHUB_OUTPUT"; echo "MAIN_PYTEST_RC:$rc"
+          exit 0
+      - name: Canonical main browser
+        id: browser
+        run: |
+          set +e
+          npm run test:browser --workspace=frontend/web-shell 2>&1 | tee main-browser.txt
+          rc=${PIPESTATUS[0]}; echo "rc=$rc" >> "$GITHUB_OUTPUT"; echo "MAIN_BROWSER_RC:$rc"
+          exit 0
+      - name: Result
+        run: echo "MAIN_INHERITED_ROOTS:pytest=${{ steps.pytest.outputs.rc }}:browser=${{ steps.browser.outputs.rc }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: main-inherited-roots-${{ github.run_id }}
+          path: |
+            main-pytest.txt
+            main-browser.txt
+          retention-days: 7
