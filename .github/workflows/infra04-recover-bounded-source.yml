@@ -42,6 +42,11 @@ jobs:
                   if stripped.startswith(prefix):
                       encoded[key] = stripped[len(prefix):].strip()
 
+          def decode_unpadded(value: str) -> str:
+              value = value.strip()
+              value += "=" * (-len(value) % 4)
+              return base64.b64decode(value, validate=False).decode("utf-8")
+
           for key in wanted:
               if key not in encoded or not encoded[key]:
                   print("Available B64 lines:")
@@ -51,10 +56,7 @@ jobs:
                   raise SystemExit(f"missing {key} in failed assembler")
               print(f"INFRA04_RECOVERY_ENCODED:{key}:{len(encoded[key])}")
 
-          payloads = {
-              key: base64.b64decode(encoded[key], validate=False).decode("utf-8")
-              for key in wanted
-          }
+          payloads = {key: decode_unpadded(encoded[key]) for key in wanted}
           workflow = payloads["WORKFLOW_B64"]
           pathlib.Path("/tmp/infra04-c2-authoritative.yml").write_text(workflow)
 
