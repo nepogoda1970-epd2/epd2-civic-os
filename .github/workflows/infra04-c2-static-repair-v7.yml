@@ -118,7 +118,7 @@ jobs:
           for f in findings: print(f)
           raise SystemExit(1 if findings else 0)
           PY
-          uv run python -m scripts.acceptance infra04.verify-reconciliation --reconciliation docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json --pcr docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          uv run python -m scripts.acceptance verify-reconciliation --root . --target-pcr docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
           uv run pytest -q -p no:randomly tests/repository/test_infra04_units.py tests/repository/test_infra04_mutation_suite.py
           echo INFRA04_FINAL_REBIND_VERIFY:PASS
       - name: Scan stale bindings and export exact verified bytes
