@@ -1,0 +1,63 @@
+name: INFRA-04 C2 Mobile Baseline Capture
+
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-mobile-baselines-20260904"]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+  INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Materialize exact current C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install exact frontend toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Regenerate only FRONT-01 mobile baseline and prove repeatability
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd frontend/web-shell
+          npx playwright test tests/browser/front01.browser.spec.ts --project=mobile --update-snapshots
+          npx playwright test tests/browser/front01.browser.spec.ts --project=mobile
+          sha256sum tests/browser/front01.browser.spec.ts-snapshots/*-mobile-linux.png | tee "$GITHUB_WORKSPACE/mobile-baselines.sha256"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-c2-current-mobile-baselines-${{ github.run_id }}
+          path: |
+            frontend/web-shell/tests/browser/front01.browser.spec.ts-snapshots/*-mobile-linux.png
+            mobile-baselines.sha256
+          if-no-files-found: error
+          retention-days: 7
