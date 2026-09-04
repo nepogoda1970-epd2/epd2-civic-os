@@ -162,15 +162,46 @@ jobs:
           test -z "$(git status --porcelain)"
           echo "INFRA04_C2_LOCAL_SOURCE_COMMIT:$(git rev-parse HEAD)"
 
+      - name: Create clean canonical harness worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_COMMIT=$(git rev-parse HEAD)
+          CLEAN_ROOT="$RUNNER_TEMP/infra04-c2-authoritative-clean"
+          test ! -e "$CLEAN_ROOT"
+          git worktree add --detach "$CLEAN_ROOT" "$SOURCE_COMMIT"
+          test "$(git -C "$CLEAN_ROOT" rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test -z "$(git -C "$CLEAN_ROOT" status --porcelain)"
+          printf '%s\n' "$CLEAN_ROOT" > "$GITHUB_WORKSPACE/clean-root.txt"
+          echo "INFRA04_C2_CLEAN_HARNESS_ROOT:PASS:$SOURCE_COMMIT"
+
       - name: Complete canonical acceptance harness
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$GITHUB_WORKSPACE/acceptance-out"
-          uv run python -m scripts.acceptance run --root . --output "$GITHUB_WORKSPACE/acceptance-out" | tee "$GITHUB_WORKSPACE/infra04-c2-harness.txt"
-          RUN_DIR=$(dirname "$(find "$GITHUB_WORKSPACE/acceptance-out" -name EXECUTION-MANIFEST.json -type f -print -quit)")
+          ORIG_WORKSPACE="$GITHUB_WORKSPACE"
+          CLEAN_ROOT=$(cat "$ORIG_WORKSPACE/clean-root.txt")
+          cd "$CLEAN_ROOT"
+
+          LOCKS_BEFORE=$(sha256sum uv.lock package-lock.json)
+          uv sync --all-groups --frozen
+          npm ci
+          LOCKS_AFTER=$(sha256sum uv.lock package-lock.json)
+          test "$LOCKS_BEFORE" = "$LOCKS_AFTER"
+          test -z "$(git status --porcelain)"
+
+          rm -rf "$ORIG_WORKSPACE/acceptance-out"
+          mkdir -p "$ORIG_WORKSPACE/acceptance-out"
+          rm -f "$ORIG_WORKSPACE/infra04-c2-harness.txt"
+
+          GITHUB_WORKSPACE="$CLEAN_ROOT" uv run python -m scripts.acceptance run \
+            --root . \
+            --output "$ORIG_WORKSPACE/acceptance-out" \
+            | tee "$ORIG_WORKSPACE/infra04-c2-harness.txt"
+
+          RUN_DIR=$(dirname "$(find "$ORIG_WORKSPACE/acceptance-out" -name EXECUTION-MANIFEST.json -type f -print -quit)")
           test -n "$RUN_DIR"
-          echo "$RUN_DIR" > "$GITHUB_WORKSPACE/run-dir.txt"
+          echo "$RUN_DIR" > "$ORIG_WORKSPACE/run-dir.txt"
           python - <<PY
           import json
           from pathlib import Path
@@ -184,12 +215,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          RUN_DIR=$(cat "$GITHUB_WORKSPACE/run-dir.txt")
-          mkdir -p "$GITHUB_WORKSPACE/dist"
-          uv run python -m scripts.infra04.preseal --root . --run-dir "$RUN_DIR" --out "$GITHUB_WORKSPACE/dist" | tee "$GITHUB_WORKSPACE/infra04-c2-preseal.txt"
-          grep -Eq '^INFRA04_PRESEAL_RESULT:PASS:[0-9a-f]{64}:[0-9]+$' "$GITHUB_WORKSPACE/infra04-c2-preseal.txt"
-          test -f "$GITHUB_WORKSPACE/dist/$C2_NAME.zip"
-          test -f "$GITHUB_WORKSPACE/dist/$C2_NAME.zip.sha256"
+          ORIG_WORKSPACE="$GITHUB_WORKSPACE"
+          CLEAN_ROOT=$(cat "$ORIG_WORKSPACE/clean-root.txt")
+          RUN_DIR=$(cat "$ORIG_WORKSPACE/run-dir.txt")
+          mkdir -p "$ORIG_WORKSPACE/dist"
+          cd "$CLEAN_ROOT"
+          GITHUB_WORKSPACE="$CLEAN_ROOT" uv run python -m scripts.infra04.preseal \
+            --root . \
+            --run-dir "$RUN_DIR" \
+            --out "$ORIG_WORKSPACE/dist" \
+            | tee "$ORIG_WORKSPACE/infra04-c2-preseal.txt"
+          grep -Eq '^INFRA04_PRESEAL_RESULT:PASS:[0-9a-f]{64}:[0-9]+$' "$ORIG_WORKSPACE/infra04-c2-preseal.txt"
+          test -f "$ORIG_WORKSPACE/dist/$C2_NAME.zip"
+          test -f "$ORIG_WORKSPACE/dist/$C2_NAME.zip.sha256"
 
       - name: Exact C2 identity
         id: identity
@@ -222,6 +260,7 @@ jobs:
             ${{ github.workspace }}/infra04-c2-harness.txt
             ${{ github.workspace }}/infra04-c2-preseal.txt
             ${{ github.workspace }}/run-dir.txt
+            ${{ github.workspace }}/clean-root.txt
             ${{ github.workspace }}/dist/*.sha256
             ${{ github.workspace }}/dist/INFRA04_PRESEAL_FINAL.json
             ${{ github.workspace }}/dist/INFRA04_PACKAGE_SEAL_VERIFICATION.json

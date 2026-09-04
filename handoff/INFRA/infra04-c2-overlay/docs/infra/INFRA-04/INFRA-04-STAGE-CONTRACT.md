@@ -26,9 +26,12 @@ byte for byte. Its digest is recomputed from the file at gate time and
 compared against the accepted identity above — a stage that claims a
 predecessor it did not run is claiming nothing.
 
-INFRA-04 consumes **nothing** from OPS-03: the canonical register records
-OPS-03 as *qualification eligible*, not accepted, and G08 refuses any
-document that says otherwise.
+INFRA-04 consumes **no runtime dependency** from OPS-03. The canonical
+register records OPS-03 C3 as **`ACCEPTED / CLOSED`**. INFRA-04 neither
+consumes OPS-03 as a predecessor nor infers OPS-layer closure or any
+INFRA-04 acceptance from that state. G08 classifies adjacent dependency
+claims against the canonical acceptance records and fails stale or false
+claims.
 
 ## 2. The ten invariants
 
