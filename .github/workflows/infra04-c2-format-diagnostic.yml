@@ -1,0 +1,64 @@
+name: INFRA-04 C2 formatting diagnostic
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-formatters-20260904"]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Materialize exact C2
+        shell: bash
+        env:
+          INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+          INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Install frozen dependencies
+        run: |
+          uv sync --all-groups --frozen
+          npm ci
+      - name: Print exact formatter failures
+        shell: bash
+        run: |
+          set +e
+          echo '===== RUFF FORMAT CHECK ====='
+          uv run ruff format --check --diff .
+          echo "RUFF_FORMAT_RC=$?"
+          echo '===== RUFF LINT CHECK ====='
+          uv run ruff check .
+          echo "RUFF_LINT_RC=$?"
+          echo '===== PRETTIER CHECK ====='
+          npx prettier --check .
+          echo "PRETTIER_RC=$?"
+          set -e
+      - name: Apply formatters in runner and print changed paths/diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format .
+          uv run ruff check --fix . || true
+          npx prettier --write . >/dev/null
+          echo '===== FORMATTER CHANGED PATHS ====='
+          git diff --name-only
+          echo '===== FORMATTER DIFF STAT ====='
+          git diff --stat
+          echo '===== FORMATTER DIFF ====='
+          git diff -- . ':(exclude)package-lock.json' ':(exclude)uv.lock'
