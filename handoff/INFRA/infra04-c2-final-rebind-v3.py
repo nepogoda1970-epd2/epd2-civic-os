@@ -50,7 +50,12 @@ for region in rec.get('verification', {}).get('regions', []):
 rp.write_text(json.dumps(rec, indent=2) + '\n')
 sp = Path('scripts/infra02/supply_chain_policy.json')
 policy = json.loads(sp.read_text())
-for name in ('ops03-c3-authoritative-build.yml','ops03-c3-final.yml','ops03-c3-v2.yml'):
+for name in (
+    'ops03-c3-authoritative-build.yml',
+    'ops03-c3-final.yml',
+    'ops03-c3-v2.yml',
+    'ops03-c3-governance-install.yml',
+):
     policy['workflow_classes'][name] = 'historical-stage'
 policy['workflow_classes'] = dict(sorted(policy['workflow_classes'].items()))
 sp.write_text(json.dumps(policy, indent=2) + '\n')
