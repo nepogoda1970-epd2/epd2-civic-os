@@ -141,7 +141,7 @@ jobs:
           OUT="$RUNNER_TEMP/rebind-export"
           for f in "${FILES[@]}"; do [ -f "$f" ] || continue; mkdir -p "$OUT/$(dirname "$f")"; cp "$f" "$OUT/$f"; done
           cp "$RUNNER_TEMP/rebind-values.txt" "$OUT/REBINDBINDING.txt"
-          (cd "$OUT" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$OUT/SHA256SUMS.txt"
+          (cd "$OUT" && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum) > "$OUT/SHA256SUMS.txt"
           echo INFRA04_STALE_AUTHORITY_SCAN:PASS
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
