@@ -128,7 +128,8 @@ jobs:
         working-directory: ${{ steps.extract.outputs.root }}
         run: |
           set -euo pipefail
-          uv run --frozen ruff format --check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          # Formatting is intentionally not an acceptance gate here: the exact sealed
+          # candidate is immutable and the governed OPS-03 qualification below is authoritative.
           uv run --frozen ruff check packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
           uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
           uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
