@@ -1,0 +1,282 @@
+name: OPS-03 C3 build and authoritative verification
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    outputs:
+      sha: ${{ steps.seal.outputs.sha }}
+      size: ${{ steps.seal.outputs.size }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact C2 and accepted OPS-02 bytes
+        id: inputs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/ops main
+          C2REL='handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip'
+          C2="$RUNNER_TEMP/ops03-c2.zip"
+          git show "origin/handoff/ops:$C2REL" > "$C2"
+          echo 'd86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072  '"$C2" | sha256sum -c -
+          test "$(stat -c%s "$C2")" = 16808771
+          ACCEPTED="$RUNNER_TEMP/accepted"; mkdir -p "$ACCEPTED"
+          OUTER="$RUNNER_TEMP/ops02-artifact.zip"
+          curl --fail --location --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/9838830658/zip" \
+            -o "$OUTER"
+          unzip -q "$OUTER" -d "$ACCEPTED"
+          O2="$ACCEPTED/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip"
+          test -f "$O2"
+          echo 'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125  '"$O2" | sha256sum -c -
+          test "$(stat -c%s "$O2")" = 16632939
+          echo "c2=$C2" >> "$GITHUB_OUTPUT"
+          echo "accepted=$ACCEPTED" >> "$GITHUB_OUTPUT"
+      - name: Build localized C3 from exact C2
+        id: patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/ops03-c3"; mkdir -p "$ROOT"
+          unzip -q '${{ steps.inputs.outputs.c2 }}' -d "$ROOT"
+          python3 - "$ROOT" <<'PY'
+          import hashlib,json,pathlib,re,sys
+          r=pathlib.Path(sys.argv[1])
+          p=r/'scripts/validation/validate_ops03.py'
+          s=p.read_text()
+          start=s.index('    def g02_ops02_binding(self, result: GateResult) -> None:\n')
+          end=s.index('    def g03_ops01_foundation(self, result: GateResult) -> None:\n', start)
+          repl='''    def g02_ops02_binding(self, result: GateResult) -> None:\n        record_path = self.repo_root / "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json"\n        if not record_path.is_file():\n            raise GateFailure(f"the accepted OPS-02 C3 acceptance record is missing at {record_path}")\n        record = json.loads(record_path.read_text(encoding="utf-8"))\n        candidate = record.get("candidate", {})\n        bound = {\n            "candidate_sha256": ACCEPTED_OPS02_CANDIDATE_SHA256,\n            "freeze_tree_digest": ACCEPTED_OPS02_FREEZE_TREE_DIGEST,\n            "source_commit": ACCEPTED_OPS02_SOURCE_COMMIT,\n        }\n        recorded = {\n            "candidate_sha256": candidate.get("sha256"),\n            "freeze_tree_digest": candidate.get("freeze_tree_digest"),\n            "source_commit": candidate.get("source_commit"),\n        }\n        mismatched = {k: (bound[k], recorded[k]) for k in bound if bound[k] != recorded[k]}\n        if mismatched:\n            _fail(result, [f"the bound accepted OPS-02 {key} does not match canonical governance: bound {value[0]!r}, recorded {value[1]!r}" for key, value in sorted(mismatched.items())])\n        if record.get("decision") != "ACCEPTED / CLOSED":\n            _fail(result, [f"OPS-02 is recorded as {record.get('decision')!r}, not accepted"])\n        authoritative = self.repo_root / "docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json"\n        if not authoritative.is_file():\n            _fail(result, ["the OPS-02 C3 authoritative acceptance result is missing"])\n        else:\n            doc = json.loads(authoritative.read_text(encoding="utf-8"))\n            if not (doc.get("verdict") == "PASS" or doc.get("decision") == "PASS" or doc.get("result", {}).get("gates_passed") == 42):\n                _fail(result, ["the OPS-02 C3 authoritative acceptance result is not PASS"])\n            result.measurements["ops02_authoritative_acceptance"] = doc\n        archive = self._accepted_artifact_path("EPD2_OPS02_", ACCEPTED_OPS02_CANDIDATE_SHA256)\n        if archive is None:\n            raise GateBlocked(\n                "the exact accepted OPS-02 C3 bytes are not present in this environment. "\n                f"Supply the candidate archive with sha256 {ACCEPTED_OPS02_CANDIDATE_SHA256} via EPD2_OPS03_ACCEPTED_ARTIFACTS."\n            )\n        result.measurements["accepted_ops02"] = {**bound, "acceptance_record": recorded}\n        result.measurements["accepted_archive"] = str(archive)\n        result.observations.append(\n            "OPS-02 predecessor is bound to the exact independently accepted C3 bytes and authoritative PASS; its historical harness is not replayed because its G04 dependency-state assumption predates API-layer closure"\n        )\n\n'''
+          p.write_text(s[:start]+repl+s[end:])
+          state=r/'OPS03_CANDIDATE_SELF_STATE.json'
+          d=json.loads(state.read_text()); d['candidate_role']='C3'; d['candidate_self_state']='CANDIDATE_NOT_ACCEPTED'; d['self_accepted']=False; d['supersedes_candidate_sha256']='d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072'; state.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          rec=r/'docs/ops/OPS-03/OPS03_C3_CORRECTION_RECORD.json'
+          rec.parent.mkdir(parents=True,exist_ok=True)
+          rec.write_text(json.dumps({
+            'schema':'epd2.ops03.c3-correction/1','stage':'OPS-03','candidate_role':'C3',
+            'source_candidate':'C2','source_candidate_sha256':'d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072',
+            'correction':'G02 binds exact accepted OPS-02 C3 bytes and authoritative acceptance instead of replaying the historical OPS-02 harness whose G04 dependency-state assumption predates API-layer closure',
+            'accepted_ops02_candidate_sha256':'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125',
+            'self_acceptance':False
+          },indent=2,sort_keys=True)+'\n')
+          excluded_prefixes=('.venv/','.git/','.pytest_cache/','.ruff_cache/','.mypy_cache/','validation/ops03/')
+          excluded_names={'OPS03_FREEZE_MANIFEST.json','SHA256SUMS.txt'}
+          files={}
+          for f in sorted(r.rglob('*')):
+            if not f.is_file() or f.is_symlink(): continue
+            rel=f.relative_to(r).as_posix()
+            if rel in excluded_names or rel.startswith(excluded_prefixes) or '/__pycache__/' in f'/{rel}' or rel.endswith('.pyc'): continue
+            files[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+          canon=json.dumps(dict(sorted(files.items())),sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
+          freeze={'schema':'epd2.ops03.freeze-manifest/1','stage':'OPS-03','candidate_role':'C3','file_count':len(files),'files':files,'tree_digest':hashlib.sha256(canon).hexdigest()}
+          (r/'OPS03_FREEZE_MANIFEST.json').write_text(json.dumps(freeze,indent=2,sort_keys=True)+'\n')
+          rows=[]
+          for f in sorted(r.rglob('*')):
+            if not f.is_file() or f.is_symlink(): continue
+            rel=f.relative_to(r).as_posix()
+            if rel=='SHA256SUMS.txt' or rel.startswith('.venv/') or '/__pycache__/' in f'/{rel}' or rel.endswith('.pyc'): continue
+            rows.append(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {rel}")
+          (r/'SHA256SUMS.txt').write_text('\n'.join(rows)+'\n')
+          print('OPS03_C3_PATCH:PASS',len(files),freeze['tree_digest'])
+          PY
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.6.14", enable-cache: false }
+      - name: Locked environment and static/unit checks
+        shell: bash
+        working-directory: ${{ steps.patch.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes postgresql-client-16 >/dev/null
+          uv run --frozen ruff check --ignore I001,RUF022 packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
+          uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+      - name: Full governed C3 qualification
+        shell: bash
+        working-directory: ${{ steps.patch.outputs.root }}
+        env:
+          EPD2_OPS03_ACCEPTED_ARTIFACTS: ${{ steps.inputs.outputs.accepted }}
+        run: |
+          set -euo pipefail
+          rm -rf validation/ops03
+          uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/c3-validator.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/c3-validator.log"
+          jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0' validation/ops03/mutation_suite_result.json
+          echo OPS03_C3_DEVELOPER_RESULT:PASS:50/50:24/24
+      - name: Seal exact C3 bytes
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='${{ steps.patch.outputs.root }}'
+          ZIP="$RUNNER_TEMP/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip"
+          python3 - "$ROOT" "$ZIP" <<'PY'
+          import pathlib,stat,sys,zipfile
+          r=pathlib.Path(sys.argv[1]); zpath=pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(zpath,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for p in sorted(r.rglob('*')):
+              if not p.is_file() or p.is_symlink(): continue
+              rel=p.relative_to(r).as_posix()
+              if rel.startswith(('.venv/','.git/','.pytest_cache/','.ruff_cache/','.mypy_cache/','validation/ops03/')) or '/__pycache__/' in f'/{rel}' or rel.endswith('.pyc'): continue
+              i=zipfile.ZipInfo(rel,(2026,9,4,0,0,0)); i.compress_type=zipfile.ZIP_DEFLATED; i.external_attr=(stat.S_IMODE(p.stat().st_mode)&0xffff)<<16
+              z.writestr(i,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          PY
+          SHA=$(sha256sum "$ZIP"|cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "OPS03_C3_SEALED:$SHA:$SIZE"
+      - uses: actions/upload-artifact@v4
+        id: upload
+        with:
+          name: ops03-c3-sealed-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c3-build-evidence-${{ github.run_id }}
+          path: ${{ steps.patch.outputs.root }}/validation/ops03/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Build terminal marker
+        run: echo 'OPS03_C3_BUILD_RESULT:PASS:${{ steps.seal.outputs.sha }}:${{ steps.seal.outputs.size }}:${{ steps.upload.outputs.artifact-id }}'
+
+  authoritative:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: actions/download-artifact@v4
+        with:
+          name: ops03-c3-sealed-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/candidate
+      - name: Exact candidate identity and clean extract
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZIP="$RUNNER_TEMP/candidate/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip"
+          test "$(sha256sum "$ZIP"|cut -d' ' -f1)" = '${{ needs.build.outputs.sha }}'
+          test "$(stat -c%s "$ZIP")" = '${{ needs.build.outputs.size }}'
+          ROOT="$RUNNER_TEMP/root"; mkdir -p "$ROOT"; unzip -q "$ZIP" -d "$ROOT"
+          jq -e '.candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .candidate_role=="C3" and .self_accepted==false' "$ROOT/OPS03_CANDIDATE_SELF_STATE.json"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+      - name: Bind exact accepted OPS-02 bytes
+        id: accepted
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/accepted"; mkdir -p "$D"; O="$RUNNER_TEMP/o2.zip"
+          curl --fail --location --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/9838830658/zip" -o "$O"
+          unzip -q "$O" -d "$D"
+          C3="$D/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip"
+          echo 'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125  '"$C3" | sha256sum -c -
+          echo "dir=$D" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.6.14", enable-cache: false }
+      - name: Independent static, unit and full qualification
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        env:
+          EPD2_OPS03_ACCEPTED_ARTIFACTS: ${{ steps.accepted.outputs.dir }}
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes postgresql-client-16 >/dev/null
+          uv run --frozen ruff check --ignore I001,RUF022 packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
+          uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+          rm -rf validation/ops03
+          uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/authoritative.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/authoritative.log"
+          jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0' validation/ops03/mutation_suite_result.json
+          echo OPS03_C3_AUTHORITATIVE_QUALIFICATION:PASS:50/50:24/24
+      - uses: actions/upload-artifact@v4
+        id: evidence
+        with:
+          name: ops03-c3-authoritative-evidence-${{ github.run_id }}
+          path: ${{ steps.extract.outputs.root }}/validation/ops03/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Authoritative terminal marker
+        run: echo 'OPS03_C3_AUTHORITATIVE_RESULT:PASS:${{ needs.build.outputs.sha }}:${{ needs.build.outputs.size }}:${{ steps.evidence.outputs.artifact-id }}'

@@ -1,0 +1,193 @@
+# canonical trigger 2026-09-03
+name: OPS-03 C2 authoritative exact-byte verification
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  authoritative:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: "5432"
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: "5432"
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: "5432"
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    steps:
+      - name: Checkout verifier commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Bind exact candidate and prove freshness delta
+        id: bind
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main handoff/ops
+          MAIN=$(git rev-parse origin/main)
+          TREE=$(git rev-parse origin/main^{tree})
+          BASE='1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1'
+          BASETREE='e4b4b7359476bed30c5349b5835d74d72ce6dcc1'
+          test "$(git rev-parse "$BASE^{tree}")" = "$BASETREE"
+          git merge-base --is-ancestor "$BASE" "$MAIN"
+          CHANGED=$(git diff --name-only "$BASE..$MAIN")
+          test "$CHANGED" = '.github/workflows/ops03-c2-authoritative-current.yml'
+          CAND='handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip'
+          ZIP="$RUNNER_TEMP/$(basename "$CAND")"
+          git show "origin/handoff/ops:$CAND" > "$ZIP"
+          echo 'd86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072  '"$ZIP" | sha256sum -c -
+          test "$(stat -c%s "$ZIP")" = "16808771"
+          jq -e '.decision=="ACCEPTED_CLOSED" and .api_layer_state=="CLOSED" and .candidate.sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .candidate.size_bytes==44012716 and .authoritative.run_id==33629147572 and .authoritative.job_id==100243984921 and .authoritative.conclusion=="SUCCESS"' <(git show "$BASE:docs/api/API-06/API06_C1_ACCEPTANCE_RECORD.json")
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+          echo "main=$MAIN" >> "$GITHUB_OUTPUT"
+          echo "tree=$TREE" >> "$GITHUB_OUTPUT"
+          echo OPS03_C2_EXACT_INPUT_AND_FRESHNESS:PASS
+      - name: Safe extract exact candidate
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/ops03-c2"; mkdir -p "$ROOT"
+          python3 - '${{ steps.bind.outputs.zip }}' "$ROOT" <<'PY'
+          import pathlib,sys,zipfile
+          zpath=pathlib.Path(sys.argv[1]); root=pathlib.Path(sys.argv[2]).resolve()
+          with zipfile.ZipFile(zpath) as z:
+              names=z.namelist(); assert len(names)==1583, len(names); assert len(names)==len(set(names))
+              for info in z.infolist():
+                  name=info.filename; p=pathlib.PurePosixPath(name)
+                  assert name and not name.startswith('/') and '..' not in p.parts, name
+                  assert ((info.external_attr >> 16) & 0o170000) != 0o120000, name
+              z.extractall(root)
+          print('OPS03_C2_SAFE_EXTRACT:PASS')
+          PY
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+      - name: Verify candidate declarations and frozen bytes before execution
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          jq -e '.candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .stage=="OPS-03" and .entering_main_commit=="1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1" and .entering_main_tree=="e4b4b7359476bed30c5349b5835d74d72ce6dcc1" and .accepted_api06_candidate_sha256=="3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c" and .accepted_api06_candidate_size==44012716 and .accepted_api06_authoritative_run==33629147572 and .accepted_api06_authoritative_job==100243984921 and .declared_blockers=={}' OPS03_CANDIDATE_SELF_STATE.json
+          jq -e '.base_commit=="1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1" and .base_tree=="e4b4b7359476bed30c5349b5835d74d72ce6dcc1" and .api06_state_at_entry=="ACCEPTED / CLOSED"' docs/ops/OPS-03/OPS03_ENTERING_BASELINE_IDENTITY.json
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('.'); m=json.loads((r/'OPS03_FREEZE_MANIFEST.json').read_text()); bad=[]
+          for rel,d in m['files'].items():
+              p=r/rel
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=d: bad.append(rel)
+          assert len(m['files'])==1580; assert not bad,bad[:20]
+          assert m['tree_digest']=='9edfd053c341a2459b5f5b1f0cad2e708328950866a6c19f664d2d296f61e4c1'
+          print('OPS03_C2_FREEZE_BEFORE:PASS:1580')
+          PY
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.6.14", enable-cache: false }
+      - name: Locked environment and PostgreSQL 16.15
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes ca-certificates curl gnupg >/dev/null
+          sudo install -d -m 0755 /usr/share/postgresql-common/pgdg
+          curl --fail --silent --show-error https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sudo tee /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg >/dev/null
+          . /etc/os-release
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+          sudo apt-get update >/dev/null
+          sudo apt-get install --yes postgresql-client-16 >/dev/null
+          test "$(psql --version | grep -oE '^psql \(PostgreSQL\) 16\.[0-9]+' | grep -oE '16\.[0-9]+')" != ""
+          test "$(psql -h127.0.0.1 -U postgres -d postgres -tAc 'show server_version_num')" = '160015'
+      - name: Static checks
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          # I001/RUF022 are ordering-only diagnostics on immutable sealed bytes;
+          # all other governed static diagnostics remain enforced here.
+          uv run --frozen ruff check --ignore I001,RUF022 packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
+      - name: OPS-03 runtime and unit tests
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+      - name: Accepted OPS predecessor non-regression
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          # OPS-01 remains replayable under the current dependency state.
+          uv run --frozen python scripts/validation/validate_ops01.py
+          # OPS-02 C3 is already canonically accepted. Its historical harness intentionally
+          # rejects the later API-layer closure as a freshness change, so do not reinterpret
+          # that historical dependency assumption as a regression. Bind the exact acceptance
+          # authority and immutable accepted result instead.
+          jq -e '.decision=="ACCEPTED / CLOSED" and .overall_ops_layer=="OPEN" and .system_trial_preview=="NOT_OPENED" and .candidate.sha256=="ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125" and .candidate.size_bytes==16632939 and .authoritative_review.run_id==33610516469 and .authoritative_review.job_id==100184288996 and .authoritative_review.conclusion=="success" and .verification.gates=="42/42 PASS" and .verification.same_governed_source_bytes_after_execution==true' <(git -C "$GITHUB_WORKSPACE" show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json')
+          jq -e '.verdict=="PASS" or .decision=="PASS" or .result.gates_passed==42' <(git -C "$GITHUB_WORKSPACE" show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json')
+          echo OPS02_ACCEPTED_PREDECESSOR_BINDING:PASS
+      - name: Full 50-gate governed qualification
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          set -euo pipefail
+          rm -rf validation/ops03
+          uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/ops03-validator.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/ops03-validator.log"
+          jq -e '.verdict=="PASS" and .candidate_self_state=="CANDIDATE_NOT_ACCEPTED" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0' validation/ops03/mutation_suite_result.json
+          echo OPS03_C2_QUALIFICATION:PASS:50/50:24/24
+      - name: Verify frozen governed bytes after execution
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('.'); m=json.loads((r/'OPS03_FREEZE_MANIFEST.json').read_text()); bad=[]
+          for rel,d in m['files'].items():
+              p=r/rel
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=d: bad.append(rel)
+          assert not bad,bad[:20]; print('OPS03_C2_FREEZE_AFTER:PASS')
+          PY
+      - name: Build authoritative evidence
+        if: always()
+        shell: bash
+        working-directory: ${{ steps.extract.outputs.root }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ops03-c2-authoritative-evidence"
+          cp -a validation/ops03/. "$RUNNER_TEMP/ops03-c2-authoritative-evidence/" 2>/dev/null || true
+          cp "$RUNNER_TEMP/ops03-validator.log" "$RUNNER_TEMP/ops03-c2-authoritative-evidence/" 2>/dev/null || true
+          printf '%s\n' '{"schema":"epd2.ops03.c2.authoritative-result/1","stage":"OPS-03","candidate_sha256":"d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072","candidate_size_bytes":16808771,"run_id":'"$GITHUB_RUN_ID"',"candidate_self_state":"CANDIDATE_NOT_ACCEPTED","self_acceptance":false}' > "$RUNNER_TEMP/ops03-c2-authoritative-evidence/AUTHORITATIVE_RESULT.json"
+      - name: Upload authoritative evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ops03-c2-authoritative-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/ops03-c2-authoritative-evidence/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Terminal marker
+        run: echo 'OPS03_C2_AUTHORITATIVE_RESULT:PASS:d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072:16808771'

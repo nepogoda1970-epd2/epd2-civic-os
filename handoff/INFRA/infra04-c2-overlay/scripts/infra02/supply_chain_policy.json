@@ -1,0 +1,131 @@
+{
+  "action_pins": {
+    "actions/checkout@v4": "11d5960a326750d5838078e36cf38b85af677262",
+    "actions/download-artifact@v4": "d3f86a106a0bac45b974a628896c90dbdf5c8093",
+    "actions/setup-node@v4": "49933ea5288caeca8642d1e84afbd3f7d6820020",
+    "actions/setup-python@v5": "a26af69be951a213d495a4c3e4e4022e16d87065",
+    "actions/upload-artifact@v4": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "astral-sh/setup-uv@v3": "8d55fbecc275b1c35dbe060458839f8d30439ccf"
+  },
+  "base_images": {
+    "note": "This repository's governed release path builds no container images. If a container build is ever added to an authoritative path, every base image MUST appear here pinned by sha256 digest; the ci-policy validator fails closed on any FROM/image reference that is not digest-pinned and listed.",
+    "policy": "NO_CONTAINER_BASE_IMAGES_ON_RELEASE_PATH"
+  },
+  "class_rules": {
+    "authoritative-acceptance": {
+      "allowed_permission_scopes": { "actions": "read", "contents": "read" },
+      "allowed_triggers": ["workflow_dispatch", "push"],
+      "forbidden_triggers": [
+        "pull_request",
+        "pull_request_target",
+        "workflow_run",
+        "issue_comment"
+      ],
+      "may_issue_release_evidence": true,
+      "require_sha_pinned_actions": true,
+      "require_top_level_permissions": true
+    },
+    "authoritative-release": {
+      "allowed_permission_scopes": { "actions": "read", "contents": "read" },
+      "allowed_triggers": ["workflow_dispatch", "push"],
+      "forbidden_triggers": [
+        "pull_request",
+        "pull_request_target",
+        "workflow_run",
+        "issue_comment"
+      ],
+      "may_issue_release_evidence": true,
+      "require_sha_pinned_actions": true,
+      "require_top_level_permissions": true
+    },
+    "developer-convenience": {
+      "allowed_triggers": ["workflow_dispatch"],
+      "forbidden_triggers": ["pull_request_target"],
+      "may_issue_release_evidence": false,
+      "note": "Non-authoritative by declaration: outputs of this class are never acceptance or release evidence.",
+      "require_sha_pinned_actions": false,
+      "require_top_level_permissions": true
+    },
+    "historical-stage": {
+      "allowed_triggers": ["workflow_dispatch", "push", "pull_request"],
+      "forbidden_triggers": ["pull_request_target", "workflow_run"],
+      "may_issue_release_evidence": false,
+      "note": "Pre-INFRA-02 stage workflows preserved as accepted history; they hold no INFRA-02 release authority. Their acceptance records pin exact workflow blobs, so INFRA-02 does not rewrite them; they are still checked for the hard prohibitions (pull_request_target, secret exposure to untrusted code). Classified additively by INFRA-04 for the API-04/API-05 stage workflows that entered canonical main after INFRA-02 was accepted: they are one-shot, already-executed stage and governance-closure workflows from the API line, hold no INFRA-02 release authority, and are not rewritten here. The two governance-closure workflows request contents: write because their single purpose was to commit a register transition; that elevation is recorded as an observation for the owning API line, not repaired by INFRA-04.",
+      "require_sha_pinned_actions": false,
+      "require_top_level_permissions": true
+    },
+    "untrusted-pr-gate": {
+      "allowed_permission_scopes": { "contents": "read" },
+      "allowed_triggers": ["pull_request", "push", "workflow_dispatch"],
+      "forbid_secret_references": true,
+      "forbidden_triggers": ["pull_request_target", "workflow_run"],
+      "may_issue_release_evidence": false,
+      "require_sha_pinned_actions": false,
+      "require_top_level_permissions": true
+    }
+  },
+  "dependency_sources": {
+    "allow_direct_url_dependencies": false,
+    "allow_git_dependencies": false,
+    "allow_local_path_dependencies_outside_workspace": false,
+    "npm_allowed_registries": ["https://registry.npmjs.org"],
+    "python_allowed_registries": ["https://pypi.org/simple"],
+    "workspace_members_are_governed_sources": true
+  },
+  "note": "The single governed, version-controlled INFRA-02 supply-chain policy: CI trust classes and rules (HI-01), immutable build-input pins (HI-02), dependency source governance (HI-07), trusted builder identities (HI-06) and the vulnerability release policy (HI-08). Changing this file is a governed change: it is tracked, hashed into the freeze inventory and covered by the required-path registry. INFRA-04 C2 additively classifies the inherited one-shot OPS-03 C2 authoritative verifier that entered canonical main after INFRA-02 acceptance; INFRA-04 does not rewrite or grant INFRA-02 release authority to that OPS-owned workflow.",
+  "policy_version": "1.0.0",
+  "publishable_refs": ["refs/heads/main"],
+  "reproducibility_declarations": {
+    "candidate-archive-zip": "DETERMINISTIC_INPUTS_BUT_BYTE_REPRODUCIBILITY_NOT_YET_PROVEN",
+    "candidate-source-tree": "CONTENT_REPRODUCIBLE_AND_PROVEN",
+    "pack16-ceremony-artifacts": "NOT_BUILT_BY_INFRA02_IM33_LEFT_EXPLICITLY_OPEN"
+  },
+  "schema": "epd2.infra02.supply-chain-policy/1",
+  "toolchain": {
+    "container_build_tooling": "NOT_USED",
+    "node_major": "22",
+    "npm_major_min": 10,
+    "python_series": "3.12",
+    "rust": "NOT_USED",
+    "uv_series_min": "0.8"
+  },
+  "trusted_builders": [
+    "https://github.com/nepogoda1970-epd2/epd2-civic-os/.github/workflows/infra02-acceptance.yml",
+    "https://github.com/nepogoda1970-epd2/epd2-civic-os/.github/workflows/infra01-acceptance.yml",
+    "epd2:local-canonical-harness",
+    "https://github.com/nepogoda1970-epd2/epd2-civic-os/.github/workflows/infra04-c2-authoritative.yml"
+  ],
+  "vulnerability_policy": {
+    "exceptions_file": "scripts/infra02/vulnerability_exceptions.json",
+    "max_exception_days": 120,
+    "release_blocking_rule": "ANY_FINDING_WITHOUT_GOVERNED_EXCEPTION",
+    "scan_binding": "scan evidence must record the exact lockfile SHA-256 digests it scanned; evidence for other lockfile digests is stale and cannot authorize a release",
+    "scanners_required": ["pip-audit", "npm-audit"]
+  },
+  "workflow_classes": {
+    "api01-accept.yml": "historical-stage",
+    "api04-accept.yml": "historical-stage",
+    "api04-c1-seal-build-main.yml": "historical-stage",
+    "api04-governance-close.yml": "historical-stage",
+    "api05-governance-close.yml": "historical-stage",
+    "ci.yml": "untrusted-pr-gate",
+    "consolidation-c1-accept.yml": "historical-stage",
+    "epd2-handoff-intake.yml": "historical-stage",
+    "front02-governed-review.yml": "historical-stage",
+    "infra01-acceptance.yml": "authoritative-acceptance",
+    "infra02-acceptance.yml": "authoritative-release",
+    "infra04-c2-authoritative.yml": "authoritative-acceptance",
+    "ops03-c2-authoritative-current.yml": "historical-stage",
+    "ops03-c3-authoritative-build.yml": "historical-stage",
+    "ops03-c3-final.yml": "historical-stage",
+    "ops03-c3-governance-install.yml": "historical-stage",
+    "ops03-c3-v2.yml": "historical-stage",
+    "pb01-i09-pg16-runtime.yml": "historical-stage",
+    "pb01-i09-pg16-toolchain.yml": "historical-stage",
+    "pilot-roadmap-guard.yml": "untrusted-pr-gate",
+    "pilot04-c9-accept.yml": "historical-stage",
+    "pilot04-c9-smoke.yml": "historical-stage",
+    "pilot04-c9-stage1.yml": "historical-stage",
+    "verify-and-package.yml": "developer-convenience"
+  }
+}

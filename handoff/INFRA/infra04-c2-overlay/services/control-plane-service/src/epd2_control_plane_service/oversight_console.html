@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>EPD² CTRL-05 Audit &amp; Oversight Console</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        background: #f4f5f7;
+        color: #1b1f24;
+      }
+      header {
+        background: #10243c;
+        color: #fff;
+        padding: 10px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      main {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      section {
+        background: #fff;
+        border: 1px solid #d8dbe0;
+        border-radius: 6px;
+        padding: 12px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      td,
+      th {
+        padding: 4px 6px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        vertical-align: top;
+      }
+      .badge {
+        display: inline-block;
+        padding: 1px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid transparent;
+      }
+      .VERIFIED {
+        background: #137333;
+        color: #fff;
+      }
+      .HASH_MISMATCH,
+      .CHAIN_BROKEN,
+      .SEQUENCE_BROKEN,
+      .METADATA_MISSING,
+      .SOURCE_UNAVAILABLE,
+      .UNKNOWN_SCHEMA {
+        background: #c5221f;
+        color: #fff;
+      }
+      .CTRL02 {
+        background: #e8f0fe;
+        color: #1a56db;
+      }
+      .CTRL03 {
+        background: #e6f4ea;
+        color: #137333;
+      }
+      .CTRL04 {
+        background: #fef7e0;
+        color: #b06000;
+      }
+      .OPENED,
+      .IN_REVIEW,
+      .NEEDS_CLARIFICATION {
+        background: #e8f0fe;
+        color: #1a56db;
+      }
+      .FINDING_RAISED,
+      .REMEDIATION_LINKED {
+        background: #fce8e6;
+        color: #c5221f;
+      }
+      .NO_FINDING {
+        background: #e6f4ea;
+        color: #137333;
+      }
+      .ATTESTED {
+        background: #137333;
+        color: #fff;
+      }
+      .CLOSED {
+        background: #5f6368;
+        color: #fff;
+      }
+      .CRITICAL,
+      .HIGH {
+        background: #c5221f;
+        color: #fff;
+      }
+      .MEDIUM {
+        background: #fef7e0;
+        color: #b06000;
+      }
+      .LOW,
+      .INFORMATIONAL {
+        background: #5f6368;
+        color: #fff;
+      }
+      .RAISED {
+        background: #fce8e6;
+        color: #c5221f;
+      }
+      .DISPUTED,
+      .SUPERSEDED {
+        background: #5f6368;
+        color: #fff;
+      }
+      .ABSENT {
+        background: #137333;
+        color: #fff;
+      }
+      .ro {
+        background: #fce8e6;
+        color: #c5221f;
+        border-color: #c5221f;
+      }
+      button {
+        font: inherit;
+        padding: 4px 9px;
+        border-radius: 4px;
+        border: 1px solid #888;
+        background: #fff;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .mono {
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        word-break: break-all;
+      }
+      #log,
+      #e-out,
+      #g-out {
+        white-space: pre-wrap;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        max-height: 240px;
+        overflow: auto;
+        background: #fafafa;
+        border: 1px solid #eee;
+        padding: 6px;
+      }
+      label {
+        display: block;
+        margin: 6px 0 2px;
+        font-size: 12px;
+      }
+      input,
+      select,
+      textarea {
+        font: inherit;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 4px;
+      }
+      .why {
+        color: #5f6368;
+        font-size: 11px;
+      }
+      .note {
+        background: #fff8e1;
+        border: 1px solid #f0d48a;
+        border-radius: 4px;
+        padding: 6px;
+        font-size: 12px;
+        margin: 0 0 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>EPD² CTRL-05 — Audit &amp; Oversight Console</strong>
+        <span class="mono" id="stage"></span>
+      </div>
+      <div id="who"></div>
+    </header>
+    <main>
+      <section style="grid-column: 1/3">
+        <p class="note" id="boundary"></p>
+      </section>
+      <section>
+        <h2>Evidence search (exact scope, bounded)</h2>
+        <label
+          >Region <input id="q-region" placeholder="from your mandate"
+        /></label>
+        <label
+          >Organization <input id="q-org" placeholder="from your mandate"
+        /></label>
+        <label
+          >Oversight unit <input id="q-unit" placeholder="from your mandate"
+        /></label>
+        <p class="why">
+          The scope is prefilled from your own mandate; the page never proposes
+          a scope you do not hold.
+        </p>
+        <label
+          >Planes
+          <select id="q-planes" multiple size="3">
+            <option value="CTRL-02" selected>CTRL-02</option>
+            <option value="CTRL-03" selected>CTRL-03</option>
+            <option value="CTRL-04" selected>CTRL-04</option>
+          </select></label
+        >
+        <label>Correlation reference (optional) <input id="q-corr" /></label>
+        <label>Limit <input id="q-limit" value="50" /></label>
+        <p class="why" id="q-why"></p>
+        <button id="q-go">Search evidence</button>
+      </section>
+      <section>
+        <h2>Open one record · independent verification</h2>
+        <label
+          >Evidence reference key
+          <input
+            id="e-ref"
+            class="mono"
+            placeholder="CTRL-04:ctrl04-operations-console:ctrl04-event-00000001"
+        /></label>
+        <button id="e-open">Open record</button>
+        <button id="e-verify">Verify integrity</button>
+        <pre id="e-out" class="mono"></pre>
+        <h2 style="margin-top: 14px">Correlation</h2>
+        <label
+          >Anchor (correlation id) <input id="g-anchor" class="mono"
+        /></label>
+        <label>Depth <input id="g-depth" value="1" /></label>
+        <button id="g-chain">Action chain</button>
+        <button id="g-graph">Correlation graph</button>
+        <pre id="g-out" class="mono"></pre>
+      </section>
+      <section style="grid-column: 1/3">
+        <h2>
+          Evidence (integrity verdicts are the server's, never the page's)
+        </h2>
+        <p class="why" id="q-summary"></p>
+        <table id="records">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Plane</th>
+              <th>Scope</th>
+              <th>Occurred</th>
+              <th>Action</th>
+              <th>Object</th>
+              <th>Result</th>
+              <th>Integrity</th>
+              <th>Review</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section>
+        <h2>Review case</h2>
+        <label
+          >Title <input id="c-title" placeholder="what is under review"
+        /></label>
+        <label
+          >Evidence references (one per line)
+          <textarea id="c-refs" rows="3" class="mono"></textarea>
+        </label>
+        <label>Idempotency key <input id="c-idem" /></label>
+        <p class="why" id="c-why"></p>
+        <button id="c-open">Open case</button>
+        <h2 style="margin-top: 14px">
+          Annotate (source evidence is never altered)
+        </h2>
+        <label
+          >Case
+          <select id="a-case"></select
+        ></label>
+        <label>Clarification <textarea id="a-text" rows="2"></textarea></label>
+        <label>Idempotency key <input id="a-idem" /></label>
+        <button id="a-go">Add clarification</button>
+      </section>
+      <section>
+        <h2>Governed act (prepare, then commit-time reauthorization)</h2>
+        <label
+          >Case
+          <select id="p-case"></select
+        ></label>
+        <label
+          >Act
+          <select id="p-act">
+            <option value="DISPOSE" data-right="AUDIT.REVIEW">
+              DISPOSE — record a disposition
+            </option>
+            <option value="FINDING" data-right="AUDIT.REVIEW">
+              FINDING — raise a finding
+            </option>
+            <option value="ATTEST" data-right="AUDIT.ATTEST">
+              ATTEST — attest the outcome
+            </option>
+            <option value="EXPORT" data-right="AUDIT.EXPORT">
+              EXPORT — purpose-bound export
+            </option>
+          </select></label
+        >
+        <button id="p-prep">Prepare</button>
+        <span class="mono" id="p-ticket"></span>
+        <label
+          >Disposition
+          <select id="p-disp">
+            <option>NEEDS_CLARIFICATION</option>
+            <option>FINDING_RAISED</option>
+            <option>NO_FINDING</option>
+          </select></label
+        >
+        <label
+          >Severity
+          <select id="p-sev">
+            <option>INFORMATIONAL</option>
+            <option>LOW</option>
+            <option>MEDIUM</option>
+            <option>HIGH</option>
+            <option>CRITICAL</option>
+          </select></label
+        >
+        <label
+          >Export purpose
+          <select id="p-purpose"></select
+        ></label>
+        <label
+          >Text / rationale / statement / evidence ref <input id="p-text"
+        /></label>
+        <label>Idempotency key <input id="p-idem" /></label>
+        <p class="why" id="p-why"></p>
+        <button id="p-commit">Commit act</button>
+      </section>
+      <section style="grid-column: 1/3">
+        <h2>Cases (append-only history)</h2>
+        <table id="cases">
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Scope</th>
+              <th>State</th>
+              <th>Dispositions</th>
+              <th>Findings</th>
+              <th>Clarifications</th>
+              <th>Remediation links</th>
+              <th>Attestations</th>
+              <th>Journal</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+      <section style="grid-column: 1/3">
+        <h2>Console log (server responses, verbatim)</h2>
+        <div id="log"></div>
+      </section>
+    </main>
+    <script>
+      const SESSION = new URLSearchParams(location.search).get("session") || "";
+      let ME = null,
+        CAT = null,
+        CSRF = "",
+        TICKET = null,
+        RECORDS = [];
+      const log = (m) => {
+        const l = document.getElementById("log");
+        l.textContent =
+          new Date().toISOString() + " " + m + "\n" + l.textContent;
+      };
+      // Every server value is HTML-escaped at ingestion; the page only ever renders escaped data.
+      const esc = (v) =>
+        typeof v === "string"
+          ? v.replace(
+              /[&<>"']/g,
+              (c) =>
+                ({
+                  "&": "&amp;",
+                  "<": "&lt;",
+                  ">": "&gt;",
+                  '"': "&quot;",
+                  "'": "&#39;",
+                })[c],
+            )
+          : Array.isArray(v)
+            ? v.map(esc)
+            : v && typeof v === "object"
+              ? Object.fromEntries(
+                  Object.entries(v).map(([k, x]) => [esc(k), esc(x)]),
+                )
+              : v;
+      async function api(method, path, body) {
+        const h = {
+          "Content-Type": "application/json",
+          "X-EPD2-Session": SESSION,
+        };
+        if (CSRF) h["X-EPD2-CSRF"] = CSRF;
+        const r = await fetch(path, {
+          method,
+          headers: h,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const j = esc(await r.json());
+        log(
+          method +
+            " " +
+            path +
+            " -> " +
+            r.status +
+            " " +
+            JSON.stringify(j).slice(0, 320),
+        );
+        return { status: r.status, json: j };
+      }
+      async function apiWithHeaders(method, path) {
+        const h = {
+          "Content-Type": "application/json",
+          "X-EPD2-Session": SESSION,
+        };
+        const r = await fetch(path, { method, headers: h });
+        const j = esc(await r.json());
+        log(
+          method +
+            " " +
+            path +
+            " -> " +
+            r.status +
+            " " +
+            JSON.stringify(j).slice(0, 320),
+        );
+        return {
+          status: r.status,
+          json: j,
+          csrf: r.headers.get("X-EPD2-CSRF"),
+        };
+      }
+      function badge(v, extra) {
+        return (
+          '<span class="badge ' + v + " " + (extra || "") + '">' + v + "</span>"
+        );
+      }
+      function scope() {
+        return {
+          region_id: document.getElementById("q-region").value,
+          org_id: document.getElementById("q-org").value,
+          unit_id: document.getElementById("q-unit").value,
+        };
+      }
+      function has(right) {
+        return !!(
+          ME &&
+          ME.usable &&
+          ME.mandates.some((m) => m.usable && m.rights.includes(right))
+        );
+      }
+      function why(right) {
+        if (!ME) return "no session";
+        if (!ME.usable) return "session " + ME.session_state;
+        if (!ME.mandates.length)
+          return "no oversight mandate: nothing is visible and nothing may be reviewed";
+        if (!has(right))
+          return (
+            "no " +
+            right +
+            " in any mandated scope (visibility is not authorization)"
+          );
+        return "";
+      }
+      async function load() {
+        const cat = await api("GET", "/audit/v1/catalogue");
+        CAT = cat.json;
+        document.getElementById("stage").textContent =
+          CAT.stage + " · " + CAT.self_state;
+        document.getElementById("boundary").innerHTML =
+          "Oversight is read-and-review only. Operational execution surface: " +
+          badge(CAT.operational_execution_surface) +
+          " · secret surface: " +
+          badge(CAT.secret_surface) +
+          " · this console cannot request, approve, execute or cancel any CTRL-04 operation, cannot alter source evidence, and holds no shell, SQL, SSH or key-custody surface. Integrity verdicts shown here are re-derived by the server.";
+        document.getElementById("p-purpose").innerHTML = Object.keys(
+          CAT.export_purposes,
+        )
+          .map((p) => '<option value="' + p + '">' + p + "</option>")
+          .join("");
+        document.getElementById("q-limit").max = CAT.bounds.query_limit;
+        document.getElementById("g-depth").max = CAT.bounds.graph_depth;
+        const me = await apiWithHeaders("GET", "/audit/v1/me");
+        // The CSRF token arrives as a response header, never in a read body.
+        if (me.status === 200) {
+          ME = me.json;
+          CSRF = me.csrf || "";
+        }
+        // The scope offered is the mandate's own scope. The page proposes nothing
+        // wider, and the server re-checks it on every call regardless.
+        if (ME && ME.mandates.length) {
+          const m = ME.mandates[0];
+          const parts = String(m.scope).split(":");
+          if (!document.getElementById("q-region").value)
+            document.getElementById("q-region").value = parts[0] || "";
+          if (!document.getElementById("q-org").value)
+            document.getElementById("q-org").value = parts[1] || "";
+          if (!document.getElementById("q-unit").value)
+            document.getElementById("q-unit").value = parts[2] || "";
+        }
+        document.getElementById("who").innerHTML =
+          me.status === 200
+            ? "<span>" +
+              ME.principal_id +
+              "</span> " +
+              (ME.mandates.length
+                ? badge("MANDATED")
+                : badge("NO_MANDATE", "ro")) +
+              " " +
+              badge("NOT_AN_OPERATOR")
+            : badge("NO_SESSION", "ro");
+        updateWhy();
+        await loadCases();
+      }
+      function updateWhy() {
+        document.getElementById("q-why").textContent =
+          why("AUDIT.READ") ||
+          "exact scope required: every query is anchored on region + organization + oversight unit";
+        document.getElementById("c-why").textContent =
+          why("AUDIT.REVIEW") ||
+          "a case always names the exact evidence it reviews";
+        const act = document.getElementById("p-act");
+        const right = act.options[act.selectedIndex].dataset.right;
+        document.getElementById("p-why").textContent =
+          why(right) ||
+          "prepare captures authority and evidence digests; the act is re-authorized at commit time";
+        document.getElementById("q-go").disabled = !!why("AUDIT.READ");
+        document.getElementById("c-open").disabled = !!why("AUDIT.REVIEW");
+        document.getElementById("a-go").disabled = !!why("AUDIT.REVIEW");
+        document.getElementById("p-prep").disabled = !!why(right);
+        document.getElementById("p-commit").disabled = !TICKET;
+      }
+      document.getElementById("p-act").onchange = updateWhy;
+      document.getElementById("q-go").onclick = async () => {
+        const planes = [
+          ...document.getElementById("q-planes").selectedOptions,
+        ].map((o) => o.value);
+        const r = await api("POST", "/audit/v1/evidence/search", {
+          ...scope(),
+          planes,
+          correlation_ref: document.getElementById("q-corr").value || null,
+          limit: parseInt(document.getElementById("q-limit").value, 10) || 50,
+        });
+        const tb = document.querySelector("#records tbody");
+        tb.innerHTML = "";
+        if (r.status !== 200) {
+          document.getElementById("q-summary").textContent =
+            "refused: " + r.json.error;
+          RECORDS = [];
+          return;
+        }
+        RECORDS = r.json.records;
+        document.getElementById("q-summary").textContent =
+          "matched " +
+          r.json.matched +
+          (r.json.truncated ? " (truncated at the governed bound)" : "") +
+          " · integrity " +
+          JSON.stringify(r.json.integrity_summary) +
+          " · unavailable planes: " +
+          (r.json.unavailable_planes &&
+          Object.keys(r.json.unavailable_planes).length
+            ? JSON.stringify(r.json.unavailable_planes)
+            : "none");
+        for (const x of RECORDS) {
+          tb.innerHTML +=
+            '<tr><td class="mono">' +
+            x.reference.key +
+            "</td><td>" +
+            badge(x.reference.plane) +
+            '</td><td class="why">' +
+            x.scope +
+            '</td><td class="why">' +
+            x.occurred_at +
+            "</td><td>" +
+            x.action_code +
+            '</td><td class="mono">' +
+            (x.object_ref || "—") +
+            "</td><td>" +
+            (x.result || "—") +
+            "</td><td>" +
+            badge(x.integrity.state) +
+            (x.integrity.detail
+              ? '<br><span class="why">' + x.integrity.detail + "</span>"
+              : "") +
+            '</td><td><button data-ref="' +
+            x.reference.key +
+            '" data-act="pick">Use</button></td></tr>';
+        }
+      };
+      document.addEventListener("click", (ev) => {
+        const b = ev.target.closest("button[data-act=pick]");
+        if (!b) return;
+        document.getElementById("e-ref").value = b.dataset.ref;
+        const ta = document.getElementById("c-refs");
+        ta.value = (ta.value ? ta.value.trim() + "\n" : "") + b.dataset.ref;
+        document.getElementById("p-text").value = b.dataset.ref;
+      });
+      document.getElementById("e-open").onclick = async () => {
+        const r = await api("POST", "/audit/v1/evidence/open", {
+          ...scope(),
+          reference_key: document.getElementById("e-ref").value,
+        });
+        document.getElementById("e-out").textContent = JSON.stringify(
+          r.json,
+          null,
+          2,
+        );
+      };
+      document.getElementById("e-verify").onclick = async () => {
+        const r = await api("POST", "/audit/v1/evidence/verify", {
+          ...scope(),
+          reference_key: document.getElementById("e-ref").value,
+        });
+        document.getElementById("e-out").textContent = JSON.stringify(
+          r.json,
+          null,
+          2,
+        );
+      };
+      document.getElementById("g-chain").onclick = async () => {
+        const r = await api("POST", "/audit/v1/correlation/chain", {
+          ...scope(),
+          correlation_ref: document.getElementById("g-anchor").value,
+        });
+        document.getElementById("g-out").textContent = JSON.stringify(
+          r.json,
+          null,
+          2,
+        );
+      };
+      document.getElementById("g-graph").onclick = async () => {
+        const r = await api("POST", "/audit/v1/correlation/graph", {
+          ...scope(),
+          anchor: document.getElementById("g-anchor").value,
+          depth: parseInt(document.getElementById("g-depth").value, 10) || 1,
+        });
+        document.getElementById("g-out").textContent = JSON.stringify(
+          r.json,
+          null,
+          2,
+        );
+      };
+      document.getElementById("c-open").onclick = async () => {
+        const refs = document
+          .getElementById("c-refs")
+          .value.split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        await api("POST", "/audit/v1/cases", {
+          ...scope(),
+          title: document.getElementById("c-title").value,
+          evidence_refs: refs,
+          idempotency_key: document.getElementById("c-idem").value,
+        });
+        await loadCases();
+      };
+      document.getElementById("a-go").onclick = async () => {
+        await api("POST", "/audit/v1/cases/clarify", {
+          case_id: document.getElementById("a-case").value,
+          text: document.getElementById("a-text").value,
+          evidence_ref: null,
+          idempotency_key: document.getElementById("a-idem").value,
+        });
+        await loadCases();
+      };
+      document.getElementById("p-prep").onclick = async () => {
+        const act = document.getElementById("p-act");
+        const r = await api("POST", "/audit/v1/prepare", {
+          case_id: document.getElementById("p-case").value,
+          act: act.value,
+          right: act.options[act.selectedIndex].dataset.right,
+        });
+        TICKET = r.status === 200 ? r.json.ticket : null;
+        document.getElementById("p-ticket").textContent = TICKET
+          ? "ticket " + TICKET.ticket_id + " · expires " + TICKET.expires_at
+          : "no ticket";
+        updateWhy();
+      };
+      document.getElementById("p-commit").onclick = async () => {
+        if (!TICKET) {
+          log("no prepared ticket");
+          return;
+        }
+        const act = document.getElementById("p-act").value;
+        const idem = document.getElementById("p-idem").value,
+          text = document.getElementById("p-text").value;
+        if (act === "DISPOSE")
+          await api("POST", "/audit/v1/cases/dispose", {
+            ticket_id: TICKET.ticket_id,
+            disposition: document.getElementById("p-disp").value,
+            rationale: text,
+            idempotency_key: idem,
+          });
+        else if (act === "FINDING")
+          await api("POST", "/audit/v1/findings", {
+            ticket_id: TICKET.ticket_id,
+            severity: document.getElementById("p-sev").value,
+            summary: document.getElementById("c-title").value || "finding",
+            evidence_ref: text,
+            idempotency_key: idem,
+          });
+        else if (act === "ATTEST")
+          await api("POST", "/audit/v1/cases/attest", {
+            ticket_id: TICKET.ticket_id,
+            statement: text,
+            idempotency_key: idem,
+          });
+        else
+          await api("POST", "/audit/v1/exports", {
+            ticket_id: TICKET.ticket_id,
+            purpose: document.getElementById("p-purpose").value,
+            evidence_refs: text
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+            idempotency_key: idem,
+          });
+        TICKET = null;
+        document.getElementById("p-ticket").textContent = "ticket consumed";
+        updateWhy();
+        await loadCases();
+      };
+      async function loadCases() {
+        const s = scope();
+        const q =
+          "?region_id=" +
+          encodeURIComponent(s.region_id) +
+          "&org_id=" +
+          encodeURIComponent(s.org_id) +
+          "&unit_id=" +
+          encodeURIComponent(s.unit_id);
+        const r = await api("GET", "/audit/v1/cases" + q);
+        const tb = document.querySelector("#cases tbody");
+        tb.innerHTML = "";
+        const cases = r.status === 200 ? r.json.cases : [];
+        const opts = cases
+          .map(
+            (c) =>
+              '<option value="' +
+              c.case_id +
+              '">' +
+              c.case_id +
+              " — " +
+              c.title +
+              "</option>",
+          )
+          .join("");
+        document.getElementById("a-case").innerHTML = opts;
+        document.getElementById("p-case").innerHTML = opts;
+        for (const c of cases) {
+          const d =
+            c.dispositions
+              .map(
+                (x) =>
+                  badge(x.state) +
+                  ' <span class="why">' +
+                  x.decided_by +
+                  "</span>",
+              )
+              .join("<br>") || "—";
+          const f =
+            c.findings
+              .map(
+                (x) =>
+                  badge(x.severity) +
+                  " " +
+                  badge(x.state) +
+                  '<br><span class="why mono">' +
+                  x.evidence_reference.key +
+                  "</span>",
+              )
+              .join("<br>") || "—";
+          const cl = c.clarifications.length,
+            rl =
+              c.remediation_links
+                .map(
+                  (x) =>
+                    '<span class="mono">' +
+                    x.plane +
+                    ":" +
+                    x.remediation_ref +
+                    '</span> <span class="why">reference only</span>',
+                )
+                .join("<br>") || "—";
+          const at =
+            c.attestations
+              .map(
+                (x) =>
+                  badge(x.outcome) +
+                  ' <span class="why">' +
+                  x.attested_by +
+                  " · v" +
+                  x.attested_case_version +
+                  "</span>",
+              )
+              .join("<br>") || "—";
+          tb.innerHTML +=
+            "<tr><td><strong>" +
+            c.case_id +
+            '</strong><br><span class="why">' +
+            c.title +
+            '</span></td><td class="why">' +
+            c.scope +
+            "</td><td>" +
+            badge(c.state) +
+            ' <span class="why">v' +
+            c.version +
+            "</span></td><td>" +
+            d +
+            "</td><td>" +
+            f +
+            "</td><td>" +
+            cl +
+            "</td><td>" +
+            rl +
+            "</td><td>" +
+            at +
+            '</td><td class="why">' +
+            c.oversight_events.length +
+            " events · append-only</td></tr>";
+        }
+      }
+      load();
+    </script>
+  </body>
+</html>
