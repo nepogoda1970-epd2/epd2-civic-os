@@ -1,0 +1,91 @@
+name: INFRA-04 C2 Assemble Exact Verified Export
+
+on:
+  push:
+    branches: ["assemble/infra04-c2-final"]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: infra04-c2-final-assembly
+  cancel-in-progress: false
+
+jobs:
+  assemble:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout verified assembly source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Download exact successful rebind export
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: infra04-c2-final-rebind-33884752229
+          path: ${{ runner.temp }}/verified-export
+          github-token: ${{ github.token }}
+          repository: nepogoda1970-epd2/epd2-civic-os
+          run-id: 33884752229
+
+      - name: Verify exact export and assemble candidate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          E="$RUNNER_TEMP/verified-export"
+          cd "$E"
+          sha256sum -c SHA256SUMS.txt
+          grep -Fxq 'LIVE_MAIN=7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5' REBINDBINDING.txt
+          grep -Fxq 'LIVE_TREE=64447ec51a0f8e2cb4bbf8819ecafafd760c37fd' REBINDBINDING.txt
+          grep -Fxq 'LIVE_PCR_SHA256=4bce151f0c50c53a99c9e132e21cc5652e8eca6c331f540bc428ea188a384f0b' REBINDBINDING.txt
+          grep -Fxq 'LIVE_PCR_BLOB=e6bebf6051341d5577fa154a0a93da6e726679ba' REBINDBINDING.txt
+          grep -Fxq 'LIVE_PCR_MODIFIED=2026-09-04T10:32:54Z' REBINDBINDING.txt
+          grep -Fxq 'RECONCILIATION_MANIFEST_SHA256=0bf7e8d2b3b52a46d37e0d64a02aba36bc22f249329e37709423c5b342a95838' REBINDBINDING.txt
+          grep -Fxq 'INFRA04_SCHEMA_V2_REBIND:PASS' REBINDBINDING.txt
+          test "$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)" = 'f620c21eabd048b4ab3c3396cd5644cde96a9102'
+          cp -a "$GITHUB_WORKSPACE/handoff/INFRA/infra04-c2-transport" "$RUNNER_TEMP/transport"
+          cp -a "$GITHUB_WORKSPACE/handoff/INFRA/infra04-c2-overlay" "$RUNNER_TEMP/overlay"
+          test "$(git -C "$GITHUB_WORKSPACE" rev-parse 'HEAD:handoff/INFRA/infra04-c2-transport')" = 'b0211e3cca9ce0d16c41246acd0b883acbd434a1'
+          cd "$GITHUB_WORKSPACE"
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = '7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5'
+          test "$(git show -s --format=%T origin/main)" = '64447ec51a0f8e2cb4bbf8819ecafafd760c37fd'
+          git reset --hard origin/main
+          git clean -fdx
+          mkdir -p handoff/INFRA
+          cp -a "$RUNNER_TEMP/transport" handoff/INFRA/infra04-c2-transport
+          cp -a "$RUNNER_TEMP/overlay" handoff/INFRA/infra04-c2-overlay
+          while IFS= read -r -d '' src; do
+            rel="${src#$E/}"
+            case "$rel" in
+              SHA256SUMS.txt|REBINDBINDING.txt|.github/workflows/infra04-c2-authoritative.yml) continue ;;
+            esac
+            dst="handoff/INFRA/infra04-c2-overlay/$rel"
+            mkdir -p "$(dirname "$dst")"
+            cp "$src" "$dst"
+          done < <(find "$E" -type f -print0)
+          mkdir -p .github/workflows
+          cp "$E/.github/workflows/infra04-c2-authoritative.yml" .github/workflows/infra04-c2-authoritative.yml
+          test "$(sha256sum .github/workflows/infra04-c2-authoritative.yml | awk '{print $1}')" = '582c103cae9ff208cfa8762189ca15063beb9251343b392eeba976b15db82c1d'
+          ! grep -R -Fq '81c2d0db987536718b30242eeb168aecc21877ca' handoff/INFRA/infra04-c2-overlay .github/workflows/infra04-c2-authoritative.yml
+          ! grep -R -Fq '5460ccd9ec5929c2136926a4a2585f3fca52937e' handoff/INFRA/infra04-c2-overlay .github/workflows/infra04-c2-authoritative.yml
+          ! grep -R -Fq '21857ce3ef10ab8a5cdd6b176938e564dc614cad1518b36525336ca64b454b5e' handoff/INFRA/infra04-c2-overlay .github/workflows/infra04-c2-authoritative.yml
+          ! grep -R -Fq '663b583a58453744e193cf468b7d6f59ff009d87' handoff/INFRA/infra04-c2-overlay .github/workflows/infra04-c2-authoritative.yml
+          echo 'INFRA04_C2_EXACT_EXPORT_ASSEMBLY:PASS'
+
+      - name: Commit exact candidate source and move candidate ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'EPD2 INFRA04 exact-export assembler'
+          git config user.email 'infra04-assembly@invalid.local'
+          git add -A
+          git commit -m 'ci(infra04): bind C2 candidate to OPS-03 accepted canonical main'
+          test "$(git rev-parse HEAD^)" = '7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5'
+          echo "INFRA04_C2_CANDIDATE_SOURCE_COMMIT=$(git rev-parse HEAD)"
+          echo "INFRA04_C2_CANDIDATE_SOURCE_TREE=$(git show -s --format=%T HEAD)"
+          git push --force origin HEAD:candidate/infra04-c2-canonical
+          echo 'INFRA04_C2_CANDIDATE_REF:PASS'
