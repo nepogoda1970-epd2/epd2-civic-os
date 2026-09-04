@@ -5,7 +5,7 @@
 **Self-acceptance:** `false` — acceptance is external, and this stage does
 not record one for itself.
 
-**Candidate revision:** `C2` — freshness/reseal correction over live `main@7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5`. C2 changes no INFRA-04 runtime invariant: it preserves the accepted CTRL-05 canonical overlay, removes stale/nonexistent `__pycache__` entries from the changed-file lineage, recomputes every changed-file digest after final evidence generation, and requires a complete independent rerun before any acceptance.
+**Candidate revision:** `C2` — freshness/reseal correction over live `main@7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5`. C2 changes no INFRA-04 runtime invariant: it preserves the accepted CTRL-05 canonical overlay, removes stale/nonexistent `__pycache__` entries from the changed-file lineage, recomputes every changed-file digest after final evidence generation, corrects inherited acceptance-test hygiene/profile orchestration without weakening any gate, refreshes exactly the ten stale FRONT-01 mobile visual baselines before freeze from a repeatable deterministic CI render whose exact bytes were independently reproduced in run `33926395618`, and requires a complete independent rerun before any acceptance. The voting-side corrections change only test/evidence hygiene: no voting protocol, cryptography, eligibility, ballot, tally, unlinkability or runtime behavior changes. BSI readiness rows `M-24`, `M-25` and `M-28` are touched only as evidence/test-discipline improvements; no new certification blocker is introduced.
 
 INFRA-04 answers one question about the accepted preview runtime: *when
 something breaks, does the system stay honest?* It adds no new capability

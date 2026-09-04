@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -52,6 +53,16 @@ def classify(path: str, old: dict[str, str]) -> str:
 
 
 def main() -> int:
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/infra04/reconcile_inherited_acceptance_baseline.py"),
+            "--root",
+            str(ROOT),
+        ],
+        check=True,
+        timeout=300,
+    )
     subprocess.run(
         ["git", "-C", str(ROOT), "fetch", "--no-tags", "origin", "main"], check=True, timeout=300
     )
