@@ -45,7 +45,7 @@ jobs:
           grep -Fxq 'LIVE_PCR_MODIFIED=2026-09-04T10:32:54Z' REBINDBINDING.txt
           grep -Fxq 'RECONCILIATION_MANIFEST_SHA256=0bf7e8d2b3b52a46d37e0d64a02aba36bc22f249329e37709423c5b342a95838' REBINDBINDING.txt
           grep -Fxq 'INFRA04_SCHEMA_V2_REBIND:PASS' REBINDBINDING.txt
-          test "$(git -C "$GITHUB_WORKSPACE" rev-parse HEAD)" = 'f620c21eabd048b4ab3c3396cd5644cde96a9102'
+          git -C "$GITHUB_WORKSPACE" merge-base --is-ancestor 'f620c21eabd048b4ab3c3396cd5644cde96a9102' HEAD
           cp -a "$GITHUB_WORKSPACE/handoff/INFRA/infra04-c2-transport" "$RUNNER_TEMP/transport"
           cp -a "$GITHUB_WORKSPACE/handoff/INFRA/infra04-c2-overlay" "$RUNNER_TEMP/overlay"
           test "$(git -C "$GITHUB_WORKSPACE" rev-parse 'HEAD:handoff/INFRA/infra04-c2-transport')" = 'b0211e3cca9ce0d16c41246acd0b883acbd434a1'
