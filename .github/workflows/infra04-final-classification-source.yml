@@ -1,0 +1,30 @@
+name: INFRA-04 final classification source
+on:
+  push:
+    branches: ["diagnostic/infra04-final-bounded-classification"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 5f619b76f9bc6ef81e076f785d6f5cb307965133
+          fetch-depth: 0
+      - name: Materialize exact C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show 'origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip' > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          tar -czf /tmp/acceptance-source.tgz scripts/acceptance
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-legacy-acceptance-source-${{ github.run_id }}
+          path: /tmp/acceptance-source.tgz
+          retention-days: 1
