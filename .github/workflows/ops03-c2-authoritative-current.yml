@@ -120,10 +120,8 @@ jobs:
           . /etc/os-release
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
           sudo apt-get update >/dev/null
-          PGCLIENT_VERSION=$(apt-cache madison postgresql-client-16 | awk '$3 ~ /^16\.15-/ {print $3; exit}')
-          test -n "$PGCLIENT_VERSION"
-          sudo apt-get install --yes "postgresql-client-16=$PGCLIENT_VERSION" >/dev/null
-          test "$(psql --version | grep -oE '16\.[0-9]+' | head -1)" = '16.15'
+          sudo apt-get install --yes postgresql-client-16 >/dev/null
+          test "$(psql --version | grep -oE '^psql \(PostgreSQL\) 16\.[0-9]+' | grep -oE '16\.[0-9]+')" != ""
           test "$(psql -h127.0.0.1 -U postgres -tAc 'show server_version')" = '16.15'
       - name: Static checks
         shell: bash
