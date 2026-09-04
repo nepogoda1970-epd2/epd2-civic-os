@@ -1,0 +1,95 @@
+{
+  "schema": "epd2.ops03.authoritative-acceptance-result/1",
+  "stage": "OPS-03 — Operational Qualification, Alerting, Capacity & Recovery Rehearsal",
+  "verdict": "PASS",
+  "decision_scope": "BOUNDED_OPS03_STAGE_ONLY",
+  "candidate": {
+    "filename": "EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip",
+    "sha256": "34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3",
+    "size_bytes": 16901907,
+    "freeze_file_count": 1583,
+    "freeze_tree_digest": "94c4a57677835cf34a123e6e977e6f1dc18995509b5a1980e6037664d51d2d91",
+    "candidate_self_state": "CANDIDATE_NOT_ACCEPTED",
+    "supersedes_candidate_sha256": "d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072"
+  },
+  "authoritative_run": {
+    "workflow": ".github/workflows/ops03-c3-final.yml",
+    "workflow_commit": "91c2fa47fa4c96929512546966fd4fe5a7daf5f5",
+    "run_id": 33863100377,
+    "build_job_id": 100991780597,
+    "authoritative_job_id": 100992395752,
+    "conclusion": "success",
+    "terminal_result": "OPS03_C3_AUTHORITATIVE_RESULT:PASS:34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3:16901907:9932940620:9932998186"
+  },
+  "artifacts": {
+    "candidate": {
+      "id": 9932940620,
+      "name": "ops03-c3-final-candidate-33863100377",
+      "artifact_zip_size_bytes": 16720621,
+      "digest": "sha256:275d00ecf2eec56f8ad4387d5f33b1e8d37f47fd0ddb5cfe5e27a3f76f891d82"
+    },
+    "build_evidence": {
+      "id": 9932941377,
+      "name": "ops03-c3-build-evidence-33863100377",
+      "digest": "sha256:da9c602236174a356191131d4fc48737b9abc4bde48068d0501e1da0c486d110"
+    },
+    "authoritative_evidence": {
+      "id": 9932998186,
+      "name": "ops03-c3-authoritative-evidence-33863100377",
+      "digest": "sha256:8312b0ebabd5ec2de95ba0426f3b494ac4edd292f720508a5eefa2c562a43a96"
+    }
+  },
+  "environment": {
+    "runner": "ubuntu-24.04",
+    "postgresql": "16.15",
+    "python": "3.12.14",
+    "uv": "0.6.14",
+    "locked_uv_sync": true
+  },
+  "quality": {
+    "ruff_check": "PASS",
+    "mypy": "PASS",
+    "unit_runtime_tests": "66/66 PASS"
+  },
+  "qualification": {
+    "gates_total": 50,
+    "gates_passed": 50,
+    "gates_failed": [],
+    "environment_blocked": [],
+    "mutation_and_anti_cheat_gate": "G48 PASS",
+    "same_governed_source_bytes_after_execution": true,
+    "preview_minimum_ops_owned_prerequisites": "15/15 EVIDENCED",
+    "terminal_marker": "OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json"
+  },
+  "predecessor_binding": {
+    "ops02_candidate_sha256": "ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125",
+    "ops02_candidate_size_bytes": 16632939,
+    "ops02_authoritative_run": 33610516469,
+    "ops02_authoritative_job": 100184288996,
+    "binding": "EXACT_ACCEPTED_BYTES_AND_CANONICAL_ACCEPTANCE",
+    "historical_ops02_harness_replayed": false,
+    "reason": "The accepted OPS-02 C3 historical G04 dependency-state assumption predates later API-layer closure; OPS-03 C3 binds the exact independently accepted OPS-02 bytes and authoritative acceptance instead of reinterpreting that historical dependency assumption as a regression."
+  },
+  "api06_binding": {
+    "candidate_sha256": "3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c",
+    "candidate_size_bytes": 44012716,
+    "authoritative_run": 33629147572,
+    "authoritative_job": 100243984921,
+    "api_layer_state": "CLOSED"
+  },
+  "live_reconciliation": {
+    "authoritative_event_head": "91c2fa47fa4c96929512546966fd4fe5a7daf5f5",
+    "contemporaneous_main_after_run_start": "0b062d876ca181329f40027dc0101db8d0829705",
+    "delta_classification": "WORKFLOW_ONLY_VERIFIER_FRESHNESS_CHANGE / NO_OPS03_RUNTIME_CONFLICT"
+  },
+  "nonclaims": [
+    "overall OPS-layer closure",
+    "System Trial Preview opening",
+    "production readiness",
+    "legal activation",
+    "BSI certification",
+    "Common Criteria certification",
+    "EAL4 certification",
+    "final security acceptance"
+  ]
+}
