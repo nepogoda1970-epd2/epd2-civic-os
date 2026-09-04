@@ -44,8 +44,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/ops03-original"
-          cp scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py "$RUNNER_TEMP/ops03-original/"
+          mkdir -p "$RUNNER_TEMP/ops03-original/.github/workflows" "$RUNNER_TEMP/ops03-original/scripts/infra02" "$RUNNER_TEMP/ops03-original/scripts"
+          cp scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py "$RUNNER_TEMP/ops03-original/scripts/"
+          cp .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml "$RUNNER_TEMP/ops03-original/.github/workflows/"
+          cp scripts/infra02/supply_chain_policy.json "$RUNNER_TEMP/ops03-original/scripts/infra02/"
           uv run ruff format scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py
           python3 - <<'PY'
           from pathlib import Path
@@ -58,7 +60,7 @@ jobs:
           python3 - <<'PY'
           import ast, os
           from pathlib import Path
-          temp = Path(os.environ['RUNNER_TEMP'])/'ops03-original'
+          temp = Path(os.environ['RUNNER_TEMP'])/'ops03-original'/'scripts'
           def normalized_original(name: str) -> str:
               tree = ast.parse((temp/name).read_text())
               if name == 'ops03_c2_authoritative_runner.py':
@@ -75,12 +77,28 @@ jobs:
               return ast.dump(tree, include_attributes=False)
           for name in ['ops03_c2_authoritative_runner.py','ops03_c3_patch_from_c2.py']:
               after = ast.dump(ast.parse((Path('scripts')/name).read_text()), include_attributes=False)
-              before = normalized_original(name)
-              if before != after:
+              if normalized_original(name) != after:
                   raise SystemExit(f'OPS03_NORMALIZED_AST_DRIFT:{name}')
           print('OPS03_NORMALIZED_AST_EQUIVALENCE:PASS:2')
           PY
-          git diff --check -- scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py
+          npx prettier --write .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml scripts/infra02/supply_chain_policy.json
+          python3 - <<'PY'
+          import json, os, yaml
+          from pathlib import Path
+          root = Path('.')
+          before = Path(os.environ['RUNNER_TEMP'])/'ops03-original'
+          for name in ['ops03-c3-authoritative-build.yml','ops03-c3-final.yml','ops03-c3-v2.yml']:
+              a = yaml.safe_load((before/'.github/workflows'/name).read_text())
+              b = yaml.safe_load((root/'.github/workflows'/name).read_text())
+              if a != b:
+                  raise SystemExit(f'OPS03_YAML_SEMANTIC_DRIFT:{name}')
+          a = json.loads((before/'scripts/infra02/supply_chain_policy.json').read_text())
+          b = json.loads((root/'scripts/infra02/supply_chain_policy.json').read_text())
+          if a != b:
+              raise SystemExit('INFRA02_POLICY_JSON_SEMANTIC_DRIFT')
+          print('OPS03_PRETTIER_SEMANTIC_EQUIVALENCE:PASS:4')
+          PY
+          git diff --check -- scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml scripts/infra02/supply_chain_policy.json
       - name: Strict verification
         shell: bash
         run: |
@@ -107,7 +125,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          FILES=(docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json docs/infra/INFRA-04/INFRA-04-KNOWN-LIMITATIONS.md docs/infra/INFRA-04/INFRA-04-STAGE-CONTRACT.md docs/infra/INFRA-04/INFRA04_DEVELOPER_REPORT.md validation/infra04/verification-summary.json validation/infra04/main-binding.json validation/infra04/verification-transcript.txt scripts/infra02/supply_chain_policy.json scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py)
+          FILES=(docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json docs/infra/INFRA-04/INFRA-04-KNOWN-LIMITATIONS.md docs/infra/INFRA-04/INFRA-04-STAGE-CONTRACT.md docs/infra/INFRA-04/INFRA04_DEVELOPER_REPORT.md validation/infra04/verification-summary.json validation/infra04/main-binding.json validation/infra04/verification-transcript.txt scripts/infra02/supply_chain_policy.json scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml)
           for stale in 81c2d0db987536718b30242eeb168aecc21877ca 5460ccd9ec5929c2136926a4a2585f3fca52937e 21857ce3ef10ab8a5cdd6b176938e564dc614cad1518b36525336ca64b454b5e 663b583a58453744e193cf468b7d6f59ff009d87; do
             for f in "${FILES[@]}"; do [ -f "$f" ] || continue; grep -Fq "$stale" "$f" && { echo "STALE_AUTHORITY:$stale:$f"; exit 1; } || true; done
           done
