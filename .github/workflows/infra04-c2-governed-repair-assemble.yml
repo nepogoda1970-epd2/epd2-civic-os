@@ -1,0 +1,130 @@
+name: INFRA-04 C2 governed functional repair assembler
+
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-governed-failures"]
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      EXPECTED_CANDIDATE_BASE: 2c4919f950d4e118a49d9a1057457b97ac5208b7
+      EXPECTED_MAIN: 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+      INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+      INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+      INFRA02_SIZE: "15980332"
+      STAGING_BRANCH: repair/infra04-c2-governed-functional-fix
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Verify exact authority and materialize governed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main candidate/infra04-c2-canonical handoff/infra
+          test "$(git rev-parse origin/main)" = "$EXPECTED_MAIN"
+          test "$(git rev-parse origin/candidate/infra04-c2-canonical)" = "$EXPECTED_CANDIDATE_BASE"
+          git show "origin/main:docs/ops/OPS-03/OPS03_C3_ACCEPTANCE_RECORD.json" > /tmp/ops03.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/ops03.json', encoding='utf-8'))
+          assert d['decision'] == 'ACCEPTED / CLOSED'
+          assert d['overall_ops_layer'] == 'OPEN'
+          assert d['system_trial_preview'] == 'NOT_OPENED'
+          PY
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          test "$(stat -c %s /tmp/infra02.zip)" = "$INFRA02_SIZE"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+      - name: Apply only the two proven functional corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('scripts/infra04/governance.py')
+          s=p.read_text()
+          needle='    "OPS-02": "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json",\n'
+          assert s.count(needle) == 1
+          s=s.replace(needle, needle+'    "OPS-03": "docs/ops/OPS-03/OPS03_C3_ACCEPTANCE_RECORD.json",\n')
+          old='UNACCEPTED_STAGES = ("OPS-03", "INFRA-04", "INFRA-05", "INFRA-06", "INFRA-07", "SEC-01")'
+          new='UNACCEPTED_STAGES = ("INFRA-04", "INFRA-05", "INFRA-06", "INFRA-07", "SEC-01")'
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('scripts/infra04/gates.py')
+          s=p.read_text()
+          old='''                "canonical target actually records. OPS-03 is qualification-"\n                "eligible, not accepted, and INFRA-04 consumes nothing from it.",'''
+          new='''                "canonical target actually records. OPS-03 is ACCEPTED / CLOSED "\n                "by its canonical acceptance record; INFRA-04 consumes nothing "\n                "from it and does not infer OPS-layer closure.",'''
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          old='''            "no unaccepted OPS/CTRL/INFRA dependency is claimed accepted; OPS-03 is "\n            "recorded as qualification-eligible only",'''
+          new='''            "no unaccepted OPS/CTRL/INFRA dependency is claimed accepted; OPS-03 "\n            "acceptance is bound to its canonical record without implying OPS-layer closure",'''
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('scripts/infra04/resilient_service.py')
+          s=p.read_text()
+          assert 'import fcntl\n' not in s
+          assert s.count('import argparse\nimport hashlib\n') == 1
+          s=s.replace('import argparse\nimport hashlib\n','import argparse\nimport fcntl\nimport hashlib\n')
+          old='''    def append(self, event: str, payload: dict[str, Any]) -> dict[str, Any]:\n        with self._lock:\n            entry = {\n                "event": event,\n                "recorded_at": round(time.time(), 3),\n                "previous": self._tail_digest(),\n                "payload": payload,\n            }\n            line = json.dumps(entry, sort_keys=True)\n            with self.path.open("a", encoding="utf-8") as handle:\n                handle.write(_scrub(line) + "\\n")\n            return entry\n'''
+          new='''    def append(self, event: str, payload: dict[str, Any]) -> dict[str, Any]:\n        # Several resilient-service processes share this ledger. A threading\n        # lock protects only one process, so the tail read and successor append\n        # must also be serialized at the file level. Otherwise two processes\n        # can observe the same tail and both append a successor, breaking I9.\n        with self._lock:\n            with self.path.open("a+", encoding="utf-8") as handle:\n                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)\n                try:\n                    handle.seek(0)\n                    previous = "0" * 64\n                    for line in handle.read().splitlines():\n                        if not line.strip():\n                            continue\n                        previous = hashlib.sha256(line.encode()).hexdigest()\n                    entry = {\n                        "event": event,\n                        "recorded_at": round(time.time(), 3),\n                        "previous": previous,\n                        "payload": payload,\n                    }\n                    line = _scrub(json.dumps(entry, sort_keys=True))\n                    handle.seek(0, 2)\n                    handle.write(line + "\\n")\n                    handle.flush()\n                    os.fsync(handle.fileno())\n                finally:\n                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)\n            return entry\n'''
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('tests/repository/test_infra04_units.py')
+          s=p.read_text()
+          assert s.count('import hashlib\nimport json\n') == 1
+          s=s.replace('import hashlib\nimport json\n','import fcntl\nimport hashlib\nimport json\nimport multiprocessing\n')
+          marker='REPO_ROOT = Path(__file__).resolve().parents[2]\n'
+          helper='''\n\ndef _append_ledger_from_child(path: str, done: Any) -> None:\n    LedgerChain(Path(path)).append("child-event", {"source": "child"})\n    done.set()\n'''
+          assert s.count(marker) == 1
+          s=s.replace(marker, marker+helper)
+          old='''    ledger.append("event", {"index": 5})\n    assert check_ledger_append_only(before, snapshot(ledger), "ledger") == []\n'''
+          new='''    ledger.append("event", {"index": 5})\n    assert check_ledger_append_only(before, snapshot(ledger), "ledger") == []\n\n    # Several service processes share this file. The child must wait while an\n    # external process-level lock is held; a threading.Lock alone cannot do so.\n    context = multiprocessing.get_context("fork")\n    done = context.Event()\n    process = context.Process(\n        target=_append_ledger_from_child, args=(str(ledger.path), done)\n    )\n    with ledger.path.open("a+", encoding="utf-8") as handle:\n        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)\n        try:\n            process.start()\n            assert not done.wait(timeout=0.5)\n        finally:\n            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)\n    assert done.wait(timeout=5.0)\n    process.join(timeout=5.0)\n    assert process.exitcode == 0\n    assert ledger.verify() == []\n'''
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          old='''    assert "OPS-03" in governance.UNACCEPTED_STAGES\n    assert "INFRA-04" in governance.UNACCEPTED_STAGES\n'''
+          new='''    assert "OPS-03" not in governance.UNACCEPTED_STAGES\n    assert governance.DEPENDENCY_RECORDS["OPS-03"] == (\n        "docs/ops/OPS-03/OPS03_C3_ACCEPTANCE_RECORD.json"\n    )\n    assert "INFRA-04" in governance.UNACCEPTED_STAGES\n'''
+          assert s.count(old) == 1
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+          python3 -m py_compile scripts/infra04/governance.py scripts/infra04/gates.py scripts/infra04/resilient_service.py tests/repository/test_infra04_units.py
+          python3 -m pip install -q ruff==0.15.22
+          ruff format scripts/infra04/governance.py scripts/infra04/gates.py scripts/infra04/resilient_service.py tests/repository/test_infra04_units.py
+          ruff check scripts/infra04/governance.py scripts/infra04/gates.py scripts/infra04/resilient_service.py tests/repository/test_infra04_units.py
+      - name: Assemble one exact candidate-child commit on staging ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/fix/scripts/infra04 /tmp/fix/tests/repository
+          cp scripts/infra04/governance.py /tmp/fix/scripts/infra04/
+          cp scripts/infra04/gates.py /tmp/fix/scripts/infra04/
+          cp scripts/infra04/resilient_service.py /tmp/fix/scripts/infra04/
+          cp tests/repository/test_infra04_units.py /tmp/fix/tests/repository/
+          git reset --hard "$EXPECTED_CANDIDATE_BASE"
+          git clean -fdx
+          git checkout -B "$STAGING_BRANCH" "$EXPECTED_CANDIDATE_BASE"
+          mkdir -p handoff/INFRA/infra04-c2-overlay/scripts/infra04 handoff/INFRA/infra04-c2-overlay/tests/repository
+          cp /tmp/fix/scripts/infra04/*.py handoff/INFRA/infra04-c2-overlay/scripts/infra04/
+          cp /tmp/fix/tests/repository/test_infra04_units.py handoff/INFRA/infra04-c2-overlay/tests/repository/
+          git add handoff/INFRA/infra04-c2-overlay/scripts/infra04/governance.py handoff/INFRA/infra04-c2-overlay/scripts/infra04/gates.py handoff/INFRA/infra04-c2-overlay/scripts/infra04/resilient_service.py handoff/INFRA/infra04-c2-overlay/tests/repository/test_infra04_units.py
+          test "$(git diff --cached --name-only | wc -l)" -eq 4
+          git config user.name "EPD2 INFRA04 governed repair assembler"
+          git config user.email "infra04-repair@invalid.local"
+          git commit -m "fix(infra04): reconcile OPS-03 and serialize audit ledger"
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_CANDIDATE_BASE"
+          git push --force origin "HEAD:refs/heads/$STAGING_BRANCH"
+          echo "INFRA04_C2_GOVERNED_REPAIR_STAGING:PASS:$(git rev-parse HEAD):$(git rev-parse HEAD^{tree})"
