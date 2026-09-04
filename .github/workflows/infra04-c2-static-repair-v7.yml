@@ -82,7 +82,7 @@ jobs:
           print('OPS03_NORMALIZED_AST_EQUIVALENCE:PASS:2')
           PY
           npx prettier --write .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml scripts/infra02/supply_chain_policy.json
-          python3 - <<'PY'
+          uv run python - <<'PY'
           import json, os, yaml
           from pathlib import Path
           root = Path('.')
