@@ -1,0 +1,50 @@
+name: INFRA-04 C2 governed failure source diagnostic
+
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-governed-failures"]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+      INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+      INFRA02_SIZE: "15980332"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Materialize exact governed C2 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          test "$(stat -c %s /tmp/infra02.zip)" = "$INFRA02_SIZE"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          mkdir -p /tmp/diag
+          grep -RIl --exclude-dir=.git -E 'I04_UNACCEPTED_DEPENDENCY_CLAIMED_ACCEPTED|I04_AUDIT_CHAIN|rollback|audit_chain|audit chain' scripts services tests validation docs/infra/INFRA-04 2>/dev/null | sort -u > /tmp/diag/matches.txt || true
+          while IFS= read -r f; do
+            test -f "$f" || continue
+            mkdir -p "/tmp/diag/$(dirname "$f")"
+            cp "$f" "/tmp/diag/$f"
+          done < /tmp/diag/matches.txt
+          cp -a scripts/infra04 /tmp/diag/scripts/ 2>/dev/null || true
+          cp tests/repository/test_infra04_units.py /tmp/diag/ 2>/dev/null || true
+          cp tests/repository/test_infra04_mutation_suite.py /tmp/diag/ 2>/dev/null || true
+          echo "INFRA04_C2_DIAGNOSTIC_CAPTURE:PASS"
+      - name: Upload governed failure sources
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-c2-governed-failure-sources-${{ github.run_id }}
+          path: /tmp/diag
+          if-no-files-found: error
+          retention-days: 1
