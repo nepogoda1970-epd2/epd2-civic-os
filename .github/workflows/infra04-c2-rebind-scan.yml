@@ -1,0 +1,39 @@
+name: INFRA-04 C2 Rebind Scan
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-rebind-scan"]
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0}
+      - name: Materialize and scan stale bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra main
+          git show origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          rm -f .github/workflows/infra04-c2-authoritative.yml .github/workflows/infra04-c2-rebind-scan.yml
+          echo '--- live main ---'
+          git rev-parse origin/main
+          git show -s --format='%T %cI' origin/main
+          git show origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md > /tmp/pcr.md
+          printf 'PCR_SHA256='; sha256sum /tmp/pcr.md | awk '{print $1}'
+          printf 'PCR_BLOB='; git rev-parse origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          echo '--- stale old commit refs ---'
+          grep -RIl --exclude-dir=.git --exclude='*.zip' '81c2d0db987536718b30242eeb168aecc21877ca' . || true
+          echo '--- stale old tree refs ---'
+          grep -RIl --exclude-dir=.git --exclude='*.zip' '5460ccd9ec5929c2136926a4a2585f3fca52937e' . || true
+          echo '--- stale old PCR sha refs ---'
+          grep -RIl --exclude-dir=.git --exclude='*.zip' '21857ce3ef10ab8a5cdd6b176938e564dc614cad1518b36525336ca64b454b5e' . || true
+          echo '--- stale old PCR blob refs ---'
+          grep -RIl --exclude-dir=.git --exclude='*.zip' '663b583a58453744e193cf468b7d6f59ff009d87' . || true
+          echo '--- ops03 reconciliation strings ---'
+          grep -RIn --exclude-dir=.git --exclude='*.zip' -E 'ops03-not-accepted|OPS-03 QUALIFICATION ELIGIBLE|OPS-03 ACCEPTED / CLOSED' docs scripts 2>/dev/null || true
