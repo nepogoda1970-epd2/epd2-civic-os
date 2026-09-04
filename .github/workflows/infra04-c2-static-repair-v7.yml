@@ -109,7 +109,7 @@ jobs:
           uv run ruff check .
           make typecheck
           npm run format:check
-          uv run pytest -q tests/repository/test_infra01_units.py tests/repository/test_infra01_mutation_suite.py tests/repository/test_infra02_units.py tests/repository/test_infra02_mutation_suite.py tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py
+          uv run pytest -q -p no:randomly tests/repository/test_infra01_harness_units.py tests/repository/test_infra01_mutation_suite.py tests/repository/test_infra02_units.py tests/repository/test_infra02_mutation_suite.py tests/repository/test_infra03_units.py tests/repository/test_infra03_mutation_suite.py
           uv run python - <<'PY'
           from pathlib import Path
           from scripts.infra02.ci_policy import check_ci_policy
@@ -119,7 +119,7 @@ jobs:
           raise SystemExit(1 if findings else 0)
           PY
           uv run python -m scripts.acceptance infra04.verify-reconciliation --reconciliation docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json --pcr docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
-          uv run pytest -q tests/repository/test_infra04_units.py tests/repository/test_infra04_mutation_suite.py
+          uv run pytest -q -p no:randomly tests/repository/test_infra04_units.py tests/repository/test_infra04_mutation_suite.py
           echo INFRA04_FINAL_REBIND_VERIFY:PASS
       - name: Scan stale bindings and export exact verified bytes
         shell: bash
