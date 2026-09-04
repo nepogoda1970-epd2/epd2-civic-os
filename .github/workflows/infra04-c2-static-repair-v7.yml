@@ -11,13 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {fetch-depth: 0}
-      - name: Reconstruct exact C2 on live main and rebind
+      - name: Reconstruct exact C2 on live main and schema-v2 rebind
         shell: bash
         run: |
           set -euo pipefail
           cp -a handoff/INFRA/infra04-c2-transport "$RUNNER_TEMP/transport"
           cp -a handoff/INFRA/infra04-c2-overlay "$RUNNER_TEMP/overlay"
-          cp handoff/INFRA/infra04-c2-final-rebind-v3.py "$RUNNER_TEMP/rebind.py"
+          cp handoff/INFRA/infra04-c2-final-rebind-v4.py "$RUNNER_TEMP/infra04-c2-final-rebind-v4.py"
+          cp handoff/INFRA/test_infra04_final_rebind_schema_v2.py "$RUNNER_TEMP/test_infra04_final_rebind_schema_v2.py"
           git fetch --no-tags origin main handoff/infra
           git show origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip > "$RUNNER_TEMP/infra02.zip"
           test "$(sha256sum "$RUNNER_TEMP/infra02.zip" | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
@@ -25,7 +26,7 @@ jobs:
           python3 "$RUNNER_TEMP/transport/apply.py" --root "$GITHUB_WORKSPACE" --predecessor "$RUNNER_TEMP/infra02.zip"
           cp -a "$RUNNER_TEMP/overlay/." "$GITHUB_WORKSPACE"/
           rm -f SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
-          python3 "$RUNNER_TEMP/rebind.py" | tee "$RUNNER_TEMP/rebind-values.txt"
+          python3 "$RUNNER_TEMP/infra04-c2-final-rebind-v4.py" | tee "$RUNNER_TEMP/rebind-values.txt"
           LIVE_MAIN="$(git rev-parse origin/main)"
           echo "LIVE_MAIN=$LIVE_MAIN" >> "$GITHUB_ENV"
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
@@ -40,6 +41,11 @@ jobs:
           set -euo pipefail
           uv sync --all-groups --frozen
           npm ci --no-audit --no-fund
+      - name: Schema-v2 final-rebind regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run pytest -q "$RUNNER_TEMP/test_infra04_final_rebind_schema_v2.py"
       - name: Candidate-only normalize inherited OPS-03 additions
         shell: bash
         run: |
@@ -125,11 +131,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          FILES=(docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json docs/infra/INFRA-04/INFRA-04-KNOWN-LIMITATIONS.md docs/infra/INFRA-04/INFRA-04-STAGE-CONTRACT.md docs/infra/INFRA-04/INFRA04_DEVELOPER_REPORT.md validation/infra04/verification-summary.json validation/infra04/main-binding.json validation/infra04/verification-transcript.txt scripts/infra02/supply_chain_policy.json scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml)
+          FILES=(docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json docs/infra/INFRA-04/INFRA-04-KNOWN-LIMITATIONS.md docs/infra/INFRA-04/INFRA-04-STAGE-CONTRACT.md docs/infra/INFRA-04/INFRA04_DEVELOPER_REPORT.md validation/infra04/verification-summary.json validation/infra04/main-binding.json validation/infra04/verification-transcript.txt scripts/infra02/supply_chain_policy.json scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py .github/workflows/ops03-c3-authoritative-build.yml .github/workflows/ops03-c3-final.yml .github/workflows/ops03-c3-v2.yml .github/workflows/infra04-c2-authoritative.yml)
           for stale in 81c2d0db987536718b30242eeb168aecc21877ca 5460ccd9ec5929c2136926a4a2585f3fca52937e 21857ce3ef10ab8a5cdd6b176938e564dc614cad1518b36525336ca64b454b5e 663b583a58453744e193cf468b7d6f59ff009d87; do
             for f in "${FILES[@]}"; do [ -f "$f" ] || continue; grep -Fq "$stale" "$f" && { echo "STALE_AUTHORITY:$stale:$f"; exit 1; } || true; done
           done
           grep -Fq 'OPS-03 ACCEPTED / CLOSED' docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
+          grep -Fq 'OPS LAYER OPEN' docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
+          grep -Fq 'System Trial Preview is NOT OPENED' docs/infra/INFRA-01/INFRA01_GOVERNANCE_RECONCILIATION.json
           OUT="$RUNNER_TEMP/rebind-export"
           for f in "${FILES[@]}"; do [ -f "$f" ] || continue; mkdir -p "$OUT/$(dirname "$f")"; cp "$f" "$OUT/$f"; done
           cp "$RUNNER_TEMP/rebind-values.txt" "$OUT/REBINDBINDING.txt"
