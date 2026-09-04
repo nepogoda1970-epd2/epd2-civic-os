@@ -1,0 +1,180 @@
+name: INFRA-04 final A/B differential
+on:
+  push:
+    branches: ["diagnostic/infra04-final-ab-differential"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  classify:
+    name: classify-${{ matrix.kind }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: baseline
+            ref: 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+          - kind: candidate
+            ref: 5f619b76f9bc6ef81e076f785d6f5cb307965133
+    steps:
+      - name: Checkout exact target
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ matrix.ref }}
+          path: target
+          fetch-depth: 0
+
+      - name: Checkout exact C2 carrier for legacy checker
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: 5f619b76f9bc6ef81e076f785d6f5cb307965133
+          path: toolsrc
+          fetch-depth: 0
+
+      - name: Materialize exact legacy checker externally
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/toolsrc"
+          git fetch --no-tags origin handoff/infra
+          git show 'origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip' > /tmp/infra02-tool.zip
+          test "$(sha256sum /tmp/infra02-tool.zip | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$PWD" --predecessor /tmp/infra02-tool.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$PWD"/
+          rm -rf /tmp/acceptance-tools
+          mkdir -p /tmp/acceptance-tools/scripts
+          cp -a scripts/acceptance /tmp/acceptance-tools/scripts/
+          cat > /tmp/acceptance-tools/scripts/__init__.py <<'PY'
+          from pkgutil import extend_path
+          __path__ = extend_path(__path__, __name__)
+          PY
+
+      - name: Materialize exact C2 source when candidate
+        if: matrix.kind == 'candidate'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/target"
+          git fetch --no-tags origin handoff/infra
+          git show 'origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip' > /tmp/infra02-candidate.zip
+          test "$(sha256sum /tmp/infra02-candidate.zip | awk '{print $1}')" = d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$PWD" --predecessor /tmp/infra02-candidate.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$PWD"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          git config user.name 'EPD2 INFRA04 differential'
+          git config user.email 'infra04-differential@invalid.local'
+          git add -A
+          git commit -qm 'diagnostic exact materialized C2 source'
+          test -z "$(git status --porcelain)"
+          echo "CANDIDATE_MATERIALIZED_COMMIT=$(git rev-parse HEAD)"
+
+      - name: Assert baseline exactness
+        if: matrix.kind == 'baseline'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/target"
+          test "$(git rev-parse HEAD)" = 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+          test -z "$(git status --porcelain)"
+          echo "BASELINE_EXACT_MAIN:PASS:$(git rev-parse HEAD):$(git rev-parse HEAD^{tree})"
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with:
+          enable-cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+
+      - name: Install PostgreSQL 16 and frozen dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
+          cd "$GITHUB_WORKSPACE/target"
+          uv sync --all-groups --frozen
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Root check bootstrap.identity
+        id: identity
+        shell: bash
+        run: |
+          set +e
+          ROOT="$GITHUB_WORKSPACE/target"
+          ROOT="$ROOT" PYTHONPATH="/tmp/acceptance-tools:$ROOT" python - <<'PY' | tee "$GITHUB_WORKSPACE/identity-${{ matrix.kind }}.txt"
+          import json, os
+          from pathlib import Path
+          from scripts.acceptance.identity import collect_identity
+          from scripts.acceptance import codes
+          root=Path(os.environ['ROOT'])
+          ident=collect_identity(root, dict(os.environ))
+          findings=[f"{codes.IDENTITY_INCOMPLETE}: {p}" for p in ident.problems]
+          if ident.git_dirty:
+              findings.append(f"{codes.DIRTY_TREE}: working tree diverges from commit {ident.git_commit}: {sorted(ident.dirty_paths)[:10]}")
+          print(json.dumps({'identity':ident.as_document(),'findings':findings}, indent=2, sort_keys=True))
+          raise SystemExit(1 if findings else 0)
+          PY
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "BOOTSTRAP_IDENTITY_RC:$rc"
+          exit 0
+
+      - name: Root check backend.pytest
+        id: pytest
+        shell: bash
+        run: |
+          set +e
+          cd "$GITHUB_WORKSPACE/target"
+          uv run pytest 2>&1 | tee "$GITHUB_WORKSPACE/pytest-${{ matrix.kind }}.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "BACKEND_PYTEST_RC:$rc"
+          exit 0
+
+      - name: Root check browser.playwright
+        id: browser
+        shell: bash
+        run: |
+          set +e
+          cd "$GITHUB_WORKSPACE/target"
+          npm run test:browser --workspace=frontend/web-shell 2>&1 | tee "$GITHUB_WORKSPACE/browser-${{ matrix.kind }}.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "BROWSER_PLAYWRIGHT_RC:$rc"
+          exit 0
+
+      - name: Emit exact differential-side result
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          out={
+            'kind':'${{ matrix.kind }}',
+            'input_ref':'${{ matrix.ref }}',
+            'root_commit': os.popen("git -C '%s/target' rev-parse HEAD" % os.environ['GITHUB_WORKSPACE']).read().strip(),
+            'root_tree': os.popen("git -C '%s/target' rev-parse HEAD^{tree}" % os.environ['GITHUB_WORKSPACE']).read().strip(),
+            'bootstrap_identity_rc': int('${{ steps.identity.outputs.rc }}'),
+            'backend_pytest_rc': int('${{ steps.pytest.outputs.rc }}'),
+            'browser_playwright_rc': int('${{ steps.browser.outputs.rc }}'),
+          }
+          Path(os.environ['GITHUB_WORKSPACE'], 'result-${{ matrix.kind }}.json').write_text(json.dumps(out, indent=2, sort_keys=True)+'\n')
+          print(json.dumps(out, sort_keys=True))
+          PY
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-final-differential-${{ matrix.kind }}-${{ github.run_id }}
+          path: |
+            ${{ github.workspace }}/result-${{ matrix.kind }}.json
+            ${{ github.workspace }}/identity-${{ matrix.kind }}.txt
+            ${{ github.workspace }}/pytest-${{ matrix.kind }}.txt
+            ${{ github.workspace }}/browser-${{ matrix.kind }}.txt
+          retention-days: 7
