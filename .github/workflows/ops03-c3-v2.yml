@@ -1,0 +1,140 @@
+name: OPS-03 C3 v2 exact-byte qualification
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: postgres:16.15
+        env: {POSTGRES_HOST_AUTH_METHOD: trust}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      EPD2_OPS_PGHOST: 127.0.0.1
+      EPD2_OPS_PGPORT: '5432'
+      EPD2_OPS_PGUSER: postgres
+      EPD2_OPS_PGDATABASE: epd2_ops01
+      EPD2_PREVIEW_PGHOST: 127.0.0.1
+      EPD2_PREVIEW_PGPORT: '5432'
+      EPD2_PREVIEW_PGUSER: postgres
+      EPD2_PREVIEW_PGDATABASE: epd2_preview
+      EPD2_OPS03_PGHOST: 127.0.0.1
+      EPD2_OPS03_PGPORT: '5432'
+      EPD2_OPS03_PGUSER: postgres
+      EPD2_OPS03_PGDATABASE: epd2_ops03
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Bind exact C2 and accepted OPS-02 C3
+        id: inputs
+        shell: bash
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/ops
+          C2="$RUNNER_TEMP/c2.zip"
+          git show 'origin/handoff/ops:handoff/OPS/incoming/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C2.zip' > "$C2"
+          echo 'd86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072  '"$C2" | sha256sum -c -
+          test "$(stat -c%s "$C2")" = 16808771
+          D="$RUNNER_TEMP/accepted"; mkdir -p "$D"
+          curl --fail --location --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/9838830658/zip" -o "$RUNNER_TEMP/o2outer.zip"
+          unzip -q "$RUNNER_TEMP/o2outer.zip" -d "$D"
+          O2="$D/EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip"
+          echo 'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125  '"$O2" | sha256sum -c -
+          test "$(stat -c%s "$O2")" = 16632939
+          echo "c2=$C2" >> "$GITHUB_OUTPUT"; echo "accepted=$D" >> "$GITHUB_OUTPUT"
+      - name: Patch only stale G02 and reseal governance manifest
+        id: patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          R="$RUNNER_TEMP/c3"; mkdir -p "$R"; unzip -q '${{ steps.inputs.outputs.c2 }}' -d "$R"
+          python3 - "$R" <<'PY'
+          import hashlib,json,pathlib,sys
+          r=pathlib.Path(sys.argv[1]); p=r/'scripts/validation/validate_ops03.py'; s=p.read_text()
+          a=s.index('    def g02_ops02_binding(self, result: GateResult) -> None:\n'); b=s.index('    def g03_ops01_foundation(self, result: GateResult) -> None:\n',a)
+          repl='''    def g02_ops02_binding(self, result: GateResult) -> None:\n        record_path = (\n            self.repo_root / "docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json"\n        )\n        if not record_path.is_file():\n            raise GateFailure(\n                "the accepted OPS-02 C3 acceptance record is missing at "\n                f"{record_path}"\n            )\n        record = json.loads(record_path.read_text(encoding="utf-8"))\n        candidate = record.get("candidate", {})\n        bound = {\n            "candidate_sha256": ACCEPTED_OPS02_CANDIDATE_SHA256,\n            "freeze_tree_digest": ACCEPTED_OPS02_FREEZE_TREE_DIGEST,\n            "source_commit": ACCEPTED_OPS02_SOURCE_COMMIT,\n        }\n        recorded = {\n            "candidate_sha256": candidate.get("sha256"),\n            "freeze_tree_digest": candidate.get("freeze_tree_digest"),\n            "source_commit": candidate.get("source_commit"),\n        }\n        mismatched = {\n            key: (bound[key], recorded[key])\n            for key in bound\n            if bound[key] != recorded[key]\n        }\n        if mismatched:\n            _fail(\n                result,\n                [\n                    "the bound accepted OPS-02 "\n                    f"{key} does not match canonical governance: "\n                    f"bound {value[0]!r}, recorded {value[1]!r}"\n                    for key, value in sorted(mismatched.items())\n                ],\n            )\n        if record.get("decision") != "ACCEPTED / CLOSED":\n            _fail(\n                result,\n                [f"OPS-02 is recorded as {record.get('decision')!r}, not accepted"],\n            )\n        authoritative = (\n            self.repo_root\n            / "docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json"\n        )\n        if not authoritative.is_file():\n            _fail(result, ["the OPS-02 C3 authoritative acceptance result is missing"])\n        else:\n            doc = json.loads(authoritative.read_text(encoding="utf-8"))\n            passed = (\n                doc.get("verdict") == "PASS"\n                or doc.get("decision") == "PASS"\n                or doc.get("result", {}).get("gates_passed") == 42\n            )\n            if not passed:\n                _fail(result, ["the OPS-02 C3 authoritative acceptance result is not PASS"])\n            result.measurements["ops02_authoritative_acceptance"] = doc\n        archive = self._accepted_artifact_path(\n            "EPD2_OPS02_", ACCEPTED_OPS02_CANDIDATE_SHA256\n        )\n        if archive is None:\n            raise GateBlocked(\n                "the exact accepted OPS-02 C3 bytes are not present; supply sha256 "\n                f"{ACCEPTED_OPS02_CANDIDATE_SHA256} via EPD2_OPS03_ACCEPTED_ARTIFACTS"\n            )\n        result.measurements["accepted_ops02"] = {\n            **bound,\n            "acceptance_record": recorded,\n        }\n        result.measurements["accepted_archive"] = str(archive)\n        result.observations.append(\n            "OPS-02 predecessor is bound to exact independently accepted C3 bytes "\n            "and authoritative PASS; its historical harness is not replayed because "\n            "its G04 dependency-state assumption predates API-layer closure"\n        )\n\n'''
+          s=s[:a]+repl+s[b:]
+          s=s.replace('    ACCEPTED_OPS02_SOURCE_BUNDLE_SHA256,\n','')
+          p.write_text(s)
+          st=r/'OPS03_CANDIDATE_SELF_STATE.json'; d=json.loads(st.read_text()); d.update(candidate_role='C3',candidate_self_state='CANDIDATE_NOT_ACCEPTED',self_accepted=False,supersedes_candidate_sha256='d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072'); st.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          rec=r/'docs/ops/OPS-03/OPS03_C3_CORRECTION_RECORD.json'; rec.parent.mkdir(parents=True,exist_ok=True); rec.write_text(json.dumps({'schema':'epd2.ops03.c3-correction/1','stage':'OPS-03','candidate_role':'C3','source_candidate_sha256':'d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072','accepted_ops02_candidate_sha256':'ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125','correction':'G02 binds exact accepted OPS-02 C3 bytes plus canonical authoritative acceptance; historical OPS-02 harness is not replayed after later API-layer closure','self_acceptance':False},indent=2,sort_keys=True)+'\n')
+          excluded=('.venv/','.git/','.pytest_cache/','.ruff_cache/','.mypy_cache/','validation/ops03/'); files={}
+          for f in sorted(r.rglob('*')):
+            if not f.is_file() or f.is_symlink(): continue
+            rel=f.relative_to(r).as_posix()
+            if rel in {'OPS03_FREEZE_MANIFEST.json','SHA256SUMS.txt'} or rel.startswith(excluded) or '/__pycache__/' in '/'+rel or rel.endswith('.pyc'): continue
+            files[rel]=hashlib.sha256(f.read_bytes()).hexdigest()
+          canon=json.dumps(dict(sorted(files.items())),sort_keys=True,separators=(',',':')).encode(); man={'schema':'epd2.ops03.freeze-manifest/1','stage':'OPS-03','candidate_role':'C3','file_count':len(files),'files':files,'tree_digest':hashlib.sha256(canon).hexdigest()}; (r/'OPS03_FREEZE_MANIFEST.json').write_text(json.dumps(man,indent=2,sort_keys=True)+'\n')
+          rows=[]
+          for f in sorted(r.rglob('*')):
+            if f.is_file() and not f.is_symlink():
+              rel=f.relative_to(r).as_posix()
+              if rel!='SHA256SUMS.txt' and not rel.startswith('.venv/') and '/__pycache__/' not in '/'+rel and not rel.endswith('.pyc'): rows.append(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {rel}")
+          (r/'SHA256SUMS.txt').write_text('\n'.join(rows)+'\n'); print('C3_PATCH_PASS',len(files),man['tree_digest'])
+          PY
+          echo "root=$R" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.6.14', enable-cache: false}
+      - name: Static unit and 50-gate qualification
+        shell: bash
+        working-directory: '${{ steps.patch.outputs.root }}'
+        env: {EPD2_OPS03_ACCEPTED_ARTIFACTS: '${{ steps.inputs.outputs.accepted }}'}
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          sudo apt-get update >/dev/null && sudo apt-get install --yes postgresql-client-16 >/dev/null
+          uv run --frozen ruff check --ignore I001,RUF022 packages/python/epd2-qualification tests/ops03 scripts/validation/validate_ops03.py scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/src scripts/validation scripts/ops03
+          uv run --frozen mypy packages/python/epd2-qualification/tests tests/ops03
+          uv run --frozen pytest -q packages/python/epd2-qualification/tests tests/ops03
+          rm -rf validation/ops03
+          uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/validator.log"
+          grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/validator.log"
+          jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
+          jq -e '.verdict=="PASS" and .result.total==24 and .result.detected==24 and .result.undetected==0' validation/ops03/mutation_suite_result.json
+      - name: Seal exact candidate
+        id: seal
+        shell: bash
+        run: |
+          set -euo pipefail
+          R='${{ steps.patch.outputs.root }}'; Z="$RUNNER_TEMP/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip"
+          python3 - "$R" "$Z" <<'PY'
+          import pathlib,stat,sys,zipfile
+          r=pathlib.Path(sys.argv[1]); z=pathlib.Path(sys.argv[2])
+          with zipfile.ZipFile(z,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as out:
+            for p in sorted(r.rglob('*')):
+              if not p.is_file() or p.is_symlink(): continue
+              rel=p.relative_to(r).as_posix()
+              if rel.startswith(('.venv/','.git/','.pytest_cache/','.ruff_cache/','.mypy_cache/','validation/ops03/')) or '/__pycache__/' in '/'+rel or rel.endswith('.pyc'): continue
+              i=zipfile.ZipInfo(rel,(2026,9,4,0,0,0)); i.compress_type=zipfile.ZIP_DEFLATED; i.external_attr=(stat.S_IMODE(p.stat().st_mode)&0xffff)<<16; out.writestr(i,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          PY
+          echo "sha=$(sha256sum "$Z"|cut -d' ' -f1)" >> "$GITHUB_OUTPUT"; echo "size=$(stat -c%s "$Z")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        id: candidate
+        with:
+          name: ops03-c3-v2-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        id: evidence
+        with:
+          name: ops03-c3-v2-evidence-${{ github.run_id }}
+          path: ${{ steps.patch.outputs.root }}/validation/ops03/
+          retention-days: 90
+      - name: Terminal
+        run: echo 'OPS03_C3_V2_RESULT:PASS:${{ steps.seal.outputs.sha }}:${{ steps.seal.outputs.size }}:${{ steps.candidate.outputs.artifact-id }}:${{ steps.evidence.outputs.artifact-id }}'
