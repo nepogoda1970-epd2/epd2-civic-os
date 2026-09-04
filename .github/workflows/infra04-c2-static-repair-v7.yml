@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           uv sync --all-groups --frozen
           npm ci --no-audit --no-fund
-      - name: Candidate-only format inherited OPS-03 additions
+      - name: Candidate-only normalize inherited OPS-03 additions
         shell: bash
         run: |
           set -euo pipefail
@@ -48,15 +48,37 @@ jobs:
           cp scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py "$RUNNER_TEMP/ops03-original/"
           uv run ruff format scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py
           python3 - <<'PY'
-          import ast
           from pathlib import Path
-          names = ['ops03_c2_authoritative_runner.py','ops03_c3_patch_from_c2.py']
-          for name in names:
-              before = ast.dump(ast.parse((Path(__import__('os').environ['RUNNER_TEMP'])/'ops03-original'/name).read_text()), include_attributes=False)
+          p = Path('scripts/ops03_c2_authoritative_runner.py')
+          text = p.read_text()
+          if text.count('import json\n') != 1:
+              raise SystemExit('OPS03_EXPECTED_SINGLE_UNUSED_JSON_IMPORT_NOT_FOUND')
+          p.write_text(text.replace('import json\n', '', 1))
+          PY
+          python3 - <<'PY'
+          import ast, os
+          from pathlib import Path
+          temp = Path(os.environ['RUNNER_TEMP'])/'ops03-original'
+          def normalized_original(name: str) -> str:
+              tree = ast.parse((temp/name).read_text())
+              if name == 'ops03_c2_authoritative_runner.py':
+                  removed = 0
+                  body = []
+                  for node in tree.body:
+                      if isinstance(node, ast.Import) and len(node.names) == 1 and node.names[0].name == 'json' and node.names[0].asname is None:
+                          removed += 1
+                          continue
+                      body.append(node)
+                  if removed != 1:
+                      raise SystemExit(f'OPS03_JSON_IMPORT_NORMALIZATION_COUNT:{removed}')
+                  tree.body = body
+              return ast.dump(tree, include_attributes=False)
+          for name in ['ops03_c2_authoritative_runner.py','ops03_c3_patch_from_c2.py']:
               after = ast.dump(ast.parse((Path('scripts')/name).read_text()), include_attributes=False)
+              before = normalized_original(name)
               if before != after:
-                  raise SystemExit(f'OPS03_FORMAT_SEMANTIC_DRIFT:{name}')
-          print('OPS03_FORMAT_AST_EQUIVALENCE:PASS:2')
+                  raise SystemExit(f'OPS03_NORMALIZED_AST_DRIFT:{name}')
+          print('OPS03_NORMALIZED_AST_EQUIVALENCE:PASS:2')
           PY
           git diff --check -- scripts/ops03_c2_authoritative_runner.py scripts/ops03_c3_patch_from_c2.py
       - name: Strict verification
