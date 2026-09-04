@@ -1,0 +1,122 @@
+name: INFRA-04 C2 Static Repair V5
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-static-repair-v5"]
+permissions:
+  contents: read
+env:
+  INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+  INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0}
+      - name: Materialize exact C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip|awk '{print $1}')" = "$INFRA02_SHA256"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          rm -f .github/workflows/infra04-c2-authoritative.yml .github/workflows/infra04-c2-static-repair-v5.yml
+          git rm -f --ignore-unmatch SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: "3.12"}
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with: {enable-cache: true}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install frozen dependencies
+        run: |
+          uv sync --all-groups --frozen
+          npm ci
+      - name: Apply exact behavior-neutral repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format scripts/build_front05_authorization_negatives.py scripts/infra04/build_changed_manifest.py
+          uv run ruff check --fix scripts/infra04/build_changed_manifest.py || true
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('scripts/infra04/build_changed_manifest.py')
+          s=p.read_text()
+          needle='"note": "Exact current-byte install delta against canonical main after runtime evidence generation. This self-describing manifest and governed package additions SHA256SUMS.txt / ACCEPTANCE/FREEZE-INVENTORY.json are intentionally excluded from the recursive file list.",'
+          replacement='''"note": (\n            "Exact current-byte install delta against canonical main after runtime evidence "\n            "generation. This self-describing manifest and governed package additions "\n            "SHA256SUMS.txt / ACCEPTANCE/FREEZE-INVENTORY.json are intentionally excluded "\n            "from the recursive file list."\n        ),'''
+          if needle not in s: raise SystemExit('manifest note anchor missing')
+          p.write_text(s.replace(needle,replacement,1))
+
+          p=Path('scripts/ctrl05_validator.py')
+          lines=p.read_text().splitlines(True)
+          stale_lines={364,379,431,821,906,931,954,990,1033,1086,1173}
+          for n in stale_lines:
+              lines[n-1]=lines[n-1].replace('  # type: ignore[import-not-found]', '')
+              lines[n-1]=lines[n-1].replace('  # type: ignore[attr-defined]', '')
+          s=''.join(lines)
+
+          old='''    coarse = [\n        refusal(\n            lambda anchor=anchor: w.service.action_chain(\n                actor_ref="auditor",\n                session_id="sess-auditor",\n                scope=OPS_UNIT,\n                correlation_ref=anchor,\n                now=w.tick(),\n            )\n        )\n        for anchor in ("", "*", "ALL", "GLOBAL")\n    ]\n'''
+          new='''    coarse = []\n    for anchor in ("", "*", "ALL", "GLOBAL"):\n        def action(anchor: str = anchor) -> Any:\n            return w.service.action_chain(\n                actor_ref="auditor",\n                session_id="sess-auditor",\n                scope=OPS_UNIT,\n                correlation_ref=anchor,\n                now=w.tick(),\n            )\n\n        coarse.append(refusal(action))\n'''
+          if old not in s: raise SystemExit('g28 anchor missing')
+          s=s.replace(old,new,1)
+
+          old='''    observed = {}\n    for label, mutate in (\n        ("grant_withdrawn", lambda w: w.authorities._grants.pop("ag-rev")),\n        ("mandate_superseded", lambda w: w.service.supersede_mandate("MND-auditor", "MND-next")),\n        ("session_revoked", lambda w: w.service.revoke_session("sess-auditor")),\n    ):\n'''
+          new='''    observed = {}\n\n    def grant_withdrawn(w: Any) -> Any:\n        return w.authorities._grants.pop("ag-rev")\n\n    def mandate_superseded(w: Any) -> Any:\n        return w.service.supersede_mandate("MND-auditor", "MND-next")\n\n    def session_revoked(w: Any) -> Any:\n        return w.service.revoke_session("sess-auditor")\n\n    for label, mutate in (\n        ("grant_withdrawn", grant_withdrawn),\n        ("mandate_superseded", mandate_superseded),\n        ("session_revoked", session_revoked),\n    ):\n'''
+          if old not in s: raise SystemExit('g45 anchor missing')
+          s=s.replace(old,new,1)
+
+          old='''        observed[label] = refusal(\n            lambda w=w, ticket=ticket: w.service.dispose(\n                actor_ref="auditor",\n                session_id="sess-auditor",\n                csrf_token="csrf-auditor",\n                ticket_id=ticket["ticket_id"],\n                disposition=ReviewState.NO_FINDING,\n                rationale="after the change",\n                idempotency_key="g45",\n                now=w.tick(),\n            )\n        )\n'''
+          new='''        def dispose_after_change() -> Any:\n            return w.service.dispose(\n                actor_ref="auditor",\n                session_id="sess-auditor",\n                csrf_token="csrf-auditor",\n                ticket_id=ticket["ticket_id"],\n                disposition=ReviewState.NO_FINDING,\n                rationale="after the change",\n                idempotency_key="g45",\n                now=w.tick(),\n            )\n\n        observed[label] = refusal(dispose_after_change)\n'''
+          if old not in s: raise SystemExit('g45 disposal anchor missing')
+          s=s.replace(old,new,1)
+
+          old='''    observed = {}\n    for label, act in (\n        ("no_mandate_search", lambda: w.search(principal="unmandated")),\n'''
+          new='''    observed: dict[str, dict[str, Any]] = {}\n    for label, act in (\n        ("no_mandate_search", lambda: w.search(principal="unmandated")),\n'''
+          if old not in s: raise SystemExit('g50 anchor missing')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+
+          p=Path('scripts/ctrl05_browser_journeys.py')
+          s=p.read_text().replace('browser = pw.chromium.launch(**launch)  # type: ignore[arg-type]', 'browser = pw.chromium.launch(**launch)')
+          p.write_text(s)
+          PY
+          uv run ruff format scripts/infra04/build_changed_manifest.py scripts/ctrl05_validator.py scripts/ctrl05_browser_journeys.py
+          uv run ruff check --fix scripts/infra04/build_changed_manifest.py
+          npx prettier --write .github/workflows/ops03-c2-authoritative-current.yml scripts/infra02/supply_chain_policy.json services/control-plane-service/src/epd2_control_plane_service/oversight_console.html
+      - name: Verify exact static gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format --check .
+          uv run ruff check .
+          make typecheck
+          npm run format:check
+          echo INFRA04_STATIC_REPAIR:PASS
+      - name: Stage repaired files
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=/tmp/repaired
+          mkdir -p "$OUT/scripts/infra04" "$OUT/scripts/infra02" "$OUT/scripts" "$OUT/services/control-plane-service/src/epd2_control_plane_service" "$OUT/.github/workflows"
+          cp scripts/build_front05_authorization_negatives.py "$OUT/scripts/"
+          cp scripts/infra04/build_changed_manifest.py "$OUT/scripts/infra04/"
+          cp scripts/ctrl05_validator.py scripts/ctrl05_browser_journeys.py "$OUT/scripts/"
+          cp scripts/infra02/supply_chain_policy.json "$OUT/scripts/infra02/"
+          cp services/control-plane-service/src/epd2_control_plane_service/oversight_console.html "$OUT/services/control-plane-service/src/epd2_control_plane_service/"
+          cp .github/workflows/ops03-c2-authoritative-current.yml "$OUT/.github/workflows/"
+          (cd "$OUT" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > /tmp/repaired-sha256.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-c2-static-repairs-${{ github.run_id }}
+          path: |
+            /tmp/repaired
+            /tmp/repaired-sha256.txt
+          if-no-files-found: error
+          retention-days: 7
