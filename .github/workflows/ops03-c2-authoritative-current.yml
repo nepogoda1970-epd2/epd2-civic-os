@@ -147,8 +147,8 @@ jobs:
           # rejects the later API-layer closure as a freshness change, so do not reinterpret
           # that historical dependency assumption as a regression. Bind the exact acceptance
           # authority and immutable accepted result instead.
-          jq -e '.decision=="ACCEPTED / CLOSED" and .overall_ops_layer=="OPEN" and .system_trial_preview=="NOT_OPENED" and .candidate.sha256=="ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125" and .candidate.size_bytes==16632939 and .authoritative_review.run_id==33610516469 and .authoritative_review.job_id==100184288996 and .authoritative_review.conclusion=="success" and .verification.gates=="42/42 PASS" and .verification.same_governed_source_bytes_after_execution==true' <(git show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json')
-          jq -e '.verdict=="PASS" or .decision=="PASS" or .result.gates_passed==42' <(git show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json')
+          jq -e '.decision=="ACCEPTED / CLOSED" and .overall_ops_layer=="OPEN" and .system_trial_preview=="NOT_OPENED" and .candidate.sha256=="ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125" and .candidate.size_bytes==16632939 and .authoritative_review.run_id==33610516469 and .authoritative_review.job_id==100184288996 and .authoritative_review.conclusion=="success" and .verification.gates=="42/42 PASS" and .verification.same_governed_source_bytes_after_execution==true' <(git -C "$GITHUB_WORKSPACE" show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_ACCEPTANCE_RECORD.json')
+          jq -e '.verdict=="PASS" or .decision=="PASS" or .result.gates_passed==42' <(git -C "$GITHUB_WORKSPACE" show '1f0ef7b0c7a9c4d38bfa2ec0fc6d669939b8d0e1:docs/ops/OPS-02/OPS02_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json')
           echo OPS02_ACCEPTED_PREDECESSOR_BINDING:PASS
       - name: Full 50-gate governed qualification
         shell: bash
