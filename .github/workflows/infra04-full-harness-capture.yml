@@ -1,0 +1,117 @@
+name: INFRA-04 full harness failure capture
+on:
+  push:
+    branches: ["diagnostic/infra04-full-harness-capture"]
+permissions:
+  contents: read
+  actions: read
+env:
+  INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+  INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+  INFRA02_SIZE: "15980332"
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact candidate carrier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: f1cfdd186b16d82dd7391eb2cad1f375f9ca2edd
+          fetch-depth: 0
+      - name: Materialize exact canonical C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra main
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          test "$(stat -c %s /tmp/infra02.zip)" = "$INFRA02_SIZE"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          test "$(git rev-parse origin/main)" = 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with:
+          enable-cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Install exact runtime toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
+          uv sync --all-groups --frozen
+          npm ci
+          npx playwright install --with-deps chromium
+          git diff --exit-code -- uv.lock package-lock.json
+      - name: Reproduce exact canonical runtime evidence and lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -f --ignore-unmatch SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+          uv run pytest -q tests/repository/test_infra04_units.py tests/repository/test_infra04_mutation_suite.py | tee "$GITHUB_WORKSPACE/infra04-c2-targeted.txt"
+          uv run python -m scripts.infra04.gates --artifact /tmp/infra02.zip | tee "$GITHUB_WORKSPACE/infra04-c2-runtime.txt"
+          uv run python -m scripts.infra04.build_changed_manifest
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+          git config user.name 'EPD2 INFRA04 harness diagnostic'
+          git config user.email 'infra04-harness-diagnostic@invalid.local'
+          git add -A
+          git commit -m 'diagnostic: exact tested C2 source snapshot'
+          test -z "$(git status --porcelain)"
+          echo "DIAG_SOURCE_COMMIT:$(git rev-parse HEAD)"
+      - name: Create exact clean harness worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          CLEAN_ROOT="$RUNNER_TEMP/infra04-full-harness-clean"
+          git worktree add --detach "$CLEAN_ROOT" HEAD
+          test -z "$(git -C "$CLEAN_ROOT" status --porcelain)"
+          echo "$CLEAN_ROOT" > "$GITHUB_WORKSPACE/diag-clean-root.txt"
+      - name: Run full acceptance and retain all outputs
+        id: harness
+        shell: bash
+        run: |
+          set +e
+          ORIG="$GITHUB_WORKSPACE"
+          CLEAN_ROOT=$(cat "$ORIG/diag-clean-root.txt")
+          cd "$CLEAN_ROOT"
+          uv sync --all-groups --frozen
+          npm ci
+          test -z "$(git status --porcelain)" || exit 97
+          rm -rf "$ORIG/diag-out"
+          mkdir -p "$ORIG/diag-out"
+          GITHUB_WORKSPACE="$CLEAN_ROOT" uv run python -m scripts.acceptance run --root . --output "$ORIG/diag-out" 2>&1 | tee "$ORIG/full-harness.txt"
+          rc=${PIPESTATUS[0]}
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "FULL_HARNESS_RC:$rc"
+          exit 0
+      - name: Inventory captured outputs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          find "$GITHUB_WORKSPACE/diag-out" -maxdepth 4 -type f -printf '%P\n' | sort | tee "$GITHUB_WORKSPACE/diag-files.txt"
+          echo "FULL_HARNESS_CAPTURE_RC:${{ steps.harness.outputs.rc }}"
+      - name: Upload complete harness capture
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-full-harness-capture-${{ github.run_id }}
+          path: |
+            ${{ github.workspace }}/diag-out/**
+            ${{ github.workspace }}/full-harness.txt
+            ${{ github.workspace }}/diag-files.txt
+            ${{ github.workspace }}/infra04-c2-targeted.txt
+            ${{ github.workspace }}/infra04-c2-runtime.txt
+          if-no-files-found: warn
+          retention-days: 7
