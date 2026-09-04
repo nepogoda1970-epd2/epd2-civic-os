@@ -10,6 +10,14 @@ modified = subprocess.check_output(['git','show','-s','--format=%cI','origin/mai
 pcr = Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
 pcr_sha = hashlib.sha256(pcr.read_bytes()).hexdigest()
 pcr_blob = subprocess.check_output(['git','rev-parse','origin/main:docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md'], text=True).strip()
+# The final candidate contains its registered authoritative workflow at the root.
+# Diagnostic reconstruction resets to canonical main first, so restore that exact
+# candidate workflow from this diagnostic branch before running inherited policy gates.
+auth_path = Path('.github/workflows/infra04-c2-authoritative.yml')
+auth_path.parent.mkdir(parents=True, exist_ok=True)
+auth_path.write_bytes(subprocess.check_output([
+    'git','show','origin/diagnostic/infra04-c2-static-repair-v7:.github/workflows/infra04-c2-authoritative.yml'
+]))
 old = {
     '81c2d0db987536718b30242eeb168aecc21877ca': main,
     '5460ccd9ec5929c2136926a4a2585f3fca52937e': tree,
