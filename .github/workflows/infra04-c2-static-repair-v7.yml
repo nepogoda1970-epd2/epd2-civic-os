@@ -1,0 +1,87 @@
+name: INFRA-04 C2 Static Repair V7
+on:
+  push:
+    branches: ["diagnostic/infra04-c2-static-repair-v7"]
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[repair-persisted]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+      INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0}
+      - name: Materialize exact C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          rm -f .github/workflows/infra04-c2-authoritative.yml .github/workflows/infra04-c2-static-repair-v7.yml
+          git rm -f --ignore-unmatch SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: "3.12"}
+      - uses: astral-sh/setup-uv@8d55fbecc275b1c35dbe060458839f8d30439ccf
+        with: {enable-cache: false}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with: {node-version: "22"}
+      - name: Install frozen dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          npm ci --no-audit --no-fund
+      - name: Apply exact repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format scripts/build_front05_authorization_negatives.py scripts/infra04/build_changed_manifest.py
+          uv run ruff check --fix scripts/infra04/build_changed_manifest.py || true
+          python handoff/INFRA/infra04-c2-static-repair-v7.py
+          uv run ruff format scripts/infra04/build_changed_manifest.py scripts/ctrl05_validator.py scripts/ctrl05_browser_journeys.py
+          uv run ruff check --fix scripts/infra04/build_changed_manifest.py
+          npx prettier --write .github/workflows/ops03-c2-authoritative-current.yml scripts/infra02/supply_chain_policy.json services/control-plane-service/src/epd2_control_plane_service/oversight_console.html
+          rm -f handoff/INFRA/infra04-c2-static-repair-v7.py
+      - name: Strict static verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run ruff format --check .
+          uv run ruff check .
+          make typecheck
+          npm run format:check
+          echo INFRA04_STATIC_REPAIR:PASS
+      - name: Persist verified bytes into overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/repaired"
+          mkdir -p "$OUT/scripts/infra04" "$OUT/scripts/infra02" "$OUT/scripts" "$OUT/.github/workflows" "$OUT/services/control-plane-service/src/epd2_control_plane_service"
+          cp scripts/build_front05_authorization_negatives.py "$OUT/scripts/"
+          cp scripts/infra04/build_changed_manifest.py "$OUT/scripts/infra04/"
+          cp scripts/ctrl05_validator.py scripts/ctrl05_browser_journeys.py "$OUT/scripts/"
+          cp scripts/infra02/supply_chain_policy.json "$OUT/scripts/infra02/"
+          cp .github/workflows/ops03-c2-authoritative-current.yml "$OUT/.github/workflows/"
+          cp services/control-plane-service/src/epd2_control_plane_service/oversight_console.html "$OUT/services/control-plane-service/src/epd2_control_plane_service/"
+          git reset --hard "$GITHUB_SHA"
+          BASE=handoff/INFRA/infra04-c2-overlay
+          mkdir -p "$BASE/scripts/infra04" "$BASE/scripts/infra02" "$BASE/scripts" "$BASE/.github/workflows" "$BASE/services/control-plane-service/src/epd2_control_plane_service"
+          cp "$OUT/scripts/build_front05_authorization_negatives.py" "$BASE/scripts/"
+          cp "$OUT/scripts/infra04/build_changed_manifest.py" "$BASE/scripts/infra04/"
+          cp "$OUT/scripts/ctrl05_validator.py" "$OUT/scripts/ctrl05_browser_journeys.py" "$BASE/scripts/"
+          cp "$OUT/scripts/infra02/supply_chain_policy.json" "$BASE/scripts/infra02/"
+          cp "$OUT/.github/workflows/ops03-c2-authoritative-current.yml" "$BASE/.github/workflows/"
+          cp "$OUT/services/control-plane-service/src/epd2_control_plane_service/oversight_console.html" "$BASE/services/control-plane-service/src/epd2_control_plane_service/"
+          git config user.name 'EPD2 INFRA04 static repair'
+          git config user.email 'infra04-static@invalid.local'
+          git add "$BASE"
+          git commit -m 'fix(infra04): persist verified static repair [repair-persisted]'
+          git push origin HEAD:diagnostic/infra04-c2-static-repair-v7
