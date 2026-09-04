@@ -1,0 +1,88 @@
+name: INFRA-04 recover bounded source
+
+on:
+  push:
+    branches: ["repair/infra04-c2-final-bounded"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: infra04-recover-bounded-source
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repair carrier
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Recover intended bounded source from failed assembler payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = "c986fe35a6aec3b3ea5d986d0b8c9f2b36a310c9"
+          git show HEAD^:.github/workflows/infra04-final-bounded-assembler.yml > /tmp/failed-assembler.yml
+          python3 - <<'PY'
+          import base64, pathlib, re
+
+          src = pathlib.Path("/tmp/failed-assembler.yml").read_text()
+          payloads = {}
+          for key in ("WORKFLOW_B64", "BASELINE_B64"):
+              m = re.search(rf"^\s+{key}:\s+([A-Za-z0-9+/=]+)\s*$", src, re.M)
+              if not m:
+                  raise SystemExit(f"missing {key} in failed assembler")
+              payloads[key] = base64.b64decode(m.group(1)).decode("utf-8")
+
+          workflow = payloads["WORKFLOW_B64"]
+          pathlib.Path("/tmp/infra04-c2-authoritative.yml").write_text(workflow)
+
+          candidates = set(re.findall(
+              r"(?i)(?:^|[\s\"'])([A-Za-z0-9_./-]*baseline[A-Za-z0-9_./-]*\.py)(?=$|[\s\"'])",
+              workflow,
+          ))
+          module_candidates = set(re.findall(
+              r"(?i)(scripts(?:\.[A-Za-z0-9_]+)*\.?[A-Za-z0-9_]*baseline[A-Za-z0-9_.]*)",
+              workflow,
+          ))
+          for mod in module_candidates:
+              candidates.add(mod.replace(".", "/") + ".py")
+
+          candidates = {c.lstrip("./") for c in candidates if "baseline" in c.lower()}
+          if len(candidates) != 1:
+              print("Recovered workflow baseline path candidates:", sorted(candidates))
+              for i, line in enumerate(workflow.splitlines(), 1):
+                  if "baseline" in line.lower():
+                      print(f"{i}: {line}")
+              raise SystemExit("could not infer one baseline helper path from recovered workflow")
+
+          helper_path = next(iter(candidates))
+          pathlib.Path("/tmp/baseline-helper-path.txt").write_text(helper_path + "\n")
+          pathlib.Path("/tmp/baseline-helper.py").write_text(payloads["BASELINE_B64"])
+          print("INFRA04_RECOVERY_PAYLOAD:PASS")
+          print("INFRA04_RECOVERY_BASELINE_PATH:" + helper_path)
+          PY
+
+      - name: Install recovered bounded source on exact C2 carrier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin candidate/infra04-c2-canonical
+          test "$(git rev-parse origin/candidate/infra04-c2-canonical)" = "5f619b76f9bc6ef81e076f785d6f5cb307965133"
+          git switch --detach 5f619b76f9bc6ef81e076f785d6f5cb307965133
+          cp /tmp/infra04-c2-authoritative.yml .github/workflows/infra04-c2-authoritative.yml
+          HELPER_PATH="$(cat /tmp/baseline-helper-path.txt)"
+          mkdir -p "$(dirname "$HELPER_PATH")"
+          cp /tmp/baseline-helper.py "$HELPER_PATH"
+
+          git config user.name "EPD2 INFRA04 bounded recovery"
+          git config user.email "infra04-bounded-recovery@invalid.local"
+          git add .github/workflows/infra04-c2-authoritative.yml "$HELPER_PATH"
+          git diff --cached --check
+          git commit -m "ci(infra04): install bounded authoritative acceptance"
+          NEW_SHA="$(git rev-parse HEAD)"
+          echo "INFRA04_BOUNDED_SOURCE_COMMIT:$NEW_SHA"
+          git push origin HEAD:refs/heads/candidate/infra04-c2-canonical
