@@ -17,10 +17,7 @@
         "actions": "read",
         "contents": "read"
       },
-      "allowed_triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
+      "allowed_triggers": ["workflow_dispatch", "push"],
       "forbidden_triggers": [
         "pull_request",
         "pull_request_target",
@@ -36,10 +33,7 @@
         "actions": "read",
         "contents": "read"
       },
-      "allowed_triggers": [
-        "workflow_dispatch",
-        "push"
-      ],
+      "allowed_triggers": ["workflow_dispatch", "push"],
       "forbidden_triggers": [
         "pull_request",
         "pull_request_target",
@@ -51,27 +45,16 @@
       "require_top_level_permissions": true
     },
     "developer-convenience": {
-      "allowed_triggers": [
-        "workflow_dispatch"
-      ],
-      "forbidden_triggers": [
-        "pull_request_target"
-      ],
+      "allowed_triggers": ["workflow_dispatch"],
+      "forbidden_triggers": ["pull_request_target"],
       "may_issue_release_evidence": false,
       "note": "Non-authoritative by declaration: outputs of this class are never acceptance or release evidence.",
       "require_sha_pinned_actions": false,
       "require_top_level_permissions": true
     },
     "historical-stage": {
-      "allowed_triggers": [
-        "workflow_dispatch",
-        "push",
-        "pull_request"
-      ],
-      "forbidden_triggers": [
-        "pull_request_target",
-        "workflow_run"
-      ],
+      "allowed_triggers": ["workflow_dispatch", "push", "pull_request"],
+      "forbidden_triggers": ["pull_request_target", "workflow_run"],
       "may_issue_release_evidence": false,
       "note": "Pre-INFRA-02 stage workflows preserved as accepted history; they hold no INFRA-02 release authority. Their acceptance records pin exact workflow blobs, so INFRA-02 does not rewrite them; they are still checked for the hard prohibitions (pull_request_target, secret exposure to untrusted code). Classified additively by INFRA-04 for the API-04/API-05 stage workflows that entered canonical main after INFRA-02 was accepted: they are one-shot, already-executed stage and governance-closure workflows from the API line, hold no INFRA-02 release authority, and are not rewritten here. The two governance-closure workflows request contents: write because their single purpose was to commit a register transition; that elevation is recorded as an observation for the owning API line, not repaired by INFRA-04.",
       "require_sha_pinned_actions": false,
@@ -81,16 +64,9 @@
       "allowed_permission_scopes": {
         "contents": "read"
       },
-      "allowed_triggers": [
-        "pull_request",
-        "push",
-        "workflow_dispatch"
-      ],
+      "allowed_triggers": ["pull_request", "push", "workflow_dispatch"],
       "forbid_secret_references": true,
-      "forbidden_triggers": [
-        "pull_request_target",
-        "workflow_run"
-      ],
+      "forbidden_triggers": ["pull_request_target", "workflow_run"],
       "may_issue_release_evidence": false,
       "require_sha_pinned_actions": false,
       "require_top_level_permissions": true
@@ -100,19 +76,13 @@
     "allow_direct_url_dependencies": false,
     "allow_git_dependencies": false,
     "allow_local_path_dependencies_outside_workspace": false,
-    "npm_allowed_registries": [
-      "https://registry.npmjs.org"
-    ],
-    "python_allowed_registries": [
-      "https://pypi.org/simple"
-    ],
+    "npm_allowed_registries": ["https://registry.npmjs.org"],
+    "python_allowed_registries": ["https://pypi.org/simple"],
     "workspace_members_are_governed_sources": true
   },
   "note": "The single governed, version-controlled INFRA-02 supply-chain policy: CI trust classes and rules (HI-01), immutable build-input pins (HI-02), dependency source governance (HI-07), trusted builder identities (HI-06) and the vulnerability release policy (HI-08). Changing this file is a governed change: it is tracked, hashed into the freeze inventory and covered by the required-path registry. INFRA-04 C2 additively classifies the inherited one-shot OPS-03 C2 authoritative verifier that entered canonical main after INFRA-02 acceptance; INFRA-04 does not rewrite or grant INFRA-02 release authority to that OPS-owned workflow.",
   "policy_version": "1.0.0",
-  "publishable_refs": [
-    "refs/heads/main"
-  ],
+  "publishable_refs": ["refs/heads/main"],
   "reproducibility_declarations": {
     "candidate-archive-zip": "DETERMINISTIC_INPUTS_BUT_BYTE_REPRODUCIBILITY_NOT_YET_PROVEN",
     "candidate-source-tree": "CONTENT_REPRODUCIBLE_AND_PROVEN",
@@ -138,10 +108,7 @@
     "max_exception_days": 120,
     "release_blocking_rule": "ANY_FINDING_WITHOUT_GOVERNED_EXCEPTION",
     "scan_binding": "scan evidence must record the exact lockfile SHA-256 digests it scanned; evidence for other lockfile digests is stale and cannot authorize a release",
-    "scanners_required": [
-      "pip-audit",
-      "npm-audit"
-    ]
+    "scanners_required": ["pip-audit", "npm-audit"]
   },
   "workflow_classes": {
     "api01-accept.yml": "historical-stage",
