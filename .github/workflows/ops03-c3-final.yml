@@ -82,7 +82,7 @@ jobs:
           uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/validator.log"
           grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/validator.log"
           jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
-          jq -e '.gates[] | select(.id=="G48") | .status=="PASS"' validation/ops03/ops03_acceptance_result.json
+          grep -q '^\[PASS\] G48 Mutation and anti-cheat suite$' "$RUNNER_TEMP/validator.log"
           echo OPS03_C3_BUILD_QUALIFICATION:PASS:50/50:G48_PASS
       - name: Seal exact candidate
         id: seal
@@ -179,7 +179,7 @@ jobs:
           uv run --frozen python scripts/validation/validate_ops03.py | tee "$RUNNER_TEMP/authoritative.log"
           grep -q '^OPS03_RESULT:PASS:validation/ops03/ops03_acceptance_result.json$' "$RUNNER_TEMP/authoritative.log"
           jq -e '.verdict=="PASS" and .result.gates_total==50 and .result.gates_passed==50 and .result.gates_failed==[] and .result.environment_blocked==[] and .result.same_governed_source_bytes_after_execution==true' validation/ops03/ops03_acceptance_result.json
-          jq -e '.gates[] | select(.id=="G48") | .status=="PASS"' validation/ops03/ops03_acceptance_result.json
+          grep -q '^\[PASS\] G48 Mutation and anti-cheat suite$' "$RUNNER_TEMP/authoritative.log"
           echo OPS03_C3_AUTHORITATIVE_QUALIFICATION:PASS:50/50:G48_PASS
       - uses: actions/upload-artifact@v4
         id: evidence
