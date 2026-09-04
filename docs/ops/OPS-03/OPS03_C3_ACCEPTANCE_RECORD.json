@@ -1,0 +1,81 @@
+{
+  "schema": "epd2.ops03.acceptance-record/1",
+  "stage": "OPS-03 — Operational Qualification, Alerting, Capacity & Recovery Rehearsal",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-04",
+  "authority": "Project Owner",
+  "scope": "BOUNDED_OPS03_STAGE_ONLY",
+  "overall_ops_layer": "OPEN",
+  "system_trial_preview": "NOT_OPENED",
+  "production_readiness": "NOT_CLAIMED",
+  "legal_activation": "NOT_CLAIMED",
+  "certification_claim": "NONE",
+  "candidate": {
+    "filename": "EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip",
+    "sha256": "34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3",
+    "size_bytes": 16901907,
+    "freeze_file_count": 1583,
+    "freeze_tree_digest": "94c4a57677835cf34a123e6e977e6f1dc18995509b5a1980e6037664d51d2d91",
+    "sealed_self_state": "CANDIDATE_NOT_ACCEPTED",
+    "supersedes": {
+      "candidate": "C2",
+      "sha256": "d86bb4f7bb40e052af877bcae27257859c00168bff3184d2aed951eb6d236072",
+      "disposition": "SUPERSEDED / NOT_ACCEPTED"
+    }
+  },
+  "authoritative_review": {
+    "workflow": ".github/workflows/ops03-c3-final.yml",
+    "workflow_commit": "91c2fa47fa4c96929512546966fd4fe5a7daf5f5",
+    "run_id": 33863100377,
+    "build_job_id": 100991780597,
+    "authoritative_job_id": 100992395752,
+    "conclusion": "success",
+    "terminal_result": "OPS03_C3_AUTHORITATIVE_RESULT:PASS:34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3:16901907:9932940620:9932998186",
+    "candidate_artifact": {
+      "id": 9932940620,
+      "name": "ops03-c3-final-candidate-33863100377",
+      "digest": "sha256:275d00ecf2eec56f8ad4387d5f33b1e8d37f47fd0ddb5cfe5e27a3f76f891d82"
+    },
+    "build_evidence_artifact": {
+      "id": 9932941377,
+      "name": "ops03-c3-build-evidence-33863100377",
+      "digest": "sha256:da9c602236174a356191131d4fc48737b9abc4bde48068d0501e1da0c486d110"
+    },
+    "authoritative_evidence_artifact": {
+      "id": 9932998186,
+      "name": "ops03-c3-authoritative-evidence-33863100377",
+      "digest": "sha256:8312b0ebabd5ec2de95ba0426f3b494ac4edd292f720508a5eefa2c562a43a96"
+    }
+  },
+  "verification": {
+    "runtime_tests": "66/66 PASS",
+    "gates": "50/50 PASS",
+    "mutation_and_anti_cheat": "G48 PASS",
+    "preview_minimum_ops_owned": "15/15 EVIDENCED",
+    "postgresql": "16.15",
+    "ruff_check": "PASS",
+    "mypy": "PASS",
+    "same_governed_source_bytes_after_execution": true,
+    "transport_identity": "PASS",
+    "no_self_acceptance_gate": "PASS",
+    "ops02_exact_accepted_predecessor_binding": "PASS",
+    "api06_exact_accepted_runtime_binding": "PASS"
+  },
+  "governance_effect": {
+    "ops03": "ACCEPTED / CLOSED",
+    "ops_layer": "OPEN / NOT CLOSED",
+    "infra_ops_preview_readiness_minimum": "OPS-OWNED 15/15 EVIDENCED; CHECKPOINT STILL REQUIRES CURRENT INFRA SIDE AND EXPLICIT GOVERNED OPENING DECISION",
+    "system_trial_preview": "NOT_OPENED"
+  },
+  "nonclaims": [
+    "overall OPS-layer closure",
+    "System Trial Preview opening",
+    "INFRA-layer closure",
+    "production readiness",
+    "legal activation",
+    "BSI certification",
+    "Common Criteria certification",
+    "EAL4 certification",
+    "final security acceptance"
+  ]
+}
