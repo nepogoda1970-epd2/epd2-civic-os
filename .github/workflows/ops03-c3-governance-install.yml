@@ -1,0 +1,55 @@
+name: OPS-03 C3 governance install
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    if: github.repository == 'nepogoda1970-epd2/epd2-civic-os'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Verify authority records and patch PCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --ff-only origin main
+          jq -e '.decision=="ACCEPTED / CLOSED" and .candidate.sha256=="34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3" and .authoritative_review.run_id==33863100377 and .authoritative_review.authoritative_job_id==100992395752 and .verification.gates=="50/50 PASS" and .overall_ops_layer=="OPEN" and .system_trial_preview=="NOT_OPENED"' docs/ops/OPS-03/OPS03_C3_ACCEPTANCE_RECORD.json
+          jq -e '.verdict=="PASS" and .candidate.sha256=="34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3" and .qualification.gates_total==50 and .qualification.gates_passed==50 and .qualification.environment_blocked==[] and .authoritative_run.conclusion=="success"' docs/ops/OPS-03/OPS03_C3_AUTHORITATIVE_ACCEPTANCE_RESULT.json
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md')
+          s=p.read_text()
+          s=s.replace('**Updated:** 2026-09-03','**Updated:** 2026-09-04',1)
+          marker='## 2. Program phase state\n'
+          paragraph='''**OPS-03 authoritative acceptance and bounded stage closure (2026-09-04):** exact sealed candidate `EPD2_OPS03_OPERATIONAL_QUALIFICATION_ALERTING_CAPACITY_AND_RECOVERY_REHEARSAL_CANDIDATE_0.1_C3.zip`, SHA-256 `34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3`, size `16,901,907` bytes, passed independent exact-byte GitHub Actions qualification in `.github/workflows/ops03-c3-final.yml`, authoritative run `33863100377`, build job `100991780597`, authoritative job `100992395752`, conclusion `success`. The build and independent replay both passed Ruff, mypy, `66/66` runtime tests and all `50/50` governed OPS-03 gates with no failed or environment-blocked gate; `G48 Mutation and anti-cheat suite` passed, the exact accepted OPS-02 C3 bytes and authoritative acceptance were rebound, API-06 accepted/CLOSED runtime identity was rebound, and `15/15` OPS-owned preview-minimum prerequisites were evidenced. Terminal marker: `OPS03_C3_AUTHORITATIVE_RESULT:PASS:34992378a17195f12dad7f0077dc5459ab730f5e8d55b1beffa5270f46f2f4b3:16901907:9932940620:9932998186`. Authoritative evidence artifact `ops03-c3-authoritative-evidence-33863100377`, artifact ID `9932998186`, digest `sha256:8312b0ebabd5ec2de95ba0426f3b494ac4edd292f720508a5eefa2c562a43a96`; exact candidate artifact ID `9932940620`, artifact digest `sha256:275d00ecf2eec56f8ad4387d5f33b1e8d37f47fd0ddb5cfe5e27a3f76f891d82`. The sealed candidate correctly retains `CANDIDATE_NOT_ACCEPTED`; that no-self-acceptance state is superseded only for this bounded stage by `docs/ops/OPS-03/OPS03_C3_ACCEPTANCE_RECORD.json`. **OPS-03 is therefore `ACCEPTED / CLOSED` as a bounded stage.** The overall OPS layer remains **OPEN / NOT CLOSED**. OPS-owned preview-readiness evidence alone does **not** open System Trial Preview: current INFRA-side minimum and a separate explicit governed checkpoint-opening decision are still required. No production-readiness, legal-activation, BSI/Common Criteria/EAL4 certification or final-security claim follows.\n\n'''
+          if 'OPS-03 authoritative acceptance and bounded stage closure (2026-09-04)' not in s:
+              if marker not in s: raise SystemExit('missing section-2 marker')
+              s=s.replace(marker, paragraph+marker,1)
+          old='| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS LAYER OPEN; OPS-03 QUALIFICATION ELIGIBLE` | Exact bounded OPS-01 C2 and OPS-02 C3 are accepted/closed. API-06/API-layer closure has released the final-API-runtime prerequisite for OPS-03 qualification. The overall OPS layer remains open; OPS-03 still requires its own exact candidate, governed PASS and independent acceptance, and System Trial Preview is not opened by this API transition. |'
+          new='| OPS | `OPS-01 ACCEPTED / CLOSED; OPS-02 ACCEPTED / CLOSED; OPS-03 ACCEPTED / CLOSED; OPS LAYER OPEN` | Exact bounded OPS-01 C2, OPS-02 C3 and OPS-03 C3 are accepted/closed. OPS-03 independently passed 50/50 governed gates and evidences 15/15 OPS-owned preview-minimum prerequisites. The overall OPS layer remains open; later OPS stages/final OPS closure remain governed separately. System Trial Preview is NOT OPENED and still requires the current INFRA-side minimum plus a separate explicit governed checkpoint-opening decision. |'
+          if old in s: s=s.replace(old,new,1)
+          elif new not in s: raise SystemExit('OPS row did not match expected current authority')
+          anchor='INFRA = OPEN / NOT CLOSED\n'
+          block='OPS-01 = ACCEPTED / CLOSED\nOPS-02 = ACCEPTED / CLOSED\nOPS-03 = ACCEPTED / CLOSED\nOPS = OPEN / NOT CLOSED\n'
+          if block not in s:
+              if anchor not in s: raise SystemExit('primary-position INFRA anchor missing')
+              s=s.replace(anchor,anchor+block,1)
+          p.write_text(s)
+          PY
+          git diff --check
+          if git diff --quiet; then
+            echo OPS03_C3_PCR_INSTALL:NO_CHANGE
+            exit 0
+          fi
+          git config user.name 'EPD2 Governance'
+          git config user.email 'governance@epd2.local'
+          git add docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md
+          git commit -m 'governance(ops03): accept close C3 in PCR'
+          git push origin HEAD:main
+          echo OPS03_C3_PCR_INSTALL:PASS
