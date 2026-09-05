@@ -21,21 +21,69 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .ci-import/feature-ci-affected-graph-v1.1.bundle.b64.part* > /tmp/feature.bundle.b64
-          base64 -d /tmp/feature.bundle.b64 > /tmp/feature.bundle
-          expected_bundle_sha="de385f90242d93f99236f8137a9434a9e323c1cc1db4942c1ce250605aee7592"
-          actual_bundle_sha="$(sha256sum /tmp/feature.bundle | awk '{print $1}')"
-          test "$actual_bundle_sha" = "$expected_bundle_sha"
-          git bundle verify /tmp/feature.bundle
-          git fetch /tmp/feature.bundle refs/heads/feature/ci-affected-graph-v1:refs/bundle/ci-affected-v11
-          target="2900648113f089b9d16974beb3d21dcc33f5cf0e"
-          base="7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5"
-          v1="9ad0f318ffea2378335509a2fea08db294aceae6"
-          test "$(git rev-parse refs/bundle/ci-affected-v11)" = "$target"
-          test "$(git rev-parse "${target}^")" = "$v1"
-          test "$(git rev-parse "${target}^^")" = "$base"
-          test "$(git rev-list --count "${base}..${target}")" = "2"
-          echo "CI_AFFECTED_GRAPH_V11_BUNDLE_VERIFY:PASS:${target}:${actual_bundle_sha}"
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import pathlib
+          import subprocess
+          import sys
+
+          expected = "de385f90242d93f99236f8137a9434a9e323c1cc1db4942c1ce250605aee7592"
+          parts = sorted(pathlib.Path('.ci-import').glob('feature-ci-affected-graph-v1.1.bundle.b64.part*'))
+          if not parts:
+              raise SystemExit('no carrier parts found')
+
+          candidates = []
+
+          # Strategy A: parts are slices of one base64 stream.
+          joined_text = ''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          try:
+              candidates.append(('joined-base64-stream', base64.b64decode(joined_text, validate=False)))
+          except Exception as exc:
+              print(f'joined-base64-stream failed: {exc}')
+
+          # Strategy B: each part was base64-encoded independently.
+          decoded_parts = []
+          try:
+              for p in parts:
+                  decoded_parts.append(base64.b64decode(p.read_text(encoding='utf-8').strip(), validate=False))
+              candidates.append(('per-part-base64', b''.join(decoded_parts)))
+          except Exception as exc:
+              print(f'per-part-base64 failed: {exc}')
+
+          seen = set()
+          for name, data in candidates:
+              sha = hashlib.sha256(data).hexdigest()
+              print(f'{name}: sha256={sha} size={len(data)}')
+              if sha in seen:
+                  continue
+              seen.add(sha)
+              if sha == expected:
+                  pathlib.Path('/tmp/feature.bundle').write_bytes(data)
+                  print(f'CI_AFFECTED_GRAPH_V11_BUNDLE_RECONSTRUCT:PASS:{name}:{sha}:{len(data)}')
+                  break
+          else:
+              raise SystemExit('no reconstruction strategy matched expected bundle sha')
+
+          subprocess.run(['git', 'bundle', 'verify', '/tmp/feature.bundle'], check=True)
+          subprocess.run([
+              'git', 'fetch', '/tmp/feature.bundle',
+              'refs/heads/feature/ci-affected-graph-v1:refs/bundle/ci-affected-v11',
+          ], check=True)
+
+          target = '2900648113f089b9d16974beb3d21dcc33f5cf0e'
+          base = '7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5'
+          v1 = '9ad0f318ffea2378335509a2fea08db294aceae6'
+
+          def git_out(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          assert git_out('rev-parse', 'refs/bundle/ci-affected-v11') == target
+          assert git_out('rev-parse', f'{target}^') == v1
+          assert git_out('rev-parse', f'{target}^^') == base
+          assert git_out('rev-list', '--count', f'{base}..{target}') == '2'
+          print(f'CI_AFFECTED_GRAPH_V11_BUNDLE_VERIFY:PASS:{target}:{expected}')
+          PY
 
       - name: Publish exact bundle head to feature branch
         shell: bash
