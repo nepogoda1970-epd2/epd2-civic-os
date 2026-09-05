@@ -1,0 +1,99 @@
+{
+  "schema": "epd2.infra04.acceptance-record/1",
+  "stage": "INFRA-04 — Resilience, Recovery & INFRA Closure Readiness",
+  "decision": "ACCEPTED / CLOSED",
+  "decision_date": "2026-09-05",
+  "decision_authority": "Project Owner",
+  "decision_basis": "Independent exact-byte authoritative GitHub acceptance plus this separate post-run governance decision.",
+  "scope": {
+    "bounded_stage": "INFRA-04",
+    "overall_infra_layer": "OPEN / NOT CLOSED",
+    "system_trial_preview": "NOT_OPENED_BY_THIS_DECISION",
+    "production_readiness": "NOT_CLAIMED"
+  },
+  "entering_canonical_main": {
+    "repository": "nepogoda1970-epd2/epd2-civic-os",
+    "branch": "main",
+    "commit": "7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5",
+    "tree": "64447ec51a0f8e2cb4bbf8819ecafafd760c37fd"
+  },
+  "candidate_source": {
+    "branch": "candidate/infra04-c2-canonical",
+    "head_sha": "215e4a900217e33b1d73060a209ecdb2733384a8",
+    "head_message": "fix(infra04): bind frontend prettier gate to npm workspaces"
+  },
+  "candidate": {
+    "filename": "EPD2_INFRA04_RESILIENCE_RECOVERY_AND_INFRA_CLOSURE_READINESS_CANDIDATE_0.1_C2.zip",
+    "sha256": "dd0fc5c68debe77fc9383a91e0bca23ce58600432511cf88a960fa30e397448b",
+    "size_bytes": 31687576,
+    "self_acceptance": false,
+    "self_state": "CANDIDATE_NOT_ACCEPTED",
+    "archive_seal": "INFRA04_C2_ARCHIVE_SEAL:PASS:2182"
+  },
+  "accepted_predecessor": {
+    "stage": "INFRA-02",
+    "filename": "EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip",
+    "sha256": "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c",
+    "size_bytes": 15980332
+  },
+  "authoritative": {
+    "workflow": "INFRA-04 C2 Canonical Acceptance",
+    "workflow_file": ".github/workflows/infra04-c2-authoritative.yml",
+    "run_id": 33964098703,
+    "run_attempt": 1,
+    "head_branch": "candidate/infra04-c2-canonical",
+    "head_sha": "215e4a900217e33b1d73060a209ecdb2733384a8",
+    "conclusion": "success",
+    "build_job_id": 101300988160,
+    "authoritative_review_job_id": 101302429894,
+    "runtime_gates_passed": 53,
+    "runtime_gates_total": 53,
+    "runtime_gates_failed": 0,
+    "runtime_gates_blocked": 0,
+    "drills_passed": 18,
+    "drills_total": 18,
+    "mutation_classes_detected": 48,
+    "mutation_classes_total": 48,
+    "targeted_tests_passed": 117,
+    "inherited_infra_regression_tests_passed": 219,
+    "full_pytest": "6194 passed, 4 skipped, 0 failed",
+    "frontend_browser_replay": "267 passed",
+    "front03_production_browser_replay": "18 passed",
+    "postgresql": "16.15",
+    "terminal_marker": "INFRA04_C2_AUTHORITATIVE_RESULT:PASS:dd0fc5c68debe77fc9383a91e0bca23ce58600432511cf88a960fa30e397448b:31687576"
+  },
+  "artifacts": {
+    "exact_candidate": {
+      "name": "infra04-c2-exact-candidate-33964098703",
+      "id": 9969015727,
+      "digest": "sha256:6885565313a27bb824804755a00236706c1aea7c08ec1fafc9e37eca1fc0ceaa"
+    },
+    "build_evidence": {
+      "name": "infra04-c2-build-evidence-33964098703",
+      "id": 9969015887,
+      "digest": "sha256:9f566d34a9fa3588467d5680100d7c44dfa770f88f50d660810d8df15f430469"
+    },
+    "authoritative_evidence": {
+      "name": "infra04-c2-authoritative-evidence-33964098703",
+      "id": 9969099450,
+      "digest": "sha256:990f5cedff58bef21a7e8308ca1d32c122cdd26200443f4ceea54b03514ff994"
+    }
+  },
+  "open_blockers": [],
+  "next_required_work": [
+    "FIND-ST01-04 governed acceptance path for SEC-PREVIEW-01/G27 dependency where applicable",
+    "INFRA-05 / PRQ-17 observability proof",
+    "INFRA-06 / PRQ-19 trusted-time proof",
+    "SEC-PREVIEW-01 / PRQ-18 identity/auth/member-runtime preview proof",
+    "PRQ-20 separate System Trial Preview checkpoint-opening governance"
+  ],
+  "nonclaims": [
+    "overall INFRA layer closure",
+    "System Trial Preview opening",
+    "production readiness",
+    "legal activation",
+    "final security acceptance",
+    "BSI/Common Criteria/EAL4 certification",
+    "hosting-provider selection"
+  ]
+}
