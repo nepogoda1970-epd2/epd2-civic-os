@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs/infra/INFRA-04/INFRA04_CHANGED_FILE_MANIFEST.json"
 PACKAGING = {"SHA256SUMS.txt", "ACCEPTANCE/FREEZE-INVENTORY.json"}
 SELF = OUT.relative_to(ROOT).as_posix()
+PRETTIER_RECONCILED = "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts"
 
 
 def git(*args: str) -> str:
@@ -63,6 +64,27 @@ def main() -> int:
         check=True,
         timeout=300,
     )
+
+    prettier = ROOT / "node_modules/.bin/prettier"
+    prettier_target = ROOT / PRETTIER_RECONCILED
+    if not prettier.is_file():
+        raise SystemExit(f"locked prettier executable is missing: {prettier}")
+    if not prettier_target.is_file():
+        raise SystemExit(f"reconciled prettier target is missing: {PRETTIER_RECONCILED}")
+    subprocess.run(
+        [str(prettier), "--write", PRETTIER_RECONCILED],
+        cwd=ROOT,
+        check=True,
+        timeout=300,
+    )
+    subprocess.run(
+        [str(prettier), "--check", PRETTIER_RECONCILED],
+        cwd=ROOT,
+        check=True,
+        timeout=300,
+    )
+    print("INFRA04_C2_POST_RECONCILIATION_PRETTIER:PASS:1")
+
     subprocess.run(
         ["git", "-C", str(ROOT), "fetch", "--no-tags", "origin", "main"], check=True, timeout=300
     )

@@ -6,6 +6,7 @@ and no voting protocol/runtime semantics. Text inputs are exact-SHA bound. The t
 FRONT-01 mobile visual baselines are refreshed only before freeze, and the refreshed
 bytes must equal the independently reproduced diagnostic hashes from run 33926395618.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -15,38 +16,82 @@ import subprocess
 from pathlib import Path
 
 PRE_EXPECTED = {
-    "frontend/web-shell/package.json": "3cc8d8db8893a27ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197",
-    "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
-    "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
-    "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
-    "services/voting-service/tests/reference/test_property.py": "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4",
-    "services/voting-service/tests/reference/test_target_conformance.py": "7f752daba15dc78796d4e9c8da91914219ccb34a67d01c18c9b3157ca81f6577",
+    "frontend/web-shell/package.json": (
+        "3cc8d8db8893a27ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197"
+    ),
+    "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": (
+        "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f"
+    ),
+    "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": (
+        "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211"
+    ),
+    "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts": (
+        "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc"
+    ),
+    "services/voting-service/tests/reference/test_property.py": (
+        "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4"
+    ),
+    "services/voting-service/tests/reference/test_target_conformance.py": (
+        "7f752daba15dc78796d4e9c8da91914219ccb34a67d01c18c9b3157ca81f6577"
+    ),
 }
 
 POST_EXPECTED = {
-    "frontend/web-shell/package.json": "df9133fcbe231bc4368e6995f0cbed4acaf5d6184e5fb06e4813ceff419d5282",
-    "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93",
-    "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094",
-    "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
-    "services/voting-service/tests/reference/test_property.py": "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6",
-    "services/voting-service/tests/reference/test_target_conformance.py": "f06765d63f06d9d03e632cfba1ebe80e3892642196c55ac58134ba2fcc196673",
+    "frontend/web-shell/package.json": (
+        "df9133fcbe231bc4368e6995f0cbed4acaf5d6184e5fb06e4813ceff419d5282"
+    ),
+    "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": (
+        "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93"
+    ),
+    "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": (
+        "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094"
+    ),
+    "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts": (
+        "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e"
+    ),
+    "services/voting-service/tests/reference/test_property.py": (
+        "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6"
+    ),
+    "services/voting-service/tests/reference/test_target_conformance.py": (
+        "f06765d63f06d9d03e632cfba1ebe80e3892642196c55ac58134ba2fcc196673"
+    ),
 }
 RUNNER_SHA256 = "df3a455b8c4e0e0de1303194580072635dd478bbc3a43aee2673db14a11d7d82"
 
 FRONT01_MOBILE_SHA256 = {
-    "front01-about-goals-mobile-linux.png": "19330778cce9bea934286303abf655e66f8d5a78bb15c48d688bfab33deb496b",
-    "front01-homepage-mobile-linux.png": "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4",
-    "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
-    "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
-    "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
-    "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
-    "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
-    "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
-    "front01-transparency-model-mobile-linux.png": "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419",
-    "front01-voting-explanation-mobile-linux.png": "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c",
+    "front01-about-goals-mobile-linux.png": (
+        "19330778cce9bea934286303abf655e66f8d5a78bb15c48d688bfab33deb496b"
+    ),
+    "front01-homepage-mobile-linux.png": (
+        "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4"
+    ),
+    "front01-initiative-lifecycle-mobile-linux.png": (
+        "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9"
+    ),
+    "front01-open-program-mobile-linux.png": (
+        "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece"
+    ),
+    "front01-participation-mobile-linux.png": (
+        "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e"
+    ),
+    "front01-program-detail-mobile-linux.png": (
+        "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258"
+    ),
+    "front01-roadmap-status-mobile-linux.png": (
+        "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653"
+    ),
+    "front01-technology-security-mobile-linux.png": (
+        "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c"
+    ),
+    "front01-transparency-model-mobile-linux.png": (
+        "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419"
+    ),
+    "front01-voting-explanation-mobile-linux.png": (
+        "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c"
+    ),
 }
 
-RUN_BROWSER = '''import { spawnSync } from "node:child_process";
+RUN_BROWSER = """import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 
@@ -69,7 +114,7 @@ run(["--grep", "@front03-production"], {
   ...process.env,
   FRONT03_TEST_PROFILE: "production",
 });
-'''
+"""
 
 
 def sha(path: Path) -> str:
@@ -178,16 +223,21 @@ def reconcile(root: Path) -> None:
     capture = root / "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts"
     replace_once(
         capture,
-        'for (const [key, route, readyText] of cases) {',
-        '''test.skip(\n  process.env.FRONT03_CAPTURE_BASELINES !== "1",\n  "baseline capture is an explicit maintenance action, not a normal acceptance test",\n);\n\nfor (const [key, route, readyText] of cases) {''',
+        "for (const [key, route, readyText] of cases) {",
+        (
+            "test.skip(\n  process.env.FRONT03_CAPTURE_BASELINES !=="
+            ' "1",\n  "baseline capture is an explicit maintenance a'
+            'ction, not a normal acceptance test",\n);\n\nfor (const ['
+            "key, route, readyText] of cases) {"
+        ),
     )
     text = capture.read_text(encoding="utf-8")
-    if text.count('test(`capture immutable FRONT03 ${key}`') != 1:
+    if text.count("test(`capture immutable FRONT03 ${key}`") != 1:
         raise SystemExit("unexpected FRONT-03 capture test title")
     capture.write_text(
         text.replace(
-            'test(`capture immutable FRONT03 ${key}`',
-            'test(`@front03-capture capture immutable FRONT03 ${key}`',
+            "test(`capture immutable FRONT03 ${key}`",
+            "test(`@front03-capture capture immutable FRONT03 ${key}`",
         ),
         encoding="utf-8",
     )
@@ -195,20 +245,63 @@ def reconcile(root: Path) -> None:
     prop = root / "services/voting-service/tests/reference/test_property.py"
     replace_once(
         prop,
-        '''def test_property_limitation_is_recorded() -> None:\n    """The limitation string exists so the report cannot quietly drop it."""\n    assert "not hypothesis" in PROPERTY_TEST_LIMITATION\n    with pytest.raises(ImportError):\n        import hypothesis  # noqa: F401\n''',
-        '''def test_property_limitation_is_recorded() -> None:\n    """The deterministic-loop limitation remains explicit in a fully provisioned CI env."""\n    assert "not hypothesis strategies" in PROPERTY_TEST_LIMITATION\n    import hypothesis\n\n    assert hypothesis.__version__\n''',
+        (
+            "def test_property_limitation_is_recorded() -> None:\n  "
+            '  """The limitation string exists so the report cannot'
+            ' quietly drop it."""\n    assert "not hypothesis" in PR'
+            "OPERTY_TEST_LIMITATION\n    with pytest.raises(ImportEr"
+            "ror):\n        import hypothesis  # noqa: F401\n"
+        ),
+        (
+            "def test_property_limitation_is_recorded() -> None:\n  "
+            '  """The deterministic-loop limitation remains explici'
+            't in a fully provisioned CI env."""\n    assert "not hy'
+            'pothesis strategies" in PROPERTY_TEST_LIMITATION\n    i'
+            "mport hypothesis\n\n    assert hypothesis.__version__\n"
+        ),
     )
 
     target = root / "services/voting-service/tests/reference/test_target_conformance.py"
     replace_once(
         target,
-        '''Timings are recorded per operation and written next to the fixtures, so the\ncost is a published number rather than an excuse.\n''',
-        '''Canonical target-profile timings are published next to the fixtures. Routine\nconformance runs measure the independent oracle but do not rewrite that tracked\nevidence: host-specific measurements belong to the acceptance run output, not\nto a frozen canonical source tree.\n''',
+        (
+            "Timings are recorded per operation and written next to"
+            " the fixtures, so the\ncost is a published number rathe"
+            "r than an excuse.\n"
+        ),
+        (
+            "Canonical target-profile timings are published next to"
+            " the fixtures. Routine\nconformance runs measure the in"
+            "dependent oracle but do not rewrite that tracked\nevide"
+            "nce: host-specific measurements belong to the acceptan"
+            "ce run output, not\nto a frozen canonical source tree.\n"
+        ),
     )
     replace_once(
         target,
-        '''    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    timings = dict(target_fixtures["timings"])\n    timings["independent_oracle_full_run"] = elapsed\n    TIMINGS.parent.mkdir(parents=True, exist_ok=True)\n    TIMINGS.write_text(\n        json.dumps(\n            {\n                "profile_id": TARGET_PROFILE_ID,\n                "note": (\n                    "producer-side generation and one full independent oracle "\n                    "run, in seconds, measured on the build host. A benchmark, "\n                    "not a capacity statement."\n                ),\n                "seconds": timings,\n            },\n            indent=2,\n        )\n        + "\\n",\n        encoding="utf-8",\n    )\n    return result\n''',
-        '''    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    assert elapsed >= 0.0\n    return result\n''',
+        (
+            "    started = time.perf_counter()\n    result = _ask_or"
+            'acle(target_fixtures["cases"])\n    elapsed = round(tim'
+            "e.perf_counter() - started, 3)\n    timings = dict(targ"
+            'et_fixtures["timings"])\n    timings["independent_oracl'
+            'e_full_run"] = elapsed\n    TIMINGS.parent.mkdir(parent'
+            "s=True, exist_ok=True)\n    TIMINGS.write_text(\n       "
+            ' json.dumps(\n            {\n                "profile_id'
+            '": TARGET_PROFILE_ID,\n                "note": (\n      '
+            '              "producer-side generation and one full i'
+            'ndependent oracle "\n                    "run, in secon'
+            'ds, measured on the build host. A benchmark, "\n       '
+            '             "not a capacity statement."\n             '
+            '   ),\n                "seconds": timings,\n            '
+            '},\n            indent=2,\n        )\n        + "\\n",\n   '
+            '     encoding="utf-8",\n    )\n    return result\n'
+        ),
+        (
+            "    started = time.perf_counter()\n    result = _ask_or"
+            'acle(target_fixtures["cases"])\n    elapsed = round(tim'
+            "e.perf_counter() - started, 3)\n    assert elapsed >= 0"
+            ".0\n    return result\n"
+        ),
     )
 
     print("INFRA04_C2_INHERITED_ACCEPTANCE_BASELINE_RECONCILIATION:PASS:6")
