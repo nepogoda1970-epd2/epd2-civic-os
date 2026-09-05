@@ -8,23 +8,11 @@ permissions:
 jobs:
   diagnose:
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
-      - name: Materialize exact C2
-        shell: bash
-        env:
-          INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
-          INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
-        run: |
-          set -euo pipefail
-          git fetch --no-tags origin handoff/infra
-          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
-          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
-          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
-          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
-          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
@@ -32,51 +20,93 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
-      - name: Install frozen dependencies
-        run: |
-          uv sync --all-groups --frozen
-          npm ci
-      - name: Capture exact formatter failures
-        shell: bash
-        run: |
-          mkdir -p /tmp/infra04-format-diagnostic
-          set +e
-          uv run ruff format --check --diff . > /tmp/infra04-format-diagnostic/ruff-format.diff 2>&1
-          echo "$?" > /tmp/infra04-format-diagnostic/ruff-format.rc
-          uv run ruff check . > /tmp/infra04-format-diagnostic/ruff-lint.txt 2>&1
-          echo "$?" > /tmp/infra04-format-diagnostic/ruff-lint.rc
-          npx prettier --check . > /tmp/infra04-format-diagnostic/prettier-check.txt 2>&1
-          echo "$?" > /tmp/infra04-format-diagnostic/prettier.rc
-          set -e
-      - name: Apply formatters in runner and capture changed paths/diff
+      - name: Format only the C2-owned reconciliation source
         shell: bash
         run: |
           set -euo pipefail
+          TARGET=handoff/INFRA/infra04-c2-overlay/scripts/infra04/reconcile_inherited_acceptance_baseline.py
+          uv sync --all-groups --frozen
+          uv run ruff format "$TARGET"
+          uv run ruff check "$TARGET"
+          mkdir -p /tmp/infra04-post-reconcile
+          cp "$TARGET" /tmp/infra04-post-reconcile/reconcile_inherited_acceptance_baseline.py
+      - name: Materialize exact canonical C2 with formatted owned source
+        shell: bash
+        env:
+          CANONICAL_SHA: f4066a5a13949bdfbd53c19890e1f4b0fee5d6b0
+          INFRA02_PATH: handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip
+          INFRA02_SHA256: d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c
+        run: |
+          set -euo pipefail
+          SOURCE_ROOT="$GITHUB_WORKSPACE"
+          CANDIDATE_ROOT="$RUNNER_TEMP/infra04-c2-post-reconcile"
+          git fetch --no-tags origin candidate/infra04-c2-canonical handoff/infra main
+          test "$(git rev-parse origin/candidate/infra04-c2-canonical)" = "$CANONICAL_SHA"
+          git show "origin/handoff/infra:$INFRA02_PATH" > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "$INFRA02_SHA256"
+          git worktree add --detach "$CANDIDATE_ROOT" "$CANONICAL_SHA"
+          cp /tmp/infra04-post-reconcile/reconcile_inherited_acceptance_baseline.py \
+            "$CANDIDATE_ROOT/handoff/INFRA/infra04-c2-overlay/scripts/infra04/reconcile_inherited_acceptance_baseline.py"
+          python3 "$CANDIDATE_ROOT/handoff/INFRA/infra04-c2-transport/apply.py" \
+            --root "$CANDIDATE_ROOT" --predecessor /tmp/infra02.zip
+          cp -a "$CANDIDATE_ROOT/handoff/INFRA/infra04-c2-overlay/." "$CANDIDATE_ROOT"/
+          rm -rf "$CANDIDATE_ROOT/handoff/INFRA/infra04-c2-transport" "$CANDIDATE_ROOT/handoff/INFRA/infra04-c2-overlay"
+          printf '%s\n' "$CANDIDATE_ROOT" > /tmp/infra04-post-reconcile/candidate-root.txt
+      - name: Install candidate dependencies and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat /tmp/infra04-post-reconcile/candidate-root.txt)
+          cd "$ROOT"
+          uv sync --all-groups --frozen
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Execute exact reconciliation and changed-file lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat /tmp/infra04-post-reconcile/candidate-root.txt)
+          cd "$ROOT"
+          git rm -f --ignore-unmatch SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+          uv run python -m scripts.infra04.build_changed_manifest
+          echo INFRA04_POST_RECONCILIATION:PASS
+      - name: Capture post-reconciliation static failures and formatter delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(cat /tmp/infra04-post-reconcile/candidate-root.txt)
+          cd "$ROOT"
+          set +e
+          uv run ruff format --check --diff . > /tmp/infra04-post-reconcile/post-ruff-format.diff 2>&1
+          echo "$?" > /tmp/infra04-post-reconcile/post-ruff-format.rc
+          uv run ruff check . > /tmp/infra04-post-reconcile/post-ruff-lint.txt 2>&1
+          echo "$?" > /tmp/infra04-post-reconcile/post-ruff-lint.rc
+          npx prettier --check . > /tmp/infra04-post-reconcile/post-prettier-check.txt 2>&1
+          echo "$?" > /tmp/infra04-post-reconcile/post-prettier.rc
+          set -e
+          git status --porcelain > /tmp/infra04-post-reconcile/post-reconcile-status.txt
+          cp docs/infra/INFRA-04/INFRA04_CHANGED_FILE_MANIFEST.json /tmp/infra04-post-reconcile/changed-manifest.json
+          cp -a . /tmp/infra04-before-format
           uv run ruff format .
           uv run ruff check --fix . || true
           npx prettier --write . >/dev/null
-          git diff --name-only > /tmp/infra04-format-diagnostic/formatter-changed-paths.txt
-          git diff --stat > /tmp/infra04-format-diagnostic/formatter-diff-stat.txt
-          git diff -- . ':(exclude)package-lock.json' ':(exclude)uv.lock' > /tmp/infra04-format-diagnostic/formatter.diff
-      - name: Upload exact diagnostic evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: infra04-c2-formatter-diagnostic
-          path: /tmp/infra04-format-diagnostic/
-          if-no-files-found: error
-          retention-days: 7
-      - name: Persist exact text evidence on diagnostic branch
+          git diff --name-only > /tmp/infra04-post-reconcile/post-formatter-changed-paths.txt
+          git diff --stat > /tmp/infra04-post-reconcile/post-formatter-diff-stat.txt
+          git diff -- . ':(exclude)package-lock.json' ':(exclude)uv.lock' > /tmp/infra04-post-reconcile/post-formatter.diff
+      - name: Persist exact evidence and formatted owned source
         if: always()
         shell: bash
         run: |
           set -euo pipefail
-          OUT=diagnostics/infra04-c2-formatter
+          cd "$GITHUB_WORKSPACE"
+          OUT=diagnostics/infra04-c2-post-reconcile
           rm -rf "$OUT"
           mkdir -p "$OUT"
-          cp /tmp/infra04-format-diagnostic/* "$OUT"/
+          cp /tmp/infra04-post-reconcile/* "$OUT"/ 2>/dev/null || true
           git config user.name 'EPD2 INFRA04 diagnostic'
           git config user.email 'infra04-diagnostic@invalid.local'
           git add "$OUT"
-          git commit -m 'diagnostic(infra04): persist formatter evidence snapshot'
+          git commit -m 'diagnostic(infra04): persist post-reconciliation static evidence'
           git push origin HEAD:diagnostic/infra04-c2-formatters-20260904
