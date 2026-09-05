@@ -1,0 +1,42 @@
+name: Context Pack Governance Export
+
+on:
+  push:
+    branches: ["diagnostic/context-pack-governance-docs-20260905"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout export branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Export exact canonical governance bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+          mkdir -p exported
+          for p in \
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          do
+            git show "$BASE:$p" > "exported/$(basename "$p")"
+          done
+          printf '%s\n' "$BASE" > exported/CANONICAL_MAIN_COMMIT.txt
+          (cd exported && sha256sum *.md > SHA256SUMS.txt)
+          cat exported/SHA256SUMS.txt
+
+      - name: Upload exact governance documents
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: epd2-canonical-governance-docs-7544f5dc
+          path: exported/
+          if-no-files-found: error
+          retention-days: 7
