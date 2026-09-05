@@ -53,6 +53,11 @@ jobs:
           set -euo pipefail
           uv sync --all-groups --frozen
           npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Apply inherited acceptance baseline reconciliation
+        shell: bash
+        run: uv run python -m scripts.infra04.reconcile_inherited_acceptance_baseline --root .
 
       - name: Expose Ruff format failures
         shell: bash
