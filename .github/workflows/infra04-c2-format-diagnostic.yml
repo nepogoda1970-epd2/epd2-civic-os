@@ -3,9 +3,10 @@ on:
   push:
     branches: ["diagnostic/infra04-c2-formatters-20260904"]
 permissions:
-  contents: read
+  contents: write
 jobs:
   diagnose:
+    if: github.event.head_commit.message != 'diagnostic(infra04): persist formatter evidence snapshot'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -65,3 +66,17 @@ jobs:
           path: /tmp/infra04-format-diagnostic/
           if-no-files-found: error
           retention-days: 7
+      - name: Persist exact text evidence on diagnostic branch
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=diagnostics/infra04-c2-formatter
+          rm -rf "$OUT"
+          mkdir -p "$OUT"
+          cp /tmp/infra04-format-diagnostic/* "$OUT"/
+          git config user.name 'EPD2 INFRA04 diagnostic'
+          git config user.email 'infra04-diagnostic@invalid.local'
+          git add "$OUT"
+          git commit -m 'diagnostic(infra04): persist formatter evidence snapshot'
+          git push origin HEAD:diagnostic/infra04-c2-formatters-20260904
