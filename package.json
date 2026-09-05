@@ -10,8 +10,8 @@
     "frontend/representative-workspace"
   ],
   "scripts": {
-    "format:check": "prettier --check .",
-    "format": "prettier --write ."
+    "format:check": "prettier --check packages/typescript/epd2-types frontend/web-shell frontend/voting-client frontend/representative-workspace",
+    "format": "prettier --write packages/typescript/epd2-types frontend/web-shell frontend/voting-client frontend/representative-workspace"
   },
   "devDependencies": {
     "prettier": "^3.3.0"
