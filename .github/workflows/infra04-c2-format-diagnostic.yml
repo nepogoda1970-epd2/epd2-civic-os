@@ -35,30 +35,33 @@ jobs:
         run: |
           uv sync --all-groups --frozen
           npm ci
-      - name: Print exact formatter failures
+      - name: Capture exact formatter failures
         shell: bash
         run: |
+          mkdir -p /tmp/infra04-format-diagnostic
           set +e
-          echo '===== RUFF FORMAT CHECK ====='
-          uv run ruff format --check --diff .
-          echo "RUFF_FORMAT_RC=$?"
-          echo '===== RUFF LINT CHECK ====='
-          uv run ruff check .
-          echo "RUFF_LINT_RC=$?"
-          echo '===== PRETTIER CHECK ====='
-          npx prettier --check .
-          echo "PRETTIER_RC=$?"
+          uv run ruff format --check --diff . > /tmp/infra04-format-diagnostic/ruff-format.diff 2>&1
+          echo "$?" > /tmp/infra04-format-diagnostic/ruff-format.rc
+          uv run ruff check . > /tmp/infra04-format-diagnostic/ruff-lint.txt 2>&1
+          echo "$?" > /tmp/infra04-format-diagnostic/ruff-lint.rc
+          npx prettier --check . > /tmp/infra04-format-diagnostic/prettier-check.txt 2>&1
+          echo "$?" > /tmp/infra04-format-diagnostic/prettier.rc
           set -e
-      - name: Apply formatters in runner and print changed paths/diff
+      - name: Apply formatters in runner and capture changed paths/diff
         shell: bash
         run: |
           set -euo pipefail
           uv run ruff format .
           uv run ruff check --fix . || true
           npx prettier --write . >/dev/null
-          echo '===== FORMATTER CHANGED PATHS ====='
-          git diff --name-only
-          echo '===== FORMATTER DIFF STAT ====='
-          git diff --stat
-          echo '===== FORMATTER DIFF ====='
-          git diff -- . ':(exclude)package-lock.json' ':(exclude)uv.lock'
+          git diff --name-only > /tmp/infra04-format-diagnostic/formatter-changed-paths.txt
+          git diff --stat > /tmp/infra04-format-diagnostic/formatter-diff-stat.txt
+          git diff -- . ':(exclude)package-lock.json' ':(exclude)uv.lock' > /tmp/infra04-format-diagnostic/formatter.diff
+      - name: Upload exact diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: infra04-c2-formatter-diagnostic
+          path: /tmp/infra04-format-diagnostic/
+          if-no-files-found: error
+          retention-days: 7
