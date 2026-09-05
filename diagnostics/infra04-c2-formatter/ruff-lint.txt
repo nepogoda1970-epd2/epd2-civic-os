@@ -1,0 +1,313 @@
+E501 Line too long (106 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:18:101
+   |
+17 | PRE_EXPECTED = {
+18 |     "frontend/web-shell/package.json": "3cc8d8db8893a27ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197",
+   |                                                                                                     ^^^^^^
+19 |     "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
+20 |     "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52…
+   |
+
+E501 Line too long (134 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:19:101
+   |
+17 | …
+18 | …3a27ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197",
+19 | …owser.spec.ts": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
+   |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+20 | …ction.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
+21 | …l.capture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+   |
+
+E501 Line too long (142 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:20:101
+   |
+18 | …ddaaf0140b79002e50c4328dc799c9ddef3ceb14812e85197",
+19 | …r.spec.ts": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
+20 | …n.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | …pture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+22 | …rty.py": "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4",
+   |
+
+E501 Line too long (138 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:21:101
+   |
+19 | …ser.spec.ts": "57f68af15e95900d937ee70a4bb2e89672182dcccdb1c8d874b393498ce6a58f",
+20 | …ion.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
+21 | …capture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | …perty.py": "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4",
+23 | …get_conformance.py": "7f752daba15dc78796d4e9c8da91914219ccb34a67d01c18c9b3157ca81f6577",
+   |
+
+E501 Line too long (131 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:22:101
+   |
+20 | …duction.browser.spec.ts": "0c3cbddea7a95e258ae9061b54757b18e639750eedd1f284c679192e52132211",
+21 | …ual.capture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+22 | …_property.py": "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4",
+   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+23 | …_target_conformance.py": "7f752daba15dc78796d4e9c8da91914219ccb34a67d01c18c9b3157ca81f6577",
+24 | …
+   |
+
+E501 Line too long (141 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:23:101
+   |
+21 | …apture.spec.ts": "d9776c20490aaa68a349cd2d4e05fa3a56088bdddcf8ce5182db9871ee2421bc",
+22 | …erty.py": "c9003f89237ef9404d5bc016b8a2dbb04af974350aa26c055ae3a93ceb8744d4",
+23 | …et_conformance.py": "7f752daba15dc78796d4e9c8da91914219ccb34a67d01c18c9b3157ca81f6577",
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | …
+   |
+
+E501 Line too long (106 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:27:101
+   |
+26 | POST_EXPECTED = {
+27 |     "frontend/web-shell/package.json": "df9133fcbe231bc4368e6995f0cbed4acaf5d6184e5fb06e4813ceff419d5282",
+   |                                                                                                     ^^^^^^
+28 |     "frontend/web-shell/tests/browser/front03.c1.browser.spec.ts": "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93",
+29 |     "frontend/web-shell/tests/browser/front03.production.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3…
+   |
+
+E501 Line too long (134 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:28:101
+   |
+26 | …
+27 | …31bc4368e6995f0cbed4acaf5d6184e5fb06e4813ceff419d5282",
+28 | …owser.spec.ts": "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93",
+   |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+29 | …ction.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094",
+30 | …l.capture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
+   |
+
+E501 Line too long (142 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:29:101
+   |
+27 | …4368e6995f0cbed4acaf5d6184e5fb06e4813ceff419d5282",
+28 | …r.spec.ts": "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93",
+29 | …n.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094",
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+30 | …pture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
+31 | …rty.py": "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6",
+   |
+
+E501 Line too long (138 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:30:101
+   |
+28 | …ser.spec.ts": "09b5943d72b1a41543a0daefd65d6d6e232a0608dafda9a39659051a40884f93",
+29 | …ion.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094",
+30 | …capture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
+   |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+31 | …perty.py": "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6",
+32 | …get_conformance.py": "f06765d63f06d9d03e632cfba1ebe80e3892642196c55ac58134ba2fcc196673",
+   |
+
+E501 Line too long (131 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:31:101
+   |
+29 | …duction.browser.spec.ts": "8f4fa87f28dcefc72193da900e31b071a0272542cb3e414ad078a2a1e3fef094",
+30 | …ual.capture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
+31 | …_property.py": "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6",
+   |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+32 | …_target_conformance.py": "f06765d63f06d9d03e632cfba1ebe80e3892642196c55ac58134ba2fcc196673",
+33 | …
+   |
+
+E501 Line too long (141 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:32:101
+   |
+30 | …apture.spec.ts": "0a65ad8c043c540e16ea347bacec58107dd4f534493256658eafabac0cfcae8e",
+31 | …erty.py": "ec0601d73990c24d29d19c20ee1aea31578f43e46192313385526fcb2a7fc8c6",
+32 | …et_conformance.py": "f06765d63f06d9d03e632cfba1ebe80e3892642196c55ac58134ba2fcc196673",
+   |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+33 | …
+34 | …8bbc3a43aee2673db14a11d7d82"
+   |
+
+E501 Line too long (111 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:37:101
+   |
+36 | FRONT01_MOBILE_SHA256 = {
+37 |     "front01-about-goals-mobile-linux.png": "19330778cce9bea934286303abf655e66f8d5a78bb15c48d688bfab33deb496b",
+   |                                                                                                     ^^^^^^^^^^^
+38 |     "front01-homepage-mobile-linux.png": "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4",
+39 |     "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
+   |
+
+E501 Line too long (108 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:38:101
+   |
+36 | FRONT01_MOBILE_SHA256 = {
+37 |     "front01-about-goals-mobile-linux.png": "19330778cce9bea934286303abf655e66f8d5a78bb15c48d688bfab33deb496b",
+38 |     "front01-homepage-mobile-linux.png": "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4",
+   |                                                                                                     ^^^^^^^^
+39 |     "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
+40 |     "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
+   |
+
+E501 Line too long (120 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:39:101
+   |
+37 |     "front01-about-goals-mobile-linux.png": "19330778cce9bea934286303abf655e66f8d5a78bb15c48d688bfab33deb496b",
+38 |     "front01-homepage-mobile-linux.png": "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4",
+39 |     "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+40 |     "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
+41 |     "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
+   |
+
+E501 Line too long (112 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:40:101
+   |
+38 |     "front01-homepage-mobile-linux.png": "3ace3a1bcbc6d7664a9a83ac839dabfa7691a823586635c7fb11f84e073fc4c4",
+39 |     "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
+40 |     "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
+   |                                                                                                     ^^^^^^^^^^^^
+41 |     "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
+42 |     "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
+   |
+
+E501 Line too long (113 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:41:101
+   |
+39 |     "front01-initiative-lifecycle-mobile-linux.png": "b50ce572cad902ec6b6ee3f7a3b09deabc3ad352837da1d45632ed587061f3f9",
+40 |     "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
+41 |     "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
+   |                                                                                                     ^^^^^^^^^^^^^
+42 |     "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
+43 |     "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
+   |
+
+E501 Line too long (114 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:42:101
+   |
+40 |     "front01-open-program-mobile-linux.png": "18eb5c86eeb12a1ce13134ce488b7db6cacb47ddefa48545141ba7faf4dafece",
+41 |     "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
+42 |     "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
+   |                                                                                                     ^^^^^^^^^^^^^^
+43 |     "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
+44 |     "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
+   |
+
+E501 Line too long (114 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:43:101
+   |
+41 |     "front01-participation-mobile-linux.png": "9be9fdfd31847161015739a34a0dab137f864f9f7cc3c6a9b61b554b44d9db7e",
+42 |     "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
+43 |     "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
+   |                                                                                                     ^^^^^^^^^^^^^^
+44 |     "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
+45 |     "front01-transparency-model-mobile-linux.png": "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419",
+   |
+
+E501 Line too long (119 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:44:101
+   |
+42 |     "front01-program-detail-mobile-linux.png": "e5a708822439ee5bf221524928941862b73cba3f9ddb96a833254b676a757258",
+43 |     "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
+44 |     "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+45 |     "front01-transparency-model-mobile-linux.png": "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419",
+46 |     "front01-voting-explanation-mobile-linux.png": "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c",
+   |
+
+E501 Line too long (118 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:45:101
+   |
+43 |     "front01-roadmap-status-mobile-linux.png": "8217133db75133436c659d2d948ca8cba5e3e2eae6e15de8a51a7393b7519653",
+44 |     "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
+45 |     "front01-transparency-model-mobile-linux.png": "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^
+46 |     "front01-voting-explanation-mobile-linux.png": "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c",
+47 | }
+   |
+
+E501 Line too long (118 > 100)
+  --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:46:101
+   |
+44 |     "front01-technology-security-mobile-linux.png": "d4023a3887b77d741d1b54cd88f44a59f7e54d6525d2530519df6b0cb0ff810c",
+45 |     "front01-transparency-model-mobile-linux.png": "c4ff35c41ba9d4d3743c6ee62201943534fd3bd23d4f0ab832835a6c39a9a419",
+46 |     "front01-voting-explanation-mobile-linux.png": "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^
+47 | }
+   |
+
+E501 Line too long (216 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:182:101
+    |
+180 | …
+181 | …
+182 | … is an explicit maintenance action, not a normal acceptance test",\n);\n\nfor (const [key, route, readyText] of cases) {''',
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+183 | …
+184 | …
+    |
+
+E501 Line too long (282 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:198:101
+    |
+196 | …
+197 | …
+198 | …ists so the report cannot quietly drop it."""\n    assert "not hypothesis" in PROPERTY_TEST_LIMITATION\n    with pytest.raises(ImportError):\n        import hypothesis  # noqa: F401\n''',
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+199 | …imitation remains explicit in a fully provisioned CI env."""\n    assert "not hypothesis strategies" in PROPERTY_TEST_LIMITATION\n    import hypothesis\n\n    assert hypothesis.__version__\n''…
+200 | …
+    |
+
+E501 Line too long (289 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:199:101
+    |
+197 | …
+198 | …ists so the report cannot quietly drop it."""\n    assert "not hypothesis" in PROPERTY_TEST_LIMITATION\n    with pytest.raises(ImportError):\n        import hypothesis  # noqa: F401\n''',
+199 | …imitation remains explicit in a fully provisioned CI env."""\n    assert "not hypothesis strategies" in PROPERTY_TEST_LIMITATION\n    import hypothesis\n\n    assert hypothesis.__version__\n''',
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+200 | …
+    |
+
+E501 Line too long (143 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:205:101
+    |
+203 | …
+204 | …
+205 | …n next to the fixtures, so the\ncost is a published number rather than an excuse.\n''',
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+206 | …d next to the fixtures. Routine\nconformance runs measure the independent oracle but do not rewrite that tracked\nevidence: host-spe…
+207 | …
+    |
+
+E501 Line too long (289 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:206:101
+    |
+204 | …
+205 | … a published number rather than an excuse.\n''',
+206 | …mance runs measure the independent oracle but do not rewrite that tracked\nevidence: host-specific measurements belong to the acceptance run output, not\nto a frozen canonical source tree.\n''',
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+207 | …
+208 | …
+    |
+
+E501 Line too long (842 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:210:101
+    |
+208 | …
+209 | …
+210 | …)\n    elapsed = round(time.perf_counter() - started, 3)\n    timings = dict(target_fixtures["timings"])\n    timings["independent_oracle_full_run"] = elapsed\n    TIMINGS.parent.mkdir(parents=True, exist_ok=True)\n    TIMINGS.write_text(\n        json.dumps(\n            {\n                "profile_id": TARGET_PROFILE_ID,\n                "note": (\n                    "producer-side generation and one full independent oracle "\n                    "run, in seconds, measured on the build host. A benchmark, "\n                    "not a capacity statement."\n                ),\n                "seconds": timings,\n            },\n            indent=2,\n        )\n        + "\\n",\n        encoding="utf-8",\n    )\n    return result\n''',
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+211 | …)\n    elapsed = round(time.perf_counter() - started, 3)\n    assert elapsed >= 0.0\n    return result\n''',
+212 | …
+    |
+
+E501 Line too long (203 > 100)
+   --> scripts/infra04/reconcile_inherited_acceptance_baseline.py:211:101
+    |
+209 | …
+210 | …["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    timings = dict(target_fixtures["timings"])\n    timings["inde…
+211 | …["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    assert elapsed >= 0.0\n    return result\n''',
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+212 | …
+    |
+
+Found 29 errors.

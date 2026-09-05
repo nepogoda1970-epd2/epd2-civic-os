@@ -1,0 +1,70 @@
+--- scripts/infra04/reconcile_inherited_acceptance_baseline.py
++++ scripts/infra04/reconcile_inherited_acceptance_baseline.py
+@@ -6,6 +6,7 @@
+ FRONT-01 mobile visual baselines are refreshed only before freeze, and the refreshed
+ bytes must equal the independently reproduced diagnostic hashes from run 33926395618.
+ """
++
+ from __future__ import annotations
+ 
+ import argparse
+@@ -46,7 +47,7 @@
+     "front01-voting-explanation-mobile-linux.png": "5c58147dc048190ab6d4ea5415227796a3a66260bf52725b8842838e29cde57c",
+ }
+ 
+-RUN_BROWSER = '''import { spawnSync } from "node:child_process";
++RUN_BROWSER = """import { spawnSync } from "node:child_process";
+ import { createRequire } from "node:module";
+ import { dirname, resolve } from "node:path";
+ 
+@@ -69,7 +70,7 @@
+   ...process.env,
+   FRONT03_TEST_PROFILE: "production",
+ });
+-'''
++"""
+ 
+ 
+ def sha(path: Path) -> str:
+@@ -178,16 +179,16 @@
+     capture = root / "frontend/web-shell/tests/browser/front03.visual.capture.spec.ts"
+     replace_once(
+         capture,
+-        'for (const [key, route, readyText] of cases) {',
+-        '''test.skip(\n  process.env.FRONT03_CAPTURE_BASELINES !== "1",\n  "baseline capture is an explicit maintenance action, not a normal acceptance test",\n);\n\nfor (const [key, route, readyText] of cases) {''',
++        "for (const [key, route, readyText] of cases) {",
++        """test.skip(\n  process.env.FRONT03_CAPTURE_BASELINES !== "1",\n  "baseline capture is an explicit maintenance action, not a normal acceptance test",\n);\n\nfor (const [key, route, readyText] of cases) {""",
+     )
+     text = capture.read_text(encoding="utf-8")
+-    if text.count('test(`capture immutable FRONT03 ${key}`') != 1:
++    if text.count("test(`capture immutable FRONT03 ${key}`") != 1:
+         raise SystemExit("unexpected FRONT-03 capture test title")
+     capture.write_text(
+         text.replace(
+-            'test(`capture immutable FRONT03 ${key}`',
+-            'test(`@front03-capture capture immutable FRONT03 ${key}`',
++            "test(`capture immutable FRONT03 ${key}`",
++            "test(`@front03-capture capture immutable FRONT03 ${key}`",
+         ),
+         encoding="utf-8",
+     )
+@@ -202,13 +203,13 @@
+     target = root / "services/voting-service/tests/reference/test_target_conformance.py"
+     replace_once(
+         target,
+-        '''Timings are recorded per operation and written next to the fixtures, so the\ncost is a published number rather than an excuse.\n''',
+-        '''Canonical target-profile timings are published next to the fixtures. Routine\nconformance runs measure the independent oracle but do not rewrite that tracked\nevidence: host-specific measurements belong to the acceptance run output, not\nto a frozen canonical source tree.\n''',
++        """Timings are recorded per operation and written next to the fixtures, so the\ncost is a published number rather than an excuse.\n""",
++        """Canonical target-profile timings are published next to the fixtures. Routine\nconformance runs measure the independent oracle but do not rewrite that tracked\nevidence: host-specific measurements belong to the acceptance run output, not\nto a frozen canonical source tree.\n""",
+     )
+     replace_once(
+         target,
+-        '''    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    timings = dict(target_fixtures["timings"])\n    timings["independent_oracle_full_run"] = elapsed\n    TIMINGS.parent.mkdir(parents=True, exist_ok=True)\n    TIMINGS.write_text(\n        json.dumps(\n            {\n                "profile_id": TARGET_PROFILE_ID,\n                "note": (\n                    "producer-side generation and one full independent oracle "\n                    "run, in seconds, measured on the build host. A benchmark, "\n                    "not a capacity statement."\n                ),\n                "seconds": timings,\n            },\n            indent=2,\n        )\n        + "\\n",\n        encoding="utf-8",\n    )\n    return result\n''',
+-        '''    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    assert elapsed >= 0.0\n    return result\n''',
++        """    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    timings = dict(target_fixtures["timings"])\n    timings["independent_oracle_full_run"] = elapsed\n    TIMINGS.parent.mkdir(parents=True, exist_ok=True)\n    TIMINGS.write_text(\n        json.dumps(\n            {\n                "profile_id": TARGET_PROFILE_ID,\n                "note": (\n                    "producer-side generation and one full independent oracle "\n                    "run, in seconds, measured on the build host. A benchmark, "\n                    "not a capacity statement."\n                ),\n                "seconds": timings,\n            },\n            indent=2,\n        )\n        + "\\n",\n        encoding="utf-8",\n    )\n    return result\n""",
++        """    started = time.perf_counter()\n    result = _ask_oracle(target_fixtures["cases"])\n    elapsed = round(time.perf_counter() - started, 3)\n    assert elapsed >= 0.0\n    return result\n""",
+     )
+ 
+     print("INFRA04_C2_INHERITED_ACCEPTANCE_BASELINE_RECONCILIATION:PASS:6")
+
+1 file would be reformatted, 684 files already formatted
