@@ -200,6 +200,14 @@ jobs:
           "$PY" -m ruff format --check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py"
           "$PY" -m mypy "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py"
           "$PY" "$ROOT/scripts/find_st01_04/run_mutations.py" --harness-root "$HARNESS" --out "$ROOT/validation/find_st01_04/c6_mutation_result.json"
+          # api04_ci_setup proves the broker/version/PKI and provisions its own
+          # fixture. G31 is required to provision a fresh fixture itself, so
+          # remove only those setup users/vhost before the measured pair.
+          for user in $(jq -r '.service_principals[] | "svc-"+.' "$ROOT/docs/api/API-04/API04_PRODUCER_CONSUMER_ACL_MATRIX.json"); do
+            sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_user "$user" >/dev/null 2>&1 || true
+          done
+          sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_user api04-provisioner-epd2-api04 >/dev/null 2>&1 || true
+          sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_vhost epd2-api04 >/dev/null 2>&1 || true
           "$PY" "$ROOT/scripts/find_st01_04/run_g31_pair.py" --candidate-root "$ROOT" --accepted-archive "$API06" --work "$RUNNER_TEMP/g31" --venv "$UV_PROJECT_ENVIRONMENT" --pg-bin "$RUNNER_TEMP/api04-ci/pg1615/bin" --pg-port 55432 --pg-user api04 --pg-db epd2_api04 --rabbit-node "$RABBITMQ_NODENAME" --broker-pki "$RUNNER_TEMP/api04-ci/pki" --out "$ROOT/validation/find_st01_04/c6_g31_environment_fingerprint.json"
           cp "$RUNNER_TEMP/g31/api06_pristine_result.json" "$ROOT/validation/find_st01_04/c6_api06_pristine_result.json"
           cp "$RUNNER_TEMP/g31/api06_corrected_result.json" "$ROOT/validation/find_st01_04/c6_api06_regression_result.json"
