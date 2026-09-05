@@ -208,6 +208,11 @@ jobs:
           done
           sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_user api04-provisioner-epd2-api04 >/dev/null 2>&1 || true
           sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_vhost epd2-api04 >/dev/null 2>&1 || true
+          # rabbitmqctl requires the runner's privileged Erlang cookie. Supply
+          # the unmodified CLI through a minimal sudo transport wrapper.
+          printf '%s\n' '#!/bin/sh' 'exec sudo /usr/sbin/rabbitmqctl "$@"' > "$RUNNER_TEMP/rabbitmqctl-sudo"
+          chmod 755 "$RUNNER_TEMP/rabbitmqctl-sudo"
+          export RABBITMQCTL="$RUNNER_TEMP/rabbitmqctl-sudo"
           "$PY" "$ROOT/scripts/find_st01_04/run_g31_pair.py" --candidate-root "$ROOT" --accepted-archive "$API06" --work "$RUNNER_TEMP/g31" --venv "$UV_PROJECT_ENVIRONMENT" --pg-bin "$RUNNER_TEMP/api04-ci/pg1615/bin" --pg-port 55432 --pg-user api04 --pg-db epd2_api04 --rabbit-node "$RABBITMQ_NODENAME" --broker-pki "$RUNNER_TEMP/api04-ci/pki" --out "$ROOT/validation/find_st01_04/c6_g31_environment_fingerprint.json"
           cp "$RUNNER_TEMP/g31/api06_pristine_result.json" "$ROOT/validation/find_st01_04/c6_api06_pristine_result.json"
           cp "$RUNNER_TEMP/g31/api06_corrected_result.json" "$ROOT/validation/find_st01_04/c6_api06_regression_result.json"
