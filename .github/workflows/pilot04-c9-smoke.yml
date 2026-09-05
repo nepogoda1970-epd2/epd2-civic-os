@@ -1,91 +1,42 @@
-name: PILOT-04 C9 exact-byte acceptance
+name: Context Pack Governance Export
 
 on:
-  pull_request:
+  push:
+    branches: ["diagnostic/context-pack-governance-docs-20260905"]
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
-  accept:
+  export:
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
-    services:
-      postgres:
-        image: postgres:16.15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      EPD2_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
-      EPD2_LOCAL_CI_HOME: ${{ runner.temp }}/epd2-local-ci
-      PYTHONUNBUFFERED: '1'
-
     steps:
-      - name: Checkout exact verification branch
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Checkout export branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
-          python-version: '3.12'
+          fetch-depth: 0
 
-      - name: Set up Node 24.19.0
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.19.0'
-
-      - name: Set up uv 0.10.0
-        uses: astral-sh/setup-uv@v6
-        with:
-          version: '0.10.0'
-          enable-cache: true
-
-      - name: Install PostgreSQL 16 client
+      - name: Export exact canonical governance bytes
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client-16
+          BASE=7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5
+          mkdir -p exported
+          for p in \
+            docs/roadmap/EPD2_PROJECT_ENTRYPOINT.md \
+            docs/roadmap/EPD2_PROGRAM_CONTROL_REGISTER.md \
+            docs/roadmap/EPD2_MASTER_FUTURE_IMPLEMENTATION_REGISTER.md
+          do
+            git show "$BASE:$p" > "exported/$(basename "$p")"
+          done
+          printf '%s\n' "$BASE" > exported/CANONICAL_MAIN_COMMIT.txt
+          (cd exported && sha256sum *.md > SHA256SUMS.txt)
+          cat exported/SHA256SUMS.txt
 
-      - name: Download frozen PB01 I10 C6 exact candidate
-        uses: actions/download-artifact@v4
+      - name: Upload exact governance documents
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: pb01-i10-c6-exact-candidate
-          path: pb01
-          github-token: ${{ github.token }}
-          repository: nepogoda1970-epd2/epd2-civic-os
-          run-id: '32388797195'
-
-      - name: Run PILOT-04 C9 exact-byte authoritative acceptance
-        shell: bash
-        run: bash scripts/tmp_pilot04_c9_exact_accept.sh
-
-      - name: Upload authoritative C9 evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilot04-c9-authoritative-evidence
-          path: |
-            PILOT04_C9_ACCEPTANCE_EVIDENCE.json
-            PILOT04_C9_AUTHORITATIVE.log
-          if-no-files-found: warn
-          retention-days: 90
-
-      - name: Upload exact accepted C9 candidate
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilot04-c9-exact-accepted-candidate
-          path: inputs/EPD2_PILOT04_NON_BINDING_DIGITAL_VOTE_PILOT_CANDIDATE_0.1_C9.zip
+          name: epd2-canonical-governance-docs-7544f5dc
+          path: exported/
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 7
