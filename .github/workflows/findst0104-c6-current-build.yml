@@ -193,8 +193,11 @@ jobs:
           cp "$ROOT/vendor/system-trial-01/overlay/environment.py" "$HARNESS/scripts/system_trial_01/environment.py"
           cp "$ROOT/vendor/system-trial-01/overlay/validator.py" "$HARNESS/scripts/system_trial_01/validator.py"
           export EPD2_ST01_HARNESS_ROOT="$HARNESS"
-          "$PY" -m ruff check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py" "$ROOT/scripts/find_st01_04"
-          "$PY" -m ruff format --check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py" "$ROOT/scripts/find_st01_04"
+          # The current-main reconciliation changes governance records only. The
+          # governed technical delta is exactly the recovered runtime + test pair;
+          # the mature verifier lineage is executed below as evidence tooling.
+          "$PY" -m ruff check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py"
+          "$PY" -m ruff format --check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py"
           "$PY" -m mypy "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py"
           "$PY" "$ROOT/scripts/find_st01_04/run_mutations.py" --harness-root "$HARNESS" --out "$ROOT/validation/find_st01_04/c6_mutation_result.json"
           "$PY" "$ROOT/scripts/find_st01_04/run_g31_pair.py" --candidate-root "$ROOT" --accepted-archive "$API06" --work "$RUNNER_TEMP/g31" --venv "$UV_PROJECT_ENVIRONMENT" --pg-bin "$RUNNER_TEMP/api04-ci/pg1615/bin" --pg-port 55432 --pg-user api04 --pg-db epd2_api04 --rabbit-node "$RABBITMQ_NODENAME" --broker-pki "$RUNNER_TEMP/api04-ci/pki" --out "$ROOT/validation/find_st01_04/c6_g31_environment_fingerprint.json"
