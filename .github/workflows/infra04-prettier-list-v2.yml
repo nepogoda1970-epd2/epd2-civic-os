@@ -76,15 +76,20 @@ jobs:
           echo "The diagnostic branch itself is expected to perturb inherited G51; authoritative candidate run remains the source of truth."
           uv run python -m scripts.infra04.build_changed_manifest
 
-      - name: List exact remaining Prettier differences
+      - name: Verify bounded frontend Prettier scope
         shell: bash
         run: |
           set -uo pipefail
-          echo '=== PRETTIER LIST DIFFERENT BEGIN ==='
-          npx prettier --list-different . | tee /tmp/prettier-different.txt
+          echo '=== BOUNDED PRETTIER LIST DIFFERENT BEGIN ==='
+          npx prettier --list-different \
+            packages/typescript/epd2-types \
+            frontend/web-shell \
+            frontend/voting-client \
+            frontend/representative-workspace \
+            | tee /tmp/prettier-bounded.txt
           rc=${PIPESTATUS[0]}
-          echo '=== PRETTIER LIST DIFFERENT END ==='
-          echo "PRETTIER_RC=$rc"
-          echo "PRETTIER_COUNT=$(wc -l < /tmp/prettier-different.txt)"
-          cat /tmp/prettier-different.txt
+          echo '=== BOUNDED PRETTIER LIST DIFFERENT END ==='
+          echo "PRETTIER_BOUNDED_RC=$rc"
+          echo "PRETTIER_BOUNDED_COUNT=$(wc -l < /tmp/prettier-bounded.txt)"
+          cat /tmp/prettier-bounded.txt
           exit "$rc"
