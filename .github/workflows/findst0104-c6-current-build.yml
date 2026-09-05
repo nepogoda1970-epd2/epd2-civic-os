@@ -203,7 +203,7 @@ jobs:
           # api04_ci_setup proves the broker/version/PKI and provisions its own
           # fixture. G31 is required to provision a fresh fixture itself, so
           # remove only those setup users/vhost before the measured pair.
-          for user in $(jq -r '.service_principals[] | "svc-"+.' "$ROOT/docs/api/API-04/API04_PRODUCER_CONSUMER_ACL_MATRIX.json"); do
+          for user in $(jq -r '.service_principals | keys[] | "svc-"+.' "$ROOT/docs/api/API-04/API04_PRODUCER_CONSUMER_ACL_MATRIX.json"); do
             sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_user "$user" >/dev/null 2>&1 || true
           done
           sudo rabbitmqctl -n "$RABBITMQ_NODENAME" delete_user api04-provisioner-epd2-api04 >/dev/null 2>&1 || true
