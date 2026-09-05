@@ -1,0 +1,257 @@
+name: FIND-ST01-04 current-main sealed candidate build
+
+on:
+  push:
+    branches: [candidate/find-st01-04-c7-current]
+    paths:
+      - '.github/workflows/findst0104-c6-current-build.yml'
+      - '.epd2-findst-c7/seed/**'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: findst0104-c6-current-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      SEED_SHA: 8e04f5d6a3071cba290cdf29b4ec10aad6a1b51ad1e69033b2af1a0aaeff1208
+      MAIN_SHA: a94585a0982495700c803e01250fd2c9ea0e0341
+      MAIN_TREE: 0b67b944724531fd641a43e2adcd8db156c09fa9
+      API02_SHA: 9363561271f0f92d2afc42ccbb0d792cb5461c97c19a5f46a6fa51408bdfc6a9
+      API02_SIZE: '34642386'
+      API06_SHA: 3432b6615aa83c6f2860c015b7cafc2a18362aa371901616951a1bd5d263933c
+      API06_SIZE: '44012716'
+      FRONT03_SHA: fec7b19d77c27cbc3ef8a34e433f5aef94ef7853f76d3212bed6acd682497c26
+      FRONT03_SIZE: '17646011'
+      OPS02_SHA: ac3b543b0cb3a8e45f7d973c841769d0b4c6e7af649a54aee034f3e0b6afc125
+      OPS02_SIZE: '16632939'
+      HARNESS_SHA: 13989cba378434e2eb77de7d54efaf1c336164c20cea0f66bf553b6badb05a6f
+      HARNESS_SIZE: '272355'
+      CANDIDATE_NAME: EPD2_FIND-ST01-04_AUTH_MEMBER_RUNTIME_CORRECTION_CANDIDATE_0.1_C6.zip
+    outputs:
+      candidate_sha256: ${{ steps.seal.outputs.sha }}
+      candidate_size_bytes: ${{ steps.seal.outputs.size }}
+      artifact_name: ${{ steps.seal.outputs.artifact }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Reconstruct and verify immutable C6 technical seed
+        id: seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/find-build"
+          find .epd2-findst-c7/seed -type f -name 'seed.part*' -print0 | sort -z | xargs -0 cat > "$RUNNER_TEMP/find-build/seed.zip"
+          echo "$SEED_SHA  $RUNNER_TEMP/find-build/seed.zip" | sha256sum -c -
+          python3 - "$RUNNER_TEMP/find-build/seed.zip" "$RUNNER_TEMP/find-build" <<'PY'
+          import pathlib, sys, zipfile
+          z=zipfile.ZipFile(sys.argv[1]); names=z.namelist()
+          assert z.testzip() is None and len(names)==len(set(names))
+          assert all(not n.startswith('/') and '..' not in pathlib.PurePosixPath(n).parts for n in names)
+          roots={n.split('/',1)[0] for n in names if n}
+          assert roots=={'EPD2_FIND-ST01-04_AUTH_MEMBER_RUNTIME_CORRECTION_CANDIDATE_0.1_C6'}
+          z.extractall(sys.argv[2])
+          PY
+          ROOT="$RUNNER_TEMP/find-build/EPD2_FIND-ST01-04_AUTH_MEMBER_RUNTIME_CORRECTION_CANDIDATE_0.1_C6"
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          test "$(sha256sum "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py"|cut -d' ' -f1)" = 5faaab4e549bded8a7196b906363c2945bbac318701119a1ba21d1231365cc45
+          test "$(sha256sum "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py"|cut -d' ' -f1)" = cd057f8ac8d710d4fb19107d4ee220a524f4b1313cf092c59d937a8a04e782fc
+          echo 'FINDST0104_RECOVERED_RUNTIME_EXACT:PASS'
+
+      - name: Download exact accepted API-02 C13
+        uses: actions/download-artifact@v4
+        with:
+          name: api02-candidate
+          path: ${{ runner.temp }}/deps/api02
+          run-id: 33495990810
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted API-06 C1
+        uses: actions/download-artifact@v4
+        with:
+          name: api06-c1-candidate-v3
+          path: ${{ runner.temp }}/deps/api06
+          run-id: 33628261946
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted FRONT-03 C1
+        uses: actions/download-artifact@v4
+        with:
+          name: front03-c1-candidate
+          path: ${{ runner.temp }}/deps/front03
+          run-id: 33527376449
+          github-token: ${{ github.token }}
+
+      - name: Download exact accepted OPS-02 C3
+        uses: actions/download-artifact@v4
+        with:
+          name: ops02-c3-authoritative-v3-candidate-33610516469
+          path: ${{ runner.temp }}/deps/ops02
+          run-id: 33610516469
+          github-token: ${{ github.token }}
+
+      - name: Verify every predecessor and frozen harness byte identity
+        id: deps
+        shell: bash
+        env:
+          ROOT: ${{ steps.seed.outputs.root }}
+        run: |
+          set -euo pipefail
+          API02=$(find "$RUNNER_TEMP/deps/api02" -type f -name 'EPD2_API02_AUTHENTICATION_AND_AUTHORIZATION_RUNTIME_CANDIDATE_0.1_C13.zip' -print -quit)
+          API06=$(find "$RUNNER_TEMP/deps/api06" -type f -name 'EPD2_API06_API_LAYER_COMPLETION_AND_PREVIEW_READINESS_CANDIDATE_0.1_C1.zip' -print -quit)
+          FRONT03=$(find "$RUNNER_TEMP/deps/front03" -type f -name 'EPD2_FRONT03_WS02_APPLICANT_AND_MEMBER_CORE_CANDIDATE_0.1_C1.zip' -print -quit)
+          OPS02=$(find "$RUNNER_TEMP/deps/ops02" -type f -name 'EPD2_OPS02_PREVIEW_OPERATIONS_DEPLOYMENT_OBSERVABILITY_AND_RECOVERY_CANDIDATE_0.1_C3.zip' -print -quit)
+          test -n "$API02" && test -n "$API06" && test -n "$FRONT03" && test -n "$OPS02"
+          for spec in "API02:$API02:$API02_SHA:$API02_SIZE" "API06:$API06:$API06_SHA:$API06_SIZE" "FRONT03:$FRONT03:$FRONT03_SHA:$FRONT03_SIZE" "OPS02:$OPS02:$OPS02_SHA:$OPS02_SIZE"; do
+            IFS=: read -r label path digest size <<< "$spec"
+            test "$(sha256sum "$path"|cut -d' ' -f1)" = "$digest"
+            test "$(stat -c%s "$path")" = "$size"
+            echo "$label exact-byte identity PASS"
+          done
+          HARNESS="$ROOT/vendor/system-trial-01/EPD2_SYSTEM_TRIAL_01_PREVIEW_CHECKPOINT_READINESS_WORKING_0.1_PRESEAL.zip"
+          test "$(sha256sum "$HARNESS"|cut -d' ' -f1)" = "$HARNESS_SHA"
+          test "$(stat -c%s "$HARNESS")" = "$HARNESS_SIZE"
+          echo "api02=$API02" >> "$GITHUB_OUTPUT"
+          echo "api06=$API06" >> "$GITHUB_OUTPUT"
+          echo "front03=$FRONT03" >> "$GITHUB_OUTPUT"
+          echo "ops02=$OPS02" >> "$GITHUB_OUTPUT"
+
+      - name: Reconcile current main and write explicit byte bindings
+        shell: bash
+        env:
+          ROOT: ${{ steps.seed.outputs.root }}
+          API02: ${{ steps.deps.outputs.api02 }}
+          API06: ${{ steps.deps.outputs.api06 }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin main
+          test "$(git rev-parse origin/main)" = "$MAIN_SHA"
+          test "$(git rev-parse origin/main^{tree})" = "$MAIN_TREE"
+          "$ROOT/scripts/find_st01_04/c6_freshness.py" --repo "$GITHUB_WORKSPACE" --observed-task-main "$MAIN_SHA" --predecessor-baseline 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5 --out "$ROOT/docs/api/FIND-ST01-04/FINDST0104_C6_CURRENT_MAIN_FRESHNESS.json"
+          "$ROOT/scripts/find_st01_04/c6_reanchor.py" --repo "$GITHUB_WORKSPACE" --branch main
+          python3 - "$ROOT" <<'PY'
+          import hashlib,json,os,sys
+          from pathlib import Path
+          root=Path(sys.argv[1]); gov=root/'docs/api/FIND-ST01-04'
+          def h(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+          binding={'schema':'epd2.find-st01-04.current-main-binding/1','work_item':'FIND-ST01-04','branch':'candidate/find-st01-04-c7-current','main_head':os.environ['MAIN_SHA'],'main_tree':os.environ['MAIN_TREE'],'candidate_state':'CANDIDATE_NOT_ACCEPTED','self_acceptance':False}
+          (gov/'CURRENT_MAIN_BINDING.json').write_text(json.dumps(binding,indent=2,sort_keys=True)+'\n')
+          pred={'schema':'epd2.find-st01-04.predecessor-binding/1','work_item':'FIND-ST01-04','bindings':[
+            {'stage':'API-02 C13','filename':Path(os.environ['API02']).name,'sha256':os.environ['API02_SHA'],'size_bytes':int(os.environ['API02_SIZE']),'authoritative_run_id':33497989489},
+            {'stage':'API-06 C1','filename':Path(os.environ['API06']).name,'sha256':os.environ['API06_SHA'],'size_bytes':int(os.environ['API06_SIZE']),'authoritative_run_id':33629147572},
+            {'stage':'FRONT-03 C1','sha256':os.environ['FRONT03_SHA'],'size_bytes':int(os.environ['FRONT03_SIZE']),'authoritative_run_id':33528038712},
+            {'stage':'OPS-02 C3','sha256':os.environ['OPS02_SHA'],'size_bytes':int(os.environ['OPS02_SIZE']),'authoritative_run_id':33610516469}],
+            'frozen_harness':{'sha256':os.environ['HARNESS_SHA'],'size_bytes':int(os.environ['HARNESS_SIZE'])},'self_acceptance':False}
+          (gov/'PREDECESSOR_BINDING_RECORD.json').write_text(json.dumps(pred,indent=2,sort_keys=True)+'\n')
+          recovered={
+            'docs/api/FIND-ST01-04/FINDST0104_CANDIDATE_MANIFEST.json':'133c9bcf62979fad9f3d94f50edccac8ab65e618da36bfc5b560dfac51491245',
+            'docs/api/FIND-ST01-04/SYSTEM_TRIAL_01_HARNESS_FREEZE_MANIFEST.json':'f8e69f84d424e9d8ac3ead5ea132073d4e7a31d525d1a24118947cb0b3c9683e',
+            'packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py':'5faaab4e549bded8a7196b906363c2945bbac318701119a1ba21d1231365cc45',
+            'packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py':'cd057f8ac8d710d4fb19107d4ee220a524f4b1313cf092c59d937a8a04e782fc',
+            'scripts/find_st01_04/checks.py':'b1cd6adf6ecb69cd32e637f5d1ba8bc788f8ffb6f7cff4f798d62ea102f70185',
+            'scripts/find_st01_04/package.py':'b3510a6aa66d4fdeff7aa44f953f0cdc365c69abf8bade14a6fa43e2a2e5db2c',
+            'scripts/find_st01_04/run_mutations.py':'4fec0059535a40aeda3f39fff004c8d7c3298cde65b4db785faa685482971954',
+            'scripts/find_st01_04/validate_correction.py':'f66ff0b58dc98b7a8020a90773ad175ea31b305aed2f9e9388df5f5e002ab03e'}
+          reasons={'docs/api/FIND-ST01-04/FINDST0104_CANDIDATE_MANIFEST.json':'mature deterministic seal metadata and current-main binding; no runtime semantic delta','docs/api/FIND-ST01-04/SYSTEM_TRIAL_01_HARNESS_FREEZE_MANIFEST.json':'mature exact frozen-harness binding metadata; frozen archive bytes unchanged','scripts/find_st01_04/validate_correction.py':'mature fail-closed evidence derivation and G31/G32/G33 controls; correction gate meanings preserved'}
+          rows=[]
+          for rel,old in recovered.items():
+            new=h(root/rel); rows.append({'path':rel,'recovered_sha256':old,'reconciled_sha256':new,'byte_identical':old==new,'reason':reasons.get(rel,'byte-identical carry-forward'),'semantic_delta':'verification/governance metadata only' if old!=new else 'none'})
+          doc={'schema':'epd2.find-st01-04.recovered-overlay-reconciliation/1','work_item':'FIND-ST01-04','files':rows,'runtime_correction_semantic_delta':'none','self_acceptance':False}
+          (gov/'RECOVERED_OVERLAY_RECONCILIATION.json').write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
+          PY
+          "$ROOT/scripts/find_st01_04/build_changed_files.py" --accepted "$API06"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.5'
+          enable-cache: false
+
+      - name: Fresh locked qualification, API regressions, G31 and mutation suites
+        id: qualify
+        shell: bash
+        env:
+          ROOT: ${{ steps.seed.outputs.root }}
+          API02: ${{ steps.deps.outputs.api02 }}
+          API06: ${{ steps.deps.outputs.api06 }}
+        run: |
+          set -euo pipefail
+          source "$ROOT/scripts/api04_ci_setup.sh" "$ROOT"
+          PY="$UV_PROJECT_ENVIRONMENT/bin/python"
+          HARNESS="$RUNNER_TEMP/find-harness"
+          mkdir -p "$HARNESS"
+          unzip -q "$ROOT/vendor/system-trial-01/EPD2_SYSTEM_TRIAL_01_PREVIEW_CHECKPOINT_READINESS_WORKING_0.1_PRESEAL.zip" -d "$RUNNER_TEMP/harness-stage"
+          mv "$RUNNER_TEMP/harness-stage/EPD2_SYSTEM_TRIAL_01_PREVIEW_CHECKPOINT_READINESS_WORKING_0.1_PRESEAL"/* "$HARNESS/"
+          cp "$ROOT/vendor/system-trial-01/overlay/environment.py" "$HARNESS/scripts/system_trial_01/environment.py"
+          cp "$ROOT/vendor/system-trial-01/overlay/validator.py" "$HARNESS/scripts/system_trial_01/validator.py"
+          export EPD2_ST01_HARNESS_ROOT="$HARNESS"
+          "$PY" -m ruff check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py" "$ROOT/scripts/find_st01_04"
+          "$PY" -m ruff format --check "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py" "$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py" "$ROOT/scripts/find_st01_04"
+          "$PY" -m mypy "$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py"
+          "$PY" "$ROOT/scripts/find_st01_04/run_mutations.py" --harness-root "$HARNESS" --out "$ROOT/validation/find_st01_04/c6_mutation_result.json"
+          "$PY" "$ROOT/scripts/find_st01_04/run_g31_pair.py" --candidate-root "$ROOT" --accepted-archive "$API06" --work "$RUNNER_TEMP/g31" --venv "$UV_PROJECT_ENVIRONMENT" --pg-bin "$RUNNER_TEMP/api04-ci/pg1615/bin" --pg-port 55432 --pg-user api04 --pg-db epd2_api04 --rabbit-node "$RABBITMQ_NODENAME" --broker-pki "$RUNNER_TEMP/api04-ci/pki" --out "$ROOT/validation/find_st01_04/c6_g31_environment_fingerprint.json"
+          cp "$RUNNER_TEMP/g31/api06_pristine_result.json" "$ROOT/validation/find_st01_04/c6_api06_pristine_result.json"
+          cp "$RUNNER_TEMP/g31/api06_corrected_result.json" "$ROOT/validation/find_st01_04/c6_api06_regression_result.json"
+          "$PY" "$ROOT/scripts/find_st01_04/validate_c6.py" --out validation/find_st01_04/c6_preseal_gates_result.json --g31-fingerprint validation/find_st01_04/c6_g31_environment_fingerprint.json
+          "$PY" "$ROOT/scripts/find_st01_04/run_governance_mutations.py" --out validation/find_st01_04/c6_governance_mutation_result.json
+          "$PY" "$ROOT/scripts/find_st01_04/validate_c6.py" --out validation/find_st01_04/c6_preseal_gates_result.json --g31-fingerprint validation/find_st01_04/c6_g31_environment_fingerprint.json
+          jq -e '.result=="PASS" and .detected==32 and .missed==0 and ([.mutations[].restored]|all)' "$ROOT/validation/find_st01_04/c6_mutation_result.json"
+          jq -e '.result=="PASS" and .g31_self_evaluation.result=="PASS" and .pristine_result.passed_gates==40 and .corrected_result.passed_gates==40' "$ROOT/validation/find_st01_04/c6_g31_environment_fingerprint.json"
+          jq -e '.result=="PASS" and .gate_counts.FAIL==0 and .gate_counts.ENVIRONMENT_BLOCKED==0' "$ROOT/validation/find_st01_04/c6_preseal_gates_result.json"
+          jq -e '.result=="PASS" and .missed==0 and .complete==true' "$ROOT/validation/find_st01_04/c6_governance_mutation_result.json"
+
+      - name: Seal deterministic current-main candidate
+        id: seal
+        shell: bash
+        env:
+          ROOT: ${{ steps.seed.outputs.root }}
+          API06: ${{ steps.deps.outputs.api06 }}
+        run: |
+          set -euo pipefail
+          rm -rf "$ROOT/.venv" "$ROOT/.pytest_cache" "$ROOT/.mypy_cache" "$ROOT/.ruff_cache"
+          find "$ROOT" -type d \( -name __pycache__ -o -name .pytest_cache -o -name .mypy_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
+          find "$ROOT" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+          "$UV_PROJECT_ENVIRONMENT/bin/python" "$ROOT/scripts/find_st01_04/build_changed_files.py" --accepted "$API06"
+          mkdir -p "$RUNNER_TEMP/sealed"
+          "$UV_PROJECT_ENVIRONMENT/bin/python" "$ROOT/scripts/find_st01_04/seal_c6.py" --out "$RUNNER_TEMP/sealed" --accepted-archive "$API06" | tee "$RUNNER_TEMP/sealed/seal.log"
+          ZIP="$RUNNER_TEMP/sealed/$CANDIDATE_NAME"
+          SHA=$(sha256sum "$ZIP"|cut -d' ' -f1); SIZE=$(stat -c%s "$ZIP")
+          test -s "$ZIP"; unzip -tq "$ZIP"
+          ART="findst0104-c6-current-sealed-candidate-${GITHUB_RUN_ID}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "artifact=$ART" >> "$GITHUB_OUTPUT"
+          echo "FINDST0104_C6_CURRENT_SEAL:PASS:$SHA:$SIZE"
+
+      - name: Upload exact sealed candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.seal.outputs.artifact }}
+          path: ${{ runner.temp }}/sealed/${{ env.CANDIDATE_NAME }}
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+
+      - name: Upload developer build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: findst0104-c6-current-build-evidence-${{ github.run_id }}
+          path: |
+            ${{ steps.seed.outputs.root }}/docs/api/FIND-ST01-04/
+            ${{ steps.seed.outputs.root }}/validation/find_st01_04/
+            ${{ runner.temp }}/sealed/seal.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Developer result
+        if: success()
+        run: echo 'FINDST0104_C6_DEVELOPER_RESULT:PASS; state=CANDIDATE_NOT_ACCEPTED; governance=AWAITING'
