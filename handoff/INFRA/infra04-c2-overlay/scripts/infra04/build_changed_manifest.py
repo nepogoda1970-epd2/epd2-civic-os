@@ -157,6 +157,20 @@ def main() -> int:
         "total_files": len(entries),
     }
     OUT.write_text(json.dumps(doc, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    subprocess.run(
+        [str(prettier), "--write", SELF],
+        cwd=ROOT,
+        check=True,
+        timeout=300,
+    )
+    subprocess.run(
+        [str(prettier), "--check", SELF],
+        cwd=ROOT,
+        check=True,
+        timeout=300,
+    )
+    print("INFRA04_C2_CHANGED_MANIFEST_PRETTIER:PASS:1")
+
     # Mechanical self-check: every non-deleted entry exists and matches.
     for e in entries:
         if e["change"] == "deleted":
