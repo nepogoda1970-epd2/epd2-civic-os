@@ -1,0 +1,37 @@
+name: INFRA-04 Prettier Definition
+
+on:
+  push:
+    branches:
+      - diagnostic/infra04-prettier-list-20260905-v2
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Materialize exact C2 acceptance source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+      - name: Print frontend.prettier definition and surrounding registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== MATCHES ==='
+          grep -R -n -C 8 --exclude-dir=.git --exclude='*.png' --exclude='*.zip' 'frontend\.prettier\|prettier --check\|format:check' scripts .github package.json frontend 2>/dev/null || true
+          echo '=== ACCEPTANCE FILES ==='
+          find scripts/acceptance -maxdepth 2 -type f -print 2>/dev/null | sort || true
+          echo '=== CHECK REGISTRY ==='
+          cat scripts/acceptance/check_registry.json 2>/dev/null || true
