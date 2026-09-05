@@ -1,0 +1,85 @@
+name: INFRA-04 Prettier Exact List v2
+
+on:
+  push:
+    branches:
+      - diagnostic/infra04-prettier-list-20260905-v2
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact diagnostic source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install PostgreSQL 16 runtime
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 postgresql-client-16
+          echo "/usr/lib/postgresql/16/bin" >> "$GITHUB_PATH"
+
+      - name: Install frozen dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv sync --all-groups --frozen
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Materialize exact INFRA-04 C2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+          test "$(stat -c %s /tmp/infra02.zip)" = "15980332"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+          git rm -f --ignore-unmatch SHA256SUMS.txt ACCEPTANCE/FREEZE-INVENTORY.json
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+
+      - name: Reproduce exact runtime evidence and lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run pytest -q tests/repository/test_infra04_units.py tests/repository/test_infra04_mutation_suite.py | tee "$GITHUB_WORKSPACE/infra04-c2-targeted.txt"
+          uv run python -m scripts.infra04.gates --artifact /tmp/infra02.zip | tee "$GITHUB_WORKSPACE/infra04-c2-runtime.txt"
+          uv run python -m scripts.infra04.build_changed_manifest
+
+      - name: List exact remaining Prettier differences
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo '=== PRETTIER LIST DIFFERENT BEGIN ==='
+          npx prettier --list-different . | tee /tmp/prettier-different.txt
+          rc=${PIPESTATUS[0]}
+          echo '=== PRETTIER LIST DIFFERENT END ==='
+          echo "PRETTIER_RC=$rc"
+          echo "PRETTIER_COUNT=$(wc -l < /tmp/prettier-different.txt)"
+          cat /tmp/prettier-different.txt
+          exit "$rc"
