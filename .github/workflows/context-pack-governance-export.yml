@@ -40,3 +40,5 @@ jobs:
           path: exported/
           if-no-files-found: error
           retention-days: 7
+
+# trigger: 2026-09-05
