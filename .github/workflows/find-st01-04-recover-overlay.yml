@@ -1,0 +1,62 @@
+name: FIND-ST01-04 recover exact reviewed overlay
+
+on:
+  push:
+    branches:
+      - work/find-st01-04-recover-overlay
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout recovery carrier
+        uses: actions/checkout@v4
+
+      - name: Reconstruct exact reviewed overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/find-overlay
+          cat .epd2-findst-review/overlay.part*.b64 | base64 --decode > /tmp/find-overlay.tgz
+          tar -xzf /tmp/find-overlay.tgz -C /tmp/find-overlay
+          find /tmp/find-overlay -type f -printf '%P\n' | LC_ALL=C sort | tee /tmp/find-overlay-files.txt
+
+      - name: Verify C6 critical runtime identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=/tmp/find-overlay
+          COMPOSITION="$ROOT/packages/python/epd2-runtime/src/epd2_runtime/pilot/composition.py"
+          TARGETED="$ROOT/packages/python/epd2-runtime/tests/test_find_st01_04_identity_session_on_member_routes.py"
+          test -f "$COMPOSITION"
+          test -f "$TARGETED"
+          test "$(sha256sum "$COMPOSITION" | awk '{print $1}')" = "5faaab4e549bded8a7196b906363c2945bbac318701119a1ba21d1231365cc45"
+          test "$(sha256sum "$TARGETED" | awk '{print $1}')" = "cd057f8ac8d710d4fb19107d4ee220a524f4b1313cf092c59d937a8a04e782fc"
+          echo "FIND_RUNTIME_BYTES:EXACT_C6_MATCH"
+
+      - name: Generate detached recovery manifest
+        shell: python
+        run: |
+          import hashlib, json
+          from pathlib import Path
+          root = Path('/tmp/find-overlay')
+          files = []
+          for path in sorted(p for p in root.rglob('*') if p.is_file()):
+              rel = path.relative_to(root).as_posix()
+              data = path.read_bytes()
+              files.append({'path': rel, 'sha256': hashlib.sha256(data).hexdigest(), 'size': len(data)})
+          Path('/tmp/find-overlay/RECOVERED_OVERLAY_MANIFEST.json').write_text(
+              json.dumps({'schema':'epd2.find-st01-04.recovered-overlay/1','source_commit':'1850504897a9c8c466155575a767c142acf454a9','files':files}, indent=2) + '\n',
+              encoding='utf-8')
+
+      - name: Upload recovered exact overlay
+        uses: actions/upload-artifact@v4
+        with:
+          name: find-st01-04-recovered-overlay-${{ github.run_id }}
+          path: /tmp/find-overlay
+          if-no-files-found: error
+          retention-days: 30
