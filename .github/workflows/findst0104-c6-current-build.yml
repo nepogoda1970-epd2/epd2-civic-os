@@ -136,8 +136,8 @@ jobs:
           git fetch --quiet origin main
           test "$(git rev-parse origin/main)" = "$MAIN_SHA"
           test "$(git rev-parse origin/main^{tree})" = "$MAIN_TREE"
-          "$ROOT/scripts/find_st01_04/c6_freshness.py" --repo "$GITHUB_WORKSPACE" --observed-task-main "$MAIN_SHA" --predecessor-baseline 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5 --out "$ROOT/docs/api/FIND-ST01-04/FINDST0104_C6_CURRENT_MAIN_FRESHNESS.json"
-          "$ROOT/scripts/find_st01_04/c6_reanchor.py" --repo "$GITHUB_WORKSPACE" --branch main
+          python3 "$ROOT/scripts/find_st01_04/c6_freshness.py" --repo "$GITHUB_WORKSPACE" --observed-task-main "$MAIN_SHA" --predecessor-baseline 7544f5dc3bf40304ae81b4d8ef476cc8ecb60ec5 --out "$ROOT/docs/api/FIND-ST01-04/FINDST0104_C6_CURRENT_MAIN_FRESHNESS.json"
+          python3 "$ROOT/scripts/find_st01_04/c6_reanchor.py" --repo "$GITHUB_WORKSPACE" --branch main
           python3 - "$ROOT" <<'PY'
           import hashlib,json,os,sys
           from pathlib import Path
@@ -168,7 +168,7 @@ jobs:
           doc={'schema':'epd2.find-st01-04.recovered-overlay-reconciliation/1','work_item':'FIND-ST01-04','files':rows,'runtime_correction_semantic_delta':'none','self_acceptance':False}
           (gov/'RECOVERED_OVERLAY_RECONCILIATION.json').write_text(json.dumps(doc,indent=2,sort_keys=True)+'\n')
           PY
-          "$ROOT/scripts/find_st01_04/build_changed_files.py" --accepted "$API06"
+          python3 "$ROOT/scripts/find_st01_04/build_changed_files.py" --accepted "$API06"
 
       - uses: astral-sh/setup-uv@v6
         with:
