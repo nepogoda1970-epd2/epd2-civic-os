@@ -1,0 +1,59 @@
+name: INFRA-04 Final Format Diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic/infra04-c2-final-format-20260905
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install locked dependencies
+        run: |
+          uv sync --all-groups --frozen
+          npm ci
+      - name: Materialize exact INFRA-04 C2
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin handoff/infra
+          git show origin/handoff/infra:handoff/INFRA/incoming/EPD2_INFRA02_CI_CD_AND_SOFTWARE_SUPPLY_CHAIN_CANDIDATE_0.1.zip > /tmp/infra02.zip
+          test "$(sha256sum /tmp/infra02.zip | awk '{print $1}')" = "d91fa6db81126765c0e26bf285fff2f974464544b7fa6299b6d069a25d1ff72c"
+          python3 handoff/INFRA/infra04-c2-transport/apply.py --root "$GITHUB_WORKSPACE" --predecessor /tmp/infra02.zip
+          cp -a handoff/INFRA/infra04-c2-overlay/. "$GITHUB_WORKSPACE"/
+          rm -rf handoff/INFRA/infra04-c2-transport handoff/INFRA/infra04-c2-overlay
+      - name: Run inherited reconciliation
+        run: uv run python scripts/infra04/reconcile_inherited_acceptance_baseline.py --root .
+      - name: Ruff exact failures
+        if: always()
+        run: |
+          uv run ruff format --check . || true
+          uv run ruff check . || true
+      - name: Ruff formatted target
+        if: always()
+        run: |
+          cp scripts/infra04/reconcile_inherited_acceptance_baseline.py /tmp/reconcile.py
+          uv run ruff format /tmp/reconcile.py
+          echo '=== RUFF_FORMATTED_RECONCILE_BEGIN ==='
+          cat /tmp/reconcile.py
+          echo '=== RUFF_FORMATTED_RECONCILE_END ==='
+      - name: Prettier formatted target
+        if: always()
+        run: |
+          echo '=== PRETTIER_FORMATTED_CAPTURE_BEGIN ==='
+          npx prettier frontend/web-shell/tests/browser/front03.visual.capture.spec.ts
+          echo '=== PRETTIER_FORMATTED_CAPTURE_END ==='
