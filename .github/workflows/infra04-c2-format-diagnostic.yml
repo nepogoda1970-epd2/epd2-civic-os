@@ -2,11 +2,11 @@ name: INFRA-04 C2 formatting diagnostic
 on:
   push:
     branches: ["diagnostic/infra04-c2-formatters-20260904"]
+    paths: [".github/workflows/infra04-c2-format-diagnostic.yml"]
 permissions:
   contents: write
 jobs:
   diagnose:
-    if: github.event.head_commit.message != 'diagnostic(infra04): persist formatter evidence snapshot'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
