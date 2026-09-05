@@ -20,16 +20,65 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
-      - name: Format only the C2-owned reconciliation source
+      - name: Structurally format only the C2-owned reconciliation source
         shell: bash
         run: |
           set -euo pipefail
           TARGET=handoff/INFRA/infra04-c2-overlay/scripts/infra04/reconcile_inherited_acceptance_baseline.py
           uv sync --all-groups --frozen
           uv run ruff format "$TARGET"
-          uv run ruff check "$TARGET"
+          TARGET="$TARGET" python3 - <<'PY'
+          import ast
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path(os.environ["TARGET"])
+          text = path.read_text(encoding="utf-8")
+
+          # Long path+digest entries: preserve both string values while moving
+          # the digest to a continuation line.
+          digest_line = re.compile(r'^(\s*)("[^"]+":) "([0-9a-f]{64})",$', re.MULTILINE)
+          text = digest_line.sub(
+              lambda m: f'{m.group(1)}{m.group(2)} (\n{m.group(1)}    "{m.group(3)}"\n{m.group(1)}),',
+              text,
+          )
+
+          # A few exact replacement strings intentionally contain escaped newlines
+          # on one physical source line. Split their *values* into adjacent Python
+          # literals; concatenation is exact, so reconciliation behavior is unchanged.
+          tree = ast.parse(text)
+          lines = text.splitlines(keepends=True)
+          offsets = [0]
+          for line in lines:
+              offsets.append(offsets[-1] + len(line))
+          replacements = []
+          for node in ast.walk(tree):
+              if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                  continue
+              if node.lineno != node.end_lineno:
+                  continue
+              start = offsets[node.lineno - 1] + node.col_offset
+              end = offsets[node.end_lineno - 1] + node.end_col_offset
+              segment = text[start:end]
+              if len(segment) <= 88:
+                  continue
+              value = node.value
+              chunks = [value[i:i + 54] for i in range(0, len(value), 54)]
+              indent = " " * node.col_offset
+              child = " " * (node.col_offset + 4)
+              replacement = "(\n" + "\n".join(child + json.dumps(c) for c in chunks) + "\n" + indent + ")"
+              replacements.append((start, end, replacement))
+          for start, end, replacement in sorted(replacements, reverse=True):
+              text = text[:start] + replacement + text[end:]
+          path.write_text(text, encoding="utf-8")
+          PY
+          uv run ruff format "$TARGET"
           mkdir -p /tmp/infra04-post-reconcile
           cp "$TARGET" /tmp/infra04-post-reconcile/reconcile_inherited_acceptance_baseline.py
+          uv run ruff format --check "$TARGET"
+          uv run ruff check "$TARGET"
       - name: Materialize exact canonical C2 with formatted owned source
         shell: bash
         env:
@@ -88,7 +137,6 @@ jobs:
           set -e
           git status --porcelain > /tmp/infra04-post-reconcile/post-reconcile-status.txt
           cp docs/infra/INFRA-04/INFRA04_CHANGED_FILE_MANIFEST.json /tmp/infra04-post-reconcile/changed-manifest.json
-          cp -a . /tmp/infra04-before-format
           uv run ruff format .
           uv run ruff check --fix . || true
           npx prettier --write . >/dev/null
@@ -108,5 +156,7 @@ jobs:
           git config user.name 'EPD2 INFRA04 diagnostic'
           git config user.email 'infra04-diagnostic@invalid.local'
           git add "$OUT"
-          git commit -m 'diagnostic(infra04): persist post-reconciliation static evidence'
-          git push origin HEAD:diagnostic/infra04-c2-formatters-20260904
+          if ! git diff --cached --quiet; then
+            git commit -m 'diagnostic(infra04): persist post-reconciliation static evidence'
+            git push origin HEAD:diagnostic/infra04-c2-formatters-20260904
+          fi
